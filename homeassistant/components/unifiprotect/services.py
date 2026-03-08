@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Coroutine
+import logging
 from typing import Any, cast
 
 from pydantic import ValidationError
@@ -26,7 +28,10 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
@@ -42,58 +47,59 @@ from .const import (
 )
 from .data import async_ufp_instance_for_config_entry_ids
 
+_LOGGER = logging.getLogger(__name__)
+
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
+SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
 
-ALL_GLOBAL_SERIVCES = [
+ATTR_PRESET = "preset"
+
+ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
+    SERVICE_PTZ_GOTO_PRESET,
 ]
 
-DOORBELL_TEXT_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_MESSAGE): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+DOORBELL_TEXT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_MESSAGE): cv.string,
+    },
 )
 
-CHIME_PAIRED_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            "doorbells": cv.TARGET_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+CHIME_PAIRED_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        "doorbells": cv.ENTITY_SERVICE_FIELDS,
+    },
 )
 
-REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_NAME): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_NAME): cv.string,
+    },
 )
 
-GET_USER_KEYRING_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+    },
+)
+
+PTZ_GOTO_PRESET_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PRESET): cv.string,
+    },
 )
 
 
@@ -101,7 +107,11 @@ GET_USER_KEYRING_INFO_SCHEMA = vol.All(
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
     if not (device_entry := device_registry.async_get(device_id)):
-        raise HomeAssistantError(f"No device found for device id: {device_id}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": device_id},
+        )
 
     if device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
@@ -110,12 +120,16 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
     if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
         return ufp_instance
 
-    raise HomeAssistantError(f"No device found for device id: {device_id}")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 @callback
 def _async_get_ufp_camera(call: ServiceCall) -> Camera:
-    ref = async_extract_referenced_entity_ids(call.hass, call)
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelection(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -133,7 +147,7 @@ def _async_get_protect_from_call(call: ServiceCall) -> set[ProtectApiClient]:
     return {
         _async_get_ufp_instance(call.hass, device_id)
         for device_id in async_extract_referenced_entity_ids(
-            call.hass, call
+            call.hass, TargetSelection(call.data)
         ).referenced_devices
     }
 
@@ -150,7 +164,11 @@ async def _async_service_call_nvr(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
     except (ClientError, ValidationError) as err:
-        raise HomeAssistantError(str(err)) from err
+        _LOGGER.debug("Error calling UniFi Protect service: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
 
 
 async def add_doorbell_text(call: ServiceCall) -> None:
@@ -179,7 +197,12 @@ async def remove_privacy_zone(call: ServiceCall) -> None:
 
     if remove_index is None:
         raise ServiceValidationError(
-            f"Could not find privacy zone with name {name} on camera {camera.display_name}."
+            translation_domain=DOMAIN,
+            translation_key="privacy_zone_not_found",
+            translation_placeholders={
+                "zone_name": name,
+                "camera_name": camera.display_name,
+            },
         )
 
     def remove_zone() -> None:
@@ -191,12 +214,12 @@ async def remove_privacy_zone(call: ServiceCall) -> None:
 @callback
 def _async_unique_id_to_mac(unique_id: str) -> str:
     """Extract the MAC address from the registry entry unique id."""
-    return unique_id.split("_")[0]
+    return unique_id.split("_", maxsplit=1)[0]
 
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    ref = async_extract_referenced_entity_ids(call.hass, call)
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelection(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -211,7 +234,9 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     assert chime is not None
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
-    doorbell_refs = async_extract_referenced_entity_ids(call.hass, call)
+    doorbell_refs = async_extract_referenced_entity_ids(
+        call.hass, TargetSelection(call.data)
+    )
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
         doorbell_sensor = entity_registry.async_get(camera_id)
@@ -232,12 +257,68 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     await chime.save_device(data_before_changed)
 
 
+@callback
+def _async_get_ptz_camera(call: ServiceCall) -> Camera:
+    """Get a PTZ camera from a service call, validating PTZ support."""
+    camera = _async_get_ufp_camera(call)
+    if not camera.feature_flags.is_ptz:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_ptz_camera",
+            translation_placeholders={"camera_name": camera.display_name},
+        )
+    return camera
+
+
+async def _async_ptz_command(
+    func: Callable[..., Coroutine[Any, Any, Any]], **kwargs: Any
+) -> Any:
+    """Execute a PTZ command with error handling."""
+    try:
+        return await func(**kwargs)
+    except (ClientError, ValidationError) as err:
+        _LOGGER.debug("Error calling UniFi Protect PTZ command: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
+
+
+async def ptz_goto_preset(call: ServiceCall) -> None:
+    """Move a PTZ camera to a preset position."""
+    camera = _async_get_ptz_camera(call)
+    preset_name: str = call.data[ATTR_PRESET]
+
+    if preset_name.lower() == "home":
+        await _async_ptz_command(camera.ptz_goto_preset_public, slot=-1)
+        return
+
+    presets = await _async_ptz_command(camera.get_ptz_presets)
+
+    for preset in presets:
+        if preset.name == preset_name:
+            await _async_ptz_command(camera.ptz_goto_preset_public, slot=preset.slot)
+            return
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="ptz_preset_not_found",
+        translation_placeholders={
+            "preset_name": preset_name,
+            "camera_name": camera.display_name,
+        },
+    )
+
+
 async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     """Get the user keyring info."""
     camera = _async_get_ufp_camera(call)
     ulp_users = camera.api.bootstrap.ulp_users.as_list()
     if not ulp_users:
-        raise HomeAssistantError("No users found, please check Protect permissions.")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_users_found",
+        )
 
     user_keyrings: list[JsonValueType] = [
         {
@@ -300,9 +381,16 @@ SERVICES = [
         GET_USER_KEYRING_INFO_SCHEMA,
         SupportsResponse.ONLY,
     ),
+    (
+        SERVICE_PTZ_GOTO_PRESET,
+        ptz_goto_preset,
+        PTZ_GOTO_PRESET_SCHEMA,
+        SupportsResponse.NONE,
+    ),
 ]
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
 

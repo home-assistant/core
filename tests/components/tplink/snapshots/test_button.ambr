@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pair new device',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Pair new device',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pair',
     'unique_id': '123456789ABCDEFGH_pair',
@@ -67,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +77,7 @@
     'original_name': 'Pan left',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pan_left',
     'unique_id': '123456789ABCDEFGH_pan_left',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': 'Pan right',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pan_right',
     'unique_id': '123456789ABCDEFGH_pan_right',
@@ -161,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset charging contacts consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +175,7 @@
     'original_name': 'Reset charging contacts consumable',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charging_contacts_reset',
     'unique_id': '123456789ABCDEFGH_charging_contacts_reset',
@@ -195,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset filter consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -202,6 +211,7 @@
     'original_name': 'Reset filter consumable',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
     'unique_id': '123456789ABCDEFGH_filter_reset',
@@ -229,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset main brush consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -236,6 +247,7 @@
     'original_name': 'Reset main brush consumable',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_brush_reset',
     'unique_id': '123456789ABCDEFGH_main_brush_reset',
@@ -263,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset sensor consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,6 +283,7 @@
     'original_name': 'Reset sensor consumable',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensor_reset',
     'unique_id': '123456789ABCDEFGH_sensor_reset',
@@ -297,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reset side brush consumable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -304,6 +319,7 @@
     'original_name': 'Reset side brush consumable',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'side_brush_reset',
     'unique_id': '123456789ABCDEFGH_side_brush_reset',
@@ -331,6 +347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -338,6 +355,7 @@
     'original_name': 'Restart',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reboot',
     'unique_id': '123456789ABCDEFGH_reboot',
@@ -365,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -372,6 +391,7 @@
     'original_name': 'Stop alarm',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stop_alarm',
     'unique_id': '123456789ABCDEFGH_stop_alarm',
@@ -412,6 +432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -419,6 +440,7 @@
     'original_name': 'Test alarm',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'test_alarm',
     'unique_id': '123456789ABCDEFGH_test_alarm',
@@ -459,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt down',
     'options': dict({
     }),
     'original_device_class': None,
@@ -466,6 +489,7 @@
     'original_name': 'Tilt down',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tilt_down',
     'unique_id': '123456789ABCDEFGH_tilt_down',
@@ -506,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt up',
     'options': dict({
     }),
     'original_device_class': None,
@@ -513,6 +538,7 @@
     'original_name': 'Tilt up',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tilt_up',
     'unique_id': '123456789ABCDEFGH_tilt_up',
@@ -553,6 +579,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unpair device',
     'options': dict({
     }),
     'original_device_class': None,
@@ -560,6 +587,7 @@
     'original_name': 'Unpair device',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unpair',
     'unique_id': '123456789ABCDEFGH_unpair',
@@ -588,7 +616,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -598,7 +625,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })

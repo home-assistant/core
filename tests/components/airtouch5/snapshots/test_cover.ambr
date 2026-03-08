@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -27,6 +28,7 @@
     'original_name': 'Damper',
     'platform': 'airtouch5',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 7>,
     'translation_key': 'damper',
     'unique_id': 'zone_1_open_percentage',
@@ -39,6 +41,7 @@
       'current_position': 90,
       'device_class': 'damper',
       'friendly_name': 'Zone 1 Damper',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -77,6 +81,7 @@
     'original_name': 'Damper',
     'platform': 'airtouch5',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 7>,
     'translation_key': 'damper',
     'unique_id': 'zone_2_open_percentage',
@@ -89,6 +94,7 @@
       'current_position': 100,
       'device_class': 'damper',
       'friendly_name': 'Zone 2 Damper',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,

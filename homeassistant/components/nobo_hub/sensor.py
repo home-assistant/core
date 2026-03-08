@@ -58,6 +58,7 @@ class NoboTemperatureSensor(SensorEntity):
             suggested_area = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, component[ATTR_SERIAL])},
+            serial_number=component[ATTR_SERIAL],
             name=component[ATTR_NAME],
             manufacturer=NOBO_MANUFACTURER,
             model=component[ATTR_MODEL].name,

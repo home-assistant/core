@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -32,6 +33,7 @@
     'original_name': 'Backup reserve',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backup_reserve_percent',
     'unique_id': '123456-backup_reserve_percent',
@@ -84,13 +86,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
     'original_icon': 'mdi:battery-unknown',
-    'original_name': 'Off grid reserve',
+    'original_name': 'Off-grid reserve',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'off_grid_vehicle_charging_reserve_percent',
     'unique_id': '123456-off_grid_vehicle_charging_reserve_percent',
@@ -101,7 +105,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Energy Site Off grid reserve',
+      'friendly_name': 'Energy Site Off-grid reserve',
       'icon': 'mdi:battery-unknown',
       'max': 100,
       'min': 0,
@@ -143,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge current',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
@@ -150,6 +155,7 @@
     'original_name': 'Charge current',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_current_request',
     'unique_id': 'VINVINVIN-charge_state_charge_current_request',
@@ -201,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -208,6 +215,7 @@
     'original_name': 'Charge limit',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_limit_soc',
     'unique_id': 'VINVINVIN-charge_state_charge_limit_soc',
@@ -259,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.SPEED: 'speed'>,
@@ -266,6 +275,7 @@
     'original_name': 'Speed limit',
     'platform': 'tessie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_speed_limit_mode_current_limit_mph',
     'unique_id': 'VINVINVIN-vehicle_state_speed_limit_mode_current_limit_mph',

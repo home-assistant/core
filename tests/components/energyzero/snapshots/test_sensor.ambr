@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Average - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_average_price',
     'supported_features': 0,
     'translation_key': 'average_price',
     'unique_id': '12345_today_energy_average_price',
@@ -71,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +81,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_current_hour_price',
     'supported_features': 0,
     'translation_key': 'current_hour_price',
     'unique_id': '12345_today_energy_current_hour_price',
@@ -121,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -128,6 +133,7 @@
     'original_name': 'Time of highest price - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_highest_price_time',
     'supported_features': 0,
     'translation_key': 'highest_price_time',
     'unique_id': '12345_today_energy_highest_price_time',
@@ -170,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -177,6 +184,7 @@
     'original_name': 'Hours priced equal or lower than current - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_hours_priced_equal_or_lower',
     'supported_features': 0,
     'translation_key': 'hours_priced_equal_or_lower',
     'unique_id': '12345_today_energy_hours_priced_equal_or_lower',
@@ -219,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -226,6 +235,7 @@
     'original_name': 'Time of lowest price - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_lowest_price_time',
     'supported_features': 0,
     'translation_key': 'lowest_price_time',
     'unique_id': '12345_today_energy_lowest_price_time',
@@ -268,6 +278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,6 +286,7 @@
     'original_name': 'Highest price - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_max_price',
     'supported_features': 0,
     'translation_key': 'max_price',
     'unique_id': '12345_today_energy_max_price',
@@ -317,6 +329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -324,6 +337,7 @@
     'original_name': 'Lowest price - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_min_price',
     'supported_features': 0,
     'translation_key': 'min_price',
     'unique_id': '12345_today_energy_min_price',
@@ -366,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -373,6 +388,7 @@
     'original_name': 'Next hour',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_next_hour_price',
     'supported_features': 0,
     'translation_key': 'next_hour_price',
     'unique_id': '12345_today_energy_next_hour_price',
@@ -415,6 +431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -422,6 +439,7 @@
     'original_name': 'Current percentage of highest price - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_energy_percentage_of_max',
     'supported_features': 0,
     'translation_key': 'percentage_of_max',
     'unique_id': '12345_today_energy_percentage_of_max',
@@ -466,6 +484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -473,6 +492,7 @@
     'original_name': 'Current hour',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_gas_current_hour_price',
     'supported_features': 0,
     'translation_key': 'current_hour_price',
     'unique_id': '12345_today_gas_current_hour_price',
@@ -516,6 +536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -523,6 +544,7 @@
     'original_name': 'Next hour',
     'platform': 'energyzero',
     'previous_unique_id': None,
+    'suggested_object_id': 'energyzero_today_gas_next_hour_price',
     'supported_features': 0,
     'translation_key': 'next_hour_price',
     'unique_id': '12345_today_gas_next_hour_price',

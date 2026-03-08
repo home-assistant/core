@@ -21,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -28,6 +29,7 @@
     'original_name': 'Media player',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 16437>,
     'translation_key': 'media',
     'unique_id': 'LRWXF7EK4KC700000-media',
@@ -100,6 +102,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Media player',
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
@@ -107,6 +110,7 @@
     'original_name': 'Media player',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'media',
     'unique_id': 'LRWXF7EK4KC700000-media',

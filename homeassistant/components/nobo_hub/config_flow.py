@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
@@ -173,7 +173,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -187,7 +187,7 @@ class NoboHubConnectError(HomeAssistantError):
         self.msg = msg
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:

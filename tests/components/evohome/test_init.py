@@ -1,4 +1,4 @@
-"""The tests for evohome."""
+"""The tests for Evohome."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from evohomeasync2 import EvohomeClient, exceptions as exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN, EvoService
+from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -31,13 +31,9 @@ _MSG_USR = (
     "special characters accepted via the vendor's website are not valid here."
 )
 
-LOG_HINT_429_CREDS = ("evohome.credentials", logging.ERROR, _MSG_429)
-LOG_HINT_OTH_CREDS = ("evohome.credentials", logging.ERROR, _MSG_OTH)
-LOG_HINT_USR_CREDS = ("evohome.credentials", logging.ERROR, _MSG_USR)
-
-LOG_HINT_429_AUTH = ("evohome.auth", logging.ERROR, _MSG_429)
-LOG_HINT_OTH_AUTH = ("evohome.auth", logging.ERROR, _MSG_OTH)
-LOG_HINT_USR_AUTH = ("evohome.auth", logging.ERROR, _MSG_USR)
+LOG_HINT_429_AUTH = ("evohomeasync2.auth", logging.ERROR, _MSG_429)
+LOG_HINT_OTH_AUTH = ("evohomeasync2.auth", logging.ERROR, _MSG_OTH)
+LOG_HINT_USR_AUTH = ("evohomeasync2.auth", logging.ERROR, _MSG_USR)
 
 LOG_FAIL_CONNECTION = (
     "homeassistant.components.evohome",
@@ -110,10 +106,10 @@ EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
 )
 
 AUTHENTICATION_TESTS: dict[Exception, list] = {
-    EXC_BAD_CONNECTION: [LOG_HINT_OTH_CREDS, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
-    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_CREDS, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
-    EXC_BAD_GATEWAY: [LOG_HINT_OTH_CREDS, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
-    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_CREDS, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
+    EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
+    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_AUTH, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
+    EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
+    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_AUTH, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
 }
 
 CLIENT_REQUEST_TESTS: dict[Exception, list] = {
@@ -137,7 +133,8 @@ async def test_authentication_failure_v2(
 
     with (
         patch(
-            "evohome.credentials.CredentialsManagerBase._request", side_effect=exception
+            "_evohome.credentials.CredentialsManagerBase._request",
+            side_effect=exception,
         ),
         caplog.at_level(logging.WARNING),
     ):
@@ -165,7 +162,7 @@ async def test_client_request_failure_v2(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
             mock_post_request("default"),
         ),
-        patch("evohome.auth.AbstractAuth._request", side_effect=exception),
+        patch("_evohome.auth.AbstractAuth._request", side_effect=exception),
         caplog.at_level(logging.WARNING),
     ):
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
@@ -187,41 +184,3 @@ async def test_setup(
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_service_refresh_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
-    """Test EvoService.REFRESH_SYSTEM of an evohome system."""
-
-    # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.update") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.REFRESH_SYSTEM,
-            {},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_service_reset_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
-    """Test EvoService.RESET_SYSTEM of an evohome system."""
-
-    # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.RESET_SYSTEM,
-            {},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)

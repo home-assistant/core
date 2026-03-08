@@ -1,7 +1,6 @@
 """Support for Met Éireann weather service."""
 
-import logging
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any, cast
 
 from homeassistant.components.weather import (
@@ -12,7 +11,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -26,13 +24,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import MetEireannWeatherData
 from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import MetEireannConfigEntry, MetEireannUpdateCoordinator
 
 
 def format_condition(condition: str | None) -> str | None:
@@ -46,11 +41,11 @@ def format_condition(condition: str | None) -> str | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MetEireannConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     # Remove hourly entity from legacy config entries
@@ -64,7 +59,7 @@ async def async_setup_entry(
     async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
-def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> str:
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
     """Calculate unique ID."""
     name_appendix = ""
     if hourly:
@@ -73,9 +68,7 @@ def _calculate_unique_id(config: MappingProxyType[str, Any], hourly: bool) -> st
     return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
 
 
-class MetEireannWeather(
-    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
-):
+class MetEireannWeather(SingleCoordinatorWeatherEntity[MetEireannUpdateCoordinator]):
     """Implementation of a Met Éireann weather condition."""
 
     _attr_attribution = "Data provided by Met Éireann"
@@ -89,8 +82,8 @@ class MetEireannWeather(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[MetEireannWeatherData],
-        config: MappingProxyType[str, Any],
+        coordinator: MetEireannUpdateCoordinator,
+        config: Mapping[str, Any],
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
@@ -140,6 +133,16 @@ class MetEireannWeather(
     def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
+
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get("wind_gust")
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get("cloudiness")
 
     def _forecast(self, hourly: bool) -> list[Forecast]:
         """Return the forecast array."""

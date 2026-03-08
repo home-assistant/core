@@ -8,6 +8,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import UPDATE_INTERVAL_DAILY_FORECAST
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     DOMAIN as WEATHER_DOMAIN,
@@ -78,13 +82,13 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     assert mock_accuweather_client.async_get_current_conditions.call_count == 1
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["weather.home"]},
         blocking=True,
     )
@@ -107,21 +111,45 @@ async def test_unsupported_condition_icon_data(
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [SERVICE_GET_FORECASTS],
+    ("forecast_type"),
+    ["daily", "hourly"],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_accuweather_client: AsyncMock,
-    service: str,
+    forecast_type: str,
 ) -> None:
     """Test multiple forecast."""
     await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
+        SERVICE_GET_FORECASTS,
+        {
+            "entity_id": "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+async def test_forecast_daily_missing_average_humidity(
+    hass: HomeAssistant,
+    mock_accuweather_client: AsyncMock,
+) -> None:
+    """Test daily forecast does not crash when average humidity is missing."""
+    mock_accuweather_client.async_get_daily_forecast.return_value[0][
+        "RelativeHumidityDay"
+    ] = {}
+
+    await init_integration(hass)
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": "weather.home",
             "type": "daily",
@@ -129,7 +157,8 @@ async def test_forecast_service(
         blocking=True,
         return_response=True,
     )
-    assert response == snapshot
+
+    assert response["weather.home"]["forecast"][0].get("humidity") is None
 
 
 async def test_forecast_subscription(

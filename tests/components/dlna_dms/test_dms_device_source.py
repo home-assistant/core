@@ -275,7 +275,7 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.url == res_abs_url
@@ -293,7 +293,7 @@ async def test_resolve_media_path(hass: HomeAssistant, dms_device_mock: Mock) ->
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.url == res_abs_url
@@ -351,7 +351,7 @@ async def test_resolve_path_browsed(hass: HomeAssistant, dms_device_mock: Mock) 
             requested_count=1,
         )
         for parent_id, title in zip(
-            ["0"] + object_ids[:-1], path.split("/"), strict=False
+            ["0", *object_ids[:-1]], path.split("/"), strict=False
         )
     ]
     assert result.didl_metadata.id == object_ids[-1]

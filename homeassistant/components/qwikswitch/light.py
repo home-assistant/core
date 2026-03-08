@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH
+from . import DOMAIN
 from .entity import QSToggleEntity
 
 
@@ -21,8 +21,8 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    qsusb = hass.data[QWIKSWITCH]
-    devs = [QSLight(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
+    qsusb = hass.data[DOMAIN]
+    devs = [QSLight(qsid, qsusb) for qsid in discovery_info[DOMAIN]]
     add_entities(devs)
 
 
@@ -30,7 +30,7 @@ class QSLight(QSToggleEntity, LightEntity):
     """Light based on a Qwikswitch relay/dimmer module."""
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
         return self.device.value if self.device.is_dimmer else None
 

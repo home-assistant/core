@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -20,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DOVADO_DOMAIN
+from . import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -90,7 +91,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Dovado sensor platform."""
-    dovado = hass.data[DOVADO_DOMAIN]
+    dovado = hass.data[DOMAIN]
 
     sensors = config[CONF_SENSORS]
     entities = [
@@ -138,6 +139,6 @@ class DovadoSensor(SensorEntity):
         self._attr_native_value = self._compute_state()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {k: v for k, v in self._data.state.items() if k not in ["date", "time"]}

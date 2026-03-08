@@ -9,11 +9,19 @@ from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
 from time import time
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    MetaData,
+    Table,
+    cast as cast_,
+    func,
+    text,
+    update,
+)
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -26,8 +34,9 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import and_, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.types import BINARY
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -52,6 +61,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
@@ -80,7 +90,7 @@ from .db_schema import (
     StatisticsRuns,
     StatisticsShortTerm,
 )
-from .models import process_timestamp
+from .models import StatisticMeanType, process_timestamp
 from .models.time import datetime_to_timestamp_or_none
 from .queries import (
     batch_cleanup_entity_ids,
@@ -102,7 +112,11 @@ from .queries import (
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import cleanup_statistics_timestamp_migration, get_start_time
+from .statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    cleanup_statistics_timestamp_migration,
+    get_start_time,
+)
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
@@ -116,10 +130,10 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-# Live schema migration supported starting from schema version 42 or newer
-# Schema version 41 was introduced in HA Core 2023.4
-# Schema version 42 was introduced in HA Core 2023.11
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+# Live schema migration supported starting from schema version 48 or newer
+# Schema version 47 was introduced in HA Core 2024.9
+# Schema version 48 was introduced in HA Core 2025.1
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 48
 
 MIGRATION_NOTE_OFFLINE = (
     "Note: this may take several hours on large databases and slow machines. "
@@ -143,24 +157,32 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
+    small_int_type: str
+    double_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
+    small_int_type="SMALLINT",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
+    small_int_type="INTEGER",
+    double_type="FLOAT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -631,7 +653,7 @@ def _add_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError, ProgrammingError):
+        except InternalError, OperationalError, ProgrammingError:
             # Some engines support adding all columns at once,
             # this error is when they don't
             _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
@@ -694,7 +716,7 @@ def _modify_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
         else:
             return
@@ -704,11 +726,16 @@ def _modify_columns(
             try:
                 connection = session.connection()
                 connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
                 raise
+
+
+class _FKAlterDict(TypedDict):
+    old_fk: ForeignKeyConstraint
+    columns: list[str]
 
 
 def _update_states_table_with_foreign_key_options(
@@ -728,7 +755,7 @@ def _update_states_table_with_foreign_key_options(
 
     inspector = sqlalchemy.inspect(engine)
     tmp_states_table = Table(TABLE_STATES, MetaData())
-    alters = [
+    alters: list[_FKAlterDict] = [
         {
             "old_fk": ForeignKeyConstraint(
                 (), (), name=foreign_key["name"], table=tmp_states_table
@@ -754,17 +781,17 @@ def _update_states_table_with_foreign_key_options(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(alter["old_fk"]))  # type: ignore[no-untyped-call]
+                connection.execute(DropConstraint(alter["old_fk"]))
                 for fkc in states_key_constraints:
                     if fkc.column_keys == alter["columns"]:
                         # AddConstraint mutates the constraint passed to it, we need to
                         # undo that to avoid changing the behavior of the table schema.
                         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
                         create_rule = fkc._create_rule  # noqa: SLF001
-                        add_constraint = AddConstraint(fkc)  # type: ignore[no-untyped-call]
+                        add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
@@ -799,8 +826,8 @@ def _drop_foreign_key_constraints(
         with session_scope(session=session_maker()) as session:
             try:
                 connection = session.connection()
-                connection.execute(DropConstraint(drop))  # type: ignore[no-untyped-call]
-            except (InternalError, OperationalError):
+                connection.execute(DropConstraint(drop))
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
@@ -844,7 +871,7 @@ def _restore_foreign_key_constraints(
         # undo that to avoid changing the behavior of the table schema.
         # https://github.com/sqlalchemy/sqlalchemy/blob/96f1172812f858fead45cdc7874abac76f45b339/lib/sqlalchemy/sql/ddl.py#L746-L748
         create_rule = constraint._create_rule  # noqa: SLF001
-        add_constraint = AddConstraint(constraint)  # type: ignore[no-untyped-call]
+        add_constraint = AddConstraint(constraint)
         constraint._create_rule = create_rule  # noqa: SLF001
         try:
             _add_constraint(session_maker, add_constraint, table, column)
@@ -880,7 +907,7 @@ def _add_constraint(
         try:
             connection = session.connection()
             connection.execute(add_constraint)
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.exception("Could not update foreign options in %s table", table)
             raise
 
@@ -1334,7 +1361,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
 class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of the statistic_meta table
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
@@ -1987,6 +2014,134 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
 
 
+class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        _add_columns(
+            self.session_maker,
+            "statistics_meta",
+            [
+                f"mean_type {self.column_types.small_int_type} NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
+            ],
+        )
+
+        for table in ("statistics", "statistics_short_term"):
+            _add_columns(
+                self.session_maker,
+                table,
+                [f"mean_weight {self.column_types.double_type}"],
+            )
+
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text(
+                    "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
+                ),
+                {"mean_type": StatisticMeanType.ARITHMETIC.value},
+            )
+
+
+class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
+
+
+class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Replaced with version 52 which corrects issues with MySQL string comparisons.
+
+
+class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            self._apply_update_mysql()
+        else:
+            self._apply_update_postgresql_sqlite()
+
+    def _apply_update_mysql(self) -> None:
+        """Version specific update method for mysql."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                case_sensitive_units = {
+                    u.encode("utf-8") if u else u for u in conv.VALID_UNITS
+                }
+                # Reset unit_class to None for entries that do not match
+                # the valid units (case sensitive) but matched before due to
+                # case insensitive comparisons.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).not_in(
+                                case_sensitive_units
+                            ),
+                        )
+                    )
+                    .values(unit_class=None)
+                )
+                # Do an explicitly case sensitive match (actually binary) to set the
+                # correct unit_class. This is needed because we use the case sensitive
+                # utf8mb4_unicode_ci collation.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(
+                                case_sensitive_units
+                            ),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+    def _apply_update_postgresql_sqlite(self) -> None:
+        """Version specific update method for postgresql and sqlite."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                # Set the correct unit_class. Unlike MySQL, Postgres and SQLite
+                # have case sensitive string comparisons by default, so we
+                # can directly match on the valid units.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+
+class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Try to change the character set of events, states and statistics_meta tables
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            for table in (
+                "events",
+                "event_data",
+                "states",
+                "state_attributes",
+                "statistics",
+                "statistics_meta",
+                "statistics_short_term",
+            ):
+                _correct_table_character_set_and_collation(table, self.session_maker)
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2029,8 +2184,10 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. %s",
+        "Updating table %s to character set %s and collation %s. %s",
         table,
+        MYSQL_DEFAULT_CHARSET,
+        MYSQL_COLLATE,
         MIGRATION_NOTE_MINUTES,
     )
     with (
@@ -2440,7 +2597,7 @@ class BaseMigration(ABC):
         start_schema_version: int,
         migration_changes: dict[str, int],
     ) -> None:
-        """Initialize a new BaseRunTimeMigration.
+        """Initialize a new BaseMigration.
 
         :param initial_schema_version: The schema version the database was created with.
         :param start_schema_version: The schema version when starting the migration.
@@ -2490,9 +2647,10 @@ class BaseMigration(ABC):
         if self.initial_schema_version > self.max_initial_schema_version:
             _LOGGER.debug(
                 "Data migration '%s' not needed, database created with version %s "
-                "after migrator was added",
+                "after migrator was added in version %s",
                 self.migration_id,
                 self.initial_schema_version,
+                self.max_initial_schema_version,
             )
             return False
         if self.start_schema_version < self.required_schema_version:
@@ -2868,7 +3026,14 @@ class EventIDPostMigration(BaseRunTimeMigration):
     """Migration to remove old event_id index from states."""
 
     migration_id = "event_id_post_migration"
-    max_initial_schema_version = LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION - 1
+    # Note we don't subtract 1 from the max_initial_schema_version
+    # in this case because we need to run this migration on databases
+    # version >= 43 because the schema was not bumped when the table
+    # rebuild was added in
+    # https://github.com/home-assistant/core/pull/120779
+    # which means its only safe to assume version 44 and later
+    # do not need the table rebuild
+    max_initial_schema_version = LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION
     task = MigrationTask
     migration_version = 2
 
@@ -2906,7 +3071,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True

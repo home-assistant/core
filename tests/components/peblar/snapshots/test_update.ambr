@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Customization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Customization',
     'platform': 'peblar',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'customization',
     'unique_id': '23-45-A4O-MOF_customization',
@@ -38,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'entity_picture': '/api/brands/integration/peblar/icon.png',
       'friendly_name': 'Peblar EV Charger Customization',
       'in_progress': False,
       'installed_version': 'Peblar-1.9',
@@ -79,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -86,6 +89,7 @@
     'original_name': 'Firmware',
     'platform': 'peblar',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '23-45-A4O-MOF_firmware',
@@ -98,7 +102,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/peblar/icon.png',
+      'entity_picture': '/api/brands/integration/peblar/icon.png',
       'friendly_name': 'Peblar EV Charger Firmware',
       'in_progress': False,
       'installed_version': '1.6.1+1+WL-1',

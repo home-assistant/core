@@ -6,8 +6,8 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 import requests
 import voluptuous as vol
 

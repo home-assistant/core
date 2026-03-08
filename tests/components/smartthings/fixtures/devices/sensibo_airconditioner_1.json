@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "deviceId": "bf4b1167-48a3-4af7-9186-0900a678ffa5",
+      "name": "sensibo-airconditioner-1",
+      "label": "Office",
+      "manufacturerName": "0ABU",
+      "presentationId": "sensibo-airconditioner-1",
+      "deviceManufacturerCode": "Sensibo",
+      "locationId": "fe14085e-bacb-4997-bc0c-df08204eaea2",
+      "ownerId": "49228038-22ca-1c78-d7ab-b774b4569480",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "thermostatCoolingSetpoint",
+              "version": 1
+            },
+            {
+              "id": "airConditionerMode",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirConditioner",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-12-04T10:10:02.873Z",
+      "profile": {
+        "id": "ddaffb28-8ebb-4bd6-9d6f-57c28dcb434d"
+      },
+      "viper": {
+        "manufacturerName": "Sensibo",
+        "modelName": "skyplus",
+        "swVersion": "SKY40147",
+        "hwVersion": "SKY40147",
+        "endpointAppId": "viper_5661d200-806e-11e9-abe0-3b2f83c8954c"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

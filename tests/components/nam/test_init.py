@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
+from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_DOMAIN
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -44,27 +44,6 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_not_ready_while_checking_credentials(hass: HomeAssistant) -> None:
-    """Test for setup failure if the connection fails while checking credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="10.10.2.3",
-        unique_id="aa:bb:cc:dd:ee:ff",
-        data={"host": "10.10.2.3"},
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
-        patch(
-            "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
-            side_effect=ApiError("API Error"),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_config_auth_failed(hass: HomeAssistant) -> None:
     """Test for setup failure if the auth fails."""
     entry = MockConfigEntry(
@@ -76,7 +55,7 @@ async def test_config_auth_failed(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
+        "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
         side_effect=AuthFailedError("Authorization has failed"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -102,7 +81,7 @@ async def test_remove_air_quality_entities(
 ) -> None:
     """Test remove air_quality entities from registry."""
     entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
+        AIR_QUALITY_DOMAIN,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sds011",
         suggested_object_id="nettigo_air_monitor_sds011",
@@ -110,7 +89,7 @@ async def test_remove_air_quality_entities(
     )
 
     entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
+        AIR_QUALITY_DOMAIN,
         DOMAIN,
         "aa:bb:cc:dd:ee:ff-sps30",
         suggested_object_id="nettigo_air_monitor_sps30",

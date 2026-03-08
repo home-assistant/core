@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -31,6 +32,7 @@
     'original_name': None,
     'platform': 'spotify',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 444983>,
     'translation_key': 'spotify',
     'unique_id': '1112264111',
@@ -94,6 +96,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -101,6 +104,7 @@
     'original_name': None,
     'platform': 'spotify',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <MediaPlayerEntityFeature: 2048>,
     'translation_key': 'spotify',
     'unique_id': '1112264111',
@@ -112,8 +116,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
       'friendly_name': 'Spotify spotify_1',
-      'media_album_name': 'Safety Third',
-      'media_artist': 'Safety Third ',
+      'media_artist': 'Safety Third',
       'media_content_id': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
       'media_content_type': <MediaType.PODCAST: 'podcast'>,
       'media_duration': 3690,

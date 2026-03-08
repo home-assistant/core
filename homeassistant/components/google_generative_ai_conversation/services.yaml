@@ -5,7 +5,8 @@ generate_content:
       selector:
         text:
           multiline: true
-    image_filename:
+    filenames:
       required: false
       selector:
-        object:
+        text:
+          multiple: true

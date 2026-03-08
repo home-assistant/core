@@ -1,5 +1,7 @@
 """Hue sensor entities."""
 
+from typing import Any
+
 from aiohue.v1.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
     TYPE_ZLL_ROTARY,
@@ -13,8 +15,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from ..const import DOMAIN as HUE_DOMAIN
+from ..bridge import HueConfigEntry
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
@@ -22,9 +26,13 @@ REMOTE_NAME_FORMAT = "{} battery level"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
-    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
 
     if not bridge.sensor_manager:
         return
@@ -58,7 +66,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes
         attributes.update(

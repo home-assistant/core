@@ -1,5 +1,7 @@
 """Support for Smart Meter Texas sensors."""
 
+from typing import Any
+
 from smart_meter_texas import Meter
 
 from homeassistant.components.sensor import (
@@ -12,10 +14,7 @@ from homeassistant.const import CONF_ADDRESS, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DATA_COORDINATOR,
@@ -25,6 +24,7 @@ from .const import (
     ESIID,
     METER_NUMBER,
 )
+from .coordinator import SmartMeterTexasCoordinator
 
 
 async def async_setup_entry(
@@ -42,7 +42,9 @@ async def async_setup_entry(
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class SmartMeterTexasSensor(
+    CoordinatorEntity[SmartMeterTexasCoordinator], RestoreEntity, SensorEntity
+):
     """Representation of an Smart Meter Texas sensor."""
 
     _attr_device_class = SensorDeviceClass.ENERGY
@@ -50,7 +52,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_available = False
 
-    def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, meter: Meter, coordinator: SmartMeterTexasCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.meter = meter
@@ -58,7 +60,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         self._attr_unique_id = f"{meter.esiid}_{meter.meter}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {
             METER_NUMBER: self.meter.meter,
@@ -67,17 +69,16 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         }
 
     @callback
-    def _state_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Call when the coordinator has an update."""
         self._attr_available = self.coordinator.last_update_success
         if self._attr_available:
             self._attr_native_value = self.meter.reading
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()
-        self.async_on_remove(self.coordinator.async_add_listener(self._state_update))
 
         # If the background update finished before
         # we added the entity, there is no need to restore

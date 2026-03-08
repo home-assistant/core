@@ -1,0 +1,52 @@
+{
+  "locationId": "2727366",
+  "gateways": [
+    {
+      "gatewayId": "2513794",
+      "temperatureControlSystems": [
+        {
+          "systemId": "3454856",
+          "zones": [
+            {
+              "zoneId": "3454854",
+              "temperatureStatus": {
+                "temperature": 22.0,
+                "isAvailable": true
+              },
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneSensorCommunicationLost",
+                  "since": "2025-02-06T11:20:29"
+                }
+              ],
+              "setpointStatus": {
+                "targetHeatTemperature": 5.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Thermostat"
+            },
+            {
+              "zoneId": "3454855",
+              "temperatureStatus": {
+                "temperature": 22.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 20.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Thermostat 2"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": {
+            "mode": "Auto",
+            "isPermanent": true
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

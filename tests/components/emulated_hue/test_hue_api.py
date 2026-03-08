@@ -103,6 +103,7 @@ ENTITY_IDS_BY_NUMBER = {
     "26": "light.living_room_rgbww_lights",
     "27": "media_player.group",
     "28": "media_player.browse",
+    "29": "media_player.search",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -813,7 +814,9 @@ async def test_put_light_state(
 
     # mock light.turn_on call
     attributes = hass.states.get("light.ceiling_lights").attributes
-    supported_features = attributes[ATTR_SUPPORTED_FEATURES] | light.SUPPORT_TRANSITION
+    supported_features = (
+        attributes[ATTR_SUPPORTED_FEATURES] | light.LightEntityFeature.TRANSITION
+    )
     attributes = {**attributes, ATTR_SUPPORTED_FEATURES: supported_features}
     hass.states.async_set("light.ceiling_lights", STATE_ON, attributes)
     call_turn_on = async_mock_service(hass, "light", "turn_on")
@@ -1793,11 +1796,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 
@@ -1821,11 +1824,11 @@ async def test_get_light_state_when_none(
             light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
-                light.COLOR_MODE_COLOR_TEMP,
-                light.COLOR_MODE_HS,
-                light.COLOR_MODE_XY,
+                light.ColorMode.COLOR_TEMP,
+                light.ColorMode.HS,
+                light.ColorMode.XY,
             ],
-            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+            light.ATTR_COLOR_MODE: light.ColorMode.XY,
         },
     )
 

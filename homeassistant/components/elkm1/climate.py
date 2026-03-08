@@ -20,10 +20,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from . import ElkM1ConfigEntry
-from .const import DOMAIN
 from .entity import ElkEntity, create_elk_entities
 
 SUPPORT_HVAC = [
@@ -78,7 +76,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
         ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.AUX_HEAT
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
@@ -129,11 +126,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         return self._element.humidity
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Return if aux heater is on."""
-        return self._element.mode == ThermostatMode.EMERGENCY_HEAT
-
-    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self._element.fan is None:
@@ -150,34 +142,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
         """Set thermostat operation mode."""
         thermostat_mode, fan_mode = HASS_TO_ELK_HVAC_MODES[hvac_mode]
         self._elk_set(thermostat_mode, fan_mode)
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._elk_set(ThermostatMode.EMERGENCY_HEAT, None)
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        self._elk_set(ThermostatMode.HEAT, None)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

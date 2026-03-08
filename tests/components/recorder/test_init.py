@@ -77,6 +77,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     recorder as recorder_helper,
 )
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -89,6 +90,10 @@ from .common import (
     async_wait_recording_done,
     convert_pending_states_to_meta,
     corrupt_db_file,
+    db_event_data_to_native,
+    db_event_to_native,
+    db_state_attributes_to_native,
+    db_state_to_native,
     run_information_with_session,
 )
 
@@ -280,8 +285,8 @@ async def test_saving_state(hass: HomeAssistant, setup_recorder: None) -> None:
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
-            state = db_state.to_native()
-            state.attributes = db_state_attributes.to_native()
+            state = db_state_to_native(db_state)
+            state.attributes = db_state_attributes_to_native(db_state_attributes)
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
@@ -322,8 +327,8 @@ async def test_saving_state_with_nul(
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
-            state = db_state.to_native()
-            state.attributes = db_state_attributes.to_native()
+            state = db_state_to_native(db_state)
+            state.attributes = db_state_attributes_to_native(db_state_attributes)
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
@@ -542,8 +547,8 @@ async def test_saving_event(hass: HomeAssistant, setup_recorder: None) -> None:
             event_data = cast(EventData, event_data)
             event_types = cast(EventTypes, event_types)
 
-            native_event = select_event.to_native()
-            native_event.data = event_data.to_native()
+            native_event = db_event_to_native(select_event)
+            native_event.data = db_event_data_to_native(event_data)
             native_event.event_type = event_types.event_type
             events.append(native_event)
 
@@ -598,8 +603,8 @@ async def _add_entities(hass: HomeAssistant, entity_ids: list[str]) -> list[Stat
             .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
             db_state.entity_id = states_meta.entity_id
-            native_state = db_state.to_native()
-            native_state.attributes = db_state_attributes.to_native()
+            native_state = db_state_to_native(db_state)
+            native_state.attributes = db_state_attributes_to_native(db_state_attributes)
             states.append(native_state)
         convert_pending_states_to_meta(get_instance(hass), session)
         return states
@@ -705,9 +710,9 @@ async def test_saving_event_exclude_event_type(
                 event_data = cast(EventData, event_data)
                 event_types = cast(EventTypes, event_types)
 
-                native_event = event.to_native()
+                native_event = db_event_to_native(event)
                 if event_data:
-                    native_event.data = event_data.to_native()
+                    native_event.data = db_event_data_to_native(event_data)
                 native_event.event_type = event_types.event_type
                 events.append(native_event)
             return events
@@ -877,8 +882,8 @@ async def test_saving_state_with_oversized_attributes(
             .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
         ):
             db_state.entity_id = states_meta.entity_id
-            native_state = db_state.to_native()
-            native_state.attributes = db_state_attributes.to_native()
+            native_state = db_state_to_native(db_state)
+            native_state.attributes = db_state_attributes_to_native(db_state_attributes)
             states.append(native_state)
 
     assert "switch.too_big" in caplog.text
@@ -1574,8 +1579,8 @@ async def test_service_disable_events_not_recording(
             event_data = cast(EventData, event_data)
             event_types = cast(EventTypes, event_types)
 
-            native_event = select_event.to_native()
-            native_event.data = event_data.to_native()
+            native_event = db_event_to_native(select_event)
+            native_event.data = db_event_data_to_native(event_data)
             native_event.event_type = event_types.event_type
             db_events.append(native_event)
 
@@ -1625,7 +1630,7 @@ async def test_service_disable_states_not_recording(
         assert db_states[0].event_id is None
         db_states[0].entity_id = "test.two"
         assert (
-            db_states[0].to_native().as_dict()
+            db_state_to_native(db_states[0]).as_dict()
             == _state_with_context(hass, "test.two").as_dict()
         )
 
@@ -1685,12 +1690,11 @@ class CannotSerializeMe:
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("recorder_mock", "skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 0}])
 async def test_database_corruption_while_running(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -1744,7 +1748,7 @@ async def test_database_corruption_while_running(
             assert len(db_states) == 1
             db_states[0].entity_id = "test.two"
             assert db_states[0].event_id is None
-            return db_states[0].to_native()
+            return db_state_to_native(db_states[0])
 
     state = await instance.async_add_executor_job(_get_last_state)
     assert state.entity_id == "test.two"
@@ -2427,8 +2431,8 @@ async def test_excluding_attributes_by_integration(
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
-            state = db_state.to_native()
-            state.attributes = db_state_attributes.to_native()
+            state = db_state_to_native(db_state)
+            state.attributes = db_state_attributes_to_native(db_state_attributes)
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
@@ -2487,8 +2491,8 @@ async def test_excluding_all_attributes_by_integration(
         ):
             db_state.entity_id = states_meta.entity_id
             db_states.append(db_state)
-            state = db_state.to_native()
-            state.attributes = db_state_attributes.to_native()
+            state = db_state_to_native(db_state)
+            state.attributes = db_state_attributes_to_native(db_state_attributes)
         assert len(db_states) == 1
         assert db_states[0].event_id is None
 
@@ -2691,7 +2695,7 @@ async def test_events_are_recorded_until_final_write(
                 select_event = cast(Events, select_event)
                 event_types = cast(EventTypes, event_types)
 
-                native_event = select_event.to_native()
+                native_event = db_event_to_native(select_event)
                 native_event.event_type = event_types.event_type
                 events.append(native_event)
 
@@ -2798,3 +2802,22 @@ async def test_empty_entity_id(
     hass.bus.async_fire("hello", {"entity_id": ""})
     await async_wait_recording_done(hass)
     assert "Invalid entity ID" not in caplog.text
+
+
+async def test_setting_up_recorder_fails_entity_registry_listener(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test recorder setup fails if an entity registry listener is in place."""
+    async_track_entity_registry_updated_event(hass, "test.test", lambda x: x)
+    recorder_helper.async_initialize_recorder(hass)
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True):
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {recorder.DOMAIN: {recorder.CONF_DB_URL: "sqlite://"}},
+        )
+        await hass.async_block_till_done()
+    assert (
+        "The recorder entity registry listener must be installed before "
+        "async_track_entity_registry_updated_event is called" in caplog.text
+    )

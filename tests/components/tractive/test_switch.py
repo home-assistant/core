@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from aiotractive.exceptions import TractiveError
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -12,6 +12,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -221,6 +222,45 @@ async def test_switch_off_with_exception(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_switch_unavailable(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the switch is navailable when the tracker is in the energy saving zone."""
+    entity_id = "switch.test_pet_tracker_buzzer"
+
+    await init_integration(hass, mock_config_entry)
+
+    mock_tractive_client.send_switch_event(mock_config_entry)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    event = {
+        "tracker_id": "device_id_123",
+        "buzzer_control": {"active": True},
+        "led_control": {"active": False},
+        "live_tracking": {"active": True},
+        "tracker_state_reason": "POWER_SAVING",
+    }
+    mock_tractive_client.send_switch_event(mock_config_entry, event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_tractive_client.send_switch_event(mock_config_entry)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

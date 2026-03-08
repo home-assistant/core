@@ -19,7 +19,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
-    CONF_APP_TYPE,
     CONF_ENDPOINT,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
@@ -45,13 +44,9 @@ class HomeAssistantTuyaData(NamedTuple):
     listener: SharingDeviceListener
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
-    """Async setup hass config entry."""
-    if CONF_APP_TYPE in entry.data:
-        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
-
-    token_listener = TokenListener(hass, entry)
-    manager = Manager(
+def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Manager:
+    """Create a Tuya Manager instance."""
+    return Manager(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
@@ -59,6 +54,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         entry.data[CONF_TOKEN_INFO],
         token_listener,
     )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
+    """Async setup hass config entry."""
+    token_listener = TokenListener(hass, entry)
+
+    # Move to executor as it makes blocking call to import_module
+    # with args ('.system', 'urllib3.contrib.resolver')
+    manager = await hass.async_add_executor_job(_create_manager, entry, token_listener)
 
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
@@ -78,16 +82,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     entry.runtime_data = HomeAssistantTuyaData(manager=manager, listener=listener)
 
     # Cleanup device registry
-    await cleanup_device_registry(hass, manager)
+    await cleanup_device_registry(hass, manager, entry)
 
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
+        LOGGER.debug(
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
             model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
         )
@@ -99,13 +114,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     return True
 
 
-async def cleanup_device_registry(hass: HomeAssistant, device_manager: Manager) -> None:
-    """Remove deleted device registry entry if there are no remaining entities."""
+async def cleanup_device_registry(
+    hass: HomeAssistant, device_manager: Manager, entry: TuyaConfigEntry
+) -> None:
+    """Unlink device registry entry if there are no remaining entities."""
     device_registry = dr.async_get(hass)
-    for dev_id, device_entry in list(device_registry.devices.items()):
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
         for item in device_entry.identifiers:
             if item[0] == DOMAIN and item[1] not in device_manager.device_map:
-                device_registry.async_remove_device(dev_id)
+                device_registry.async_update_device(
+                    device_entry.id, remove_config_entry_id=entry.entry_id
+                )
                 break
 
 
@@ -147,25 +168,41 @@ class DeviceListener(SharingDeviceListener):
         self.manager = manager
 
     def update_device(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None = None,
+        dp_timestamps: dict[str, int] | None = None,
     ) -> None:
-        """Update device status."""
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s)",
+            "Received update for device %s (online: %s): %s"
+            " (updated properties: %s, dp_timestamps: %s)",
             device.id,
-            self.manager.device_map[device.id].status,
+            device.online,
+            device.status,
             updated_status_properties,
+            dp_timestamps,
         )
         dispatcher_send(
             self.hass,
             f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
             updated_status_properties,
+            dp_timestamps,
         )
 
     def add_device(self, device: CustomerDevice) -> None:
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
+
+        LOGGER.debug(
+            "Add device %s (online: %s): %s (function: %s, status range: %s)",
+            device.id,
+            device.online,
+            device.status,
+            device.function,
+            device.status_range,
+        )
 
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 

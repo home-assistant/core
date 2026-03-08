@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -27,6 +28,7 @@
     'original_name': 'Bedroom Socket',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_27',
@@ -76,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -83,6 +86,7 @@
     'original_name': 'Kitchen Socket',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_28',
@@ -132,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study Socket',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -139,6 +144,7 @@
     'original_name': 'Study Socket',
     'platform': 'geniushub',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01J71MQF0EC62D620DGYNG2R8H_zone_32',

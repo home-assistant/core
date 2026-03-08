@@ -2,21 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import datetime
 import logging
+from typing import Any
 
-from googlemaps import Client
-from googlemaps.distance_matrix import distance_matrix
-from googlemaps.exceptions import ApiError, Timeout, TransportError
+from google.api_core.client_options import ClientOptions
+from google.api_core.exceptions import GoogleAPIError, PermissionDenied
+from google.maps.routing_v2 import Route, RoutesAsyncClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
+    CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     UnitOfTime,
@@ -25,31 +29,42 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
     CONF_ARRIVAL_TIME,
+    CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_TRAFFIC_MODEL,
+    CONF_TRANSIT_MODE,
+    CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
+    TRAVEL_MODES_TO_GOOGLE_SDK_ENUM,
+)
+from .helpers import (
+    async_compute_routes,
+    create_routes_api_disabled_issue,
+    delete_routes_api_disabled_issue,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = datetime.timedelta(minutes=10)
+FIELD_MASK = "routes.duration,routes.localized_values"
 
-
-def convert_time_to_utc(timestr):
-    """Take a string like 08:00:00 and convert it to a unix timestamp."""
-    combined = datetime.combine(
-        dt_util.start_of_local_day(), dt_util.parse_time(timestr)
+SENSOR_DESCRIPTIONS = [
+    SensorEntityDescription(
+        key="duration",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     )
-    if combined < datetime.now():
-        combined = combined + timedelta(days=1)
-    return dt_util.as_timestamp(combined)
+]
 
 
 async def async_setup_entry(
@@ -63,25 +78,36 @@ async def async_setup_entry(
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
-    client = Client(api_key, timeout=10)
+    client_options = ClientOptions(api_key=api_key)
+    client = RoutesAsyncClient(client_options=client_options)
 
-    sensor = GoogleTravelTimeSensor(
-        config_entry, name, api_key, origin, destination, client
-    )
+    sensors = [
+        GoogleTravelTimeSensor(
+            config_entry, name, api_key, origin, destination, client, sensor_description
+        )
+        for sensor_description in SENSOR_DESCRIPTIONS
+    ]
 
-    async_add_entities([sensor], False)
+    async_add_entities(sensors, False)
 
 
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry, name, api_key, origin, destination, client):
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        name: str,
+        api_key: str,
+        origin: str,
+        destination: str,
+        client: RoutesAsyncClient,
+        sensor_description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
+        self.entity_description = sensor_description
         self._attr_name = name
         self._attr_unique_id = config_entry.entry_id
         self._attr_device_info = DeviceInfo(
@@ -91,13 +117,12 @@ class GoogleTravelTimeSensor(SensorEntity):
         )
 
         self._config_entry = config_entry
-        self._matrix = None
-        self._api_key = api_key
+        self._route: Route | None = None
         self._client = client
         self._origin = origin
         self._destination = destination
-        self._resolved_origin = None
-        self._resolved_destination = None
+        self._resolved_origin: str | None = None
+        self._resolved_destination: str | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
@@ -109,64 +134,41 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self._matrix is None:
+        if self._route is None:
             return None
 
-        _data = self._matrix["rows"][0]["elements"][0]
-        if "duration_in_traffic" in _data:
-            return round(_data["duration_in_traffic"]["value"] / 60)
-        if "duration" in _data:
-            return round(_data["duration"]["value"] / 60)
-        return None
+        return self._route.duration.seconds
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        if self._matrix is None:
+        if self._route is None:
             return None
 
-        res = self._matrix.copy()
-        options = self._config_entry.options.copy()
-        res.update(options)
-        del res["rows"]
-        _data = self._matrix["rows"][0]["elements"][0]
-        if "duration_in_traffic" in _data:
-            res["duration_in_traffic"] = _data["duration_in_traffic"]["text"]
-        if "duration" in _data:
-            res["duration"] = _data["duration"]["text"]
-        if "distance" in _data:
-            res["distance"] = _data["distance"]["text"]
-        res["origin"] = self._resolved_origin
-        res["destination"] = self._resolved_destination
-        return res
+        result = self._config_entry.options.copy()
+        result["duration_in_traffic"] = self._route.localized_values.duration.text
+        result["duration"] = self._route.localized_values.static_duration.text
+        result["distance"] = self._route.localized_values.distance.text
 
-    async def first_update(self, _=None):
+        result["origin"] = self._resolved_origin
+        result["destination"] = self._resolved_destination
+        return result
+
+    async def first_update(self, _=None) -> None:
         """Run the first update and write the state."""
-        await self.hass.async_add_executor_job(self.update)
+        await self.async_update()
         self.async_write_ha_state()
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data from Google."""
-        options_copy = self._config_entry.options.copy()
-        dtime = options_copy.get(CONF_DEPARTURE_TIME)
-        atime = options_copy.get(CONF_ARRIVAL_TIME)
-        if dtime is not None and ":" in dtime:
-            options_copy[CONF_DEPARTURE_TIME] = convert_time_to_utc(dtime)
-        elif dtime is not None:
-            options_copy[CONF_DEPARTURE_TIME] = dtime
-        elif atime is None:
-            options_copy[CONF_DEPARTURE_TIME] = "now"
-
-        if atime is not None and ":" in atime:
-            options_copy[CONF_ARRIVAL_TIME] = convert_time_to_utc(atime)
-        elif atime is not None:
-            options_copy[CONF_ARRIVAL_TIME] = atime
+        travel_mode = TRAVEL_MODES_TO_GOOGLE_SDK_ENUM[
+            self._config_entry.options[CONF_MODE]
+        ]
 
         self._resolved_origin = find_coordinates(self.hass, self._origin)
         self._resolved_destination = find_coordinates(self.hass, self._destination)
-
         _LOGGER.debug(
             "Getting update for origin: %s destination: %s",
             self._resolved_origin,
@@ -174,12 +176,32 @@ class GoogleTravelTimeSensor(SensorEntity):
         )
         if self._resolved_destination is not None and self._resolved_origin is not None:
             try:
-                self._matrix = distance_matrix(
-                    self._client,
-                    self._resolved_origin,
-                    self._resolved_destination,
-                    **options_copy,
+                response = await async_compute_routes(
+                    client=self._client,
+                    origin=self._resolved_origin,
+                    destination=self._resolved_destination,
+                    hass=self.hass,
+                    travel_mode=travel_mode,
+                    units=self._config_entry.options[CONF_UNITS],
+                    language=self._config_entry.options.get(CONF_LANGUAGE),
+                    avoid=self._config_entry.options.get(CONF_AVOID),
+                    traffic_model=self._config_entry.options.get(CONF_TRAFFIC_MODEL),
+                    transit_mode=self._config_entry.options.get(CONF_TRANSIT_MODE),
+                    transit_routing_preference=self._config_entry.options.get(
+                        CONF_TRANSIT_ROUTING_PREFERENCE
+                    ),
+                    departure_time=self._config_entry.options.get(CONF_DEPARTURE_TIME),
+                    arrival_time=self._config_entry.options.get(CONF_ARRIVAL_TIME),
+                    field_mask=FIELD_MASK,
                 )
-            except (ApiError, TransportError, Timeout) as ex:
+                _LOGGER.debug("Received response: %s", response)
+                if response is not None and len(response.routes) > 0:
+                    self._route = response.routes[0]
+                delete_routes_api_disabled_issue(self.hass, self._config_entry)
+            except PermissionDenied:
+                _LOGGER.error("Routes API is disabled for this API key")
+                create_routes_api_disabled_issue(self.hass, self._config_entry)
+                self._route = None
+            except GoogleAPIError as ex:
                 _LOGGER.error("Error getting travel time: %s", ex)
-                self._matrix = None
+                self._route = None

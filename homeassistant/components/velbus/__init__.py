@@ -19,8 +19,8 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
-from .services import setup_services
+from .const import CONF_VLP_FILE, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,20 +91,24 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions for the Velbus component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bool:
     """Establish connection with velbus."""
     controller = Velbus(
-        entry.data[CONF_PORT],
+        dsn=entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
+        vlp_file=entry.data.get(CONF_VLP_FILE),
     )
     try:
         await controller.connect()
     except VelbusConnectionFailed as error:
-        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from error
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
@@ -135,15 +139,41 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-    cache_path = hass.config.path(STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/")
-    if config_entry.version == 1:
-        # This is the config entry migration for adding the new program selection
+    _LOGGER.error(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
+
+    # This is the config entry migration for swapping the usb unique id to the serial number
+    # migrate from 2.1 to 2.2
+    if (
+        config_entry.version < 3
+        and config_entry.minor_version == 1
+        and config_entry.unique_id is not None
+    ):
+        # not all velbus devices have a unique id, so handle this correctly
+        parts = config_entry.unique_id.split("_")
+        # old one should have 4 item
+        if len(parts) == 4:
+            hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
+
+    # This is the config entry migration for adding the new program selection
+    # migrate from < 2 to 2.1
+    # This is the config entry migration for adding the new properties
+    # migrate from < 3 to 3.2
+    if config_entry.version < 3:
         # clean the velbusCache
+        cache_path = hass.config.path(
+            STORAGE_DIR, f"velbuscache-{config_entry.entry_id}/"
+        )
         if os.path.isdir(cache_path):
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
-        # set the new version
-        hass.config_entries.async_update_entry(config_entry, version=2)
 
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+    # update the config entry
+    hass.config_entries.async_update_entry(config_entry, version=3, minor_version=2)
+
+    _LOGGER.error(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True

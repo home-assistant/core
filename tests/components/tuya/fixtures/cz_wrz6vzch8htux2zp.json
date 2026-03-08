@@ -1,0 +1,168 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Elivco TV",
+  "category": "cz",
+  "product_id": "wrz6vzch8htux2zp",
+  "product_name": "WiFi Plug",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-02-20T12:10:18+00:00",
+  "create_time": "2023-02-20T12:10:18+00:00",
+  "update_time": "2023-02-20T12:10:18+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    },
+    "overcharge_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["relay", "pos", "none"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 50000,
+        "scale": 3,
+        "step": 100
+      }
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "mA",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cur_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 80000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": {
+        "unit": "V",
+        "min": 0,
+        "max": 5000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    },
+    "overcharge_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["relay", "pos", "none"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "countdown_1": 0,
+    "add_ele": 6,
+    "cur_current": 91,
+    "cur_power": 100,
+    "cur_voltage": 2377,
+    "relay_status": "last",
+    "overcharge_switch": false,
+    "light_mode": "relay",
+    "child_lock": false,
+    "cycle_time": "",
+    "random_time": "",
+    "switch_inching": ""
+  },
+  "set_up": true,
+  "support_local": true
+}

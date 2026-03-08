@@ -4,7 +4,8 @@
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/weatherflow_cloud",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["weatherflow4py"],
-  "requirements": ["weatherflow4py==1.0.6"]
+  "requirements": ["weatherflow4py==1.4.1"]
 }

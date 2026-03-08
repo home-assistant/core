@@ -31,8 +31,8 @@ def build_mock_node(file: str) -> AsyncMock:
             for key, value in attribute.items():
                 setattr(att, key, value)
             att.is_reversed = False
-            att.get_value = (
-                lambda att=att: att.data if att.unit == "text" else att.current_value
+            att.get_value = lambda att=att: (
+                att.data if att.unit == "text" else att.current_value
             )
             mock_attributes.append(att)
         return mock_attributes
@@ -46,6 +46,7 @@ def build_mock_node(file: str) -> AsyncMock:
     def attribute_by_type(type, instance=0) -> HomeeAttribute | None:
         return {attr.type: attr for attr in mock_node.attributes}.get(type)
 
+    mock_node.raw_data = json_node
     mock_node.get_attribute_by_type = attribute_by_type
 
     return mock_node

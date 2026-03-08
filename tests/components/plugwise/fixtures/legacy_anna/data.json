@@ -35,6 +35,7 @@
   },
   "0d266432d64443e283b5d708ae98b455": {
     "active_preset": "home",
+    "available_schedules": [],
     "climate_mode": "heat",
     "control_state": "heating",
     "dev_class": "thermostat",
@@ -44,6 +45,7 @@
     "model": "ThermoTouch",
     "name": "Anna",
     "preset_modes": ["away", "vacation", "asleep", "home", "no_frost"],
+    "select_schedule": null,
     "sensors": {
       "illuminance": 150.8,
       "setpoint": 20.5,

@@ -20,7 +20,9 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import _suggest_report_issue
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    _suggest_report_issue,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -39,7 +41,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_platform, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -129,11 +131,6 @@ async def async_setup_entry(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
     )
 
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        source_entity_id,
-    )
-
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -143,7 +140,8 @@ async def async_setup_entry(
     name = config_entry.title
     net_consumption = config_entry.options[CONF_METER_NET_CONSUMPTION]
     periodically_resetting = config_entry.options[CONF_METER_PERIODICALLY_RESETTING]
-    tariff_entity = hass.data[DATA_UTILITY][entry_id][CONF_TARIFF_ENTITY]
+    entry_meter_info = hass.data[DATA_UTILITY][entry_id]
+    tariff_entity = entry_meter_info[CONF_TARIFF_ENTITY]
     sensor_always_available = config_entry.options.get(
         CONF_SENSOR_ALWAYS_AVAILABLE, False
     )
@@ -154,6 +152,7 @@ async def async_setup_entry(
     if not tariffs:
         # Add single sensor, not gated by a tariff selector
         meter_sensor = UtilityMeterSensor(
+            hass,
             cron_pattern=cron_pattern,
             delta_values=delta_values,
             meter_offset=meter_offset,
@@ -166,15 +165,15 @@ async def async_setup_entry(
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
-            device_info=device_info,
             sensor_always_available=sensor_always_available,
         )
         meters.append(meter_sensor)
-        hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+        entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
     else:
         # Add sensors for each tariff
         for tariff in tariffs:
             meter_sensor = UtilityMeterSensor(
+                hass,
                 cron_pattern=cron_pattern,
                 delta_values=delta_values,
                 meter_offset=meter_offset,
@@ -187,11 +186,10 @@ async def async_setup_entry(
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
-                device_info=device_info,
                 sensor_always_available=sensor_always_available,
             )
             meters.append(meter_sensor)
-            hass.data[DATA_UTILITY][entry_id][DATA_TARIFF_SENSORS].append(meter_sensor)
+            entry_meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -220,16 +218,17 @@ async def async_setup_platform(
 
     meters = []
     for conf in discovery_info.values():
-        meter = conf[CONF_METER]
-        conf_meter_source = hass.data[DATA_UTILITY][meter][CONF_SOURCE_SENSOR]
-        conf_meter_unique_id = hass.data[DATA_UTILITY][meter].get(CONF_UNIQUE_ID)
+        meter: str = conf[CONF_METER]
+        meter_info = hass.data[DATA_UTILITY][meter]
+        conf_meter_source = meter_info[CONF_SOURCE_SENSOR]
+        conf_meter_unique_id = meter_info.get(CONF_UNIQUE_ID)
         conf_sensor_tariff = conf.get(CONF_TARIFF, "single_tariff")
         conf_sensor_unique_id = (
             f"{conf_meter_unique_id}_{conf_sensor_tariff}"
             if conf_meter_unique_id
             else None
         )
-        conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+        conf_meter_name = meter_info.get(CONF_NAME, meter)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
 
         suggested_entity_id = None
@@ -240,25 +239,18 @@ async def async_setup_platform(
         else:
             conf_sensor_name = conf_meter_name
 
-        conf_meter_type = hass.data[DATA_UTILITY][meter].get(CONF_METER_TYPE)
-        conf_meter_offset = hass.data[DATA_UTILITY][meter][CONF_METER_OFFSET]
-        conf_meter_delta_values = hass.data[DATA_UTILITY][meter][
-            CONF_METER_DELTA_VALUES
-        ]
-        conf_meter_net_consumption = hass.data[DATA_UTILITY][meter][
-            CONF_METER_NET_CONSUMPTION
-        ]
-        conf_meter_periodically_resetting = hass.data[DATA_UTILITY][meter][
+        conf_meter_type = meter_info.get(CONF_METER_TYPE)
+        conf_meter_offset = meter_info[CONF_METER_OFFSET]
+        conf_meter_delta_values = meter_info[CONF_METER_DELTA_VALUES]
+        conf_meter_net_consumption = meter_info[CONF_METER_NET_CONSUMPTION]
+        conf_meter_periodically_resetting = meter_info[
             CONF_METER_PERIODICALLY_RESETTING
         ]
-        conf_meter_tariff_entity = hass.data[DATA_UTILITY][meter].get(
-            CONF_TARIFF_ENTITY
-        )
-        conf_cron_pattern = hass.data[DATA_UTILITY][meter].get(CONF_CRON_PATTERN)
-        conf_sensor_always_available = hass.data[DATA_UTILITY][meter][
-            CONF_SENSOR_ALWAYS_AVAILABLE
-        ]
+        conf_meter_tariff_entity = meter_info.get(CONF_TARIFF_ENTITY)
+        conf_cron_pattern = meter_info.get(CONF_CRON_PATTERN)
+        conf_sensor_always_available = meter_info[CONF_SENSOR_ALWAYS_AVAILABLE]
         meter_sensor = UtilityMeterSensor(
+            hass,
             cron_pattern=conf_cron_pattern,
             delta_values=conf_meter_delta_values,
             meter_offset=conf_meter_offset,
@@ -276,7 +268,7 @@ async def async_setup_platform(
         )
         meters.append(meter_sensor)
 
-        hass.data[DATA_UTILITY][meter][DATA_TARIFF_SENSORS].append(meter_sensor)
+        meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
 
@@ -359,6 +351,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     def __init__(
         self,
+        hass,
         *,
         cron_pattern,
         delta_values,
@@ -374,11 +367,13 @@ class UtilityMeterSensor(RestoreSensor):
         unique_id,
         sensor_always_available,
         suggested_entity_id=None,
-        device_info=None,
     ):
         """Initialize the Utility Meter sensor."""
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            source_entity,
+        )
         self.entity_id = suggested_entity_id
         self._parent_meter = parent_meter
         self._sensor_source_id = source_entity
@@ -503,9 +498,8 @@ class UtilityMeterSensor(RestoreSensor):
 
         if self.native_value is None:
             # First state update initializes the utility_meter sensors
-            for sensor in self.hass.data[DATA_UTILITY][self._parent_meter][
-                DATA_TARIFF_SENSORS
-            ]:
+            parent_meter_info = self.hass.data[DATA_UTILITY][self._parent_meter]
+            for sensor in parent_meter_info[DATA_TARIFF_SENSORS]:
                 sensor.start(new_state_attributes)
                 if self.native_unit_of_measurement is None:
                     _LOGGER.warning(
@@ -577,9 +571,9 @@ class UtilityMeterSensor(RestoreSensor):
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
 
-        await self._program_reset()
-
         await self.async_reset_meter(self._tariff_entity)
+
+        await self._program_reset()
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
@@ -605,7 +599,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
 
@@ -687,7 +681,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
             return self._input_device_class
@@ -699,7 +693,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass:
         """Return the device class of the sensor."""
         return (
             SensorStateClass.TOTAL
@@ -708,7 +702,7 @@ class UtilityMeterSensor(RestoreSensor):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         state_attr = {
             ATTR_STATUS: PAUSED if self._collecting is None else COLLECTING,

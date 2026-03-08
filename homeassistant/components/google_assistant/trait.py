@@ -21,6 +21,7 @@ from homeassistant.components import (
     input_boolean,
     input_button,
     input_select,
+    lawn_mower,
     light,
     lock,
     media_player,
@@ -42,6 +43,7 @@ from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.humidifier import HumidifierEntityFeature
+from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import LockState
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
@@ -180,10 +182,10 @@ FAN_SPEED_MAX_SPEED_COUNT = 5
 
 COVER_VALVE_STATES = {
     cover.DOMAIN: {
-        "closed": cover.STATE_CLOSED,
-        "closing": cover.STATE_CLOSING,
-        "open": cover.STATE_OPEN,
-        "opening": cover.STATE_OPENING,
+        "closed": cover.CoverState.CLOSED.value,
+        "closing": cover.CoverState.CLOSING.value,
+        "open": cover.CoverState.OPEN.value,
+        "opening": cover.CoverState.OPENING.value,
     },
     valve.DOMAIN: {
         "closed": valve.STATE_CLOSED,
@@ -714,7 +716,7 @@ class DockTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        return domain in (vacuum.DOMAIN, lawn_mower.DOMAIN)
 
     def sync_attributes(self) -> dict[str, Any]:
         """Return dock attributes for a sync request."""
@@ -722,17 +724,32 @@ class DockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
-        return {"isDocked": self.state.state == vacuum.VacuumActivity.DOCKED}
+        domain = self.state.domain
+        state = self.state.state
+        if domain == vacuum.DOMAIN:
+            return {"isDocked": state == vacuum.VacuumActivity.DOCKED}
+        if domain == lawn_mower.DOMAIN:
+            return {"isDocked": state == lawn_mower.LawnMowerActivity.DOCKED}
+        raise NotImplementedError(f"Unsupported domain {domain}")
 
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
-        await self.hass.services.async_call(
-            self.state.domain,
-            vacuum.SERVICE_RETURN_TO_BASE,
-            {ATTR_ENTITY_ID: self.state.entity_id},
-            blocking=not self.config.should_report_state,
-            context=data.context,
-        )
+        domain = self.state.domain
+        service: str | None = None
+
+        if domain == vacuum.DOMAIN:
+            service = vacuum.SERVICE_RETURN_TO_BASE
+        elif domain == lawn_mower.DOMAIN:
+            service = lawn_mower.SERVICE_DOCK
+
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
 
 @register_trait
@@ -843,7 +860,7 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == vacuum.DOMAIN:
+        if domain in (vacuum.DOMAIN, lawn_mower.DOMAIN):
             return True
 
         if (
@@ -863,6 +880,12 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & LawnMowerEntityFeature.PAUSE
+                != 0
+            }
         if domain in COVER_VALVE_DOMAINS:
             return {}
 
@@ -878,14 +901,28 @@ class StartStopTrait(_Trait):
                 "isRunning": state == vacuum.VacuumActivity.CLEANING,
                 "isPaused": state == vacuum.VacuumActivity.PAUSED,
             }
+        if domain == lawn_mower.DOMAIN:
+            return {
+                "isRunning": state == lawn_mower.LawnMowerActivity.MOWING,
+                "isPaused": state == lawn_mower.LawnMowerActivity.PAUSED,
+            }
 
         if domain in COVER_VALVE_DOMAINS:
+            assumed_state_or_set_position = bool(
+                (
+                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    & COVER_VALVE_SET_POSITION_FEATURE[domain]
+                )
+                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+            )
+
             return {
                 "isRunning": state
                 in (
                     COVER_VALVE_STATES[domain]["closing"],
                     COVER_VALVE_STATES[domain]["opening"],
                 )
+                or assumed_state_or_set_position
             }
 
         raise NotImplementedError(f"Unsupported domain {domain}")
@@ -896,56 +933,74 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             await self._execute_vacuum(command, data, params, challenge)
             return
+        if domain == lawn_mower.DOMAIN:
+            await self._execute_lawn_mower(command, data, params, challenge)
+            return
         if domain in COVER_VALVE_DOMAINS:
             await self._execute_cover_or_valve(command, data, params, challenge)
             return
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        service: str | None = None
         if command == COMMAND_START_STOP:
-            if params["start"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_STOP,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
         elif command == COMMAND_PAUSE_UNPAUSE:
-            if params["pause"]:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_PAUSE,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-            else:
-                await self.hass.services.async_call(
-                    self.state.domain,
-                    vacuum.SERVICE_START,
-                    {ATTR_ENTITY_ID: self.state.entity_id},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
+            service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+
+    async def _execute_lawn_mower(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        service: str | None = None
+        if command == COMMAND_START_STOP:
+            service = (
+                lawn_mower.SERVICE_START_MOWING
+                if params["start"]
+                else lawn_mower.SERVICE_DOCK
+            )
+        elif command == COMMAND_PAUSE_UNPAUSE:
+            service = (
+                lawn_mower.SERVICE_PAUSE
+                if params["pause"]
+                else lawn_mower.SERVICE_START_MOWING
+            )
+        if service:
+            await self.hass.services.async_call(
+                self.state.domain,
+                service,
+                {ATTR_ENTITY_ID: self.state.entity_id},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
 
     async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
         if command == COMMAND_START_STOP:
+            assumed_state_or_set_position = bool(
+                (
+                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    & COVER_VALVE_SET_POSITION_FEATURE[domain]
+                )
+                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+            )
+
             if params["start"] is False:
-                if self.state.state in (
-                    COVER_VALVE_STATES[domain]["closing"],
-                    COVER_VALVE_STATES[domain]["opening"],
-                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
+                if (
+                    self.state.state
+                    in (
+                        COVER_VALVE_STATES[domain]["closing"],
+                        COVER_VALVE_STATES[domain]["opening"],
+                    )
+                    or assumed_state_or_set_position
+                ):
                     await self.hass.services.async_call(
                         domain,
                         SERVICE_STOP_COVER_VALVE[domain],
@@ -958,7 +1013,14 @@ class StartStopTrait(_Trait):
                         ERR_ALREADY_STOPPED,
                         f"{FRIENDLY_DOMAIN[domain]} is already stopped",
                     )
-            else:
+            elif (
+                self.state.state
+                in (
+                    COVER_VALVE_STATES[domain]["open"],
+                    COVER_VALVE_STATES[domain]["closed"],
+                )
+                or assumed_state_or_set_position
+            ):
                 await self.hass.services.async_call(
                     domain,
                     SERVICE_TOGGLE_COVER_VALVE[domain],
@@ -1690,15 +1752,15 @@ class FanSpeedTrait(_Trait):
         """Initialize a trait for a state."""
         super().__init__(hass, state, config)
         if state.domain == fan.DOMAIN:
-            speed_count = min(
-                FAN_SPEED_MAX_SPEED_COUNT,
-                round(
-                    100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
-                ),
+            speed_count = round(
+                100 / (self.state.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 1.0)
             )
-            self._ordered_speed = [
-                f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
-            ]
+            if speed_count <= FAN_SPEED_MAX_SPEED_COUNT:
+                self._ordered_speed = [
+                    f"{speed}/{speed_count}" for speed in range(1, speed_count + 1)
+                ]
+            else:
+                self._ordered_speed = []
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1724,7 +1786,11 @@ class FanSpeedTrait(_Trait):
             result.update(
                 {
                     "reversible": reversible,
-                    "supportsFanSpeedPercent": True,
+                    # supportsFanSpeedPercent is mutually exclusive with
+                    # availableFanSpeeds, where supportsFanSpeedPercent takes
+                    # precedence. Report it only when step speeds are not
+                    # supported so Google renders a percent slider (1-100%).
+                    "supportsFanSpeedPercent": not self._ordered_speed,
                 }
             )
 
@@ -1770,10 +1836,12 @@ class FanSpeedTrait(_Trait):
 
         if domain == fan.DOMAIN:
             percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
-            response["currentFanSpeedPercent"] = percent
-            response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
-                self._ordered_speed, percent
-            )
+            if self._ordered_speed:
+                response["currentFanSpeedSetting"] = percentage_to_ordered_list_item(
+                    self._ordered_speed, percent
+                )
+            else:
+                response["currentFanSpeedPercent"] = percent
 
         return response
 
@@ -1793,7 +1861,7 @@ class FanSpeedTrait(_Trait):
             )
 
         if domain == fan.DOMAIN:
-            if fan_speed := params.get("fanSpeed"):
+            if self._ordered_speed and (fan_speed := params.get("fanSpeed")):
                 fan_speed_percent = ordered_list_item_to_percentage(
                     self._ordered_speed, fan_speed
                 )

@@ -131,6 +131,8 @@
     }),
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
+      'available_schedules': list([
+      ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
       'dev_class': 'climate',
@@ -143,6 +145,7 @@
         'vacation',
         'no_frost',
       ]),
+      'select_schedule': None,
       'sensors': dict({
         'temperature': 15.6,
       }),
@@ -212,7 +215,7 @@
       'firmware': '2019-03-27T01:00:00+01:00',
       'hardware': '1',
       'location': '08963fec7c53423ca5680aa4cb502c63',
-      'model': 'Tom/Floor',
+      'model': 'Tom',
       'model_id': '106-03',
       'name': 'Thermostatic Radiator Badkamer 1',
       'sensors': dict({
@@ -363,7 +366,7 @@
       'firmware': '2019-03-27T01:00:00+01:00',
       'hardware': '1',
       'location': '12493538af164a409c6a1c79e38afe1c',
-      'model': 'Tom/Floor',
+      'model': 'Tom',
       'model_id': '106-03',
       'name': 'Bios Cv Thermostatic Radiator ',
       'sensors': dict({
@@ -388,7 +391,7 @@
       'firmware': '2019-03-27T01:00:00+01:00',
       'hardware': '1',
       'location': 'c50f167537524366a5af7aa3942feb1e',
-      'model': 'Tom/Floor',
+      'model': 'Tom',
       'model_id': '106-03',
       'name': 'Floor kraan',
       'sensors': dict({
@@ -506,7 +509,7 @@
       'firmware': '2019-03-27T01:00:00+01:00',
       'hardware': '1',
       'location': '82fa13f017d240daa0d0ea1775420f24',
-      'model': 'Tom/Floor',
+      'model': 'Tom',
       'model_id': '106-03',
       'name': 'Thermostatic Radiator Jessie',
       'sensors': dict({
@@ -551,6 +554,20 @@
       'vendor': 'Plugwise',
       'zigbee_mac_address': 'ABCD012345670A06',
     }),
+    'e117db6848394c8cb70d9c28e63d92d2': dict({
+      'dev_class': 'pumping',
+      'members': list([
+        '78d1126fc4c743db81b61c20e88342a7',
+        'b59bcebaf94b499ea7d46e4a66fb62d8',
+      ]),
+      'model': 'Group',
+      'name': 'Vloerverwarming Woonkamer',
+      'sensors': dict({
+        'electricity_consumed': 35.6,
+        'temperature': 20.9,
+      }),
+      'vendor': 'Plugwise',
+    }),
     'e7693eb9582644e5b865dba8d4447cf1': dict({
       'available': True,
       'binary_sensors': dict({
@@ -560,7 +577,7 @@
       'firmware': '2019-03-27T01:00:00+01:00',
       'hardware': '1',
       'location': '446ac08dd04d4eff8ac57489757b7314',
-      'model': 'Tom/Floor',
+      'model': 'Tom',
       'model_id': '106-03',
       'name': 'CV Kraan Garage',
       'sensors': dict({
@@ -578,6 +595,23 @@
       }),
       'vendor': 'Plugwise',
       'zigbee_mac_address': 'ABCD012345670A11',
+    }),
+    'e8ef2a01ed3b4139a53bf749204fe6b4': dict({
+      'dev_class': 'switching',
+      'members': list([
+        '02cf28bfec924855854c544690a609ef',
+        '4a810418d5394b3f82727340b91ba740',
+      ]),
+      'model': 'Group',
+      'name': 'Test',
+      'sensors': dict({
+        'electricity_consumed': 14.8,
+        'electricity_produced': 0.0,
+      }),
+      'switches': dict({
+        'relay': True,
+      }),
+      'vendor': 'Plugwise',
     }),
     'f1fee6043d3642a9b0a65297455f008e': dict({
       'available': True,
@@ -622,7 +656,6 @@
           'warning': "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device.",
         }),
       }),
-      'select_regulation_mode': 'heating',
       'sensors': dict({
         'outdoor_temperature': 7.81,
       }),

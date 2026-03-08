@@ -3,7 +3,7 @@
 import logging
 from numbers import Number
 import re
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -19,16 +19,19 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from . import HassioAPIError
+from .config import HassioUpdateParametersDict
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_PARAMS,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_SLUG,
     ATTR_TIMEOUT,
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
+    DATA_CONFIG_STORE,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -65,6 +68,8 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_update_addon)
     websocket_api.async_register_command(hass, websocket_update_core)
+    websocket_api.async_register_command(hass, websocket_update_config_info)
+    websocket_api.async_register_command(hass, websocket_update_config_update)
 
 
 @callback
@@ -107,6 +112,7 @@ def websocket_supervisor_event(
         vol.Required(ATTR_ENDPOINT): cv.string,
         vol.Required(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_DATA): dict,
+        vol.Optional(ATTR_PARAMS): dict,
         vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
     }
 )
@@ -136,6 +142,7 @@ async def websocket_supervisor_api(
             timeout=msg.get(ATTR_TIMEOUT, 10),
             payload=payload,
             source="core.websocket_api",
+            params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
@@ -182,6 +189,45 @@ async def websocket_update_addon(
 async def websocket_update_core(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Websocket handler to update an addon."""
+    """Websocket handler to update Home Assistant Core."""
     await update_core(hass, None, msg["backup"])
     connection.send_result(msg[WS_ID])
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "hassio/update/config/info"})
+def websocket_update_config_info(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Send the stored backup config."""
+    connection.send_result(
+        msg["id"], hass.data[DATA_CONFIG_STORE].data.update_config.to_dict()
+    )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "hassio/update/config/update",
+        vol.Optional("add_on_backup_before_update"): bool,
+        vol.Optional("add_on_backup_retain_copies"): vol.All(int, vol.Range(min=1)),
+        vol.Optional("core_backup_before_update"): bool,
+    }
+)
+def websocket_update_config_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update the stored backup config."""
+    changes = dict(msg)
+    changes.pop("id")
+    changes.pop("type")
+    hass.data[DATA_CONFIG_STORE].update(
+        update_config=cast(HassioUpdateParametersDict, changes)
+    )
+    connection.send_result(msg["id"])

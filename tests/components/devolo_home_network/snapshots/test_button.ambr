@@ -34,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify device with a blinking LED',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -41,6 +42,7 @@
     'original_name': 'Identify device with a blinking LED',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'identify',
     'unique_id': '1234567890_identify',
@@ -82,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart device',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -89,6 +92,7 @@
     'original_name': 'Restart device',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restart',
     'unique_id': '1234567890_restart',
@@ -129,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start PLC pairing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -136,6 +141,7 @@
     'original_name': 'Start PLC pairing',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pairing',
     'unique_id': '1234567890_pairing',
@@ -176,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start WPS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -183,6 +190,7 @@
     'original_name': 'Start WPS',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'start_wps',
     'unique_id': '1234567890_start_wps',

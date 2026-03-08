@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the Zeversolar integration."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.zeversolar import DOMAIN
 from homeassistant.core import HomeAssistant

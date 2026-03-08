@@ -5,7 +5,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/devolo_home_network/icon.png',
+      'entity_picture': '/api/brands/integration/devolo_home_network/icon.png',
       'friendly_name': 'Mock Title Firmware',
       'in_progress': False,
       'installed_version': '5.6.1',
@@ -46,6 +46,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -53,6 +54,7 @@
     'original_name': 'Firmware',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 5>,
     'translation_key': 'regular_firmware',
     'unique_id': '1234567890_regular_firmware',

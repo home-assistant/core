@@ -27,7 +27,7 @@ REDACT_DEVICES = {
     "x_ssh_hostkey_fingerprint",
     "x_vwirekey",
 }
-REDACT_WLANS = {"bc_filter_list", "x_passphrase"}
+REDACT_WLANS = {"bc_filter_list", "password", "x_passphrase"}
 
 
 @callback

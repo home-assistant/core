@@ -10,6 +10,9 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
+from homeassistant.components.homeassistant_yellow.config_flow import (
+    HomeAssistantYellowConfigFlow,
+)
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -68,10 +71,16 @@ async def test_setup_entry(
     if num_entries > 0:
         zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
         assert len(zha_flows) == 1
-        assert zha_flows[0]["step_id"] == "choose_formation_strategy"
+        assert zha_flows[0]["step_id"] == "choose_setup_strategy"
+
+        setup_result = await hass.config_entries.flow.async_configure(
+            zha_flows[0]["flow_id"],
+            user_input={"next_step_id": zha.config_flow.SETUP_STRATEGY_ADVANCED},
+        )
+        assert setup_result["step_id"] == "choose_formation_strategy"
 
         await hass.config_entries.flow.async_configure(
-            zha_flows[0]["flow_id"],
+            setup_result["flow_id"],
             user_input={"next_step_id": zha.config_flow.FORMATION_REUSE_SETTINGS},
         )
         await hass.async_block_till_done()
@@ -114,10 +123,16 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
     # Finish setting up ZHA
     zha_flows = hass.config_entries.flow.async_progress_by_handler("zha")
     assert len(zha_flows) == 1
-    assert zha_flows[0]["step_id"] == "choose_formation_strategy"
+    assert zha_flows[0]["step_id"] == "choose_setup_strategy"
+
+    setup_result = await hass.config_entries.flow.async_configure(
+        zha_flows[0]["flow_id"],
+        user_input={"next_step_id": zha.config_flow.SETUP_STRATEGY_ADVANCED},
+    )
+    assert setup_result["step_id"] == "choose_formation_strategy"
 
     await hass.config_entries.flow.async_configure(
-        zha_flows[0]["flow_id"],
+        setup_result["flow_id"],
         user_input={"next_step_id": zha.config_flow.FORMATION_REUSE_SETTINGS},
     )
     await hass.async_block_till_done()
@@ -248,3 +263,71 @@ async def test_setup_entry_addon_info_fails(
 
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("start_version", "data", "migrated_data"),
+    [
+        (1, {}, {"firmware": "ezsp", "firmware_version": None}),
+        (2, {"firmware": "ezsp"}, {"firmware": "ezsp", "firmware_version": None}),
+        (
+            2,
+            {"firmware": "ezsp", "firmware_version": "123"},
+            {"firmware": "ezsp", "firmware_version": "123"},
+        ),
+        (3, {"firmware": "ezsp"}, {"firmware": "ezsp", "firmware_version": None}),
+        (
+            3,
+            {"firmware": "ezsp", "firmware_version": "123"},
+            {"firmware": "ezsp", "firmware_version": "123"},
+        ),
+    ],
+)
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    start_version: int,
+    data: dict,
+    migrated_data: dict,
+) -> None:
+    """Test migration of a config entry."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data=data,
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=start_version,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.guess_firmware_info",
+            return_value=FirmwareInfo(  # Nothing is setup
+                device="/dev/ttyAMA1",
+                firmware_version="1234",
+                firmware_type=ApplicationType.EZSP,
+                source="unknown",
+                owners=[],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.data == migrated_data
+    assert config_entry.options == {}
+    assert config_entry.minor_version == HomeAssistantYellowConfigFlow.MINOR_VERSION
+    assert config_entry.version == HomeAssistantYellowConfigFlow.VERSION

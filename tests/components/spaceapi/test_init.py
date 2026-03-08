@@ -94,10 +94,12 @@ SENSOR_OUTPUT = {
 
 
 @pytest.fixture
-def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> TestClient:
+async def mock_client(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Start the Home Assistant HTTP component."""
     with patch("homeassistant.components.spaceapi", return_value=True):
-        hass.loop.run_until_complete(async_setup_component(hass, "spaceapi", CONFIG))
+        await async_setup_component(hass, "spaceapi", CONFIG)
 
     hass.states.async_set(
         "test.temp1",
@@ -126,10 +128,10 @@ def mock_client(hass: HomeAssistant, hass_client: ClientSessionGenerator) -> Tes
         "test.hum1", 88, attributes={ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
     )
 
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
-async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK
@@ -173,7 +175,7 @@ async def test_spaceapi_get(hass: HomeAssistant, mock_client) -> None:
     assert data["radio_show"][0]["end"] == "2019-09-02T12:00Z"
 
 
-async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_state_get(hass: HomeAssistant, mock_client: TestClient) -> None:
     """Test response if the state entity was set."""
     hass.states.async_set("test.test_door", True)
 
@@ -184,7 +186,9 @@ async def test_spaceapi_state_get(hass: HomeAssistant, mock_client) -> None:
     assert data["state"]["open"] == bool(1)
 
 
-async def test_spaceapi_sensors_get(hass: HomeAssistant, mock_client) -> None:
+async def test_spaceapi_sensors_get(
+    hass: HomeAssistant, mock_client: TestClient
+) -> None:
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.OK

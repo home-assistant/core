@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -35,6 +36,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -42,6 +44,7 @@
     'original_name': None,
     'platform': 'tailwind',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '_3c_e9_e_6d_21_84_-door1',
@@ -66,7 +69,6 @@
         '_3c_e9_e_6d_21_84_-door1',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tailwind',
@@ -76,7 +78,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '10.10',
     'via_device_id': <ANY>,
   })
@@ -86,6 +87,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 2',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -124,6 +127,7 @@
     'original_name': None,
     'platform': 'tailwind',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '_3c_e9_e_6d_21_84_-door2',
@@ -148,7 +152,6 @@
         '_3c_e9_e_6d_21_84_-door2',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tailwind',
@@ -158,7 +161,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '10.10',
     'via_device_id': <ANY>,
   })

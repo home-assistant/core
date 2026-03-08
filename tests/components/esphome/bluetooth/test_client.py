@@ -6,7 +6,9 @@ from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceIn
 from bleak.exc import BleakError
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
-from bleak_esphome.backend.scanner import ESPHomeScanner
+from bleak_esphome.backend.scanner import (  # pylint: disable=no-name-in-module
+    ESPHomeScanner,
+)
 import pytest
 
 from homeassistant.components.bluetooth import HaBluetoothConnector
@@ -53,4 +55,4 @@ async def test_client_usage_while_not_connected(client_data: ESPHomeClientData) 
     with pytest.raises(
         BleakError, match=f"{ESP_NAME}.*{ESP_MAC_ADDRESS}.*not connected"
     ):
-        assert await client.write_gatt_char("test", b"test") is False
+        assert await client.write_gatt_char("test", b"test", False) is False

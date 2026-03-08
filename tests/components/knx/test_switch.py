@@ -111,7 +111,7 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
-async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
+async def test_switch_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test restoring KNX switch state and respond to read."""
     _ADDRESS = "1/1/1"
     fake_state = State("switch.test", "on")
@@ -181,6 +181,6 @@ async def test_switch_ui_load(knx: KNXTestKit) -> None:
     # unrelated light in config store
     await knx.assert_read("1/0/21", response=True, ignore_order=True)
     knx.assert_state(
-        "switch.none_test",  # has_entity_name with unregistered device -> none_test
+        "switch.test",  # has_entity_name with unregistered device
         STATE_ON,
     )

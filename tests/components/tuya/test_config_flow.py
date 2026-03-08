@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import CONF_USER_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -161,62 +161,21 @@ async def test_reauth_flow(
     assert mock_config_entry == snapshot
 
 
-@pytest.mark.usefixtures("mock_tuya_login_control")
-async def test_reauth_flow_migration(
-    hass: HomeAssistant,
-    mock_old_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the reauthentication configuration flow.
-
-    This flow tests the migration from an old config entry.
-    """
-    mock_old_config_entry.add_to_hass(hass)
-
-    # Ensure old data is there, new data is missing
-    assert CONF_APP_TYPE in mock_old_config_entry.data
-    assert CONF_USER_CODE not in mock_old_config_entry.data
-
-    result = await mock_old_config_entry.start_reauth_flow(hass)
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_user_code"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_USER_CODE: "12345"},
-    )
-
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "scan"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result3.get("type") is FlowResultType.ABORT
-    assert result3.get("reason") == "reauth_successful"
-
-    # Ensure the old data is gone, new data is present
-    assert CONF_APP_TYPE not in mock_old_config_entry.data
-    assert CONF_USER_CODE in mock_old_config_entry.data
-
-    assert mock_old_config_entry == snapshot
-
-
 async def test_reauth_flow_failed_qr_code(
     hass: HomeAssistant,
     mock_tuya_login_control: MagicMock,
-    mock_old_config_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an error occurring while retrieving the QR code."""
-    mock_old_config_entry.add_to_hass(hass)
-
-    result = await mock_old_config_entry.start_reauth_flow(hass)
+    mock_config_entry.add_to_hass(hass)
 
     # Something went wrong getting the QR code (like an invalid user code)
     mock_tuya_login_control.qr_code.return_value["success"] = False
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_user_code"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +28,7 @@
     'original_name': 'Alarm',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
     'unique_id': '123456-7890-1234-has_alarm',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -75,6 +78,7 @@
     'original_name': 'Connectivity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-connection_state',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -123,6 +128,7 @@
     'original_name': 'Connectivity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-connection_state',
@@ -164,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -171,6 +178,7 @@
     'original_name': 'Extern. adjust\xadment climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43161',
@@ -211,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extern. adjust\xadment climate system 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -218,6 +227,7 @@
     'original_name': 'Extern. adjust\xadment climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43161',
@@ -258,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +276,7 @@
     'original_name': 'Pump: Heating medium (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49995',
@@ -305,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump: Heating medium (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +325,7 @@
     'original_name': 'Pump: Heating medium (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49995',

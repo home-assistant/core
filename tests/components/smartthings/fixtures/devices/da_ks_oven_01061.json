@@ -1,0 +1,153 @@
+{
+  "items": [
+    {
+      "deviceId": "9447959a-0dfa-6b27-d40d-650da525c53f",
+      "name": "[oven] Samsung",
+      "label": "Oven",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-KS-OVEN-01061",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "a81dc8da-5a3f-43b6-8c8a-1309f37eeeb9",
+      "ownerId": "97ee2149-9de0-3287-8245-24d6fd1609aa",
+      "roomId": "eb2167dd-8b8d-4131-b59e-5dd391b2e151",
+      "deviceTypeName": "Samsung OCF Oven",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.doorState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.definedRecipe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.microwavePower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenModeSpecification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.waterReservoir",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenDrainageRequirement",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Oven",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-01-08T17:29:12.549Z",
+      "profile": {
+        "id": "eb34598f-f96a-3420-a90a-71693052eaa3"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.oven",
+        "name": "[oven] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP1X_DA-KS-OVEN-01061|40457041|50030018001611000A00000000000000",
+        "platformVersion": "DAWIT 3.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AKS-WW-TP1X-21-OVEN_40211229",
+        "vendorId": "DA-KS-OVEN-01061",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.211122",
+        "lastSignupTime": "2025-01-08T17:29:08.536664213Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

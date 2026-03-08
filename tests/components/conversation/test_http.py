@@ -1,29 +1,41 @@
 """The tests for the HTTP API of the Conversation component."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation import (
+    AssistantContent,
+    ConversationInput,
+    async_get_agent,
+    async_get_chat_log,
+)
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
+from homeassistant.components.conversation.models import ConversationResult
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    chat_session,
+    entity_registry as er,
+    intent,
+)
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from . import MockAgent
 
-from tests.common import async_mock_service
+from tests.common import MockUser, async_fire_time_changed, async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -162,6 +174,36 @@ async def test_http_api_wrong_data(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_http_processing_intent_with_device_satellite_ids(
+    hass: HomeAssistant,
+    init_components,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test processing intent via HTTP API with both device_id and satellite_id."""
+    client = await hass_client()
+    mock_result = intent.IntentResponse(language=hass.config.language)
+    mock_result.async_set_speech("test")
+
+    with patch(
+        "homeassistant.components.conversation.http.async_converse",
+        return_value=ConversationResult(response=mock_result),
+    ) as mock_converse:
+        resp = await client.post(
+            "/api/conversation/process",
+            json={
+                "text": "test",
+                "device_id": "test-device-id",
+                "satellite_id": "test-satellite-id",
+            },
+        )
+
+        assert resp.status == HTTPStatus.OK
+        mock_converse.assert_called_once()
+        call_kwargs = mock_converse.call_args[1]
+        assert call_kwargs["device_id"] == "test-device-id"
+        assert call_kwargs["satellite_id"] == "test-satellite-id"
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -187,7 +229,7 @@ async def test_http_api_wrong_data(
         },
         {
             "text": "Test Text",
-            "agent_id": "homeassistant",
+            "agent_id": HOME_ASSISTANT_AGENT,
         },
     ],
 )
@@ -210,13 +252,44 @@ async def test_ws_api(
     assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
 
 
+async def test_ws_api_with_device_satellite_ids(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the Websocket conversation API with both device_id and satellite_id."""
+    client = await hass_ws_client(hass)
+    mock_result = intent.IntentResponse(language=hass.config.language)
+    mock_result.async_set_speech("test")
+
+    with patch(
+        "homeassistant.components.conversation.http.async_converse",
+        return_value=ConversationResult(response=mock_result),
+    ) as mock_converse:
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/process",
+                "text": "test",
+                "device_id": "test-device-id",
+                "satellite_id": "test-satellite-id",
+            }
+        )
+
+        msg = await client.receive_json()
+
+        assert msg["success"]
+        mock_converse.assert_called_once()
+        call_kwargs = mock_converse.call_args[1]
+        assert call_kwargs["device_id"] == "test-device-id"
+        assert call_kwargs["satellite_id"] == "test-satellite-id"
+
+
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 async def test_ws_prepare(
     hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
+    agent = async_get_agent(hass)
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)
@@ -536,3 +609,376 @@ async def test_ws_hass_agent_debug_sentence_trigger(
 
     # Trigger should not have been executed
     assert len(calls) == 0
+
+
+async def test_ws_hass_language_scores(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # Sanity check
+    result = msg["result"]
+    assert result["languages"]["en-US"] == {
+        "cloud": 3,
+        "focused_local": 2,
+        "full_local": 3,
+    }
+
+
+async def test_ws_hass_language_scores_with_filter(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting language support scores with language/country filter."""
+    client = await hass_ws_client(hass)
+
+    # Language filter
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/language_scores", "language": "de"}
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # German should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "de-DE"
+
+    # Language/country filter
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/language_scores",
+            "language": "en",
+            "country": "GB",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    # GB English should be preferred
+    result = msg["result"]
+    assert result["preferred_language"] == "en-GB"
+
+
+async def test_ws_chat_log_index_subscription(
+    hass: HomeAssistant,
+    init_components,
+    mock_conversation_input: ConversationInput,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that we can subscribe to chat logs."""
+    client = await hass_ws_client(hass)
+
+    with freeze_time():
+        now = utcnow().isoformat()
+
+        with (
+            chat_session.async_get_chat_session(hass) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            before_sub_conversation_id = session.conversation_id
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent("test-agent-id", "I hear you")
+            )
+
+        await client.send_json_auto_id(
+            {"type": "conversation/chat_log/subscribe_index"}
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        event_id = msg["id"]
+
+        # 1. The INITIAL_STATE event
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "event_type": "initial_state",
+                "data": [
+                    {
+                        "conversation_id": before_sub_conversation_id,
+                        "continue_conversation": False,
+                        "created": now,
+                        "content": [
+                            {"role": "system", "content": "", "created": now},
+                            {"role": "user", "content": "Hello", "created": now},
+                            {
+                                "role": "assistant",
+                                "agent_id": "test-agent-id",
+                                "content": "I hear you",
+                                "created": now,
+                            },
+                        ],
+                    }
+                ],
+            },
+        }
+
+        with (
+            chat_session.async_get_chat_session(hass) as session,
+            async_get_chat_log(hass, session, mock_conversation_input),
+        ):
+            conversation_id = session.conversation_id
+
+        # We should receive 2 events for this newly created chat:
+        # 1. The CREATED event (fired before content is added)
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "created",
+                "data": {
+                    "chat_log": {
+                        "conversation_id": conversation_id,
+                        "continue_conversation": False,
+                        "created": now,
+                        "content": [{"role": "system", "content": "", "created": now}],
+                    }
+                },
+            },
+        }
+
+        # 2. The DELETED event (since no assistant message was added)
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "deleted",
+                "data": {},
+            },
+        }
+
+        # Trigger session cleanup
+        with patch(
+            "homeassistant.helpers.chat_session.CONVERSATION_TIMEOUT",
+            timedelta(0),
+        ):
+            async_fire_time_changed(hass, fire_all=True)
+
+        # 3. The DELETED event of before sub conversation
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": before_sub_conversation_id,
+                "event_type": "deleted",
+                "data": {},
+            },
+        }
+
+
+async def test_ws_chat_log_index_subscription_requires_admin(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that chat log subscription requires admin access."""
+    # Create a non-admin user
+    hass_admin_user.groups = []
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/chat_log/subscribe_index",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
+async def test_ws_chat_log_subscription(
+    hass: HomeAssistant,
+    init_components,
+    mock_conversation_input: ConversationInput,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that we can subscribe to chat logs."""
+    client = await hass_ws_client(hass)
+
+    with freeze_time():
+        now = utcnow().isoformat()
+
+        with (
+            chat_session.async_get_chat_session(hass) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            conversation_id = session.conversation_id
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent("test-agent-id", "I hear you")
+            )
+
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/chat_log/subscribe",
+                "conversation_id": conversation_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert msg["success"]
+        event_id = msg["id"]
+
+        # 1. The INITIAL_STATE event (fired before content is added)
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "event_type": "initial_state",
+                "data": {
+                    "conversation_id": conversation_id,
+                    "continue_conversation": False,
+                    "created": now,
+                    "content": [
+                        {"role": "system", "content": "", "created": now},
+                        {"role": "user", "content": "Hello", "created": now},
+                        {
+                            "role": "assistant",
+                            "agent_id": "test-agent-id",
+                            "content": "I hear you",
+                            "created": now,
+                        },
+                    ],
+                },
+            },
+        }
+
+        with (
+            chat_session.async_get_chat_session(hass, conversation_id) as session,
+            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        ):
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent("test-agent-id", "I still hear you")
+            )
+
+        # 2. The user input content added event
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "content_added",
+                "data": {
+                    "content": {
+                        "content": "Hello",
+                        "role": "user",
+                        "created": now,
+                    },
+                },
+            },
+        }
+
+        # 3. The assistant input content added event
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "content_added",
+                "data": {
+                    "content": {
+                        "agent_id": "test-agent-id",
+                        "content": "I still hear you",
+                        "role": "assistant",
+                        "created": now,
+                    },
+                },
+            },
+        }
+
+        # Forward time to mimic auto-cleanup
+
+        # 4. The UPDATED event (since no assistant message was added)
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "updated",
+                "data": {
+                    "chat_log": {
+                        "continue_conversation": False,
+                        "conversation_id": conversation_id,
+                        "created": now,
+                        "content": [
+                            {
+                                "content": "",
+                                "role": "system",
+                                "created": now,
+                            },
+                            {
+                                "content": "Hello",
+                                "role": "user",
+                                "created": now,
+                            },
+                            {
+                                "agent_id": "test-agent-id",
+                                "content": "I hear you",
+                                "role": "assistant",
+                                "created": now,
+                            },
+                            {
+                                "content": "Hello",
+                                "role": "user",
+                                "created": now,
+                            },
+                            {
+                                "agent_id": "test-agent-id",
+                                "content": "I still hear you",
+                                "role": "assistant",
+                                "created": now,
+                            },
+                        ],
+                    },
+                },
+            },
+        }
+
+        # Trigger session cleanup
+        with patch(
+            "homeassistant.helpers.chat_session.CONVERSATION_TIMEOUT",
+            timedelta(0),
+        ):
+            async_fire_time_changed(hass, fire_all=True)
+
+        # 5. The DELETED event
+        msg = await client.receive_json()
+        assert msg == {
+            "type": "event",
+            "id": event_id,
+            "event": {
+                "conversation_id": conversation_id,
+                "event_type": "deleted",
+                "data": {},
+            },
+        }
+
+        # Subscribing now will fail
+        await client.send_json_auto_id(
+            {
+                "type": "conversation/chat_log/subscribe",
+                "conversation_id": conversation_id,
+            }
+        )
+        msg = await client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "not_found"

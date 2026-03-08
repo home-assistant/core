@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
@@ -57,7 +59,7 @@ class CecEntity(Entity):
         self._attr_available = False
         self.schedule_update_ha_state(False)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
         self.hass.bus.async_listen(
@@ -95,7 +97,7 @@ class CecEntity(Entity):
         return self._device.type
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:

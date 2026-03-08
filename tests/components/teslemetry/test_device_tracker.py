@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import VEHICLE_DATA_ALT
+from .const import METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -43,9 +43,24 @@ async def test_device_tracker_alt(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_device_tracker_streaming(
+async def test_device_tracker_noscope(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Tests that the device tracker entities are correct."""
+
+    mock_metadata.return_value = METADATA_NOSCOPE
+    entry = await setup_platform(hass, [Platform.DEVICE_TRACKER])
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entity_entries) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_device_tracker_streaming(
+    hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -74,24 +89,16 @@ async def test_device_tracker_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "device_tracker.test_location",
-        "device_tracker.test_route",
-        "device_tracker.test_origin",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+    # Assert the entities have correct state values
+    assert hass.states.get("device_tracker.test_location").state == "not_home"
+    assert hass.states.get("device_tracker.test_route").state == "home"
+    assert hass.states.get("device_tracker.test_origin").state == "unknown"
 
     # Reload the entry
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     # Assert the entities restored their values
-    for entity_id in (
-        "device_tracker.test_location",
-        "device_tracker.test_route",
-        "device_tracker.test_origin",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-restore")
+    assert hass.states.get("device_tracker.test_location").state == "not_home"
+    assert hass.states.get("device_tracker.test_route").state == "not_home"
+    assert hass.states.get("device_tracker.test_origin").state == "unknown"

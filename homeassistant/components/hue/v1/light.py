@@ -7,6 +7,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 import random
+from typing import Any
 
 import aiohue
 
@@ -28,10 +29,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,13 +41,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import color as color_util
 
-from ..bridge import HueBridge
+from ..bridge import HueConfigEntry
 from ..const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
-    DOMAIN as HUE_DOMAIN,
+    DOMAIN,
     GROUP_TYPE_ENTERTAINMENT,
     GROUP_TYPE_LIGHT_GROUP,
     GROUP_TYPE_LIGHT_SOURCE,
@@ -139,11 +141,15 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Hue lights from a config entry."""
-    bridge: HueBridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
-    rooms = {}
+    rooms: dict[str, str] = {}
 
     allow_groups = config_entry.options.get(
         CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
@@ -158,6 +164,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name="light",
         update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
@@ -192,6 +199,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         name="group",
         update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
@@ -403,7 +411,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return hue_brightness_to_hass(bri)
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode
@@ -475,7 +483,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(max_mireds)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.is_group:
             return self.light.state["any_on"]
@@ -518,7 +526,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             suggested_area = self._rooms[self.light.id]
 
         return DeviceInfo(
-            identifiers={(HUE_DOMAIN, self.device_id)},
+            identifiers={(DOMAIN, self.device_id)},
             manufacturer=self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
             # (published 03/05/2018)
@@ -526,7 +534,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             name=self.name,
             sw_version=self.light.swversion,
             suggested_area=suggested_area,
-            via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
+            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
         )
 
     async def async_turn_on(self, **kwargs):
@@ -615,7 +623,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         if not self.is_group:
             return {}

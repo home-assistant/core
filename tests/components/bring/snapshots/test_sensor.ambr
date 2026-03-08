@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Discount only',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_discounted',
@@ -74,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -81,6 +84,7 @@
     'original_name': 'List access',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_ACCESS: 'list_access'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_access',
@@ -127,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -134,6 +139,7 @@
     'original_name': 'On occasion',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_convenient',
@@ -198,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -205,6 +212,7 @@
     'original_name': 'Region & language',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_language',
@@ -268,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,6 +284,7 @@
     'original_name': 'Urgent',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_urgent',
@@ -316,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -323,6 +334,7 @@
     'original_name': 'Discount only',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_discounted',
@@ -370,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -377,6 +390,7 @@
     'original_name': 'List access',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_ACCESS: 'list_access'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_access',
@@ -423,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -430,6 +445,7 @@
     'original_name': 'On occasion',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_convenient',
@@ -494,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -501,6 +518,7 @@
     'original_name': 'Region & language',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_language',
@@ -564,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -571,6 +590,7 @@
     'original_name': 'Urgent',
     'platform': 'bring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_urgent',

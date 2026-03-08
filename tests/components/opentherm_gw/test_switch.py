@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
-from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
+from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -44,7 +44,7 @@ async def test_switch_added_disabled(
     assert (
         switch_entity_id := entity_registry.async_get_entity_id(
             SWITCH_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
         )
     ) is not None
@@ -80,7 +80,7 @@ async def test_ch_override_switch(
     assert (
         switch_entity_id := entity_registry.async_get_entity_id(
             SWITCH_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
         )
     ) is not None

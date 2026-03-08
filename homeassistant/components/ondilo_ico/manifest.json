@@ -3,7 +3,7 @@
   "name": "Ondilo ICO",
   "codeowners": ["@JeromeHXP"],
   "config_flow": true,
-  "dependencies": ["auth"],
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/ondilo_ico",
   "integration_type": "hub",
   "iot_class": "cloud_polling",

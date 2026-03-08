@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aioswitcher.api import SwitcherBaseResponse
+from aioswitcher.api.messages import SwitcherBaseResponse
 from aioswitcher.device import ShutterDirection
 import pytest
 

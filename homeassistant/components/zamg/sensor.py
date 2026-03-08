@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
+    UnitOfIrradiance,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
@@ -82,7 +83,8 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="wind_bearing",
         name="Wind Bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         para_name="DD",
     ),
     ZamgSensorEntityDescription(
@@ -154,6 +156,14 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         para_name="TPAM",
+    ),
+    ZamgSensorEntityDescription(
+        key="global_radiation",
+        name="Global Radiation",
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        para_name="GLOW",
     ),
 )
 

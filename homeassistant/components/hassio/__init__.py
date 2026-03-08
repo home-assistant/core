@@ -5,21 +5,23 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import datetime
-from functools import partial
 import logging
 import os
 import re
+import struct
 from typing import Any, NamedTuple
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom
+from homeassistant.components import frontend, panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
@@ -33,31 +35,18 @@ from homeassistant.core import (
     async_get_hass_or_none,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
+    issue_registry as ir,
+    selector,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    deprecated_function,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.hassio import (
-    get_supervisor_ip as _get_supervisor_ip,
-    is_hassio as _is_hassio,
-)
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.service_info.hassio import (
-    HassioServiceInfo as _HassioServiceInfo,
-)
-from homeassistant.helpers.storage import Store
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -72,16 +61,20 @@ from . import (  # noqa: F401
     config_flow,
     diagnostics,
     sensor,
+    switch,
     system_health,
     update,
 )
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
+    ATTR_APP,
+    ATTR_APPS,
     ATTR_COMPRESSED,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
@@ -91,6 +84,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_SLUG,
     DATA_COMPONENT,
+    DATA_CONFIG_STORE,
     DATA_CORE_INFO,
     DATA_HOST_INFO,
     DATA_INFO,
@@ -101,16 +95,16 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
+    SupervisorEntityModel,
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
-    get_addons_changelogs,  # noqa: F401
     get_addons_info,
     get_addons_stats,  # noqa: F401
     get_core_info,  # noqa: F401
     get_core_stats,  # noqa: F401
     get_host_info,  # noqa: F401
-    get_info,  # noqa: F401
+    get_info,
     get_issues_info,  # noqa: F401
     get_os_info,
     get_supervisor_info,  # noqa: F401
@@ -120,11 +114,6 @@ from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
-    async_create_backup,
-    async_get_green_settings,
-    async_get_yellow_settings,
-    async_set_green_settings,
-    async_set_yellow_settings,
     async_update_diagnostics,
     get_supervisor_client,
 )
@@ -135,21 +124,11 @@ from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
-get_supervisor_ip = deprecated_function(
-    "homeassistant.helpers.hassio.get_supervisor_ip", breaks_in_ha_version="2025.11"
-)(_get_supervisor_ip)
-_DEPRECATED_HassioServiceInfo = DeprecatedConstant(
-    _HassioServiceInfo,
-    "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
-    "2025.11",
-)
 
-STORAGE_KEY = DOMAIN
-STORAGE_VERSION = 1
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
 # wait for the import of the platforms
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -161,16 +140,25 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
 SERVICE_ADDON_RESTART = "addon_restart"
-SERVICE_ADDON_UPDATE = "addon_update"
 SERVICE_ADDON_STDIN = "addon_stdin"
+SERVICE_APP_START = "app_start"
+SERVICE_APP_STOP = "app_stop"
+SERVICE_APP_RESTART = "app_restart"
+SERVICE_APP_STDIN = "app_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
 SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
+SERVICE_MOUNT_RELOAD = "mount_reload"
 
 VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
+
+DEPRECATION_URL = (
+    "https://www.home-assistant.io/blog/2025/05/22/"
+    "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
+)
 
 
 def valid_addon(value: Any) -> str:
@@ -179,7 +167,7 @@ def valid_addon(value: Any) -> str:
     hass = async_get_hass_or_none()
 
     if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid add-on slug")
+        raise vol.Invalid("Not a valid app slug")
     return value
 
 
@@ -188,6 +176,12 @@ SCHEMA_NO_DATA = vol.Schema({})
 SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
+    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+)
+
+SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
+
+SCHEMA_APP_STDIN = SCHEMA_APP.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
@@ -209,7 +203,13 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
+        # Legacy "addons", "apps" is preferred
+        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
     }
 )
 
@@ -224,9 +224,33 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
+        # Legacy "addons", "apps" is preferred
+        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
     }
 )
+
+SCHEMA_MOUNT_RELOAD = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+            selector.DeviceSelectorConfig(
+                filter=selector.DeviceFilterSelectorConfig(
+                    integration=DOMAIN,
+                    model=SupervisorEntityModel.MOUNT,
+                )
+            )
+        )
+    }
+)
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
 
 
 class APIEndpointSettings(NamedTuple):
@@ -239,13 +263,18 @@ class APIEndpointSettings(NamedTuple):
 
 
 MAP_SERVICE_API = {
+    # Legacy addon services
     SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
     SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
     SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
-    SERVICE_ADDON_UPDATE: APIEndpointSettings("/addons/{addon}/update", SCHEMA_ADDON),
     SERVICE_ADDON_STDIN: APIEndpointSettings(
         "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
     ),
+    # New app services
+    SERVICE_APP_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_APP),
+    SERVICE_APP_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_APP),
+    SERVICE_APP_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_APP),
+    SERVICE_APP_STDIN: APIEndpointSettings("/addons/{addon}/stdin", SCHEMA_APP_STDIN),
     SERVICE_HOST_SHUTDOWN: APIEndpointSettings("/host/shutdown", SCHEMA_NO_DATA),
     SERVICE_HOST_REBOOT: APIEndpointSettings("/host/reboot", SCHEMA_NO_DATA),
     SERVICE_BACKUP_FULL: APIEndpointSettings(
@@ -297,19 +326,6 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
     return addon_slug.replace("_", "-")
 
 
-@callback
-@deprecated_function(
-    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
-)
-@bind_hass
-def is_hassio(hass: HomeAssistant) -> bool:
-    """Return true if Hass.io is loaded.
-
-    Async friendly.
-    """
-    return _is_hassio(hass)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
@@ -324,6 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         return False
 
     async_load_websocket_api(hass)
+    frontend.async_register_built_in_panel(hass, "app")
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
@@ -335,13 +352,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     except SupervisorError:
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
-    if (data := await store.async_load()) is None:
-        data = {}
+    # Load the store
+    config_store = HassioConfig(hass)
+    await config_store.load()
+    hass.data[DATA_CONFIG_STORE] = config_store
 
     refresh_token = None
-    if "hassio_user" in data:
-        user = await hass.auth.async_get_user(data["hassio_user"])
+    if (hassio_user := config_store.data.hassio_user) is not None:
+        user = await hass.auth.async_get_user(hassio_user)
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
@@ -358,8 +376,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
-        data["hassio_user"] = user.id
-        await store.async_save(data)
+        config_store.update(hassio_user=user.id)
 
     # This overrides the normal API call that would be forwarded
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
@@ -390,18 +407,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     last_timezone = None
+    last_country = None
 
     async def push_config(_: Event | None) -> None:
         """Push core config to Hass.io."""
         nonlocal last_timezone
+        nonlocal last_country
 
         new_timezone = str(hass.config.time_zone)
+        new_country = str(hass.config.country)
 
-        if new_timezone == last_timezone:
-            return
-
-        last_timezone = new_timezone
-        await hassio.update_hass_timezone(new_timezone)
+        if new_timezone != last_timezone or new_country != last_country:
+            last_timezone = new_timezone
+            last_country = new_country
+            await hassio.update_hass_config(new_timezone, new_country)
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
@@ -412,25 +431,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
-        if service.service == SERVICE_ADDON_UPDATE:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "update_service_deprecated",
-                breaks_in_ha_version="2025.5",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="update_service_deprecated",
-            )
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()
-        addon = data.pop(ATTR_ADDON, None)
+        addon = data.pop(ATTR_APP, None) or data.pop(ATTR_ADDON, None)
         slug = data.pop(ATTR_SLUG, None)
+
+        if addons := data.pop(ATTR_APPS, None) or data.pop(ATTR_ADDONS, None):
+            data[ATTR_ADDONS] = addons
+
         payload = None
 
         # Pass data to Hass.io API
-        if service.service == SERVICE_ADDON_STDIN:
+        if service.service in (SERVICE_ADDON_STDIN, SERVICE_APP_STDIN):
             payload = data[ATTR_INPUT]
         elif api_endpoint.pass_data:
             payload = data
@@ -448,6 +461,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
+
+    dev_reg = dr.async_get(hass)
+
+    async def async_mount_reload(service: ServiceCall) -> None:
+        """Handle service calls for Hass.io."""
+        coordinator: HassioDataUpdateCoordinator | None = None
+
+        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_unknown_device_id",
+            )
+
+        if (
+            device.name is None
+            or device.model != SupervisorEntityModel.MOUNT
+            or (coordinator := hass.data.get(ADDONS_COORDINATOR)) is None
+            or coordinator.entry_id not in device.config_entries
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_invalid_device",
+            )
+
+        try:
+            await supervisor_client.mounts.reload_mount(device.name)
+        except SupervisorError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mount_reload_error",
+                translation_placeholders={"name": device.name, "error": str(error)},
+            ) from error
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
+    )
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""
@@ -559,6 +608,61 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
+    def deprecated_setup_issue() -> None:
+        os_info = get_os_info(hass)
+        info = get_info(hass)
+        if os_info is None or info is None:
+            return
+        is_haos = info.get("hassos") is not None
+        board = os_info.get("board")
+        arch = info.get("arch", "unknown")
+        unsupported_board = board in {"tinker", "odroid-xu4", "rpi2"}
+        unsupported_os_on_board = board in {"rpi3", "rpi4"}
+        if is_haos and (unsupported_board or unsupported_os_on_board):
+            issue_id = "deprecated_os_"
+            if unsupported_os_on_board:
+                issue_id += "aarch64"
+            elif unsupported_board:
+                issue_id += "armv7"
+            ir.async_create_issue(
+                hass,
+                "homeassistant",
+                issue_id,
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_guide": "https://www.home-assistant.io/installation/",
+                },
+            )
+        bit32 = _is_32_bit()
+        deprecated_architecture = bit32 and not (
+            unsupported_board or unsupported_os_on_board
+        )
+        if not is_haos or deprecated_architecture:
+            issue_id = "deprecated"
+            if not is_haos:
+                issue_id += "_method"
+            if deprecated_architecture:
+                issue_id += "_architecture"
+            ir.async_create_issue(
+                hass,
+                "homeassistant",
+                issue_id,
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=issue_id,
+                translation_placeholders={
+                    "installation_type": "OS" if is_haos else "Supervised",
+                    "arch": arch,
+                },
+            )
+        listener()
+
+    listener = coordinator.async_add_listener(deprecated_setup_issue)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -568,15 +672,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Pop add-on data
+    # Unload coordinator
+    coordinator: HassioDataUpdateCoordinator = hass.data[ADDONS_COORDINATOR]
+    coordinator.unload()
+
+    # Pop coordinator
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

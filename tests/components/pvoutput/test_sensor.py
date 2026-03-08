@@ -30,8 +30,8 @@ async def test_sensors(
 ) -> None:
     """Test the PVOutput sensors."""
 
-    state = hass.states.get("sensor.frenck_s_solar_farm_energy_consumed")
-    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_consumed")
+    state = hass.states.get("sensor.frenck_s_solar_farm_energy_consumption")
+    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_consumption")
     assert entry
     assert state
     assert entry.unique_id == "12345_energy_consumption"
@@ -40,14 +40,14 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Frenck's Solar Farm Energy consumed"
+        == "Frenck's Solar Farm Energy consumption"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.frenck_s_solar_farm_energy_generated")
-    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_generated")
+    state = hass.states.get("sensor.frenck_s_solar_farm_energy_generation")
+    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_energy_generation")
     assert entry
     assert state
     assert entry.unique_id == "12345_energy_generation"
@@ -56,7 +56,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Frenck's Solar Farm Energy generated"
+        == "Frenck's Solar Farm Energy generation"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.WATT_HOUR
@@ -78,8 +78,8 @@ async def test_sensors(
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.frenck_s_solar_farm_power_consumed")
-    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_power_consumed")
+    state = hass.states.get("sensor.frenck_s_solar_farm_power_consumption")
+    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_power_consumption")
     assert entry
     assert state
     assert entry.unique_id == "12345_power_consumption"
@@ -87,14 +87,15 @@ async def test_sensors(
     assert state.state == "2500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Power consumed"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Frenck's Solar Farm Power consumption"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
     assert ATTR_ICON not in state.attributes
 
-    state = hass.states.get("sensor.frenck_s_solar_farm_power_generated")
-    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_power_generated")
+    state = hass.states.get("sensor.frenck_s_solar_farm_power_generation")
+    entry = entity_registry.async_get("sensor.frenck_s_solar_farm_power_generation")
     assert entry
     assert state
     assert entry.unique_id == "12345_power_generation"
@@ -103,7 +104,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Frenck's Solar Farm Power generated"
+        == "Frenck's Solar Farm Power generation"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT

@@ -22,6 +22,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -49,7 +51,6 @@ SWITCHES: list[SmSwitchEntityDescription] = [
     SmSwitchEntityDescription(
         key="auto_zigbee_update",
         translation_key="auto_zigbee_update",
-        entity_category=EntityCategory.CONFIG,
         setting=Settings.ZB_AUTOUPDATE,
         entity_registry_enabled_default=False,
         state_fn=lambda x: x.auto_zigbee,
@@ -81,6 +82,7 @@ class SmSwitch(SmEntity, SwitchEntity):
     coordinator: SmDataUpdateCoordinator
     entity_description: SmSwitchEntityDescription
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

@@ -312,6 +312,15 @@ async def test_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=service_info
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {

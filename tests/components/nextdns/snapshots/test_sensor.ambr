@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +30,7 @@
     'original_name': 'DNS-over-HTTP/3 queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doh3_queries',
     'unique_id': 'xyz12_doh3_queries',
@@ -73,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTP/3 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -80,6 +83,7 @@
     'original_name': 'DNS-over-HTTP/3 queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doh3_queries_ratio',
     'unique_id': 'xyz12_doh3_queries_ratio',
@@ -124,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,6 +136,7 @@
     'original_name': 'DNS-over-HTTPS queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doh_queries',
     'unique_id': 'xyz12_doh_queries',
@@ -175,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-HTTPS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -182,6 +189,7 @@
     'original_name': 'DNS-over-HTTPS queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doh_queries_ratio',
     'unique_id': 'xyz12_doh_queries_ratio',
@@ -226,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,6 +242,7 @@
     'original_name': 'DNS-over-QUIC queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doq_queries',
     'unique_id': 'xyz12_doq_queries',
@@ -277,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-QUIC queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -284,6 +295,7 @@
     'original_name': 'DNS-over-QUIC queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doq_queries_ratio',
     'unique_id': 'xyz12_doq_queries_ratio',
@@ -328,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -335,6 +348,7 @@
     'original_name': 'DNS-over-TLS queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dot_queries',
     'unique_id': 'xyz12_dot_queries',
@@ -379,6 +393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS-over-TLS queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +401,7 @@
     'original_name': 'DNS-over-TLS queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dot_queries_ratio',
     'unique_id': 'xyz12_dot_queries_ratio',
@@ -430,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -437,6 +454,7 @@
     'original_name': 'DNS queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'all_queries',
     'unique_id': 'xyz12_all_queries',
@@ -481,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -488,6 +507,7 @@
     'original_name': 'DNS queries blocked',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blocked_queries',
     'unique_id': 'xyz12_blocked_queries',
@@ -532,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -539,6 +560,7 @@
     'original_name': 'DNS queries blocked ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'blocked_queries_ratio',
     'unique_id': 'xyz12_blocked_queries_ratio',
@@ -583,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries relayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -590,6 +613,7 @@
     'original_name': 'DNS queries relayed',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relayed_queries',
     'unique_id': 'xyz12_relayed_queries',
@@ -634,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC not validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,6 +666,7 @@
     'original_name': 'DNSSEC not validated queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'not_validated_queries',
     'unique_id': 'xyz12_not_validated_queries',
@@ -685,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +719,7 @@
     'original_name': 'DNSSEC validated queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'validated_queries',
     'unique_id': 'xyz12_validated_queries',
@@ -736,6 +764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNSSEC validated queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -743,6 +772,7 @@
     'original_name': 'DNSSEC validated queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'validated_queries_ratio',
     'unique_id': 'xyz12_validated_queries_ratio',
@@ -787,6 +817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -794,6 +825,7 @@
     'original_name': 'Encrypted queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'encrypted_queries',
     'unique_id': 'xyz12_encrypted_queries',
@@ -838,6 +870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Encrypted queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -845,6 +878,7 @@
     'original_name': 'Encrypted queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'encrypted_queries_ratio',
     'unique_id': 'xyz12_encrypted_queries_ratio',
@@ -889,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv4 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -896,6 +931,7 @@
     'original_name': 'IPv4 queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ipv4_queries',
     'unique_id': 'xyz12_ipv4_queries',
@@ -940,6 +976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -947,6 +984,7 @@
     'original_name': 'IPv6 queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ipv6_queries',
     'unique_id': 'xyz12_ipv6_queries',
@@ -991,6 +1029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IPv6 queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -998,6 +1037,7 @@
     'original_name': 'IPv6 queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ipv6_queries_ratio',
     'unique_id': 'xyz12_ipv6_queries_ratio',
@@ -1042,6 +1082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1049,6 +1090,7 @@
     'original_name': 'TCP queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tcp_queries',
     'unique_id': 'xyz12_tcp_queries',
@@ -1093,6 +1135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TCP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1100,6 +1143,7 @@
     'original_name': 'TCP queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tcp_queries_ratio',
     'unique_id': 'xyz12_tcp_queries_ratio',
@@ -1144,6 +1188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1151,6 +1196,7 @@
     'original_name': 'UDP queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'udp_queries',
     'unique_id': 'xyz12_udp_queries',
@@ -1195,6 +1241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UDP queries ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1202,6 +1249,7 @@
     'original_name': 'UDP queries ratio',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'udp_queries_ratio',
     'unique_id': 'xyz12_udp_queries_ratio',
@@ -1246,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unencrypted queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1253,6 +1302,7 @@
     'original_name': 'Unencrypted queries',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unencrypted_queries',
     'unique_id': 'xyz12_unencrypted_queries',

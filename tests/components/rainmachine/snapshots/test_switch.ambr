@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Evening',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_2',
@@ -93,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -100,6 +103,7 @@
     'original_name': 'Evening enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_2_enabled',
@@ -142,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extra water on hot days',
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,6 +154,7 @@
     'original_name': 'Extra water on hot days',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hot_days_extra_watering',
     'unique_id': 'aa:bb:cc:dd:ee:ff_hot_days_extra_watering',
@@ -190,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box',
     'options': dict({
     }),
     'original_device_class': None,
@@ -197,6 +204,7 @@
     'original_name': 'Flower box',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2',
@@ -252,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -259,6 +268,7 @@
     'original_name': 'Flower box enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_2_enabled',
@@ -301,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +319,7 @@
     'original_name': 'Freeze protection',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'freeze_protect_enabled',
     'unique_id': 'aa:bb:cc:dd:ee:ff_freeze_protect_enabled',
@@ -349,6 +361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +369,7 @@
     'original_name': 'Landscaping',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1',
@@ -411,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -418,6 +433,7 @@
     'original_name': 'Landscaping enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_1_enabled',
@@ -460,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -467,6 +484,7 @@
     'original_name': 'Morning',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_1',
@@ -533,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -540,6 +559,7 @@
     'original_name': 'Morning enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_program_1_enabled',
@@ -582,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,6 +610,7 @@
     'original_name': 'Test',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3',
@@ -644,6 +666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -651,6 +674,7 @@
     'original_name': 'Test enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_3_enabled',
@@ -693,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10',
     'options': dict({
     }),
     'original_device_class': None,
@@ -700,6 +725,7 @@
     'original_name': 'Zone 10',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10',
@@ -755,6 +781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -762,6 +789,7 @@
     'original_name': 'Zone 10 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_10_enabled',
@@ -804,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11',
     'options': dict({
     }),
     'original_device_class': None,
@@ -811,6 +840,7 @@
     'original_name': 'Zone 11',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11',
@@ -866,6 +896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -873,6 +904,7 @@
     'original_name': 'Zone 11 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_11_enabled',
@@ -915,6 +947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12',
     'options': dict({
     }),
     'original_device_class': None,
@@ -922,6 +955,7 @@
     'original_name': 'Zone 12',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12',
@@ -977,6 +1011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -984,6 +1019,7 @@
     'original_name': 'Zone 12 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_12_enabled',
@@ -1026,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1033,6 +1070,7 @@
     'original_name': 'Zone 4',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4',
@@ -1088,6 +1126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1095,6 +1134,7 @@
     'original_name': 'Zone 4 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_4_enabled',
@@ -1137,6 +1177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1144,6 +1185,7 @@
     'original_name': 'Zone 5',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5',
@@ -1199,6 +1241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1206,6 +1249,7 @@
     'original_name': 'Zone 5 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_5_enabled',
@@ -1248,6 +1292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1255,6 +1300,7 @@
     'original_name': 'Zone 6',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6',
@@ -1310,6 +1356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1317,6 +1364,7 @@
     'original_name': 'Zone 6 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_6_enabled',
@@ -1359,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1366,6 +1415,7 @@
     'original_name': 'Zone 7',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7',
@@ -1421,6 +1471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1428,6 +1479,7 @@
     'original_name': 'Zone 7 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_7_enabled',
@@ -1470,6 +1522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1477,6 +1530,7 @@
     'original_name': 'Zone 8',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8',
@@ -1532,6 +1586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1539,6 +1594,7 @@
     'original_name': 'Zone 8 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_8_enabled',
@@ -1581,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1588,6 +1645,7 @@
     'original_name': 'Zone 9',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9',
@@ -1643,6 +1701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1650,6 +1709,7 @@
     'original_name': 'Zone 9 enabled',
     'platform': 'rainmachine',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_zone_9_enabled',

@@ -1,4 +1,56 @@
 # serializer version: 1
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_battery:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': 'mdi:battery-unknown',
+    'original_name': 'Battery',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'E1234567890000000003_battery_status',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_battery:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'E1234567890000000003 Battery',
+      'icon': 'mdi:battery-unknown',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -20,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +80,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': 'E1234567890000000003_lifespan_filter',
@@ -68,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +130,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_main_brush',
     'unique_id': 'E1234567890000000003_lifespan_main_brush',
@@ -116,6 +172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +180,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': 'E1234567890000000003_lifespan_side_brush',
@@ -145,6 +203,7 @@
 # ---
 # name: test_legacy_sensors[123][states]
   list([
+    'sensor.e1234567890000000003_battery',
     'sensor.e1234567890000000003_main_brush_lifespan',
     'sensor.e1234567890000000003_side_brush_lifespan',
     'sensor.e1234567890000000003_filter_lifespan',
@@ -171,13 +230,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
@@ -187,6 +254,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Goat G1 Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -195,7 +263,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '0.001',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_battery:entity-registry]
@@ -219,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -226,6 +295,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '8516fbb1-17f1-4194-0000000_battery_level',
@@ -268,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blade lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,6 +346,7 @@
     'original_name': 'Blade lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_blade',
     'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_blade',
@@ -316,7 +388,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -326,6 +402,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_time',
@@ -368,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': None,
@@ -375,6 +453,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': '8516fbb1-17f1-4194-0000000_error',
@@ -416,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -423,6 +503,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_ip',
@@ -463,6 +544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lens brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -470,6 +552,7 @@
     'original_name': 'Lens brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_lens_brush',
     'unique_id': '8516fbb1-17f1-4194-0000000_lifespan_lens_brush',
@@ -513,13 +596,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
@@ -529,6 +617,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Goat G1 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -564,7 +653,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -574,6 +667,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_time',
@@ -593,7 +687,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:entity-registry]
@@ -619,6 +713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -626,6 +721,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_cleanings',
@@ -667,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -674,6 +771,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_rssi',
@@ -714,6 +812,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,6 +820,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': '8516fbb1-17f1-4194-0000000_network_ssid',
@@ -761,13 +861,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000001_stats_area',
@@ -777,6 +885,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Dusty Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -809,6 +918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -816,6 +926,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '8516fbb1-17f1-4194-0000001_battery_level',
@@ -858,7 +969,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -868,6 +983,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000001_stats_time',
@@ -910,6 +1026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': None,
@@ -917,6 +1034,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': '8516fbb1-17f1-4194-0000001_error',
@@ -958,6 +1076,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -965,6 +1084,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_filter',
@@ -1006,6 +1126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1013,6 +1134,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_ip',
@@ -1053,6 +1175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1060,6 +1183,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_brush',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_brush',
@@ -1101,6 +1225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Round mop lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1108,6 +1233,7 @@
     'original_name': 'Round mop lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_round_mop',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_round_mop',
@@ -1149,6 +1275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1156,6 +1283,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_side_brush',
@@ -1185,6 +1313,8 @@
       'options': list([
         'idle',
         'emptying_dustbin',
+        'washing_mop',
+        'drying_mop',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1202,6 +1332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Station state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1209,6 +1340,7 @@
     'original_name': 'Station state',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'station_state',
     'unique_id': '8516fbb1-17f1-4194-0000001_station_state',
@@ -1223,6 +1355,8 @@
       'options': list([
         'idle',
         'emptying_dustbin',
+        'washing_mop',
+        'drying_mop',
       ]),
     }),
     'context': <ANY>,
@@ -1256,13 +1390,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_area',
@@ -1272,6 +1411,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Dusty Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1307,7 +1447,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -1317,6 +1461,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_time',
@@ -1336,7 +1481,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:entity-registry]
@@ -1362,6 +1507,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1369,6 +1515,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_cleanings',
@@ -1410,6 +1557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Unit care lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1417,6 +1565,7 @@
     'original_name': 'Unit care lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_unit_care',
     'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_unit_care',
@@ -1458,6 +1607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1465,6 +1615,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_rssi',
@@ -1505,6 +1656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1512,6 +1664,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': '8516fbb1-17f1-4194-0000001_network_ssid',
@@ -1552,13 +1705,21 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': 'E1234567890000000001_stats_area',
@@ -1568,6 +1729,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Ozmo 950 Area cleaned',
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
@@ -1600,6 +1762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1607,6 +1770,7 @@
     'original_name': 'Battery',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'E1234567890000000001_battery_level',
@@ -1649,7 +1813,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
@@ -1659,6 +1827,7 @@
     'original_name': 'Cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'stats_time',
     'unique_id': 'E1234567890000000001_stats_time',
@@ -1701,6 +1870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1708,6 +1878,7 @@
     'original_name': 'Error',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'error',
     'unique_id': 'E1234567890000000001_error',
@@ -1749,6 +1920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1756,6 +1928,7 @@
     'original_name': 'Filter lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_filter',
     'unique_id': 'E1234567890000000001_lifespan_filter',
@@ -1797,6 +1970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1804,6 +1978,7 @@
     'original_name': 'IP address',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ip',
     'unique_id': 'E1234567890000000001_network_ip',
@@ -1844,6 +2019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1851,6 +2027,7 @@
     'original_name': 'Main brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_brush',
     'unique_id': 'E1234567890000000001_lifespan_brush',
@@ -1892,6 +2069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush lifespan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1899,6 +2077,7 @@
     'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lifespan_side_brush',
     'unique_id': 'E1234567890000000001_lifespan_side_brush',
@@ -1942,13 +2121,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total area cleaned',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.AREA: 'area'>,
     'original_icon': None,
     'original_name': 'Total area cleaned',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': 'E1234567890000000001_total_stats_area',
@@ -1958,6 +2142,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'area',
       'friendly_name': 'Ozmo 950 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
@@ -1993,7 +2178,11 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning duration',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
       }),
@@ -2003,6 +2192,7 @@
     'original_name': 'Total cleaning duration',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_time',
     'unique_id': 'E1234567890000000001_total_stats_time',
@@ -2022,7 +2212,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.000',
+    'state': '40.0',
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:entity-registry]
@@ -2048,6 +2238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleanings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2055,6 +2246,7 @@
     'original_name': 'Total cleanings',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_stats_cleanings',
     'unique_id': 'E1234567890000000001_total_stats_cleanings',
@@ -2096,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2103,6 +2296,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_rssi',
     'unique_id': 'E1234567890000000001_network_rssi',
@@ -2143,6 +2337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi SSID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2150,6 +2345,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'ecovacs',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'network_ssid',
     'unique_id': 'E1234567890000000001_network_ssid',

@@ -11,12 +11,14 @@ from aioairzone.const import (
     API_ACS_SET_POINT,
     API_ACS_TEMP,
     API_AIR_DEMAND,
+    API_BATTERY,
     API_COLD_ANGLE,
     API_COLD_STAGE,
     API_COLD_STAGES,
     API_COOL_MAX_TEMP,
     API_COOL_MIN_TEMP,
     API_COOL_SET_POINT,
+    API_COVERAGE,
     API_DATA,
     API_ERRORS,
     API_FLOOR_DEMAND,
@@ -36,6 +38,7 @@ from aioairzone.const import (
     API_NAME,
     API_ON,
     API_POWER,
+    API_Q_ADAPT,
     API_ROOM_TEMP,
     API_SET_POINT,
     API_SLEEP,
@@ -119,6 +122,8 @@ HVAC_MOCK = {
                     API_THERMOS_TYPE: 4,
                     API_THERMOS_FIRMWARE: "3.33",
                     API_THERMOS_RADIO: 1,
+                    API_BATTERY: 99,
+                    API_COVERAGE: 72,
                     API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -147,6 +152,8 @@ HVAC_MOCK = {
                     API_THERMOS_TYPE: 4,
                     API_THERMOS_FIRMWARE: "3.33",
                     API_THERMOS_RADIO: 1,
+                    API_BATTERY: 35,
+                    API_COVERAGE: 60,
                     API_ON: 1,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -173,6 +180,8 @@ HVAC_MOCK = {
                     API_THERMOS_TYPE: 4,
                     API_THERMOS_FIRMWARE: "3.33",
                     API_THERMOS_RADIO: 1,
+                    API_BATTERY: 25,
+                    API_COVERAGE: 88,
                     API_ON: 0,
                     API_MAX_TEMP: 86,
                     API_MIN_TEMP: 59,
@@ -203,6 +212,8 @@ HVAC_MOCK = {
                     API_THERMOS_TYPE: 4,
                     API_THERMOS_FIRMWARE: "3.33",
                     API_THERMOS_RADIO: 1,
+                    API_BATTERY: 80,
+                    API_COVERAGE: 66,
                     API_ON: 0,
                     API_MAX_TEMP: 30,
                     API_MIN_TEMP: 15,
@@ -343,6 +354,7 @@ HVAC_SYSTEMS_MOCK = {
             API_POWER: 0,
             API_SYSTEM_FIRMWARE: "3.31",
             API_SYSTEM_TYPE: 1,
+            API_Q_ADAPT: 0,
         }
     ]
 }
@@ -361,7 +373,7 @@ HVAC_WEBSERVER_MOCK = {
 
 async def async_init_integration(
     hass: HomeAssistant,
-) -> None:
+) -> MockConfigEntry:
     """Set up the Airzone integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
@@ -397,3 +409,5 @@ async def async_init_integration(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    return config_entry

@@ -23,6 +23,7 @@ from .const import (
     DEFAULT_HEATING_TYPE,
     DOMAIN,
     VICARE_NAME,
+    VIESSMANN_DEVELOPER_PORTAL,
     HeatingType,
 )
 from .utils import login
@@ -63,13 +64,16 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.hass.async_add_executor_job(login, self.hass, user_input)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_create_entry(title=VICARE_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL
+            },
             data_schema=USER_SCHEMA,
             errors=errors,
         )
@@ -95,13 +99,16 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(login, self.hass, data)
-            except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
+            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(reauth_entry, data=data)
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={
+                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL
+            },
             data_schema=self.add_suggested_values_to_schema(
                 REAUTH_SCHEMA, reauth_entry.data
             ),

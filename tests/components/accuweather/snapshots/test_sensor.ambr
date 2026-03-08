@@ -7,11 +7,10 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -29,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 0',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -36,6 +36,7 @@
     'original_name': 'Air quality day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-0',
@@ -50,11 +51,10 @@
       'friendly_name': 'Home Air quality day 0',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -73,11 +73,10 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -95,6 +94,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -102,6 +102,7 @@
     'original_name': 'Air quality day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-1',
@@ -116,11 +117,10 @@
       'friendly_name': 'Home Air quality day 1',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -139,11 +139,10 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -161,6 +160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -168,6 +168,7 @@
     'original_name': 'Air quality day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-2',
@@ -182,11 +183,10 @@
       'friendly_name': 'Home Air quality day 2',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -205,11 +205,10 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -227,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -234,6 +234,7 @@
     'original_name': 'Air quality day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-3',
@@ -248,11 +249,10 @@
       'friendly_name': 'Home Air quality day 3',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -271,11 +271,10 @@
     'capabilities': dict({
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -293,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality day 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -300,6 +300,7 @@
     'original_name': 'Air quality day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_quality',
     'unique_id': '0123456-airquality-4',
@@ -314,11 +315,10 @@
       'friendly_name': 'Home Air quality day 4',
       'options': list([
         'good',
-        'hazardous',
-        'high',
-        'low',
         'moderate',
         'unhealthy',
+        'very_unhealthy',
+        'hazardous',
       ]),
     }),
     'context': <ANY>,
@@ -352,13 +352,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Apparent temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'apparent_temperature',
     'unique_id': '0123456-apparenttemperature',
@@ -405,6 +410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud ceiling',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -415,6 +421,7 @@
     'original_name': 'Cloud ceiling',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_ceiling',
     'unique_id': '0123456-ceiling',
@@ -461,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,6 +476,7 @@
     'original_name': 'Cloud cover',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover',
     'unique_id': '0123456-cloudcover',
@@ -511,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -518,6 +528,7 @@
     'original_name': 'Cloud cover day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-0',
@@ -560,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -567,6 +579,7 @@
     'original_name': 'Cloud cover day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-1',
@@ -609,6 +622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -616,6 +630,7 @@
     'original_name': 'Cloud cover day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-2',
@@ -658,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -665,6 +681,7 @@
     'original_name': 'Cloud cover day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-3',
@@ -707,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -714,6 +732,7 @@
     'original_name': 'Cloud cover day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_day',
     'unique_id': '0123456-cloudcoverday-4',
@@ -756,6 +775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -763,6 +783,7 @@
     'original_name': 'Cloud cover night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-0',
@@ -805,6 +826,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -812,6 +834,7 @@
     'original_name': 'Cloud cover night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-1',
@@ -854,6 +877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -861,6 +885,7 @@
     'original_name': 'Cloud cover night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-2',
@@ -903,6 +928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -910,6 +936,7 @@
     'original_name': 'Cloud cover night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-3',
@@ -952,6 +979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud cover night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -959,6 +987,7 @@
     'original_name': 'Cloud cover night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_cover_night',
     'unique_id': '0123456-cloudcovernight-4',
@@ -1001,6 +1030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1008,6 +1038,7 @@
     'original_name': 'Condition day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-0',
@@ -1049,6 +1080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1056,6 +1088,7 @@
     'original_name': 'Condition day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-1',
@@ -1097,6 +1130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1104,6 +1138,7 @@
     'original_name': 'Condition day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-2',
@@ -1145,6 +1180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1152,6 +1188,7 @@
     'original_name': 'Condition day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-3',
@@ -1193,6 +1230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1200,6 +1238,7 @@
     'original_name': 'Condition day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_day',
     'unique_id': '0123456-longphraseday-4',
@@ -1241,6 +1280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1248,6 +1288,7 @@
     'original_name': 'Condition night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-0',
@@ -1289,6 +1330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1296,6 +1338,7 @@
     'original_name': 'Condition night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-1',
@@ -1337,6 +1380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1344,6 +1388,7 @@
     'original_name': 'Condition night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-2',
@@ -1385,6 +1430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1392,6 +1438,7 @@
     'original_name': 'Condition night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-3',
@@ -1433,6 +1480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1440,6 +1488,7 @@
     'original_name': 'Condition night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'condition_night',
     'unique_id': '0123456-longphrasenight-4',
@@ -1483,13 +1532,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Dew point',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dew_point',
     'unique_id': '0123456-dewpoint',
@@ -1534,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1541,6 +1596,7 @@
     'original_name': 'Grass pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-0',
@@ -1584,6 +1640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1591,6 +1648,7 @@
     'original_name': 'Grass pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-1',
@@ -1634,6 +1692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1641,6 +1700,7 @@
     'original_name': 'Grass pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-2',
@@ -1684,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1691,6 +1752,7 @@
     'original_name': 'Grass pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-3',
@@ -1734,6 +1796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grass pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1741,6 +1804,7 @@
     'original_name': 'Grass pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grass_pollen',
     'unique_id': '0123456-grass-4',
@@ -1784,6 +1848,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1791,6 +1856,7 @@
     'original_name': 'Hours of sun day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-0',
@@ -1833,6 +1899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1840,6 +1907,7 @@
     'original_name': 'Hours of sun day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-1',
@@ -1882,6 +1950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1889,6 +1958,7 @@
     'original_name': 'Hours of sun day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-2',
@@ -1931,6 +2001,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1938,6 +2009,7 @@
     'original_name': 'Hours of sun day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-3',
@@ -1980,6 +2052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hours of sun day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1987,6 +2060,7 @@
     'original_name': 'Hours of sun day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hours_of_sun',
     'unique_id': '0123456-hoursofsun-4',
@@ -2031,6 +2105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2038,6 +2113,7 @@
     'original_name': 'Humidity',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
     'unique_id': '0123456-relativehumidity',
@@ -2082,6 +2158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2089,6 +2166,7 @@
     'original_name': 'Mold pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-0',
@@ -2132,6 +2210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2139,6 +2218,7 @@
     'original_name': 'Mold pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-1',
@@ -2182,6 +2262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2189,6 +2270,7 @@
     'original_name': 'Mold pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-2',
@@ -2232,6 +2314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2239,6 +2322,7 @@
     'original_name': 'Mold pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-3',
@@ -2282,6 +2366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mold pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2289,6 +2374,7 @@
     'original_name': 'Mold pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mold_pollen',
     'unique_id': '0123456-mold-4',
@@ -2334,13 +2420,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
     'original_name': 'Precipitation',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'precipitation',
     'unique_id': '0123456-precipitation',
@@ -2388,6 +2479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2398,6 +2490,7 @@
     'original_name': 'Pressure',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure',
     'unique_id': '0123456-pressure',
@@ -2448,6 +2541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure tendency',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2455,6 +2549,7 @@
     'original_name': 'Pressure tendency',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_tendency',
     'unique_id': '0123456-pressuretendency',
@@ -2502,6 +2597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2509,6 +2605,7 @@
     'original_name': 'Ragweed pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-0',
@@ -2552,6 +2649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2559,6 +2657,7 @@
     'original_name': 'Ragweed pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-1',
@@ -2602,6 +2701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2609,6 +2709,7 @@
     'original_name': 'Ragweed pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-2',
@@ -2652,6 +2753,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2659,6 +2761,7 @@
     'original_name': 'Ragweed pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-3',
@@ -2702,6 +2805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ragweed pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2709,6 +2813,7 @@
     'original_name': 'Ragweed pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ragweed_pollen',
     'unique_id': '0123456-ragweed-4',
@@ -2754,13 +2859,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature',
     'unique_id': '0123456-realfeeltemperature',
@@ -2805,13 +2915,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature max day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-0',
@@ -2855,13 +2970,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature max day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-1',
@@ -2905,13 +3025,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature max day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-2',
@@ -2955,13 +3080,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature max day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-3',
@@ -3005,13 +3135,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature max day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature max day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_max',
     'unique_id': '0123456-realfeeltemperaturemax-4',
@@ -3055,13 +3190,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-0',
@@ -3105,13 +3245,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature min day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-1',
@@ -3155,13 +3300,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature min day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-2',
@@ -3205,13 +3355,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature min day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-3',
@@ -3255,13 +3410,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature min day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature min day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_min',
     'unique_id': '0123456-realfeeltemperaturemin-4',
@@ -3307,13 +3467,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade',
     'unique_id': '0123456-realfeeltemperatureshade',
@@ -3358,13 +3523,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade max day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-0',
@@ -3408,13 +3578,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade max day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-1',
@@ -3458,13 +3633,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade max day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-2',
@@ -3508,13 +3688,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade max day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-3',
@@ -3558,13 +3743,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade max day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade max day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_max',
     'unique_id': '0123456-realfeeltemperatureshademax-4',
@@ -3608,13 +3798,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade min day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-0',
@@ -3658,13 +3853,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade min day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-1',
@@ -3708,13 +3908,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade min day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-2',
@@ -3758,13 +3963,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade min day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-3',
@@ -3808,13 +4018,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RealFeel temperature shade min day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'RealFeel temperature shade min day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'realfeel_temperature_shade_min',
     'unique_id': '0123456-realfeeltemperatureshademin-4',
@@ -3858,13 +4073,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-0',
@@ -3908,13 +4128,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-1',
@@ -3958,13 +4183,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-2',
@@ -4008,13 +4238,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-3',
@@ -4058,13 +4293,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_day',
     'unique_id': '0123456-solarirradianceday-4',
@@ -4108,13 +4348,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-0',
@@ -4158,13 +4403,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-1',
@@ -4208,13 +4458,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-2',
@@ -4258,13 +4513,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-3',
@@ -4308,13 +4568,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Solar irradiance night 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
     'original_icon': None,
     'original_name': 'Solar irradiance night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'solar_irradiance_night',
     'unique_id': '0123456-solarirradiancenight-4',
@@ -4360,13 +4625,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
     'unique_id': '0123456-temperature',
@@ -4411,6 +4681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4418,6 +4689,7 @@
     'original_name': 'Thunderstorm probability day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-0',
@@ -4460,6 +4732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4467,6 +4740,7 @@
     'original_name': 'Thunderstorm probability day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-1',
@@ -4509,6 +4783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4516,6 +4791,7 @@
     'original_name': 'Thunderstorm probability day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-2',
@@ -4558,6 +4834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4565,6 +4842,7 @@
     'original_name': 'Thunderstorm probability day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-3',
@@ -4607,6 +4885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4614,6 +4893,7 @@
     'original_name': 'Thunderstorm probability day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_day',
     'unique_id': '0123456-thunderstormprobabilityday-4',
@@ -4656,6 +4936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4663,6 +4944,7 @@
     'original_name': 'Thunderstorm probability night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-0',
@@ -4705,6 +4987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4712,6 +4995,7 @@
     'original_name': 'Thunderstorm probability night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-1',
@@ -4754,6 +5038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4761,6 +5046,7 @@
     'original_name': 'Thunderstorm probability night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-2',
@@ -4803,6 +5089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4810,6 +5097,7 @@
     'original_name': 'Thunderstorm probability night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-3',
@@ -4852,6 +5140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunderstorm probability night 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4859,6 +5148,7 @@
     'original_name': 'Thunderstorm probability night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'thunderstorm_probability_night',
     'unique_id': '0123456-thunderstormprobabilitynight-4',
@@ -4901,6 +5191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4908,6 +5199,7 @@
     'original_name': 'Tree pollen day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-0',
@@ -4951,6 +5243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4958,6 +5251,7 @@
     'original_name': 'Tree pollen day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-1',
@@ -5001,6 +5295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5008,6 +5303,7 @@
     'original_name': 'Tree pollen day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-2',
@@ -5051,6 +5347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5058,6 +5355,7 @@
     'original_name': 'Tree pollen day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-3',
@@ -5101,6 +5399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tree pollen day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5108,6 +5407,7 @@
     'original_name': 'Tree pollen day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tree_pollen',
     'unique_id': '0123456-tree-4',
@@ -5153,6 +5453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5160,6 +5461,7 @@
     'original_name': 'UV index',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index',
     'unique_id': '0123456-uvindex',
@@ -5204,6 +5506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5211,6 +5514,7 @@
     'original_name': 'UV index day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-0',
@@ -5254,6 +5558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5261,6 +5566,7 @@
     'original_name': 'UV index day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-1',
@@ -5304,6 +5610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5311,6 +5618,7 @@
     'original_name': 'UV index day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-2',
@@ -5354,6 +5662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5361,6 +5670,7 @@
     'original_name': 'UV index day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-3',
@@ -5404,6 +5714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index day 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5411,6 +5722,7 @@
     'original_name': 'UV index day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_index_forecast',
     'unique_id': '0123456-uvindex-4',
@@ -5456,13 +5768,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wet bulb temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet_bulb_temperature',
     'unique_id': '0123456-wetbulbtemperature',
@@ -5509,13 +5826,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wind chill temperature',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_chill_temperature',
     'unique_id': '0123456-windchilltemperature',
@@ -5562,13 +5884,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed',
     'unique_id': '0123456-windgust',
@@ -5613,13 +5940,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-0',
@@ -5664,13 +5996,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-1',
@@ -5715,13 +6052,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-2',
@@ -5766,13 +6108,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-3',
@@ -5817,13 +6164,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_day',
     'unique_id': '0123456-windgustday-4',
@@ -5868,13 +6220,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-0',
@@ -5919,13 +6276,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-1',
@@ -5970,13 +6332,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-2',
@@ -6021,13 +6388,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-3',
@@ -6072,13 +6444,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust speed night 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind gust speed night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_gust_speed_night',
     'unique_id': '0123456-windgustnight-4',
@@ -6125,13 +6502,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed',
     'unique_id': '0123456-wind',
@@ -6176,13 +6558,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed day 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-0',
@@ -6227,13 +6614,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed day 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-1',
@@ -6278,13 +6670,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed day 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-2',
@@ -6329,13 +6726,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed day 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-3',
@@ -6380,13 +6782,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed day 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed day 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_day',
     'unique_id': '0123456-windday-4',
@@ -6431,13 +6838,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed night 0',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-0',
@@ -6482,13 +6894,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed night 1',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-1',
@@ -6533,13 +6950,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed night 2',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-2',
@@ -6584,13 +7006,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 3',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed night 3',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-3',
@@ -6635,13 +7062,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed night 4',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
     'original_name': 'Wind speed night 4',
     'platform': 'accuweather',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wind_speed_night',
     'unique_id': '0123456-windnight-4',

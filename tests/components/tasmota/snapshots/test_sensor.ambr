@@ -38,13 +38,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT11 Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DHT11 Temperature',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DHT11_Temperature',
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Speed Act',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +131,7 @@
     'original_name': 'TX23 Speed Act',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_TX23_Speed_Act',
@@ -165,6 +172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX23 Dir Card',
     'options': dict({
     }),
     'original_device_class': None,
@@ -172,6 +180,7 @@
     'original_name': 'TX23 Dir Card',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_TX23_Dir_Card',
@@ -271,13 +280,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_0',
@@ -419,13 +433,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY TotalTariff 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY TotalTariff 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_TotalTariff_1',
@@ -471,13 +490,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY ExportTariff 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_0',
@@ -523,13 +547,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY ExportTariff 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY ExportTariff 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_ExportTariff_1',
@@ -607,13 +636,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'DS18B20 Temperature',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DS18B20_Temperature',
@@ -654,6 +688,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 Id',
     'options': dict({
     }),
     'original_device_class': None,
@@ -661,6 +696,7 @@
     'original_name': 'DS18B20 Id',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_DS18B20_Id',
@@ -764,13 +800,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total',
@@ -848,13 +889,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 0',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total 0',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_0',
@@ -900,13 +946,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total 1',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_1',
@@ -1016,13 +1067,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total Phase1',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_Phase1',
@@ -1068,13 +1124,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ENERGY Total Phase2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ENERGY Total Phase2',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ENERGY_Total_Phase2',
@@ -1184,13 +1245,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'ANALOG Temperature1',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Temperature1',
@@ -1268,13 +1334,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Temperature2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'ANALOG Temperature2',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Temperature2',
@@ -1320,6 +1391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG Illuminance3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1327,6 +1399,7 @@
     'original_name': 'ANALOG Illuminance3',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_Illuminance3',
@@ -1436,13 +1509,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Energy',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Energy',
@@ -1584,13 +1662,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Power',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Power',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Power',
@@ -1636,13 +1719,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Voltage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Voltage',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Voltage',
@@ -1688,13 +1776,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ANALOG CTEnergy1 Current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'ANALOG CTEnergy1 Current',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_ANALOG_CTEnergy1_Current',
@@ -1767,6 +1860,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR1 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1774,6 +1868,7 @@
     'original_name': 'SENSOR1 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR1_Unknown',
@@ -1896,6 +1991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR2 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1903,6 +1999,7 @@
     'original_name': 'SENSOR2 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR2_Unknown',
@@ -1946,6 +2043,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR3 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1953,6 +2051,7 @@
     'original_name': 'SENSOR3 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR3_Unknown',
@@ -1996,6 +2095,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SENSOR4 Unknown',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2003,6 +2103,7 @@
     'original_name': 'SENSOR4 Unknown',
     'platform': 'tasmota',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000049A3BC_sensor_sensor_SENSOR4_Unknown',

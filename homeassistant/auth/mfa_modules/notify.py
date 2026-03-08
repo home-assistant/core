@@ -6,7 +6,6 @@ Sending HOTP through notify service
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 import logging
 from typing import Any, cast
 
@@ -27,7 +26,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.8.0"]
+REQUIREMENTS = ["pyotp==2.9.0"]
 
 CONF_MESSAGE = "message"
 
@@ -52,28 +51,28 @@ _LOGGER = logging.getLogger(__name__)
 
 def _generate_secret() -> str:
     """Generate a secret."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return str(pyotp.random_base32())
 
 
 def _generate_random() -> int:
     """Generate a 32 digit number."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return int(pyotp.random_base32(length=32, chars=list("1234567890")))
 
 
 def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return str(pyotp.HOTP(secret).at(count))
 
 
 def _verify_otp(secret: str, otp: str, count: int) -> bool:
     """Verify one time password."""
-    import pyotp  # pylint: disable=import-outside-toplevel
+    import pyotp  # noqa: PLC0415
 
     return bool(pyotp.HOTP(secret).verify(otp, count))
 
@@ -304,13 +303,14 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         if not self._available_notify_services:
             return self.async_abort(reason="no_available_service")
 
-        schema: dict[str, Any] = OrderedDict()
-        schema["notify_service"] = vol.In(self._available_notify_services)
-        schema["target"] = vol.Optional(str)
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(schema), errors=errors
+        schema = vol.Schema(
+            {
+                vol.Required("notify_service"): vol.In(self._available_notify_services),
+                vol.Optional("target"): str,
+            }
         )
+
+        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
 
     async def async_step_setup(
         self, user_input: dict[str, str] | None = None

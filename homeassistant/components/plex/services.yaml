@@ -9,5 +9,3 @@ refresh_library:
       example: "TV Shows"
       selector:
         text:
-
-scan_for_clients:

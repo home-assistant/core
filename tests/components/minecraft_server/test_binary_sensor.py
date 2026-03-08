@@ -4,10 +4,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus import BedrockServer, JavaServer, LegacyServer
+from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -16,6 +16,7 @@ from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
     TEST_HOST,
     TEST_JAVA_STATUS_RESPONSE,
+    TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
 
@@ -36,6 +37,12 @@ from tests.common import async_fire_time_changed
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )
@@ -64,7 +71,9 @@ async def test_binary_sensor(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get("binary_sensor.minecraft_server_status") == snapshot
+        assert (
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status") == snapshot
+        )
 
 
 @pytest.mark.parametrize(
@@ -81,6 +90,12 @@ async def test_binary_sensor(
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )
@@ -113,7 +128,9 @@ async def test_binary_sensor_update(
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert hass.states.get("binary_sensor.minecraft_server_status") == snapshot
+        assert (
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status") == snapshot
+        )
 
 
 @pytest.mark.parametrize(
@@ -130,6 +147,12 @@ async def test_binary_sensor_update(
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )
@@ -167,5 +190,6 @@ async def test_binary_sensor_update_failure(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert (
-            hass.states.get("binary_sensor.minecraft_server_status").state == STATE_OFF
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status").state
+            == STATE_OFF
         )

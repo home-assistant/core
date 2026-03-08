@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow export',
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,6 +34,7 @@
     'original_name': 'Allow export',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_customer_preferred_export_rule',
     'unique_id': '123456-components_customer_preferred_export_rule',
@@ -84,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +94,7 @@
     'original_name': 'Operation mode',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'default_real_mode',
     'unique_id': '123456-default_real_mode',
@@ -143,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater front left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -150,6 +155,7 @@
     'original_name': 'Seat heater front left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_left',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_left',
@@ -203,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater front right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,6 +217,7 @@
     'original_name': 'Seat heater front right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_right',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_right',
@@ -263,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear center',
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,6 +279,7 @@
     'original_name': 'Seat heater rear center',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_center',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_center',
@@ -323,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -330,6 +341,7 @@
     'original_name': 'Seat heater rear left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_left',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_left',
@@ -383,6 +395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Seat heater rear right',
     'options': dict({
     }),
     'original_device_class': None,
@@ -390,6 +403,7 @@
     'original_name': 'Seat heater rear right',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_seat_heater_rear_right',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_seat_heater_rear_right',
@@ -442,6 +456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steering wheel heater',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,6 +464,7 @@
     'original_name': 'Steering wheel heater',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_steering_wheel_heat_level',
     'unique_id': 'LRW3F7EK4NC700000-climate_state_steering_wheel_heat_level',
@@ -472,22 +488,4 @@
     'last_updated': <ANY>,
     'state': 'off',
   })
-# ---
-# name: test_select_streaming[select.test_seat_heater_front_left]
-  'off'
-# ---
-# name: test_select_streaming[select.test_seat_heater_front_right]
-  'low'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_center]
-  'unknown'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_left]
-  'medium'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_right]
-  'high'
-# ---
-# name: test_select_streaming[select.test_steering_wheel_heater]
-  'off'
 # ---

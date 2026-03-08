@@ -310,18 +310,21 @@ async def test_get_trigger_capabilities(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -341,18 +344,21 @@ async def test_get_trigger_capabilities(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -380,18 +386,21 @@ async def test_get_trigger_capabilities_unknown(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -421,18 +430,21 @@ async def test_get_trigger_capabilities_legacy(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -452,18 +464,21 @@ async def test_get_trigger_capabilities_legacy(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]

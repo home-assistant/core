@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
+
+from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -122,7 +125,7 @@ async def async_setup_entry(
                     device, "Illumination", "illumination", gateway, config_entry
                 )
             )
-        elif device["model"] in ("vibration",):
+        elif device["model"] == "vibration":
             entities.append(
                 XiaomiSensor(
                     device, "Bed Activity", "bed_activity", gateway, config_entry
@@ -164,7 +167,14 @@ async def async_setup_entry(
 class XiaomiSensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
-    def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
+    def __init__(
+        self,
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiSensor."""
         self._data_key = data_key
         self.entity_description = SENSOR_TYPES[data_key]
@@ -180,7 +190,7 @@ class XiaomiSensor(XiaomiDevice, SensorEntity):
         value = float(value)
         if self._data_key in ("temperature", "humidity", "pressure"):
             value /= 100
-        elif self._data_key in ("illumination",):
+        elif self._data_key == "illumination":
             value = max(value - 300, 0)
         if self._data_key == "temperature" and (value < -50 or value > 60):
             return False
@@ -206,7 +216,7 @@ class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
         succeed = super().parse_voltage(data)
         if not succeed:
             return False
-        battery_level = int(self._extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
+        battery_level = int(self._attr_extra_state_attributes.pop(ATTR_BATTERY_LEVEL))
         if battery_level <= 0 or battery_level > 100:
             return False
         self._attr_native_value = battery_level

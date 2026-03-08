@@ -6,12 +6,13 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
+from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EvoService
+from .const import DOMAIN
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,20 +47,10 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
             raise NotImplementedError
         if payload["unique_id"] != self._attr_unique_id:
             return
-        if payload["service"] in (
-            EvoService.SET_ZONE_OVERRIDE,
-            EvoService.RESET_ZONE_OVERRIDE,
-        ):
-            await self.async_zone_svc_request(payload["service"], payload["data"])
-            return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
 
     async def async_tcs_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (system mode) for a controller."""
-        raise NotImplementedError
-
-    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
-        """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 
     @property
@@ -102,7 +93,7 @@ class EvoChild(EvoEntity):
 
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: dict[str, Any] | None = None
+        self._schedule: list[DayOfWeekDhwT] | None = None
         self._setpoints: dict[str, Any] = {}
 
     @property
@@ -122,6 +113,9 @@ class EvoChild(EvoEntity):
 
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
+
+        if not self._schedule:
+            return self._setpoints
 
         this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
         next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
@@ -152,10 +146,10 @@ class EvoChild(EvoEntity):
                     self._evo_device,
                     err,
                 )
-                self._schedule = {}
+                self._schedule = []
                 return
             else:
-                self._schedule = schedule or {}  # mypy hint
+                self._schedule = schedule  # type: ignore[assignment]
 
             _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
 
@@ -177,7 +171,7 @@ class EvoChild(EvoEntity):
 
         self._device_state_attrs = {
             "activeFaults": self._evo_device.active_faults,
-            "setpoints": self._setpoints,
+            "setpoints": self.setpoints,
         }
 
         super()._handle_coordinator_update()

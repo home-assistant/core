@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
+from homeassistant.components.balboa.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ async def test_setup_entry(
 async def test_setup_entry_fails(hass: HomeAssistant, client: MagicMock) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
-        domain=BALBOA_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
         },

@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +33,7 @@
     'original_name': 'Light',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ABC999111-light',
@@ -82,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +92,7 @@
     'original_name': 'Light',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'AAZZAAZZ-light',

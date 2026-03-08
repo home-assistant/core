@@ -54,7 +54,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.flipr_myfliprid_chlorine")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mV"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "mg/L"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.state == "0.23654886"
 

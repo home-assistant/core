@@ -45,7 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -174,7 +174,9 @@ async def test_rgb_light(
     assert state.state == STATE_UNKNOWN
     color_modes = [light.ColorMode.HS]
     assert state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
-    expected_features = light.SUPPORT_FLASH | light.SUPPORT_TRANSITION
+    expected_features = (
+        light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
+    )
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == expected_features
 
 
@@ -401,7 +403,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb", "on,,195")
 
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 195
+    assert light_state.attributes[light.ATTR_COLOR_TEMP_KELVIN] == 5128
 
     # change the color
     async_fire_mqtt_message(hass, "test_light_rgb", "on,,,41-42-43")
@@ -1287,8 +1289,8 @@ async def test_max_mireds(
     await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
-    assert state.attributes.get("min_mireds") == 153
-    assert state.attributes.get("max_mireds") == 370
+    assert state.attributes.get(light.ATTR_MIN_COLOR_TEMP_KELVIN) == 2702
+    assert state.attributes.get(light.ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
 
 
 @pytest.mark.parametrize(
@@ -1545,3 +1547,109 @@ async def test_rgb_value_template_fails(
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "effect_list": ["rainbow", "colorloop"],
+                    "state_topic": "test-topic",
+                    "state_template": "{{ value_json.state }}",
+                    "brightness_template": "{{ value_json.brightness }}",
+                    "color_temp_template": "{{ value_json.color_temp }}",
+                    "red_template": "{{ value_json.color.red }}",
+                    "green_template": "{{ value_json.color.green }}",
+                    "blue_template": "{{ value_json.color.blue }}",
+                    "effect_template": "{{ value_json.effect }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_state_templates_ignore_missing_values(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test that rendering of MQTT value template ignores missing values."""
+    await mqtt_mock_entry()
+
+    # turn on the light
+    async_fire_mqtt_message(hass, "test-topic", '{"state": "on"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("color_temp_kelvin") is None
+    assert state.attributes.get("effect") is None
+
+    # update brightness and color temperature (with no state)
+    async_fire_mqtt_message(
+        hass, "test-topic", '{"brightness": 255, "color_temp": 145}'
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (
+        246,
+        244,
+        255,
+    )  # temp converted to color
+    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("color_temp_kelvin") == 6896
+    assert state.attributes.get("effect") is None
+    assert state.attributes.get("xy_color") == (0.317, 0.317)  # temp converted to color
+    assert state.attributes.get("hs_color") == (
+        251.249,
+        4.253,
+    )  # temp converted to color
+
+    # update color
+    async_fire_mqtt_message(
+        hass, "test-topic", '{"color": {"red": 255, "green": 128, "blue": 64}}'
+    )
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") is None
+
+    # update brightness
+    async_fire_mqtt_message(hass, "test-topic", '{"brightness": 128}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") is None
+
+    # update effect
+    async_fire_mqtt_message(hass, "test-topic", '{"effect": "rainbow"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") == "rainbow"
+
+    # invalid effect
+    async_fire_mqtt_message(hass, "test-topic", '{"effect": "invalid"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 128, 64)
+    assert state.attributes.get("brightness") == 128
+    assert state.attributes.get("color_temp_kelvin") is None  # rgb color has priority
+    assert state.attributes.get("effect") == "rainbow"
+
+    # turn off the light
+    async_fire_mqtt_message(hass, "test-topic", '{"state": "off"}')
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("brightness") is None
+    assert state.attributes.get("color_temp_kelvin") is None
+    assert state.attributes.get("effect") is None

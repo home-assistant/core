@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr import DOMAIN
 from homeassistant.const import Platform
@@ -11,7 +11,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import call_webhook, setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 from tests.typing import ClientSessionGenerator
 
 
@@ -35,7 +39,7 @@ async def test_webhook_trigger_update(
     mock_config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test all entities."""
+    """Test webhook triggers coordinator update for request sensors."""
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.overseerr_available_requests").state == "8"
@@ -45,9 +49,43 @@ async def test_webhook_trigger_update(
 
     await call_webhook(
         hass,
-        load_json_object_fixture("webhook_request_automatically_approved.json", DOMAIN),
+        await async_load_json_object_fixture(
+            hass, "webhook_request_automatically_approved.json", DOMAIN
+        ),
         client,
     )
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.overseerr_available_requests").state == "7"
+
+
+async def test_webhook_issue_trigger_update(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test webhook triggers coordinator update for issue sensors."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.overseerr_total_issues").state == "15"
+    assert hass.states.get("sensor.overseerr_open_issues").state == "10"
+    assert hass.states.get("sensor.overseerr_video_issues").state == "6"
+
+    mock_overseerr_client.get_issue_count.return_value.total = 16
+    mock_overseerr_client.get_issue_count.return_value.open = 11
+    mock_overseerr_client.get_issue_count.return_value.video = 7
+    client = await hass_client_no_auth()
+
+    await call_webhook(
+        hass,
+        await async_load_json_object_fixture(
+            hass, "webhook_issue_reported.json", DOMAIN
+        ),
+        client,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.overseerr_total_issues").state == "16"
+    assert hass.states.get("sensor.overseerr_open_issues").state == "11"
+    assert hass.states.get("sensor.overseerr_video_issues").state == "7"

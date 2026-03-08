@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup capable',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Backup capable',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backup_capable',
     'unique_id': '123456-backup_capable',
@@ -67,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +77,7 @@
     'original_name': 'Grid services active',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'grid_services_active',
     'unique_id': '123456-grid_services_active',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid services enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': 'Grid services enabled',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'components_grid_services_enabled',
     'unique_id': '123456-components_grid_services_enabled',
@@ -161,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storm watch active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +175,7 @@
     'original_name': 'Storm watch active',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storm_mode_active',
     'unique_id': '123456-storm_mode_active',
@@ -208,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery heater',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -215,6 +224,7 @@
     'original_name': 'Battery heater',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_battery_heater_on',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_battery_heater_on',
@@ -256,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cabin overheat protection actively cooling',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -263,6 +274,7 @@
     'original_name': 'Cabin overheat protection actively cooling',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_cabin_overheat_protection_actively_cooling',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_cabin_overheat_protection_actively_cooling',
@@ -304,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge cable',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -311,6 +324,7 @@
     'original_name': 'Charge cable',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_conn_charge_cable',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_conn_charge_cable',
@@ -352,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charger has multiple phases',
     'options': dict({
     }),
     'original_device_class': None,
@@ -359,6 +374,7 @@
     'original_name': 'Charger has multiple phases',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charger_phases',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_charger_phases',
@@ -399,6 +415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dashcam',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -406,6 +423,7 @@
     'original_name': 'Dashcam',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_dashcam_state',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_dashcam_state',
@@ -447,6 +465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -454,6 +473,7 @@
     'original_name': 'Front driver door',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_df',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_df',
@@ -495,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -502,6 +523,7 @@
     'original_name': 'Front driver window',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_fd_window',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_fd_window',
@@ -543,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -550,6 +573,7 @@
     'original_name': 'Front passenger door',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_pf',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_pf',
@@ -591,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -598,6 +623,7 @@
     'original_name': 'Front passenger window',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_fp_window',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_fp_window',
@@ -639,6 +665,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preconditioning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -646,6 +673,7 @@
     'original_name': 'Preconditioning',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_state_is_preconditioning',
     'unique_id': 'LRWXF7EK4KC700000-climate_state_is_preconditioning',
@@ -686,6 +714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preconditioning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -693,6 +722,7 @@
     'original_name': 'Preconditioning enabled',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_preconditioning_enabled',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_preconditioning_enabled',
@@ -733,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -740,6 +771,7 @@
     'original_name': 'Rear driver door',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_dr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_dr',
@@ -781,6 +813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear driver window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -788,6 +821,7 @@
     'original_name': 'Rear driver window',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rd_window',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rd_window',
@@ -829,6 +863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -836,6 +871,7 @@
     'original_name': 'Rear passenger door',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_pr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_pr',
@@ -877,6 +913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear passenger window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -884,6 +921,7 @@
     'original_name': 'Rear passenger window',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rp_window',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_rp_window',
@@ -925,6 +963,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scheduled charging pending',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,6 +971,7 @@
     'original_name': 'Scheduled charging pending',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_scheduled_charging_pending',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_scheduled_charging_pending',
@@ -972,6 +1012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -979,6 +1020,7 @@
     'original_name': 'Status',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state',
     'unique_id': 'LRWXF7EK4KC700000-state',
@@ -1020,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1027,6 +1070,7 @@
     'original_name': 'Tire pressure warning front left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_fl',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_fl',
@@ -1068,6 +1112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning front right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1075,6 +1120,7 @@
     'original_name': 'Tire pressure warning front right',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_fr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_fr',
@@ -1116,6 +1162,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear left',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1123,6 +1170,7 @@
     'original_name': 'Tire pressure warning rear left',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_rl',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_rl',
@@ -1164,6 +1212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tire pressure warning rear right',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1171,6 +1220,7 @@
     'original_name': 'Tire pressure warning rear right',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_soft_warning_rr',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_tpms_soft_warning_rr',
@@ -1212,6 +1262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip charging',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1219,6 +1270,7 @@
     'original_name': 'Trip charging',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_trip_charging',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_trip_charging',
@@ -1259,6 +1311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User present',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -1266,6 +1319,7 @@
     'original_name': 'User present',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_is_user_present',
     'unique_id': 'LRWXF7EK4KC700000-vehicle_state_is_user_present',

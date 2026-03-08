@@ -21,7 +21,10 @@ play_media:
           options:
             - artist
             - album
+            - audiobook
+            - folder
             - playlist
+            - podcast
             - track
             - radio
     artist:
@@ -65,6 +68,10 @@ play_announcement:
       example: "true"
       selector:
         boolean:
+    pre_announce_url:
+      example: "http://someremotesite.com/chime.mp3"
+      selector:
+        text:
     announce_volume:
       example: 75
       selector:
@@ -118,7 +125,9 @@ search:
           options:
             - artist
             - album
+            - audiobook
             - playlist
+            - podcast
             - track
             - radio
     artist:
@@ -160,7 +169,9 @@ get_library:
           options:
             - artist
             - album
+            - audiobook
             - playlist
+            - podcast
             - track
             - radio
     favorite:

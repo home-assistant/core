@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load balancing mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,6 +35,7 @@
     'original_name': 'Load balancing mode',
     'platform': 'lektrico',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'load_balancing_mode',
     'unique_id': '500006_load_balancing_mode',

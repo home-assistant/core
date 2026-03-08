@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -28,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -35,6 +34,7 @@
     'original_name': None,
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00055511EECC-2-12',
@@ -46,7 +46,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 270,
       'color_temp_kelvin': 3700,
       'friendly_name': 'Another Test Light',
       'hs_color': tuple(
@@ -54,9 +53,7 @@
         40.593,
       ),
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'rgb_color': tuple(
         255,
         198,
@@ -86,9 +83,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 500,
-      'max_mireds': 6535,
       'min_color_temp_kelvin': 153,
-      'min_mireds': 2000,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -109,6 +104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +112,7 @@
     'original_name': 'Light 1',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-1',
@@ -127,7 +124,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 255,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test Light Light 1',
       'hs_color': tuple(
@@ -135,9 +131,7 @@
         52.941,
       ),
       'max_color_temp_kelvin': 500,
-      'max_mireds': 6535,
       'min_color_temp_kelvin': 153,
-      'min_mireds': 2000,
       'rgb_color': tuple(
         255,
         200,
@@ -168,9 +162,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 4000,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 250,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -191,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -198,6 +191,7 @@
     'original_name': 'Light 2',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-5',
@@ -209,14 +203,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Test Light Light 2',
       'hs_color': None,
       'max_color_temp_kelvin': 4000,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 250,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -258,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +257,7 @@
     'original_name': 'Light 3',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-9',
@@ -315,6 +308,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -322,6 +316,7 @@
     'original_name': 'Light 4',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_instance',
     'unique_id': '00055511EECC-1-11',

@@ -2,8 +2,8 @@
 
 import logging
 
-from pyezviz.client import EzvizClient
-from pyezviz.exceptions import (
+from pyezvizapi.client import EzvizClient
+from pyezvizapi.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
     HTTPError,
@@ -94,8 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
 
         entry.runtime_data = coordinator
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     # Check EZVIZ cloud account entity is present, reload cloud account entities for camera entity change to take effect.
     # Cameras are accessed via local RTSP stream with unique credentials per camera.
     # Separate camera entities allow for credential changes per camera.
@@ -120,8 +118,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> bo
     return await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: EzvizConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

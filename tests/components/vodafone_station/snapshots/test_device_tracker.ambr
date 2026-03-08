@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LanDevice1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'LanDevice1',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_tracker',
     'unique_id': 'yy:yy:yy:yy:yy:yy',
@@ -71,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'WifiDevice0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -78,6 +81,7 @@
     'original_name': 'WifiDevice0',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_tracker',
     'unique_id': 'xx:xx:xx:xx:xx:xx',

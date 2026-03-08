@@ -6,11 +6,11 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import (
-    OhmeAdvancedSettingsCoordinator,
     OhmeChargeSessionCoordinator,
     OhmeConfigEntry,
     OhmeDeviceInfoCoordinator,
@@ -31,7 +31,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
     """Set up Ohme from a config entry."""
 
-    client = OhmeApiClient(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+    client = OhmeApiClient(
+        email=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        session=async_get_clientsession(hass),
+    )
 
     try:
         await client.async_login()
@@ -51,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
 
     coordinators = (
         OhmeChargeSessionCoordinator(hass, entry, client),
-        OhmeAdvancedSettingsCoordinator(hass, entry, client),
         OhmeDeviceInfoCoordinator(hass, entry, client),
     )
 

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from demetriek import CloudDevice, Device
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -23,7 +25,7 @@ from tests.common import MockConfigEntry, load_fixture, load_json_array_fixture
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential("client", "secret"), "credentials"
     )
@@ -97,12 +99,20 @@ def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lametric: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lametric: MagicMock,
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Set up the LaMetric integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    context = nullcontext()
+    if platform := getattr(request, "param", None):
+        context = patch("homeassistant.components.lametric.PLATFORMS", [platform])
+
+    with context:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

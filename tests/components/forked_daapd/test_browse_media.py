@@ -34,7 +34,7 @@ async def test_async_browse_media(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -214,7 +214,7 @@ async def test_async_browse_media_not_found(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -284,7 +284,7 @@ async def test_async_browse_spotify(
                 media_class=MediaClass.APP,
                 media_content_id=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}some_id",
                 media_content_type=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}track",
-                thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+                thumbnail="/api/brands/integration/spotify/logo.png",
                 can_play=False,
                 can_expand=True,
             )
@@ -294,7 +294,7 @@ async def test_async_browse_spotify(
             media_class=MediaClass.APP,
             media_content_id=SPOTIFY_MEDIA_PLAYER_PREFIX,
             media_content_type=f"{SPOTIFY_MEDIA_PLAYER_PREFIX}library",
-            thumbnail="https://brands.home-assistant.io/_/spotify/logo.png",
+            thumbnail="/api/brands/integration/spotify/logo.png",
             can_play=False,
             can_expand=True,
             children=children,
@@ -375,7 +375,7 @@ async def test_async_browse_image(
     """Test browse media images."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}
@@ -430,7 +430,7 @@ async def test_async_browse_image_missing(
     """Test browse media images with no image available."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = {"websocket_port": 2}

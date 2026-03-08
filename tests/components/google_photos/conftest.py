@@ -16,6 +16,7 @@ from google_photos_library_api.model import (
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -25,8 +26,8 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
 )
 
 USER_IDENTIFIER = "user-identifier-1"
@@ -94,7 +95,7 @@ def mock_config_entry(
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -121,7 +122,8 @@ def mock_api_error() -> Exception | None:
 
 
 @pytest.fixture(name="mock_api")
-def mock_client_api(
+async def mock_client_api(
+    hass: HomeAssistant,
     fixture_name: str,
     user_identifier: str,
     api_error: Exception,
@@ -133,7 +135,11 @@ def mock_client_api(
         name="Test Name",
     )
 
-    responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
+    responses = (
+        await async_load_json_array_fixture(hass, fixture_name, DOMAIN)
+        if fixture_name
+        else []
+    )
 
     async def list_media_items(*args: Any) -> AsyncGenerator[ListMediaItemResult]:
         for response in responses:
@@ -161,10 +167,12 @@ def mock_client_api(
     # return a single page.
 
     async def list_albums(*args: Any, **kwargs: Any) -> AsyncGenerator[ListAlbumResult]:
+        album_list = await async_load_json_object_fixture(
+            hass, "list_albums.json", DOMAIN
+        )
         mock_list_album_result = Mock(ListAlbumResult)
         mock_list_album_result.albums = [
-            Album.from_dict(album)
-            for album in load_json_object_fixture("list_albums.json", DOMAIN)["albums"]
+            Album.from_dict(album) for album in album_list["albums"]
         ]
         yield mock_list_album_result
 
@@ -174,7 +182,10 @@ def mock_client_api(
 
     # Mock a point lookup by reading contents of the album fixture above
     async def get_album(album_id: str, **kwargs: Any) -> Mock:
-        for album in load_json_object_fixture("list_albums.json", DOMAIN)["albums"]:
+        album_list = await async_load_json_object_fixture(
+            hass, "list_albums.json", DOMAIN
+        )
+        for album in album_list["albums"]:
             if album["id"] == album_id:
                 return Album.from_dict(album)
         return None

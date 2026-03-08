@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
@@ -14,14 +14,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    GreenInfo,
+    JobsInfo,
     Repository,
     ResolutionInfo,
     StoreAddon,
     StoreInfo,
+    YellowInfo,
 )
 import pytest
 import voluptuous as vol
 
+from homeassistant import components, loader
 from homeassistant.components import repairs
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
@@ -30,7 +34,17 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceRegistry,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -41,6 +55,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -93,22 +108,11 @@ def entity_registry_enabled_by_default() -> Generator[None]:
         yield
 
 
-# Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None]:
-    """Stub copying the blueprints to the config folder."""
-    # pylint: disable-next=import-outside-toplevel
-    from .blueprint.common import stub_blueprint_populate_fixture_helper
-
-    yield from stub_blueprint_populate_fixture_helper()
-
-
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_get_cache_files_fixture_helper
+    from .tts.common import mock_tts_get_cache_files_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_get_cache_files_fixture_helper()
 
@@ -118,8 +122,7 @@ def mock_tts_init_cache_dir_fixture(
     init_tts_cache_dir_side_effect: Any,
 ) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_init_cache_dir_fixture_helper
+    from .tts.common import mock_tts_init_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_init_cache_dir_fixture_helper(init_tts_cache_dir_side_effect)
 
@@ -127,8 +130,9 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper
+    from .tts.common import (  # noqa: PLC0415
+        init_tts_cache_dir_side_effect_fixture_helper,
+    )
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -141,8 +145,7 @@ def mock_tts_cache_dir_fixture(
     request: pytest.FixtureRequest,
 ) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_cache_dir_fixture_helper
+    from .tts.common import mock_tts_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_cache_dir_fixture_helper(
         tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
@@ -152,8 +155,7 @@ def mock_tts_cache_dir_fixture(
 @pytest.fixture(name="tts_mutagen_mock")
 def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
     """Mock writing tags."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import tts_mutagen_mock_fixture_helper
+    from .tts.common import tts_mutagen_mock_fixture_helper  # noqa: PLC0415
 
     yield from tts_mutagen_mock_fixture_helper()
 
@@ -161,13 +163,14 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    # pylint: disable-next=import-outside-toplevel
-    from .conversation.common import mock_conversation_agent_fixture_helper
+    from .conversation.common import (  # noqa: PLC0415
+        mock_conversation_agent_fixture_helper,
+    )
 
     return mock_conversation_agent_fixture_helper(hass)
 
 
-@pytest.fixture(scope="session", autouse=find_spec("ffmpeg") is not None)
+@pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
 def prevent_ffmpeg_subprocess() -> Generator[None]:
     """If installed, prevent ffmpeg from creating a subprocess."""
     with patch(
@@ -179,8 +182,7 @@ def prevent_ffmpeg_subprocess() -> Generator[None]:
 @pytest.fixture
 def mock_light_entities() -> list[MockLight]:
     """Return mocked light entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .light.common import MockLight
+    from .light.common import MockLight  # noqa: PLC0415
 
     return [
         MockLight("Ceiling", STATE_ON),
@@ -192,8 +194,7 @@ def mock_light_entities() -> list[MockLight]:
 @pytest.fixture
 def mock_sensor_entities() -> dict[str, MockSensor]:
     """Return mocked sensor entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .sensor.common import get_mock_sensor_entities
+    from .sensor.common import get_mock_sensor_entities  # noqa: PLC0415
 
     return get_mock_sensor_entities()
 
@@ -201,8 +202,7 @@ def mock_sensor_entities() -> dict[str, MockSensor]:
 @pytest.fixture
 def mock_switch_entities() -> list[MockSwitch]:
     """Return mocked toggle entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .switch.common import get_mock_switch_entities
+    from .switch.common import get_mock_switch_entities  # noqa: PLC0415
 
     return get_mock_switch_entities()
 
@@ -210,8 +210,7 @@ def mock_switch_entities() -> list[MockSwitch]:
 @pytest.fixture
 def mock_legacy_device_scanner() -> MockScanner:
     """Return mocked legacy device scanner entity."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import MockScanner
+    from .device_tracker.common import MockScanner  # noqa: PLC0415
 
     return MockScanner()
 
@@ -219,8 +218,7 @@ def mock_legacy_device_scanner() -> MockScanner:
 @pytest.fixture
 def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner], None]:
     """Return setup callable for legacy device tracker setup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import mock_legacy_device_tracker_setup
+    from .device_tracker.common import mock_legacy_device_tracker_setup  # noqa: PLC0415
 
     return mock_legacy_device_tracker_setup
 
@@ -230,8 +228,7 @@ def addon_manager_fixture(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> AddonManager:
     """Return an AddonManager instance."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_manager
+    from .hassio.common import mock_addon_manager  # noqa: PLC0415
 
     return mock_addon_manager(hass)
 
@@ -287,8 +284,7 @@ def addon_store_info_fixture(
     addon_store_info_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock Supervisor add-on store info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_store_info
+    from .hassio.common import mock_addon_store_info  # noqa: PLC0415
 
     return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
 
@@ -304,8 +300,7 @@ def addon_info_fixture(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
 ) -> AsyncMock:
     """Mock Supervisor add-on info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_info
+    from .hassio.common import mock_addon_info  # noqa: PLC0415
 
     return mock_addon_info(supervisor_client, addon_info_side_effect)
 
@@ -315,8 +310,7 @@ def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_not_installed
+    from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
     return mock_addon_not_installed(addon_store_info, addon_info)
 
@@ -326,8 +320,7 @@ def addon_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_installed
+    from .hassio.common import mock_addon_installed  # noqa: PLC0415
 
     return mock_addon_installed(addon_store_info, addon_info)
 
@@ -337,8 +330,7 @@ def addon_running_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_running
+    from .hassio.common import mock_addon_running  # noqa: PLC0415
 
     return mock_addon_running(addon_store_info, addon_info)
 
@@ -349,8 +341,7 @@ def install_addon_side_effect_fixture(
 ) -> Any | None:
     """Return the install add-on side effect."""
 
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon_side_effect
+    from .hassio.common import mock_install_addon_side_effect  # noqa: PLC0415
 
     return mock_install_addon_side_effect(addon_store_info, addon_info)
 
@@ -370,8 +361,7 @@ def start_addon_side_effect_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
     """Return the start add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon_side_effect
+    from .hassio.common import mock_start_addon_side_effect  # noqa: PLC0415
 
     return mock_start_addon_side_effect(addon_store_info, addon_info)
 
@@ -418,8 +408,7 @@ def set_addon_options_side_effect_fixture(
     addon_options: dict[str, Any],
 ) -> Any | None:
     """Return the set add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options_side_effect
+    from .hassio.common import mock_set_addon_options_side_effect  # noqa: PLC0415
 
     return mock_set_addon_options_side_effect(addon_options)
 
@@ -443,12 +432,9 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock create backup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_create_backup
-
-    yield from mock_create_backup()
+    return supervisor_client.backups.partial_backup
 
 
 @pytest.fixture(name="update_addon")
@@ -485,8 +471,7 @@ def store_info_fixture(
 @pytest.fixture(name="addon_stats")
 def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock addon stats info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_stats
+    from .hassio.common import mock_addon_stats  # noqa: PLC0415
 
     return mock_addon_stats(supervisor_client)
 
@@ -525,6 +510,31 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     return supervisor_client.resolution.suggestions_for_issue
 
 
+@pytest.fixture(name="jobs_info")
+def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock jobs info from supervisor."""
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    return supervisor_client.jobs.info
+
+
+@pytest.fixture(name="os_yellow_info")
+def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock yellow info API from supervisor OS."""
+    supervisor_client.os.yellow_info.return_value = YellowInfo(
+        disk_led=True, heartbeat_led=True, power_led=True
+    )
+    return supervisor_client.os.yellow_info
+
+
+@pytest.fixture(name="os_green_info")
+def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock green info API from supervisor OS."""
+    supervisor_client.os.green_info.return_value = GreenInfo(
+        activity_led=True, power_led=True, system_health_led=True
+    )
+    return supervisor_client.os.green_info
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -537,6 +547,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
     supervisor_client.jobs = AsyncMock()
+    supervisor_client.jobs.info.return_value = MagicMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
@@ -568,6 +579,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.jobs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -605,16 +620,42 @@ def _validate_translation_placeholders(
 async def _validate_translation(
     hass: HomeAssistant,
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
     category: str,
     component: str,
     key: str,
-    description_placeholders: dict[str, str] | None,
+    description_placeholders: Mapping[str, str] | None,
     *,
     translation_required: bool = True,
 ) -> None:
     """Raise if translation doesn't exist."""
     full_key = f"component.{component}.{category}.{key}"
+    if component in ignore_translations_for_mock_domains:
+        try:
+            integration = await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            return
+        component_paths = components.__path__
+        if not any(
+            Path(f"{component_path}/{component}") == integration.file_path
+            for component_path in component_paths
+        ):
+            return
+        # If the integration exists, translation errors should be ignored via the
+        # ignore_missing_translations fixture instead of the
+        # ignore_translations_for_mock_domains fixture.
+        translation_errors[full_key] = f"The integration '{component}' exists"
+        return
+
     translations = await async_get_translations(hass, "en", category, [component])
+
+    if full_key.endswith("."):
+        for subkey, translation in translations.items():
+            if subkey.startswith(full_key):
+                _validate_translation_placeholders(
+                    subkey, translation, description_placeholders, translation_errors
+                )
+        return
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -624,7 +665,20 @@ async def _validate_translation(
     if not translation_required:
         return
 
-    if full_key in translation_errors:
+    if translation_errors.get(full_key) in {"used", "unused"}:
+        # If the does not integration exist, translation errors should be ignored
+        # via the ignore_translations_for_mock_domains fixture instead of the
+        # ignore_missing_translations fixture.
+        try:
+            await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotFound:
+            translation_errors[full_key] = (
+                f"Translation not found for {component}: `{category}.{key}`. "
+                f"The integration '{component}' does not exist."
+            )
+            return
+
+        # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
 
@@ -635,11 +689,22 @@ async def _validate_translation(
 
 
 @pytest.fixture
-def ignore_translations() -> str | list[str]:
-    """Ignore specific translations.
+def ignore_missing_translations() -> str | list[str]:
+    """Ignore specific missing translations.
 
-    Override or parametrize this fixture with a fixture that returns,
-    a list of translation that should be ignored.
+    Override or parametrize this fixture with a fixture that returns
+    a list of missing translation that should be ignored.
+    """
+    return []
+
+
+@pytest.fixture
+def ignore_translations_for_mock_domains() -> str | list[str]:
+    """Don't validate translations for specific domains.
+
+    Override or parametrize this fixture with a fixture that returns
+    a list of domains for which translations should not be validated.
+    This should only be used when testing mocked integrations.
     """
     return []
 
@@ -672,6 +737,7 @@ async def _check_step_or_section_translations(
     translation_prefix: str,
     description_placeholders: dict[str, str],
     data_schema: vol.Schema | None,
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required
     # - title defaults to integration name
@@ -680,6 +746,7 @@ async def _check_step_or_section_translations(
         await _validate_translation(
             hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             category,
             integration,
             f"{translation_prefix}.{header}",
@@ -701,6 +768,7 @@ async def _check_step_or_section_translations(
                 f"{translation_prefix}.sections.{data_key}",
                 description_placeholders,
                 data_value.schema,
+                ignore_translations_for_mock_domains,
             )
             continue
         iqs_config_flow = _get_integration_quality_scale_rule(
@@ -711,6 +779,7 @@ async def _check_step_or_section_translations(
             await _validate_translation(
                 hass,
                 translation_errors,
+                ignore_translations_for_mock_domains,
                 category,
                 integration,
                 f"{translation_prefix}.{header}.{data_key}",
@@ -724,12 +793,14 @@ async def _check_config_flow_result_translations(
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if result["type"] is FlowResultType.CREATE_ENTRY:
         # No need to check translations for a completed flow
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -741,7 +812,16 @@ async def _check_config_flow_result_translations(
         integration = flow.handler
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        if issue is None:
+            # Issue was deleted mid-flow (e.g., config entry removed), skip check
+            return
         key_prefix = f"{issue.translation_key}.fix_flow."
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
@@ -757,8 +837,9 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
+                ignore_translations_for_mock_domains,
             )
 
         if errors := result.get("errors"):
@@ -766,10 +847,11 @@ async def _check_config_flow_result_translations(
                 await _validate_translation(
                     flow.hass,
                     translation_errors,
+                    ignore_translations_for_mock_domains,
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -781,10 +863,11 @@ async def _check_config_flow_result_translations(
         await _validate_translation(
             flow.hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
@@ -792,6 +875,7 @@ async def _check_create_issue_translations(
     issue_registry: ir.IssueRegistry,
     issue: ir.IssueEntry,
     translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if issue.translation_key is None:
         # `translation_key` is only None on dismissed issues
@@ -799,6 +883,7 @@ async def _check_create_issue_translations(
     await _validate_translation(
         issue_registry.hass,
         translation_errors,
+        ignore_translations_for_mock_domains,
         "issues",
         issue.domain,
         f"{issue.translation_key}.title",
@@ -809,6 +894,7 @@ async def _check_create_issue_translations(
         await _validate_translation(
             issue_registry.hass,
             translation_errors,
+            ignore_translations_for_mock_domains,
             "issues",
             issue.domain,
             f"{issue.translation_key}.description",
@@ -830,6 +916,7 @@ async def _check_exception_translation(
     exception: HomeAssistantError,
     translation_errors: dict[str, str],
     request: pytest.FixtureRequest,
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if exception.translation_key is None:
         if (
@@ -843,6 +930,7 @@ async def _check_exception_translation(
     await _validate_translation(
         hass,
         translation_errors,
+        ignore_translations_for_mock_domains,
         "exceptions",
         exception.translation_domain,
         f"{exception.translation_key}.message",
@@ -850,9 +938,32 @@ async def _check_exception_translation(
     )
 
 
+async def _check_service_registration_translation(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str,
+    description_placeholders: Mapping[str, str] | None,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
+        description_placeholders,
+    )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
-    ignore_translations: str | list[str], request: pytest.FixtureRequest
+    ignore_missing_translations: str | list[str],
+    ignore_translations_for_mock_domains: str | list[str],
+    request: pytest.FixtureRequest,
 ) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
@@ -861,10 +972,16 @@ async def check_translations(
     - issue registry entries
     - action (service) exceptions
     """
-    if not isinstance(ignore_translations, list):
-        ignore_translations = [ignore_translations]
+    if not isinstance(ignore_missing_translations, list):
+        ignore_missing_translations = [ignore_missing_translations]
 
-    translation_errors = {k: "unused" for k in ignore_translations}
+    if not isinstance(ignore_translations_for_mock_domains, list):
+        ignored_domains = {ignore_translations_for_mock_domains}
+    else:
+        ignored_domains = set(ignore_translations_for_mock_domains)
+
+    # Set all ignored translation keys to "unused"
+    translation_errors = dict.fromkeys(ignore_missing_translations, "unused")
 
     translation_coros = set()
 
@@ -872,6 +989,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_service_registry_async_register = ServiceRegistry.async_register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -879,18 +997,20 @@ async def check_translations(
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
         await _check_config_flow_result_translations(
-            self, flow, result, translation_errors
+            self, flow, result, translation_errors, ignored_domains
         )
         return result
 
     def _issue_registry_async_create_issue(
         self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
-    ) -> None:
+    ) -> ir.IssueEntry:
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
         translation_coros.add(
-            _check_create_issue_translations(self, result, translation_errors)
+            _check_create_issue_translations(
+                self, result, translation_errors, ignored_domains
+            )
         )
         return result
 
@@ -918,10 +1038,53 @@ async def check_translations(
         except HomeAssistantError as err:
             translation_coros.add(
                 _check_exception_translation(
-                    self._hass, err, translation_errors, request
+                    self._hass,
+                    err,
+                    translation_errors,
+                    request,
+                    ignored_domains,
                 )
             )
             raise
+
+    @callback
+    def _service_registry_async_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: VolSchemaType | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        translation_coros.add(
+            _check_service_registration_translation(
+                self._hass,
+                domain,
+                service,
+                description_placeholders,
+                translation_errors,
+                ignored_domains,
+            )
+        )
+        _original_service_registry_async_register(
+            self,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders=description_placeholders,
+        )
 
     # Use override functions
     with (
@@ -937,6 +1100,10 @@ async def check_translations(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
         ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_register",
+            _service_registry_async_register,
+        ),
     ):
         yield
 
@@ -945,10 +1112,21 @@ async def check_translations(
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
+        # Some ignored translations were not used
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
-            "Please remove them from the ignore_translations fixture."
+            "Please remove them from the ignore_missing_translations fixture."
         )
     for description in translation_errors.values():
-        if description not in {"used", "unused"}:
+        if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

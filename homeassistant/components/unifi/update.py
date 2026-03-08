@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -31,9 +31,6 @@ from .entity import (
 
 LOGGER = logging.getLogger(__name__)
 
-_DataT = TypeVar("_DataT", bound=Device)
-_HandlerT = TypeVar("_HandlerT", bound=Devices)
-
 
 async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None:
     """Control upgrade of device."""
@@ -41,7 +38,7 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiUpdateEntityDescription(
+class UnifiUpdateEntityDescription[_HandlerT: Devices, _DataT: Device](
     UpdateEntityDescription, UnifiEntityDescription[_HandlerT, _DataT]
 ):
     """Class describing UniFi update entity."""
@@ -78,7 +75,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
+class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
+    UnifiEntity[_HandlerT, _DataT], UpdateEntity
+):
     """Representation of a UniFi device update entity."""
 
     entity_description: UnifiUpdateEntityDescription[_HandlerT, _DataT]

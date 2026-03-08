@@ -1,0 +1,277 @@
+{
+  "items": [
+    {
+      "deviceId": "808dbd84-f357-47e2-a0cd-3b66fa22d584",
+      "name": "Builtin Cooktop",
+      "label": "Induction Hob",
+      "manufacturerName": "0A4H",
+      "presentationId": "DA-KS-COOKTOP-31001",
+      "deviceManufacturerCode": "0A4H",
+      "locationId": "7d27161a-0ef6-4294-91a0-80054ea5bc59",
+      "ownerId": "d52fb883-0f76-f4d9-0f6a-7ec2c0987b11",
+      "roomId": "afe14ff1-d444-420d-a766-4dd52f3e1c71",
+      "deviceTypeId": "Cooktop",
+      "deviceTypeName": "Samsung Cooktop",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledComponents",
+              "version": 1
+            },
+            {
+              "id": "custom.userNotification",
+              "version": 1
+            },
+            {
+              "id": "custom.cooktopOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.errorAndAlarmState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.remoteManagementData",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLockControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopFlexZone",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Cooktop",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-01",
+          "label": "burner-01",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-02",
+          "label": "burner-02",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-03",
+          "label": "burner-03",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-04",
+          "label": "burner-04",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-05",
+          "label": "burner-05",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "burner-06",
+          "label": "burner-06",
+          "capabilities": [
+            {
+              "id": "samsungce.surfaceResidualHeat",
+              "version": 1
+            },
+            {
+              "id": "samsungce.cooktopHeatingPower",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        },
+        {
+          "id": "hood",
+          "label": "hood",
+          "capabilities": [
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "samsungce.connectionState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.hoodFanSpeed",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.countDownTimer",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-03-25T18:18:23.576Z",
+      "profile": {
+        "id": "a99bbcb8-51c9-468d-b9d5-0ce6dca09d5a"
+      },
+      "mqtt": {
+        "executingLocally": false,
+        "transferCandidate": false
+      },
+      "type": "MQTT",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

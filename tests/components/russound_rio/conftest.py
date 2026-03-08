@@ -65,8 +65,8 @@ def mock_russound_client() -> Generator[AsyncMock]:
             for zone_id, zone in zones.items():
                 zone.device_str = zone_device_str(controller_id, zone_id)
                 zone.fetch_current_source = Mock(
-                    side_effect=lambda current_source=zone.current_source: client.sources.get(
-                        int(current_source)
+                    side_effect=lambda current_source=zone.current_source: (
+                        client.sources.get(int(current_source))
                     )
                 )
                 zone.volume_up = AsyncMock()
@@ -79,6 +79,12 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 zone.unmute = AsyncMock()
                 zone.toggle_mute = AsyncMock()
                 zone.set_seek_time = AsyncMock()
+                zone.set_balance = AsyncMock()
+                zone.set_bass = AsyncMock()
+                zone.set_treble = AsyncMock()
+                zone.set_turn_on_volume = AsyncMock()
+                zone.set_loudness = AsyncMock()
+                zone.restore_preset = AsyncMock()
 
         client.controllers = {
             1: Controller(

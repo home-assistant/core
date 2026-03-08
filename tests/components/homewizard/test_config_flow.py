@@ -620,6 +620,7 @@ async def test_reconfigure_cannot_connect(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_manual_flow_works_with_v2_api_support(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
@@ -659,6 +660,7 @@ async def test_manual_flow_works_with_v2_api_support(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_manual_flow_detects_failed_user_authorization(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
@@ -704,6 +706,7 @@ async def test_manual_flow_detects_failed_user_authorization(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_reauth_flow_updates_token(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -739,6 +742,7 @@ async def test_reauth_flow_updates_token(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_reauth_flow_handles_user_not_pressing_button(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -785,9 +789,9 @@ async def test_reauth_flow_handles_user_not_pressing_button(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(("device_fixture"), ["HWE-P1", "HWE-KWH1"])
 async def test_discovery_with_v2_api_ask_authorization(
     hass: HomeAssistant,
-    # mock_setup_entry: AsyncMock,
     mock_homewizardenergy_v2: MagicMock,
 ) -> None:
     """Test discovery detecting missing discovery info."""

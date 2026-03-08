@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import SENSOR, TOKEN, ComponentSetup
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, async_load_fixture
 
 
 @pytest.mark.parametrize(
@@ -41,7 +41,10 @@ async def test_sensors(
         "httplib2.Http.request",
         return_value=(
             Response({}),
-            bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+            bytes(
+                await async_load_fixture(hass, f"{fixture}.json", DOMAIN),
+                encoding="UTF-8",
+            ),
         ),
     ):
         next_update = dt_util.utcnow() + timedelta(minutes=15)

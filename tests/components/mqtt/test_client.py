@@ -27,8 +27,8 @@ from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
+from .common import help_all_subscribe_calls
 from .conftest import ENTRY_DEFAULT_BIRTH_MESSAGE
-from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
@@ -282,15 +282,52 @@ async def test_subscribe_topic(
         unsub()
 
 
-@pytest.mark.usefixtures("mqtt_mock_entry")
-async def test_subscribe_topic_not_initialize(
-    hass: HomeAssistant, record_calls: MessageCallbackType
+async def test_status_subscription_done(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    recorded_calls: list[ReceiveMessage],
+    record_calls: MessageCallbackType,
 ) -> None:
-    """Test the subscription of a topic when MQTT was not initialized."""
-    with pytest.raises(
-        HomeAssistantError, match=r".*make sure MQTT is set up correctly"
-    ):
-        await mqtt.async_subscribe(hass, "test-topic", record_calls)
+    """Test the on subscription status."""
+    await mqtt_mock_entry()
+
+    on_status = asyncio.Event()
+    on_status_calls: list[bool] = []
+
+    def _on_subscribe_status() -> None:
+        on_status.set()
+        on_status_calls.append(True)
+
+    subscribe_callback = await mqtt.async_subscribe(
+        hass, "test-topic", record_calls, qos=0
+    )
+    handler = mqtt.async_on_subscribe_done(
+        hass, "test-topic", 0, on_subscribe_status=_on_subscribe_status
+    )
+    await on_status.wait()
+    assert ("test-topic", 0) in help_all_subscribe_calls(mqtt_client_mock)
+
+    await mqtt.async_publish(hass, "test-topic", "beer ready", 0)
+    handler()
+    assert len(recorded_calls) == 1
+    assert recorded_calls[0].topic == "test-topic"
+    assert recorded_calls[0].payload == "beer ready"
+    assert recorded_calls[0].qos == 0
+
+    # Test as we have an existing subscription, test we get a callback
+    recorded_calls.clear()
+    on_status.clear()
+    handler = mqtt.async_on_subscribe_done(
+        hass, "test-topic", 0, on_subscribe_status=_on_subscribe_status
+    )
+    assert len(on_status_calls) == 1
+    await on_status.wait()
+    assert len(on_status_calls) == 2
+
+    # cleanup
+    handler()
+    subscribe_callback()
 
 
 async def test_subscribe_mqtt_config_entry_disabled(
@@ -1554,6 +1591,42 @@ async def test_setup_uses_certificate_on_certificate_set_to_auto_and_insecure(
 
     # test if insecure is set
     assert insecure_check["insecure"] == insecure_param
+
+
+@pytest.mark.parametrize(
+    ("mqtt_config_entry_data", "client_id"),
+    [
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+                "client_id": "random01234random0124",
+            },
+            "random01234random0124",
+        ),
+        (
+            {
+                mqtt.CONF_BROKER: "mock-broker",
+            },
+            None,
+        ),
+    ],
+)
+async def test_client_id_is_set(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    client_id: str | None,
+) -> None:
+    """Test setup defaults for tls."""
+    with patch(
+        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
+    ) as async_client_mock:
+        await mqtt_mock_entry()
+        await hass.async_block_till_done()
+    assert async_client_mock.call_count == 1
+    call_params: dict[str, Any] = async_client_mock.call_args[1]
+    assert "client_id" in call_params
+    assert client_id is None or client_id == call_params["client_id"]
+    assert call_params["client_id"] is not None
 
 
 @pytest.mark.parametrize(

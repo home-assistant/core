@@ -18,20 +18,21 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DEVICE_UPDATE_INTERVAL
 from .const import DOMAIN
+from .coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    DEVICE_UPDATE_INTERVAL_PER_CAM,
+    ReolinkCoordinator,
+)
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 RESUME_AFTER_INSTALL = 15
@@ -94,9 +95,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ReolinkUpdateBaseEntity(
-    CoordinatorEntity[DataUpdateCoordinator[None]], UpdateEntity
-):
+class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntity):
     """Base update entity class for Reolink."""
 
     _attr_release_url = "https://reolink.com/download-center/"
@@ -105,7 +104,7 @@ class ReolinkUpdateBaseEntity(
         self,
         reolink_data: ReolinkData,
         channel: int | None,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: ReolinkCoordinator,
     ) -> None:
         """Initialize Reolink update entity."""
         CoordinatorEntity.__init__(self, coordinator)
@@ -184,6 +183,7 @@ class ReolinkUpdateBaseEntity(
             f"## Release notes\n\n{new_firmware.release_notes}"
         )
 
+    @raise_translated_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -196,6 +196,8 @@ class ReolinkUpdateBaseEntity(
         try:
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
+            if err.translation_key:
+                raise
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="firmware_install_error",
@@ -218,7 +220,10 @@ class ReolinkUpdateBaseEntity(
 
     async def _resume_update_coordinator(self, *args: Any) -> None:
         """Resume updating the states using the data update coordinator (after reboots)."""
-        self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
+        self._reolink_data.device_coordinator.update_interval = max(
+            DEVICE_UPDATE_INTERVAL_MIN,
+            DEVICE_UPDATE_INTERVAL_PER_CAM * self._host.api.num_cameras,
+        )
         try:
             await self._reolink_data.device_coordinator.async_refresh()
         finally:

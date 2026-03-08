@@ -1,0 +1,54 @@
+{
+  "status": {
+    "errorCode": "OK",
+    "errorMessage": null
+  },
+  "result": [
+    {
+      "id": "ABCDEFG",
+      "name": "XONEX",
+      "locale": "en-US",
+      "consoleType": "XboxOneX",
+      "powerState": "ConnectedStandby",
+      "digitalAssistantRemoteControlEnabled": true,
+      "remoteManagementEnabled": true,
+      "consoleStreamingEnabled": false,
+      "storageDevices": [
+        {
+          "storageDeviceId": "1",
+          "storageDeviceName": "Internal",
+          "isDefault": true,
+          "freeSpaceBytes": 236267835392.0,
+          "totalSpaceBytes": 838592360448.0
+        }
+      ]
+    },
+    {
+      "id": "HIJKLMN",
+      "name": "XONE",
+      "locale": "en-US",
+      "consoleType": "XboxOne",
+      "powerState": "ConnectedStandby",
+      "digitalAssistantRemoteControlEnabled": true,
+      "remoteManagementEnabled": true,
+      "consoleStreamingEnabled": false,
+      "storageDevices": [
+        {
+          "storageDeviceId": "2",
+          "storageDeviceName": "Internal",
+          "isDefault": false,
+          "freeSpaceBytes": 147163541504.0,
+          "totalSpaceBytes": 391915761664.0
+        },
+        {
+          "storageDeviceId": "3",
+          "storageDeviceName": "External",
+          "isDefault": true,
+          "freeSpaceBytes": 3200714067968.0,
+          "totalSpaceBytes": 4000787029504.0
+        }
+      ]
+    }
+  ],
+  "agentUserId": null
+}

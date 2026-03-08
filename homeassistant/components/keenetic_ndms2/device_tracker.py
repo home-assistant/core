@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from ndms2_client import Device
 
@@ -10,26 +11,24 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, ROUTER
-from .router import KeeneticRouter
+from .router import KeeneticConfigEntry, KeeneticRouter
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: KeeneticConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Keenetic NDMS2 component."""
-    router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
+    router = config_entry.runtime_data
 
     tracked: set[str] = set()
 
@@ -128,7 +127,7 @@ class KeeneticTracker(ScannerEntity):
         return self._router.available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if self.is_connected:
             return {

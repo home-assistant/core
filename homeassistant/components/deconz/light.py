@@ -38,7 +38,7 @@ from homeassistant.util.color import (
 )
 
 from . import DeconzConfigEntry
-from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
+from .const import DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
 from .hub import DeconzHub
 
@@ -244,7 +244,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
                     self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._device.color_mode in DECONZ_TO_COLOR_MODE:
             color_mode = DECONZ_TO_COLOR_MODE[self._device.color_mode]
@@ -395,11 +395,11 @@ class DeconzGroup(DeconzBaseLight[Group]):
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
-            identifiers={(DECONZ_DOMAIN, self.unique_id)},
-            manufacturer="Dresden Elektronik",
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="dresden elektronik",
             model="deCONZ group",
             name=self._device.name,
-            via_device=(DECONZ_DOMAIN, self.hub.api.config.bridge_id),
+            via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )
 
     @property

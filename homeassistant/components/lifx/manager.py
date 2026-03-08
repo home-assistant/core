@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiolifx_effects
 from aiolifx_themes.painter import ThemePainter
@@ -28,11 +28,17 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 
-from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN
-from .coordinator import LIFXUpdateCoordinator, Light
+from .const import ATTR_THEME, DOMAIN
+from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
+
+if TYPE_CHECKING:
+    from aiolifx.aiolifx import Light
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -129,8 +135,6 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        # _ATTR_COLOR_TEMP deprecated - to be removed in 2026.1
-        vol.Exclusive(_ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -237,7 +241,7 @@ class LIFXManager:
         """Initialize the manager."""
         self.hass = hass
         self.effects_conductor = aiolifx_effects.Conductor(hass.loop)
-        self.entry_id_to_entity_id: dict[str, str] = {}
+        self.entity_id_to_coordinator: dict[str, LIFXUpdateCoordinator] = {}
 
     @callback
     def async_unload(self) -> None:
@@ -247,15 +251,15 @@ class LIFXManager:
 
     @callback
     def async_register_entity(
-        self, entity_id: str, entry_id: str
+        self, entity_id: str, coordinator: LIFXUpdateCoordinator
     ) -> Callable[[], None]:
         """Register an entity to the config entry id."""
-        self.entry_id_to_entity_id[entry_id] = entity_id
+        self.entity_id_to_coordinator[entity_id] = coordinator
 
         @callback
         def unregister_entity() -> None:
             """Unregister entity when it is being destroyed."""
-            self.entry_id_to_entity_id.pop(entry_id)
+            self.entity_id_to_coordinator.pop(entity_id)
 
         return unregister_entity
 
@@ -265,7 +269,9 @@ class LIFXManager:
 
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
-            referenced = async_extract_referenced_entity_ids(self.hass, service)
+            referenced = async_extract_referenced_entity_ids(
+                self.hass, TargetSelection(service.data)
+            )
             all_referenced = referenced.referenced | referenced.indirectly_referenced
             if all_referenced:
                 await self.start_effect(all_referenced, service.service, **service.data)
@@ -426,8 +432,8 @@ class LIFXManager:
     ) -> None:
         """Start the firmware-based Sky effect."""
         palette = kwargs.get(ATTR_PALETTE)
+        theme = Theme()
         if palette is not None:
-            theme = Theme()
             for hsbk in palette:
                 theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
 
@@ -491,13 +497,11 @@ class LIFXManager:
         coordinators: list[LIFXUpdateCoordinator] = []
         bulbs: list[Light] = []
 
-        for entry_id, coordinator in self.hass.data[DOMAIN].items():
-            if (
-                entry_id != DATA_LIFX_MANAGER
-                and self.entry_id_to_entity_id[entry_id] in entity_ids
-            ):
-                coordinators.append(coordinator)
-                bulbs.append(coordinator.device)
-
+        coordinators = [
+            coordinator
+            for entity_id, coordinator in self.entity_id_to_coordinator.items()
+            if entity_id in entity_ids
+        ]
+        bulbs = [coordinator.device for coordinator in coordinators]
         if start_effect_func := self._effect_dispatch.get(service):
             await start_effect_func(self, bulbs, coordinators, **kwargs)

@@ -16,7 +16,7 @@ from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
+    DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
@@ -53,7 +53,7 @@ async def test_flow_discovered_bridges(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -96,7 +96,7 @@ async def test_flow_manual_configuration_decision(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -151,7 +151,7 @@ async def test_flow_manual_configuration(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -197,7 +197,7 @@ async def test_manual_configuration_after_discovery_timeout(
     aioclient_mock.get(pydeconz.utils.URL_DISCOVER, exc=TimeoutError)
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -212,7 +212,7 @@ async def test_manual_configuration_after_discovery_ResponseError(
     aioclient_mock.get(pydeconz.utils.URL_DISCOVER, exc=pydeconz.errors.ResponseError)
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -233,7 +233,7 @@ async def test_manual_configuration_update_configuration(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -280,7 +280,7 @@ async def test_manual_configuration_dont_update_configuration(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -325,7 +325,7 @@ async def test_manual_configuration_timeout_get_bridge(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -378,7 +378,7 @@ async def test_link_step_fails(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -437,7 +437,7 @@ async def test_flow_ssdp_discovery(
 ) -> None:
     """Test that config flow for one discovered bridge works."""
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
+        DOMAIN,
         data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
@@ -483,9 +483,9 @@ async def test_ssdp_discovery_update_configuration(
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
-            DECONZ_DOMAIN,
+            DOMAIN,
             data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
@@ -502,7 +502,6 @@ async def test_ssdp_discovery_update_configuration(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_ssdp_discovery_dont_update_configuration(
@@ -511,7 +510,7 @@ async def test_ssdp_discovery_dont_update_configuration(
     """Test if a discovered bridge has already been configured."""
 
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
+        DOMAIN,
         data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
@@ -535,7 +534,7 @@ async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
 ) -> None:
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
+        DOMAIN,
         data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
@@ -556,7 +555,7 @@ async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
 async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
     """Test hassio discovery flow works."""
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
+        DOMAIN,
         data=HassioServiceInfo(
             config={
                 "addon": "Mock Addon",
@@ -607,9 +606,9 @@ async def test_hassio_discovery_update_configuration(
     with patch(
         "homeassistant.components.deconz.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
-            DECONZ_DOMAIN,
+            DOMAIN,
             data=HassioServiceInfo(
                 config={
                     CONF_HOST: "2.3.4.5",
@@ -630,14 +629,13 @@ async def test_hassio_discovery_update_configuration(
     assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
     assert config_entry_setup.data[CONF_PORT] == 8080
     assert config_entry_setup.data[CONF_API_KEY] == "updated"
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("config_entry_setup")
 async def test_hassio_discovery_dont_update_configuration(hass: HomeAssistant) -> None:
     """Test we can update an existing config entry."""
     result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
+        DOMAIN,
         data=HassioServiceInfo(
             config={
                 CONF_HOST: "1.2.3.4",

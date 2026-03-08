@@ -309,8 +309,8 @@ class OptionsFlowHandler(OptionsFlow, ABC):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        # pylint: disable=hass-component-root-import
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
 
@@ -451,16 +451,12 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Configure the Silicon Labs Multiprotocol add-on."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        # pylint: disable=hass-component-root-import
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.silabs_multiprotocol import (
+        from homeassistant.components.zha.silabs_multiprotocol import (  # noqa: PLC0415
             async_get_channel as async_get_zha_channel,
         )
 
@@ -747,11 +743,9 @@ class OptionsFlowHandler(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Perform initial backup and reconfigure ZHA."""
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
-
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.radio_manager import (
+        # pylint: disable=hass-component-root-import
+        from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN  # noqa: PLC0415
+        from homeassistant.components.zha.radio_manager import (  # noqa: PLC0415
             ZhaMultiPANMigrationHelper,
         )
 

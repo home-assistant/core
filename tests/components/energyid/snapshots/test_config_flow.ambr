@@ -1,0 +1,26 @@
+# serializer version: 1
+# name: test_config_flow_user_step_success_claimed[create_entry_data]
+  dict({
+    'device_id': 'homeassistant_eid_test_instance_123',
+    'device_name': 'test home',
+    'provisioning_key': 'test_prov_key',
+    'provisioning_secret': 'test_prov_secret',
+    'record_name': 'My Test Site',
+    'record_number': 'site_12345',
+  })
+# ---
+# name: test_config_flow_user_step_success_claimed[user_step_form]
+  FlowResultSnapshot({
+    'description_placeholders': dict({
+      'docs_url': 'https://app.energyid.eu/integrations/home-assistant',
+    }),
+    'errors': dict({
+    }),
+    'flow_id': <ANY>,
+    'handler': 'energyid',
+    'last_step': None,
+    'preview': None,
+    'step_id': 'user',
+    'type': <FlowResultType.FORM: 'form'>,
+  })
+# ---

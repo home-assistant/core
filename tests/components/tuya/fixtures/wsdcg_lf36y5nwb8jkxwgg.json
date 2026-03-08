@@ -1,0 +1,66 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Greenhouse",
+  "category": "wsdcg",
+  "product_id": "lf36y5nwb8jkxwgg",
+  "product_name": "T & H Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-08-14T13:59:25+00:00",
+  "create_time": "2023-08-14T13:59:25+00:00",
+  "update_time": "2023-08-14T13:59:25+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 99,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 322,
+    "va_humidity": 53,
+    "battery_state": "middle",
+    "temp_unit_convert": "c"
+  },
+  "set_up": true,
+  "support_local": true
+}

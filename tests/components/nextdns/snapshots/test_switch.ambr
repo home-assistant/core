@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AI-Driven threat detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'AI-Driven threat detection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ai_threat_detection',
     'unique_id': 'xyz12_ai_threat_detection',
@@ -67,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow affiliate & tracking links',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +77,7 @@
     'original_name': 'Allow affiliate & tracking links',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'allow_affiliate',
     'unique_id': 'xyz12_allow_affiliate',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Anonymized EDNS client subnet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': 'Anonymized EDNS client subnet',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'anonymized_ecs',
     'unique_id': 'xyz12_anonymized_ecs',
@@ -161,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block 9GAG',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +175,7 @@
     'original_name': 'Block 9GAG',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_9gag',
     'unique_id': 'xyz12_block_9gag',
@@ -208,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Amazon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +224,7 @@
     'original_name': 'Block Amazon',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_amazon',
     'unique_id': 'xyz12_block_amazon',
@@ -255,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block BeReal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +273,7 @@
     'original_name': 'Block BeReal',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_bereal',
     'unique_id': 'xyz12_block_bereal',
@@ -302,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Blizzard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +322,7 @@
     'original_name': 'Block Blizzard',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_blizzard',
     'unique_id': 'xyz12_block_blizzard',
@@ -349,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block bypass methods',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +371,7 @@
     'original_name': 'Block bypass methods',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_bypass_methods',
     'unique_id': 'xyz12_block_bypass_methods',
@@ -396,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block ChatGPT',
     'options': dict({
     }),
     'original_device_class': None,
@@ -403,6 +420,7 @@
     'original_name': 'Block ChatGPT',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_chatgpt',
     'unique_id': 'xyz12_block_chatgpt',
@@ -443,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block child sexual abuse material',
     'options': dict({
     }),
     'original_device_class': None,
@@ -450,6 +469,7 @@
     'original_name': 'Block child sexual abuse material',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_csam',
     'unique_id': 'xyz12_block_csam',
@@ -490,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Dailymotion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -497,6 +518,7 @@
     'original_name': 'Block Dailymotion',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_dailymotion',
     'unique_id': 'xyz12_block_dailymotion',
@@ -537,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dating',
     'options': dict({
     }),
     'original_device_class': None,
@@ -544,6 +567,7 @@
     'original_name': 'Block dating',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_dating',
     'unique_id': 'xyz12_block_dating',
@@ -584,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Discord',
     'options': dict({
     }),
     'original_device_class': None,
@@ -591,6 +616,7 @@
     'original_name': 'Block Discord',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_discord',
     'unique_id': 'xyz12_block_discord',
@@ -631,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block disguised third-party trackers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -638,6 +665,7 @@
     'original_name': 'Block disguised third-party trackers',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_disguised_trackers',
     'unique_id': 'xyz12_block_disguised_trackers',
@@ -678,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Disney Plus',
     'options': dict({
     }),
     'original_device_class': None,
@@ -685,6 +714,7 @@
     'original_name': 'Block Disney Plus',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_disneyplus',
     'unique_id': 'xyz12_block_disneyplus',
@@ -725,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block dynamic DNS hostnames',
     'options': dict({
     }),
     'original_device_class': None,
@@ -732,6 +763,7 @@
     'original_name': 'Block dynamic DNS hostnames',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_ddns',
     'unique_id': 'xyz12_block_ddns',
@@ -772,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block eBay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -779,6 +812,7 @@
     'original_name': 'Block eBay',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_ebay',
     'unique_id': 'xyz12_block_ebay',
@@ -819,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Facebook',
     'options': dict({
     }),
     'original_device_class': None,
@@ -826,6 +861,7 @@
     'original_name': 'Block Facebook',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_facebook',
     'unique_id': 'xyz12_block_facebook',
@@ -866,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Fortnite',
     'options': dict({
     }),
     'original_device_class': None,
@@ -873,6 +910,7 @@
     'original_name': 'Block Fortnite',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_fortnite',
     'unique_id': 'xyz12_block_fortnite',
@@ -913,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block gambling',
     'options': dict({
     }),
     'original_device_class': None,
@@ -920,6 +959,7 @@
     'original_name': 'Block gambling',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_gambling',
     'unique_id': 'xyz12_block_gambling',
@@ -960,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Google Chat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -967,6 +1008,7 @@
     'original_name': 'Block Google Chat',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_google_chat',
     'unique_id': 'xyz12_block_google_chat',
@@ -1007,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block HBO Max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1014,6 +1057,7 @@
     'original_name': 'Block HBO Max',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_hbomax',
     'unique_id': 'xyz12_block_hbomax',
@@ -1054,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Hulu',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1061,6 +1106,7 @@
     'original_name': 'Block Hulu',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xyz12_block_hulu',
@@ -1101,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Imgur',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1108,6 +1155,7 @@
     'original_name': 'Block Imgur',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_imgur',
     'unique_id': 'xyz12_block_imgur',
@@ -1148,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Instagram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1155,6 +1204,7 @@
     'original_name': 'Block Instagram',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_instagram',
     'unique_id': 'xyz12_block_instagram',
@@ -1195,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block League of Legends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1202,6 +1253,7 @@
     'original_name': 'Block League of Legends',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_leagueoflegends',
     'unique_id': 'xyz12_block_leagueoflegends',
@@ -1242,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Mastodon',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1249,6 +1302,7 @@
     'original_name': 'Block Mastodon',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_mastodon',
     'unique_id': 'xyz12_block_mastodon',
@@ -1289,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Messenger',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1296,6 +1351,7 @@
     'original_name': 'Block Messenger',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_messenger',
     'unique_id': 'xyz12_block_messenger',
@@ -1336,6 +1392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Minecraft',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1343,6 +1400,7 @@
     'original_name': 'Block Minecraft',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_minecraft',
     'unique_id': 'xyz12_block_minecraft',
@@ -1383,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Netflix',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1390,6 +1449,7 @@
     'original_name': 'Block Netflix',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_netflix',
     'unique_id': 'xyz12_block_netflix',
@@ -1430,6 +1490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block newly registered domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1437,6 +1498,7 @@
     'original_name': 'Block newly registered domains',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_nrd',
     'unique_id': 'xyz12_block_nrd',
@@ -1477,6 +1539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block online gaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1484,6 +1547,7 @@
     'original_name': 'Block online gaming',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_online_gaming',
     'unique_id': 'xyz12_block_online_gaming',
@@ -1524,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block page',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1531,6 +1596,7 @@
     'original_name': 'Block page',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_page',
     'unique_id': 'xyz12_block_page',
@@ -1571,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block parked domains',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1578,6 +1645,7 @@
     'original_name': 'Block parked domains',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_parked_domains',
     'unique_id': 'xyz12_block_parked_domains',
@@ -1618,6 +1686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Pinterest',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1625,6 +1694,7 @@
     'original_name': 'Block Pinterest',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_pinterest',
     'unique_id': 'xyz12_block_pinterest',
@@ -1665,6 +1735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block piracy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1672,6 +1743,7 @@
     'original_name': 'Block piracy',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_piracy',
     'unique_id': 'xyz12_block_piracy',
@@ -1712,6 +1784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block PlayStation Network',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1719,6 +1792,7 @@
     'original_name': 'Block PlayStation Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_playstation_network',
     'unique_id': 'xyz12_block_playstation_network',
@@ -1759,6 +1833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block porn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1766,6 +1841,7 @@
     'original_name': 'Block porn',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_porn',
     'unique_id': 'xyz12_block_porn',
@@ -1806,6 +1882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Prime Video',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1813,6 +1890,7 @@
     'original_name': 'Block Prime Video',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_primevideo',
     'unique_id': 'xyz12_block_primevideo',
@@ -1853,6 +1931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Reddit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1860,6 +1939,7 @@
     'original_name': 'Block Reddit',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_reddit',
     'unique_id': 'xyz12_block_reddit',
@@ -1900,6 +1980,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Roblox',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1907,6 +1988,7 @@
     'original_name': 'Block Roblox',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_roblox',
     'unique_id': 'xyz12_block_roblox',
@@ -1947,6 +2029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Signal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1954,6 +2037,7 @@
     'original_name': 'Block Signal',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_signal',
     'unique_id': 'xyz12_block_signal',
@@ -1994,6 +2078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Skype',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2001,6 +2086,7 @@
     'original_name': 'Block Skype',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_skype',
     'unique_id': 'xyz12_block_skype',
@@ -2041,6 +2127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Snapchat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2048,6 +2135,7 @@
     'original_name': 'Block Snapchat',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_snapchat',
     'unique_id': 'xyz12_block_snapchat',
@@ -2088,6 +2176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block social networks',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2095,6 +2184,7 @@
     'original_name': 'Block social networks',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_social_networks',
     'unique_id': 'xyz12_block_social_networks',
@@ -2135,6 +2225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Spotify',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2142,6 +2233,7 @@
     'original_name': 'Block Spotify',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_spotify',
     'unique_id': 'xyz12_block_spotify',
@@ -2182,6 +2274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Steam',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2189,6 +2282,7 @@
     'original_name': 'Block Steam',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_steam',
     'unique_id': 'xyz12_block_steam',
@@ -2229,6 +2323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Telegram',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2236,6 +2331,7 @@
     'original_name': 'Block Telegram',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_telegram',
     'unique_id': 'xyz12_block_telegram',
@@ -2276,6 +2372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block TikTok',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2283,6 +2380,7 @@
     'original_name': 'Block TikTok',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tiktok',
     'unique_id': 'xyz12_block_tiktok',
@@ -2323,6 +2421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tinder',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2330,6 +2429,7 @@
     'original_name': 'Block Tinder',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tinder',
     'unique_id': 'xyz12_block_tinder',
@@ -2370,6 +2470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Tumblr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2377,6 +2478,7 @@
     'original_name': 'Block Tumblr',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_tumblr',
     'unique_id': 'xyz12_block_tumblr',
@@ -2417,6 +2519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Twitch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2424,6 +2527,7 @@
     'original_name': 'Block Twitch',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_twitch',
     'unique_id': 'xyz12_block_twitch',
@@ -2464,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block video streaming',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2471,6 +2576,7 @@
     'original_name': 'Block video streaming',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_video_streaming',
     'unique_id': 'xyz12_block_video_streaming',
@@ -2511,6 +2617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Vimeo',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2518,6 +2625,7 @@
     'original_name': 'Block Vimeo',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_vimeo',
     'unique_id': 'xyz12_block_vimeo',
@@ -2558,6 +2666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block VK',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2565,6 +2674,7 @@
     'original_name': 'Block VK',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_vk',
     'unique_id': 'xyz12_block_vk',
@@ -2605,6 +2715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block WhatsApp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2612,6 +2723,7 @@
     'original_name': 'Block WhatsApp',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_whatsapp',
     'unique_id': 'xyz12_block_whatsapp',
@@ -2652,6 +2764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block X (formerly Twitter)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2659,6 +2772,7 @@
     'original_name': 'Block X (formerly Twitter)',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_twitter',
     'unique_id': 'xyz12_block_twitter',
@@ -2678,7 +2792,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-entry]
+# name: test_switch[switch.fake_profile_block_xbox_network-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2691,7 +2805,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2699,26 +2813,28 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Xbox Network',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Block Xbox Live',
+    'original_name': 'Block Xbox Network',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_xboxlive',
     'unique_id': 'xyz12_block_xboxlive',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.fake_profile_block_xbox_live-state]
+# name: test_switch[switch.fake_profile_block_xbox_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Xbox Live',
+      'friendly_name': 'Fake Profile Block Xbox Network',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'entity_id': 'switch.fake_profile_block_xbox_network',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2746,6 +2862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block YouTube',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2753,6 +2870,7 @@
     'original_name': 'Block YouTube',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_youtube',
     'unique_id': 'xyz12_block_youtube',
@@ -2793,6 +2911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Block Zoom',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2800,6 +2919,7 @@
     'original_name': 'Block Zoom',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'block_zoom',
     'unique_id': 'xyz12_block_zoom',
@@ -2813,6 +2933,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_zoom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_bypass_age_verification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_bypass_age_verification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bypass age verification',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass age verification',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bypass_age_verification',
+    'unique_id': 'xyz12_bav',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_bypass_age_verification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Bypass age verification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_bypass_age_verification',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2840,6 +3009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2847,6 +3017,7 @@
     'original_name': 'Cache boost',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cache_boost',
     'unique_id': 'xyz12_cache_boost',
@@ -2887,6 +3058,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CNAME flattening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2894,6 +3066,7 @@
     'original_name': 'CNAME flattening',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cname_flattening',
     'unique_id': 'xyz12_cname_flattening',
@@ -2934,6 +3107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cryptojacking protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2941,6 +3115,7 @@
     'original_name': 'Cryptojacking protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cryptojacking_protection',
     'unique_id': 'xyz12_cryptojacking_protection',
@@ -2981,6 +3156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS rebinding protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2988,6 +3164,7 @@
     'original_name': 'DNS rebinding protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dns_rebinding_protection',
     'unique_id': 'xyz12_dns_rebinding_protection',
@@ -3028,6 +3205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Domain generation algorithms protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3035,6 +3213,7 @@
     'original_name': 'Domain generation algorithms protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dga_protection',
     'unique_id': 'xyz12_dga_protection',
@@ -3075,6 +3254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force SafeSearch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3082,6 +3262,7 @@
     'original_name': 'Force SafeSearch',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'safesearch',
     'unique_id': 'xyz12_safesearch',
@@ -3122,6 +3303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Force YouTube restricted mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3129,6 +3311,7 @@
     'original_name': 'Force YouTube restricted mode',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'youtube_restricted_mode',
     'unique_id': 'xyz12_youtube_restricted_mode',
@@ -3169,6 +3352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google safe browsing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3176,6 +3360,7 @@
     'original_name': 'Google safe browsing',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'google_safe_browsing',
     'unique_id': 'xyz12_google_safe_browsing',
@@ -3216,6 +3401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IDN homograph attacks protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3223,6 +3409,7 @@
     'original_name': 'IDN homograph attacks protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'idn_homograph_attacks_protection',
     'unique_id': 'xyz12_idn_homograph_attacks_protection',
@@ -3263,6 +3450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Logs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3270,6 +3458,7 @@
     'original_name': 'Logs',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'logs',
     'unique_id': 'xyz12_logs',
@@ -3310,6 +3499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Threat intelligence feeds',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3317,6 +3507,7 @@
     'original_name': 'Threat intelligence feeds',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'threat_intelligence_feeds',
     'unique_id': 'xyz12_threat_intelligence_feeds',
@@ -3357,6 +3548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Typosquatting protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3364,6 +3556,7 @@
     'original_name': 'Typosquatting protection',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'typosquatting_protection',
     'unique_id': 'xyz12_typosquatting_protection',
@@ -3404,6 +3597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Web3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3411,6 +3605,7 @@
     'original_name': 'Web3',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'web3',
     'unique_id': 'xyz12_web3',

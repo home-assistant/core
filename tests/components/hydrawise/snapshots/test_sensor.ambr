@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -28,11 +29,12 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_use',
     'unique_id': '52496_daily_active_water_use',
@@ -43,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily active water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -76,13 +78,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Daily active watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_time',
     'unique_id': '52496_daily_active_water_time',
@@ -126,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily inactive water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -134,11 +142,12 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily inactive water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_inactive_water_use',
     'unique_id': '52496_daily_inactive_water_use',
@@ -149,7 +158,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily inactive water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -182,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily total water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -190,11 +200,12 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily total water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_total_water_use',
     'unique_id': '52496_daily_total_water_use',
@@ -205,7 +216,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily total water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -238,6 +249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -246,11 +258,12 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_use',
     'unique_id': '5965394_daily_active_water_use',
@@ -261,7 +274,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Zone One Daily active water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -294,13 +307,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Daily active watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_time',
     'unique_id': '5965394_daily_active_water_time',
@@ -344,6 +362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next cycle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -351,6 +370,7 @@
     'original_name': 'Next cycle',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_cycle',
     'unique_id': '5965394_next_cycle',
@@ -393,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -400,6 +421,7 @@
     'original_name': 'Remaining watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'watering_time',
     'unique_id': '5965394_watering_time',
@@ -442,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active water use',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -450,11 +473,12 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': 'mdi:water-outline',
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_use',
     'unique_id': '5965395_daily_active_water_use',
@@ -465,7 +489,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Zone Two Daily active water use',
       'icon': 'mdi:water-outline',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
@@ -499,13 +523,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily active watering time',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Daily active watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_active_water_time',
     'unique_id': '5965395_daily_active_water_time',
@@ -549,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next cycle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -556,6 +586,7 @@
     'original_name': 'Next cycle',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_cycle',
     'unique_id': '5965395_next_cycle',
@@ -598,6 +629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining watering time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -605,6 +637,7 @@
     'original_name': 'Remaining watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'watering_time',
     'unique_id': '5965395_watering_time',

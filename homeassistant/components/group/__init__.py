@@ -72,6 +72,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,13 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["group_type"],)
     )
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -190,8 +185,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         - Remove group.group entities not created by service calls and set them up again
         - Reload xxx.group platforms
         """
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
 
         # Simplified + modified version of EntityPlatform.async_reset:
         # - group.group never retries setup

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
-from unittest.mock import sentinel
+from unittest.mock import patch, sentinel
 
 from freezegun import freeze_time
 import pytest
@@ -31,9 +32,29 @@ from .common import (
     assert_states_equal_without_context,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
 )
 
 from tests.typing import RecorderInstanceContextManager
+
+
+@pytest.fixture
+def multiple_start_time_chunk_sizes(
+    ids_for_start_time_chunk_sizes: int,
+) -> Generator[None]:
+    """Fixture to test different chunk sizes for start time query.
+
+    Force the recorder to use different chunk sizes for start time query.
+
+    In effect this forces get_significant_states_with_session
+    to call _generate_significant_states_with_session_stmt multiple times.
+    """
+    with patch(
+        "homeassistant.components.recorder.history.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        ids_for_start_time_chunk_sizes,
+    ):
+        yield
 
 
 @pytest.fixture
@@ -429,6 +450,7 @@ async def test_ensure_state_can_be_copied(
     assert_states_equal_without_context(copy(hist[entity_id][1]), hist[entity_id][1])
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states(hass: HomeAssistant) -> None:
     """Test that only significant states are returned.
 
@@ -443,6 +465,7 @@ async def test_get_significant_states(hass: HomeAssistant) -> None:
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_minimal_response(
     hass: HomeAssistant,
 ) -> None:
@@ -512,6 +535,7 @@ async def test_get_significant_states_minimal_response(
     )
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "US/Hawaii", "UTC"])
 async def test_get_significant_states_with_initial(
     time_zone, hass: HomeAssistant
@@ -544,6 +568,7 @@ async def test_get_significant_states_with_initial(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_without_initial(
     hass: HomeAssistant,
 ) -> None:
@@ -578,6 +603,7 @@ async def test_get_significant_states_without_initial(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_entity_id(
     hass: HomeAssistant,
 ) -> None:
@@ -596,6 +622,7 @@ async def test_get_significant_states_entity_id(
     assert_dict_of_states_equal_without_context_and_last_changed(states, hist)
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
 async def test_get_significant_states_multiple_entity_ids(
     hass: HomeAssistant,
 ) -> None:
@@ -859,10 +886,10 @@ async def test_get_full_significant_states_handles_empty_last_changed(
                 db_state.entity_id = metadata_id_to_entity_id[
                     db_state.metadata_id
                 ].entity_id
-                state = db_state.to_native()
-                state.attributes = db_state_attributes[
-                    db_state.attributes_id
-                ].to_native()
+                state = db_state_to_native(db_state)
+                state.attributes = db_state_attributes_to_native(
+                    db_state_attributes[db_state.attributes_id]
+                )
                 native_states.append(state)
             return native_states
 

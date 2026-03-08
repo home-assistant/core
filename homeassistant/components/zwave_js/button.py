@@ -2,32 +2,31 @@
 
 from __future__ import annotations
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZwaveJSConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave button from config entry."""
-    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_button(info: ZwaveDiscoveryInfo) -> None:
@@ -70,7 +69,7 @@ class ZwaveBooleanNodeButton(ZWaveBaseEntity, ButtonEntity):
     """Representation of a ZWave button entity for a boolean value."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize entity."""
         super().__init__(config_entry, driver, info)
@@ -141,7 +140,7 @@ class ZWaveNotificationIdleButton(ZWaveBaseEntity, ButtonEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZWaveNotificationIdleButton entity."""
         super().__init__(config_entry, driver, info)

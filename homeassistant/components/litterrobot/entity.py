@@ -17,7 +17,7 @@ from .coordinator import LitterRobotDataUpdateCoordinator
 _WhiskerEntityT = TypeVar("_WhiskerEntityT", bound=Robot | Pet)
 
 
-def get_device_info(whisker_entity: _WhiskerEntityT) -> DeviceInfo:
+def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
     """Get device info for a robot or pet."""
     if isinstance(whisker_entity, Robot):
         return DeviceInfo(

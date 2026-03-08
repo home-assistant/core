@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -27,6 +28,7 @@
     'original_name': 'Child lock',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'external_binary_input',
     'unique_id': '00055511EECC-1-1',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual operation',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -75,6 +78,7 @@
     'original_name': 'Manual operation',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'manual_operation',
     'unique_id': '00055511EECC-1-2',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 1',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -123,6 +128,7 @@
     'original_name': 'Switch 1',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_instance',
     'unique_id': '00055511EECC-1-3',
@@ -164,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch 2',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -171,6 +178,7 @@
     'original_name': 'Switch 2',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'on_off_instance',
     'unique_id': '00055511EECC-1-4',
@@ -212,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Watchdog',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -219,6 +228,7 @@
     'original_name': 'Watchdog',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'watchdog',
     'unique_id': '00055511EECC-1-5',

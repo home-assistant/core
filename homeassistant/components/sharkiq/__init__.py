@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 
+import aiohttp
 from sharkiq import (
     AylaApi,
     SharkIqAuthError,
@@ -15,7 +16,9 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_TIMEOUT,
@@ -26,6 +29,9 @@ from .const import (
     SHARKIQ_REGION_EUROPE,
 )
 from .coordinator import SharkIqUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
@@ -48,6 +54,12 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     return True
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the sharkiq platform via config entry."""
     if CONF_REGION not in config_entry.data:
@@ -56,10 +68,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
         )
 
+    new_websession = async_create_clientsession(
+        hass,
+        cookie_jar=aiohttp.CookieJar(unsafe=True, quote_cookie=False),
+    )
+
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        websession=async_get_clientsession(hass),
+        websession=new_websession,
         europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
@@ -94,7 +111,7 @@ async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
             await coordinator.ayla_api.async_sign_out()
 
 
-async def async_update_options(hass, config_entry):
+async def async_update_options(hass: HomeAssistant, config_entry):
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 

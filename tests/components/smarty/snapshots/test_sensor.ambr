@@ -20,13 +20,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air temperature',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'extract_air_temperature',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_extract_air_temperature',
@@ -69,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -76,6 +82,7 @@
     'original_name': 'Extract fan speed',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'extract_fan_speed',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_extract_fan_speed',
@@ -117,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter days left',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -124,6 +132,7 @@
     'original_name': 'Filter days left',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_days_left',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_filter_days_left',
@@ -165,13 +174,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor air temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Outdoor air temperature',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'outdoor_air_temperature',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_outdoor_air_temperature',
@@ -214,13 +228,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply air temperature',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_air_temperature',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_supply_air_temperature',
@@ -263,6 +282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,6 +290,7 @@
     'original_name': 'Supply fan speed',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'supply_fan_speed',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_supply_fan_speed',

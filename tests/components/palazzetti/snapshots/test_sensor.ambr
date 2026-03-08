@@ -22,13 +22,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air outlet temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Air outlet temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_outlet_temperature',
     'unique_id': '11:22:33:44:55:66-air_outlet_temperature',
@@ -74,13 +79,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydro temperature 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hydro temperature 1',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 't1_hydro',
     'unique_id': '11:22:33:44:55:66-t1_hydro',
@@ -126,13 +136,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydro temperature 2',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hydro temperature 2',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 't2_hydro',
     'unique_id': '11:22:33:44:55:66-t2_hydro',
@@ -178,13 +193,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pellet quantity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
     'original_name': 'Pellet quantity',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pellet_quantity',
     'unique_id': '11:22:33:44:55:66-pellet_quantity',
@@ -230,13 +250,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return water temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return water temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'return_water_temperature',
     'unique_id': '11:22:33:44:55:66-return_water_temperature',
@@ -282,13 +307,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'room_temperature',
     'unique_id': '11:22:33:44:55:66-room_temperature',
@@ -382,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -389,6 +420,7 @@
     'original_name': 'Status',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': '11:22:33:44:55:66-status',
@@ -481,13 +513,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank water temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Tank water temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tank_water_temperature',
     'unique_id': '11:22:33:44:55:66-tank_water_temperature',
@@ -533,13 +570,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wood combustion temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Wood combustion temperature',
     'platform': 'palazzetti',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wood_combustion_temperature',
     'unique_id': '11:22:33:44:55:66-wood_combustion_temperature',

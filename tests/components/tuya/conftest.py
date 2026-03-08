@@ -6,32 +6,66 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya.const import CONF_APP_TYPE, CONF_USER_CODE, DOMAIN
+from homeassistant.components.tuya.const import (
+    CONF_ENDPOINT,
+    CONF_TERMINAL_ID,
+    CONF_TOKEN_INFO,
+    CONF_USER_CODE,
+    DOMAIN,
+)
+from homeassistant.core import HomeAssistant
+
+from . import (
+    DEVICE_MOCKS,
+    MockDeviceListener,
+    create_device,
+    create_listener,
+    create_manager,
+)
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_old_config_entry() -> MockConfigEntry:
-    """Mock an old config entry that can be migrated."""
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
     return MockConfigEntry(
-        title="Old Tuya configuration entry",
+        title="Test Tuya entry",
         domain=DOMAIN,
-        data={CONF_APP_TYPE: "tuyaSmart"},
+        data={
+            CONF_ENDPOINT: "test_endpoint",
+            CONF_TERMINAL_ID: "test_terminal",
+            CONF_TOKEN_INFO: "test_token",
+            CONF_USER_CODE: "test_user_code",
+        },
         unique_id="12345",
     )
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Mock an config entry."""
-    return MockConfigEntry(
-        title="12345",
-        domain=DOMAIN,
-        data={CONF_USER_CODE: "12345"},
-        unique_id="12345",
-    )
+async def mock_loaded_entry(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> MockConfigEntry:
+    """Mock a config entry."""
+    # Setup
+    mock_manager.device_map = {
+        mock_device.id: mock_device,
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    # Initialize the component
+    with (
+        patch("homeassistant.components.tuya.Manager", return_value=mock_manager),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
 
 
 @pytest.fixture
@@ -68,3 +102,43 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
             },
         )
         yield login_control
+
+
+@pytest.fixture
+def mock_manager() -> Manager:
+    """Fixture for Tuya Manager."""
+    return create_manager()
+
+
+@pytest.fixture
+def mock_device_code() -> str:
+    """Fixture to parametrize the type of the mock device.
+
+    To set a configuration, tests can be marked with:
+    @pytest.mark.parametrize("mock_device_code", ["device_code_1", "device_code_2"])
+    """
+    return None
+
+
+@pytest.fixture
+async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
+    """Load all Tuya CustomerDevice fixtures.
+
+    Use this to generate global snapshots for each platform.
+    """
+    return [await create_device(hass, device_code) for device_code in DEVICE_MOCKS]
+
+
+@pytest.fixture
+async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Load a single Tuya CustomerDevice fixture.
+
+    Use this for testing behavior on a specific device.
+    """
+    return await create_device(hass, mock_device_code)
+
+
+@pytest.fixture
+def mock_listener(hass: HomeAssistant, mock_manager: Manager) -> MockDeviceListener:
+    """Fixture for Tuya DeviceListener."""
+    return create_listener(hass, mock_manager)

@@ -4,9 +4,10 @@ from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.device_tracker import DOMAIN as PLATFORM
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.devolo_home_network.const import (
     DOMAIN,
     LONG_UPDATE_INTERVAL,
@@ -16,15 +17,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import configure_integration
-from .const import CONNECTED_STATIONS, DISCOVERY_INFO, NO_CONNECTED_STATIONS
+from .const import CONNECTED_STATIONS, NO_CONNECTED_STATIONS
 from .mock import MockDevice
 
 from tests.common import async_fire_time_changed
 
 STATION = CONNECTED_STATIONS[0]
-SERIAL = DISCOVERY_INFO.properties["SN"]
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_tracker(
     hass: HomeAssistant,
     mock_device: MockDevice,
@@ -33,8 +34,8 @@ async def test_device_tracker(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device tracker states."""
-    state_key = (
-        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
     )
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -42,15 +43,7 @@ async def test_device_tracker(
     freezer.tick(LONG_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    # Enable entity
-    entity_registry.async_update_entity(state_key, disabled_by=None)
-    await hass.async_block_till_done()
-    freezer.tick(LONG_UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(state_key) == snapshot
+    assert hass.states.get(entity_id) == snapshot
 
     # Emulate state change
     mock_device.device.async_get_wifi_connected_station = AsyncMock(
@@ -60,7 +53,7 @@ async def test_device_tracker(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME
 
@@ -72,11 +65,9 @@ async def test_device_tracker(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_restoring_clients(
@@ -85,14 +76,14 @@ async def test_restoring_clients(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test restoring existing device_tracker entities."""
-    state_key = (
-        f"{PLATFORM}.{DOMAIN}_{SERIAL}_{STATION.mac_address.lower().replace(':', '_')}"
+    entity_id = (
+        f"{DEVICE_TRACKER_DOMAIN}.{STATION.mac_address.lower().replace(':', '_')}"
     )
     entry = configure_integration(hass)
     entity_registry.async_get_or_create(
-        PLATFORM,
+        DEVICE_TRACKER_DOMAIN,
         DOMAIN,
-        f"{SERIAL}_{STATION.mac_address}",
+        f"{STATION.mac_address}",
         config_entry=entry,
     )
 
@@ -103,6 +94,6 @@ async def test_restoring_clients(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(state_key)
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_NOT_HOME

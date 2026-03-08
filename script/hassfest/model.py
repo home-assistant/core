@@ -72,7 +72,7 @@ class Brand:
     @property
     def domain(self) -> str:
         """Integration domain."""
-        return self.path.stem
+        return self.brand["domain"]
 
     @property
     def name(self) -> str | None:
@@ -221,6 +221,15 @@ class Integration:
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
         """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
+
+    def add_warning_or_error(
+        self, warning_only: bool, *args: Any, **kwargs: Any
+    ) -> None:
+        """Add an error or a warning."""
+        if warning_only:
+            self.add_warning(*args, **kwargs)
+        else:
+            self.add_error(*args, **kwargs)
 
     def load_manifest(self) -> None:
         """Load manifest."""

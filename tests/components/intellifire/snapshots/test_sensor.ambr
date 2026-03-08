@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection quality',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Connection quality',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connection_quality',
     'unique_id': 'connection_quality_mock_serial',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -75,6 +78,7 @@
     'original_name': 'Downtime',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'downtime',
     'unique_id': 'downtime_mock_serial',
@@ -117,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ECM latency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -124,6 +129,7 @@
     'original_name': 'ECM latency',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ecm_latency',
     'unique_id': 'ecm_latency_mock_serial',
@@ -167,13 +173,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan speed',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan Speed',
+    'original_name': 'Fan speed',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_speed',
     'unique_id': 'fan_speed_mock_serial',
@@ -184,7 +192,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by unpublished Intellifire API',
-      'friendly_name': 'IntelliFire Fan Speed',
+      'friendly_name': 'IntelliFire Fan speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -218,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flame height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -225,6 +234,7 @@
     'original_name': 'Flame height',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flame_height',
     'unique_id': 'flame_height_mock_serial',
@@ -267,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IP address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -274,6 +285,7 @@
     'original_name': 'IP address',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ipv4_address',
     'unique_id': 'ipv4_address_mock_serial',
@@ -317,13 +329,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Target temperature',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'target_temp',
     'unique_id': 'target_temp_mock_serial',
@@ -370,13 +387,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'temperature_mock_serial',
@@ -423,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer end',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -430,6 +453,7 @@
     'original_name': 'Timer end',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'timer_end_timestamp',
     'unique_id': 'timer_end_timestamp_mock_serial',
@@ -473,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -480,6 +505,7 @@
     'original_name': 'Uptime',
     'platform': 'intellifire',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'uptime_mock_serial',

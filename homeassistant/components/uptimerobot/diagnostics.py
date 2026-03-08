@@ -6,19 +6,20 @@ from typing import Any
 
 from pyuptimerobot import UptimeRobotException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .coordinator import UptimeRobotConfigEntry
+
+TO_REDACT = {"email"}
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UptimeRobotConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     account: dict[str, Any] | str | None = None
     try:
         response = await coordinator.api.async_get_account_details()
@@ -27,20 +28,19 @@ async def async_get_config_entry_diagnostics(
     else:
         if (details := response.data) is not None:
             account = {
-                "up_monitors": details.up_monitors,
-                "down_monitors": details.down_monitors,
-                "paused_monitors": details.paused_monitors,
+                "monitorsCount": details.monitorsCount,
+                "email": details.email,
             }
 
     return {
-        "account": account,
+        "account": async_redact_data(account, TO_REDACT),
         "monitors": [
             {
                 "id": monitor.id,
-                "type": str(monitor.type),
+                "type": monitor.type,
                 "interval": monitor.interval,
                 "status": monitor.status,
             }
-            for monitor in coordinator.data
+            for monitor in coordinator.data.values()
         ],
     }

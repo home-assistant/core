@@ -12,16 +12,18 @@ from bring_api import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bring import async_setup_entry
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def setup_integration(
@@ -52,11 +54,11 @@ async def test_load_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "status"),
+    ("exception", "status", "reauth_triggered"),
     [
-        (BringRequestException, ConfigEntryState.SETUP_RETRY),
-        (BringAuthException, ConfigEntryState.SETUP_ERROR),
-        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringRequestException, ConfigEntryState.SETUP_RETRY, False),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR, True),
+        (BringParseException, ConfigEntryState.SETUP_RETRY, False),
     ],
 )
 async def test_init_failure(
@@ -64,6 +66,7 @@ async def test_init_failure(
     mock_bring_client: AsyncMock,
     status: ConfigEntryState,
     exception: Exception,
+    reauth_triggered: bool,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
@@ -71,28 +74,14 @@ async def test_init_failure(
     await setup_integration(hass, bring_config_entry)
     assert bring_config_entry.state == status
 
-
-@pytest.mark.parametrize(
-    ("exception", "expected"),
-    [
-        (BringRequestException, ConfigEntryNotReady),
-        (BringAuthException, ConfigEntryAuthFailed),
-        (BringParseException, ConfigEntryNotReady),
-    ],
-)
-async def test_init_exceptions(
-    hass: HomeAssistant,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-    expected: Exception,
-    bring_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initialization error on integration load."""
-    bring_config_entry.add_to_hass(hass)
-    mock_bring_client.login.side_effect = exception
-
-    with pytest.raises(expected):
-        await async_setup_entry(hass, bring_config_entry)
+    assert (
+        any(
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == SOURCE_REAUTH
+        )
+        is reauth_triggered
+    )
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
@@ -137,6 +126,31 @@ async def test_config_entry_not_ready_udpdate_failed(
     await hass.async_block_till_done()
 
     assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (BringRequestException, ConfigEntryState.SETUP_RETRY),
+        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_activity_coordinator_errors(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    mock_bring_client: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry not ready from update failed in _async_update_data."""
+    mock_bring_client.get_activity.side_effect = exception
+
+    bring_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(bring_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert bring_config_entry.state is state
 
 
 @pytest.mark.parametrize(
@@ -215,7 +229,7 @@ async def test_purge_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
 
     freezer.tick(timedelta(seconds=90))
@@ -240,7 +254,7 @@ async def test_create_devices(
     """Test create device entry for new lists."""
     list_uuid = "b4776778-7f6c-496e-951b-92a35d3db0dd"
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
     await setup_integration(hass, bring_config_entry)
 
@@ -254,7 +268,7 @@ async def test_create_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists.json", DOMAIN)
+        await async_load_fixture(hass, "lists.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
@@ -263,3 +277,44 @@ async def test_create_devices(
     assert device_registry.async_get_device(
         {(DOMAIN, f"{bring_config_entry.unique_id}_{list_uuid}")}
     )
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_coordinator_update_intervals(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_bring_client: AsyncMock,
+) -> None:
+    """Test the coordinator updates at the specified intervals."""
+    await setup_integration(hass, bring_config_entry)
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    # fetch 2 lists on first refresh
+    assert mock_bring_client.load_lists.await_count == 2
+    assert mock_bring_client.get_activity.await_count == 2
+
+    mock_bring_client.load_lists.reset_mock()
+    mock_bring_client.get_activity.reset_mock()
+
+    mock_bring_client.load_lists.return_value = BringListResponse.from_json(
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
+    )
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # main coordinator refreshes, activity does not
+    assert mock_bring_client.load_lists.await_count == 1
+    assert mock_bring_client.get_activity.await_count == 0
+
+    mock_bring_client.load_lists.reset_mock()
+    mock_bring_client.get_activity.reset_mock()
+
+    freezer.tick(timedelta(seconds=510))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # assert activity refreshes after 10min and has up-to-date lists data
+    assert mock_bring_client.get_activity.await_count == 1

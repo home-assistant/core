@@ -4,7 +4,7 @@ from homeassistant.components.agent_dvr.const import DOMAIN, SERVER_URL
 from homeassistant.const import CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONF_DATA = {
@@ -34,12 +34,12 @@ async def init_integration(
 
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getStatus",
-        text=load_fixture("agent_dvr/status.json"),
+        text=await async_load_fixture(hass, "status.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         "http://example.local:8090/command.cgi?cmd=getObjects",
-        text=load_fixture("agent_dvr/objects.json"),
+        text=await async_load_fixture(hass, "objects.json", DOMAIN),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     entry = create_entry(hass)

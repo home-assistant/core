@@ -1,7 +1,7 @@
 """The homee button platform."""
 
 from pyHomee.const import AttributeType
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -14,6 +14,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
+
+PARALLEL_UPDATES = 0
 
 BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
     AttributeType.AUTOMATIC_MODE_IMPULSE: ButtonEntityDescription(key="automatic_mode"),
@@ -37,19 +40,28 @@ BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
 }
 
 
+async def add_button_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee button entities."""
+    async_add_entities(
+        HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type in BUTTON_DESCRIPTIONS and attribute.editable
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the button component."""
+    """Add the homee platform for the button component."""
 
-    async_add_entities(
-        HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type in BUTTON_DESCRIPTIONS and attribute.editable
-    )
+    await setup_homee_platform(add_button_entities, async_add_entities, config_entry)
 
 
 class HomeeButton(HomeeEntity, ButtonEntity):
@@ -75,4 +87,4 @@ class HomeeButton(HomeeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.async_set_value(1)
+        await self.async_set_homee_value(1)

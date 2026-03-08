@@ -1,5 +1,10 @@
 """Tests for the Voice Assistant integration."""
 
+from dataclasses import asdict
+from unittest.mock import ANY
+
+from homeassistant.components import assist_pipeline
+
 MANY_LANGUAGES = [
     "ar",
     "bg",
@@ -54,3 +59,16 @@ MANY_LANGUAGES = [
     "zh-hk",
     "zh-tw",
 ]
+
+
+def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
+    """Process events to remove dynamic values."""
+    processed = []
+    for event in events:
+        as_dict = asdict(event)
+        as_dict.pop("timestamp")
+        if as_dict["type"] == assist_pipeline.PipelineEventType.RUN_START:
+            as_dict["data"]["pipeline"] = ANY
+        processed.append(as_dict)
+
+    return processed

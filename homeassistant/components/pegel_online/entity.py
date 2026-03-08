@@ -13,18 +13,13 @@ class PegelOnlineEntity(CoordinatorEntity[PegelOnlineDataUpdateCoordinator]):
     """Representation of a PEGELONLINE entity."""
 
     _attr_has_entity_name = True
-    _attr_available = True
 
     def __init__(self, coordinator: PegelOnlineDataUpdateCoordinator) -> None:
         """Initialize a PEGELONLINE entity."""
         super().__init__(coordinator)
         self.station = coordinator.station
         self._attr_extra_state_attributes = {}
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information of the entity."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.station.uuid)},
             name=f"{self.station.name} {self.station.water_name}",
             manufacturer=self.station.agency,

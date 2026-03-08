@@ -6,7 +6,6 @@ import logging
 from typing import Any, cast
 
 from roonapi import split_media_path
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -19,7 +18,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -33,10 +31,6 @@ from .const import DOMAIN
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_TRANSFER = "transfer"
-
-ATTR_TRANSFER = "transfer_id"
 
 REPEAT_MODE_MAPPING_TO_HA = {
     "loop": RepeatMode.ALL,
@@ -58,21 +52,13 @@ async def async_setup_entry(
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
 
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER): cv.entity_id},
-        "async_transfer",
-    )
-
     @callback
     def async_update_media_player(player_data):
         """Add or update Roon MediaPlayer."""
         dev_id = player_data["dev_id"]
         if dev_id not in media_players:
             # new player!
-            media_player = RoonDevice(roon_server, player_data)
+            media_player = RoonDevice(roon_server, player_data, config_entry.entry_id)
             media_players.add(dev_id)
             async_add_entities([media_player])
         else:
@@ -106,7 +92,7 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
     )
 
-    def __init__(self, server, player_data):
+    def __init__(self, server, player_data, entry_id):
         """Initialize Roon device object."""
         self._remove_signal_status = None
         self._server = server
@@ -125,6 +111,7 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_volume_level = 0
         self._volume_fixed = True
         self._volume_incremental = False
+        self._entry_id = entry_id
         self.update_data(player_data)
 
     async def async_added_to_hass(self) -> None:
@@ -166,7 +153,7 @@ class RoonDevice(MediaPlayerEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._server.roon_id),
+            via_device=(DOMAIN, self._entry_id),
         )
 
     def update_data(self, player_data=None):
@@ -328,6 +315,11 @@ class RoonDevice(MediaPlayerEntity):
     def media_album_artist(self) -> str | None:
         """Album artist of current playing media (Music track only)."""
         return self.media_artist
+
+    @property
+    def media_content_type(self) -> str:
+        """Return the media type."""
+        return MediaType.MUSIC
 
     @property
     def supports_standby(self):

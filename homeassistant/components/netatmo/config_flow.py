@@ -135,7 +135,7 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_WEATHER_AREAS,
                     default=weather_areas,
-                ): cv.multi_select({wa: None for wa in weather_areas}),
+                ): cv.multi_select(dict.fromkeys(weather_areas)),
                 vol.Optional(CONF_NEW_AREA): str,
             }
         )
@@ -218,7 +218,7 @@ def fix_coordinates(user_input: dict) -> dict:
     # Ensure coordinates have acceptable length for the Netatmo API
     for coordinate in (CONF_LAT_NE, CONF_LAT_SW, CONF_LON_NE, CONF_LON_SW):
         if len(str(user_input[coordinate]).split(".")[1]) < 7:
-            user_input[coordinate] = user_input[coordinate] + 0.0000001
+            user_input[coordinate] = user_input[coordinate] + 1e-7
 
     # Swap coordinates if entered in wrong order
     if user_input[CONF_LAT_NE] < user_input[CONF_LAT_SW]:

@@ -117,23 +117,23 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int:
         """Return the current temperature."""
         return self._unit.Temperature
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return fan mode of the AC this group belongs to."""
         return AT_TO_HA_FAN_SPEED[self._airtouch.acs[self._ac_number].AcFanSpeed]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         airtouch_fan_speeds = self._airtouch.GetSupportedFanSpeedsForAc(self._ac_number)
         return [AT_TO_HA_FAN_SPEED[speed] for speed in airtouch_fan_speeds]
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         is_off = self._unit.PowerState == "Off"
         if is_off:
@@ -142,7 +142,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return AT_TO_HA_STATE[self._airtouch.acs[self._ac_number].AcMode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         airtouch_modes = self._airtouch.GetSupportedCoolingModesForAc(self._ac_number)
         modes = [AT_TO_HA_STATE[mode] for mode in airtouch_modes]
@@ -226,27 +226,27 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MinSetpoint
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MaxSetpoint
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int:
         """Return the current temperature."""
         return self._unit.Temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int:
         """Return the temperature we are trying to reach."""
         return self._unit.TargetSetpoint
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac target hvac state."""
         # there are other power states that aren't 'on' but still count as on (eg. 'Turbo')
         is_off = self._unit.PowerState == "Off"
@@ -272,12 +272,12 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return fan mode of the AC this group belongs to."""
         return AT_TO_HA_FAN_SPEED[self._airtouch.acs[self._unit.BelongsToAc].AcFanSpeed]
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         airtouch_fan_speeds = self._airtouch.GetSupportedFanSpeedsByGroup(
             self._group_number

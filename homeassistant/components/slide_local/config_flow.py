@@ -14,7 +14,11 @@ from goslideapi.goslideapi import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
@@ -59,9 +63,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-        except (ClientConnectionError, ClientTimeoutError):
+        except ClientConnectionError, ClientTimeoutError:
             return {"base": "cannot_connect"}
-        except (AuthenticationFailed, DigestAuthCalcError):
+        except AuthenticationFailed, DigestAuthCalcError:
             return {"base": "invalid_auth"}
         except Exception:
             _LOGGER.exception("Exception occurred during connection test")
@@ -81,9 +85,9 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await slide.slide_info(user_input[CONF_HOST])
-        except (ClientConnectionError, ClientTimeoutError):
+        except ClientConnectionError, ClientTimeoutError:
             return {"base": "cannot_connect"}
-        except (AuthenticationFailed, DigestAuthCalcError):
+        except AuthenticationFailed, DigestAuthCalcError:
             return {"base": "invalid_auth"}
         except Exception:
             _LOGGER.exception("Exception occurred during connection test")
@@ -232,7 +236,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class SlideOptionsFlowHandler(OptionsFlow):
+class SlideOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a options flow for slide_local."""
 
     async def async_step_init(

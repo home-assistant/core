@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In-home chime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'In-home chime',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'in_home_chime',
     'unique_id': '987654-in_home_chime',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +78,7 @@
     'original_name': 'Motion detection',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detection',
     'unique_id': '987654-motion_detection',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -123,6 +128,7 @@
     'original_name': 'Motion detection',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detection',
     'unique_id': '765432-motion_detection',
@@ -164,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
@@ -171,6 +178,7 @@
     'original_name': 'Siren',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
     'unique_id': '765432-siren',
@@ -212,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -219,6 +228,7 @@
     'original_name': 'Motion detection',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detection',
     'unique_id': '345678-motion_detection',
@@ -260,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
@@ -267,6 +278,7 @@
     'original_name': 'Siren',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
     'unique_id': '345678-siren',

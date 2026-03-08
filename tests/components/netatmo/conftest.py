@@ -1,5 +1,7 @@
 """Provide common Netatmo fixtures."""
 
+from collections.abc import Generator
+from functools import partial
 from time import time
 from unittest.mock import AsyncMock, patch
 
@@ -7,6 +9,7 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -25,7 +28,7 @@ CLIENT_SECRET = "5678"
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -87,13 +90,17 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="netatmo_auth")
-def netatmo_auth() -> AsyncMock:
+def netatmo_auth(hass: HomeAssistant) -> Generator[None]:
     """Restrict loaded platforms to list given."""
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth:
-        mock_auth.return_value.async_post_request.side_effect = fake_post_request
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
+        mock_auth.return_value.async_post_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
         mock_auth.return_value.async_get_image.side_effect = fake_get_image
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()

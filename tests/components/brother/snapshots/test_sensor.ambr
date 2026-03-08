@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'B/W pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +30,7 @@
     'original_name': 'B/W pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bw_pages',
     'unique_id': '0123456789_bw_counter',
@@ -73,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Belt unit remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -80,6 +83,7 @@
     'original_name': 'Belt unit remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'belt_unit_remaining_life',
     'unique_id': '0123456789_belt_unit_remaining_life',
@@ -124,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,6 +136,7 @@
     'original_name': 'Black drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_page_counter',
     'unique_id': '0123456789_black_drum_counter',
@@ -175,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -182,6 +189,7 @@
     'original_name': 'Black drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_remaining_life',
     'unique_id': '0123456789_black_drum_remaining_life',
@@ -226,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,6 +242,7 @@
     'original_name': 'Black drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_drum_remaining_pages',
     'unique_id': '0123456789_black_drum_remaining_pages',
@@ -277,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -284,6 +295,7 @@
     'original_name': 'Black toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'black_toner_remaining',
     'unique_id': '0123456789_black_toner_remaining',
@@ -328,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Color pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -335,6 +348,7 @@
     'original_name': 'Color pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'color_pages',
     'unique_id': '0123456789_color_counter',
@@ -379,6 +393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +401,7 @@
     'original_name': 'Cyan drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_page_counter',
     'unique_id': '0123456789_cyan_drum_counter',
@@ -430,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -437,6 +454,7 @@
     'original_name': 'Cyan drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_remaining_life',
     'unique_id': '0123456789_cyan_drum_remaining_life',
@@ -481,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -488,6 +507,7 @@
     'original_name': 'Cyan drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_drum_remaining_pages',
     'unique_id': '0123456789_cyan_drum_remaining_pages',
@@ -532,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -539,6 +560,7 @@
     'original_name': 'Cyan toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cyan_toner_remaining',
     'unique_id': '0123456789_cyan_toner_remaining',
@@ -583,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -590,6 +613,7 @@
     'original_name': 'Drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_page_counter',
     'unique_id': '0123456789_drum_counter',
@@ -634,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,6 +666,7 @@
     'original_name': 'Drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_remaining_life',
     'unique_id': '0123456789_drum_remaining_life',
@@ -685,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +719,7 @@
     'original_name': 'Drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'drum_remaining_pages',
     'unique_id': '0123456789_drum_remaining_pages',
@@ -736,6 +764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duplex unit page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -743,6 +772,7 @@
     'original_name': 'Duplex unit page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'duplex_unit_page_counter',
     'unique_id': '0123456789_duplex_unit_pages_counter',
@@ -787,6 +817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuser remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -794,6 +825,7 @@
     'original_name': 'Fuser remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fuser_remaining_life',
     'unique_id': '0123456789_fuser_remaining_life',
@@ -836,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -843,6 +876,7 @@
     'original_name': 'Last restart',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': '0123456789_uptime',
@@ -886,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -893,6 +928,7 @@
     'original_name': 'Magenta drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_page_counter',
     'unique_id': '0123456789_magenta_drum_counter',
@@ -937,6 +973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -944,6 +981,7 @@
     'original_name': 'Magenta drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_remaining_life',
     'unique_id': '0123456789_magenta_drum_remaining_life',
@@ -988,6 +1026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -995,6 +1034,7 @@
     'original_name': 'Magenta drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_drum_remaining_pages',
     'unique_id': '0123456789_magenta_drum_remaining_pages',
@@ -1039,6 +1079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1046,6 +1087,7 @@
     'original_name': 'Magenta toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'magenta_toner_remaining',
     'unique_id': '0123456789_magenta_toner_remaining',
@@ -1090,6 +1132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1097,6 +1140,7 @@
     'original_name': 'Page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'page_counter',
     'unique_id': '0123456789_page_counter',
@@ -1141,6 +1185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PF Kit 1 remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1148,6 +1193,7 @@
     'original_name': 'PF Kit 1 remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pf_kit_1_remaining_life',
     'unique_id': '0123456789_pf_kit_1_remaining_life',
@@ -1190,6 +1236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1197,6 +1244,7 @@
     'original_name': 'Status',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': '0123456789_status',
@@ -1239,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1246,6 +1295,7 @@
     'original_name': 'Yellow drum page counter',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_page_counter',
     'unique_id': '0123456789_yellow_drum_counter',
@@ -1290,6 +1340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1297,6 +1348,7 @@
     'original_name': 'Yellow drum remaining lifetime',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_remaining_life',
     'unique_id': '0123456789_yellow_drum_remaining_life',
@@ -1341,6 +1393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1348,6 +1401,7 @@
     'original_name': 'Yellow drum remaining pages',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_drum_remaining_pages',
     'unique_id': '0123456789_yellow_drum_remaining_pages',
@@ -1392,6 +1446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1399,6 +1454,7 @@
     'original_name': 'Yellow toner remaining',
     'platform': 'brother',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yellow_toner_remaining',
     'unique_id': '0123456789_yellow_toner_remaining',

@@ -8,6 +8,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
   })
 # ---
 # name: test_audio_pipeline.1
@@ -38,11 +44,13 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline.4
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -65,17 +73,19 @@
 # ---
 # name: test_audio_pipeline.5
   dict({
-    'engine': 'test',
-    'language': 'en-US',
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': 'james_earl_jones',
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -91,6 +101,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -122,11 +138,13 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_debug.4
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -149,17 +167,19 @@
 # ---
 # name: test_audio_pipeline_debug.5
   dict({
-    'engine': 'test',
-    'language': 'en-US',
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': 'james_earl_jones',
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline_debug.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -187,6 +207,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -218,11 +244,13 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.4
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -245,17 +273,19 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.5
   dict({
-    'engine': 'test',
-    'language': 'en-US',
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': 'james_earl_jones',
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.6
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -271,6 +301,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -324,11 +360,13 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.6
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -351,17 +389,19 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.7
   dict({
-    'engine': 'test',
-    'language': 'en-US',
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
-    'voice': 'james_earl_jones',
+    'voice': None,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.8
   dict({
     'tts_output': dict({
-      'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -377,6 +417,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -537,6 +583,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_failed.2
@@ -561,6 +608,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_timeout.2
@@ -581,6 +629,12 @@
       'stt_binary_handler_id': None,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_pipeline_empty_tts_output.1
@@ -591,11 +645,13 @@
     'intent_input': 'never mind',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_pipeline_empty_tts_output.2
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -629,6 +685,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_cooldown_different_ids.1
@@ -639,6 +701,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -651,6 +719,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_cooldown_same_id.1
@@ -662,6 +736,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_stream_failed
@@ -672,6 +752,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -710,11 +796,13 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg0].2
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -757,11 +845,13 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg1].2
   dict({
     'intent_output': dict({
+      'continue_conversation': False,
       'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
@@ -791,28 +881,6 @@
     'message': 'Timeout running pipeline',
   })
 # ---
-# name: test_tts_failed
-  dict({
-    'conversation_id': 'mock-ulid',
-    'language': 'en',
-    'pipeline': <ANY>,
-    'runner_data': dict({
-      'stt_binary_handler_id': None,
-      'timeout': 300,
-    }),
-  })
-# ---
-# name: test_tts_failed.1
-  dict({
-    'engine': 'test',
-    'language': 'en-US',
-    'tts_input': 'Lights are on.',
-    'voice': 'james_earl_jones',
-  })
-# ---
-# name: test_tts_failed.2
-  None
-# ---
 # name: test_wake_word_cooldown_different_entities
   dict({
     'conversation_id': 'mock-ulid',
@@ -821,6 +889,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -832,6 +906,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -885,6 +965,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_wake_word_cooldown_different_ids.1
@@ -895,6 +981,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -951,6 +1043,12 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_wake_word_cooldown_same_id.1
@@ -961,6 +1059,12 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---

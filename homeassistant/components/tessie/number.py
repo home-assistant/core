@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any
 
-from tesla_fleet_api import EnergySpecific
+from tesla_fleet_api.tessie import EnergySite
 from tessie_api import set_charge_limit, set_charging_amps, set_speed_limit
 
 from homeassistant.components.number import (
@@ -90,7 +90,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
 class TessieNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes Tessie Number entity."""
 
-    func: Callable[[EnergySpecific, float], Awaitable[Any]]
+    func: Callable[[EnergySite, float], Awaitable[Any]]
     requires: str
 
 

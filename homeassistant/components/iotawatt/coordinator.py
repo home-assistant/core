@@ -21,14 +21,16 @@ _LOGGER = logging.getLogger(__name__)
 # Matches iotwatt data log interval
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
 
+type IotawattConfigEntry = ConfigEntry[IotawattUpdater]
+
 
 class IotawattUpdater(DataUpdateCoordinator):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
     api: Iotawatt | None = None
-    config_entry: ConfigEntry
+    config_entry: IotawattConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: IotawattConfigEntry) -> None:
         """Initialize IotaWattUpdater object."""
         super().__init__(
             hass=hass,

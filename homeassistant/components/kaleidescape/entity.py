@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as KALEIDESCAPE_DOMAIN, NAME as KALEIDESCAPE_NAME
+from .const import DOMAIN, NAME as KALEIDESCAPE_NAME
 
 if TYPE_CHECKING:
     from kaleidescape import Device as KaleidescapeDevice
@@ -29,7 +29,7 @@ class KaleidescapeEntity(Entity):
 
         self._attr_unique_id = device.serial_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(KALEIDESCAPE_DOMAIN, self._device.serial_number)},
+            identifiers={(DOMAIN, self._device.serial_number)},
             # Instead of setting the device name to the entity name, kaleidescape
             # should be updated to set has_entity_name = True
             name=f"{KALEIDESCAPE_NAME} {device.system.friendly_name}",
@@ -44,7 +44,7 @@ class KaleidescapeEntity(Entity):
         """Register update listener."""
 
         @callback
-        def _update(event: str) -> None:
+        def _update(event: str, *args: Any) -> None:
             """Handle device state changes."""
             self.async_write_ha_state()
 

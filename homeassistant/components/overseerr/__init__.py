@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, EVENT_KEY, JSON_PAYLOAD, LOGGER, REGISTERED_NOTIFICATIONS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
-from .services import setup_services
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
 CONF_CLOUDHOOK_URL = "cloudhook_url"
@@ -35,7 +35,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Overseerr component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -159,7 +159,8 @@ class OverseerrWebhookManager:
         """Handle webhook."""
         data = await request.json()
         LOGGER.debug("Received webhook payload: %s", data)
-        if data["notification_type"].startswith("MEDIA"):
+        notification_type = data["notification_type"]
+        if notification_type.startswith(("REQUEST_", "ISSUE_", "MEDIA_")):
             await self.entry.runtime_data.async_refresh()
         async_dispatcher_send(hass, EVENT_KEY, data)
         return HomeAssistantView.json({"message": "ok"})

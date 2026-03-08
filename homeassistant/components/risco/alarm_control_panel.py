@@ -82,7 +82,6 @@ async def async_setup_entry(
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco cloud partition."""
 
-    _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -100,8 +99,13 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._partition_id = partition_id
         self._partition = partition
         self._code = code
-        self._attr_code_arm_required = options[CONF_CODE_ARM_REQUIRED]
-        self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        arm_required = options[CONF_CODE_ARM_REQUIRED]
+        disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        self._attr_code_arm_required = arm_required
+        self._code_disarm_required = disarm_required
+        self._attr_code_format = (
+            CodeFormat.NUMBER if arm_required or disarm_required else None
+        )
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
         for state in self._ha_to_risco:

@@ -17,8 +17,6 @@ from homeassistant.components.mqtt.vacuum import (
     services_to_strings,
 )
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     SERVICE_CLEAN_SPOT,
@@ -33,7 +31,7 @@ from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
@@ -108,7 +106,7 @@ async def test_default_supported_features(
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
-        ["start", "stop", "return_home", "battery", "clean_spot"]
+        ["start", "stop", "return_home", "clean_spot"]
     )
 
 
@@ -313,8 +311,6 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
     assert state.attributes.get(ATTR_FAN_SPEED) == "max"
 
     message = """{
@@ -326,8 +322,6 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
     assert state.attributes.get(ATTR_FAN_SPEED) == "min"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
 
@@ -346,7 +340,9 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING
+                        mqttvacuum.DEFAULT_SERVICES
+                        | vacuum.VacuumEntityFeature.BATTERY,
+                        SERVICE_TO_STRING,
                     )
                 },
             ),
@@ -368,8 +364,6 @@ async def test_no_fan_vacuum(
     assert state.state == VacuumActivity.CLEANING
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
 
     message = """{
         "battery_level": 54,
@@ -383,9 +377,6 @@ async def test_no_fan_vacuum(
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
-
     message = """{
         "battery_level": 61,
         "state": "docked"
@@ -394,8 +385,6 @@ async def test_no_fan_vacuum(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
@@ -687,7 +676,6 @@ async def test_publishing_with_custom_encoding(
     domain = vacuum.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["supported_features"] = [
-        "battery",
         "clean_spot",
         "fan_speed",
         "locate",
@@ -796,7 +784,6 @@ async def test_setup_manual_entity_from_yaml(
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
         ("vacuum/state", '{"state": "cleaning"}', '{"state": "docked"}'),
-        ("vacuum/state", '{"battery_level": 71}', '{"battery_level": 60}'),
         ("vacuum/state", '{"fan_speed": "max"}', '{"fan_speed": "min"}'),
     ],
 )

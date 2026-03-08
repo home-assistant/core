@@ -1,23 +1,17 @@
 {
   "entity": {
     "sensor": {
-      "current_dc": {
-        "default": "mdi:current-dc"
-      },
-      "current_dc_2": {
-        "default": "mdi:current-dc"
-      },
-      "voltage_dc": {
-        "default": "mdi:current-dc"
-      },
-      "voltage_dc_2": {
-        "default": "mdi:current-dc"
+      "cash_factor": {
+        "default": "mdi:cash-plus"
       },
       "co2_factor": {
         "default": "mdi:molecule-co2"
       },
-      "cash_factor": {
-        "default": "mdi:cash-plus"
+      "current_dc": {
+        "default": "mdi:current-dc"
+      },
+      "current_dc_mppt_no": {
+        "default": "mdi:current-dc"
       },
       "delivery_factor": {
         "default": "mdi:cash-minus"
@@ -34,10 +28,16 @@
       "relative_self_consumption": {
         "default": "mdi:solar-power"
       },
+      "voltage_dc": {
+        "default": "mdi:current-dc"
+      },
       "voltage_dc_maximum_cell": {
         "default": "mdi:current-dc"
       },
       "voltage_dc_minimum_cell": {
+        "default": "mdi:current-dc"
+      },
+      "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
       }
     }

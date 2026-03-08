@@ -1,10 +1,11 @@
 """Tests for the Model Context Protocol component."""
 
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
-from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
+from mcp import McpError
+from mcp.types import CallToolResult, ErrorData, ListToolsResult, TextContent, Tool
 import pytest
 import voluptuous as vol
 
@@ -58,7 +59,6 @@ def create_llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="test_platform",
         context=Context(),
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -76,17 +76,136 @@ async def test_init(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [
+        (httpx.TimeoutException("Some timeout")),
+        (httpx.HTTPStatusError("", request=None, response=httpx.Response(500))),
+        (httpx.HTTPStatusError("", request=None, response=httpx.Response(401))),
+        (httpx.HTTPError("Some HTTP error")),
+    ],
+)
 async def test_mcp_server_failure(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
 ) -> None:
-    """Test the integration fails to setup if the server fails initialization."""
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "", request=None, response=httpx.Response(500)
+    """Test the integration fails to setup if the server fails initialization.
+
+    This tests generic failure types that are independent of transport.
+    """
+    mock_mcp_client.side_effect = side_effect
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_http_transport_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+) -> None:
+    """Test the integration fails to setup if the HTTP transport fails."""
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
     )
 
-    with patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_sse_transport_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+) -> None:
+    """Test the integration fails to setup if the SSE transport fails.
+
+    This exercises the case where the HTTP transport fails with method not
+    allowed, indicating an SSE server, then also fails with SSE.
+    """
+    http_405 = httpx.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx.Response(405)
+    )
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Method not allowed", [http_405]
+    )
+
+    mock_sse_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
+    )
+
+
+@pytest.mark.parametrize(
+    ("side_effect"),
+    [
+        (
+            ExceptionGroup(
+                "Method not allowed",
+                [
+                    httpx.HTTPStatusError(
+                        "Method not allowed",
+                        request=None,
+                        response=httpx.Response(405),
+                    )
+                ],
+            ),
+        ),
+        (
+            ExceptionGroup(
+                "Some exception group",
+                [McpError(ErrorData(code=500, message="Session terminated"))],
+            )
+        ),
+    ],
+)
+async def test_mcp_client_fallback_to_sse_success(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+    mock_mcp_client: Mock,
+    side_effect: Exception,
+) -> None:
+    """Test mcp_client falls back to SSE on some errors.
+
+    This exercises the backwards compatibility part of the MCP Transport
+    specification.
+    """
+    mock_http_streamable_client.side_effect = side_effect
+
+    # Setup mocks for SSE fallback
+    mock_sse_client.return_value.__aenter__.return_value = ("read", "write")
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert mock_http_streamable_client.called
+    assert mock_sse_client.called
+
+
+async def test_mcp_server_authentication_failure(
+    hass: HomeAssistant,
+    credential: None,
+    config_entry_with_auth: MockConfigEntry,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test the integration fails to setup if the server fails authentication."""
+    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+        "Authentication required", request=None, response=httpx.Response(401)
+    )
+
+    await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
+    assert config_entry_with_auth.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 async def test_list_tools_failure(

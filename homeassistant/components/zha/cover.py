@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -68,8 +67,12 @@ class ZhaCover(ZHAEntity, CoverEntity):
                 self.entity_data.entity.info_object.device_class
             )
 
+    @staticmethod
+    def _convert_supported_features(
+        zha_features: ZHACoverEntityFeature,
+    ) -> CoverEntityFeature:
+        """Convert ZHA cover features to HA cover features."""
         features = CoverEntityFeature(0)
-        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
 
         if ZHACoverEntityFeature.OPEN in zha_features:
             features |= CoverEntityFeature.OPEN
@@ -88,16 +91,13 @@ class ZhaCover(ZHAEntity, CoverEntity):
         if ZHACoverEntityFeature.SET_TILT_POSITION in zha_features:
             features |= CoverEntityFeature.SET_TILT_POSITION
 
-        self._attr_supported_features = features
+        return features
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        state = self.entity_data.entity.state
-        return {
-            "target_lift_position": state.get("target_lift_position"),
-            "target_tilt_position": state.get("target_tilt_position"),
-        }
+    def supported_features(self) -> CoverEntityFeature:
+        """Return the supported features."""
+        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
+        return self._convert_supported_features(zha_features)
 
     @property
     def is_closed(self) -> bool | None:
@@ -185,8 +185,4 @@ class ZhaCover(ZHAEntity, CoverEntity):
             return
 
         # Same as `light`, some entity state is not derived from ZCL attributes
-        self.entity_data.entity.restore_external_state_attributes(
-            state=state.state,
-            target_lift_position=state.attributes.get("target_lift_position"),
-            target_tilt_position=state.attributes.get("target_tilt_position"),
-        )
+        self.entity_data.entity.restore_external_state_attributes(state=state.state)

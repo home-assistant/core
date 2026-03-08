@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -33,6 +34,7 @@
     'original_name': 'Connection mode',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_mode',
     'unique_id': 'aa:bb:cc:dd:ee:ff_device_mode',
@@ -81,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core chip temp',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -91,6 +94,7 @@
     'original_name': 'Core chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_temperature',
@@ -134,6 +138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -141,6 +146,7 @@
     'original_name': 'Core uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'core_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_core_uptime',
@@ -182,13 +188,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filesystem usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Filesystem usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fs_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_fs_usage',
@@ -236,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware channel',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -243,6 +255,7 @@
     'original_name': 'Firmware channel',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'firmware_channel',
     'unique_id': 'aa:bb:cc:dd:ee:ff_firmware_channel',
@@ -288,13 +301,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RAM usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'RAM usage',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ram_usage',
     'unique_id': 'aa:bb:cc:dd:ee:ff_ram_usage',
@@ -339,6 +357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee chip temp',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -349,6 +368,7 @@
     'original_name': 'Zigbee chip temp',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_temperature',
@@ -398,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -405,6 +426,7 @@
     'original_name': 'Zigbee type',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zigbee_type',
     'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_type',
@@ -451,6 +473,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -458,6 +481,7 @@
     'original_name': 'Zigbee uptime',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'socket_uptime',
     'unique_id': 'aa:bb:cc:dd:ee:ff_socket_uptime',

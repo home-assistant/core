@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
+import re
 from typing import Any
 
 from freezegun import freeze_time
@@ -12,10 +13,17 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
+from homeassistant.components.calendar import (
+    CREATE_EVENT_SERVICE,
+    DOMAIN,
+    SERVICE_GET_EVENTS,
+    CalendarEntity,
+    CalendarEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity, MockConfigEntry
@@ -122,6 +130,7 @@ async def test_calendars_http_api(
     assert data == [
         {"entity_id": "calendar.calendar_1", "name": "Calendar 1"},
         {"entity_id": "calendar.calendar_2", "name": "Calendar 2"},
+        {"entity_id": "calendar.calendar_3", "name": "Calendar 3"},
     ]
 
 
@@ -215,7 +224,6 @@ async def test_unsupported_websocket(
 
 async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     """Test unsupported service call."""
-    await async_setup_component(hass, "homeassistant", {})
     with pytest.raises(
         ServiceNotSupported,
         match="Entity calendar.calendar_1 does not "
@@ -223,7 +231,7 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
     ):
         await hass.services.async_call(
             DOMAIN,
-            "create_event",
+            CREATE_EVENT_SERVICE,
             {
                 "start_date_time": "1997-07-14T17:00:00+00:00",
                 "end_date_time": "1997-07-15T04:00:00+00:00",
@@ -398,8 +406,8 @@ async def test_create_event_service_invalid_params(
 
     with pytest.raises(expected_error, match=error_match):
         await hass.services.async_call(
-            "calendar",
-            "create_event",
+            DOMAIN,
+            CREATE_EVENT_SERVICE,
             {
                 "summary": "Bastille Day Party",
                 **date_fields,
@@ -448,7 +456,7 @@ async def test_list_events_service(
     service: str,
     expected: dict[str, Any],
 ) -> None:
-    """Test listing events from the service call using exlplicit start and end time.
+    """Test listing events from the service call using explicit start and end time.
 
     This test uses a fixed date/time so that it can deterministically test the
     string output values.
@@ -553,3 +561,157 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
+)
+@pytest.mark.parametrize(
+    ("service_data", "error_msg"),
+    [
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00-06:00",
+                "end_date_time": "2023-06-22T04:30:00-06:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00-06:00, 2023-06-22 04:30:00-06:00)",
+        ),
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00",
+                "end_date_time": "2023-06-22T04:30:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00, 2023-06-22 04:30:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
+            "Expected end time to be after start time (2023-06-22 00:00:00, 2023-06-22 00:00:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},
+            "Expected positive duration (0:00:00)",
+        ),
+    ],
+)
+async def test_list_events_service_same_dates(
+    hass: HomeAssistant,
+    service_data: dict[str, str],
+    error_msg: str,
+) -> None:
+    """Test listing events from the service call using the same start and end time."""
+
+    with pytest.raises(vol.error.MultipleInvalid, match=re.escape(error_msg)):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_EVENTS,
+            service_data={
+                "entity_id": "calendar.calendar_1",
+                **service_data,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_calendar_initial_color_valid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that initial_color creates initial entity options."""
+    # Entity 3 was created with an initial_color
+    entity = test_entities[2]
+
+    # Check that entity registry was populated with the initial_color
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry is not None
+    assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
+
+
+@pytest.mark.parametrize(
+    "invalid_initial_color",
+    [
+        "FF0000",  # Missing #
+        "#FF00",  # Too short
+        "#FF00000",  # Too long
+        "#GGGGGG",  # Invalid hex
+        "red",  # Not hex
+        "",  # Empty
+    ],
+)
+async def test_calendar_initial_color_invalid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    invalid_initial_color: str,
+) -> None:
+    """Test that invalid initial_color is ignored."""
+    entity = MockCalendarEntity(
+        "Invalid Color Test",
+        [],
+        initial_color=invalid_initial_color,
+        unique_id=f"test_{invalid_initial_color}",
+    )
+    assert entity.get_initial_entity_options() is None
+
+
+async def test_calendar_initial_color_none(
+    hass: HomeAssistant,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that entities without initial_color return None."""
+    # Entities 1 and 2 were created without an initial_color
+    entity = test_entities[0]
+    assert entity.get_initial_entity_options() is None
+
+
+@pytest.mark.parametrize(
+    ("description_color", "attr_color", "expected_color"),
+    [
+        # no description and no attr_initial_color
+        (UNDEFINED, UNDEFINED, None),
+        # no description and attr_initial_color "A"
+        (UNDEFINED, "#AAAAAA", "#AAAAAA"),
+        # no description and attr_initial_color None
+        (UNDEFINED, None, None),
+        # description setting the color "B", and no attr_initial_color
+        ("#BBBBBB", UNDEFINED, "#BBBBBB"),
+        # description setting the color "B", but overridden by attr_initial_color "A"
+        ("#BBBBBB", "#AAAAAA", "#AAAAAA"),
+        # description setting the color "B", but overridden by attr_initial_color None
+        ("#BBBBBB", None, None),
+    ],
+)
+async def test_calendar_initial_color_precedence(
+    description_color: str | None | object,
+    attr_color: str | None | object,
+    expected_color: str | None,
+) -> None:
+    """Test that _attr_initial_color takes precedence over entity_description."""
+
+    class TestCalendarEntity(CalendarEntity):
+        """Test entity for initial_color precedence tests."""
+
+        _attr_has_entity_name = True
+
+        def __init__(
+            self,
+            description_color: str | None | object,
+            attr_color: str | None | object,
+        ) -> None:
+            """Initialize entity."""
+            self._attr_name = "Test"
+            self._attr_unique_id = "test_precedence"
+
+            # Only set entity_description if description_color is not UNDEFINED
+            if description_color is not UNDEFINED:
+                self.entity_description = CalendarEntityDescription(
+                    key="test",
+                    initial_color=description_color,
+                )
+
+            # Only set _attr_initial_color if attr_color is not UNDEFINED
+            if attr_color is not UNDEFINED:
+                self._attr_initial_color = attr_color
+
+    entity = TestCalendarEntity(description_color, attr_color)
+    assert entity.initial_color == expected_color

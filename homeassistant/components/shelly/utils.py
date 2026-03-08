@@ -2,24 +2,27 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
-from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    BLU_TRV_IDENTIFIER,
+    BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
     MODEL_1L,
+    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    MODEL_PLUG,
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
@@ -27,8 +30,14 @@ from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -36,16 +45,22 @@ from homeassistant.helpers import (
     issue_registry as ir,
     singleton,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
 from .const import (
     API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -53,13 +68,19 @@ from .const import (
     GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
+    MAX_SCRIPT_SIZE,
+    PUSH_UPDATE_ISSUE_ID,
+    ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
+    SHAIR_MAX_WORK_HOURS,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
+    All_LIGHT_TYPES,
 )
 
 
@@ -75,8 +96,8 @@ def async_remove_shelly_entity(
         entity_reg.async_remove(entity_id)
 
 
-def get_number_of_channels(device: BlockDevice, block: Block) -> int:
-    """Get number of channels for block type."""
+def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
+    """Get number of channels."""
     channels = None
 
     if block.type == "input":
@@ -93,53 +114,40 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
         channels = device.shelly.get("num_emeters")
     elif block.type in ["relay", "light"]:
         channels = device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
-        channels = 1
 
     return channels or 1
 
 
-def get_block_entity_name(
-    device: BlockDevice,
-    block: Block | None,
-    description: str | None = None,
-) -> str:
-    """Naming for block based switch and sensors."""
-    channel_name = get_block_channel_name(device, block)
+def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
+    """Get custom name from device settings."""
+    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+        assert block.channel
 
-    if description:
-        return f"{channel_name} {description.lower()}"
+        if name := device.settings[key][int(block.channel)].get("name"):
+            return cast(str, name)
 
-    return channel_name
+    return None
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
-    """Get name based on device and channel name."""
-    entity_name = device.name
+def get_block_channel(block: Block | None, base: str = "1") -> str:
+    """Get block channel."""
+    assert block and block.channel
 
-    if (
-        not block
-        or block.type == "device"
-        or get_number_of_channels(device, block) == 1
-    ):
-        return entity_name
+    return chr(int(block.channel) + ord(base))
 
-    assert block.channel
 
-    channel_name: str | None = None
-    mode = cast(str, block.type) + "s"
-    if mode in device.settings:
-        channel_name = device.settings[mode][int(block.channel)].get("name")
+def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
+    """Get name of block sub-device."""
+    if TYPE_CHECKING:
+        assert block.channel
 
-    if channel_name:
-        return channel_name
+    if custom_name := get_block_custom_name(device, block):
+        return custom_name
 
     if device.settings["device"]["type"] == MODEL_EM3:
-        base = ord("A")
-    else:
-        base = ord("1")
+        return f"{device.name} Phase {get_block_channel(block, 'A')}"
 
-    return f"{entity_name} channel {chr(int(block.channel) + base)}"
+    return f"{device.name} Channel {get_block_channel(block)}"
 
 
 def is_block_momentary_input(
@@ -175,14 +183,33 @@ def is_block_momentary_input(
     return button_type in momentary_types
 
 
+def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block should be excluded from switch platform."""
+
+    if settings.get("mode") == "roller":
+        return True
+
+    return is_block_channel_type_light(settings, block)
+
+
 def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
+        or (diff := abs((delta_uptime - last_uptime).total_seconds()))
+        > UPTIME_DEVIATION
     ):
+        if last_uptime:
+            LOGGER.debug(
+                "Time deviation %s > %s: uptime=%s, last_uptime=%s, delta_uptime=%s",
+                diff,
+                UPTIME_DEVIATION,
+                uptime,
+                last_uptime,
+                delta_uptime,
+            )
         return delta_uptime
 
     return last_uptime
@@ -198,7 +225,7 @@ def get_block_input_triggers(
     if not is_block_momentary_input(device.settings, block, True):
         return []
 
-    if block.type == "device" or get_number_of_channels(device, block) == 1:
+    if block.type == "device" or get_block_number_of_channels(device, block) == 1:
         subtype = "button"
     else:
         assert block.channel
@@ -219,6 +246,13 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
+def get_coiot_port(hass: HomeAssistant) -> int:
+    """Get CoIoT port from config."""
+    if DOMAIN in hass.data:
+        return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
+    return DEFAULT_COAP_PORT
+
+
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
@@ -230,7 +264,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
         ipv4.extend(
-            address
+            cast(IPv4Address, address)
             for address in await network.async_get_enabled_source_ips(hass)
             if address.version == 4
             and not (
@@ -241,10 +275,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
             )
         )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
-    if DOMAIN in hass.data:
-        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
-    else:
-        port = DEFAULT_COAP_PORT
+    port = get_coiot_port(hass)
     LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port, ipv4)
 
@@ -310,7 +341,7 @@ def get_info_gen(info: dict[str, Any]) -> int:
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
     if get_info_gen(info) in RPC_GENERATIONS:
-        return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
+        return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
@@ -336,49 +367,99 @@ def get_shelly_model_name(
     return cast(str, MODEL_NAMES.get(model))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
+def get_rpc_key(value: str) -> tuple[bool, str, str]:
+    """Get split device key."""
+    parts = value.split(":")
+    return len(parts) > 1, parts[0], parts[-1]
+
+
+def get_rpc_key_id(value: str) -> int:
+    """Get id from device key."""
+    return int(get_rpc_key(value)[-1])
+
+
+def get_rpc_custom_name(device: RpcDevice, key: str) -> str | None:
+    """Get custom name from device config."""
+    if (
+        key in device.config
+        and key != "em:0"  # workaround for Pro 3EM, we don't want to get name for em:0
+        and (name := device.config[key].get("name"))
+    ):
+        return cast(str, name)
+
+    return None
+
+
+def get_rpc_number_of_channels(device: RpcDevice, component: str) -> int:
+    """Get number of channels."""
+    return len(get_rpc_key_instances(device.status, component, all_lights=True))
+
+
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     """Get name based on device and channel name."""
-    key = key.replace("emdata", "em")
+    if BLU_TRV_IDENTIFIER in key:
+        return None
+
+    _, component, component_id = get_rpc_key(key)
+
+    if custom_name := get_rpc_custom_name(device, key):
+        if component in (*VIRTUAL_COMPONENTS, "input", "presencezone", "script"):
+            return custom_name
+
+        return (
+            custom_name if get_rpc_number_of_channels(device, component) == 1 else None
+        )
+
+    if component in (*VIRTUAL_COMPONENTS, "input"):
+        return f"{component.title()} {component_id}"
+
+    return None
+
+
+def get_rpc_key_normalized(key: str) -> str:
+    """Get normalized key. Workaround for Pro EM50 and Pro 3EM."""
+    # workaround for Pro EM50
     key = key.replace("em1data", "em1")
-    device_name = device.name
-    entity_name: str | None = None
-    if key in device.config:
-        entity_name = device.config[key].get("name")
-
-    if entity_name is None:
-        channel = key.split(":")[0]
-        channel_id = key.split(":")[-1]
-        if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
-            return f"{device_name} {channel.title()} {channel_id}"
-        if key.startswith(("cct", "rgb:", "rgbw:")):
-            return f"{device_name} {channel.upper()} light {channel_id}"
-        if key.startswith("em1"):
-            return f"{device_name} EM{channel_id}"
-        if key.startswith(("boolean:", "enum:", "number:", "text:")):
-            return f"{channel.title()} {channel_id}"
-        return device_name
-
-    return entity_name
+    # workaround for Pro 3EM
+    return key.replace("emdata", "em")
 
 
-def get_rpc_entity_name(
-    device: RpcDevice, key: str, description: str | None = None
+def get_rpc_sub_device_name(
+    device: RpcDevice, key: str, emeter_phase: str | None = None
 ) -> str:
-    """Naming for RPC based switch and sensors."""
-    channel_name = get_rpc_channel_name(device, key)
+    """Get name based on device and channel name."""
+    if key in device.config and key != "em:0":
+        # workaround for Pro 3EM, we don't want to get name for em:0
+        if (zone_id := get_irrigation_zone_id(device, key)) is not None:
+            # workaround for Irrigation controller, name stored in "service:0"
+            if zone_name := device.config["service:0"]["zones"][zone_id]["name"]:
+                return cast(str, zone_name)
 
-    if description:
-        return f"{channel_name} {description.lower()}"
+        if entity_name := device.config[key].get("name"):
+            return cast(str, entity_name)
 
-    return channel_name
+    _, component, component_id = get_rpc_key(get_rpc_key_normalized(key))
+
+    if component in ("cct", "rgb", "rgbw"):
+        return f"{device.name} {component.upper()} light {component_id}"
+    if component == "em1":
+        return f"{device.name} Energy Meter {component_id}"
+    if component == "em" and emeter_phase is not None:
+        return f"{device.name} Phase {emeter_phase}"
+    if component == "switch":
+        return f"{device.name} Output {component_id}"
+
+    return f"{device.name} {component.title()} {component_id}"
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get(CONF_GEN, 1)
+    return entry.data.get(CONF_GEN, 1)  # type: ignore[no-any-return]
 
 
-def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
+def get_rpc_key_instances(
+    keys_dict: dict[str, Any], key: str, all_lights: bool = False
+) -> list[str]:
     """Return list of key instances for RPC device from a dict."""
     if key in keys_dict:
         return [key]
@@ -386,12 +467,28 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key == "switch" and "cover:0" in keys_dict:
         key = "cover"
 
+    if key in All_LIGHT_TYPES and all_lights:
+        return [k for k in keys_dict if k.startswith(All_LIGHT_TYPES)]
+
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
-    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
+    return [get_rpc_key_id(k) for k in keys_dict if k.startswith(f"{key}:")]
+
+
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
+    """Return role by key for RPC device from a dict."""
+    return cast(str, keys_dict[key].get("role", ROLE_GENERIC))
 
 
 def is_rpc_momentary_input(
@@ -401,9 +498,12 @@ def is_rpc_momentary_input(
     return cast(bool, config[key]["type"] == "button")
 
 
-def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+def is_block_channel_type_light(settings: dict[str, Any], block: Block) -> bool:
     """Return true if block channel appliance type is set to light."""
-    app_type = settings["relays"][channel].get("appliance_type")
+    if TYPE_CHECKING:
+        assert block.channel is not None
+
+    app_type = settings["relays"][int(block.channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
 
 
@@ -470,8 +570,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -502,7 +609,7 @@ def async_create_issue_unsupported_firmware(
         translation_key="unsupported_firmware",
         translation_placeholders={
             "device_name": entry.title,
-            "ip_address": entry.data["host"],
+            "ip_address": entry.data[CONF_HOST],
         },
     )
 
@@ -517,7 +624,7 @@ def is_rpc_wifi_stations_disabled(
     return True
 
 
-def get_http_port(data: MappingProxyType[str, Any]) -> int:
+def get_http_port(data: Mapping[str, Any]) -> int:
     """Get port from config entry data."""
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
@@ -548,17 +655,9 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP.get(platform)
-
-    if not component:
-        return []
+    component = VIRTUAL_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -566,10 +665,29 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
         ids.extend(
             k
             for k, v in config.items()
-            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+            if k.startswith(comp_type)
+            # default to button view if not set, workaround for Wall Display
+            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
+            in component["modes"]
         )
 
     return ids
+
+
+def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
+    """Return true if the virtual component view match the platform."""
+    component = VIRTUAL_COMPONENTS_MAP[platform]
+    view = config[key]["meta"]["ui"]["view"]
+    return view in component["modes"]
+
+
+def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
+    """Return the unit of a virtual component.
+
+    If the unit is not set, the device sends an empty string
+    """
+    unit = config["meta"]["ui"]["unit"]
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
 @callback
@@ -584,15 +702,8 @@ def async_remove_orphaned_entities(
     """Remove orphaned entities."""
     orphaned_entities = []
     entity_reg = er.async_get(hass)
-    device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
-
-    device_id = devices[0].id
-    entities = er.async_entries_for_device(entity_reg, device_id, True)
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
     for entity in entities:
         if not entity.entity_id.startswith(platform):
             continue
@@ -604,26 +715,402 @@ def async_remove_orphaned_entities(
 
         key = match.group()
         if key not in keys:
+            LOGGER.debug(
+                "Found orphaned Shelly entity: %s, unique id: %s",
+                entity.entity_id,
+                entity.unique_id,
+            )
             orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
-def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
-    """Return the RPC websocket URL."""
+def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
+    """Return HomeAssistant URL."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        LOGGER.debug("URL not available, skipping setup")
         return None
-    url = URL(raw_url)
+    return URL(raw_url)
+
+
+async def get_coiot_address(hass: HomeAssistant) -> str | None:
+    """Return the CoIoT ip address."""
+    url = _get_homeassistant_url(hass)
+    if url is None or url.host is None:
+        return None
+    return await async_get_source_ip(hass, url.host)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
 
 
 async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     """Return a list of event types for a specific script."""
-    code_response = await device.script_getcode(id)
+    code_response = await device.script_getcode(id, bytes_to_read=MAX_SCRIPT_SIZE)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
+
+
+def is_rpc_exclude_from_relay(
+    settings: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
+    """Return true if rpc channel should be excludeed from switch platform."""
+    if is_rpc_thermostat_internal_actuator(status):
+        return True
+
+    return is_rpc_channel_type_light(settings, get_rpc_key_id(channel))
+
+
+def get_shelly_air_lamp_life(lamp_seconds: int) -> float:
+    """Return Shelly Air lamp life in percentage."""
+    lamp_hours = lamp_seconds / 3600
+    if lamp_hours >= SHAIR_MAX_WORK_HOURS:
+        return 0.0
+    return 100 * (1 - lamp_hours / SHAIR_MAX_WORK_HOURS)
+
+
+async def get_rpc_scripts_event_types(
+    device: RpcDevice, ignore_scripts: list[str]
+) -> dict[int, list[str]]:
+    """Return a dict of all scripts and their event types."""
+    script_events = {}
+    for script in get_rpc_key_instances(device.status, "script"):
+        if get_rpc_channel_name(device, script) in ignore_scripts:
+            continue
+
+        script_id = get_rpc_key_id(script)
+        script_events[script_id] = await get_rpc_script_event_types(device, script_id)
+
+    return script_events
+
+
+def get_irrigation_zone_id(device: RpcDevice, key: str) -> int | None:
+    """Return the zone id if the component is an irrigation zone."""
+    if (
+        device.initialized
+        and key in device.config
+        and (zone := get_rpc_role_by_key(device.config, key)).startswith("zone")
+    ):
+        return int(zone[4:])
+    return None
+
+
+def get_rpc_device_info(
+    device: RpcDevice,
+    mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
+    key: str | None = None,
+    emeter_phase: str | None = None,
+    suggested_area: str | None = None,
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    if key is None:
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    key = get_rpc_key_normalized(key)
+    has_id, component, _ = get_rpc_key(key)
+
+    if emeter_phase is not None:
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{mac}-{key}-{emeter_phase.lower()}")},
+            name=get_rpc_sub_device_name(device, key, emeter_phase),
+            manufacturer="Shelly",
+            model=model_name,
+            model_id=model,
+            suggested_area=suggested_area,
+            via_device=(DOMAIN, mac),
+            configuration_url=configuration_url,
+        )
+
+    if (
+        (
+            component not in (*All_LIGHT_TYPES, "cover", "em1", "switch")
+            and get_irrigation_zone_id(device, key) is None
+        )
+        or not has_id
+        or get_rpc_number_of_channels(device, component) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{key}")},
+        name=get_rpc_sub_device_name(device, key),
+        manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
+        via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
+    )
+
+
+def get_blu_trv_device_info(
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
+) -> DeviceInfo:
+    """Return device info for RPC device."""
+    model_id = config.get("local_name")
+    return DeviceInfo(
+        connections={(CONNECTION_BLUETOOTH, ble_addr)},
+        identifiers={(DOMAIN, ble_addr)},
+        via_device=(DOMAIN, parent_mac),
+        manufacturer="Shelly",
+        model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
+        model_id=config.get("local_name"),
+        name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
+    )
+
+
+def is_block_single_device(device: BlockDevice, block: Block | None = None) -> bool:
+    """Return true if block is single device."""
+    return (
+        block is None
+        or block.type not in ("light", "relay", "emeter")
+        or device.settings.get("mode") == "roller"
+    )
+
+
+def get_block_device_info(
+    device: BlockDevice,
+    mac: str,
+    configuration_url: str,
+    model: str,
+    model_name: str | None = None,
+    block: Block | None = None,
+    suggested_area: str | None = None,
+) -> DeviceInfo:
+    """Return device info for Block device."""
+    if is_block_single_device(device, block) or (
+        block is not None and get_block_number_of_channels(device, block) < 2
+    ):
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, mac)})
+
+    if TYPE_CHECKING:
+        assert block
+
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{mac}-{block.description}")},
+        name=get_block_sub_device_name(device, block),
+        manufacturer="Shelly",
+        model=model_name,
+        model_id=model,
+        suggested_area=suggested_area,
+        via_device=(DOMAIN, mac),
+        configuration_url=configuration_url,
+    )
+
+
+@callback
+def remove_stale_blu_trv_devices(
+    hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
+) -> None:
+    """Remove stale BLU TRV devices."""
+    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
+        return
+
+    dev_reg = dr.async_get(hass)
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    config = rpc_device.config
+    blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
+    trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if any(
+            identifier[0] == DOMAIN and identifier[1] in trv_addrs
+            for identifier in device.identifiers
+        ):
+            continue
+
+        LOGGER.debug("Removing stale BLU TRV device %s", device.name)
+        dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+@callback
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove sub devices without entities."""
+    dev_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if er.async_entries_for_device(entity_reg, device.id, True):
+            # Device has entities, skip
+            continue
+
+        if any(identifier[0] == DOMAIN for identifier in device.identifiers):
+            LOGGER.debug("Removing empty sub-device %s", device.name)
+            dev_reg.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()
+
+
+@callback
+def async_migrate_rpc_sensor_description_unique_ids(
+    entity_entry: er.RegistryEntry,
+) -> dict[str, Any] | None:
+    """Migrate RPC sensor unique_ids after sensor description key rename."""
+    unique_id_map = {
+        "-temperature_0": "-temperature_tc",
+        "-humidity_0": "-humidity_rh",
+    }
+
+    for old_suffix, new_suffix in unique_id_map.items():
+        if entity_entry.unique_id.endswith(old_suffix):
+            new_unique_id = entity_entry.unique_id.removesuffix(old_suffix) + new_suffix
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {"new_unique_id": new_unique_id}
+
+    return None
+
+
+@callback
+def async_migrate_rpc_virtual_components_unique_ids(
+    config: dict[str, Any], entity_entry: er.RegistryEntry
+) -> dict[str, Any] | None:
+    """Migrate RPC virtual components unique_ids to include role in the ID.
+
+    This is needed to support multiple components with the same key.
+    The old unique_id format is: {mac}-{key}-{component}
+    The new unique_id format is: {mac}-{key}-{component}_{role}
+    """
+    for component in VIRTUAL_COMPONENTS:
+        if (
+            entity_entry.unique_id.endswith(f"-{component!s}")
+            and (key := entity_entry.unique_id.split("-")[-2]) in config
+        ):
+            role = get_rpc_role_by_key(config, key)
+            new_unique_id = f"{entity_entry.unique_id}_{role}"
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    entity_entry.unique_id, new_unique_id
+                )
+            }
+
+    return None
+
+
+def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+    """Return true if BLE scanner is supported."""
+    return (
+        entry.runtime_data.rpc_supports_scripts
+        and not entry.runtime_data.rpc_zigbee_firmware
+    )
+
+
+async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
+    """Check if CoIoT is correctly configured."""
+    if device.model == MODEL_PLUG:
+        # Shelly Plug Gen 1 does not have CoIoT settings
+        return True
+
+    coiot_config = device.settings["coiot"]
+
+    # Check if CoIoT is disabled
+    if not coiot_config.get("enabled"):
+        return False
+
+    coiot_address = await get_coiot_address(hass)
+    if coiot_address is None:
+        LOGGER.debug(
+            "Skipping CoIoT peer check for device %s as no local address is available",
+            device.name,
+        )
+        return True
+
+    coiot_peer = f"{coiot_address}:{get_coiot_port(hass)}"
+    # Check if CoIoT address is not correctly set
+    if (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer:
+        LOGGER.debug(
+            "CoIoT is unconfigured for device %s, peer_config: %s, coiot_peer: %s",
+            device.name,
+            peer_config,
+            coiot_peer,
+        )
+        return False
+
+    return True
+
+
+async def async_manage_coiot_issues_task(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """CoIoT configuration or push updates issues task."""
+    config_issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
+    push_updates_issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.block is not None
+
+    device = entry.runtime_data.block.device
+
+    if await check_coiot_config(device, hass):
+        # CoIoT is correctly configured, create push updates issue
+        ir.async_delete_issue(hass, DOMAIN, config_issue_id)
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            push_updates_issue_id,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
+            translation_key="push_update_failure",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+        )
+        return
+
+    # CoIoT is not correctly configured, create config issue
+    ir.async_delete_issue(hass, DOMAIN, push_updates_issue_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        config_issue_id,
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="coiot_unconfigured",
+        translation_placeholders={
+            "device_name": device.name,
+            "ip_address": device.ip_address,
+        },
+        data={"entry_id": entry.entry_id},
+    )

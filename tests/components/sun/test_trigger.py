@@ -21,18 +21,11 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, mock_component
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(autouse=True)
-def setup_comp(hass: HomeAssistant) -> None:
+async def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
-    hass.loop.run_until_complete(
-        async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
-    )
+    await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
 
 async def test_sunset_trigger(

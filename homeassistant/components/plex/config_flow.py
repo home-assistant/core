@@ -14,7 +14,6 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components import http
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import (
@@ -36,7 +35,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow, http
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -125,7 +124,11 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._async_step_plex_website_auth()
         if self.show_advanced_options:
             return await self.async_step_user_advanced(errors=errors)
-        return self.async_show_form(step_id="user", errors=errors)
+        return self.async_show_form(
+            step_id="user",
+            errors=errors,
+            description_placeholders={"plex_server_url": "[plex.tv](https://plex.tv)"},
+        )
 
     async def async_step_user_advanced(
         self,
@@ -213,13 +216,13 @@ class PlexFlowHandler(ConfigFlow, domain=DOMAIN):
         except NoServersFound:
             _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
-        except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
+        except plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized:
             _LOGGER.error("Invalid credentials provided, config not created")
             errors[CONF_TOKEN] = "faulty_credentials"
         except requests.exceptions.SSLError as error:
             _LOGGER.error("SSL certificate error: [%s]", error)
             errors["base"] = "ssl_error"
-        except (plexapi.exceptions.NotFound, requests.exceptions.ConnectionError):
+        except plexapi.exceptions.NotFound, requests.exceptions.ConnectionError:
             server_identifier = (
                 server_config.get(CONF_URL) or plex_server.server_choice or "Unknown"
             )

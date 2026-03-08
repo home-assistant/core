@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
+from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 
@@ -57,15 +57,9 @@ def async_get_coordinator_by_device_id(
     if (device_entry := device_registry.async_get(device_id)) is None:
         raise ValueError(f"Unknown LaMetric device ID: {device_id}")
 
-    for entry_id in device_entry.config_entries:
-        if (
-            (entry := hass.config_entries.async_get_entry(entry_id))
-            and entry.domain == DOMAIN
-            and entry.entry_id in hass.data[DOMAIN]
-        ):
-            coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][
-                entry.entry_id
-            ]
-            return coordinator
+    entry: LaMetricConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.entry_id in device_entry.config_entries:
+            return entry.runtime_data
 
     raise ValueError(f"No coordinator for device ID: {device_id}")

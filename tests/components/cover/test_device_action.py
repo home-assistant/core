@@ -23,11 +23,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
@@ -260,6 +255,7 @@ async def test_get_action_capabilities_set_pos(
             {
                 "name": "position",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -310,6 +306,7 @@ async def test_get_action_capabilities_set_tilt_pos(
             {
                 "name": "position",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,

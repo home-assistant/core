@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
+from homeassistant.components.gree.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -24,7 +24,7 @@ async def test_creating_entry_sets_up_climate(
         return_value=FakeDiscovery(),
     ):
         result = await hass.config_entries.flow.async_init(
-            GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
@@ -50,7 +50,7 @@ async def test_creating_entry_has_no_devices(
         discovery.return_value.mock_devices = []
 
         result = await hass.config_entries.flow.async_init(
-            GREE_DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form

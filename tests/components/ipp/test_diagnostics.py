@@ -1,7 +1,7 @@
 """Tests for the diagnostics data provided by the Internet Printing Protocol (IPP) integration."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from deebot_client.exceptions import DeebotError, InvalidAuthenticationError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -105,9 +105,9 @@ async def test_devices_in_dr(
 @pytest.mark.parametrize(
     ("device_fixture", "entities"),
     [
-        ("yna5x1", 26),
+        ("yna5x1", 27),
         ("5xu9h3", 25),
-        ("123", 1),
+        ("123", 3),
     ],
 )
 async def test_all_entities_loaded(

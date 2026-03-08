@@ -2,11 +2,10 @@
 
 from datetime import timedelta
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
+from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import (
     CONF_ATTRIBUTE,
@@ -78,6 +77,11 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     hass.states.async_set(entity_id, "on", {attribute: 1})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
+
+    # Change attribute below resolution of DPT; expect no telegram
+    hass.states.async_set(entity_id, "on", {attribute: 1.2})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
 
     # Read in between
     await knx.receive_read("1/1/8")
@@ -252,6 +256,32 @@ async def test_expose_cooldown(
     await knx.assert_write("1/1/8", (3,))
 
 
+async def test_expose_periodic_send(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an expose with periodic send."""
+    entity_id = "fake.entity"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percentU8",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_PERIODIC_SEND: {"minutes": 1},
+            }
+        },
+    )
+    # Initialize state
+    hass.states.async_set(entity_id, "15", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (15,))
+    # Wait for time to pass
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (15,))
+
+
 async def test_expose_value_template(
     hass: HomeAssistant, knx: KNXTestKit, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -348,19 +378,20 @@ async def test_expose_conversion_exception(
     )
 
 
-@freeze_time("2022-1-7 9:13:14")
+@pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
 @pytest.mark.parametrize(
     ("time_type", "raw"),
     [
-        ("time", (0xA9, 0x0D, 0x0E)),  # localtime includes day of week
+        ("time", (0xAA, 0x0D, 0x0E)),  # localtime includes day of week
         ("date", (0x07, 0x01, 0x16)),
-        ("datetime", (0x7A, 0x1, 0x7, 0xA9, 0xD, 0xE, 0x20, 0xC0)),
+        ("datetime", (0x7A, 0x1, 0x7, 0xAA, 0xD, 0xE, 0x20, 0xC0)),
     ],
 )
 async def test_expose_with_date(
     hass: HomeAssistant, knx: KNXTestKit, time_type: str, raw: tuple[int, ...]
 ) -> None:
     """Test an expose with a date."""
+    await hass.config.async_set_time_zone("Europe/Vienna")
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {

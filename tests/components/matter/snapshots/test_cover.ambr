@@ -1,5 +1,58 @@
 # serializer version: 1
-# name: test_covers[window_covering_full][cover.mock_full_window_covering-entry]
+# name: test_covers[eve_shutter][cover.eve_shutter_switch_20eci1701-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.eve_shutter_switch_20eci1701',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[eve_shutter][cover.eve_shutter_switch_20eci1701-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shade',
+      'friendly_name': 'Eve Shutter Switch 20ECI1701',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.eve_shutter_switch_20eci1701',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
@@ -27,19 +81,21 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 143>,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareLiftAndTilt-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_full][cover.mock_full_window_covering-state]
+# name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'current_tilt_position': 100,
       'device_class': 'awning',
       'friendly_name': 'Mock Full Window Covering',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
@@ -50,7 +106,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[window_covering_lift][cover.mock_lift_window_covering-entry]
+# name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
@@ -78,17 +135,19 @@
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_lift][cover.mock_lift_window_covering-state]
+# name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'awning',
       'friendly_name': 'Mock Lift Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -99,7 +158,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
+# name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -120,25 +179,28 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_pa_lift][cover.longan_link_wncv_da01-state]
+# name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 51,
-      'device_class': 'awning',
+      'device_class': 'shade',
       'friendly_name': 'Longan link WNCV DA01',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -149,7 +211,7 @@
     'state': 'open',
   })
 # ---
-# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
+# name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -170,25 +232,28 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-MatterCoverPositionAwareTilt-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-state]
+# name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_tilt_position': 100,
-      'device_class': 'awning',
+      'device_class': 'blind',
       'friendly_name': 'Mock PA Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -199,7 +264,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering-entry]
+# name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -220,24 +285,27 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 139>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-MatterCover-258-10',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-MatterCover-258-10',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_covers[window_covering_tilt][cover.mock_tilt_window_covering-state]
+# name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'awning',
+      'device_class': 'blind',
       'friendly_name': 'Mock Tilt Window Covering',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 139>,
     }),
     'context': <ANY>,
@@ -246,5 +314,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_covers[zemismart_mt25b][cover.zemismart_mt25b_roller_motor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.zemismart_mt25b_roller_motor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHADE: 'shade'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-MatterCoverPositionAwareLift-258-10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_covers[zemismart_mt25b][cover.zemismart_mt25b_roller_motor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shade',
+      'friendly_name': 'Zemismart MT25B Roller Motor',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.zemismart_mt25b_roller_motor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---

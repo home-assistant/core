@@ -37,7 +37,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
         {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
         blocking=True,
     )
-    getattr(mock_account.robots[0], "start_cleaning").assert_called_once()
+    mock_account.robots[0].start_cleaning.assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
 

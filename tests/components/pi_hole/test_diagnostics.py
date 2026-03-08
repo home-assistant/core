@@ -19,9 +19,10 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Tests diagnostics."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=5)
+    config_entry = {**CONFIG_DATA_DEFAULTS, "api_version": 5}
     entry = MockConfigEntry(
-        domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS, entry_id="pi_hole_mock_entry"
+        domain=pi_hole.DOMAIN, data=config_entry, entry_id="pi_hole_mock_entry"
     )
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):

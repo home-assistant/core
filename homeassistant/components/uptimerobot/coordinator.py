@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAuthenticationException,
@@ -15,18 +17,22 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+
+type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
 
 
-class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMonitor]]):
+class UptimeRobotDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[int, UptimeRobotMonitor]]
+):
     """Data update coordinator for UptimeRobot."""
 
-    config_entry: ConfigEntry
+    config_entry: UptimeRobotConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: UptimeRobotConfigEntry,
         api: UptimeRobot,
     ) -> None:
         """Initialize coordinator."""
@@ -37,10 +43,9 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
             name=DOMAIN,
             update_interval=COORDINATOR_UPDATE_INTERVAL,
         )
-        self._device_registry = dr.async_get(hass)
         self.api = api
 
-    async def _async_update_data(self) -> list[UptimeRobotMonitor]:
+    async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
@@ -49,30 +54,21 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
         except UptimeRobotException as exception:
             raise UpdateFailed(exception) from exception
 
-        if response.status != API_ATTR_OK:
-            raise UpdateFailed(response.error.message)
+        if TYPE_CHECKING:
+            assert isinstance(response.data, list)
 
-        monitors: list[UptimeRobotMonitor] = response.data
+        current_ids = self.data.keys() if self.data else ()
+        new_monitors = {monitor.id: monitor for monitor in response.data}
+        if stale_ids := set(current_ids) - new_monitors.keys():
+            device_registry = dr.async_get(self.hass)
 
-        current_monitors = {
-            list(device.identifiers)[0][1]
-            for device in dr.async_entries_for_config_entry(
-                self._device_registry, self.config_entry.entry_id
-            )
-        }
-        new_monitors = {str(monitor.id) for monitor in monitors}
-        if stale_monitors := current_monitors - new_monitors:
-            for monitor_id in stale_monitors:
-                if device := self._device_registry.async_get_device(
-                    identifiers={(DOMAIN, monitor_id)}
+            for monitor_id in stale_ids:
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, str(monitor_id))}
                 ):
-                    self._device_registry.async_remove_device(device.id)
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
-        # If there are new monitors, we should reload the config entry so we can
-        # create new devices and entities.
-        if self.data and new_monitors - {str(monitor.id) for monitor in self.data}:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
-
-        return monitors
+        return new_monitors

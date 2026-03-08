@@ -711,7 +711,10 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
-        await hass.async_add_executor_job(schema, value)
+        with pytest.raises(
+            vol.Invalid, match="Validates schema outside the event loop"
+        ):
+            await hass.async_add_executor_job(schema, value)
 
 
 def test_dynamic_template(hass: HomeAssistant) -> None:
@@ -773,6 +776,7 @@ async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(schema, value)
 
 
+@pytest.mark.usefixtures("hass")
 def test_template_complex() -> None:
     """Test template_complex validator."""
     schema = vol.Schema(cv.template_complex)
@@ -1414,6 +1418,7 @@ def test_key_value_schemas() -> None:
         schema({"mode": mode, "data": data})
 
 
+@pytest.mark.usefixtures("hass")
 def test_key_value_schemas_with_default() -> None:
     """Test key value schemas."""
     schema = vol.Schema(
@@ -1453,18 +1458,68 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
+@pytest.mark.usefixtures("hass")
+def test_key_value_schemas_with_default_no_list_alternatives() -> None:
+    """Test key value schemas."""
+    schema = vol.Schema(
+        cv.key_value_schemas(
+            "mode",
+            {
+                "number": vol.Schema({"mode": "number", "data": int}),
+                "string": vol.Schema({"mode": "string", "data": str}),
+            },
+            vol.Schema({"mode": cv.dynamic_template}),
+            "a cool template",
+            list_alternatives=False,
+        )
+    )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema(True)
+    assert str(excinfo.value) == "Expected a dictionary"
+
+    for mode in None, {"a": "dict"}, "invalid":
+        with pytest.raises(vol.Invalid) as excinfo:
+            schema({"mode": mode})
+        assert (
+            str(excinfo.value)
+            == f"Unexpected value for mode: '{mode}'. Expected a cool template"
+        )
+
+
+@pytest.mark.usefixtures("hass")
+def test_key_value_schemas_without_default_no_list_alternatives() -> None:
+    """Test key value schemas."""
+    with pytest.raises(ValueError) as excinfo:
+        vol.Schema(
+            cv.key_value_schemas(
+                "mode",
+                {
+                    "number": vol.Schema({"mode": "number", "data": int}),
+                    "string": vol.Schema({"mode": "string", "data": str}),
+                },
+                vol.Schema({"mode": cv.dynamic_template}),
+                list_alternatives=False,
+            )
+        )
+    assert (
+        str(excinfo.value)
+        == "default_description must be provided if list_alternatives is False"
+    )
+
+
 @pytest.mark.parametrize(
     ("config", "error"),
     [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
-        ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
-        (
-            {"condition": "not", "conditions": {"condition": "invalid"}},
-            "Unexpected value for condition: 'invalid'",
-        ),
         # The validation error message could be improved to explain that this is not
         # a valid shorthand template
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, a list of "
+            "conditions or a valid template",
+        ),
         (
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
@@ -1492,8 +1547,9 @@ def test_key_value_schemas_with_default() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("hass")
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
-    """Test script validation is user friendly."""
+    """Test script action validation is user friendly."""
     with pytest.raises(vol.Invalid, match=error):
         cv.script_action(config)
 
@@ -1570,6 +1626,7 @@ def test_language() -> None:
         assert schema(value)
 
 
+@pytest.mark.usefixtures("hass")
 def test_positive_time_period_template() -> None:
     """Test positive time period template validation."""
     schema = vol.Schema(cv.positive_time_period_template)
@@ -1949,3 +2006,30 @@ async def test_is_entity_service_schema(
         vol.All(vol.Schema(cv.make_entity_service_schema({"some": str}))),
     ):
         assert cv.is_entity_service_schema(schema) is True
+
+
+def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
+    """Test renamed."""
+    renamed_schema = vol.All(cv.renamed("mors", "mars"), schema)
+
+    test_data = {"mars": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == test_data
+
+    test_data = {"mors": True}
+    output = renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+    assert output == {"mars": True}
+
+    test_data = {"mars": True, "mors": True}
+    with pytest.raises(
+        vol.Invalid,
+        match="Cannot specify both 'mors' and 'mars'. Please use 'mars' only.",
+    ):
+        renamed_schema(test_data.copy())
+    assert len(caplog.records) == 0
+
+    # Check error handling if data is not a dict
+    with pytest.raises(vol.Invalid, match="expected a dictionary"):
+        renamed_schema([])

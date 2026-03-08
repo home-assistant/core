@@ -1,4 +1,4 @@
-"""Fixtures for Tessie."""
+"""Fixtures for Tesla Fleet."""
 
 from __future__ import annotations
 
@@ -35,7 +35,10 @@ def mock_expires_at() -> int:
 
 
 def create_config_entry(
-    expires_at: int, scopes: list[Scope], implementation: str = DOMAIN
+    expires_at: int,
+    scopes: list[Scope],
+    implementation: str = DOMAIN,
+    region: str = "NA",
 ) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     access_token = jwt.encode(
@@ -43,7 +46,7 @@ def create_config_entry(
             "sub": UID,
             "aud": [],
             "scp": scopes,
-            "ou_code": "NA",
+            "ou_code": region,
         },
         key="",
         algorithm="none",
@@ -113,7 +116,7 @@ def mock_products() -> Generator[AsyncMock]:
 def mock_vehicle_state() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle",
+        "tesla_fleet_api.tesla.VehicleFleet.vehicle",
         return_value=VEHICLE_ONLINE,
     ) as mock_vehicle:
         yield mock_vehicle
@@ -123,7 +126,7 @@ def mock_vehicle_state() -> Generator[AsyncMock]:
 def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.vehicle_data",
+        "tesla_fleet_api.tesla.VehicleFleet.vehicle_data",
         return_value=VEHICLE_DATA,
     ) as mock_vehicle_data:
         yield mock_vehicle_data
@@ -133,7 +136,7 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
 def mock_wake_up() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.wake_up",
+        "tesla_fleet_api.tesla.VehicleFleet.wake_up",
         return_value=VEHICLE_ONLINE,
     ) as mock_wake_up:
         yield mock_wake_up
@@ -143,7 +146,7 @@ def mock_wake_up() -> Generator[AsyncMock]:
 def mock_live_status() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Energy Specific live_status method."""
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.live_status",
+        "tesla_fleet_api.tesla.EnergySite.live_status",
         side_effect=lambda: deepcopy(LIVE_STATUS),
     ) as mock_live_status:
         yield mock_live_status
@@ -153,7 +156,7 @@ def mock_live_status() -> Generator[AsyncMock]:
 def mock_site_info() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Energy Specific site_info method."""
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.site_info",
+        "tesla_fleet_api.tesla.EnergySite.site_info",
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
@@ -182,7 +185,7 @@ def mock_request():
 def mock_energy_history():
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        "tesla_fleet_api.tesla.EnergySite.energy_history",
         return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status
@@ -192,7 +195,7 @@ def mock_energy_history():
 def mock_signed_command() -> Generator[AsyncMock]:
     """Mock Tesla Fleet Api signed_command method."""
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSigned.signed_command",
+        "tesla_fleet_api.tesla.VehicleSigned.signed_command",
         return_value=COMMAND_OK,
     ) as mock_signed_command:
         yield mock_signed_command

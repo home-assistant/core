@@ -4,16 +4,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import (
+    Account,
+    Instance,
+    InstanceV2,
+    MastodonError,
+    MastodonUnauthorizedError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass
@@ -21,15 +27,15 @@ class MastodonData:
     """Mastodon data type."""
 
     client: Mastodon
-    instance: dict
-    account: dict
+    instance: InstanceV2 | Instance
+    account: Account
     coordinator: MastodonCoordinator
 
 
 type MastodonConfigEntry = ConfigEntry[MastodonData]
 
 
-class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class MastodonCoordinator(DataUpdateCoordinator[Account]):
     """Class to manage fetching Mastodon data."""
 
     config_entry: MastodonConfigEntry
@@ -47,11 +53,16 @@ class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> Account:
         try:
-            account: dict = await self.hass.async_add_executor_job(
+            account: Account = await self.hass.async_add_executor_job(
                 self.client.account_verify_credentials
             )
+        except MastodonUnauthorizedError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from error
         except MastodonError as ex:
             raise UpdateFailed(ex) from ex
 

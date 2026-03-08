@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -27,6 +28,7 @@
     'original_name': 'Pure Boost',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_boost_switch',
     'unique_id': 'BBZZBBZZ-pure_boost_switch',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Climate React',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -75,6 +78,7 @@
     'original_name': 'Climate React',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'climate_react_switch',
     'unique_id': 'ABC999111-climate_react_switch',
@@ -117,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -124,6 +129,7 @@
     'original_name': 'Timer',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'timer_on_switch',
     'unique_id': 'ABC999111-timer_on_switch',
@@ -167,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -174,6 +181,7 @@
     'original_name': 'Pure Boost',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_boost_switch',
     'unique_id': 'AAZZAAZZ-pure_boost_switch',

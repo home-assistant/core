@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
@@ -73,7 +73,7 @@ def setup_platform(
     credentials = BankCredentials(
         config[CONF_BIN], config[CONF_USERNAME], config[CONF_PIN], config[CONF_URL]
     )
-    fints_name = config.get(CONF_NAME, config[CONF_BIN])
+    fints_name = cast(str, config.get(CONF_NAME, config[CONF_BIN]))
 
     account_config = {
         acc[CONF_ACCOUNT]: acc[CONF_NAME] for acc in config[CONF_ACCOUNTS]

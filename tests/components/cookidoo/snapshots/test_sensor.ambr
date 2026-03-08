@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscription',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -33,6 +34,7 @@
     'original_name': 'Subscription',
     'platform': 'cookidoo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <CookidooSensor.SUBSCRIPTION: 'subscription'>,
     'unique_id': 'sub_uuid_subscription',
@@ -79,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subscription expiration date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -86,6 +89,7 @@
     'original_name': 'Subscription expiration date',
     'platform': 'cookidoo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <CookidooSensor.EXPIRES: 'expires'>,
     'unique_id': 'sub_uuid_expires',

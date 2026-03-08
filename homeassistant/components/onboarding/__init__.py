@@ -21,6 +21,7 @@ from .const import (
     STEP_USER,
     STEPS,
 )
+from .views import BaseOnboardingView, NoAuthBaseOnboardingView  # noqa: F401
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 4

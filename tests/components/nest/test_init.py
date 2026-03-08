@@ -20,6 +20,7 @@ from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
     SubscriberException,
+    SubscriberTimeoutException,
 )
 import pytest
 
@@ -27,12 +28,16 @@ from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util.dt import utcnow
 
 from .common import (
     PROJECT_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_NEW_SUBSCRIPTION,
+    CreateDevice,
     PlatformSetup,
+    create_nest_event,
 )
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -110,19 +115,27 @@ async def test_setup_configuration_failure(
     assert "Subscription misconfigured. Expected subscriber_id" in caplog.text
 
 
-@pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
+@pytest.mark.parametrize(
+    ("subscriber_side_effect", "expected_log_message"),
+    [
+        (SubscriberException(), "Subscriber error:"),
+        (SubscriberTimeoutException(), "Subscriber timed out"),
+    ],
+)
 async def test_setup_subscriber_failure(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     setup_base_platform,
+    expected_log_message: str,
 ) -> None:
-    """Test configuration error."""
+    """Test subscriber error handling (SubscriberException and SubscriberTimeoutException)."""
     await setup_base_platform()
-    assert "Subscriber error:" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    assert expected_log_message in caplog.text
 
 
 async def test_setup_device_manager_failure(
@@ -137,7 +150,7 @@ async def test_setup_device_manager_failure(
     ):
         await setup_base_platform()
 
-    assert "Device manager error:" in caplog.text
+    assert "Error communicating with the Device Access API" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -211,7 +224,7 @@ async def test_subscriber_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
+@pytest.mark.parametrize("subscriber_side_effect", [ConfigurationException()])
 async def test_subscriber_configuration_failure(
     hass: HomeAssistant,
     error_caplog: pytest.LogCaptureFixture,
@@ -339,3 +352,97 @@ async def test_migrate_unique_id(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == PROJECT_ID
+
+
+async def test_add_devices(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    subscriber: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that adding devices after initial setup works."""
+    device_id1 = "enterprises/project-id/devices/device-id"
+    traits = {
+        "sdm.devices.traits.Temperature": {
+            "ambientTemperatureCelsius": 25.1,
+        },
+    }
+    create_device.create(raw_traits=traits, raw_data={"name": device_id1})
+    await setup_platform()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert len(device_entries) == 1
+
+    # Add a second device and trigger a notification to refresh
+    device_id2 = "enterprises/project-id/devices/device-id-2"
+    create_device.create(raw_traits=traits, raw_data={"name": device_id2})
+
+    event_message = create_nest_event(
+        {
+            "eventId": "some-event-id",
+            "timestamp": utcnow().isoformat(timespec="seconds"),
+            "relationUpdate": {
+                "type": "UPDATED",
+                "subject": "some-subject",
+                "object": "some-object",
+            },
+        },
+    )
+    await subscriber.async_receive_event(event_message)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert len(device_entries) == 2
+
+
+async def test_stale_device_cleanup(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    subscriber: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that stale devices are removed."""
+    # Device #1 will be returned by the API.
+    device_id1 = "enterprises/project-id/devices/device-id"
+    device_registry.async_get_or_create(
+        config_entry_id=hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+        identifiers={(DOMAIN, device_id1)},
+        manufacturer="Google Nest",
+    )
+    create_device.create(
+        raw_traits={
+            "sdm.devices.traits.Temperature": {
+                "ambientTemperatureCelsius": 25.1,
+            },
+        },
+        raw_data={"name": device_id1},
+    )
+
+    # Device #2 is stale and should be removed.
+    device_registry.async_get_or_create(
+        config_entry_id=hass.config_entries.async_entries(DOMAIN)[0].entry_id,
+        identifiers={(DOMAIN, "enterprises/project-id/devices/device-id-stale")},
+        manufacturer="Google Nest",
+    )
+
+    # Verify both devices are registered before setup.
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert len(device_entries) == 2
+
+    # Setup should remove the stale device.
+    await setup_platform()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
+    assert len(device_entries) == 1
+    assert device_entries[0].identifiers == {(DOMAIN, device_id1)}

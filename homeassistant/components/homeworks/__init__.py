@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -58,6 +57,8 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
+type HomeworksConfigEntry = ConfigEntry[HomeworksData]
+
 
 @dataclass
 class HomeworksData:
@@ -72,45 +73,44 @@ class HomeworksData:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Lutron Homeworks Series 4 and 8 integration."""
 
-    async def async_call_service(service_call: ServiceCall) -> None:
-        """Call the service."""
-        await async_send_command(hass, service_call.data)
-
     hass.services.async_register(
         DOMAIN,
         "send_command",
-        async_call_service,
+        async_send_command,
         schema=SERVICE_SEND_COMMAND_SCHEMA,
     )
 
 
-async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
+async def async_send_command(service_call: ServiceCall) -> None:
     """Send command to a controller."""
 
     def get_controller_ids() -> list[str]:
         """Get homeworks data for the specified controller ID."""
-        return [data.controller_id for data in hass.data[DOMAIN].values()]
+        return [
+            entry.runtime_data.controller_id
+            for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
+        ]
 
     def get_homeworks_data(controller_id: str) -> HomeworksData | None:
         """Get homeworks data for the specified controller ID."""
-        data: HomeworksData
-        for data in hass.data[DOMAIN].values():
-            if data.controller_id == controller_id:
-                return data
+        entry: HomeworksConfigEntry
+        for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN):
+            if entry.runtime_data.controller_id == controller_id:
+                return entry.runtime_data
         return None
 
-    homeworks_data = get_homeworks_data(data[CONF_CONTROLLER_ID])
+    homeworks_data = get_homeworks_data(service_call.data[CONF_CONTROLLER_ID])
     if not homeworks_data:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_controller_id",
             translation_placeholders={
-                "controller_id": data[CONF_CONTROLLER_ID],
+                "controller_id": service_call.data[CONF_CONTROLLER_ID],
                 "controller_ids": ",".join(get_controller_ids()),
             },
         )
 
-    commands = data[CONF_COMMAND]
+    commands = service_call.data[CONF_COMMAND]
     _LOGGER.debug("Send commands: %s", commands)
     for command in commands:
         if command.lower().startswith("delay"):
@@ -119,7 +119,7 @@ async def async_send_command(hass: HomeAssistant, data: Mapping[str, Any]) -> No
             await asyncio.sleep(delay / 1000)
         else:
             _LOGGER.debug("Sending command '%s'", command)
-            await hass.async_add_executor_job(
+            await service_call.hass.async_add_executor_job(
                 homeworks_data.controller._send,  # noqa: SLF001
                 command,
             )
@@ -132,10 +132,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
     """Set up Homeworks from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     controller_id = entry.options[CONF_CONTROLLER_ID]
 
     def hw_callback(msg_type: Any, values: Any) -> None:
@@ -174,9 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name = key_config[CONF_NAME]
         keypads[addr] = HomeworksKeypad(hass, controller, controller_id, addr, name)
 
-    hass.data[DOMAIN][entry.entry_id] = HomeworksData(
-        controller, controller_id, keypads
-    )
+    entry.runtime_data = HomeworksData(controller, controller_id, keypads)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -184,19 +181,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeworksConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: HomeworksData = hass.data[DOMAIN].pop(entry.entry_id)
-        for keypad in data.keypads.values():
+        for keypad in entry.runtime_data.keypads.values():
             keypad.unsubscribe()
 
-        await hass.async_add_executor_job(data.controller.stop)
+        await hass.async_add_executor_job(entry.runtime_data.controller.stop)
 
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: HomeworksConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 

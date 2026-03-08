@@ -106,10 +106,10 @@ async def test_unload_entry(
     this verifies that the unload, calls async_stop, which calls async_send and
     shuts down the hub.
     """
-    assert entry_managed.state == ConfigEntryState.LOADED
+    assert entry_managed.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
     mock_managed_streaming.assert_not_called()
-    assert entry_managed.state == ConfigEntryState.NOT_LOADED
+    assert entry_managed.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
@@ -261,4 +261,4 @@ async def test_connection(
     entry.add_to_hass(hass)
     mock_execute_query.side_effect = sideeffect
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR

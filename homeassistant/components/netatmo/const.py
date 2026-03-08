@@ -46,13 +46,16 @@ NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
+NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR = "netatmo_create_connectivity_binary_sensor"
 NETATMO_CREATE_BUTTON = "netatmo_create_button"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
 NETATMO_CREATE_LIGHT = "netatmo_create_light"
+NETATMO_CREATE_OPENING_BINARY_SENSOR = "netatmo_create_opening_binary_sensor"
 NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
+NETATMO_CREATE_WEATHER_BINARY_SENSOR = "netatmo_create_weather_binary_sensor"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"
@@ -95,6 +98,7 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_TIME_PERIOD = "time_period"
 
@@ -113,38 +117,51 @@ EVENT_TYPE_SCHEDULE = "schedule"
 EVENT_TYPE_SET_POINT = "set_point"
 EVENT_TYPE_THERM_MODE = "therm_mode"
 # Camera events
-EVENT_TYPE_CAMERA_ANIMAL = "animal"
-EVENT_TYPE_CAMERA_HUMAN = "human"
-EVENT_TYPE_CAMERA_MOVEMENT = "movement"
-EVENT_TYPE_CAMERA_OUTDOOR = "outdoor"
-EVENT_TYPE_CAMERA_PERSON = "person"
-EVENT_TYPE_CAMERA_PERSON_AWAY = "person_away"
-EVENT_TYPE_CAMERA_VEHICLE = "vehicle"
+EVENT_TYPE_ANIMAL = "animal"
+EVENT_TYPE_HUMAN = "human"
+EVENT_TYPE_MOVEMENT = "movement"
+EVENT_TYPE_OUTDOOR = "outdoor"
+EVENT_TYPE_PERSON = "person"
+EVENT_TYPE_PERSON_AWAY = "person_away"
+EVENT_TYPE_VEHICLE = "vehicle"
 EVENT_TYPE_LIGHT_MODE = "light_mode"
 # Door tags
 EVENT_TYPE_ALARM_STARTED = "alarm_started"
-EVENT_TYPE_DOOR_TAG_BIG_MOVE = "tag_big_move"
-EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
-EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
+EVENT_TYPE_TAG_BIG_MOVE = "tag_big_move"
+EVENT_TYPE_TAG_OPEN = "tag_open"
+EVENT_TYPE_TAG_SMALL_MOVE = "tag_small_move"
+# Generic events
+EVENT_TYPE_CONNECTION = "connection"
+EVENT_TYPE_DISCONNECTION = "disconnection"
+EVENT_TYPE_MODULE_CONNECT = "module_connect"
+EVENT_TYPE_MODULE_DISCONNECT = "module_disconnect"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
 
+CAMERA_TRIGGERS = [
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
+    EVENT_TYPE_LIGHT_MODE,
+    EVENT_TYPE_OFF,
+    EVENT_TYPE_ON,
+]
+
 OUTDOOR_CAMERA_TRIGGERS = [
-    EVENT_TYPE_CAMERA_ANIMAL,
-    EVENT_TYPE_CAMERA_HUMAN,
-    EVENT_TYPE_CAMERA_OUTDOOR,
-    EVENT_TYPE_CAMERA_VEHICLE,
+    EVENT_TYPE_ANIMAL,
+    EVENT_TYPE_HUMAN,
+    EVENT_TYPE_OUTDOOR,
+    EVENT_TYPE_VEHICLE,
 ]
 INDOOR_CAMERA_TRIGGERS = [
     EVENT_TYPE_ALARM_STARTED,
-    EVENT_TYPE_CAMERA_MOVEMENT,
-    EVENT_TYPE_CAMERA_PERSON_AWAY,
-    EVENT_TYPE_CAMERA_PERSON,
+    EVENT_TYPE_MOVEMENT,
+    EVENT_TYPE_PERSON_AWAY,
+    EVENT_TYPE_PERSON,
 ]
 DOOR_TAG_TRIGGERS = [
-    EVENT_TYPE_DOOR_TAG_BIG_MOVE,
-    EVENT_TYPE_DOOR_TAG_OPEN,
-    EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+    EVENT_TYPE_TAG_BIG_MOVE,
+    EVENT_TYPE_TAG_OPEN,
+    EVENT_TYPE_TAG_SMALL_MOVE,
 ]
 CLIMATE_TRIGGERS = [
     EVENT_TYPE_CANCEL_SET_POINT,
@@ -153,18 +170,20 @@ CLIMATE_TRIGGERS = [
 ]
 EVENT_ID_MAP = {
     EVENT_TYPE_ALARM_STARTED: "device_id",
-    EVENT_TYPE_CAMERA_ANIMAL: "device_id",
-    EVENT_TYPE_CAMERA_HUMAN: "device_id",
-    EVENT_TYPE_CAMERA_MOVEMENT: "device_id",
-    EVENT_TYPE_CAMERA_OUTDOOR: "device_id",
-    EVENT_TYPE_CAMERA_PERSON_AWAY: "device_id",
-    EVENT_TYPE_CAMERA_PERSON: "device_id",
-    EVENT_TYPE_CAMERA_VEHICLE: "device_id",
+    EVENT_TYPE_ANIMAL: "device_id",
+    EVENT_TYPE_HUMAN: "device_id",
+    EVENT_TYPE_MOVEMENT: "device_id",
+    EVENT_TYPE_OUTDOOR: "device_id",
+    EVENT_TYPE_PERSON_AWAY: "device_id",
+    EVENT_TYPE_PERSON: "device_id",
+    EVENT_TYPE_VEHICLE: "device_id",
     EVENT_TYPE_CANCEL_SET_POINT: "room_id",
-    EVENT_TYPE_DOOR_TAG_BIG_MOVE: "device_id",
-    EVENT_TYPE_DOOR_TAG_OPEN: "device_id",
-    EVENT_TYPE_DOOR_TAG_SMALL_MOVE: "device_id",
+    EVENT_TYPE_TAG_BIG_MOVE: "device_id",
+    EVENT_TYPE_TAG_OPEN: "device_id",
+    EVENT_TYPE_TAG_SMALL_MOVE: "device_id",
     EVENT_TYPE_LIGHT_MODE: "device_id",
+    EVENT_TYPE_MODULE_CONNECT: "module_id",
+    EVENT_TYPE_MODULE_DISCONNECT: "module_id",
     EVENT_TYPE_SET_POINT: "room_id",
     EVENT_TYPE_THERM_MODE: "home_id",
 }
@@ -174,8 +193,29 @@ MODE_LIGHT_OFF = "off"
 MODE_LIGHT_ON = "on"
 CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
 
+# Door tag categories
+DOORTAG_CATEGORY_DOOR = "door"
+DOORTAG_CATEGORY_FURNITURE = "furniture"
+DOORTAG_CATEGORY_GARAGE = "garage"
+DOORTAG_CATEGORY_GATE = "gate"
+DOORTAG_CATEGORY_OTHER = "other"
+DOORTAG_CATEGORY_WINDOW = "window"
+# Door tag statuses
+DOORTAG_STATUS_CALIBRATING = "calibrating"
+DOORTAG_STATUS_CALIBRATION_FAILED = "calibration_failed"
+DOORTAG_STATUS_CLOSED = "closed"
+DOORTAG_STATUS_MAINTENANCE = "maintenance"
+DOORTAG_STATUS_NO_NEWS = "no_news"
+DOORTAG_STATUS_OPEN = "open"
+DOORTAG_STATUS_UNDEFINED = "undefined"
+DOORTAG_STATUS_WEAK_SIGNAL = "weak_signal"
+
+# Webhook push_types MUST follow exactly Netatmo's naming on products!
+# See https://dev.netatmo.com/apidocumentation
+# e.g. cameras: NACamera, NOC, etc.
 WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
-WEBHOOK_LIGHT_MODE = "NOC-light_mode"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
+WEBHOOK_NOCAMERA_CONNECTION = "NOC-connection"
 WEBHOOK_PUSH_TYPE = "push_type"
+CAMERA_CONNECTION_WEBHOOKS = [WEBHOOK_NACAMERA_CONNECTION, WEBHOOK_NOCAMERA_CONNECTION]

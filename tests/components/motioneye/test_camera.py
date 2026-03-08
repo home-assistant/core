@@ -1,6 +1,5 @@
 """Test the motionEye camera."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Callable
 import copy
 from unittest.mock import AsyncMock, Mock, call
@@ -67,7 +66,6 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture
 def aiohttp_server(
-    event_loop: AbstractEventLoop,
     aiohttp_server: Callable[[], TestServer],
     socket_enabled: None,
 ) -> Callable[[], TestServer]:

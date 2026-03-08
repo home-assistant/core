@@ -21,7 +21,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })
@@ -62,6 +60,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +68,7 @@
     'original_name': 'Clean count',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_count',
     'unique_id': '123456789ABCDEFGH_clean_count',
@@ -118,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan degrees',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +126,7 @@
     'original_name': 'Pan degrees',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pan_step',
     'unique_id': '123456789ABCDEFGH_pan_step',
@@ -174,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,6 +184,7 @@
     'original_name': 'Power protection',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_protection_threshold',
     'unique_id': '123456789ABCDEFGH_power_protection_threshold',
@@ -230,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -237,6 +242,7 @@
     'original_name': 'Smooth off',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_off',
     'unique_id': '123456789ABCDEFGH_smooth_transition_off',
@@ -286,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -293,6 +300,7 @@
     'original_name': 'Smooth on',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smooth_transition_on',
     'unique_id': '123456789ABCDEFGH_smooth_transition_on',
@@ -342,13 +350,15 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_offset',
     'unique_id': '123456789ABCDEFGH_temperature_offset',
@@ -358,6 +368,7 @@
 # name: test_states[number.my_device_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'temperature_delta',
       'friendly_name': 'my_device Temperature offset',
       'max': 10,
       'min': -10,
@@ -398,6 +409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt degrees',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,6 +417,7 @@
     'original_name': 'Tilt degrees',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tilt_step',
     'unique_id': '123456789ABCDEFGH_tilt_step',
@@ -454,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off in',
     'options': dict({
     }),
     'original_device_class': None,
@@ -461,6 +475,7 @@
     'original_name': 'Turn off in',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_off_minutes',
     'unique_id': '123456789ABCDEFGH_auto_off_minutes',

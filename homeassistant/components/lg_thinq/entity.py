@@ -10,24 +10,18 @@ from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
 
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COMPANY, DOMAIN
+from .const import COMPANY, DEVICE_UNIT_TO_HA, DOMAIN
 from .coordinator import DeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 EMPTY_STATE = PropertyState()
-
-UNIT_CONVERSION_MAP: dict[str, str] = {
-    "F": UnitOfTemperature.FAHRENHEIT,
-    "C": UnitOfTemperature.CELSIUS,
-}
 
 
 class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
@@ -40,6 +34,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         coordinator: DeviceDataUpdateCoordinator,
         entity_description: EntityDescription,
         property_id: str,
+        postfix_id: str | None = None,
     ) -> None:
         """Initialize an entity."""
         super().__init__(coordinator)
@@ -54,7 +49,11 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
             name=coordinator.device_name,
         )
-        self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
+        self._attr_unique_id = (
+            f"{coordinator.unique_id}_{self.property_id}"
+            if postfix_id is None
+            else f"{coordinator.unique_id}_{self.property_id}_{postfix_id}"
+        )
         if self.location is not None and self.location not in (
             Location.MAIN,
             Location.OVEN,
@@ -75,7 +74,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         if unit is None:
             return None
 
-        return UNIT_CONVERSION_MAP.get(unit)
+        return DEVICE_UNIT_TO_HA.get(unit)
 
     def _update_status(self) -> None:
         """Update status itself.

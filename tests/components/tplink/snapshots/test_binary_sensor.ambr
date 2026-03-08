@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -27,6 +28,7 @@
     'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_low',
     'unique_id': '123456789ABCDEFGH_battery_low',
@@ -54,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -61,6 +64,7 @@
     'original_name': 'Cloud connection',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': '123456789ABCDEFGH_cloud_connection',
@@ -102,6 +106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -109,6 +114,7 @@
     'original_name': 'Door',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_open',
     'unique_id': '123456789ABCDEFGH_is_open',
@@ -150,6 +156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity warning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -157,6 +164,7 @@
     'original_name': 'Humidity warning',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity_warning',
     'unique_id': '123456789ABCDEFGH_humidity_warning',
@@ -184,6 +192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -191,6 +200,7 @@
     'original_name': 'Moisture',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_alert',
     'unique_id': '123456789ABCDEFGH_water_alert',
@@ -232,6 +242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -239,6 +250,7 @@
     'original_name': 'Motion',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_detected',
     'unique_id': '123456789ABCDEFGH_motion_detected',
@@ -280,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overheated',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -287,6 +300,7 @@
     'original_name': 'Overheated',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'overheated',
     'unique_id': '123456789ABCDEFGH_overheated',
@@ -328,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overloaded',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -335,6 +350,7 @@
     'original_name': 'Overloaded',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'overloaded',
     'unique_id': '123456789ABCDEFGH_overloaded',
@@ -376,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature warning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -383,6 +400,7 @@
     'original_name': 'Temperature warning',
     'platform': 'tplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_warning',
     'unique_id': '123456789ABCDEFGH_temperature_warning',
@@ -411,7 +429,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',
@@ -421,7 +438,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.0.0',
     'via_device_id': None,
   })

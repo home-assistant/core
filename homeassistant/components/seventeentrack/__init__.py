@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import SeventeenTrackCoordinator
-from .services import setup_services
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -23,7 +23,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the 17Track component."""
 
-    setup_services(hass)
+    async_setup_services(hass)
 
     return True
 

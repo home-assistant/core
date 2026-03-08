@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.stookwijzer.const import DOMAIN
+from homeassistant.components.stookwijzer.services import Forecast
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
@@ -70,16 +71,38 @@ def mock_stookwijzer() -> Generator[MagicMock]:
             new=stookwijzer_mock,
         ),
     ):
-        stookwijzer_mock.async_transform_coordinates.return_value = (
-            200000.123456789,
-            450000.123456789,
-        )
+        stookwijzer_mock.async_transform_coordinates.return_value = {
+            "x": 450000.123456789,
+            "y": 200000.123456789,
+        }
 
         client = stookwijzer_mock.return_value
         client.lki = 2
         client.windspeed_ms = 2.5
         client.windspeed_bft = 2
         client.advice = "code_yellow"
+        client.async_get_forecast.return_value = (
+            Forecast(
+                datetime="2025-02-12T17:00:00+01:00",
+                advice="code_yellow",
+                final=True,
+            ),
+            Forecast(
+                datetime="2025-02-12T23:00:00+01:00",
+                advice="code_yellow",
+                final=True,
+            ),
+            Forecast(
+                datetime="2025-02-13T05:00:00+01:00",
+                advice="code_orange",
+                final=False,
+            ),
+            Forecast(
+                datetime="2025-02-13T11:00:00+01:00",
+                advice="code_orange",
+                final=False,
+            ),
+        )
 
         yield stookwijzer_mock
 

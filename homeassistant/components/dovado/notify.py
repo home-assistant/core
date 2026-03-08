@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as DOVADO_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> DovadoSMSNotificationService:
     """Get the Dovado Router SMS notification service."""
-    return DovadoSMSNotificationService(hass.data[DOVADO_DOMAIN].client)
+    return DovadoSMSNotificationService(hass.data[DOMAIN].client)
 
 
 class DovadoSMSNotificationService(BaseNotificationService):
@@ -29,7 +30,7 @@ class DovadoSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._client = client
 
-    def send_message(self, message, **kwargs):
+    def send_message(self, message: str, **kwargs: Any) -> None:
         """Send SMS to the specified target phone number."""
         if not (target := kwargs.get(ATTR_TARGET)):
             _LOGGER.error("One target is required")

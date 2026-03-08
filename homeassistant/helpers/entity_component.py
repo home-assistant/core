@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import timedelta
 import logging
 from types import ModuleType
@@ -18,31 +18,33 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
-    HassJob,
     HassJobType,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.hass_dict import HassKey
 
-from . import config_validation as cv, discovery, entity, service
+from . import discovery, entity, service
 from .entity_platform import EntityPlatform
 from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
-DATA_INSTANCES = "entity_components"
+DATA_INSTANCES: HassKey[dict[str, EntityComponent]] = HassKey("entity_components")
 
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]
-    entity_comp: EntityComponent[entity.Entity] | None
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
 
     if entity_comp is None:
@@ -95,7 +97,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
-        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self  # type: ignore[assignment]
 
     @property
     def entities(self) -> Iterable[_EntityT]:
@@ -212,44 +214,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities, service_call, expand_group
-        )
-
-    @callback
-    def async_register_legacy_entity_service(
-        self,
-        name: str,
-        schema: VolDictType | VolSchemaType,
-        func: str | Callable[..., Any],
-        required_features: list[int] | None = None,
-        supports_response: SupportsResponse = SupportsResponse.NONE,
-    ) -> None:
-        """Register an entity service with a legacy response format."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        async def handle_service(
-            call: ServiceCall,
-        ) -> ServiceResponse:
-            """Handle the service."""
-
-            result = await service.entity_service_call(
-                self.hass, self._entities, service_func, call, required_features
-            )
-
-            if result:
-                if len(result) > 1:
-                    raise HomeAssistantError(
-                        "Deprecated service call matched more than one entity"
-                    )
-                return result.popitem()[1]
-            return None
-
-        self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+            self.entities, service_call, expand_group
         )
 
     @callback
@@ -260,6 +225,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service."""
         service.async_register_entity_service(
@@ -272,6 +239,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def async_setup_platform(
@@ -337,27 +305,31 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(
-        self, *, skip_reset: bool = False
-    ) -> ConfigType | None:
+    async def async_prepare_reload(self, *, skip_reset: bool = False) -> ConfigType:
         """Prepare reloading this entity component.
 
-        This method must be run in the event loop.
+        This method is intended to be called from service handlers implementing reload.
+        Will raise ServiceValidationError if the config is not valid.
         """
         try:
             conf = await conf_util.async_hass_config_yaml(self.hass)
         except HomeAssistantError as err:
-            self.logger.error(err)
-            return None
+            raise ServiceValidationError(
+                f"Failed to load configuration: {err}"
+            ) from err
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        processed_conf = await conf_util.async_process_component_and_handle_errors(
-            self.hass, conf, integration
-        )
-
-        if processed_conf is None:
-            return None
+        try:
+            processed_conf = await conf_util.async_process_component_and_handle_errors(
+                self.hass, conf, integration, raise_on_failure=True
+            )
+        except ConfigValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
         if not skip_reset:
             await self._async_reset()

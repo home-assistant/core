@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -29,6 +30,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-battery_level',
@@ -72,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last fertilized',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -79,6 +82,7 @@
     'original_name': 'Last fertilized',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_fertilised',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_last',
@@ -122,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -129,6 +134,7 @@
     'original_name': 'Light',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light',
@@ -139,6 +145,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gummibaum Light',
+      'max_acceptable': 675.0,
+      'max_good': 450.0,
+      'min_acceptable': 18.0,
+      'min_good': 20.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μmol/s⋅m²',
     }),
@@ -180,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -187,6 +198,7 @@
     'original_name': 'Light state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-light_status',
@@ -238,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
@@ -245,6 +258,7 @@
     'original_name': 'Moisture',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture',
@@ -256,6 +270,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Gummibaum Moisture',
+      'max_acceptable': 80.0,
+      'max_good': 70.0,
+      'min_acceptable': 25.0,
+      'min_good': 35.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -297,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -304,6 +323,7 @@
     'original_name': 'Moisture state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-moisture_status',
@@ -353,6 +373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next fertilization',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -360,6 +381,7 @@
     'original_name': 'Next fertilization',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_fertilisation',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-fertilise_next',
@@ -410,6 +432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrients state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -417,6 +440,7 @@
     'original_name': 'Nutrients state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nutrients_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-nutrients_status',
@@ -468,6 +492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -475,6 +500,7 @@
     'original_name': 'pH',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-ph',
@@ -524,6 +550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -531,6 +558,7 @@
     'original_name': 'Plant state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plant_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-status',
@@ -580,13 +608,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CONDUCTIVITY: 'conductivity'>,
     'original_icon': None,
     'original_name': 'Salinity',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity',
@@ -598,6 +631,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'conductivity',
       'friendly_name': 'Gummibaum Salinity',
+      'max_acceptable': 1.2,
+      'max_good': 1.0,
+      'min_acceptable': 0.4,
+      'min_good': 0.6,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
@@ -639,6 +676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -646,6 +684,7 @@
     'original_name': 'Salinity state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-salinity_status',
@@ -695,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scientific name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -702,6 +742,7 @@
     'original_name': 'Scientific name',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'scientific_name',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-scientific_name',
@@ -744,13 +785,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature',
@@ -762,6 +808,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Gummibaum Temperature',
+      'max_acceptable': 42.0,
+      'max_good': 36.0,
+      'min_acceptable': 10.0,
+      'min_good': 17.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -803,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -810,6 +861,7 @@
     'original_name': 'Temperature state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-temperature_status',
@@ -861,6 +913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -868,6 +921,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-battery_level',
@@ -911,6 +965,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last fertilized',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -918,6 +973,7 @@
     'original_name': 'Last fertilized',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_fertilised',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_last',
@@ -961,6 +1017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -968,6 +1025,7 @@
     'original_name': 'Light',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light',
@@ -978,6 +1036,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kakaobaum Light',
+      'max_acceptable': 675.0,
+      'max_good': 450.0,
+      'min_acceptable': 18.0,
+      'min_good': 20.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μmol/s⋅m²',
     }),
@@ -1019,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1026,6 +1089,7 @@
     'original_name': 'Light state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-light_status',
@@ -1077,6 +1141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1084,6 +1149,7 @@
     'original_name': 'Moisture',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture',
@@ -1095,6 +1161,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
       'friendly_name': 'Kakaobaum Moisture',
+      'max_acceptable': 80.0,
+      'max_good': 70.0,
+      'min_acceptable': 25.0,
+      'min_good': 35.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1136,6 +1206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1143,6 +1214,7 @@
     'original_name': 'Moisture state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'moisture_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-moisture_status',
@@ -1192,6 +1264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next fertilization',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -1199,6 +1272,7 @@
     'original_name': 'Next fertilization',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_fertilisation',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-fertilise_next',
@@ -1249,6 +1323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrients state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1256,6 +1331,7 @@
     'original_name': 'Nutrients state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nutrients_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-nutrients_status',
@@ -1307,6 +1383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -1314,6 +1391,7 @@
     'original_name': 'pH',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-ph',
@@ -1363,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1370,6 +1449,7 @@
     'original_name': 'Plant state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plant_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-status',
@@ -1419,13 +1499,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CONDUCTIVITY: 'conductivity'>,
     'original_icon': None,
     'original_name': 'Salinity',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity',
@@ -1437,6 +1522,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'conductivity',
       'friendly_name': 'Kakaobaum Salinity',
+      'max_acceptable': 1.2,
+      'max_good': 1.0,
+      'min_acceptable': 0.4,
+      'min_good': 0.6,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
@@ -1478,6 +1567,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1485,6 +1575,7 @@
     'original_name': 'Salinity state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'salinity_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-salinity_status',
@@ -1534,6 +1625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scientific name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1541,6 +1633,7 @@
     'original_name': 'Scientific name',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'scientific_name',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-scientific_name',
@@ -1583,13 +1676,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Temperature',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature',
@@ -1601,6 +1699,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Kakaobaum Temperature',
+      'max_acceptable': 42.0,
+      'max_good': 36.0,
+      'min_acceptable': 10.0,
+      'min_good': 17.0,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1642,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1649,6 +1752,7 @@
     'original_name': 'Temperature state',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_status',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-temperature_status',

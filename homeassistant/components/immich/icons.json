@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "disk_usage": {
+        "default": "mdi:database"
+      },
+      "photos_count": {
+        "default": "mdi:file-image"
+      },
+      "videos_count": {
+        "default": "mdi:file-video"
+      }
+    }
+  },
+  "services": {
+    "upload_file": {
+      "service": "mdi:upload"
+    }
+  }
+}

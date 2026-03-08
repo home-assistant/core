@@ -12,7 +12,9 @@
   "homekit": {
     "models": ["Sensibo"]
   },
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pysensibo"],
-  "requirements": ["pysensibo==1.1.0"]
+  "quality_scale": "platinum",
+  "requirements": ["pysensibo==1.2.1"]
 }

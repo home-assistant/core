@@ -12,6 +12,7 @@ from pyoverkiz.enums import APIType, OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    NotAuthenticatedException,
     NotSuchTokenException,
     TooManyRequestsException,
 )
@@ -92,7 +93,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             scenarios = await client.get_scenarios()
         else:
             scenarios = []
-    except (BadCredentialsException, NotSuchTokenException) as exception:
+    except (
+        BadCredentialsException,
+        NotSuchTokenException,
+        NotAuthenticatedException,
+    ) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
@@ -155,10 +160,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
-            model=gateway.sub_type.beautify_name if gateway.sub_type else None,
+            model=gateway.type.beautify_name if gateway.type else None,
+            model_id=str(gateway.type),
             manufacturer=client.server.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
+            hw_version=f"{gateway.type}:{gateway.sub_type}"
+            if gateway.type and gateway.sub_type
+            else None,
             configuration_url=client.server.configuration_url,
         )
 

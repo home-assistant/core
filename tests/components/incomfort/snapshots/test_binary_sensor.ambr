@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -27,6 +28,7 @@
     'original_name': 'Burner',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_burning',
     'unique_id': 'c0ffeec0ffee_is_burning',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -75,6 +78,7 @@
     'original_name': 'Fault',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'c0ffeec0ffee_failed',
@@ -117,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -124,6 +129,7 @@
     'original_name': 'Hot water tap',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_tapping',
     'unique_id': 'c0ffeec0ffee_is_tapping',
@@ -165,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -172,6 +179,7 @@
     'original_name': 'Pump',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_pumping',
     'unique_id': 'c0ffeec0ffee_is_pumping',
@@ -213,6 +221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -220,6 +229,7 @@
     'original_name': 'Burner',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_burning',
     'unique_id': 'c0ffeec0ffee_is_burning',
@@ -261,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -268,6 +279,7 @@
     'original_name': 'Fault',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'c0ffeec0ffee_failed',
@@ -310,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -317,6 +330,7 @@
     'original_name': 'Hot water tap',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_tapping',
     'unique_id': 'c0ffeec0ffee_is_tapping',
@@ -358,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -365,6 +380,7 @@
     'original_name': 'Pump',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_pumping',
     'unique_id': 'c0ffeec0ffee_is_pumping',
@@ -406,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -413,6 +430,7 @@
     'original_name': 'Burner',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_burning',
     'unique_id': 'c0ffeec0ffee_is_burning',
@@ -454,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -461,6 +480,7 @@
     'original_name': 'Fault',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'c0ffeec0ffee_failed',
@@ -503,6 +523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -510,6 +531,7 @@
     'original_name': 'Hot water tap',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_tapping',
     'unique_id': 'c0ffeec0ffee_is_tapping',
@@ -551,6 +573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -558,6 +581,7 @@
     'original_name': 'Pump',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_pumping',
     'unique_id': 'c0ffeec0ffee_is_pumping',
@@ -599,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -606,6 +631,7 @@
     'original_name': 'Burner',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_burning',
     'unique_id': 'c0ffeec0ffee_is_burning',
@@ -647,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -654,6 +681,7 @@
     'original_name': 'Fault',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'c0ffeec0ffee_failed',
@@ -696,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -703,6 +732,7 @@
     'original_name': 'Hot water tap',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_tapping',
     'unique_id': 'c0ffeec0ffee_is_tapping',
@@ -744,6 +774,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -751,6 +782,7 @@
     'original_name': 'Pump',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_pumping',
     'unique_id': 'c0ffeec0ffee_is_pumping',
@@ -792,6 +824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Burner',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -799,6 +832,7 @@
     'original_name': 'Burner',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_burning',
     'unique_id': 'c0ffeec0ffee_is_burning',
@@ -840,6 +874,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fault',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -847,6 +882,7 @@
     'original_name': 'Fault',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fault',
     'unique_id': 'c0ffeec0ffee_failed',
@@ -889,6 +925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water tap',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -896,6 +933,7 @@
     'original_name': 'Hot water tap',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_tapping',
     'unique_id': 'c0ffeec0ffee_is_tapping',
@@ -937,6 +975,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -944,6 +983,7 @@
     'original_name': 'Pump',
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_pumping',
     'unique_id': 'c0ffeec0ffee_is_pumping',

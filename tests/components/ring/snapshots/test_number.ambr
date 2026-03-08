@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +33,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '123456-volume',
@@ -82,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +92,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '987654-volume',
@@ -139,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -146,6 +151,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '765432-volume',
@@ -196,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -203,6 +210,7 @@
     'original_name': 'Doorbell volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'doorbell_volume',
     'unique_id': '185036587-doorbell_volume',
@@ -253,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mic volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +269,7 @@
     'original_name': 'Mic volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mic_volume',
     'unique_id': '185036587-mic_volume',
@@ -310,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -317,6 +328,7 @@
     'original_name': 'Voice volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voice_volume',
     'unique_id': '185036587-voice_volume',
@@ -367,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -374,6 +387,7 @@
     'original_name': 'Volume',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
     'unique_id': '345678-volume',

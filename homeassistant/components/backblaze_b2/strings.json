@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_bucket_name": "[%key:component::backblaze_b2::exceptions::invalid_bucket_name::message%]",
+      "invalid_capability": "[%key:component::backblaze_b2::exceptions::invalid_capability::message%]",
+      "invalid_credentials": "[%key:component::backblaze_b2::exceptions::invalid_credentials::message%]",
+      "invalid_prefix": "[%key:component::backblaze_b2::exceptions::invalid_prefix::message%]",
+      "restricted_bucket": "[%key:component::backblaze_b2::exceptions::restricted_bucket::message%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "application_key": "Application key",
+          "key_id": "Key ID"
+        },
+        "data_description": {
+          "application_key": "Application key to connect to {brand_name}",
+          "key_id": "Key ID to connect to {brand_name}"
+        },
+        "description": "Update your {brand_name} credentials for bucket {bucket}.",
+        "title": "Reauthenticate {brand_name}"
+      },
+      "reconfigure": {
+        "data": {
+          "application_key": "Application key",
+          "bucket": "Bucket name",
+          "key_id": "Key ID",
+          "prefix": "Folder prefix (optional)"
+        },
+        "data_description": {
+          "application_key": "Application key to connect to {brand_name}",
+          "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "key_id": "Key ID to connect to {brand_name}",
+          "prefix": "Directory path to store backup files in. Leave empty to store in the root."
+        },
+        "title": "Reconfigure {brand_name}"
+      },
+      "user": {
+        "data": {
+          "application_key": "Application key",
+          "bucket": "Bucket name",
+          "key_id": "Key ID",
+          "prefix": "Folder prefix (optional)"
+        },
+        "data_description": {
+          "application_key": "Application key to connect to {brand_name}",
+          "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "key_id": "Key ID to connect to {brand_name}",
+          "prefix": "Directory path to store backup files in. Leave empty to store in the root."
+        },
+        "title": "Add {brand_name} backup"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to endpoint"
+    },
+    "invalid_bucket_name": {
+      "message": "Bucket does not exist or is not writable by the provided credentials."
+    },
+    "invalid_capability": {
+      "message": "Application key does not have the required read/write capabilities."
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using provided of key ID and application key."
+    },
+    "invalid_prefix": {
+      "message": "Prefix is not allowed for provided key. Must start with {allowed_prefix}."
+    },
+    "restricted_bucket": {
+      "message": "Application key is restricted to bucket {restricted_bucket_name}."
+    }
+  },
+  "issues": {
+    "bucket_access_restricted": {
+      "description": "Access to your {brand_name} bucket {bucket_name} is restricted for the current credentials. This means your application key may only have access to specific buckets, but not this one. To fix this issue:\n\n1. Log in to your {brand_name} account\n2. Check your application key restrictions\n3. Either use a different bucket that your key can access, or create a new application key with access to {bucket_name}\n4. Go to Settings > Devices & Services > {brand_name} and reconfigure the integration settings\n\nOnce you update the integration settings, this issue will be automatically resolved.",
+      "title": "{brand_name} bucket access restricted"
+    },
+    "bucket_not_found": {
+      "description": "The {brand_name} bucket {bucket_name} cannot be found or accessed. This could mean:\n\n1. The bucket was deleted\n2. The bucket name was changed\n3. Your credentials no longer have access to this bucket\n\nTo fix this issue:\n\n1. Log in to your {brand_name} account\n2. Verify the bucket still exists and check its name\n3. Ensure your application key has access to this bucket\n4. Go to Settings > Devices & Services > {brand_name} and reconfigure the integration settings\n\nOnce you update the integration settings, this issue will be automatically resolved.",
+      "title": "{brand_name} bucket not found"
+    }
+  }
+}

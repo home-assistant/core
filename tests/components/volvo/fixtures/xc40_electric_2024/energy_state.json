@@ -1,0 +1,58 @@
+{
+  "batteryChargeLevel": {
+    "status": "OK",
+    "value": 53,
+    "unit": "percentage",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "electricRange": {
+    "status": "OK",
+    "value": 150,
+    "unit": "mi",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "chargerConnectionStatus": {
+    "status": "OK",
+    "value": "CONNECTED",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "chargingStatus": {
+    "status": "OK",
+    "value": "CHARGING",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "chargingType": {
+    "status": "OK",
+    "value": "AC",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "chargerPowerStatus": {
+    "status": "OK",
+    "value": "PROVIDING_POWER",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "estimatedChargingTimeToTargetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 1440,
+    "unit": "minutes",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  },
+  "chargingCurrentLimit": {
+    "status": "OK",
+    "value": 32,
+    "unit": "ampere",
+    "updatedAt": "2024-03-05T08:38:44Z"
+  },
+  "targetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 90,
+    "unit": "percentage",
+    "updatedAt": "2024-09-22T09:40:12Z"
+  },
+  "chargingPower": {
+    "status": "OK",
+    "value": 1386,
+    "unit": "watts",
+    "updatedAt": "2025-07-02T08:51:23Z"
+  }
+}

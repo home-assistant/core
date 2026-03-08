@@ -9,12 +9,23 @@ from datetime import datetime, timedelta
 from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
+import math
 from operator import itemgetter
 import re
 from time import time as time_time
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
-from sqlalchemy import Select, and_, bindparam, func, lambda_stmt, select, text
+from sqlalchemy import (
+    Label,
+    Select,
+    and_,
+    bindparam,
+    case,
+    func,
+    lambda_stmt,
+    select,
+    text,
+)
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.session import Session
@@ -24,14 +35,19 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.collection import chunked_or_all
+from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -42,10 +58,18 @@ from homeassistant.util.unit_conversion import (
     EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
@@ -59,6 +83,7 @@ from .const import (
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,
     INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
+    MAX_IDS_FOR_INDEXED_GROUP_BY,
     SupportedDialect,
 )
 from .db_schema import (
@@ -72,6 +97,7 @@ from .db_schema import (
 from .models import (
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     StatisticResult,
     datetime_to_timestamp_or_none,
@@ -111,11 +137,53 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.sum,
 )
 
+
+def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
+    """Return the sqlalchemy function for circular mean and the mean_weight.
+
+    The result must be modulo 360 to normalize the result [0, 360].
+    """
+    # Postgres doesn't support modulo for double precision and
+    # the other dbs return the remainder instead of the modulo
+    # meaning negative values are possible. For these reason
+    # we need to normalize the result to be in the range [0, 360)
+    # in Python.
+    # https://en.wikipedia.org/wiki/Circular_mean
+    radians = func.radians(table.mean)
+    weighted_sum_sin = func.sum(func.sin(radians) * table.mean_weight)
+    weighted_sum_cos = func.sum(func.cos(radians) * table.mean_weight)
+    weight = func.sqrt(
+        func.power(weighted_sum_sin, 2) + func.power(weighted_sum_cos, 2)
+    )
+    return (
+        func.degrees(func.atan2(weighted_sum_sin, weighted_sum_cos)).label("mean"),
+        weight.label("mean_weight"),
+    )
+
+
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
-    func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
     func.max(StatisticsShortTerm.max),
+    case(
+        (
+            StatisticsMeta.mean_type == StatisticMeanType.ARITHMETIC,
+            func.avg(StatisticsShortTerm.mean),
+        ),
+        (
+            StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
+            query_circular_mean(StatisticsShortTerm)[0],
+        ),
+        else_=None,
+    ),
+    case(
+        (
+            StatisticsMeta.mean_type == StatisticMeanType.CIRCULAR,
+            query_circular_mean(StatisticsShortTerm)[1],
+        ),
+        else_=None,
+    ),
+    StatisticsMeta.mean_type,
 )
 
 QUERY_STATISTICS_SUMMARY_SUM = (
@@ -132,40 +200,55 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     .label("rownum"),
 )
 
+_PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    ConductivityConverter,
+    DataRateConverter,
+    DistanceConverter,
+    DurationConverter,
+    ElectricCurrentConverter,
+    ElectricPotentialConverter,
+    EnergyConverter,
+    EnergyDistanceConverter,
+    InformationConverter,
+    MassConverter,
+    MassVolumeConcentrationConverter,
+    PowerConverter,
+    PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
+    SpeedConverter,
+    TemperatureConverter,
+    UnitlessRatioConverter,
+    VolumeConverter,
+    VolumeFlowRateConverter,
+]
+
+_SECONDARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
+    CarbonMonoxideConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
+    SulphurDioxideConcentrationConverter,
+    TemperatureDeltaConverter,
+]
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
-    **{unit: AreaConverter for unit in AreaConverter.VALID_UNITS},
-    **{
-        unit: BloodGlucoseConcentrationConverter
-        for unit in BloodGlucoseConcentrationConverter.VALID_UNITS
-    },
-    **{unit: ConductivityConverter for unit in ConductivityConverter.VALID_UNITS},
-    **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
-    **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
-    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
-    **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
-    **{
-        unit: ElectricPotentialConverter
-        for unit in ElectricPotentialConverter.VALID_UNITS
-    },
-    **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
-    **{unit: EnergyDistanceConverter for unit in EnergyDistanceConverter.VALID_UNITS},
-    **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
-    **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
-    **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
-    **{unit: PressureConverter for unit in PressureConverter.VALID_UNITS},
-    **{unit: SpeedConverter for unit in SpeedConverter.VALID_UNITS},
-    **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
-    **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
-    **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
-    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
+    unit: conv for conv in _PRIMARY_UNIT_CONVERTERS for unit in conv.VALID_UNITS
 }
+"""Map of units to unit converter.
 
+This map includes units which can be converted without knowing the unit class.
+"""
 
-UNIT_CLASSES = {
-    unit: converter.UNIT_CLASS
-    for unit, converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.items()
+UNIT_CLASS_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    conv.UNIT_CLASS: conv
+    for conv in chain(_PRIMARY_UNIT_CONVERTERS, _SECONDARY_UNIT_CONVERTERS)
 }
+"""Map of unit class to converter."""
+
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
 
@@ -179,6 +262,26 @@ def mean(values: list[float]) -> float | None:
     an order of magnitude slower.
     """
     return sum(values) / len(values)
+
+
+DEG_TO_RAD = math.pi / 180
+RAD_TO_DEG = 180 / math.pi
+
+
+def weighted_circular_mean(
+    values: Iterable[tuple[float, float]],
+) -> tuple[float, float]:
+    """Return the weighted circular mean and the weight of the values."""
+    weighted_sin_sum, weighted_cos_sum = 0.0, 0.0
+    for x, weight in values:
+        rad_x = x * DEG_TO_RAD
+        weighted_sin_sum += math.sin(rad_x) * weight
+        weighted_cos_sum += math.cos(rad_x) * weight
+
+    return (
+        (RAD_TO_DEG * math.atan2(weighted_sin_sum, weighted_cos_sum)) % 360,
+        math.sqrt(weighted_sin_sum**2 + weighted_cos_sum**2),
+    )
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -227,17 +330,36 @@ class StatisticsRow(BaseStatisticsRow, total=False):
     min: float | None
     max: float | None
     mean: float | None
+    mean_weight: float | None
     change: float | None
+
+
+def _get_unit_converter(
+    unit_class: str | None, from_unit: str | None
+) -> type[BaseUnitConverter] | None:
+    """Return the unit converter for the given unit class and unit.
+
+    The unit converter is determined from the unit class and unit if the unit class
+    and unit match, otherwise from the unit.
+    """
+    if (
+        conv := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)
+    ) is not None and from_unit in conv.VALID_UNITS:
+        return conv
+    if (conv := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(from_unit)) is not None:
+        return conv
+    return None
 
 
 def get_display_unit(
     hass: HomeAssistant,
     statistic_id: str,
+    unit_class: str | None,
     statistic_unit: str | None,
 ) -> str | None:
     """Return the unit which the statistic will be displayed in."""
 
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return statistic_unit
 
     state_unit: str | None = statistic_unit
@@ -252,13 +374,14 @@ def get_display_unit(
 
 
 def _get_statistic_to_display_unit_converter(
+    unit_class: str | None,
     statistic_unit: str | None,
     state_unit: str | None,
     requested_units: dict[str, str] | None,
     allow_none: bool = True,
 ) -> Callable[[float | None], float | None] | Callable[[float], float] | None:
     """Prepare a converter from the statistics unit to display unit."""
-    if (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None:
+    if (converter := _get_unit_converter(unit_class, statistic_unit)) is None:
         return None
 
     display_unit: str | None
@@ -282,24 +405,25 @@ def _get_statistic_to_display_unit_converter(
     return converter.converter_factory(from_unit=statistic_unit, to_unit=display_unit)
 
 
-def _get_display_to_statistic_unit_converter(
+def _get_display_to_statistic_unit_converter_func(
+    unit_class: str | None,
     display_unit: str | None,
     statistic_unit: str | None,
 ) -> Callable[[float], float] | None:
     """Prepare a converter from the display unit to the statistics unit."""
     if (
         display_unit == statistic_unit
-        or (converter := STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistic_unit)) is None
+        or (converter := _get_unit_converter(unit_class, statistic_unit)) is None
     ):
         return None
     return converter.converter_factory(from_unit=display_unit, to_unit=statistic_unit)
 
 
-def _get_unit_converter(
-    from_unit: str, to_unit: str
+def _get_unit_converter_func(
+    unit_class: str | None, from_unit: str, to_unit: str
 ) -> Callable[[float | None], float | None] | None:
     """Prepare a converter from a unit to another unit."""
-    for conv in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+    if (conv := _get_unit_converter(unit_class, from_unit)) is not None:
         if from_unit in conv.VALID_UNITS and to_unit in conv.VALID_UNITS:
             if from_unit == to_unit:
                 return None
@@ -309,9 +433,11 @@ def _get_unit_converter(
     raise HomeAssistantError
 
 
-def can_convert_units(from_unit: str | None, to_unit: str | None) -> bool:
+def can_convert_units(
+    unit_class: str | None, from_unit: str | None, to_unit: str | None
+) -> bool:
     """Return True if it's possible to convert from from_unit to to_unit."""
-    for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
+    if (converter := _get_unit_converter(unit_class, from_unit)) is not None:
         if from_unit in converter.VALID_UNITS and to_unit in converter.VALID_UNITS:
             return True
     return False
@@ -373,12 +499,23 @@ def _compile_hourly_statistics_summary_mean_stmt(
     start_time_ts: float, end_time_ts: float
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
+    # Due the fact that we support different mean type (See StatisticMeanType)
+    # we need to join here with the StatisticsMeta table to get the mean type
+    # and then use a case statement to compute the mean based on the mean type.
+    # As we use the StatisticsMeta.mean_type in the select case statement we need
+    # to group by it as well.
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
-        .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-        .filter(StatisticsShortTerm.start_ts < end_time_ts)
-        .group_by(StatisticsShortTerm.metadata_id)
-        .order_by(StatisticsShortTerm.metadata_id)
+        lambda: (
+            select(*QUERY_STATISTICS_SUMMARY_MEAN)
+            .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+            .filter(StatisticsShortTerm.start_ts < end_time_ts)
+            .join(
+                StatisticsMeta,
+                and_(StatisticsShortTerm.metadata_id == StatisticsMeta.id),
+            )
+            .group_by(StatisticsShortTerm.metadata_id, StatisticsMeta.mean_type)
+            .order_by(StatisticsShortTerm.metadata_id)
+        )
     )
 
 
@@ -387,16 +524,18 @@ def _compile_hourly_statistics_last_sum_stmt(
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
     return lambda_stmt(
-        lambda: select(
-            subquery := (
-                select(*QUERY_STATISTICS_SUMMARY_SUM)
-                .filter(StatisticsShortTerm.start_ts >= start_time_ts)
-                .filter(StatisticsShortTerm.start_ts < end_time_ts)
-                .subquery()
+        lambda: (
+            select(
+                subquery := (
+                    select(*QUERY_STATISTICS_SUMMARY_SUM)
+                    .filter(StatisticsShortTerm.start_ts >= start_time_ts)
+                    .filter(StatisticsShortTerm.start_ts < end_time_ts)
+                    .subquery()
+                )
             )
+            .filter(subquery.c.rownum == 1)
+            .order_by(subquery.c.metadata_id)
         )
-        .filter(subquery.c.rownum == 1)
-        .order_by(subquery.c.metadata_id)
     )
 
 
@@ -419,10 +558,17 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
     if stats:
         for stat in stats:
-            metadata_id, _mean, _min, _max = stat
+            metadata_id, _min, _max, _mean, _mean_weight, _mean_type = stat
+            if (
+                try_parse_enum(StatisticMeanType, _mean_type)
+                is StatisticMeanType.CIRCULAR
+            ):
+                # Normalize the circular mean to be in the range [0, 360)
+                _mean = _mean % 360
             summary[metadata_id] = {
                 "start_ts": start_time_ts,
                 "mean": _mean,
+                "mean_weight": _mean_weight,
                 "min": _min,
                 "max": _max,
             }
@@ -763,18 +909,71 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
         instance.statistics_meta_manager.delete(session, statistic_ids)
 
 
+@callback
+def async_update_statistics_metadata(
+    hass: HomeAssistant,
+    statistic_id: str,
+    *,
+    new_statistic_id: str | UndefinedType = UNDEFINED,
+    new_unit_class: str | None | UndefinedType = UNDEFINED,
+    new_unit_of_measurement: str | None | UndefinedType = UNDEFINED,
+    on_done: Callable[[], None] | None = None,
+    _called_from_ws_api: bool = False,
+) -> None:
+    """Update statistics metadata for a statistic_id."""
+    if new_unit_of_measurement is not UNDEFINED and new_unit_class is UNDEFINED:
+        if not _called_from_ws_api:
+            report_usage(
+                (
+                    "doesn't specify unit_class when calling "
+                    "async_update_statistics_metadata"
+                ),
+                breaks_in_ha_version="2026.11",
+                exclude_integrations={DOMAIN},
+            )
+
+        unit = new_unit_of_measurement
+        if unit in STATISTIC_UNIT_TO_UNIT_CONVERTER:
+            new_unit_class = STATISTIC_UNIT_TO_UNIT_CONVERTER[unit].UNIT_CLASS
+        else:
+            new_unit_class = None
+
+    if TYPE_CHECKING:
+        # After the above check, new_unit_class is guaranteed to not be UNDEFINED
+        assert new_unit_class is not UNDEFINED
+
+    if new_unit_of_measurement is not UNDEFINED and new_unit_class is not None:
+        if (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(new_unit_class)) is None:
+            raise HomeAssistantError(f"Unsupported unit_class: '{new_unit_class}'")
+
+        if new_unit_of_measurement not in converter.VALID_UNITS:
+            raise HomeAssistantError(
+                f"Unsupported unit_of_measurement '{new_unit_of_measurement}' "
+                f"for unit_class '{new_unit_class}'"
+            )
+
+    get_instance(hass).async_update_statistics_metadata(
+        statistic_id,
+        new_statistic_id=new_statistic_id,
+        new_unit_class=new_unit_class,
+        new_unit_of_measurement=new_unit_of_measurement,
+        on_done=on_done,
+    )
+
+
 def update_statistics_metadata(
     instance: Recorder,
     statistic_id: str,
     new_statistic_id: str | None | UndefinedType,
+    new_unit_class: str | None | UndefinedType,
     new_unit_of_measurement: str | None | UndefinedType,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     statistics_meta_manager = instance.statistics_meta_manager
-    if new_unit_of_measurement is not UNDEFINED:
+    if new_unit_class is not UNDEFINED and new_unit_of_measurement is not UNDEFINED:
         with session_scope(session=instance.get_session()) as session:
             statistics_meta_manager.update_unit_of_measurement(
-                session, statistic_id, new_unit_of_measurement
+                session, statistic_id, new_unit_class, new_unit_of_measurement
             )
     if new_statistic_id is not UNDEFINED and new_statistic_id is not None:
         with session_scope(
@@ -826,13 +1025,16 @@ def _statistic_by_id_from_metadata(
     return {
         meta["statistic_id"]: {
             "display_unit_of_measurement": get_display_unit(
-                hass, meta["statistic_id"], meta["unit_of_measurement"]
+                hass,
+                meta["statistic_id"],
+                meta["unit_class"],
+                meta["unit_of_measurement"],
             ),
-            "has_mean": meta["has_mean"],
+            "mean_type": meta["mean_type"],
             "has_sum": meta["has_sum"],
             "name": meta["name"],
             "source": meta["source"],
-            "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
+            "unit_class": meta["unit_class"],
             "unit_of_measurement": meta["unit_of_measurement"],
         }
         for _, meta in metadata.values()
@@ -847,7 +1049,9 @@ def _flatten_list_statistic_ids_metadata_result(
         {
             "statistic_id": _id,
             "display_unit_of_measurement": info["display_unit_of_measurement"],
-            "has_mean": info["has_mean"],
+            "has_mean": info["mean_type"]
+            == StatisticMeanType.ARITHMETIC,  # Can be removed with 2026.4
+            "mean_type": info["mean_type"],
             "has_sum": info["has_sum"],
             "name": info.get("name"),
             "source": info["source"],
@@ -902,11 +1106,11 @@ def list_statistic_ids(
                     continue
                 result[key] = {
                     "display_unit_of_measurement": meta["unit_of_measurement"],
-                    "has_mean": meta["has_mean"],
+                    "mean_type": meta["mean_type"],
                     "has_sum": meta["has_sum"],
                     "name": meta["name"],
                     "source": meta["source"],
-                    "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
+                    "unit_class": meta["unit_class"],
                     "unit_of_measurement": meta["unit_of_measurement"],
                 }
 
@@ -920,6 +1124,7 @@ def _reduce_statistics(
     period_start_end: Callable[[float], tuple[float, float]],
     period: timedelta,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily or monthly statistics."""
     result: dict[str, list[StatisticsRow]] = defaultdict(list)
@@ -932,7 +1137,7 @@ def _reduce_statistics(
     _want_sum = "sum" in types
     for statistic_id, stat_list in stats.items():
         max_values: list[float] = []
-        mean_values: list[float] = []
+        mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
         fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
@@ -947,7 +1152,16 @@ def _reduce_statistics(
                     "end": end,
                 }
                 if _want_mean:
-                    row["mean"] = mean(mean_values) if mean_values else None
+                    row["mean"] = None
+                    row["mean_weight"] = None
+                    if mean_values:
+                        match metadata[statistic_id][1]["mean_type"]:
+                            case StatisticMeanType.ARITHMETIC:
+                                row["mean"] = mean([x[0] for x in mean_values])
+                            case StatisticMeanType.CIRCULAR:
+                                row["mean"], row["mean_weight"] = (
+                                    weighted_circular_mean(mean_values)
+                                )
                     mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
@@ -964,8 +1178,10 @@ def _reduce_statistics(
                 result[statistic_id].append(row)
             if _want_max and (_max := statistic.get("max")) is not None:
                 max_values.append(_max)
-            if _want_mean and (_mean := statistic.get("mean")) is not None:
-                mean_values.append(_mean)
+            if _want_mean:
+                if (_mean := statistic.get("mean")) is not None:
+                    _mean_weight = statistic.get("mean_weight") or 0.0
+                    mean_values.append((_mean, _mean_weight))
             if _want_min and (_min := statistic.get("min")) is not None:
                 min_values.append(_min)
             prev_stat = statistic
@@ -1012,11 +1228,12 @@ def reduce_day_ts_factory() -> tuple[
 def _reduce_statistics_per_day(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to daily statistics."""
     _same_day_ts, _day_start_end_ts = reduce_day_ts_factory()
     return _reduce_statistics(
-        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types
+        stats, _same_day_ts, _day_start_end_ts, timedelta(days=1), types, metadata
     )
 
 
@@ -1060,11 +1277,12 @@ def reduce_week_ts_factory() -> tuple[
 def _reduce_statistics_per_week(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to weekly statistics."""
     _same_week_ts, _week_start_end_ts = reduce_week_ts_factory()
     return _reduce_statistics(
-        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types
+        stats, _same_week_ts, _week_start_end_ts, timedelta(days=7), types, metadata
     )
 
 
@@ -1113,11 +1331,60 @@ def reduce_month_ts_factory() -> tuple[
 def _reduce_statistics_per_month(
     stats: dict[str, list[StatisticsRow]],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
 ) -> dict[str, list[StatisticsRow]]:
     """Reduce hourly statistics to monthly statistics."""
     _same_month_ts, _month_start_end_ts = reduce_month_ts_factory()
     return _reduce_statistics(
-        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types
+        stats, _same_month_ts, _month_start_end_ts, timedelta(days=31), types, metadata
+    )
+
+
+def reduce_year_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
+    """Return functions to match same year and year start end."""
+    _lower_bound: float = 0
+    _upper_bound: float = 0
+
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
+    )
+
+    def _same_year_ts(time1: float, time2: float) -> bool:
+        """Return True if time1 and time2 are in the same year."""
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _year_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
+
+    def _year_start_end_ts(time: float) -> tuple[float, float]:
+        """Return the start and end of the period (year) time is within."""
+        start_local = _local_from_timestamp(time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return (
+            start_local.timestamp(),
+            (start_local.replace(year=start_local.year + 1)).timestamp(),
+        )
+
+    # We create _year_start_end_ts_cached in the closure in case the timezone changes
+    _year_start_end_ts_cached = lru_cache(maxsize=6)(_year_start_end_ts)
+
+    return _same_year_ts, _year_start_end_ts_cached
+
+
+def _reduce_statistics_per_year(
+    stats: dict[str, list[StatisticsRow]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+) -> dict[str, list[StatisticsRow]]:
+    """Reduce hourly statistics to yearly statistics."""
+    _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
+    return _reduce_statistics(
+        stats, _same_year_ts, _year_start_end_ts, timedelta(days=366), types, metadata
     )
 
 
@@ -1161,27 +1428,41 @@ def _generate_max_mean_min_statistic_in_sub_period_stmt(
     return stmt
 
 
+class _MaxMinMeanStatisticSubPeriod(TypedDict, total=False):
+    max: float
+    mean_acc: float
+    min: float
+    duration: float
+    circular_means: Required[list[tuple[float, float]]]
+
+
 def _get_max_mean_min_statistic_in_sub_period(
     session: Session,
-    result: dict[str, float],
+    result: _MaxMinMeanStatisticSubPeriod,
     start_time: datetime | None,
     end_time: datetime | None,
     table: type[StatisticsBase],
     types: set[Literal["max", "mean", "min", "change"]],
-    metadata_id: int,
+    metadata: tuple[int, StatisticMetaData],
 ) -> None:
     """Return max, mean and min during the period."""
     # Calculate max, mean, min
+    mean_type = metadata[1]["mean_type"]
     columns = select()
     if "max" in types:
         columns = columns.add_columns(func.max(table.max))
     if "mean" in types:
-        columns = columns.add_columns(func.avg(table.mean))
-        columns = columns.add_columns(func.count(table.mean))
+        match mean_type:
+            case StatisticMeanType.ARITHMETIC:
+                columns = columns.add_columns(func.avg(table.mean))
+                columns = columns.add_columns(func.count(table.mean))
+            case StatisticMeanType.CIRCULAR:
+                columns = columns.add_columns(*query_circular_mean(table))
     if "min" in types:
         columns = columns.add_columns(func.min(table.min))
+
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
-        columns, start_time, end_time, table, metadata_id
+        columns, start_time, end_time, table, metadata[0]
     )
     stats = cast(Sequence[Row[Any]], execute_stmt_lambda_element(session, stmt))
     if not stats:
@@ -1189,11 +1470,21 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "max" in types and (new_max := stats[0].max) is not None:
         old_max = result.get("max")
         result["max"] = max(new_max, old_max) if old_max is not None else new_max
-    if "mean" in types and stats[0].avg is not None:
+    if "mean" in types:
         # https://github.com/sqlalchemy/sqlalchemy/issues/9127
-        duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
-        result["duration"] = result.get("duration", 0.0) + duration
-        result["mean_acc"] = result.get("mean_acc", 0.0) + stats[0].avg * duration
+        match mean_type:
+            case StatisticMeanType.ARITHMETIC:
+                duration = stats[0].count * table.duration.total_seconds()  # type: ignore[operator]
+                if stats[0].avg is not None:
+                    result["duration"] = result.get("duration", 0.0) + duration
+                    result["mean_acc"] = (
+                        result.get("mean_acc", 0.0) + stats[0].avg * duration
+                    )
+            case StatisticMeanType.CIRCULAR:
+                if (new_circular_mean := stats[0].mean) is not None and (
+                    weight := stats[0].mean_weight
+                ) is not None:
+                    result["circular_means"].append((new_circular_mean, weight))
     if "min" in types and (new_min := stats[0].min) is not None:
         old_min = result.get("min")
         result["min"] = min(new_min, old_min) if old_min is not None else new_min
@@ -1208,15 +1499,15 @@ def _get_max_mean_min_statistic(
     tail_start_time: datetime | None,
     tail_end_time: datetime | None,
     tail_only: bool,
-    metadata_id: int,
+    metadata: tuple[int, StatisticMetaData],
     types: set[Literal["max", "mean", "min", "change"]],
 ) -> dict[str, float | None]:
     """Return max, mean and min during the period.
 
-    The mean is a time weighted average, combining hourly and 5-minute statistics if
+    The mean is time weighted, combining hourly and 5-minute statistics if
     necessary.
     """
-    max_mean_min: dict[str, float] = {}
+    max_mean_min = _MaxMinMeanStatisticSubPeriod(circular_means=[])
     result: dict[str, float | None] = {}
 
     if tail_start_time is not None:
@@ -1228,7 +1519,7 @@ def _get_max_mean_min_statistic(
             tail_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
         )
 
     if not tail_only:
@@ -1239,7 +1530,7 @@ def _get_max_mean_min_statistic(
             main_end_time,
             Statistics,
             types,
-            metadata_id,
+            metadata,
         )
 
     if head_start_time is not None:
@@ -1250,16 +1541,23 @@ def _get_max_mean_min_statistic(
             head_end_time,
             StatisticsShortTerm,
             types,
-            metadata_id,
+            metadata,
         )
 
     if "max" in types:
         result["max"] = max_mean_min.get("max")
     if "mean" in types:
-        if "mean_acc" not in max_mean_min:
-            result["mean"] = None
-        else:
-            result["mean"] = max_mean_min["mean_acc"] / max_mean_min["duration"]
+        mean_value = None
+        match metadata[1]["mean_type"]:
+            case StatisticMeanType.CIRCULAR:
+                if circular_means := max_mean_min["circular_means"]:
+                    mean_value = weighted_circular_mean(circular_means)[0]
+            case StatisticMeanType.ARITHMETIC:
+                if (mean_value := max_mean_min.get("mean_acc")) is not None and (
+                    duration := max_mean_min.get("duration")
+                ) is not None:
+                    mean_value = mean_value / duration
+        result["mean"] = mean_value
     if "min" in types:
         result["min"] = max_mean_min.get("min")
     return result
@@ -1272,10 +1570,12 @@ def _first_statistic(
 ) -> datetime | None:
     """Return the date of the oldest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        lambda: select(table.start_ts)
-        .filter(table.metadata_id == metadata_id)
-        .order_by(table.start_ts.asc())
-        .limit(1)
+        lambda: (
+            select(table.start_ts)
+            .filter(table.metadata_id == metadata_id)
+            .order_by(table.start_ts.asc())
+            .limit(1)
+        )
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
         return dt_util.utc_from_timestamp(stats[0].start_ts)
@@ -1289,10 +1589,12 @@ def _last_statistic(
 ) -> datetime | None:
     """Return the date of the newest statistic row for a given metadata id."""
     stmt = lambda_stmt(
-        lambda: select(table.start_ts)
-        .filter(table.metadata_id == metadata_id)
-        .order_by(table.start_ts.desc())
-        .limit(1)
+        lambda: (
+            select(table.start_ts)
+            .filter(table.metadata_id == metadata_id)
+            .order_by(table.start_ts.desc())
+            .limit(1)
+        )
     )
     if stats := cast(Sequence[Row], execute_stmt_lambda_element(session, stmt)):
         return dt_util.utc_from_timestamp(stats[0].start_ts)
@@ -1319,11 +1621,13 @@ def _get_oldest_sum_statistic(
     ) -> float | None:
         """Return the oldest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(table.sum)
-            .filter(table.metadata_id == metadata_id)
-            .filter(table.sum.is_not(None))
-            .order_by(table.start_ts.asc())
-            .limit(1)
+            lambda: (
+                select(table.sum)
+                .filter(table.metadata_id == metadata_id)
+                .filter(table.sum.is_not(None))
+                .order_by(table.start_ts.asc())
+                .limit(1)
+            )
         )
         if start_time is not None:
             start_time = start_time + table.duration - timedelta.resolution
@@ -1412,13 +1716,15 @@ def _get_newest_sum_statistic(
     ) -> float | None:
         """Return the newest non-NULL sum during the period."""
         stmt = lambda_stmt(
-            lambda: select(
-                table.sum,
+            lambda: (
+                select(
+                    table.sum,
+                )
+                .filter(table.metadata_id == metadata_id)
+                .filter(table.sum.is_not(None))
+                .order_by(table.start_ts.desc())
+                .limit(1)
             )
-            .filter(table.metadata_id == metadata_id)
-            .filter(table.sum.is_not(None))
-            .order_by(table.start_ts.desc())
-            .limit(1)
         )
         if start_time is not None:
             start_time_ts = start_time.timestamp()
@@ -1560,7 +1866,7 @@ def statistic_during_period(
                 tail_start_time,
                 tail_end_time,
                 tail_only,
-                metadata_id,
+                metadata,
                 types,
             )
 
@@ -1596,10 +1902,13 @@ def statistic_during_period(
             else:
                 result["change"] = None
 
+    unit_class = metadata[1]["unit_class"]
     state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-    convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+    convert = _get_statistic_to_display_unit_converter(
+        unit_class, unit, state_unit, units
+    )
 
     if not convert:
         return result
@@ -1607,12 +1916,12 @@ def statistic_during_period(
 
 
 _type_column_mapping = {
-    "last_reset": "last_reset_ts",
-    "max": "max",
-    "mean": "mean",
-    "min": "min",
-    "state": "state",
-    "sum": "sum",
+    "last_reset": ("last_reset_ts",),
+    "max": ("max",),
+    "mean": ("mean", "mean_weight"),
+    "min": ("min",),
+    "state": ("state",),
+    "sum": ("sum",),
 }
 
 
@@ -1624,12 +1933,13 @@ def _generate_select_columns_for_types_stmt(
     track_on: list[str | None] = [
         table.__tablename__,  # type: ignore[attr-defined]
     ]
-    for key, column in _type_column_mapping.items():
-        if key in types:
-            columns = columns.add_columns(getattr(table, column))
-            track_on.append(column)
-        else:
-            track_on.append(None)
+    for key, type_columns in _type_column_mapping.items():
+        for column in type_columns:
+            if key in types:
+                columns = columns.add_columns(getattr(table, column))
+                track_on.append(column)
+            else:
+                track_on.append(None)
     return lambda_stmt(lambda: columns, track_on=track_on)
 
 
@@ -1643,7 +1953,7 @@ def _extract_metadata_and_discard_impossible_columns(
     has_sum = False
     for metadata_id, stats_metadata in metadata.values():
         metadata_ids.append(metadata_id)
-        has_mean |= stats_metadata["has_mean"]
+        has_mean |= stats_metadata["mean_type"] is not StatisticMeanType.NONE
         has_sum |= stats_metadata["has_sum"]
     if not has_mean:
         types.discard("mean")
@@ -1669,6 +1979,7 @@ def _augment_result_with_change(
     drop_sum = "sum" not in _types
     prev_sums = {}
     if tmp := _statistics_at_time(
+        get_instance(hass),
         session,
         {metadata[statistic_id][0] for statistic_id in result},
         table,
@@ -1680,10 +1991,13 @@ def _augment_result_with_change(
             metadata_by_id = _metadata[row.metadata_id]
             statistic_id = metadata_by_id["statistic_id"]
 
+            unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            convert = _get_statistic_to_display_unit_converter(unit, state_unit, units)
+            convert = _get_statistic_to_display_unit_converter(
+                unit_class, unit, state_unit, units
+            )
 
             if convert is not None:
                 prev_sums[statistic_id] = convert(row.sum)
@@ -1712,7 +2026,7 @@ def _statistics_during_period_with_session(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -1773,6 +2087,22 @@ def _statistics_during_period_with_session(
         if end_time is not None:
             end_time = _find_month_end_time(dt_util.as_local(end_time))
 
+    elif period == "year":
+        start_time = dt_util.as_local(start_time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        if end_time is not None:
+            end_local = dt_util.as_local(end_time)
+            end_time = end_local.replace(
+                year=end_local.year + 1,
+                month=1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
@@ -1798,18 +2128,27 @@ def _statistics_during_period_with_session(
     )
 
     if period == "day":
-        result = _reduce_statistics_per_day(result, types)
+        result = _reduce_statistics_per_day(result, types, metadata)
 
     if period == "week":
-        result = _reduce_statistics_per_week(result, types)
+        result = _reduce_statistics_per_week(result, types, metadata)
 
     if period == "month":
-        result = _reduce_statistics_per_month(result, types)
+        result = _reduce_statistics_per_month(result, types, metadata)
+
+    if period == "year":
+        result = _reduce_statistics_per_year(result, types, metadata)
 
     if "change" in _types:
         _augment_result_with_change(
             hass, session, start_time, units, _types, table, metadata, result
         )
+
+    # filter out mean_weight as it is only needed to reduce statistics
+    # and not needed in the result
+    for stats_rows in result.values():
+        for row in stats_rows:
+            row.pop("mean_weight", None)
 
     # Return statistics combined with metadata
     return result
@@ -1820,7 +2159,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -1848,10 +2187,12 @@ def _get_last_statistics_stmt(
 ) -> StatementLambdaElement:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(Statistics.metadata_id, Statistics.start_ts.desc())
-        .limit(number_of_stats)
+        lambda: (
+            select(*QUERY_STATISTICS)
+            .filter_by(metadata_id=metadata_id)
+            .order_by(Statistics.metadata_id, Statistics.start_ts.desc())
+            .limit(number_of_stats)
+        )
     )
 
 
@@ -1864,10 +2205,14 @@ def _get_last_statistics_short_term_stmt(
     For a given statistic_id.
     """
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SHORT_TERM)
-        .filter_by(metadata_id=metadata_id)
-        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts.desc())
-        .limit(number_of_stats)
+        lambda: (
+            select(*QUERY_STATISTICS_SHORT_TERM)
+            .filter_by(metadata_id=metadata_id)
+            .order_by(
+                StatisticsShortTerm.metadata_id, StatisticsShortTerm.start_ts.desc()
+            )
+            .limit(number_of_stats)
+        )
     )
 
 
@@ -2027,7 +2372,39 @@ def get_latest_short_term_statistics_with_session(
     )
 
 
-def _generate_statistics_at_time_stmt(
+def _generate_statistics_at_time_stmt_group_by(
+    table: type[StatisticsBase],
+    metadata_ids: set[int],
+    start_time_ts: float,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> StatementLambdaElement:
+    """Create the statement for finding the statistics for a given time."""
+    # Simple group-by for MySQL, must use less
+    # than 1000 metadata_ids in the IN clause for MySQL
+    # or it will optimize poorly. Callers are responsible
+    # for ensuring that the number of metadata_ids is less
+    # than 1000.
+    return _generate_select_columns_for_types_stmt(table, types) + (
+        lambda q: q.join(
+            most_recent_statistic_ids := (
+                select(
+                    func.max(table.start_ts).label("max_start_ts"),
+                    table.metadata_id.label("max_metadata_id"),
+                )
+                .filter(table.start_ts < start_time_ts)
+                .filter(table.metadata_id.in_(metadata_ids))
+                .group_by(table.metadata_id)
+                .subquery()
+            ),
+            and_(
+                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+            ),
+        )
+    )
+
+
+def _generate_statistics_at_time_stmt_dependent_sub_query(
     table: type[StatisticsBase],
     metadata_ids: set[int],
     start_time_ts: float,
@@ -2041,33 +2418,34 @@ def _generate_statistics_at_time_stmt(
     # databases. Since all databases support this query as a join
     # condition we can use it as a subquery to get the last start_time_ts
     # before a specific point in time for all entities.
-    stmt = _generate_select_columns_for_types_stmt(table, types)
-    stmt += (
-        lambda q: q.select_from(StatisticsMeta)
-        .join(
-            table,
-            and_(
-                table.start_ts
-                == (
-                    select(table.start_ts)
-                    .where(
-                        (StatisticsMeta.id == table.metadata_id)
-                        & (table.start_ts < start_time_ts)
+    return _generate_select_columns_for_types_stmt(table, types) + (
+        lambda q: (
+            q.select_from(StatisticsMeta)
+            .join(
+                table,
+                and_(
+                    table.start_ts
+                    == (
+                        select(table.start_ts)
+                        .where(
+                            (StatisticsMeta.id == table.metadata_id)
+                            & (table.start_ts < start_time_ts)
+                        )
+                        .order_by(table.start_ts.desc())
+                        .limit(1)
                     )
-                    .order_by(table.start_ts.desc())
-                    .limit(1)
-                )
-                .scalar_subquery()
-                .correlate(StatisticsMeta),
-                table.metadata_id == StatisticsMeta.id,
-            ),
+                    .scalar_subquery()
+                    .correlate(StatisticsMeta),
+                    table.metadata_id == StatisticsMeta.id,
+                ),
+            )
+            .where(table.metadata_id.in_(metadata_ids))
         )
-        .where(table.metadata_id.in_(metadata_ids))
     )
-    return stmt
 
 
 def _statistics_at_time(
+    instance: Recorder,
     session: Session,
     metadata_ids: set[int],
     table: type[StatisticsBase],
@@ -2076,8 +2454,41 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    stmt = _generate_statistics_at_time_stmt(table, metadata_ids, start_time_ts, types)
-    return cast(Sequence[Row], execute_stmt_lambda_element(session, stmt))
+    if TYPE_CHECKING:
+        assert instance.database_engine is not None
+    if not instance.database_engine.optimizer.slow_dependent_subquery:
+        stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
+            table=table,
+            metadata_ids=metadata_ids,
+            start_time_ts=start_time_ts,
+            types=types,
+        )
+        return cast(list[Row], execute_stmt_lambda_element(session, stmt))
+    rows: list[Row] = []
+    # https://github.com/home-assistant/core/issues/132865
+    # If we include the start time state we need to limit the
+    # number of metadata_ids we query for at a time to avoid
+    # hitting limits in the MySQL optimizer that prevent
+    # the start time state query from using an index-only optimization
+    # to find the start time state.
+    for metadata_ids_chunk in chunked_or_all(
+        metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY
+    ):
+        stmt = _generate_statistics_at_time_stmt_group_by(
+            table=table,
+            metadata_ids=metadata_ids_chunk,
+            start_time_ts=start_time_ts,
+            types=types,
+        )
+        row_chunk = cast(list[Row], execute_stmt_lambda_element(session, stmt))
+        if rows:
+            rows += row_chunk
+        else:
+            # If we have no rows yet, we can just assign the chunk
+            # as this is the common case since its rare that
+            # we exceed the MAX_IDS_FOR_INDEXED_GROUP_BY limit
+            rows = row_chunk
+    return rows
 
 
 def _build_sum_converted_stats(
@@ -2194,18 +2605,24 @@ def _sorted_statistics_to_dict(
         field_map["last_reset"] = field_map.pop("last_reset_ts")
     sum_idx = field_map["sum"] if "sum" in types else None
     sum_only = len(types) == 1 and sum_idx is not None
-    row_mapping = tuple((key, field_map[key]) for key in types if key in field_map)
+    row_mapping = tuple(
+        (column, field_map[column])
+        for key in types
+        for column in ({key, *_type_column_mapping.get(key, ())})
+        if column in field_map
+    )
     # Append all statistic entries, and optionally do unit conversion
     table_duration_seconds = table.duration.total_seconds()
     for meta_id, db_rows in stats_by_meta_id.items():
         metadata_by_id = metadata[meta_id]
         statistic_id = metadata_by_id["statistic_id"]
         if convert_units:
+            unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
                 state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             convert = _get_statistic_to_display_unit_converter(
-                unit, state_unit, units, allow_none=False
+                unit_class, unit, state_unit, units, allow_none=False
             )
         else:
             convert = None
@@ -2276,6 +2693,34 @@ def _async_import_statistics(
     statistics: Iterable[StatisticData],
 ) -> None:
     """Validate timestamps and insert an import_statistics job in the queue."""
+    if "mean_type" not in metadata:
+        metadata["mean_type"] = (  # type: ignore[unreachable]
+            StatisticMeanType.ARITHMETIC
+            if metadata.pop("has_mean", False)
+            else StatisticMeanType.NONE
+        )
+
+    # If unit class is not set, we try to set it based on the unit of measurement
+    # Note: This can't happen from the type checker's perspective, but we need
+    # to guard against custom integrations that have not been updated to set
+    # the unit_class.
+    if "unit_class" not in metadata:
+        unit = metadata["unit_of_measurement"]  # type: ignore[unreachable]
+        if unit in STATISTIC_UNIT_TO_UNIT_CONVERTER:
+            metadata["unit_class"] = STATISTIC_UNIT_TO_UNIT_CONVERTER[unit].UNIT_CLASS
+        else:
+            metadata["unit_class"] = None
+
+    if (unit_class := metadata["unit_class"]) is not None:
+        if (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)) is None:
+            raise HomeAssistantError(f"Unsupported unit_class: '{unit_class}'")
+
+        if metadata["unit_of_measurement"] not in converter.VALID_UNITS:
+            raise HomeAssistantError(
+                f"Unsupported unit_of_measurement '{metadata['unit_of_measurement']}' "
+                f"for unit_class '{unit_class}'"
+            )
+
     for statistic in statistics:
         start = statistic["start"]
         if start.tzinfo is None or start.tzinfo.utcoffset(start) is None:
@@ -2307,6 +2752,8 @@ def async_import_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Import hourly statistics from an internal source.
 
@@ -2319,6 +2766,19 @@ def async_import_statistics(
     if not metadata["source"] or metadata["source"] != DOMAIN:
         raise HomeAssistantError("Invalid source")
 
+    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify mean_type when calling async_import_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_import_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
+
     _async_import_statistics(hass, metadata, statistics)
 
 
@@ -2327,6 +2787,8 @@ def async_add_external_statistics(
     hass: HomeAssistant,
     metadata: StatisticMetaData,
     statistics: Iterable[StatisticData],
+    *,
+    _called_from_ws_api: bool = False,
 ) -> None:
     """Add hourly statistics from an external source.
 
@@ -2340,6 +2802,19 @@ def async_add_external_statistics(
     domain, _object_id = split_statistic_id(metadata["statistic_id"])
     if not metadata["source"] or metadata["source"] != domain:
         raise HomeAssistantError("Invalid source")
+
+    if "mean_type" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify mean_type when calling async_import_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
+    if "unit_class" not in metadata and not _called_from_ws_api:  # type: ignore[unreachable]
+        report_usage(  # type: ignore[unreachable]
+            "doesn't specify unit_class when calling async_add_external_statistics",
+            breaks_in_ha_version="2026.11",
+            exclude_integrations={DOMAIN},
+        )
 
     _async_import_statistics(hass, metadata, statistics)
 
@@ -2428,12 +2903,14 @@ def _find_latest_short_term_statistic_for_metadata_id_stmt(
     #
     #
     return lambda_stmt(
-        lambda: select(
-            StatisticsShortTerm.id,
+        lambda: (
+            select(
+                StatisticsShortTerm.id,
+            )
+            .where(StatisticsShortTerm.metadata_id == metadata_id)
+            .order_by(StatisticsShortTerm.start_ts.desc())
+            .limit(1)
         )
-        .where(StatisticsShortTerm.metadata_id == metadata_id)
-        .order_by(StatisticsShortTerm.start_ts.desc())
-        .limit(1)
     )
 
 
@@ -2474,9 +2951,10 @@ def adjust_statistics(
         if statistic_id not in metadata:
             return True
 
+        unit_class = metadata[statistic_id][1]["unit_class"]
         statistic_unit = metadata[statistic_id][1]["unit_of_measurement"]
-        if convert := _get_display_to_statistic_unit_converter(
-            adjustment_unit, statistic_unit
+        if convert := _get_display_to_statistic_unit_converter_func(
+            unit_class, adjustment_unit, statistic_unit
         ):
             sum_adjustment = convert(sum_adjustment)
 
@@ -2544,8 +3022,9 @@ def change_statistics_unit(
             return
 
         metadata_id = metadata[0]
+        unit_class = metadata[1]["unit_class"]
 
-        if not (convert := _get_unit_converter(old_unit, new_unit)):
+        if not (convert := _get_unit_converter_func(unit_class, old_unit, new_unit)):
             _LOGGER.warning(
                 "Statistics unit of measurement for %s is already %s",
                 statistic_id,
@@ -2561,12 +3040,14 @@ def change_statistics_unit(
             _change_statistics_unit_for_table(session, table, metadata_id, convert)
 
         statistics_meta_manager.update_unit_of_measurement(
-            session, statistic_id, new_unit
+            session,
+            statistic_id,
+            unit_class,
+            new_unit,
         )
 
 
-@callback
-def async_change_statistics_unit(
+async def async_change_statistics_unit(
     hass: HomeAssistant,
     statistic_id: str,
     *,
@@ -2574,7 +3055,17 @@ def async_change_statistics_unit(
     old_unit_of_measurement: str,
 ) -> None:
     """Change statistics unit for a statistic_id."""
-    if not can_convert_units(old_unit_of_measurement, new_unit_of_measurement):
+    metadatas = await get_instance(hass).async_add_executor_job(
+        partial(get_metadata, hass, statistic_ids={statistic_id})
+    )
+    if statistic_id not in metadatas:
+        raise HomeAssistantError(f"No metadata found for {statistic_id}")
+
+    metadata = metadatas[statistic_id][1]
+
+    if not can_convert_units(
+        metadata["unit_class"], old_unit_of_measurement, new_unit_of_measurement
+    ):
         raise HomeAssistantError(
             f"Can't convert {old_unit_of_measurement} to {new_unit_of_measurement}"
         )
@@ -2634,7 +3125,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # to indicate we need to run again
                     return False
 
-    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
+    from .migration import _drop_index  # noqa: PLC0415
 
     for table in STATISTICS_TABLES:
         _drop_index(instance.get_session, table, f"ix_{table}_start")

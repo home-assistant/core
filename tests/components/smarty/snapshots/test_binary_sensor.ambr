@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +28,7 @@
     'original_name': 'Alarm',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_alarm',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boost state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +78,7 @@
     'original_name': 'Boost state',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boost_state',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_boost',
@@ -115,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Warning',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -122,6 +127,7 @@
     'original_name': 'Warning',
     'platform': 'smarty',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'warning',
     'unique_id': '01JAZ5DPW8C62D620DGYNG2R8H_warning',

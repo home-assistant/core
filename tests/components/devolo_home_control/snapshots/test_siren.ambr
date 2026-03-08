@@ -41,6 +41,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -48,6 +49,7 @@
     'original_name': None,
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 7>,
     'translation_key': None,
     'unique_id': 'devolo.SirenMultiLevelSwitch:Test',
@@ -96,6 +98,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -103,6 +106,7 @@
     'original_name': None,
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 7>,
     'translation_key': None,
     'unique_id': 'devolo.SirenMultiLevelSwitch:Test',
@@ -151,6 +155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -158,6 +163,7 @@
     'original_name': None,
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 7>,
     'translation_key': None,
     'unique_id': 'devolo.SirenMultiLevelSwitch:Test',

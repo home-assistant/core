@@ -1,11 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "r_iso": {
-        "default": "mdi:omega"
-      },
       "alarm": {
         "default": "mdi:alert-octagon"
+      },
+      "r_iso": {
+        "default": "mdi:omega"
       }
     }
   }

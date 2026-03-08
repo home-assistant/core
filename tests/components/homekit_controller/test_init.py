@@ -174,6 +174,7 @@ async def test_offline_device_raises(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery")
 async def test_ble_device_only_checks_is_available(
     hass: HomeAssistant, get_next_aid: Callable[[], int], controller
 ) -> None:
@@ -242,6 +243,34 @@ async def test_ble_device_only_checks_is_available(
     assert hass.states.get("light.testdevice").state == STATE_OFF
 
 
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_populates_connections(
+    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+) -> None:
+    """Test a BLE device populates connections in the device registry."""
+    aid = get_next_aid()
+
+    accessory = Accessory.create_with_info(
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, _ = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    dev_reg = dr.async_get(hass)
+    assert (
+        dev_reg.async_get_device(
+            identifiers={}, connections={("bluetooth", "AA:BB:CC:DD:EE:FF")}
+        )
+        is not None
+    )
+
+
 @pytest.mark.parametrize("example", FIXTURES, ids=lambda val: str(val.stem))
 async def test_snapshots(
     hass: HomeAssistant,
@@ -299,6 +328,8 @@ async def test_snapshots(
         device_dict.pop("created_at", None)
         device_dict.pop("modified_at", None)
         device_dict.pop("_cache", None)
+        # This can be removed when suggested_area is removed from DeviceEntry
+        device_dict.pop("_suggested_area")
 
         devices.append({"device": device_dict, "entities": entities})
 

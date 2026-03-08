@@ -1,0 +1,154 @@
+# serializer version: 1
+# name: test_devices
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+        tuple(
+          'mac',
+          '6a:24:21:21:11:0e',
+        ),
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sunricher_dali',
+          '6A242121110E',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Sunricher',
+      'model': 'SR-GW-EDA',
+      'model_id': None,
+      'name': 'Test Gateway',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': '6A242121110E',
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sunricher_dali',
+          '01010000026A242121110E',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Sunricher',
+      'model': 'DALI DT6 Dimmable Driver',
+      'model_id': None,
+      'name': 'Dimmer 0000-02',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sunricher_dali',
+          '01020000036A242121110E',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Sunricher',
+      'model': 'DALI DT8 Tc Dimmable Driver',
+      'model_id': None,
+      'name': 'CCT 0000-03',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sunricher_dali',
+          '01030000046A242121110E',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Sunricher',
+      'model': 'DALI HS Color Driver',
+      'model_id': None,
+      'name': 'HS Color Light',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'sunricher_dali',
+          '01040000056A242121110E',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Sunricher',
+      'model': 'DALI RGBW Driver',
+      'model_id': None,
+      'name': 'RGBW Light',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---

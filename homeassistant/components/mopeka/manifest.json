@@ -3,58 +3,58 @@
   "name": "Mopeka",
   "bluetooth": [
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [3],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [4],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [5],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [6],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [8],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [9],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [10],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [11],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb",
-      "manufacturer_id": 89,
+      "connectable": false,
       "manufacturer_data_start": [12],
-      "connectable": false
+      "manufacturer_id": 89,
+      "service_uuid": "0000fee5-0000-1000-8000-00805f9b34fb"
     }
   ],
   "codeowners": ["@bdraco"],

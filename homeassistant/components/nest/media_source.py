@@ -20,8 +20,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+import datetime
 import logging
 import os
+import pathlib
+import shutil
 from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
@@ -46,6 +49,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util
@@ -67,29 +71,53 @@ STORAGE_VERSION = 1
 # Buffer writes every few minutes (plus guaranteed to be written at shutdown)
 STORAGE_SAVE_DELAY_SECONDS = 120
 # Path under config directory
-MEDIA_PATH = f"{DOMAIN}/event_media"
+LEGACY_MEDIA_PATH = f"{DOMAIN}/event_media"
+MEDIA_CACHE_PATH = "event_media"
 
 # Size of small in-memory disk cache to avoid excessive disk reads
 DISK_READ_LRU_MAX_SIZE = 32
+
+# Remove orphaned media files that are older than this age
+ORPHANED_MEDIA_AGE_CUTOFF = datetime.timedelta(days=7)
 
 
 async def async_get_media_event_store(
     hass: HomeAssistant, subscriber: GoogleNestSubscriber
 ) -> EventMediaStore:
     """Create the disk backed EventMediaStore."""
-    media_path = hass.config.path(MEDIA_PATH)
-
-    def mkdir() -> None:
-        os.makedirs(media_path, exist_ok=True)
-
-    await hass.async_add_executor_job(mkdir)
+    media_path = pathlib.Path(hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH))
+    legacy_media_path = pathlib.Path(hass.config.path(LEGACY_MEDIA_PATH))
+    await hass.async_add_executor_job(
+        _prepare_media_cache_dir, media_path, legacy_media_path
+    )
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    return NestEventMediaStore(hass, subscriber, store, media_path)
+    return NestEventMediaStore(hass, subscriber, store, str(media_path))
+
+
+def _prepare_media_cache_dir(
+    media_path: pathlib.Path, legacy_media_path: pathlib.Path
+) -> None:
+    """Prepare the media cache directory."""
+    # Migrate media from legacy path to new path.
+    if legacy_media_path.exists() and not media_path.exists():
+        _LOGGER.info(
+            "Migrating media cache directory from %s to %s",
+            legacy_media_path,
+            media_path,
+        )
+        media_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(legacy_media_path, media_path)
+        except OSError as error:
+            _LOGGER.info(
+                "Failed to migrate media cache directory, abandoning: %s", error
+            )
+    media_path.mkdir(parents=True, exist_ok=True)
 
 
 async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
     """Get a nest clip transcoder."""
-    media_path = hass.config.path(MEDIA_PATH)
+    media_path = hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH)
     ffmpeg_manager = get_ffmpeg_manager(hass)
     return Transcoder(ffmpeg_manager.binary, media_path)
 
@@ -123,6 +151,12 @@ class NestEventMediaStore(EventMediaStore):
         self._media_path = media_path
         self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
+        # Invoke garbage collection for orphaned files one per
+        async_track_time_interval(
+            hass,
+            self.async_remove_orphaned_media,
+            datetime.timedelta(days=1),
+        )
 
     async def async_load(self) -> dict | None:
         """Load data."""
@@ -248,6 +282,68 @@ class NestEventMediaStore(EventMediaStore):
             ):
                 devices[device.name] = device_entry.id
         return devices
+
+    async def async_remove_orphaned_media(self, now: datetime.datetime) -> None:
+        """Remove any media files that are orphaned and not referenced by the active event data.
+
+        The event media store handles garbage collection, but there may be cases where files are
+        left around or unable to be removed. This is a scheduled event that will also check for
+        old orphaned files and remove them when the events are not referenced in the active list
+        of event data.
+
+        Event media files are stored with the format  <timestamp>-<event_type>.suffix. We extract
+        the list of valid timestamps from the event data and remove any files that are not in that list
+        or are older than the cutoff time.
+        """
+        _LOGGER.debug("Checking for orphaned media at %s", now)
+
+        def _cleanup(event_timestamps: dict[str, set[int]]) -> None:
+            time_cutoff = (now - ORPHANED_MEDIA_AGE_CUTOFF).timestamp()
+            media_path = pathlib.Path(self._media_path)
+            for device_id, valid_timestamps in event_timestamps.items():
+                media_files = list(media_path.glob(f"{device_id}/*"))
+                _LOGGER.debug("Found %d files (device=%s)", len(media_files), device_id)
+                for media_file in media_files:
+                    if "-" not in media_file.name:
+                        continue
+                    try:
+                        timestamp = int(media_file.name.split("-")[0])
+                    except ValueError:
+                        continue
+                    if timestamp in valid_timestamps or timestamp > time_cutoff:
+                        continue
+                    _LOGGER.debug("Removing orphaned media file: %s", media_file)
+                    try:
+                        os.remove(media_file)
+                    except OSError as err:
+                        _LOGGER.error(
+                            "Unable to remove orphaned media file: %s %s",
+                            media_file,
+                            err,
+                        )
+
+        # Nest device id mapped to home assistant device id
+        event_timestamps = await self._get_valid_event_timestamps()
+        await self._hass.async_add_executor_job(_cleanup, event_timestamps)
+
+    async def _get_valid_event_timestamps(self) -> dict[str, set[int]]:
+        """Return a mapping of home assistant device id to valid timestamps."""
+        device_map = await self._get_devices()
+        event_data = await self.async_load() or {}
+        valid_device_timestamps = {}
+        for nest_device_id, device_id in device_map.items():
+            if (device_events := event_data.get(nest_device_id, {})) is None:
+                continue
+            valid_device_timestamps[device_id] = {
+                int(
+                    datetime.datetime.fromisoformat(
+                        camera_event["timestamp"]
+                    ).timestamp()
+                )
+                for events in device_events
+                for camera_event in events["events"].values()
+            }
+        return valid_device_timestamps
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:

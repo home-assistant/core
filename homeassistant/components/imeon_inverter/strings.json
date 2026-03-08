@@ -1,0 +1,236 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_route": "Unable to request the API, make sure 'API Module' is enabled on your device",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Imeon {model} ({serial})",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP of your inverter",
+          "password": "The password of your OS One account",
+          "username": "The username of your OS One account"
+        },
+        "title": "Add Imeon inverter"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "manager_inverter_mode": {
+        "name": "Inverter mode",
+        "state": {
+          "backup": "Backup",
+          "off_grid": "Off-grid",
+          "on_grid": "On-grid",
+          "smart_grid": "Smart grid"
+        }
+      }
+    },
+    "sensor": {
+      "battery_consumed": {
+        "name": "Battery consumed"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_soc": {
+        "name": "Battery state of charge"
+      },
+      "battery_status": {
+        "name": "Battery status",
+        "state": {
+          "charged": "Charged",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]"
+        }
+      },
+      "battery_stored": {
+        "name": "Battery stored"
+      },
+      "energy_battery_consumed": {
+        "name": "Today battery-consumed energy"
+      },
+      "energy_battery_stored": {
+        "name": "Today battery-stored energy"
+      },
+      "energy_building_consumption": {
+        "name": "Today building consumption"
+      },
+      "energy_grid_consumed": {
+        "name": "Today grid-consumed energy"
+      },
+      "energy_grid_injected": {
+        "name": "Today grid-injected energy"
+      },
+      "energy_pv": {
+        "name": "Today PV energy"
+      },
+      "forecast_cons_remaining_today": {
+        "name": "Forecast remaining energy consumption for today"
+      },
+      "forecast_prod_remaining_today": {
+        "name": "Forecast remaining energy production for today"
+      },
+      "grid_current_l1": {
+        "name": "Grid current L1"
+      },
+      "grid_current_l2": {
+        "name": "Grid current L2"
+      },
+      "grid_current_l3": {
+        "name": "Grid current L3"
+      },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
+      "grid_voltage_l1": {
+        "name": "Grid voltage L1"
+      },
+      "grid_voltage_l2": {
+        "name": "Grid voltage L2"
+      },
+      "grid_voltage_l3": {
+        "name": "Grid voltage L3"
+      },
+      "input_power_l1": {
+        "name": "Input power L1"
+      },
+      "input_power_l2": {
+        "name": "Input power L2"
+      },
+      "input_power_l3": {
+        "name": "Input power L3"
+      },
+      "input_power_total": {
+        "name": "Input power total"
+      },
+      "inverter_charging_current_limit": {
+        "name": "Charging current limit"
+      },
+      "inverter_injection_power_limit": {
+        "name": "Injection power limit"
+      },
+      "manager_inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "grid_consumption": "Grid consumption",
+          "grid_injection": "Grid injection",
+          "grid_synchronized_but_not_used": "Grid unsynchronized but used",
+          "not_connected": "Not connected",
+          "unsynchronized": "Unsynchronized"
+        }
+      },
+      "meter_power": {
+        "name": "Meter power"
+      },
+      "monitoring_minute_building_consumption": {
+        "name": "Building consumption"
+      },
+      "monitoring_minute_grid_consumption": {
+        "name": "Grid consumption"
+      },
+      "monitoring_minute_grid_injection": {
+        "name": "Grid injection"
+      },
+      "monitoring_minute_grid_power_flow": {
+        "name": "Grid power flow"
+      },
+      "monitoring_minute_solar_production": {
+        "name": "Solar production"
+      },
+      "monitoring_self_consumption": {
+        "name": "Self-consumption"
+      },
+      "monitoring_self_sufficiency": {
+        "name": "Self-sufficiency"
+      },
+      "output_current_l1": {
+        "name": "Output current L1"
+      },
+      "output_current_l2": {
+        "name": "Output current L2"
+      },
+      "output_current_l3": {
+        "name": "Output current L3"
+      },
+      "output_frequency": {
+        "name": "Output frequency"
+      },
+      "output_power_l1": {
+        "name": "Output power L1"
+      },
+      "output_power_l2": {
+        "name": "Output power L2"
+      },
+      "output_power_l3": {
+        "name": "Output power L3"
+      },
+      "output_power_total": {
+        "name": "Output power total"
+      },
+      "output_voltage_l1": {
+        "name": "Output voltage L1"
+      },
+      "output_voltage_l2": {
+        "name": "Output voltage L2"
+      },
+      "output_voltage_l3": {
+        "name": "Output voltage L3"
+      },
+      "pv_consumed": {
+        "name": "PV consumed"
+      },
+      "pv_injected": {
+        "name": "PV injected"
+      },
+      "pv_power_1": {
+        "name": "PV power 1"
+      },
+      "pv_power_2": {
+        "name": "PV power 2"
+      },
+      "pv_power_total": {
+        "name": "PV power total"
+      },
+      "temp_air_temperature": {
+        "name": "Air temperature"
+      },
+      "temp_component_temperature": {
+        "name": "Component temperature"
+      },
+      "timeline_type_msg": {
+        "name": "Timeline status",
+        "state": {
+          "com_lost": "Communication lost.",
+          "error_bat": "Battery error detected.",
+          "error_grid": "Power grid error detected.",
+          "error_ond": "Inverter error detected.",
+          "error_pv": "PV system error detected.",
+          "error_soft": "Software error detected.",
+          "good_1": "System operating normally.",
+          "info_bat": "Battery information available.",
+          "info_ond": "Inverter information available.",
+          "info_smartlo": "Smart load information available.",
+          "info_soft": "Software information available.",
+          "warning_bat": "Battery warning detected.",
+          "warning_grid": "Power grid warning detected.",
+          "warning_pv": "PV system warning detected.",
+          "web_account": "Web account notification."
+        }
+      }
+    }
+  }
+}

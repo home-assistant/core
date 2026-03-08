@@ -16,12 +16,21 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
-KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
+KNOWN_HOSTS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_KNOWN_HOSTS,
+        ): SelectSelector(
+            SelectSelectorConfig(custom_value=True, options=[], multiple=True),
+        )
+    }
+)
 WANTED_UUID_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 
 
@@ -29,12 +38,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self._ignore_cec = set[str]()
-        self._known_hosts = set[str]()
-        self._wanted_uuid = set[str]()
 
     @staticmethod
     @callback
@@ -62,48 +65,31 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
-        errors = {}
-        data = {CONF_KNOWN_HOSTS: self._known_hosts}
-
         if user_input is not None:
-            bad_hosts = False
-            known_hosts = user_input[CONF_KNOWN_HOSTS]
-            known_hosts = [x.strip() for x in known_hosts.split(",") if x.strip()]
-            try:
-                known_hosts = KNOWN_HOSTS_SCHEMA(known_hosts)
-            except vol.Invalid:
-                errors["base"] = "invalid_known_hosts"
-                bad_hosts = True
-            else:
-                self._known_hosts = known_hosts
-                data = self._get_data()
-            if not bad_hosts:
-                return self.async_create_entry(title="Google Cast", data=data)
+            known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
+            return self.async_create_entry(
+                title="Google Cast",
+                data=self._get_data(known_hosts=known_hosts),
+            )
 
-        fields = {}
-        fields[vol.Optional(CONF_KNOWN_HOSTS, default="")] = str
-
-        return self.async_show_form(
-            step_id="config", data_schema=vol.Schema(fields), errors=errors
-        )
+        return self.async_show_form(step_id="config", data_schema=KNOWN_HOSTS_SCHEMA)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
-
-        data = self._get_data()
-
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(title="Google Cast", data=data)
+            return self.async_create_entry(title="Google Cast", data=self._get_data())
 
         return self.async_show_form(step_id="confirm")
 
-    def _get_data(self):
+    def _get_data(
+        self, *, known_hosts: list[str] | None = None
+    ) -> dict[str, list[str]]:
         return {
-            CONF_IGNORE_CEC: list(self._ignore_cec),
-            CONF_KNOWN_HOSTS: list(self._known_hosts),
-            CONF_UUID: list(self._wanted_uuid),
+            CONF_IGNORE_CEC: [],
+            CONF_KNOWN_HOSTS: known_hosts or [],
+            CONF_UUID: [],
         }
 
 
@@ -123,31 +109,24 @@ class CastOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the Google Cast options."""
         errors: dict[str, str] = {}
-        current_config = self.config_entry.data
         if user_input is not None:
-            bad_hosts, known_hosts = _string_to_list(
-                user_input.get(CONF_KNOWN_HOSTS, ""), KNOWN_HOSTS_SCHEMA
+            known_hosts = _trim_items(user_input.get(CONF_KNOWN_HOSTS, []))
+            self.updated_config = dict(self.config_entry.data)
+            self.updated_config[CONF_KNOWN_HOSTS] = known_hosts
+
+            if self.show_advanced_options:
+                return await self.async_step_advanced_options()
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=self.updated_config
             )
-
-            if not bad_hosts:
-                self.updated_config = dict(current_config)
-                self.updated_config[CONF_KNOWN_HOSTS] = known_hosts
-
-                if self.show_advanced_options:
-                    return await self.async_step_advanced_options()
-
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=self.updated_config
-                )
-                return self.async_create_entry(title="", data={})
-
-        fields: dict[vol.Marker, type[str]] = {}
-        suggested_value = _list_to_string(current_config.get(CONF_KNOWN_HOSTS))
-        _add_with_suggestion(fields, CONF_KNOWN_HOSTS, suggested_value)
+            return self.async_create_entry(title="", data={})
 
         return self.async_show_form(
             step_id="basic_options",
-            data_schema=vol.Schema(fields),
+            data_schema=self.add_suggested_values_to_schema(
+                KNOWN_HOSTS_SCHEMA, self.config_entry.data
+            ),
             errors=errors,
             last_step=not self.show_advanced_options,
         )
@@ -204,6 +183,10 @@ def _string_to_list(string, schema):
         invalid = True
 
     return invalid, items
+
+
+def _trim_items(items: list[str]) -> list[str]:
+    return [x.strip() for x in items if x.strip()]
 
 
 def _add_with_suggestion(

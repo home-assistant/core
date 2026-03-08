@@ -70,7 +70,7 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc = self._instance.media_player_new()
         self._attr_name = name
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest details from the device."""
         status = self._vlc.get_state()
         if status == vlc.State.Playing:
@@ -87,8 +87,6 @@ class VlcDevice(MediaPlayerEntity):
 
         self._attr_volume_level = self._vlc.audio_get_volume() / 100
         self._attr_is_volume_muted = self._vlc.audio_get_mute() == 1
-
-        return True
 
     def media_seek(self, position: float) -> None:
         """Seek the media to a specific location."""

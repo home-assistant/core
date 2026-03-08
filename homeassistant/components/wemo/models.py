@@ -4,17 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pywemo
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:  # Avoid circular dependencies.
     from . import HostPortTuple, WemoDiscovery, WemoDispatcher
     from .coordinator import DeviceCoordinator
+
+DATA_WEMO: HassKey[WemoData] = HassKey(DOMAIN)
 
 
 @dataclass
@@ -37,9 +39,3 @@ class WemoData:
     # unloaded. It's a programmer error if config_entry_data is accessed when the
     # config entry is not loaded
     config_entry_data: WemoConfigEntryData = None  # type: ignore[assignment]
-
-
-@callback
-def async_wemo_data(hass: HomeAssistant) -> WemoData:
-    """Fetch WemoData with proper typing."""
-    return cast(WemoData, hass.data[DOMAIN])

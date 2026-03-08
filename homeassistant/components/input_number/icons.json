@@ -6,11 +6,11 @@
     "increment": {
       "service": "mdi:plus"
     },
-    "set_value": {
-      "service": "mdi:numeric"
-    },
     "reload": {
       "service": "mdi:reload"
+    },
+    "set_value": {
+      "service": "mdi:numeric"
     }
   }
 }

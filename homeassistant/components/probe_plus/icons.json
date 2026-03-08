@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "probe_temperature": {
+        "default": "mdi:thermometer-bluetooth"
+      }
+    }
+  }
+}

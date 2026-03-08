@@ -15,7 +15,13 @@ from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN, MANUFACTURER
 
-PLATFORMS: list[Platform] = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 

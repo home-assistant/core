@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -32,6 +33,7 @@
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reserve_soc',
     'unique_id': '1234_reserve_soc',
@@ -83,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -90,6 +93,7 @@
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reserve_soc',
     'unique_id': '654321_reserve_soc',
@@ -141,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -148,6 +153,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC1_soc_low',
@@ -198,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -205,6 +212,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC1_soc_high',
@@ -255,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -262,6 +271,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC2_soc_low',
@@ -312,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -319,6 +330,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC2_soc_high',
@@ -369,6 +381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -376,6 +389,7 @@
     'original_name': 'Cutoff battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutoff_battery_level',
     'unique_id': '654321_relay_NC3_soc_low',
@@ -426,6 +440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -433,6 +448,7 @@
     'original_name': 'Restore battery level',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'restore_battery_level',
     'unique_id': '654321_relay_NC3_soc_high',

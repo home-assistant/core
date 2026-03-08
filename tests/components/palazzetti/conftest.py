@@ -65,6 +65,7 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.has_fan_auto = True
         mock_client.has_on_off_switch = True
         mock_client.has_pellet_level = False
+        mock_client.host = "XXXXXXXXXX"
         mock_client.connected = True
         mock_client.status = 6
         mock_client.is_heating = True

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -27,6 +28,7 @@
     'original_name': 'Device connection status',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_connection_status',
     'unique_id': 'xyz12_this_device_nextdns_connection_status',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Device profile connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -75,6 +78,7 @@
     'original_name': 'Device profile connection status',
     'platform': 'nextdns',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_profile_connection_status',
     'unique_id': 'xyz12_this_device_profile_connection_status',

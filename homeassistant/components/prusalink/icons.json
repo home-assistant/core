@@ -12,26 +12,26 @@
       }
     },
     "sensor": {
-      "printer_state": {
-        "default": "mdi:printer-3d"
+      "filename": {
+        "default": "mdi:file-image-outline"
       },
       "material": {
         "default": "mdi:palette-swatch-variant"
       },
-      "progress": {
-        "default": "mdi:progress-clock"
-      },
-      "filename": {
-        "default": "mdi:file-image-outline"
-      },
       "nozzle_diameter": {
         "default": "mdi:printer-3d-nozzle"
+      },
+      "print_finish": {
+        "default": "mdi:clock-end"
       },
       "print_start": {
         "default": "mdi:clock-start"
       },
-      "print_finish": {
-        "default": "mdi:clock-end"
+      "printer_state": {
+        "default": "mdi:printer-3d"
+      },
+      "progress": {
+        "default": "mdi:progress-clock"
       }
     }
   }

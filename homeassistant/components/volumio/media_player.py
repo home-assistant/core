@@ -70,7 +70,6 @@ class Volumio(MediaPlayerEntity):
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
-    _attr_source_list = []
 
     def __init__(self, volumio, uid, name, info):
         """Initialize the media player."""
@@ -78,6 +77,7 @@ class Volumio(MediaPlayerEntity):
         unique_id = uid
         self._state = {}
         self.thumbnail_cache = {}
+        self._attr_source_list = []
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},

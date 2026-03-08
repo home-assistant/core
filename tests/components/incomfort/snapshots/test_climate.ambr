@@ -17,7 +17,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'climate.thermostat_1',
     'has_entity_name': True,
     'hidden_by': None,
@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,6 +34,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -84,7 +86,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'climate.thermostat_1',
     'has_entity_name': True,
     'hidden_by': None,
@@ -93,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -100,6 +103,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -151,7 +155,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'climate.thermostat_1',
     'has_entity_name': True,
     'hidden_by': None,
@@ -160,6 +164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +172,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',
@@ -218,7 +224,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_category': None,
     'entity_id': 'climate.thermostat_1',
     'has_entity_name': True,
     'hidden_by': None,
@@ -227,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,6 +241,7 @@
     'original_name': None,
     'platform': 'incomfort',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': None,
     'unique_id': 'c0ffeec0ffee_1',

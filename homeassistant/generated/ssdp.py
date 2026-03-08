@@ -141,6 +141,12 @@ SSDP = {
             "manufacturer": "Logitech",
         },
     ],
+    "hegel": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Hegel",
+        },
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1",
@@ -164,6 +170,13 @@ SSDP = {
         {
             "manufacturer": "Hyperion Open Source Ambient Lighting",
             "st": "urn:hyperion-project.org:device:basic:1",
+        },
+    ],
+    "imeon_inverter": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "IMEON",
+            "st": "upnp:rootdevice",
         },
     ],
     "isy994": [
@@ -391,6 +404,16 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda",
+        },
+    ],
+    "xbox": [
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox 360",
+        },
+        {
+            "manufacturer": "Microsoft Corporation",
+            "modelName": "Xbox One",
         },
     ],
     "yamaha_musiccast": [

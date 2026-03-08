@@ -1,30 +1,32 @@
 # serializer version: 1
-# name: test_active_bbw_recipe[Linea Mini]
+# name: test_bbw_dose_mode[Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LMZ-123A45 Active brew by weight recipe',
+      'friendly_name': 'LM012345 Brew by weight dose mode',
       'options': list([
-        'a',
-        'b',
+        'continuous',
+        'dose1',
+        'dose2',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.lmz_123a45_active_brew_by_weight_recipe',
+    'entity_id': 'select.lm012345_brew_by_weight_dose_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'a',
+    'state': 'continuous',
   })
 # ---
-# name: test_active_bbw_recipe[Linea Mini].1
+# name: test_bbw_dose_mode[Linea Mini].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'a',
-        'b',
+        'continuous',
+        'dose1',
+        'dose2',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -33,8 +35,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.lmz_123a45_active_brew_by_weight_recipe',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.lm012345_brew_by_weight_dose_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -42,16 +44,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brew by weight dose mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Active brew by weight recipe',
+    'original_name': 'Brew by weight dose mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'active_bbw',
-    'unique_id': 'LM012345_active_bbw',
+    'translation_key': 'bbw_dose_mode',
+    'unique_id': 'LM012345_bbw_dose_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -100,6 +104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -107,9 +112,70 @@
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'GS012345_prebrew_infusion_select',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_pre_brew_infusion_select[Linea Micra]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MR012345 Prebrew/-infusion mode',
+      'options': list([
+        'disabled',
+        'prebrew',
+        'preinfusion',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mr012345_prebrew_infusion_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'preinfusion',
+  })
+# ---
+# name: test_pre_brew_infusion_select[Linea Micra].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'prebrew',
+        'preinfusion',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mr012345_prebrew_infusion_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Prebrew/-infusion mode',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'prebrew_infusion_select',
+    'unique_id': 'MR012345_prebrew_infusion_select',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +194,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'preinfusion',
+    'state': 'disabled',
   })
 # ---
 # name: test_pre_brew_infusion_select[Linea Mini].1
@@ -158,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prebrew/-infusion mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,67 +232,10 @@
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'LM012345_prebrew_infusion_select',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_pre_brew_infusion_select[Micra]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'MR012345 Prebrew/-infusion mode',
-      'options': list([
-        'disabled',
-        'prebrew',
-        'preinfusion',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mr012345_prebrew_infusion_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'preinfusion',
-  })
-# ---
-# name: test_pre_brew_infusion_select[Micra].1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'disabled',
-        'prebrew',
-        'preinfusion',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mr012345_prebrew_infusion_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Prebrew/-infusion mode',
-    'platform': 'lamarzocco',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'prebrew_infusion_select',
-    'unique_id': 'MR012345_prebrew_infusion_select',
     'unit_of_measurement': None,
   })
 # ---
@@ -243,7 +253,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'last_brewing',
+    'state': 'power_on',
   })
 # ---
 # name: test_smart_standby_mode.1
@@ -272,6 +282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -279,13 +290,14 @@
     'original_name': 'Smart standby mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_standby_mode',
     'unique_id': 'GS012345_smart_standby_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_steam_boiler_level[Micra]
+# name: test_steam_boiler_level[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR012345 Steam level',
@@ -300,10 +312,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '3',
   })
 # ---
-# name: test_steam_boiler_level[Micra].1
+# name: test_steam_boiler_level[Linea Micra].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -330,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,6 +350,7 @@
     'original_name': 'Steam level',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'steam_temp_select',
     'unique_id': 'MR012345_steam_temp_select',

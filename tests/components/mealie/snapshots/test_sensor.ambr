@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Categories',
     'options': dict({
     }),
     'original_device_class': None,
@@ -29,6 +30,7 @@
     'original_name': 'Categories',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'categories',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_categories',
@@ -73,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Recipes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -80,6 +83,7 @@
     'original_name': 'Recipes',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'recipes',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_recipes',
@@ -124,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tags',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,6 +136,7 @@
     'original_name': 'Tags',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tags',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tags',
@@ -175,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tools',
     'options': dict({
     }),
     'original_device_class': None,
@@ -182,6 +189,7 @@
     'original_name': 'Tools',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tools',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tools',
@@ -226,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Users',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,6 +242,7 @@
     'original_name': 'Users',
     'platform': 'mealie',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'users',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_users',

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -29,6 +30,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-4k5l6m7n-8o9p-1q2r-3s4t_balance',
@@ -74,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -81,6 +84,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-4k5l6m7n-8o9p-1q2r-3s4t_age',
@@ -125,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -132,6 +137,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-1k2l3m4n-5o6p-7q8r-9s0t_balance',
@@ -177,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -184,6 +191,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-1k2l3m4n-5o6p-7q8r-9s0t_age',
@@ -228,6 +236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -235,6 +244,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-5k6l7m8n-9o0p-1q2r-3s4t_balance',
@@ -280,6 +290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -287,6 +298,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-5k6l7m8n-9o0p-1q2r-3s4t_age',
@@ -331,6 +343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -338,6 +351,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-7a8b9c0d-1e2f-3g4h-5i6j_balance',
@@ -383,6 +397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -390,6 +405,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-7a8b9c0d-1e2f-3g4h-5i6j_age',
@@ -434,6 +450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -441,6 +458,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-6a7b8c9d-0e1f-2g3h-4i5j_balance',
@@ -486,6 +504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -493,6 +512,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-6a7b8c9d-0e1f-2g3h-4i5j_age',
@@ -537,6 +557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -544,6 +565,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-3a4b5c6d-7e8f-9g0h-1i2j_balance',
@@ -589,6 +611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -596,6 +619,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-3a4b5c6d-7e8f-9g0h-1i2j_age',
@@ -640,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -647,6 +672,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-2a3b4c5d-6e7f-8g9h-0i1j_balance',
@@ -692,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -699,6 +726,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-2a3b4c5d-6e7f-8g9h-0i1j_age',
@@ -743,6 +771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -750,6 +779,7 @@
     'original_name': 'Balance',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'account_ACT-1a2b3c4d-5e6f-7g8h-9i0j_balance',
@@ -795,6 +825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -802,6 +833,7 @@
     'original_name': 'Data age',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'age',
     'unique_id': 'account_ACT-1a2b3c4d-5e6f-7g8h-9i0j_age',

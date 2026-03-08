@@ -22,7 +22,6 @@
           '98765',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Flo by Moen',
@@ -32,7 +31,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '111111111111',
-      'suggested_area': None,
       'sw_version': '6.1.1',
       'via_device_id': None,
     }),
@@ -57,7 +55,6 @@
           '32839',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Flo by Moen',
@@ -67,7 +64,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '111111111112',
-      'suggested_area': None,
       'sw_version': '1.1.15',
       'via_device_id': None,
     }),

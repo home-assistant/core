@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_binary_sensor_setup(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:

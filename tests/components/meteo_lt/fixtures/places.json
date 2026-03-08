@@ -1,0 +1,35 @@
+[
+  {
+    "code": "vilnius",
+    "name": "Vilnius",
+    "administrativeDivision": "Vilniaus miesto savivaldybė",
+    "country": "Lietuva",
+    "countryCode": "LT",
+    "coordinates": {
+      "latitude": 54.68705,
+      "longitude": 25.28291
+    }
+  },
+  {
+    "code": "kaunas",
+    "name": "Kaunas",
+    "administrativeDivision": "Kauno miesto savivaldybė",
+    "country": "Lietuva",
+    "countryCode": "LT",
+    "coordinates": {
+      "latitude": 54.90272,
+      "longitude": 23.95952
+    }
+  },
+  {
+    "code": "klaipeda",
+    "name": "Klaipėda",
+    "administrativeDivision": "Klaipėdos miesto savivaldybė",
+    "country": "Lietuva",
+    "countryCode": "LT",
+    "coordinates": {
+      "latitude": 55.70329,
+      "longitude": 21.14427
+    }
+  }
+]

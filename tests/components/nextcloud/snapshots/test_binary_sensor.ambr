@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Avatars enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Avatars enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_enable_avatars',
     'unique_id': '1234567890abcdef#system_enable_avatars',
@@ -67,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Debug enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +77,7 @@
     'original_name': 'Debug enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_debug',
     'unique_id': '1234567890abcdef#system_debug',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filelocking enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': 'Filelocking enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_filelocking_enabled',
     'unique_id': '1234567890abcdef#system_filelocking.enabled',
@@ -161,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +175,7 @@
     'original_name': 'JIT active',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_on',
     'unique_id': '1234567890abcdef#jit_on',
@@ -208,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +224,7 @@
     'original_name': 'JIT enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_jit_enabled',
     'unique_id': '1234567890abcdef#jit_enabled',
@@ -255,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Previews enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +273,7 @@
     'original_name': 'Previews enabled',
     'platform': 'nextcloud',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nextcloud_system_enable_previews',
     'unique_id': '1234567890abcdef#system_enable_previews',

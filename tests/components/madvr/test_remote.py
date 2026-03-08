@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.remote import (
     DOMAIN as REMOTE_DOMAIN,
@@ -38,6 +38,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_remote_setup(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_madvr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:

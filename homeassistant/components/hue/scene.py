@@ -12,7 +12,6 @@ from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartScene
 import voluptuous as vol
 
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .bridge import HueBridge
+from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
@@ -33,11 +32,11 @@ ATTR_BRIGHTNESS = "brightness"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up scene platform from Hue group scenes."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -99,11 +98,11 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
-        self.group = self.controller.get_group(self.resource.id)
+        self.hue_group = self.controller.get_group(self.resource.id)
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
+            identifiers={(DOMAIN, self.hue_group.id)},
         )
 
     async def async_added_to_hass(self) -> None:
@@ -113,7 +112,7 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         self.async_on_remove(
             self.bridge.api.groups.subscribe(
                 self._handle_event,
-                self.group.id,
+                self.hue_group.id,
                 (EventType.RESOURCE_UPDATED),
             )
         )
@@ -186,8 +185,8 @@ class HueSceneEntity(HueSceneEntityBase):
             # Hue uses a range of [0, 100] to control brightness.
             brightness = round((brightness / 100) * 255)
         return {
-            "group_name": self.group.metadata.name,
-            "group_type": self.group.type.value,
+            "group_name": self.hue_group.metadata.name,
+            "group_type": self.hue_group.type.value,
             "name": self.resource.metadata.name,
             "speed": self.resource.speed,
             "brightness": brightness,
@@ -215,8 +214,8 @@ class HueSmartSceneEntity(HueSceneEntityBase):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         res = {
-            "group_name": self.group.metadata.name,
-            "group_type": self.group.type.value,
+            "group_name": self.hue_group.metadata.name,
+            "group_type": self.hue_group.type.value,
             "name": self.resource.metadata.name,
             "is_active": self.is_active,
         }

@@ -17,6 +17,7 @@ from pynecil import (
     ScrollSpeed,
     SettingsDataResponse,
     TempUnit,
+    TipType,
     USBPDMode,
 )
 
@@ -53,6 +54,7 @@ class PinecilSelect(StrEnum):
     LOCKING_MODE = "locking_mode"
     LOGO_DURATION = "logo_duration"
     USB_PD_MODE = "usb_pd_mode"
+    TIP_TYPE = "tip_type"
 
 
 def enum_to_str(enum: Enum | None) -> str | None:
@@ -138,6 +140,8 @@ PINECIL_SELECT_DESCRIPTIONS: tuple[IronOSSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
+)
+PINECIL_SELECT_DESCRIPTIONS_V222: tuple[IronOSSelectEntityDescription, ...] = (
     IronOSSelectEntityDescription(
         key=PinecilSelect.USB_PD_MODE,
         translation_key=PinecilSelect.USB_PD_MODE,
@@ -149,6 +153,27 @@ PINECIL_SELECT_DESCRIPTIONS: tuple[IronOSSelectEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
+PINECIL_SELECT_DESCRIPTIONS_V223: tuple[IronOSSelectEntityDescription, ...] = (
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.USB_PD_MODE,
+        translation_key=PinecilSelect.USB_PD_MODE,
+        characteristic=CharSetting.USB_PD_MODE,
+        value_fn=lambda x: enum_to_str(x.get("usb_pd_mode")),
+        raw_value_fn=lambda value: USBPDMode[value.upper()],
+        options=[x.name.lower() for x in USBPDMode],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.TIP_TYPE,
+        translation_key=PinecilSelect.TIP_TYPE,
+        characteristic=CharSetting.TIP_TYPE,
+        value_fn=lambda x: enum_to_str(x.get("tip_type")),
+        raw_value_fn=lambda value: TipType[value.upper()],
+        options=[x.name.lower() for x in TipType],
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -157,11 +182,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities from a config entry."""
-    coordinator = entry.runtime_data
+    coordinators = entry.runtime_data
+    descriptions = PINECIL_SELECT_DESCRIPTIONS
+
+    descriptions += (
+        PINECIL_SELECT_DESCRIPTIONS_V223
+        if coordinators.live_data.v223_features
+        else PINECIL_SELECT_DESCRIPTIONS_V222
+    )
 
     async_add_entities(
-        IronOSSelectEntity(coordinator, description)
-        for description in PINECIL_SELECT_DESCRIPTIONS
+        IronOSSelectEntity(coordinators, description) for description in descriptions
     )
 
 

@@ -1,11 +1,12 @@
 """Test Matter valve."""
 
+from typing import Any
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -18,28 +19,36 @@ from .common import (
 )
 
 
-@pytest.mark.usefixtures("matter_devices")
+@pytest.fixture(name="attributes")
+def attributes_fixture(request: pytest.FixtureRequest) -> dict[str, Any]:
+    """Override node attributes for a parametrized test."""
+    return getattr(request, "param", {})
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valves(
     hass: HomeAssistant,
+    matter_node: MatterNode,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test valves."""
+    assert matter_node
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.VALVE)
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
     """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
-    entity_id = "valve.valve"
+    entity_id = "valve.mock_valve"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "closed"
-    assert state.attributes["friendly_name"] == "Valve"
+    assert state.attributes["friendly_name"] == "Mock Valve"
 
     # test close_valve action
     await hass.services.async_call(
@@ -133,3 +142,58 @@ async def test_valve(
         command=clusters.ValveConfigurationAndControl.Commands.Open(targetLevel=100),
     )
     matter_client.send_device_command.reset_mock()
+
+    # test using set_position action to close valve
+    await hass.services.async_call(
+        "valve",
+        "set_valve_position",
+        {
+            "entity_id": entity_id,
+            "position": 0,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ValveConfigurationAndControl.Commands.Close(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
+@pytest.mark.parametrize(
+    "attributes",
+    [{"1/129/4": None, "1/129/5": None}],
+    indirect=True,
+)
+async def test_valve_discovery_with_nullable_states(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test valve discovery when CurrentState and TargetState are nullable."""
+    assert matter_node.node_id == 60
+
+    state = hass.states.get("valve.mock_valve")
+    assert state
+    assert state.state == "unknown"
+    assert state.attributes["friendly_name"] == "Mock Valve"
+
+    await hass.services.async_call(
+        "valve",
+        "open_valve",
+        {
+            "entity_id": "valve.mock_valve",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ValveConfigurationAndControl.Commands.Open(),
+    )

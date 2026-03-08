@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.ABV',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +78,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.BATCH_VOLUME',
@@ -115,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +127,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.BUBBLES',
@@ -163,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'options': dict({
     }),
     'original_device_class': None,
@@ -170,6 +177,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.BPM',
@@ -211,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -218,6 +227,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.CO2_VOLUME',
@@ -258,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +276,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.OG',
@@ -306,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +326,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.SG',
@@ -354,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +376,7 @@
     'original_name': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.TEMPERATURE',
@@ -401,6 +417,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -408,6 +425,7 @@
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.BEER_LEFT',
@@ -451,6 +469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -458,6 +477,7 @@
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.LAST_POUR',
@@ -502,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -509,6 +530,7 @@
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.PERCENT_BEER_LEFT',
@@ -553,13 +575,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'platform': 'plaato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'valid_token_Pins.TEMPERATURE',

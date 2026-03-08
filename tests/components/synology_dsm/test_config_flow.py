@@ -12,7 +12,7 @@ from synology_dsm.exceptions import (
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
@@ -40,6 +40,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .common import mock_dsm_information
 from .consts import (
     DEVICE_TOKEN,
     HOST,
@@ -72,7 +73,7 @@ def mock_controller_service():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -95,7 +96,7 @@ def mock_controller_service_2sa():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -116,7 +117,7 @@ def mock_controller_service_vdsm():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -137,7 +138,7 @@ def mock_controller_service_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -170,7 +171,7 @@ def mock_controller_service_failed():
             volumes_ids=[],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=None)
+        dsm.information = mock_dsm_information(serial=None)
         dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
         yield dsm
 
@@ -251,9 +252,7 @@ async def test_user_2sa(
     assert result["step_id"] == "2sa"
 
     # Failed the first time because was too slow to enter the code
-    service_2sa.return_value.login = Mock(
-        side_effect=SynologyDSMLogin2SAFailedException
-    )
+    service_2sa.login = AsyncMock(side_effect=SynologyDSMLogin2SAFailedException)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_OTP_CODE: "000000"}
     )

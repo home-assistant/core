@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Additional purchases',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Additional purchases',
     'platform': 'cookidoo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <TodoListEntityFeature: 7>,
     'translation_key': 'additional_item_list',
     'unique_id': 'sub_uuid_additional_items',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shopping list',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +78,7 @@
     'original_name': 'Shopping list',
     'platform': 'cookidoo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <TodoListEntityFeature: 4>,
     'translation_key': 'ingredient_list',
     'unique_id': 'sub_uuid_ingredients',

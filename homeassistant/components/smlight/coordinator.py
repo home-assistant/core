@@ -111,7 +111,11 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             raise ConfigEntryAuthFailed from err
 
         except SmlightConnectionError as err:
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_device",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:
@@ -162,7 +166,9 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         zb_firmware: list[FirmwareList] = []
 
         try:
-            esp_firmware = await self.client.get_firmware_version(info.fw_channel)
+            esp_firmware = await self.client.get_firmware_version(
+                info.fw_channel, device=info.model
+            )
             zb_firmware.extend(
                 [
                     await self.client.get_firmware_version(

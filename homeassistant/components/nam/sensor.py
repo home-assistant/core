@@ -10,7 +10,7 @@ import logging
 from nettigo_air_monitor import NAMSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -33,6 +34,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    ATTR_BH1750_ILLUMINANCE,
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
     ATTR_BME280_TEMPERATURE,
@@ -83,6 +85,15 @@ class NAMSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
+    NAMSensorEntityDescription(
+        key=ATTR_BH1750_ILLUMINANCE,
+        translation_key="bh1750_illuminance",
+        suggested_display_precision=0,
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.bh1750_illuminance,
+    ),
     NAMSensorEntityDescription(
         key=ATTR_BME280_HUMIDITY,
         translation_key="bme280_humidity",
@@ -313,6 +324,7 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         translation_key="sps30_pm4",
         suggested_display_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM4,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.sps30_p4,
     ),
@@ -369,7 +381,9 @@ async def async_setup_entry(
     for old_sensor, new_sensor in MIGRATION_SENSORS:
         old_unique_id = f"{coordinator.unique_id}-{old_sensor}"
         new_unique_id = f"{coordinator.unique_id}-{new_sensor}"
-        if entity_id := ent_reg.async_get_entity_id(PLATFORM, DOMAIN, old_unique_id):
+        if entity_id := ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, old_unique_id
+        ):
             _LOGGER.debug(
                 "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
                 entity_id,

@@ -21,6 +21,7 @@ from .const import (
     CONF_MOTOR,
     CONF_OUTPUT,
     CONF_OUTPUTS,
+    CONF_POSITIONING_MODE,
     CONF_REGISTER,
     CONF_REVERSE_TIME,
     CONF_SETPOINT,
@@ -30,7 +31,8 @@ from .const import (
     LED_PORTS,
     LOGICOP_PORTS,
     MOTOR_PORTS,
-    MOTOR_REVERSE_TIME,
+    MOTOR_POSITIONING_MODES,
+    MOTOR_REVERSE_TIMES,
     OUTPUT_PORTS,
     RELAY_PORTS,
     S0_INPUTS,
@@ -68,8 +70,11 @@ DOMAIN_DATA_CLIMATE: VolDictType = {
 
 DOMAIN_DATA_COVER: VolDictType = {
     vol.Required(CONF_MOTOR): vol.All(vol.Upper, vol.In(MOTOR_PORTS)),
+    vol.Optional(CONF_POSITIONING_MODE, default="none"): vol.All(
+        vol.Upper, vol.In(MOTOR_POSITIONING_MODES)
+    ),
     vol.Optional(CONF_REVERSE_TIME, default="rt1200"): vol.All(
-        vol.Upper, vol.In(MOTOR_REVERSE_TIME)
+        vol.Upper, vol.In(MOTOR_REVERSE_TIMES)
     ),
 }
 

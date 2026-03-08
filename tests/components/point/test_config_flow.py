@@ -6,11 +6,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.point.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -29,7 +29,7 @@ REDIRECT_URL = "https://example.com/auth/external/callback"
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -157,16 +157,3 @@ async def test_reauthentication_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
     assert old_entry.unique_id == expected_unique_id
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "pick_implementation"

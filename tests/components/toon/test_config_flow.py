@@ -27,13 +27,12 @@ async def setup_component(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
 
-    with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
+    )
+    await hass.async_block_till_done()
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
@@ -214,7 +213,7 @@ async def test_agreement_already_set_up(
 ) -> None:
     """Test showing display form again if display already exists."""
     await setup_component(hass)
-    MockConfigEntry(domain=DOMAIN, unique_id=123).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="123").add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -313,7 +312,7 @@ async def test_import_migration(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test if importing step with migration works."""
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id="123", version=1)
     old_entry.add_to_hass(hass)
 
     await setup_component(hass)

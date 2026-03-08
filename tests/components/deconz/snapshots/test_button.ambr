@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scene Store Current Scene',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Scene Store Current Scene',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '01234E56789A/groups/1/scenes/1-store',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Aqara FP1 Reset Presence',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -75,6 +78,7 @@
     'original_name': 'Aqara FP1 Reset Presence',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'xx:xx:xx:xx:xx:xx:xx:xx-01-0406-reset_presence',

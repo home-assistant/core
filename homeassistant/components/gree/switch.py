@@ -13,13 +13,13 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
-from .entity import GreeEntity
+from .const import DISPATCH_DEVICE_DISCOVERED
+from .coordinator import GreeConfigEntry
+from .entity import DeviceDataUpdateCoordinator, GreeEntity
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -92,13 +92,13 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GreeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
 
     @callback
-    def init_device(coordinator):
+    def init_device(coordinator: DeviceDataUpdateCoordinator) -> None:
         """Register the device."""
 
         async_add_entities(
@@ -106,7 +106,7 @@ async def async_setup_entry(
             for description in GREE_SWITCHES
         )
 
-    for coordinator in hass.data[DOMAIN][COORDINATORS]:
+    for coordinator in entry.runtime_data.coordinators:
         init_device(coordinator)
 
     entry.async_on_unload(

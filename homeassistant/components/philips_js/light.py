@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from haphilipsjs import PhilipsTV
 from haphilipsjs.typing import AmbilightCurrentConfiguration
@@ -135,12 +135,12 @@ def _average_pixels(data):
 class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_effect: str
     _attr_translation_key = "ambilight"
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
-    def __init__(
-        self,
-        coordinator: PhilipsTVDataUpdateCoordinator,
-    ) -> None:
+    def __init__(self, coordinator: PhilipsTVDataUpdateCoordinator) -> None:
         """Initialize light."""
         self._tv = coordinator.api
         self._hs = None
@@ -149,8 +149,6 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         self._last_selected_effect: AmbilightEffect | None = None
         super().__init__(coordinator)
 
-        self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
-        self._attr_supported_features = LightEntityFeature.EFFECT
         self._attr_unique_id = coordinator.unique_id
 
         self._update_from_coordinator()
@@ -213,10 +211,10 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if the light is turned on."""
         if self._tv.on:
-            effect = AmbilightEffect.from_str(self.effect)
+            effect = AmbilightEffect.from_str(self._attr_effect)
             return effect.is_on(self._tv.powerstate)
 
         return False
@@ -328,7 +326,7 @@ class PhilipsTVLightEntity(PhilipsJsEntity, LightEntity):
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
-        attr_effect = kwargs.get(ATTR_EFFECT, self.effect)
+        attr_effect = cast(str, kwargs.get(ATTR_EFFECT, self.effect))
 
         if not self._tv.on:
             raise HomeAssistantError("TV is not available")

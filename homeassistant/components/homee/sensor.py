@@ -25,7 +25,9 @@ from .const import (
     WINDOW_MAP_REVERSED,
 )
 from .entity import HomeeEntity, HomeeNodeEntity
-from .helpers import get_name_for_enum
+from .helpers import get_name_for_enum, setup_homee_platform
+
+PARALLEL_UPDATES = 0
 
 
 def get_open_close_value(attribute: HomeeAttribute) -> str | None:
@@ -40,15 +42,27 @@ def get_window_value(attribute: HomeeAttribute) -> str | None:
     return vals.get(attribute.current_value)
 
 
+def get_brightness_device_class(
+    attribute: HomeeAttribute, device_class: SensorDeviceClass | None
+) -> SensorDeviceClass | None:
+    """Return the device class for a brightness sensor."""
+    if attribute.unit == "%":
+        return None
+    return device_class
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
 
-    value_fn: Callable[[HomeeAttribute], str | float | None] = (
-        lambda value: value.current_value
+    device_class_fn: Callable[
+        [HomeeAttribute, SensorDeviceClass | None], SensorDeviceClass | None
+    ] = lambda attribute, device_class: device_class
+    value_fn: Callable[[HomeeAttribute], str | float | None] = lambda value: (
+        value.current_value
     )
-    native_unit_of_measurement_fn: Callable[[str], str | None] = (
-        lambda homee_unit: HOMEE_UNIT_TO_HA_UNIT[homee_unit]
+    native_unit_of_measurement_fn: Callable[[str], str | None] = lambda homee_unit: (
+        HOMEE_UNIT_TO_HA_UNIT[homee_unit]
     )
 
 
@@ -67,11 +81,14 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.BRIGHTNESS: HomeeSensorEntityDescription(
         key="brightness",
         device_class=SensorDeviceClass.ILLUMINANCE,
+        device_class_fn=get_brightness_device_class,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=(
-            lambda attribute: attribute.current_value * 1000
-            if attribute.unit == "klx"
-            else attribute.current_value
+            lambda attribute: (
+                attribute.current_value * 1000
+                if attribute.unit == "klx"
+                else attribute.current_value
+            )
         ),
     ),
     AttributeType.CURRENT: HomeeSensorEntityDescription(
@@ -82,11 +99,6 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.CURRENT_ENERGY_USE: HomeeSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    AttributeType.CURRENT_VALVE_POSITION: HomeeSensorEntityDescription(
-        key="valve_position",
-        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.DAWN: HomeeSensorEntityDescription(
@@ -103,6 +115,16 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         key="exhaust_motor_revs",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AttributeType.EXTERNAL_TEMPERATURE: HomeeSensorEntityDescription(
+        key="external_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.FLOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="floor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.INDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key="indoor_humidity",
@@ -262,27 +284,38 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the homee platform for the sensor components."""
 
-    devices: list[HomeeSensor | HomeeNodeSensor] = []
-    for node in config_entry.runtime_data.nodes:
-        # Node properties that are sensors.
-        devices.extend(
-            HomeeNodeSensor(node, config_entry, description)
-            for description in NODE_SENSOR_DESCRIPTIONS
-        )
+    async def add_sensor_entities(
+        config_entry: HomeeConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+        nodes: list[HomeeNode],
+    ) -> None:
+        """Add homee sensor entities."""
+        entities: list[HomeeSensor | HomeeNodeSensor] = []
 
-        # Node attributes that are sensors.
-        devices.extend(
-            HomeeSensor(attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type])
-            for attribute in node.attributes
-            if attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable
-        )
+        for node in nodes:
+            # Node properties that are sensors.
+            entities.extend(
+                HomeeNodeSensor(node, config_entry, description)
+                for description in NODE_SENSOR_DESCRIPTIONS
+            )
 
-    if devices:
-        async_add_devices(devices)
+            # Node attributes that are sensors.
+            entities.extend(
+                HomeeSensor(
+                    attribute, config_entry, SENSOR_DESCRIPTIONS[attribute.type]
+                )
+                for attribute in node.attributes
+                if attribute.type in SENSOR_DESCRIPTIONS and not attribute.editable
+            )
+
+        if entities:
+            async_add_entities(entities)
+
+    await setup_homee_platform(add_sensor_entities, async_add_entities, config_entry)
 
 
 class HomeeSensor(HomeeEntity, SensorEntity):
@@ -303,6 +336,9 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+        self._attr_device_class = description.device_class_fn(
+            attribute, description.device_class
+        )
 
     @property
     def native_value(self) -> float | str | None:

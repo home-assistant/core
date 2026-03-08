@@ -8,11 +8,13 @@ from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 import io
+import pathlib
 from typing import Any
 from unittest.mock import patch
 
 import aiohttp
 import av
+from freezegun import freeze_time
 import numpy as np
 import pytest
 
@@ -39,7 +41,7 @@ from .common import (
 )
 from .conftest import FakeAuth
 
-from tests.common import MockUser, async_capture_events
+from tests.common import MockUser, async_capture_events, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 DOMAIN = "nest"
@@ -1574,3 +1576,153 @@ async def test_event_clip_media_attachment(
         response = await client.get(content_path)
         assert response.status == HTTPStatus.OK, f"Response not matched: {response}"
         await response.read()
+
+
+@pytest.mark.parametrize(("device_traits", "cache_size"), [(BATTERY_CAMERA_TRAITS, 5)])
+async def test_remove_stale_media(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    auth,
+    mp4,
+    hass_client: ClientSessionGenerator,
+    subscriber,
+    setup_platform,
+    media_path: str,
+) -> None:
+    """Test media files getting evicted from the cache."""
+    await setup_platform()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    assert device
+    assert device.name == DEVICE_NAME
+
+    # Publish a media event
+    auth.responses = [
+        aiohttp.web.Response(body=mp4.getvalue()),
+    ]
+    event_timestamp = dt_util.now()
+    await subscriber.async_receive_event(
+        create_event_message(
+            create_battery_event_data(MOTION_EVENT),
+            timestamp=event_timestamp,
+        )
+    )
+    await hass.async_block_till_done()
+
+    # The first subdirectory is the device id. Media for events are stored in the
+    # device subdirectory. First verify that the media was persisted. We will
+    # then add additional media files, then invoke the garbage collector, and
+    # then verify orphaned files are removed.
+    storage_path = pathlib.Path(media_path)
+    device_path = storage_path / device.id
+    media_files = list(device_path.glob("*"))
+    assert len(media_files) == 1
+    event_media = media_files[0]
+    assert event_media.name.endswith(".mp4")
+
+    event_time1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=8)
+    extra_media1 = (
+        device_path / f"{int(event_time1.timestamp())}-camera_motion-test.mp4"
+    )
+    extra_media1.write_bytes(mp4.getvalue())
+    event_time2 = event_time1 + datetime.timedelta(hours=20)
+    extra_media2 = (
+        device_path / f"{int(event_time2.timestamp())}-camera_motion-test.jpg"
+    )
+    extra_media2.write_bytes(mp4.getvalue())
+    # This event will not be garbage collected because it is too recent
+    event_time3 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=3)
+    extra_media3 = (
+        device_path / f"{int(event_time3.timestamp())}-camera_motion-test.mp4"
+    )
+    extra_media3.write_bytes(mp4.getvalue())
+
+    assert len(list(device_path.glob("*"))) == 4
+
+    # Advance the clock to invoke the garbage collector. This will remove extra
+    # files that are not valid events that are old enough.
+    point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    with freeze_time(point_in_time):
+        async_fire_time_changed(hass, point_in_time)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # Verify that the event media is still present and that the extra files
+    # are removed. Newer media is not removed.
+    assert event_media.exists()
+    assert not extra_media1.exists()
+    assert not extra_media2.exists()
+    assert extra_media3.exists()
+
+
+async def test_media_migration(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration of media files from legacy path to new path."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    file2 = legacy_device_path / "event2.mp4"
+    file2.write_text("content2")
+
+    # Run setup (which triggers migration)
+    await setup_platform()
+
+    # Check if files are moved to cache path
+    cache_device_path = cache_path / device_id
+    assert (cache_device_path / "event1.jpg").exists()
+    assert (cache_device_path / "event1.jpg").read_text() == "content1"
+    assert (cache_device_path / "event2.mp4").exists()
+    assert (cache_device_path / "event2.mp4").read_text() == "content2"
+
+    # Check if files are removed from legacy path
+    assert not file1.exists()
+    assert not file2.exists()
+    assert not legacy_device_path.exists()
+    assert not legacy_path.exists()
+
+
+async def test_media_migration_failure(
+    hass: HomeAssistant,
+    setup_platform,
+    legacy_media_path: str,
+    media_path: str,
+) -> None:
+    """Test migration failure handles the error gracefully."""
+    legacy_path = pathlib.Path(legacy_media_path)
+    cache_path = pathlib.Path(media_path)
+
+    # Create some dummy files in the legacy path
+    device_id = "device-1"
+    legacy_device_path = legacy_path / device_id
+    legacy_device_path.mkdir(parents=True)
+    file1 = legacy_device_path / "event1.jpg"
+    file1.write_text("content1")
+
+    # Mock shutil.move to fail
+    with patch(
+        "homeassistant.components.nest.media_source.shutil.move",
+        side_effect=OSError("Storage full"),
+    ):
+        # Run setup (which triggers migration)
+        # Note: setup_platform handles the integration setup which calls async_get_media_event_store
+        await setup_platform()
+
+    # Verify that the legacy path still exists (migration was abandoned)
+    assert file1.exists()
+    assert legacy_path.exists()
+
+    # Verify that the cache path was still created (it should be empty)
+    assert cache_path.exists()
+    assert not (cache_path / device_id).exists()

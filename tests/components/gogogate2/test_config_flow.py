@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
@@ -218,7 +219,9 @@ async def test_discovered_dhcp(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+            ip="1.2.3.4",
+            macaddress=dr.format_mac(MOCK_MAC_ADDR).replace(":", ""),
+            hostname="mock_hostname",
         ),
     )
     assert result["type"] is FlowResultType.FORM
@@ -281,7 +284,9 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+            ip="1.2.3.4",
+            macaddress=dr.format_mac(MOCK_MAC_ADDR).replace(":", ""),
+            hostname="mock_hostname",
         ),
     )
     assert result2["type"] is FlowResultType.ABORT
@@ -291,7 +296,7 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=DhcpServiceInfo(
-            ip="1.2.3.4", macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+            ip="1.2.3.4", macaddress="000000000000", hostname="mock_hostname"
         ),
     )
     assert result3["type"] is FlowResultType.ABORT

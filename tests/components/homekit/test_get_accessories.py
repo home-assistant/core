@@ -6,17 +6,26 @@ import pytest
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
+from homeassistant.components.homekit import TYPE_AIR_PURIFIER
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
     TYPE_VALVE,
+)
+from homeassistant.components.homekit.type_sensors import (
+    AirQualitySensor,
+    CarbonDioxideSensor,
+    PM10Sensor,
+    PM25Sensor,
+    TemperatureSensor,
 )
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -40,6 +49,20 @@ from homeassistant.const import (
 from homeassistant.core import State
 
 
+def get_identified_type(entity_id, attrs, config=None):
+    """Helper to return the accessory type name selected by get_accessory."""
+
+    def passthrough(type: type):
+        return lambda *args, **kwargs: type
+
+    # Patch TYPES so that get_accessory returns a type instead of an instance.
+    with patch.dict(
+        TYPES, {type_name: passthrough(v) for type_name, v in TYPES.items()}
+    ):
+        entity_state = State(entity_id, "irrelevant", attrs)
+        return get_accessory(None, None, entity_state, 2, config or {})
+
+
 def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     """Test if none is returned if entity isn't supported."""
     # not supported entity
@@ -49,6 +72,12 @@ def test_not_supported(caplog: pytest.LogCaptureFixture) -> None:
     assert get_accessory(None, None, State("light.demo", "on"), None, None) is None
     assert caplog.records[0].levelname == "WARNING"
     assert "invalid aid" in caplog.records[0].msg
+
+
+def test_not_supported_sensor(caplog: pytest.LogCaptureFixture) -> None:
+    """Test if none is returned if entity isn't supported."""
+    assert get_accessory(None, None, State("sensor.xyz", "on"), 2, {}) is None
+    assert "Unsupported sensor type (device_class=None)" in caplog.text
 
 
 def test_not_supported_media_player() -> None:
@@ -351,6 +380,23 @@ def test_type_switches(type_name, entity_id, state, attrs, config) -> None:
 
 
 @pytest.mark.parametrize(
+    ("type_name", "entity_id", "state", "attrs", "config"),
+    [
+        ("Fan", "fan.test", "on", {}, {}),
+        ("Fan", "fan.test", "on", {}, {CONF_TYPE: TYPE_FAN}),
+        ("AirPurifier", "fan.test", "on", {}, {CONF_TYPE: TYPE_AIR_PURIFIER}),
+    ],
+)
+def test_type_fans(type_name, entity_id, state, attrs, config) -> None:
+    """Test if switch types are associated correctly."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State(entity_id, state, attrs)
+        get_accessory(None, None, entity_state, 2, config)
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
     ("type_name", "entity_id", "state", "attrs"),
     [
         ("Valve", "valve.test", "on", {}),
@@ -400,3 +446,58 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("expected_type", "entity_id", "attrs"),
+    [
+        (
+            PM10Sensor,
+            "sensor.air_quality_pm25",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.PM10},
+        ),
+        (
+            PM25Sensor,
+            "sensor.air_quality_pm10",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.PM25},
+        ),
+        (
+            AirQualitySensor,
+            "sensor.co2_sensor",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.GAS},
+        ),
+        (
+            CarbonDioxideSensor,
+            "sensor.air_quality_gas",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.CO2},
+        ),
+        (
+            TemperatureSensor,
+            "sensor.random_sensor",
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE},
+        ),
+    ],
+)
+def test_explicit_device_class_takes_precedence(
+    expected_type, entity_id, attrs
+) -> None:
+    """Test that explicit device_class takes precedence over entity_id hints."""
+    identified_type = get_identified_type(entity_id, attrs=attrs)
+    assert identified_type == expected_type
+
+
+@pytest.mark.parametrize(
+    ("expected_type", "entity_id", "attrs"),
+    [
+        (PM10Sensor, "sensor.air_quality_pm10", {}),
+        (PM25Sensor, "sensor.air_quality_pm25", {}),
+        (AirQualitySensor, "sensor.air_quality_gas", {}),
+        (CarbonDioxideSensor, "sensor.airmeter_co2", {}),
+    ],
+)
+def test_entity_id_fallback_when_no_device_class(
+    expected_type, entity_id, attrs
+) -> None:
+    """Test that entity_id is used as fallback when device_class is not set."""
+    identified_type = get_identified_type(entity_id, attrs=attrs)
+    assert identified_type == expected_type

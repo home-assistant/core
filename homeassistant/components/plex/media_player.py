@@ -7,6 +7,7 @@ from functools import wraps
 import logging
 from typing import Any, Concatenate, cast
 
+from plexapi.client import PlexClient
 import plexapi.exceptions
 import requests.exceptions
 
@@ -189,7 +190,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             PLEX_UPDATE_SENSOR_SIGNAL.format(self.plex_server.machine_identifier),
         )
 
-    def update(self):
+    def update(self) -> None:
         """Refresh key device data."""
         if not self.session:
             self.force_idle()
@@ -207,6 +208,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self.device.proxyThroughServer()
         self._device_protocol_capabilities = self.device.protocolCapabilities
 
+        device: PlexClient
         for device in filter(None, [self.device, self.session_device]):
             self.device_make = self.device_make or device.device
             self.device_platform = self.device_platform or device.platform
@@ -498,7 +500,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             ) from exc
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the scene state attributes."""
         attributes = {}
         for attr in (

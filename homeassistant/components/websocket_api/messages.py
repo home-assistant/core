@@ -109,6 +109,19 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
+def construct_event_message(iden: int, event: bytes) -> bytes:
+    """Construct an event message JSON."""
+    return b"".join(
+        (
+            b'{"id":',
+            str(iden).encode(),
+            b',"type":"event","event":',
+            event,
+            b"}",
+        )
+    )
+
+
 def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 
@@ -207,7 +220,7 @@ def _state_diff_event(
         additions[COMPRESSED_STATE_STATE] = new_state.state
     if old_state.last_changed != new_state.last_changed:
         additions[COMPRESSED_STATE_LAST_CHANGED] = new_state.last_changed_timestamp
-    elif old_state.last_updated != new_state.last_updated:
+    elif old_state.last_updated_timestamp != new_state.last_updated_timestamp:
         additions[COMPRESSED_STATE_LAST_UPDATED] = new_state.last_updated_timestamp
     if old_state_context.parent_id != new_state_context.parent_id:
         additions[COMPRESSED_STATE_CONTEXT] = {"parent_id": new_state_context.parent_id}
@@ -242,7 +255,7 @@ def _message_to_json_bytes_or_none(message: dict[str, Any]) -> bytes | None:
     """Serialize a websocket message to json or return None."""
     try:
         return json_bytes(message)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         _LOGGER.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(

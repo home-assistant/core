@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import http, llm_api
+from . import http
 from .const import DOMAIN
 from .session import SessionManager
 from .types import MCPServerConfigEntry
@@ -14,9 +14,6 @@ from .types import MCPServerConfigEntry
 __all__ = [
     "CONFIG_SCHEMA",
     "DOMAIN",
-    "async_setup",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -25,7 +22,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Model Context Protocol component."""
     http.async_register(hass)
-    llm_api.async_register_api(hass)
     return True
 
 

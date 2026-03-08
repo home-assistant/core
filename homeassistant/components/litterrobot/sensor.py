@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
@@ -39,11 +40,14 @@ class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEnti
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
+    last_reset_fn: Callable[[], datetime | None] = lambda: None
     value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
-ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
-    LitterRobot: [  # type: ignore[type-abstract]  # only used for isinstance check
+ROBOT_SENSOR_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...], list[RobotSensorEntityDescription]
+] = {
+    LitterRobot: [
         RobotSensorEntityDescription[LitterRobot](
             key="waste_drawer_level",
             translation_key="waste_drawer",
@@ -57,9 +61,9 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             translation_key="sleep_mode_start_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=(
-                lambda robot: robot.sleep_mode_start_time
-                if robot.sleep_mode_enabled
-                else None
+                lambda robot: (
+                    robot.sleep_mode_start_time if robot.sleep_mode_enabled else None
+                )
             ),
         ),
         RobotSensorEntityDescription[LitterRobot](
@@ -67,9 +71,9 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             translation_key="sleep_mode_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
             value_fn=(
-                lambda robot: robot.sleep_mode_end_time
-                if robot.sleep_mode_enabled
-                else None
+                lambda robot: (
+                    robot.sleep_mode_end_time if robot.sleep_mode_enabled else None
+                )
             ),
         ),
         RobotSensorEntityDescription[LitterRobot](
@@ -115,9 +119,37 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 lambda robot: status.lower() if (status := robot.status_code) else None
             ),
         ),
+        RobotSensorEntityDescription[LitterRobot](
+            key="total_cycles",
+            translation_key="total_cycles",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.cycle_count,
+        ),
     ],
     LitterRobot4: [
         RobotSensorEntityDescription[LitterRobot4](
+            key="hopper_status",
+            translation_key="hopper_status",
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                "enabled",
+                "disabled",
+                "motor_fault_short",
+                "motor_ot_amps",
+                "motor_disconnected",
+                "empty",
+            ],
+            value_fn=(
+                lambda robot: (
+                    status.name.lower() if (status := robot.hopper_status) else None
+                )
+            ),
+        ),
+    ],
+    (LitterRobot4, LitterRobot5): [
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="litter_level",
             translation_key="litter_level",
             native_unit_of_measurement=PERCENTAGE,
@@ -125,7 +157,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.litter_level,
         ),
-        RobotSensorEntityDescription[LitterRobot4](
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="pet_weight",
             translation_key="pet_weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
@@ -136,13 +168,40 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
     ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
+            key="food_dispensed_today",
+            translation_key="food_dispensed_today",
+            state_class=SensorStateClass.TOTAL,
+            last_reset_fn=dt_util.start_of_local_day,
+            value_fn=(
+                lambda robot: robot.get_food_dispensed_since(
+                    dt_util.start_of_local_day()
+                )
+            ),
+        ),
+        RobotSensorEntityDescription[FeederRobot](
             key="food_level",
             translation_key="food_level",
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.food_level,
-        )
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="last_feeding",
+            translation_key="last_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=(
+                lambda robot: (
+                    robot.last_feeding["timestamp"] if robot.last_feeding else None
+                )
+            ),
+        ),
+        RobotSensorEntityDescription[FeederRobot](
+            key="next_feeding",
+            translation_key="next_feeding",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            value_fn=lambda robot: robot.next_feeding,
+        ),
     ],
 }
 
@@ -153,7 +212,14 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfMass.POUNDS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda pet: pet.weight,
-    )
+    ),
+    RobotSensorEntityDescription[Pet](
+        key="visits_today",
+        translation_key="visits_today",
+        state_class=SensorStateClass.TOTAL,
+        last_reset_fn=dt_util.start_of_local_day,
+        value_fn=lambda pet: pet.get_visits_since(dt_util.start_of_local_day()),
+    ),
 ]
 
 
@@ -199,3 +265,8 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
         if (icon := self.entity_description.icon_fn(self.state)) is not None:
             return icon
         return super().icon
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        return self.entity_description.last_reset_fn() or super().last_reset

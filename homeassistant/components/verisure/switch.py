@@ -99,4 +99,4 @@ class VerisureSmartplug(CoordinatorEntity[VerisureDataUpdateCoordinator], Switch
         )
         self._state = state
         self._change_timestamp = monotonic()
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()

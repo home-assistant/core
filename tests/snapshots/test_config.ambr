@@ -78,7 +78,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -146,7 +146,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -262,7 +262,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
   ])
 # ---
@@ -306,7 +306,7 @@
     }),
     dict({
       'has_exc_info': True,
-      'message': 'config_validator_unknown_err',
+      'message': 'Unknown error calling custom_validator_bad_2 config validator - broken',
     }),
     dict({
       'has_exc_info': False,
@@ -357,7 +357,7 @@
     ''',
     "Invalid config for 'custom_validator_ok_2' at configuration.yaml, line 52: required key 'host' not provided, please check the docs at https://www.home-assistant.io/integrations/custom_validator_ok_2",
     "Invalid config for 'custom_validator_bad_1' at configuration.yaml, line 55: broken, please check the docs at https://www.home-assistant.io/integrations/custom_validator_bad_1",
-    'config_validator_unknown_err',
+    'Unknown error calling custom_validator_bad_2 config validator - broken',
   ])
 # ---
 # name: test_individual_packages_schema_validation_errors[packages_dict]
@@ -434,7 +434,7 @@
 # name: test_yaml_error[basic]
   '''
   mapping values are not allowed here
-    in "configuration.yaml", line 4, column 14
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic/configuration.yaml", line 4, column 14
   '''
 # ---
 # name: test_yaml_error[basic].1
@@ -448,7 +448,7 @@
 # name: test_yaml_error[basic_include]
   '''
   mapping values are not allowed here
-    in "integrations/iot_domain.yaml", line 3, column 12
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/basic_include/integrations/iot_domain.yaml", line 3, column 12
   '''
 # ---
 # name: test_yaml_error[basic_include].1
@@ -462,7 +462,7 @@
 # name: test_yaml_error[include_dir_list]
   '''
   mapping values are not allowed here
-    in "iot_domain/iot_domain_1.yaml", line 3, column 10
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_list/iot_domain/iot_domain_1.yaml", line 3, column 10
   '''
 # ---
 # name: test_yaml_error[include_dir_list].1
@@ -476,7 +476,7 @@
 # name: test_yaml_error[include_dir_merge_list]
   '''
   mapping values are not allowed here
-    in "iot_domain/iot_domain_1.yaml", line 3, column 12
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/include_dir_merge_list/iot_domain/iot_domain_1.yaml", line 3, column 12
   '''
 # ---
 # name: test_yaml_error[include_dir_merge_list].1
@@ -490,7 +490,7 @@
 # name: test_yaml_error[packages_include_dir_named]
   '''
   mapping values are not allowed here
-    in "integrations/adr_0007_1.yaml", line 4, column 9
+    in "<BASE_PATH>/fixtures/core/config/yaml_errors/packages_include_dir_named/integrations/adr_0007_1.yaml", line 4, column 9
   '''
 # ---
 # name: test_yaml_error[packages_include_dir_named].1

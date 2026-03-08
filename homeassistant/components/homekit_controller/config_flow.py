@@ -355,11 +355,10 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ignored_model")
 
         # Late imports in case BLE is not available
-        # pylint: disable-next=import-outside-toplevel
-        from aiohomekit.controller.ble.discovery import BleDiscovery
-
-        # pylint: disable-next=import-outside-toplevel
-        from aiohomekit.controller.ble.manufacturer_data import HomeKitAdvertisement
+        from aiohomekit.controller.ble.discovery import BleDiscovery  # noqa: PLC0415
+        from aiohomekit.controller.ble.manufacturer_data import (  # noqa: PLC0415
+            HomeKitAdvertisement,
+        )
 
         mfr_data = discovery_info.manufacturer_data
 
@@ -461,6 +460,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
             except Exception as err:
@@ -491,6 +496,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             except aiohomekit.AccessoryNotFoundError:
                 # Can no longer find the device on the network
                 return self.async_abort(reason="accessory_not_found_error")
+            except aiohomekit.AccessoryDisconnectedError as err:
+                # The accessory has disconnected from the network
+                return self.async_abort(
+                    reason="accessory_disconnected_error",
+                    description_placeholders={"error": str(err)},
+                )
             except IndexError:
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")

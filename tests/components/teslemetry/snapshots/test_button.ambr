@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Flash lights',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flash_lights',
     'unique_id': 'LRW3F7EK4NC700000-flash_lights',
@@ -67,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Homelink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +77,7 @@
     'original_name': 'Homelink',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'homelink',
     'unique_id': 'LRW3F7EK4NC700000-homelink',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': 'Honk horn',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'honk',
     'unique_id': 'LRW3F7EK4NC700000-honk',
@@ -161,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keyless driving',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +175,7 @@
     'original_name': 'Keyless driving',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'enable_keyless_driving',
     'unique_id': 'LRW3F7EK4NC700000-enable_keyless_driving',
@@ -208,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Play fart',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +224,7 @@
     'original_name': 'Play fart',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boombox',
     'unique_id': 'LRW3F7EK4NC700000-boombox',
@@ -255,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wake',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +273,7 @@
     'original_name': 'Wake',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wake',
     'unique_id': 'LRW3F7EK4NC700000-wake',

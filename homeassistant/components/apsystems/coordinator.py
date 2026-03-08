@@ -43,6 +43,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
 
     config_entry: ApSystemsConfigEntry
     device_version: str
+    battery_system: bool
 
     def __init__(
         self,
@@ -63,11 +64,12 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     async def _async_setup(self) -> None:
         try:
             device_info = await self.api.get_device_info()
-        except (ConnectionError, TimeoutError):
+        except ConnectionError, TimeoutError:
             raise UpdateFailed from None
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower
         self.device_version = device_info.devVer
+        self.battery_system = device_info.isBatterySystem
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:

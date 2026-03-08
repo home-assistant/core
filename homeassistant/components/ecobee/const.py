@@ -20,7 +20,6 @@ from homeassistant.const import Platform
 _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "ecobee"
-ATTR_CONFIG_ENTRY_ID = "entry_id"
 ATTR_AVAILABLE_SENSORS = "available_sensors"
 ATTR_ACTIVE_SENSORS = "active_sensors"
 
@@ -40,6 +39,7 @@ ECOBEE_MODEL_TO_NAME = {
     "vulcanSmart": "ecobee4 Smart",
     "aresSmart": "ecobee Smart Premium",
     "artemisSmart": "ecobee Smart Enhanced",
+    "attisRetail": "ecobee Smart Thermostat with Voice Control",
 }
 
 PLATFORMS = [

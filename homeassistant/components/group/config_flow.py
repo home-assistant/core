@@ -35,9 +35,11 @@ from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
+from .valve import async_create_preview_valve
 
 _STATISTIC_MEASURES = [
     "last",
+    "first_available",
     "max",
     "mean",
     "median",
@@ -56,12 +58,12 @@ async def basic_group_options_schema(
     entity_selector: selector.Selector[Any] | vol.Schema
     if handler is None:
         entity_selector = selector.selector(
-            {"entity": {"domain": domain, "multiple": True}}
+            {"entity": {"domain": domain, "multiple": True, "reorder": True}}
         )
     else:
         entity_selector = entity_selector_without_own_entities(
             cast(SchemaOptionsFlowHandler, handler.parent_handler),
-            selector.EntitySelectorConfig(domain=domain, multiple=True),
+            selector.EntitySelectorConfig(domain=domain, multiple=True, reorder=True),
         )
 
     return vol.Schema(
@@ -78,7 +80,9 @@ def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
         {
             vol.Required("name"): selector.TextSelector(),
             vol.Required(CONF_ENTITIES): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=domain, multiple=True),
+                selector.EntitySelectorConfig(
+                    domain=domain, multiple=True, reorder=True
+                ),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
@@ -139,11 +143,23 @@ async def light_switch_options_schema(
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
         {
-            vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
-            ): selector.BooleanSelector(),
+            vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
     )
+
+
+LIGHT_CONFIG_SCHEMA = basic_group_config_schema("light").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
+
+
+SWITCH_CONFIG_SCHEMA = basic_group_config_schema("switch").extend(
+    {
+        vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
+    }
+)
 
 
 GROUP_TYPES = [
@@ -158,6 +174,7 @@ GROUP_TYPES = [
     "notify",
     "sensor",
     "switch",
+    "valve",
 ]
 
 
@@ -210,7 +227,7 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("fan"),
     ),
     "light": SchemaFlowFormStep(
-        basic_group_config_schema("light"),
+        LIGHT_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("light"),
     ),
@@ -235,9 +252,14 @@ CONFIG_FLOW = {
         validate_user_input=set_group_type("sensor"),
     ),
     "switch": SchemaFlowFormStep(
-        basic_group_config_schema("switch"),
+        SWITCH_CONFIG_SCHEMA,
         preview="group",
         validate_user_input=set_group_type("switch"),
+    ),
+    "valve": SchemaFlowFormStep(
+        basic_group_config_schema("valve"),
+        preview="group",
+        validate_user_input=set_group_type("valve"),
     ),
 }
 
@@ -288,6 +310,10 @@ OPTIONS_FLOW = {
         partial(light_switch_options_schema, "switch"),
         preview="group",
     ),
+    "valve": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "valve"),
+        preview="group",
+    ),
 }
 
 PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
@@ -307,6 +333,7 @@ CREATE_PREVIEW_ENTITY: dict[
     "notify": async_create_preview_notify,
     "sensor": async_create_preview_sensor,
     "switch": async_create_preview_switch,
+    "valve": async_create_preview_valve,
 }
 
 
@@ -315,6 +342,7 @@ class GroupConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

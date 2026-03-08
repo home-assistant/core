@@ -2,11 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiovodafone import CannotAuthenticate
-from aiovodafone.exceptions import AlreadyLogged, CannotConnect
+from aiovodafone.exceptions import AlreadyLogged, CannotAuthenticate, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vodafone_station.const import LINE_TYPES, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -14,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
+from .const import TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -53,10 +53,11 @@ async def test_active_connection_type(
     """Test device connection type."""
     await setup_integration(hass, mock_config_entry)
 
-    active_connection_entity = "sensor.vodafone_station_m123456789_active_connection"
+    active_connection_entity = (
+        f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_active_connection"
+    )
 
-    state = hass.states.get(active_connection_entity)
-    assert state
+    assert (state := hass.states.get(active_connection_entity))
     assert state.state == STATE_UNKNOWN
 
     mock_vodafone_station_router.get_sensor_data.return_value[connection_type] = (
@@ -67,8 +68,7 @@ async def test_active_connection_type(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(active_connection_entity)
-    assert state
+    assert (state := hass.states.get(active_connection_entity))
     assert state.state == LINE_TYPES[index]
 
 
@@ -83,10 +83,9 @@ async def test_uptime(
     await setup_integration(hass, mock_config_entry)
 
     uptime = "2024-11-19T20:19:00+00:00"
-    uptime_entity = "sensor.vodafone_station_m123456789_uptime"
+    uptime_entity = f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_uptime"
 
-    state = hass.states.get(uptime_entity)
-    assert state
+    assert (state := hass.states.get(uptime_entity))
     assert state.state == uptime
 
     mock_vodafone_station_router.get_sensor_data.return_value["sys_uptime"] = "12:17:23"
@@ -95,8 +94,7 @@ async def test_uptime(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(uptime_entity)
-    assert state
+    assert (state := hass.states.get(uptime_entity))
     assert state.state == uptime
 
 
@@ -124,6 +122,7 @@ async def test_coordinator_client_connector_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.vodafone_station_m123456789_uptime")
-    assert state
+    assert (
+        state := hass.states.get(f"sensor.vodafone_station_{TEST_SERIAL_NUMBER}_uptime")
+    )
     assert state.state == STATE_UNAVAILABLE

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keypad',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Keypad',
     'platform': 'deconz',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': None,
     'unique_id': '00:00:00:00:00:00:00:00-00',

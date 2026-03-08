@@ -2,28 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-from typing import Any, TypedDict
-
-from pylamarzocco.const import FirmwareType
+from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_USE_BLUETOOTH
 from .coordinator import LaMarzoccoConfigEntry
 
 TO_REDACT = {
     "serial_number",
 }
-
-
-class DiagnosticsData(TypedDict):
-    """Diagnostic data for La Marzocco."""
-
-    model: str
-    config: dict[str, Any]
-    firmware: list[dict[FirmwareType, dict[str, Any]]]
-    statistics: dict[str, Any]
 
 
 async def async_get_config_entry_diagnostics(
@@ -33,12 +23,12 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.config_coordinator
     device = coordinator.device
-    # collect all data sources
-    diagnostics_data = DiagnosticsData(
-        model=device.model,
-        config=asdict(device.config),
-        firmware=[{key: asdict(firmware)} for key, firmware in device.firmware.items()],
-        statistics=asdict(device.statistics),
-    )
-
-    return async_redact_data(diagnostics_data, TO_REDACT)
+    data = {
+        "device": device.to_dict(),
+        "bluetooth_available": {
+            "options_enabled": entry.options.get(CONF_USE_BLUETOOTH, True),
+            CONF_MAC: CONF_MAC in entry.data,
+            CONF_TOKEN: CONF_TOKEN in entry.data,
+        },
+    }
+    return async_redact_data(data, TO_REDACT)

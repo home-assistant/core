@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN
 
 if TYPE_CHECKING:
-    from ..bridge import HueBridge
+    from ..bridge import HueBridge, HueConfigEntry
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
@@ -111,8 +111,9 @@ REMOTES: dict[str, dict[tuple[str, str], dict[str, int]]] = {
 
 def _get_hue_event_from_device_id(hass, device_id):
     """Resolve hue event from device id."""
-    for bridge in hass.data.get(DOMAIN, {}).values():
-        for hue_event in bridge.sensor_manager.current_events.values():
+    entries: list[HueConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    for entry in entries:
+        for hue_event in entry.runtime_data.sensor_manager.current_events.values():
             if device_id == hue_event.device_registry_id:
                 return hue_event
 

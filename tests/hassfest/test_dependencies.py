@@ -68,33 +68,6 @@ import homeassistant.components.renamed_absolute as hue
     assert mock_collector.unfiltered_referenced == {"renamed_absolute"}
 
 
-def test_hass_components_var(mock_collector) -> None:
-    """Test detecting a hass_components_var reference."""
-    mock_collector.visit(
-        ast.parse(
-            """
-def bla(hass):
-    hass.components.hass_components_var.async_do_something()
-"""
-        )
-    )
-    assert mock_collector.unfiltered_referenced == {"hass_components_var"}
-
-
-def test_hass_components_class(mock_collector) -> None:
-    """Test detecting a hass_components_class reference."""
-    mock_collector.visit(
-        ast.parse(
-            """
-class Hello:
-    def something(self):
-        self.hass.components.hass_components_class.async_yo()
-"""
-        )
-    )
-    assert mock_collector.unfiltered_referenced == {"hass_components_class"}
-
-
 def test_all_imports(mock_collector) -> None:
     """Test all imports together."""
     mock_collector.visit(
@@ -108,13 +81,6 @@ from homeassistant.components.subimport.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.child_import_field import bla
 
 import homeassistant.components.renamed_absolute as hue
-
-def bla(hass):
-    hass.components.hass_components_var.async_do_something()
-
-class Hello:
-    def something(self):
-        self.hass.components.hass_components_class.async_yo()
 """
         )
     )
@@ -123,6 +89,4 @@ class Hello:
         "subimport",
         "child_import_field",
         "renamed_absolute",
-        "hass_components_var",
-        "hass_components_class",
     }

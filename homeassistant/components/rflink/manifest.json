@@ -6,5 +6,5 @@
   "iot_class": "assumed_state",
   "loggers": ["rflink"],
   "quality_scale": "legacy",
-  "requirements": ["rflink==0.0.66"]
+  "requirements": ["rflink==0.0.67"]
 }

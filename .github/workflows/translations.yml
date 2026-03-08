@@ -9,8 +9,11 @@ on:
     paths:
       - "**strings.json"
 
-env:
-  DEFAULT_PYTHON: "3.13"
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
   upload:
@@ -19,14 +22,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.4.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
 
       - name: Upload Translations
+        env:
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
         run: |
-          export LOKALISE_TOKEN="${{ secrets.LOKALISE_TOKEN }}"
           python3 -m script.translations upload

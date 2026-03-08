@@ -1,4 +1,4 @@
-"""Test the Nibe Heat Pump config flow."""
+"""Test the Nibe Heat Pump climate entities."""
 
 from typing import Any
 from unittest.mock import call, patch
@@ -12,14 +12,14 @@ from nibe.coil_groups import (
 )
 from nibe.heatpump import Model
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -124,7 +124,7 @@ async def test_active_accessory(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate groups that can be deactivated by configuration."""
-    climate, unit = _setup_climate_group(coils, model, climate_id)
+    climate, _unit = _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
 
@@ -164,7 +164,7 @@ async def test_set_temperature_supported_cooling(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -181,7 +181,7 @@ async def test_set_temperature_supported_cooling(
     mock_connection.write_coil.reset_mock()
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -199,7 +199,7 @@ async def test_set_temperature_supported_cooling(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -209,7 +209,7 @@ async def test_set_temperature_supported_cooling(
         )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -255,7 +255,7 @@ async def test_set_temperature_unsupported_cooling(
 
     # Set temperature to heat
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -272,7 +272,7 @@ async def test_set_temperature_unsupported_cooling(
     # Attempt to set temperature to cool should raise ServiceValidationError
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: entity_id,
@@ -297,7 +297,6 @@ async def test_set_temperature_unsupported_cooling(
     [
         (Model.S320, "s1", "climate.climate_system_s1"),
         (Model.F1155, "s2", "climate.climate_system_s2"),
-        (Model.F730, "s1", "climate.climate_system_s1"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -325,7 +324,7 @@ async def test_set_hvac_mode(
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: entity_id,
@@ -365,7 +364,7 @@ async def test_set_invalid_hvac_mode(
     await async_add_model(hass, model)
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: entity_id,

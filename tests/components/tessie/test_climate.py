@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -130,3 +130,21 @@ async def test_errors(hass: HomeAssistant) -> None:
         )
     mock_set.assert_called_once()
     assert error.value.__cause__ == ERROR_UNKNOWN
+
+    # Test setting climate with child presence detection error
+    with (
+        patch(
+            "homeassistant.components.tessie.climate.start_climate_preconditioning",
+            return_value={"result": False, "reason": "cpd_enabled"},
+        ) as mock_set,
+        pytest.raises(HomeAssistantError) as error,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+            blocking=True,
+        )
+    mock_set.assert_called_once()
+    assert error.value.translation_domain == "tessie"
+    assert error.value.translation_key == "cpd_enabled"

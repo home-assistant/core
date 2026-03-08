@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components import huisbaasje
+from homeassistant.components.huisbaasje.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -40,10 +40,9 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
-            domain=huisbaasje.DOMAIN,
+            domain=DOMAIN,
             title="userId",
             data={
                 CONF_ID: "userId",
@@ -331,10 +330,9 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
             return_value=MOCK_LIMITED_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
     ):
-        hass.config.components.add(huisbaasje.DOMAIN)
         config_entry = MockConfigEntry(
             version=1,
-            domain=huisbaasje.DOMAIN,
+            domain=DOMAIN,
             title="userId",
             data={
                 CONF_ID: "userId",

@@ -1,7 +1,7 @@
 """The config flow tests for the forked_daapd media player platform."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -12,12 +12,10 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_VOLUME,
     DOMAIN,
 )
-from homeassistant.components.forked_daapd.media_player import async_setup_entry
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
@@ -75,9 +73,13 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
             new=AsyncMock(),
         ) as mock_test_connection,
         patch(
-            "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
+            "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
             autospec=True,
         ) as mock_get_request,
+        patch(
+            "homeassistant.components.forked_daapd.async_setup_entry",
+            return_value=True,
+        ),
     ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
@@ -231,10 +233,16 @@ async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
 async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test config flow options."""
 
-    with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI.get_request",
-        autospec=True,
-    ) as mock_get_request:
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.ForkedDaapdAPI.get_request",
+            autospec=True,
+        ) as mock_get_request,
+        patch(
+            "homeassistant.components.forked_daapd.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         mock_get_request.return_value = SAMPLE_CONFIG
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -256,17 +264,18 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
 
 
 async def test_async_setup_entry_not_ready(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test that a PlatformNotReady exception is thrown during platform setup."""
 
     with patch(
-        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        "homeassistant.components.forked_daapd.ForkedDaapdAPI",
         autospec=True,
     ) as mock_api:
         mock_api.return_value.get_request.return_value = None
         config_entry.add_to_hass(hass)
-        with pytest.raises(PlatformNotReady):
-            await async_setup_entry(hass, config_entry, MagicMock())
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         mock_api.return_value.get_request.assert_called_once()
+        assert "Platform forked_daapd not ready yet" in caplog.text
+        assert config_entry.state is ConfigEntryState.LOADED

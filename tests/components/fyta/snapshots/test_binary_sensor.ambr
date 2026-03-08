@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -27,6 +28,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-low_battery',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +78,7 @@
     'original_name': 'Light notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_light',
@@ -115,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +127,7 @@
     'original_name': 'Nutrition notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_nutrition',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_nutrition',
@@ -162,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -169,6 +176,7 @@
     'original_name': 'Productive plant',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'productive_plant',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-productive_plant',
@@ -209,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +225,7 @@
     'original_name': 'Repotted',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'repotted',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-repotted',
@@ -256,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +274,7 @@
     'original_name': 'Temperature notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_temperature',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_temperature',
@@ -303,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
@@ -310,6 +323,7 @@
     'original_name': 'Update',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-sensor_update_available',
@@ -351,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -358,6 +373,7 @@
     'original_name': 'Water notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_water',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_water',
@@ -398,6 +414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -405,6 +422,7 @@
     'original_name': 'Battery',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-low_battery',
@@ -446,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -453,6 +472,7 @@
     'original_name': 'Light notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_light',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_light',
@@ -493,6 +513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrition notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -500,6 +521,7 @@
     'original_name': 'Nutrition notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_nutrition',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_nutrition',
@@ -540,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Productive plant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -547,6 +570,7 @@
     'original_name': 'Productive plant',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'productive_plant',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-productive_plant',
@@ -587,6 +611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Repotted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +619,7 @@
     'original_name': 'Repotted',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'repotted',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-repotted',
@@ -634,6 +660,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,6 +668,7 @@
     'original_name': 'Temperature notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_temperature',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_temperature',
@@ -681,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Update',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
@@ -688,6 +717,7 @@
     'original_name': 'Update',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-sensor_update_available',
@@ -729,6 +759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water notification',
     'options': dict({
     }),
     'original_device_class': None,
@@ -736,6 +767,7 @@
     'original_name': 'Water notification',
     'platform': 'fyta',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'notification_water',
     'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_water',

@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import datetime
 import logging
 
-from pyyardian import (
-    AsyncYardianClient,
-    NetworkException,
-    NotAuthorizedException,
-    YardianDeviceState,
-)
+from pyyardian import AsyncYardianClient, NetworkException, NotAuthorizedException
+from pyyardian.typing import OperationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,7 +23,24 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=30)
 
 
-class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
+@dataclass(slots=True)
+class YardianZone:
+    """Normalized metadata for a Yardian irrigation zone."""
+
+    name: str
+    is_enabled: bool
+
+
+@dataclass
+class YardianCoordinatorData:
+    """Combined device state for Yardian."""
+
+    zones: list[YardianZone]
+    active_zones: set[int]
+    oper_info: OperationInfo
+
+
+class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
     """Coordinator for Yardian API calls."""
 
     config_entry: ConfigEntry
@@ -50,6 +65,7 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
         self.yid = entry.data["yid"]
         self._name = entry.title
         self._model = entry.data["model"]
+        self._serial = entry.data.get("serialNumber")
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -59,17 +75,48 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianDeviceState]):
             identifiers={(DOMAIN, self.yid)},
             manufacturer=MANUFACTURER,
             model=self._model,
+            serial_number=self._serial,
         )
 
-    async def _async_update_data(self) -> YardianDeviceState:
+    async def _async_update_data(self) -> YardianCoordinatorData:
         """Fetch data from Yardian device."""
+        _LOGGER.debug(
+            "Fetching Yardian device state for %s (controller=%s)",
+            self._name,
+            type(self.controller).__name__,
+        )
         try:
             async with asyncio.timeout(10):
-                return await self.controller.fetch_device_state()
+                # Fetch device state and operation info; specific exceptions are
+                # handled by the outer block to avoid double-logging.
+                dev_state = await self.controller.fetch_device_state()
+                oper_info = await self.controller.fetch_oper_info()
 
         except TimeoutError as e:
-            raise UpdateFailed("Communication with Device was time out") from e
+            raise UpdateFailed("Timeout communicating with device") from e
         except NotAuthorizedException as e:
-            raise UpdateFailed("Invalid access token") from e
+            raise ConfigEntryError("Invalid access token") from e
         except NetworkException as e:
-            raise UpdateFailed("Failed to communicate with Device") from e
+            raise UpdateFailed("Failed to communicate with device") from e
+        except Exception as e:  # safety net for tests to surface failure reason
+            _LOGGER.exception("Unexpected error while fetching Yardian data")
+            raise UpdateFailed(f"Unexpected error: {type(e).__name__}: {e}") from e
+
+        _LOGGER.debug(
+            "Fetched Yardian data: zones=%s active=%s oper_keys=%s",
+            len(dev_state.zones),
+            len(dev_state.active_zones),
+            list(oper_info.keys()),
+        )
+
+        return YardianCoordinatorData(
+            zones=[
+                YardianZone(
+                    name=str(zone_info[0]),
+                    is_enabled=zone_info[1] == 1,
+                )
+                for zone_info in dev_state.zones
+            ],
+            active_zones=set(dev_state.active_zones),
+            oper_info=oper_info,
+        )

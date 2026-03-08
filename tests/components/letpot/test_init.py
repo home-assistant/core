@@ -37,7 +37,7 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_device_client.disconnect.assert_called_once()
+    mock_device_client.unsubscribe.assert_called_once()
 
 
 @pytest.mark.freeze_time("2025-02-15 00:00:00")

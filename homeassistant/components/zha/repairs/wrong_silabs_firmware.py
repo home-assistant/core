@@ -37,16 +37,6 @@ class HardwareType(enum.StrEnum):
     OTHER = "other"
 
 
-DISABLE_MULTIPAN_URL = {
-    HardwareType.YELLOW: (
-        "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.OTHER: None,
-}
-
 ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED = "wrong_silabs_firmware_installed"
 
 
@@ -81,7 +71,20 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     if device.startswith("socket://"):
         return False
 
-    app_type = await probe_silabs_firmware_type(device)
+    app_type = await probe_silabs_firmware_type(
+        device,
+        bootloader_reset_methods=(),
+        application_probe_methods=[
+            (ApplicationType.GECKO_BOOTLOADER, 115200),
+            (ApplicationType.EZSP, 115200),
+            (ApplicationType.EZSP, 460800),
+            (ApplicationType.SPINEL, 460800),
+            (ApplicationType.CPC, 460800),
+            (ApplicationType.CPC, 230400),
+            (ApplicationType.CPC, 115200),
+            (ApplicationType.ROUTER, 115200),
+        ],
+    )
 
     if app_type is None:
         # Failed to probe, we can't tell if the wrong firmware is installed
@@ -99,7 +102,6 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
         is_fixable=False,
         is_persistent=True,
-        learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
         severity=ir.IssueSeverity.ERROR,
         translation_key=(
             ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED

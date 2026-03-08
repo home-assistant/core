@@ -1,10 +1,13 @@
 """Constants for the PurpleAir integration."""
 
 import logging
+from typing import Final
 
-DOMAIN = "purpleair"
+from homeassistant.const import Platform
 
-LOGGER = logging.getLogger(__package__)
+LOGGER: Final = logging.getLogger(__package__)
+PLATFORMS: Final = [Platform.SENSOR]
 
-CONF_READ_KEY = "read_key"
-CONF_SENSOR_INDICES = "sensor_indices"
+DOMAIN: Final[str] = "purpleair"
+
+CONF_SENSOR_INDICES: Final[str] = "sensor_indices"

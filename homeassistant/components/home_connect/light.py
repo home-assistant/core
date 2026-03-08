@@ -21,31 +21,25 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .common import setup_home_connect_entry
-from .const import (
-    BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
-    DOMAIN,
-    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
-)
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .const import BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR, DOMAIN
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectLightEntityDescription(LightEntityDescription):
     """Light entity description."""
 
-    brightness_key: SettingKey | None = None
+    brightness_key: SettingKey
+    brightness_scale: tuple[float, float]
     color_key: SettingKey | None = None
     enable_custom_color_value_key: str | None = None
     custom_color_key: SettingKey | None = None
-    brightness_scale: tuple[float, float] = (0.0, 100.0)
 
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
@@ -80,14 +74,13 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectLight(entry.runtime_data, appliance, description)
+        HomeConnectLight(appliance_coordinator, description)
         for description in LIGHTS
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     ]
 
 
@@ -98,6 +91,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect light."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -111,8 +105,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectLightEntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -120,7 +113,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         def get_setting_key_if_setting_exists(
             setting_key: SettingKey | None,
         ) -> SettingKey | None:
-            if setting_key and setting_key in appliance.settings:
+            if setting_key and setting_key in appliance_coordinator.data.settings:
                 return setting_key
             return None
 
@@ -135,7 +128,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         )
         self._brightness_scale = desc.brightness_scale
 
-        super().__init__(coordinator, appliance, desc)
+        super().__init__(appliance_coordinator, desc)
 
         match (self._brightness_key, self._custom_color_key):
             case (None, None):
@@ -162,7 +155,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_on_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    "entity_id": self.entity_id,
                 },
             ) from err
         if self._color_key and self._custom_color_key:
@@ -181,7 +174,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="select_light_custom_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
 
@@ -199,7 +192,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
                 return
@@ -209,11 +202,13 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 brightness = round(
                     color_util.brightness_to_value(
                         self._brightness_scale,
-                        kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness),
+                        cast(int, kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness)),
                     )
                 )
 
-                hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+                hs_color = cast(
+                    tuple[float, float], kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+                )
 
                 rgb = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1], brightness)
                 hex_val = color_util.color_rgb_to_hex(*rgb)
@@ -229,7 +224,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         translation_key="set_light_color",
                         translation_placeholders={
                             **get_dict_from_home_connect_error(err),
-                            SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                            "entity_id": self.entity_id,
                         },
                     ) from err
                 return
@@ -252,7 +247,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     translation_key="set_light_brightness",
                     translation_placeholders={
                         **get_dict_from_home_connect_error(err),
-                        SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                        "entity_id": self.entity_id,
                     },
                 ) from err
 
@@ -270,7 +265,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 translation_key="turn_off_light",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID: self.entity_id,
+                    "entity_id": self.entity_id,
                 },
             ) from err
 
@@ -286,10 +281,7 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self.async_on_remove(
                 self.coordinator.async_add_listener(
                     self._handle_coordinator_update,
-                    (
-                        self.appliance.info.ha_id,
-                        EventKey(key),
-                    ),
+                    EventKey(key),
                 )
             )
 

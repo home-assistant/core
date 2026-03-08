@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from itertools import chain
+from typing import Any
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
@@ -11,13 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import get_data_update_coordinator, sensor_unique_id
-from .coordinator import DeviceDataUpdateCoordinator
+from .common import sensor_unique_id
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
 from .entity import GoGoGate2Entity
 
 SENSOR_ID_WIRED = "WIRE"
@@ -25,11 +25,11 @@ SENSOR_ID_WIRED = "WIRE"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GogoGateConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the config entry."""
-    data_update_coordinator = get_data_update_coordinator(hass, config_entry)
+    data_update_coordinator = config_entry.runtime_data
 
     sensors = chain(
         [
@@ -50,7 +50,7 @@ class DoorSensorEntity(GoGoGate2Entity, SensorEntity):
     """Base class for door sensor entities."""
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = super().extra_state_attributes
         door = self.door
@@ -69,7 +69,7 @@ class DoorSensorBattery(DoorSensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:
@@ -97,7 +97,7 @@ class DoorSensorTemperature(DoorSensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: GogoGateConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
     ) -> None:

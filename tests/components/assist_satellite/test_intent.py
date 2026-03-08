@@ -4,28 +4,28 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_DOMAIN, MockAssistSatellite
 
+from tests.components.tts.common import MockResultStream
+
 
 @pytest.fixture
-def mock_tts():
+async def mock_tts(hass: HomeAssistant):
     """Mock TTS service."""
+    assert await async_setup_component(hass, "tts", {})
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            "homeassistant.components.tts.generate_media_source_id",
             return_value="media-source://bla",
         ),
         patch(
-            "homeassistant.components.media_source.async_resolve_media",
-            return_value=PlayMedia(
-                url="https://www.home-assistant.io/resolved.mp3",
-                mime_type="audio/mp3",
-            ),
+            "homeassistant.components.tts.async_create_stream",
+            return_value=MockResultStream(hass, "wav", b""),
         ),
     ):
         yield
@@ -41,9 +41,13 @@ async def test_broadcast_intent(
 ) -> None:
     """Test we can invoke a broadcast intent."""
 
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_BROADCAST, {"message": {"value": "Hello"}}
-    )
+    with patch(
+        "homeassistant.components.tts.async_resolve_engine",
+        return_value="tts.cloud",
+    ):
+        result = await intent.async_handle(
+            hass, "test", intent.INTENT_BROADCAST, {"message": {"value": "Hello"}}
+        )
 
     assert result.as_dict() == {
         "card": {},
@@ -71,13 +75,17 @@ async def test_broadcast_intent(
     assert len(entity2.announcements) == 1
     assert len(entity_no_features.announcements) == 0
 
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_BROADCAST,
-        {"message": {"value": "Hello"}},
-        device_id=entity.device_entry.id,
-    )
+    with patch(
+        "homeassistant.components.tts.async_resolve_engine",
+        return_value="tts.cloud",
+    ):
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_BROADCAST,
+            {"message": {"value": "Hello"}},
+            device_id=entity.device_entry.id,
+        )
     # Broadcast doesn't targets device that triggered it.
     assert result.as_dict() == {
         "card": {},

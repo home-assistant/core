@@ -1,10 +1,18 @@
 {
   "services": {
-    "reload": {
-      "service": "mdi:reload"
-    },
     "get_schedule": {
       "service": "mdi:calendar-export"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:calendar-blank"
+    },
+    "turned_on": {
+      "trigger": "mdi:calendar-clock"
     }
   }
 }

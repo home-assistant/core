@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -27,6 +28,7 @@
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'charge_state_charge_port_door_open',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
@@ -38,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -76,6 +80,7 @@
     'original_name': 'Frunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 1>,
     'translation_key': 'vehicle_state_ft',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
@@ -87,6 +92,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -118,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -125,6 +132,7 @@
     'original_name': 'Sunroof',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': 'vehicle_state_sun_roof_state',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
@@ -136,6 +144,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -167,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -174,6 +184,7 @@
     'original_name': 'Trunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_rt',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
@@ -185,6 +196,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -216,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -223,6 +236,7 @@
     'original_name': 'Windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'windows',
     'unique_id': 'LRW3F7EK4NC700000-windows',
@@ -234,6 +248,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -265,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -272,6 +288,7 @@
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'charge_state_charge_port_door_open',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
@@ -283,6 +300,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -314,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -321,6 +340,7 @@
     'original_name': 'Frunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 1>,
     'translation_key': 'vehicle_state_ft',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
@@ -332,6 +352,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -363,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -370,6 +392,7 @@
     'original_name': 'Trunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'vehicle_state_rt',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
@@ -381,6 +404,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -412,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -419,6 +444,7 @@
     'original_name': 'Windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': 'windows',
     'unique_id': 'LRW3F7EK4NC700000-windows',
@@ -430,6 +456,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -461,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -468,6 +496,7 @@
     'original_name': 'Charge port door',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_state_charge_port_door_open',
     'unique_id': 'LRW3F7EK4NC700000-charge_state_charge_port_door_open',
@@ -479,6 +508,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -510,6 +540,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -517,6 +548,7 @@
     'original_name': 'Frunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_ft',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_ft',
@@ -528,6 +560,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -559,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -566,6 +600,7 @@
     'original_name': 'Sunroof',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_sun_roof_state',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_sun_roof_state',
@@ -577,6 +612,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -608,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -615,6 +652,7 @@
     'original_name': 'Trunk',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_state_rt',
     'unique_id': 'LRW3F7EK4NC700000-vehicle_state_rt',
@@ -626,6 +664,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -657,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -664,6 +704,7 @@
     'original_name': 'Windows',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'windows',
     'unique_id': 'LRW3F7EK4NC700000-windows',
@@ -675,6 +716,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -684,40 +726,4 @@
     'last_updated': <ANY>,
     'state': 'closed',
   })
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-closed]
-  'closed'
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-open]
-  'closed'
-# ---
-# name: test_cover_streaming[cover.test_charge_port_door-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-closed]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-open]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_frunk-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-closed]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-open]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_trunk-unknown]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_windows-closed]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_windows-open]
-  'unknown'
-# ---
-# name: test_cover_streaming[cover.test_windows-unknown]
-  'unknown'
 # ---

@@ -22,13 +22,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -74,13 +79,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average outdoor temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Average outdoor temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40067',
@@ -126,13 +136,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -178,13 +193,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calculated supply climate system 1',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Calculated supply climate system 1',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43009',
@@ -230,13 +250,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -282,13 +307,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser (BT12)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Condenser (BT12)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40017',
@@ -334,13 +364,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -386,13 +421,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40079',
@@ -438,13 +478,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -490,13 +535,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40081',
@@ -542,13 +592,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -594,13 +649,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current (BE3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current (BE3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40083',
@@ -646,13 +706,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -698,13 +763,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Current compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-41778',
@@ -748,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -755,6 +826,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -795,6 +867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current fan mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +875,7 @@
     'original_name': 'Current fan mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fan_mode',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43108',
@@ -842,6 +916,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -849,6 +924,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -890,6 +966,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current hot water mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -897,6 +974,7 @@
     'original_name': 'Current hot water mode',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43109',
@@ -940,13 +1018,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -992,13 +1075,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current outd temp (BT1)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Current outd temp (BT1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40004',
@@ -1042,6 +1130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1049,6 +1138,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1090,6 +1180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Decrease from reference value',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1097,6 +1188,7 @@
     'original_name': 'Decrease from reference value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43125',
@@ -1140,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1150,6 +1243,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1195,6 +1289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrosting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1205,6 +1300,7 @@
     'original_name': 'Defrosting time',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43066',
@@ -1248,6 +1344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1255,6 +1352,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1296,6 +1394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Degree minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1303,6 +1402,7 @@
     'original_name': 'Degree minutes',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940',
@@ -1344,6 +1444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1351,6 +1452,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1392,6 +1494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1399,6 +1502,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1440,6 +1544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1447,6 +1552,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-42770',
@@ -1488,6 +1594,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Desired humidity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1495,6 +1602,7 @@
     'original_name': 'Desired humidity',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49633',
@@ -1538,13 +1646,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1590,13 +1703,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discharge (BT14)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Discharge (BT14)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40018',
@@ -1642,13 +1760,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1694,13 +1817,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'dT Inverter - exh air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'dT Inverter - exh air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43146',
@@ -1746,13 +1874,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1798,13 +1931,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator (BT16)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Evaporator (BT16)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40020',
@@ -1850,13 +1988,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1902,13 +2045,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air (BT20)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Exhaust air (BT20)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40025',
@@ -1954,13 +2102,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -2006,13 +2159,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air (BT21)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Extract air (BT21)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40026',
@@ -2056,6 +2214,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2063,6 +2222,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2104,6 +2264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating medium pump speed (GP1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2111,6 +2272,7 @@
     'original_name': 'Heating medium pump speed (GP1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43437',
@@ -2154,13 +2316,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2206,13 +2373,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge current value ((BT12 | BT63))',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge current value ((BT12 | BT63))',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43116',
@@ -2258,13 +2430,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2310,13 +2487,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water: charge set point value',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water: charge set point value',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43115',
@@ -2362,13 +2544,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2414,13 +2601,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water charging (BT6)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water charging (BT6)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40014',
@@ -2466,13 +2658,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2518,13 +2715,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hot water top (BT7)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Hot water top (BT7)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40013',
@@ -2578,6 +2780,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2585,6 +2788,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2645,6 +2849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2652,6 +2857,7 @@
     'original_name': 'Int elec add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993',
@@ -2702,6 +2908,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2709,6 +2916,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2749,6 +2957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Int elec add heat raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2756,6 +2965,7 @@
     'original_name': 'Int elec add heat raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'elect_add',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49993-raw',
@@ -2798,13 +3008,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2850,13 +3065,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Inverter temperature',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43140',
@@ -2902,13 +3122,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -2954,13 +3179,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Liquid line (BT15)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Liquid line (BT15)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40019',
@@ -3006,13 +3236,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3058,13 +3293,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Max compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43123',
@@ -3110,13 +3350,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3162,13 +3407,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Min compressor frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Min compressor frequency',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43122',
@@ -3214,13 +3464,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3266,13 +3521,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40146',
@@ -3318,13 +3578,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3370,13 +3635,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oil temperature (EP15-BT29)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Oil temperature (EP15-BT29)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40145',
@@ -3430,6 +3700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3437,6 +3708,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3497,6 +3769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Priority',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3504,6 +3777,7 @@
     'original_name': 'Priority',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994',
@@ -3554,6 +3828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3561,6 +3836,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3601,6 +3877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Prior\xadity raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3608,6 +3885,7 @@
     'original_name': 'Prior\xadity raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'priority',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49994-raw',
@@ -3648,6 +3926,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3655,6 +3934,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3696,6 +3976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'r start diff additional heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3703,6 +3984,7 @@
     'original_name': 'r start diff additional heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-148072r',
@@ -3746,13 +4028,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3798,13 +4085,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reference, air speed sensor',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Reference, air speed sensor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'airflow',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43124',
@@ -3850,13 +4142,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -3902,13 +4199,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT3)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT3)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40012',
@@ -3954,13 +4256,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -4006,13 +4313,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return line (BT62)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Return line (BT62)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40048',
@@ -4058,13 +4370,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4110,13 +4427,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature (BT50)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Room temperature (BT50)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40033',
@@ -4167,6 +4489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4174,6 +4497,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4228,6 +4552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status compressor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4235,6 +4560,7 @@
     'original_name': 'Status compressor',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427',
@@ -4282,6 +4608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4289,6 +4616,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4329,6 +4657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status com\xadpressor raw',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4336,6 +4665,7 @@
     'original_name': 'Status com\xadpressor raw',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_compressor',
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43427-raw',
@@ -4378,13 +4708,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4430,13 +4765,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Suction gas (BT17)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Suction gas (BT17)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40022',
@@ -4482,13 +4822,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4534,13 +4879,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT2)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT2)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40008',
@@ -4586,13 +4936,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4638,13 +4993,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply line (BT61)',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
     'original_name': 'Supply line (BT61)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40047',
@@ -4688,6 +5048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4695,6 +5056,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4736,6 +5098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time factor add heat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4743,6 +5106,7 @@
     'original_name': 'Time factor add heat',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43081',
@@ -4784,6 +5148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4791,6 +5156,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',
@@ -4832,6 +5198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Value, air velocity sensor (BS1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4839,6 +5206,7 @@
     'original_name': 'Value, air velocity sensor (BS1)',
     'platform': 'myuplink',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40050',

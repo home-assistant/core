@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-import itertools
 import logging
 from typing import Any, cast
 
@@ -13,10 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
     CONF_ICON,
-    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_PATH,
     CONF_VARIABLES,
@@ -24,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -34,123 +29,26 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
     async_track_template_result,
 )
-from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
     TemplateStateFromEntityId,
     result_as_boolean,
 )
-from homeassistant.helpers.trigger_template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
-    make_template_entity_base_schema,
-)
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ATTRIBUTE_TEMPLATES,
-    CONF_ATTRIBUTES,
-    CONF_AVAILABILITY,
-    CONF_AVAILABILITY_TEMPLATE,
-    CONF_PICTURE,
-)
+from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ICON): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
-    }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
-
-
-def make_template_entity_common_schema(default_name: str) -> vol.Schema:
-    """Return a schema with default name."""
-    return vol.Schema(
-        {
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-            vol.Optional(CONF_AVAILABILITY): cv.template,
-        }
-    ).extend(make_template_entity_base_schema(default_name).schema)
-
-
-TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
-            {cv.string: cv.template}
-        ),
-    }
-)
-
-TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-    }
-)
-
-TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY = vol.Schema(
-    {
-        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    }
-).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
-
-
-LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
-    CONF_FRIENDLY_NAME: CONF_NAME,
-}
-
-
-def rewrite_common_legacy_to_modern_conf(
-    hass: HomeAssistant,
-    entity_cfg: dict[str, Any],
-    extra_legacy_fields: dict[str, str] | None = None,
-) -> dict[str, Any]:
-    """Rewrite legacy config."""
-    entity_cfg = {**entity_cfg}
-    if extra_legacy_fields is None:
-        extra_legacy_fields = {}
-
-    for from_key, to_key in itertools.chain(
-        LEGACY_FIELDS.items(), extra_legacy_fields.items()
-    ):
-        if from_key not in entity_cfg or to_key in entity_cfg:
-            continue
-
-        val = entity_cfg.pop(from_key)
-        if isinstance(val, str):
-            val = Template(val, hass)
-        entity_cfg[to_key] = val
-
-    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME], hass)
-
-    return entity_cfg
 
 
 class _TemplateAttribute:
@@ -248,7 +146,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
+class TemplateEntity(AbstractTemplateEntity):
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True
@@ -258,16 +156,11 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        availability_template: Template | None = None,
-        icon_template: Template | None = None,
-        entity_picture_template: Template | None = None,
-        attribute_templates: dict[str, Template] | None = None,
-        config: ConfigType | None = None,
-        fallback_name: str | None = None,
-        unique_id: str | None = None,
+        config: ConfigType,
+        unique_id: str | None,
     ) -> None:
         """Template Entity."""
+        AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -285,22 +178,11 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             ]
             | None
         ) = None
-        if config is None:
-            self._attribute_templates = attribute_templates
-            self._availability_template = availability_template
-            self._icon_template = icon_template
-            self._entity_picture_template = entity_picture_template
-            self._friendly_name_template = None
-            self._run_variables = {}
-            self._blueprint_inputs = None
-        else:
-            self._attribute_templates = config.get(CONF_ATTRIBUTES)
-            self._availability_template = config.get(CONF_AVAILABILITY)
-            self._icon_template = config.get(CONF_ICON)
-            self._entity_picture_template = config.get(CONF_PICTURE)
-            self._friendly_name_template = config.get(CONF_NAME)
-            self._run_variables = config.get(CONF_VARIABLES, {})
-            self._blueprint_inputs = config.get("raw_blueprint_inputs")
+        self._run_variables: ScriptVariables | dict
+        self._attribute_templates = config.get(CONF_ATTRIBUTES)
+        self._availability_template = config.get(CONF_AVAILABILITY)
+        self._run_variables = config.get(CONF_VARIABLES, {})
+        self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -315,41 +197,36 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 """Name of this state."""
                 return "<None>"
 
-        variables = {"this": DummyState()}
-
-        # Try to render the name as it can influence the entity ID
-        self._attr_name = fallback_name
-        if self._friendly_name_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_name = self._friendly_name_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        # Templates will not render while the entity is unavailable, try to render the
-        # icon and picture templates.
-        if self._entity_picture_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_entity_picture = self._entity_picture_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        if self._icon_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_icon = self._icon_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-    @callback
-    def _render_variables(self) -> dict:
-        if isinstance(self._run_variables, dict):
-            return self._run_variables
-
-        return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
+        # Render the current variables and add a dummy this variable to them.
+        variables = (
+            self._run_variables
+            if isinstance(self._run_variables, dict)
+            else self._run_variables.async_render(self.hass, {})
         )
+        variables = {"this": DummyState(), **variables}
+
+        self.add_template(
+            CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
+        )
+
+        # Render name, icon, and picture early. name is rendered early because it influences
+        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # if the entity renders unavailable.
+        self._attr_name = None
+        for option, attribute, validator in (
+            (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),
+            (CONF_PICTURE, "_attr_entity_picture", cv.string),
+            (CONF_NAME, "_attr_name", cv.string),
+        ):
+            if template := self.add_template(
+                option, attribute, validator, add_if_static=option != CONF_NAME
+            ):
+                with contextlib.suppress(TemplateError):
+                    setattr(
+                        self,
+                        attribute,
+                        template.async_render(variables=variables, parse_result=False),
+                    )
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -386,6 +263,100 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         if self._blueprint_inputs is None:
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    def _get_this_variable(self) -> TemplateStateFromEntityId:
+        """Create a this variable for the entity."""
+        entity_id = self.entity_id
+        if self._preview_callback:
+            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # a temporary entity_id is created.
+            # During option flow, the preview entity_id will be None, however the registry entry
+            # will contain the target entity_id.
+            if self.registry_entry:
+                entity_id = self.registry_entry.entity_id
+            else:
+                entity_id = async_generate_entity_id(
+                    self._entity_id_format, self._attr_name or "preview", hass=self.hass
+                )
+
+        return TemplateStateFromEntityId(self.hass, entity_id)
+
+    def _render_script_variables(self) -> dict[str, Any]:
+        """Render configured variables."""
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass, {"this": self._get_this_variable()}
+        )
+
+    def setup_state_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity."""
+
+        @callback
+        def _update_state(result: Any) -> None:
+            if isinstance(result, TemplateError):
+                setattr(self, attribute, None)
+                if self._availability_template:
+                    return
+
+                self._attr_available = False
+                return
+
+            # Recover from template errors if they happened before.
+            if not self._availability_template and not self._attr_available:
+                self._attr_available = True
+
+            state = validator(result) if validator else result
+            if on_update:
+                on_update(state)
+            else:
+                setattr(self, attribute, state)
+
+        self.add_template(
+            option, attribute, on_update=_update_state, none_on_template_error=False
+        )
+
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        none_on_template_error: bool = True,
+    ):
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
+        """
+        self.add_template(
+            option, attribute, validator, on_update, none_on_template_error
+        )
 
     def add_template_attribute(
         self,
@@ -453,14 +424,21 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
                 )
             return
 
+        errors = []
         for update in updates:
             for template_attr in self._template_attrs[update.template]:
                 template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
+                if isinstance(update.result, TemplateError):
+                    errors.append(update.result)
 
         if not self._preview_callback:
             self.async_write_ha_state()
+            return
+
+        if errors:
+            self._preview_callback(None, None, None, str(errors[-1]))
             return
 
         try:
@@ -487,8 +465,8 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         has_availability_template = False
 
         variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **self._render_variables(),
+            "this": self._get_this_variable(),
+            **self._render_script_variables(),
         }
 
         for template, attributes in self._template_attrs.items():
@@ -519,30 +497,20 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
-        if self._availability_template is not None:
-            self.add_template_attribute(
-                "_attr_available",
-                self._availability_template,
-                None,
-                self._update_available,
-            )
+
+        # Handle attributes as a dictionary.
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
-        if self._icon_template is not None:
+
+        # Iterate all dynamic templates and add listeners.
+        for entity_template in self._templates.values():
             self.add_template_attribute(
-                "_attr_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
-            )
-        if self._entity_picture_template is not None:
-            self.add_template_attribute(
-                "_attr_entity_picture", self._entity_picture_template, cv.string
-            )
-        if (
-            self._friendly_name_template is not None
-            and not self._friendly_name_template.is_static
-        ):
-            self.add_template_attribute(
-                "_attr_name", self._friendly_name_template, cv.string
+                entity_template.attribute,
+                entity_template.template,
+                entity_template.validator,
+                entity_template.on_update,
+                entity_template.none_on_template_error,
             )
 
     @callback
@@ -560,13 +528,19 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
-        def log_template_error(level: int, msg: str) -> None:
-            preview_callback(None, None, None, msg)
+        def suppress_preview_errors(level: int, msg: str) -> None:
+            """Suppress redundant template render errors.
+
+            Preview entities render templates at least 3 times before the preview entity
+            is created. If template contains an error, each render will produce an error.
+            Instead of overwhelming the client with errors, suppress them and raise
+            a single error through the self._handle_results method.
+            """
 
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup(None, log_template_error)
+            self._async_template_startup(None, suppress_preview_errors)
         except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
@@ -581,22 +555,3 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
         """Call for forced update."""
         assert self._template_result_info
         self._template_result_info.async_refresh()
-
-    async def async_run_script(
-        self,
-        script: Script,
-        *,
-        run_variables: _VarsType | None = None,
-        context: Context | None = None,
-    ) -> None:
-        """Run an action script."""
-        if run_variables is None:
-            run_variables = {}
-        await script.async_run(
-            run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-                **self._render_variables(),
-                **run_variables,
-            },
-            context=context,
-        )

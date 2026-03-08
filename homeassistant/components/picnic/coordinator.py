@@ -6,8 +6,8 @@ import copy
 from datetime import timedelta
 import logging
 
-from python_picnic_api import PicnicAPI
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2 import PicnicAPI
+from python_picnic_api2.session import PicnicAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -120,7 +120,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
             )
             last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             # A KeyError or TypeError indicate that the response contains unexpected data
             return {}, {}
 

@@ -52,7 +52,8 @@ def mock_client():
         client = client.return_value
         client.async_login.return_value = True
         client.status = ChargerStatus.CHARGING
-        client.power = ChargerPower(0, 0, 0, 0)
+        client.power = ChargerPower(0, 0, 0)
+        client.available = True
 
         client.target_soc = 50
         client.target_time = (8, 0)
@@ -60,10 +61,14 @@ def mock_client():
         client.preconditioning = 15
         client.serial = "chargerid"
         client.ct_connected = True
+        client.cap_available = True
+        client.cap_enabled = True
         client.energy = 1000
         client.device_info = {
             "name": "Ohme Home Pro",
             "model": "Home Pro",
             "sw_version": "v2.65",
         }
+        client.vehicles = ["Nissan Leaf", "Tesla Model 3"]
+        client.current_vehicle = "Nissan Leaf"
         yield client

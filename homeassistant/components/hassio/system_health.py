@@ -54,6 +54,15 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             "error": "Unsupported",
         }
 
+    nameservers = set()
+    for interface in network_info.get("interfaces", []):
+        if not interface.get("primary"):
+            continue
+        if ipv4 := interface.get("ipv4"):
+            nameservers.update(ipv4.get("nameservers", []))
+        if ipv6 := interface.get("ipv6"):
+            nameservers.update(ipv6.get("nameservers", []))
+
     information = {
         "host_os": host_info.get("operating_system"),
         "update_channel": info.get("channel"),
@@ -62,6 +71,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "docker_version": info.get("docker"),
         "disk_total": f"{host_info.get('disk_total')} GB",
         "disk_used": f"{host_info.get('disk_used')} GB",
+        "nameservers": ", ".join(nameservers),
         "healthy": healthy,
         "supported": supported,
         "host_connectivity": network_info.get("host_internet"),

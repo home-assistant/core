@@ -62,8 +62,12 @@ from .const import (
     CALL_TYPE_X_COILS,
     CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_BAUDRATE,
+    CONF_BRIGHTNESS_REGISTER,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COLOR_TEMP_REGISTER,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -79,6 +83,16 @@ from .const import (
     CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_FANS,
+    CONF_HVAC_ACTION_COOLING,
+    CONF_HVAC_ACTION_DEFROSTING,
+    CONF_HVAC_ACTION_DRYING,
+    CONF_HVAC_ACTION_FAN,
+    CONF_HVAC_ACTION_HEATING,
+    CONF_HVAC_ACTION_IDLE,
+    CONF_HVAC_ACTION_OFF,
+    CONF_HVAC_ACTION_PREHEATING,
+    CONF_HVAC_ACTION_REGISTER,
+    CONF_HVAC_ACTION_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -125,6 +139,8 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
@@ -136,7 +152,7 @@ from .const import (
     DEFAULT_HVAC_ON_VALUE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     RTUOVERTCP,
     SERIAL,
     TCP,
@@ -147,8 +163,10 @@ from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
+    ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
     nan_validator,
+    not_zero_value,
     register_int_list_validator,
     struct_validator,
 )
@@ -198,8 +216,10 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Optional(CONF_SCALE): vol.All(
+            vol.Coerce(float), lambda v: not_zero_value(v, "Scale cannot be zero.")
+        ),
+        vol.Optional(CONF_OFFSET): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
@@ -255,12 +275,24 @@ CLIMATE_SCHEMA = vol.All(
         {
             vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
-            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
+            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(int),
+            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(int),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
             vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
+            vol.Optional(CONF_CURRENT_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(
+                    v, "Current temperature scale cannot be zero."
+                ),
+            ),
+            vol.Optional(CONF_TARGET_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(v, "Target temperature scale cannot be zero."),
+            ),
+            vol.Optional(CONF_CURRENT_TEMP_OFFSET): vol.Coerce(float),
+            vol.Optional(CONF_TARGET_TEMP_OFFSET): vol.Coerce(float),
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,
@@ -295,6 +327,45 @@ CLIMATE_SCHEMA = vol.All(
                         ),
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
+                }
+            ),
+            vol.Optional(CONF_HVAC_ACTION_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_ACTION_VALUES: {
+                        vol.Optional(CONF_HVAC_ACTION_COOLING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DEFROSTING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_DRYING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_FAN): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_HEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_IDLE): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_OFF): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                        vol.Optional(CONF_HVAC_ACTION_PREHEATING): vol.Any(
+                            cv.positive_int, [cv.positive_int]
+                        ),
+                    },
+                    vol.Optional(
+                        CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING
+                    ): vol.In(
+                        [
+                            CALL_TYPE_REGISTER_HOLDING,
+                            CALL_TYPE_REGISTER_INPUT,
+                        ]
+                    ),
                 }
             ),
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
@@ -334,6 +405,7 @@ CLIMATE_SCHEMA = vol.All(
             ),
         },
     ),
+    ensure_and_check_conflicting_scales_and_offsets,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -366,7 +438,14 @@ SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
     }
 )
 
-LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
@@ -421,7 +500,8 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(

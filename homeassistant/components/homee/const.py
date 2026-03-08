@@ -20,12 +20,18 @@ from homeassistant.const import (
 # General
 DOMAIN = "homee"
 
+# Error strings
+RESULT_CANNOT_CONNECT = "cannot_connect"
+RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_UNKNOWN_ERROR = "unknown"
+
 # Sensor mappings
 HOMEE_UNIT_TO_HA_UNIT = {
     "": None,
     "n/a": None,
     "text": None,
     "%": PERCENTAGE,
+    "Lux": LIGHT_LUX,
     "lx": LIGHT_LUX,
     "klx": LIGHT_LUX,
     "1/min": REVOLUTIONS_PER_MINUTE,
@@ -95,3 +101,8 @@ LIGHT_PROFILES = [
     NodeProfile.WIFI_DIMMABLE_LIGHT,
     NodeProfile.WIFI_ON_OFF_DIMMABLE_METERING_SWITCH,
 ]
+
+# Preset modes
+PRESET_AUTO = "auto"
+PRESET_MANUAL = "manual"
+PRESET_SUMMER = "summer"

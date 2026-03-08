@@ -33,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected PLC devices',
     'options': dict({
     }),
     'original_device_class': None,
@@ -40,6 +41,7 @@
     'original_name': 'Connected PLC devices',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connected_plc_devices',
     'unique_id': '1234567890_connected_plc_devices',
@@ -83,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connected Wi-Fi clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -90,6 +93,7 @@
     'original_name': 'Connected Wi-Fi clients',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connected_wifi_clients',
     'unique_id': '1234567890_connected_wifi_clients',
@@ -131,6 +135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart of the device',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -138,6 +143,7 @@
     'original_name': 'Last restart of the device',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': '1234567890_last_restart',
@@ -178,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Neighboring Wi-Fi networks',
     'options': dict({
     }),
     'original_device_class': None,
@@ -185,6 +192,7 @@
     'original_name': 'Neighboring Wi-Fi networks',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'neighboring_wifi_networks',
     'unique_id': '1234567890_neighboring_wifi_networks',
@@ -227,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -237,6 +246,7 @@
     'original_name': 'PLC downlink PHY rate (test2)',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
     'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',
@@ -279,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PLC downlink PHY rate (test2)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -289,6 +300,7 @@
     'original_name': 'PLC downlink PHY rate (test2)',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'plc_rx_rate',
     'unique_id': '1234567890_plc_rx_rate_11:22:33:44:55:66',

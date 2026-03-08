@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +28,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-4k5l6m7n-8o9p-1q2r-3s4t_possible_error',
@@ -69,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -76,6 +79,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-1k2l3m4n-5o6p-7q8r-9s0t_possible_error',
@@ -118,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -125,6 +130,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-5k6l7m8n-9o0p-1q2r-3s4t_possible_error',
@@ -167,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -174,6 +181,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-7a8b9c0d-1e2f-3g4h-5i6j_possible_error',
@@ -216,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -223,6 +232,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-6a7b8c9d-0e1f-2g3h-4i5j_possible_error',
@@ -265,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -272,6 +283,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-3a4b5c6d-7e8f-9g0h-1i2j_possible_error',
@@ -314,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -321,6 +334,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-2a3b4c5d-6e7f-8g9h-0i1j_possible_error',
@@ -363,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Possible error',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -370,6 +385,7 @@
     'original_name': 'Possible error',
     'platform': 'simplefin',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'possible_error',
     'unique_id': 'account_ACT-1a2b3c4d-5e6f-7g8h-9i0j_possible_error',

@@ -12,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT
+from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .utils import render_template_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +44,13 @@ class CommandLineNotificationService(BaseNotificationService):
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a command line."""
+        if not (command := render_template_args(self.hass, self.command)):
+            return
+
+        LOGGER.debug("Running with message: %s", message)
+
         with subprocess.Popen(  # noqa: S602 # shell by design
-            self.command,
+            command,
             universal_newlines=True,
             stdin=subprocess.PIPE,
             close_fds=False,  # required for posix_spawn
@@ -56,10 +62,10 @@ class CommandLineNotificationService(BaseNotificationService):
                     _LOGGER.error(
                         "Command failed (with return code %s): %s",
                         proc.returncode,
-                        self.command,
+                        command,
                     )
             except subprocess.TimeoutExpired:
-                _LOGGER.error("Timeout for command: %s", self.command)
+                _LOGGER.error("Timeout for command: %s", command)
                 kill_subprocess(proc)
             except subprocess.SubprocessError:
-                _LOGGER.error("Error trying to exec command: %s", self.command)
+                _LOGGER.error("Error trying to exec command: %s", command)

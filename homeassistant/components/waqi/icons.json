@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "carbon_monoxide": {
+        "default": "mdi:molecule-co"
+      },
+      "dominant_pollutant": {
+        "default": "mdi:molecule",
+        "state": {
+          "co": "mdi:molecule-co",
+          "neph": "mdi:eye",
+          "no2": "mdi:molecule",
+          "o3": "mdi:molecule",
+          "pm10": "mdi:molecule",
+          "pm25": "mdi:molecule",
+          "so2": "mdi:molecule"
+        }
+      },
+      "neph": {
+        "default": "mdi:eye"
+      },
+      "nitrogen_dioxide": {
+        "default": "mdi:molecule"
+      },
+      "ozone": {
+        "default": "mdi:molecule"
+      },
+      "pm10": {
+        "default": "mdi:molecule"
+      },
+      "pm25": {
+        "default": "mdi:molecule"
+      },
+      "sulphur_dioxide": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

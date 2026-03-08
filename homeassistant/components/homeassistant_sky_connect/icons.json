@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "beta_firmware": {
+        "default": "mdi:test-tube"
+      }
+    }
+  }
+}

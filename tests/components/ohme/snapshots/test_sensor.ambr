@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.ohme_home_pro_ct_current-entry]
+# name: test_sensors[sensor.ohme_home_pro_charge_slots-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ohme_home_pro_ct_current',
+    'entity_id': 'sensor.ohme_home_pro_charge_slots',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,32 +20,32 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge slots',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'CT current',
+    'original_name': 'Charge slots',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ct_current',
-    'unique_id': 'chargerid_ct_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'translation_key': 'slot_list',
+    'unique_id': 'chargerid_slot_list',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.ohme_home_pro_ct_current-state]
+# name: test_sensors[sensor.ohme_home_pro_charge_slots-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Ohme Home Pro CT current',
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'friendly_name': 'Ohme Home Pro Charge slots',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ohme_home_pro_ct_current',
+    'entity_id': 'sensor.ohme_home_pro_charge_slots',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.ohme_home_pro_current-entry]
@@ -53,7 +53,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -69,13 +71,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'chargerid_current',
@@ -87,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'Ohme Home Pro Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -120,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -133,6 +142,7 @@
     'original_name': 'Energy',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'chargerid_energy',
@@ -160,7 +170,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -176,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -189,6 +202,7 @@
     'original_name': 'Power',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'chargerid_power',
@@ -200,6 +214,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Ohme Home Pro Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -240,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -247,6 +263,7 @@
     'original_name': 'Status',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status',
     'unique_id': 'chargerid_status',
@@ -280,7 +297,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -296,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -306,6 +326,7 @@
     'original_name': 'Vehicle battery',
     'platform': 'ohme',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vehicle_battery',
     'unique_id': 'chargerid_battery',
@@ -317,6 +338,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Ohme Home Pro Vehicle battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -325,5 +347,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80',
+  })
+# ---
+# name: test_sensors[sensor.ohme_home_pro_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ohme_home_pro_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'ohme',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'chargerid_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[sensor.ohme_home_pro_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Ohme Home Pro Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ohme_home_pro_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

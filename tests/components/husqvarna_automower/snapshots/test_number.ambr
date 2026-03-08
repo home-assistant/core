@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -32,6 +33,7 @@
     'original_name': 'Back lawn cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_cutting_height_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_654321_cutting_height_work_area',
@@ -82,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -89,6 +92,7 @@
     'original_name': 'Cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cutting_height',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_height',
@@ -138,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,6 +150,7 @@
     'original_name': 'Front lawn cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'work_area_cutting_height_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_123456_cutting_height_work_area',
@@ -195,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn cutting height',
     'options': dict({
     }),
     'original_device_class': None,
@@ -202,6 +209,7 @@
     'original_name': 'My lawn cutting height',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'my_lawn_cutting_height_work_area',
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_0_cutting_height_work_area',

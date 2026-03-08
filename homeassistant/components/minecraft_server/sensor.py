@@ -7,15 +7,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import MinecraftServerData, MinecraftServerType
-from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator
+from .const import KEY_LATENCY, KEY_MOTD
+from .coordinator import MinecraftServerConfigEntry, MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
 ATTR_PLAYERS_LIST = "players_list"
@@ -30,6 +29,9 @@ KEY_VERSION = "version"
 
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
+
+# Coordinator is used to centralize the data updates.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,6 +65,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -74,6 +77,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -87,6 +91,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_registry_enabled_default=False,
     ),
@@ -100,6 +105,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -111,6 +117,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
     ),
     MinecraftServerSensorEntityDescription(
@@ -122,6 +129,7 @@ SENSOR_DESCRIPTIONS = [
         supported_server_types={
             MinecraftServerType.JAVA_EDITION,
             MinecraftServerType.BEDROCK_EDITION,
+            MinecraftServerType.LEGACY_JAVA_EDITION,
         },
     ),
     MinecraftServerSensorEntityDescription(
@@ -158,11 +166,11 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MinecraftServerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Add sensor entities.
     async_add_entities(
@@ -184,7 +192,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
         self,
         coordinator: MinecraftServerCoordinator,
         description: MinecraftServerSensorEntityDescription,
-        config_entry: ConfigEntry,
+        config_entry: MinecraftServerConfigEntry,
     ) -> None:
         """Initialize sensor base entity."""
         super().__init__(coordinator, config_entry)

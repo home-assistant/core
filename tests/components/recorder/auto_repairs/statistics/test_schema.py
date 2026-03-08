@@ -46,7 +46,7 @@ async def test_validate_db_schema_fix_utf8_issue(
         in caplog.text
     )
     assert (
-        "Updating character set and collation of table statistics_meta to utf8mb4"
+        "Updating table statistics_meta to character set utf8mb4 and collation utf8mb4_bin"
         in caplog.text
     )
 
@@ -87,6 +87,7 @@ async def test_validate_db_schema_fix_float_issue(
         "created_ts DOUBLE PRECISION",
         "start_ts DOUBLE PRECISION",
         "mean DOUBLE PRECISION",
+        "mean_weight DOUBLE PRECISION",
         "min DOUBLE PRECISION",
         "max DOUBLE PRECISION",
         "last_reset_ts DOUBLE PRECISION",
@@ -112,7 +113,7 @@ async def test_validate_db_schema_fix_collation_issue(
     with (
         patch(
             "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_has_correct_collation",
-            return_value={"statistics.utf8mb4_unicode_ci"},
+            return_value={"statistics.utf8mb4_bin"},
         ),
     ):
         async with async_test_recorder(hass):
@@ -120,10 +121,10 @@ async def test_validate_db_schema_fix_collation_issue(
 
     assert "Schema validation failed" not in caplog.text
     assert (
-        "Database is about to correct DB schema errors: statistics.utf8mb4_unicode_ci"
+        "Database is about to correct DB schema errors: statistics.utf8mb4_bin"
         in caplog.text
     )
     assert (
-        "Updating character set and collation of table statistics to utf8mb4"
+        "Updating table statistics to character set utf8mb4 and collation utf8mb4_bin"
         in caplog.text
     )

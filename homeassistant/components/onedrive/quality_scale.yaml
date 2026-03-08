@@ -1,18 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not have any custom actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -41,10 +36,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      There is no data to diagnose.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -73,10 +65,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      Nothing to reconfigure.
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt

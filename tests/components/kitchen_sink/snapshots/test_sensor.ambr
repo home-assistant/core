@@ -31,6 +31,20 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
+        'device_class': 'wind_direction',
+        'friendly_name': 'Statistics issues Issue 5',
+        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        'unit_of_measurement': '°',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issues_issue_5',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
         'friendly_name': 'Statistics issues Issue 1',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
@@ -98,6 +112,20 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '1500',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'wind_direction',
+        'friendly_name': 'Statistics issues Issue 5',
+        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        'unit_of_measurement': '°',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.statistics_issues_issue_5',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

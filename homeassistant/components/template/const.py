@@ -1,22 +1,19 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.components.blueprint import BLUEPRINT_SCHEMA
 from homeassistant.const import Platform
 from homeassistant.helpers.typing import ConfigType
 
-CONF_ACTION = "action"
+CONF_ADVANCED_OPTIONS = "advanced_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_ATTRIBUTES = "attributes"
 CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
-CONF_CONDITION = "condition"
+CONF_DEFAULT_ENTITY_ID = "default_entity_id"
 CONF_MAX = "max"
 CONF_MIN = "min"
-CONF_OBJECT_ID = "object_id"
 CONF_PICTURE = "picture"
 CONF_PRESS = "press"
 CONF_STEP = "step"
-CONF_TRIGGER = "trigger"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
 
@@ -29,6 +26,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -37,11 +35,10 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
     Platform.WEATHER,
 ]
-
-TEMPLATE_BLUEPRINT_SCHEMA = BLUEPRINT_SCHEMA
 
 
 class TemplateConfig(dict):

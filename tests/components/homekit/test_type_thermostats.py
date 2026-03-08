@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
-    DOMAIN as DOMAIN_CLIMATE,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -56,6 +56,9 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_thermostats import (
+    FAN_STATE_ACTIVE,
+    FAN_STATE_IDLE,
+    FAN_STATE_INACTIVE,
     HC_HEAT_COOL_AUTO,
     HC_HEAT_COOL_COOL,
     HC_HEAT_COOL_HEAT,
@@ -63,13 +66,12 @@ from homeassistant.components.homekit.type_thermostats import (
     Thermostat,
     WaterHeater,
 )
-from homeassistant.components.water_heater import DOMAIN as DOMAIN_WATER_HEATER
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -77,6 +79,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import async_mock_service
 
@@ -328,8 +331,8 @@ async def test_thermostat(hass: HomeAssistant, hk_driver, events: list[Event]) -
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
 
     char_target_temp_iid = acc.char_target_temp.to_HAP()[HAP_REPR_IID]
     char_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
@@ -508,7 +511,7 @@ async def test_thermostat_auto(
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
 
     char_heating_thresh_temp_iid = acc.char_heating_thresh_temp.to_HAP()[HAP_REPR_IID]
     char_cooling_thresh_temp_iid = acc.char_cooling_thresh_temp.to_HAP()[HAP_REPR_IID]
@@ -605,8 +608,8 @@ async def test_thermostat_mode_and_temp_change(
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
 
     char_heating_thresh_temp_iid = acc.char_heating_thresh_temp.to_HAP()[HAP_REPR_IID]
     char_cooling_thresh_temp_iid = acc.char_cooling_thresh_temp.to_HAP()[HAP_REPR_IID]
@@ -692,7 +695,7 @@ async def test_thermostat_humidity(
     assert acc.char_target_humidity.value == 35
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN_CLIMATE, "set_humidity")
+    call_set_humidity = async_mock_service(hass, CLIMATE_DOMAIN, "set_humidity")
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -806,7 +809,7 @@ async def test_thermostat_power_state(
     assert acc.char_target_heat_cool.value == 0
 
     # Set from HomeKit
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
 
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
 
@@ -858,6 +861,7 @@ async def test_thermostat_fahrenheit(
 ) -> None:
     """Test if accessory and HA are updated accordingly."""
     entity_id = "climate.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     # support_ = True
     hass.states.async_set(
@@ -869,10 +873,7 @@ async def test_thermostat_fahrenheit(
         },
     )
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
     hk_driver.add_accessory(acc)
     acc.run()
     await hass.async_block_till_done()
@@ -900,7 +901,7 @@ async def test_thermostat_fahrenheit(
     assert acc.char_display_units.value == 1
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
 
     char_cooling_thresh_temp_iid = acc.char_cooling_thresh_temp.to_HAP()[HAP_REPR_IID]
     char_heating_thresh_temp_iid = acc.char_heating_thresh_temp.to_HAP()[HAP_REPR_IID]
@@ -1116,7 +1117,7 @@ async def test_thermostat_hvac_modes_with_auto_heat_cool(
             ]
         },
     )
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     await hass.async_block_till_done()
 
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1174,7 +1175,7 @@ async def test_thermostat_hvac_modes_with_auto_no_heat_cool(
         HVACMode.HEAT,
         {ATTR_HVAC_MODES: [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]},
     )
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     await hass.async_block_till_done()
 
     acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1200,7 +1201,7 @@ async def test_thermostat_hvac_modes_with_auto_no_heat_cool(
     assert acc.char_target_heat_cool.value == 1
 
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     await hass.async_block_till_done()
     hk_driver.set_characteristics(
         {
@@ -1257,7 +1258,7 @@ async def test_thermostat_hvac_modes_with_auto_only(
     assert acc.char_target_heat_cool.value == 3
 
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     await hass.async_block_till_done()
     hk_driver.set_characteristics(
         {
@@ -1314,7 +1315,7 @@ async def test_thermostat_hvac_modes_with_heat_only(
     assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
 
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     await hass.async_block_till_done()
     hk_driver.set_characteristics(
         {
@@ -1393,7 +1394,7 @@ async def test_thermostat_hvac_modes_with_cool_only(
     assert acc.char_target_heat_cool.value == HC_HEAT_COOL_COOL
 
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
@@ -1456,7 +1457,7 @@ async def test_thermostat_hvac_modes_with_heat_cool_only(
     assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
     char_target_temp_iid = acc.char_target_temp.to_HAP()[HAP_REPR_IID]
     char_target_heat_cool_iid = acc.char_target_heat_cool.to_HAP()[HAP_REPR_IID]
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
@@ -1632,7 +1633,7 @@ async def test_thermostat_without_target_temp_only_range(
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
 
     char_target_temp_iid = acc.char_target_temp.to_HAP()[HAP_REPR_IID]
 
@@ -1678,7 +1679,7 @@ async def test_thermostat_without_target_temp_only_range(
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN_CLIMATE, "set_temperature")
+    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, "set_temperature")
 
     char_target_temp_iid = acc.char_target_temp.to_HAP()[HAP_REPR_IID]
 
@@ -1759,7 +1760,7 @@ async def test_water_heater(
 
     # Set from HomeKit
     call_set_temperature = async_mock_service(
-        hass, DOMAIN_WATER_HEATER, "set_temperature"
+        hass, WATER_HEATER_DOMAIN, "set_temperature"
     )
 
     acc.char_target_temp.client_update_value(52.0)
@@ -1786,13 +1787,11 @@ async def test_water_heater_fahrenheit(
 ) -> None:
     """Test if accessory and HA are update accordingly."""
     entity_id = "water_heater.test"
+    hass.config.units = US_CUSTOMARY_SYSTEM
 
     hass.states.async_set(entity_id, HVACMode.HEAT)
     await hass.async_block_till_done()
-    with patch.object(
-        hass.config.units, CONF_TEMPERATURE_UNIT, new=UnitOfTemperature.FAHRENHEIT
-    ):
-        acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
     acc.run()
     await hass.async_block_till_done()
 
@@ -1804,7 +1803,7 @@ async def test_water_heater_fahrenheit(
 
     # Set from HomeKit
     call_set_temperature = async_mock_service(
-        hass, DOMAIN_WATER_HEATER, "set_temperature"
+        hass, WATER_HEATER_DOMAIN, "set_temperature"
     )
 
     acc.char_target_temp.client_update_value(60)
@@ -2128,7 +2127,7 @@ async def test_thermostat_with_fan_modes_with_auto(
     assert acc.char_speed.value == pytest.approx(100 / 3)
 
     call_set_swing_mode = async_mock_service(
-        hass, DOMAIN_CLIMATE, SERVICE_SET_SWING_MODE
+        hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE
     )
     char_swing_iid = acc.char_swing.to_HAP()[HAP_REPR_IID]
 
@@ -2168,7 +2167,7 @@ async def test_thermostat_with_fan_modes_with_auto(
     assert call_set_swing_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_swing_mode[-1].data[ATTR_SWING_MODE] == SWING_BOTH
 
-    call_set_fan_mode = async_mock_service(hass, DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE)
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
     char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
 
     hk_driver.set_characteristics(
@@ -2333,7 +2332,7 @@ async def test_thermostat_with_fan_modes_with_off(
     await hass.async_block_till_done()
     assert acc.char_active.value == 0
 
-    call_set_fan_mode = async_mock_service(hass, DOMAIN_CLIMATE, SERVICE_SET_FAN_MODE)
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
     char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
     hk_driver.set_characteristics(
         {
@@ -2497,6 +2496,98 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
     assert not acc.fan_chars
 
 
+async def test_thermostat_fan_state_with_preheating_and_defrosting(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test thermostat fan state mappings for preheating and defrosting actions."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify fan state characteristics are available
+    assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
+    assert hasattr(acc, "char_current_fan_state")
+
+    # Test PREHEATING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.PREHEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test DEFROSTING action maps to FAN_STATE_IDLE
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.DEFROSTING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_IDLE
+
+    # Test other actions for comparison
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.HEATING,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_ACTIVE
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: [FAN_AUTO, FAN_LOW, FAN_HIGH],
+            ATTR_HVAC_ACTION: HVACAction.OFF,
+            ATTR_FAN_MODE: FAN_AUTO,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_fan_state.value == FAN_STATE_INACTIVE
+
+
 async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) -> None:
     """Test a thermostat can handle unknown state."""
     entity_id = "climate.test"
@@ -2519,7 +2610,7 @@ async def test_thermostat_handles_unknown_state(hass: HomeAssistant, hk_driver) 
         ],
     }
 
-    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, "set_hvac_mode")
     hass.states.async_set(
         entity_id,
         HVACMode.OFF,

@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "average_processing_speed": {
+        "default": "mdi:speedometer"
+      },
       "dns_queries": {
         "default": "mdi:magnify"
       },
@@ -13,21 +16,18 @@
       "parental_control_blocked": {
         "default": "mdi:human-male-girl"
       },
+      "rules_count": {
+        "default": "mdi:counter"
+      },
       "safe_browsing_blocked": {
         "default": "mdi:shield-half-full"
       },
       "safe_searches_enforced": {
         "default": "mdi:shield-search"
-      },
-      "average_processing_speed": {
-        "default": "mdi:speedometer"
-      },
-      "rules_count": {
-        "default": "mdi:counter"
       }
     },
     "switch": {
-      "protection": {
+      "filtering": {
         "default": "mdi:shield-check",
         "state": {
           "off": "mdi:shield-off"
@@ -39,7 +39,13 @@
           "off": "mdi:shield-off"
         }
       },
-      "safe_search": {
+      "protection": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield-off"
+        }
+      },
+      "query_log": {
         "default": "mdi:shield-check",
         "state": {
           "off": "mdi:shield-off"
@@ -51,13 +57,7 @@
           "off": "mdi:shield-off"
         }
       },
-      "filtering": {
-        "default": "mdi:shield-check",
-        "state": {
-          "off": "mdi:shield-off"
-        }
-      },
-      "query_log": {
+      "safe_search": {
         "default": "mdi:shield-check",
         "state": {
           "off": "mdi:shield-off"
@@ -69,17 +69,17 @@
     "add_url": {
       "service": "mdi:link-plus"
     },
-    "remove_url": {
-      "service": "mdi:link-off"
+    "disable_url": {
+      "service": "mdi:link-variant-off"
     },
     "enable_url": {
       "service": "mdi:link-variant"
     },
-    "disable_url": {
-      "service": "mdi:link-variant-off"
-    },
     "refresh": {
       "service": "mdi:refresh"
+    },
+    "remove_url": {
+      "service": "mdi:link-off"
     }
   }
 }

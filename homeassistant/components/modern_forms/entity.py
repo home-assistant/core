@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -31,6 +31,9 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         """Return device information about this Modern Forms device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.data.info.mac_address)},
+            connections={
+                (CONNECTION_NETWORK_MAC, self.coordinator.data.info.mac_address)
+            },
             name=self.coordinator.data.info.device_name,
             manufacturer="Modern Forms",
             model=self.coordinator.data.info.fan_type,

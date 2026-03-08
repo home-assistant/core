@@ -42,7 +42,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_current"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.set_charging_amps",
+        "tesla_fleet_api.teslemetry.Vehicle.set_charging_amps",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -57,7 +57,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_limit"
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.set_charge_limit",
+        "tesla_fleet_api.teslemetry.Vehicle.set_charge_limit",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -72,7 +72,7 @@ async def test_number_services(
 
     entity_id = "number.energy_site_backup_reserve"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.backup",
+        "tesla_fleet_api.teslemetry.EnergySite.backup",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -90,7 +90,7 @@ async def test_number_services(
 
     entity_id = "number.energy_site_off_grid_reserve"
     with patch(
-        "homeassistant.components.teslemetry.EnergySpecific.off_grid_vehicle_charging_reserve",
+        "tesla_fleet_api.teslemetry.EnergySite.off_grid_vehicle_charging_reserve",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -106,7 +106,6 @@ async def test_number_services(
 
 async def test_number_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -130,10 +129,6 @@ async def test_number_streaming(
 
     await reload_platform(hass, entry, [Platform.NUMBER])
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "number.test_charge_current",
-        "number.test_charge_limit",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("number.test_charge_current").state == "24"
+    assert hass.states.get("number.test_charge_limit").state == "99"

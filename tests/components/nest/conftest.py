@@ -18,6 +18,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     async_import_client_credential,
 )
 from homeassistant.components.nest import DOMAIN
@@ -144,13 +145,28 @@ async def auth(
     return FakeAuth(aioclient_mock, create_device, device_access_project_id)
 
 
-@pytest.fixture(autouse=True)
-def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
+@pytest.fixture(autouse=True, name="media_path")
+def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
-    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
-        yield
-        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
+    with patch(
+        "homeassistant.components.nest.media_source.MEDIA_CACHE_PATH", new=tmp_path
+    ):
+        full_path = hass.config.cache_path(DOMAIN, tmp_path)
+        yield full_path
+        shutil.rmtree(full_path, ignore_errors=True)
+
+
+@pytest.fixture(name="legacy_media_path")
+def cleanup_legacy_media_storage(hass: HomeAssistant) -> Generator[str]:
+    """Test cleanup, remove any media storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.nest.media_source.LEGACY_MEDIA_PATH", new=tmp_path
+    ):
+        full_path = hass.config.path(tmp_path)
+        yield full_path
+        shutil.rmtree(full_path, ignore_errors=True)
 
 
 @pytest.fixture
@@ -290,7 +306,7 @@ async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> N
     """Fixture that provides the ClientCredential for the test if any."""
     if not nest_test_config.credential:
         return
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, nest_test_config.credential, "imported-cred"
     )
@@ -312,7 +328,7 @@ async def setup_base_platform(
             await hass.async_block_till_done()
 
         yield _setup_func
-        if config_entry.state == ConfigEntryState.LOADED:
+        if config_entry.state is ConfigEntryState.LOADED:
             await hass.config_entries.async_unload(config_entry.entry_id)
 
 

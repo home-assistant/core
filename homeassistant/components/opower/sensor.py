@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 
-from opower import Forecast, MeterType, UnitOfMeasure
+from opower import MeterType, UnitOfMeasure
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,15 +22,34 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OpowerConfigEntry, OpowerCoordinator
+from .coordinator import OpowerConfigEntry, OpowerCoordinator, OpowerData
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class OpowerEntityDescription(SensorEntityDescription):
     """Class describing Opower sensors entities."""
 
-    value_fn: Callable[[Forecast], str | float | date]
+    value_fn: Callable[[OpowerData], str | float | date | datetime | None]
 
+
+COMMON_SENSORS: tuple[OpowerEntityDescription, ...] = (
+    OpowerEntityDescription(
+        key="last_changed",
+        translation_key="last_changed",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.last_changed,
+    ),
+    OpowerEntityDescription(
+        key="last_updated",
+        translation_key="last_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.last_updated,
+    ),
+)
 
 # suggested_display_precision=0 for all sensors since
 # Opower provides 0 decimal points for all these.
@@ -38,146 +57,146 @@ class OpowerEntityDescription(SensorEntityDescription):
 ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
         key="elec_usage_to_date",
-        name="Current bill electric usage to date",
+        translation_key="elec_usage_to_date",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         # Not TOTAL_INCREASING because it can decrease for accounts with solar
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.usage_to_date,
+        value_fn=lambda data: data.forecast.usage_to_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_forecasted_usage",
-        name="Current bill electric forecasted usage",
+        translation_key="elec_forecasted_usage",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.forecasted_usage,
+        value_fn=lambda data: data.forecast.forecasted_usage if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_typical_usage",
-        name="Typical monthly electric usage",
+        translation_key="elec_typical_usage",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.typical_usage,
+        value_fn=lambda data: data.forecast.typical_usage if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_cost_to_date",
-        name="Current bill electric cost to date",
+        translation_key="elec_cost_to_date",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.cost_to_date,
+        value_fn=lambda data: data.forecast.cost_to_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_forecasted_cost",
-        name="Current bill electric forecasted cost",
+        translation_key="elec_forecasted_cost",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.forecasted_cost,
+        value_fn=lambda data: data.forecast.forecasted_cost if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_typical_cost",
-        name="Typical monthly electric cost",
+        translation_key="elec_typical_cost",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.typical_cost,
+        value_fn=lambda data: data.forecast.typical_cost if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_start_date",
-        name="Current bill electric start date",
+        translation_key="elec_start_date",
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.start_date,
+        value_fn=lambda data: data.forecast.start_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="elec_end_date",
-        name="Current bill electric end date",
+        translation_key="elec_end_date",
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.end_date,
+        value_fn=lambda data: data.forecast.end_date if data.forecast else None,
     ),
 )
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
         key="gas_usage_to_date",
-        name="Current bill gas usage to date",
+        translation_key="gas_usage_to_date",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CENTUM_CUBIC_FEET,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.usage_to_date,
+        value_fn=lambda data: data.forecast.usage_to_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_forecasted_usage",
-        name="Current bill gas forecasted usage",
+        translation_key="gas_forecasted_usage",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CENTUM_CUBIC_FEET,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.forecasted_usage,
+        value_fn=lambda data: data.forecast.forecasted_usage if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_typical_usage",
-        name="Typical monthly gas usage",
+        translation_key="gas_typical_usage",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CENTUM_CUBIC_FEET,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.typical_usage,
+        value_fn=lambda data: data.forecast.typical_usage if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_cost_to_date",
-        name="Current bill gas cost to date",
+        translation_key="gas_cost_to_date",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.cost_to_date,
+        value_fn=lambda data: data.forecast.cost_to_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_forecasted_cost",
-        name="Current bill gas forecasted cost",
+        translation_key="gas_forecasted_cost",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.forecasted_cost,
+        value_fn=lambda data: data.forecast.forecasted_cost if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_typical_cost",
-        name="Typical monthly gas cost",
+        translation_key="gas_typical_cost",
         device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="USD",
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=0,
-        value_fn=lambda data: data.typical_cost,
+        value_fn=lambda data: data.forecast.typical_cost if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_start_date",
-        name="Current bill gas start date",
+        translation_key="gas_start_date",
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.start_date,
+        value_fn=lambda data: data.forecast.start_date if data.forecast else None,
     ),
     OpowerEntityDescription(
         key="gas_end_date",
-        name="Current bill gas end date",
+        translation_key="gas_end_date",
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.end_date,
+        value_fn=lambda data: data.forecast.end_date if data.forecast else None,
     ),
 )
 
@@ -191,32 +210,38 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     entities: list[OpowerSensor] = []
-    forecasts = coordinator.data.values()
-    for forecast in forecasts:
-        device_id = f"{coordinator.api.utility.subdomain()}_{forecast.account.utility_account_id}"
+    opower_data_list = coordinator.data.values()
+    for opower_data in opower_data_list:
+        account = opower_data.account
+        forecast = opower_data.forecast
+        device_id = (
+            f"{coordinator.api.utility.subdomain()}_{account.utility_account_id}"
+        )
         device = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
-            name=f"{forecast.account.meter_type.name} account {forecast.account.utility_account_id}",
+            name=f"{account.meter_type.name} account {account.utility_account_id}",
             manufacturer="Opower",
             model=coordinator.api.utility.name(),
             entry_type=DeviceEntryType.SERVICE,
         )
-        sensors: tuple[OpowerEntityDescription, ...] = ()
+        sensors: tuple[OpowerEntityDescription, ...] = COMMON_SENSORS
         if (
-            forecast.account.meter_type == MeterType.ELEC
+            account.meter_type == MeterType.ELEC
+            and forecast is not None
             and forecast.unit_of_measure == UnitOfMeasure.KWH
         ):
-            sensors = ELEC_SENSORS
+            sensors += ELEC_SENSORS
         elif (
-            forecast.account.meter_type == MeterType.GAS
+            account.meter_type == MeterType.GAS
+            and forecast is not None
             and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
         ):
-            sensors = GAS_SENSORS
+            sensors += GAS_SENSORS
         entities.extend(
             OpowerSensor(
                 coordinator,
                 sensor,
-                forecast.account.utility_account_id,
+                account.utility_account_id,
                 device,
                 device_id,
             )
@@ -229,6 +254,7 @@ async def async_setup_entry(
 class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
     """Representation of an Opower sensor."""
 
+    _attr_has_entity_name = True
     entity_description: OpowerEntityDescription
 
     def __init__(
@@ -247,10 +273,8 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self.utility_account_id = utility_account_id
 
     @property
-    def native_value(self) -> StateType | date:
+    def native_value(self) -> StateType | date | datetime:
         """Return the state."""
-        if self.coordinator.data is not None:
-            return self.entity_description.value_fn(
-                self.coordinator.data[self.utility_account_id]
-            )
-        return None
+        return self.entity_description.value_fn(
+            self.coordinator.data[self.utility_account_id]
+        )

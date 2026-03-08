@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -31,6 +32,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '987654-ding',
@@ -81,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -88,6 +91,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '987654-motion',
@@ -138,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -145,6 +150,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '765432-motion',
@@ -195,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ding',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
@@ -202,6 +209,7 @@
     'original_name': 'Ding',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ding',
     'unique_id': '185036587-ding',
@@ -252,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intercom unlock',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -259,6 +268,7 @@
     'original_name': 'Intercom unlock',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'intercom_unlock',
     'unique_id': '185036587-intercom_unlock',
@@ -309,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
@@ -316,6 +327,7 @@
     'original_name': 'Motion',
     'platform': 'ring',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion',
     'unique_id': '345678-motion',

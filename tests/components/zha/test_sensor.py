@@ -1,9 +1,12 @@
 """Test ZHA sensor."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.quirks.v2 import QuirkBuilder
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -30,6 +33,7 @@ from homeassistant.core import HomeAssistant
 from .common import send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+ENTITY_ID_NO_PREFIX = "sensor.fakemanufacturer_fakemodel"
 ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_{}"
 
 
@@ -166,14 +170,14 @@ async def async_test_electrical_measurement(
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "100.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "99.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "100.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
     assert_state(hass, entity_id, "9.9", UnitOfPower.WATT)
@@ -190,14 +194,14 @@ async def async_test_em_apparent_power(
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "100.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "99.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "100.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 5000})
     assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
@@ -229,14 +233,14 @@ async def async_test_em_rms_current(
     """Test electrical measurement RMS Current sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1234, 10: 1000})
-    assert_state(hass, entity_id, "1.2", UnitOfElectricCurrent.AMPERE)
+    assert_state(hass, entity_id, "1.234", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_current_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 236, 10: 1000})
     assert_state(hass, entity_id, "23.6", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1236, 10: 1000})
-    assert_state(hass, entity_id, "124", UnitOfElectricCurrent.AMPERE)
+    assert_state(hass, entity_id, "123.6", UnitOfElectricCurrent.AMPERE)
 
     assert "rms_current_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050A: 88, 10: 5000})
@@ -249,18 +253,18 @@ async def async_test_em_rms_voltage(
     """Test electrical measurement RMS Voltage sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 1234, 10: 1000})
-    assert_state(hass, entity_id, "123", UnitOfElectricPotential.VOLT)
+    assert_state(hass, entity_id, "123.4", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 234, 10: 1000})
     assert_state(hass, entity_id, "23.4", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {"ac_voltage_divisor": 100})
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 2236, 10: 1000})
-    assert_state(hass, entity_id, "22.4", UnitOfElectricPotential.VOLT)
+    assert_state(hass, entity_id, "22.36", UnitOfElectricPotential.VOLT)
 
     assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
-    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == 8.9
+    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == 8.88
 
 
 async def async_test_powerconfiguration(
@@ -268,7 +272,7 @@ async def async_test_powerconfiguration(
 ):
     """Test powerconfiguration/battery sensor."""
     await send_attributes_report(hass, cluster, {33: 98})
-    assert_state(hass, entity_id, "49", "%")
+    assert_state(hass, entity_id, "49.0", "%")
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
     assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
     assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
@@ -280,14 +284,11 @@ async def async_test_powerconfiguration2(
     hass: HomeAssistant, cluster: Cluster, entity_id: str
 ):
     """Test powerconfiguration/battery sensor."""
-    await send_attributes_report(hass, cluster, {33: -1})
-    assert_state(hass, entity_id, STATE_UNKNOWN, "%")
-
     await send_attributes_report(hass, cluster, {33: 255})
     assert_state(hass, entity_id, STATE_UNKNOWN, "%")
 
     await send_attributes_report(hass, cluster, {33: 98})
-    assert_state(hass, entity_id, "49", "%")
+    assert_state(hass, entity_id, "49.0", "%")
 
 
 async def async_test_device_temperature(
@@ -335,7 +336,7 @@ async def async_test_pi_heating_demand(
             "humidity",
             async_test_humidity,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -344,7 +345,7 @@ async def async_test_pi_heating_demand(
             "temperature",
             async_test_temperature,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -353,7 +354,7 @@ async def async_test_pi_heating_demand(
             "pressure",
             async_test_pressure,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -362,7 +363,7 @@ async def async_test_pi_heating_demand(
             "illuminance",
             async_test_illuminance,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -395,7 +396,7 @@ async def async_test_pi_heating_demand(
                 "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x00,
             },
-            {"instaneneous_demand", "current_summ_received"},
+            {"instantaneous_demand", "current_summ_received"},
             STATE_UNKNOWN,
         ),
         (
@@ -413,7 +414,7 @@ async def async_test_pi_heating_demand(
                 "unit_of_measure": 0x00,
                 "current_summ_received": 0,
             },
-            {"instaneneous_demand", "current_summ_delivered"},
+            {"instantaneous_demand", "current_summ_delivered"},
             "0.0",
         ),
         (
@@ -492,7 +493,7 @@ async def async_test_pi_heating_demand(
             "device_temperature",
             async_test_device_temperature,
             1,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -501,7 +502,7 @@ async def async_test_pi_heating_demand(
             "setpoint_change_source",
             async_test_setpoint_change_source,
             10,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -510,7 +511,7 @@ async def async_test_pi_heating_demand(
             "pi_heating_demand",
             async_test_pi_heating_demand,
             10,
-            None,
+            {},
             None,
             STATE_UNKNOWN,
         ),
@@ -518,8 +519,8 @@ async def async_test_pi_heating_demand(
 )
 async def test_sensor(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     cluster_id,
     entity_suffix,
     test_func,
@@ -558,7 +559,6 @@ async def test_sensor(
     gateway.get_or_create_device(zigpy_device)
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
-    entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
 
     zigpy_device = zigpy_device_mock(
         {
@@ -570,10 +570,134 @@ async def test_sensor(
         }
     )
 
+    if hass.states.get(ENTITY_ID_NO_PREFIX):
+        entity_id = ENTITY_ID_NO_PREFIX
+    else:
+        entity_id = ENTITY_ID_PREFIX.format(entity_suffix)
+
     assert hass.states.get(entity_id).state == initial_sensor_state
 
     # test sensor associated logic
     await test_func(hass, cluster, entity_id)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "fallback_name",
+        "device_class",
+        "unit",
+        "entity_id_suffix",
+        "expected_friendly_name_suffix",
+    ),
+    [
+        (
+            "this_translation_key_is_not_translated",
+            "Software build",
+            None,
+            None,
+            "software_build",
+            "Software build",
+        ),
+        (
+            "device_status",
+            "I should not be used",
+            None,
+            None,
+            "device_status",
+            "Device status",
+        ),
+        (
+            "this_translation_key_is_not_translated",
+            "Product url",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            "product_url",
+            "Product url",
+        ),
+        (
+            "device_temperature",
+            "I should not be used",
+            SensorDeviceClass.TEMPERATURE,
+            UnitOfTemperature.CELSIUS,
+            "device_temperature",
+            "Device temperature",
+        ),
+        (
+            None,
+            "I should not be used",
+            SensorDeviceClass.BATTERY,
+            PERCENTAGE,
+            "battery",
+            "Battery",
+        ),
+    ],
+)
+async def test_sensor_name(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+    translation_key: str | None,
+    fallback_name: str,
+    device_class: SensorDeviceClass | None,
+    unit: str | None,
+    entity_id_suffix: str,
+    expected_friendly_name_suffix: str,
+) -> None:
+    """Test ZHA entity name generation.
+
+    This test sets up a v2 quirks sensor with various combinations of
+    translation key, fallback name, and device class to verify that the
+    entity's friendly name is generated correctly.
+
+    Built-in quirks have translations in HA, so those are used.
+    Custom quirks with new translation keys won't have translations.
+    For them, the fallback name should be used instead.
+    If a device class is set but no translation key,
+    the device class name is used.
+    """
+    (
+        QuirkBuilder("Test Manf", "Test Model")
+        .sensor(
+            attribute_name="product_label",  # doesn't matter for this test
+            cluster_id=general.Basic.cluster_id,
+            translation_key=translation_key,
+            fallback_name=fallback_name,
+            device_class=device_class,
+            unit=unit,
+        )
+        .add_to_registry()
+    )
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+            }
+        },
+        manufacturer="Test Manf",
+        model="Test Model",
+    )
+
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = f"sensor.test_manf_test_model_{entity_id_suffix}"
+    hass_state = hass.states.get(entity_id)
+    assert hass_state is not None
+
+    # Check that the friendly name matches the expected name.
+    assert (
+        hass_state.attributes.get("friendly_name")
+        == f"Test Manf Test Model {expected_friendly_name_suffix}"
+    )
 
 
 def assert_state(hass: HomeAssistant, entity_id, state, unit_of_measurement):

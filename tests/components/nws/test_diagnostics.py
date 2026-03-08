@@ -1,6 +1,6 @@
 """Test NWS diagnostics."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import nws
 from homeassistant.core import HomeAssistant

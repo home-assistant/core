@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -27,6 +28,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF4-battery',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -75,6 +78,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF4',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -123,6 +128,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF5-battery',
@@ -164,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -171,6 +178,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF5',
@@ -212,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -219,6 +228,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF6-battery',
@@ -260,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -267,6 +278,7 @@
     'original_name': 'Door',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'RF6',
@@ -308,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -315,6 +328,7 @@
     'original_name': 'Battery',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': '1-battery',
@@ -356,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Jam',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -363,6 +378,7 @@
     'original_name': 'Jam',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'jam',
     'unique_id': '1-jam',
@@ -404,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power loss',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -411,6 +428,7 @@
     'original_name': 'Power loss',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_loss',
     'unique_id': '1-acfail',
@@ -452,6 +470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -459,6 +478,7 @@
     'original_name': 'Tamper',
     'platform': 'yale_smart_alarm',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tamper',
     'unique_id': '1-tamper',

@@ -38,6 +38,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_PICTURE,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     ManualTriggerEntity,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -73,7 +74,9 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PARAMS): {cv.string: cv.template},
         vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
         vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-        vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+        vol.Optional(CONF_IS_ON_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
             vol.Lower, vol.In(SUPPORT_REST_METHODS)
         ),
@@ -107,12 +110,12 @@ async def async_setup_platform(
     try:
         switch = RestSwitch(hass, config, trigger_entity_config)
 
-        req = await switch.get_device_state(hass)
+        req = await switch.get_response(hass)
         if req.status_code >= HTTPStatus.BAD_REQUEST:
             _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
             async_add_entities([switch])
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         _LOGGER.error(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
@@ -147,7 +150,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         self._auth = auth
         self._body_on: template.Template = config[CONF_BODY_ON]
         self._body_off: template.Template = config[CONF_BODY_OFF]
-        self._is_on_template: template.Template | None = config.get(CONF_IS_ON_TEMPLATE)
+        self._is_on_template: ValueTemplate | None = config.get(CONF_IS_ON_TEMPLATE)
         self._timeout: int = config[CONF_TIMEOUT]
         self._verify_ssl: bool = config[CONF_VERIFY_SSL]
 
@@ -169,7 +172,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (TimeoutError, httpx.RequestError):
+        except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -184,7 +187,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (TimeoutError, httpx.RequestError):
+        except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching off %s", self._resource)
 
     async def set_device_state(self, body: Any) -> httpx.Response:
@@ -208,35 +211,41 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         """Get the current state, catching errors."""
         req = None
         try:
-            req = await self.get_device_state(self.hass)
-        except (TimeoutError, httpx.TimeoutException):
+            req = await self.get_response(self.hass)
+        except TimeoutError, httpx.TimeoutException:
             _LOGGER.exception("Timed out while fetching data")
         except httpx.RequestError:
             _LOGGER.exception("Error while fetching data")
 
         if req:
-            self._process_manual_data(req.text)
-            self.async_write_ha_state()
+            self._async_update(req.text)
 
-    async def get_device_state(self, hass: HomeAssistant) -> httpx.Response:
+    async def get_response(self, hass: HomeAssistant) -> httpx.Response:
         """Get the latest data from REST API and update the state."""
         websession = get_async_client(hass, self._verify_ssl)
 
         rendered_headers = template.render_complex(self._headers, parse_result=False)
         rendered_params = template.render_complex(self._params)
 
-        req = await websession.get(
+        return await websession.get(
             self._state_resource,
             auth=self._auth,
             headers=rendered_headers,
             params=rendered_params,
             timeout=self._timeout,
         )
-        text = req.text
+
+    def _async_update(self, text: str) -> None:
+        """Get the latest data from REST API and update the state."""
+
+        variables = self._template_variables_with_value(text)
+        if not self._render_availability_template(variables):
+            self.async_write_ha_state()
+            return
 
         if self._is_on_template is not None:
-            text = self._is_on_template.async_render_with_possible_json_value(
-                text, "None"
+            text = self._is_on_template.async_render_as_value_template(
+                self.entity_id, variables, "None"
             )
             text = text.lower()
             if text == "true":
@@ -252,4 +261,5 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         else:
             self._attr_is_on = None
 
-        return req
+        self._process_manual_data(variables)
+        self.async_write_ha_state()

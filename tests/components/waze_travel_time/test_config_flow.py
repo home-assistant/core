@@ -13,6 +13,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
@@ -93,6 +94,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_update")
 async def test_options(hass: HomeAssistant) -> None:
     """Test options flow."""
     entry = MockConfigEntry(
@@ -116,9 +118,10 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
-            CONF_EXCL_FILTER: ["exclude"],
-            CONF_INCL_FILTER: ["include"],
+            CONF_EXCL_FILTER: ["ExcludeThis"],
+            CONF_INCL_FILTER: ["IncludeThis"],
             CONF_REALTIME: False,
+            CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
         },
@@ -129,9 +132,10 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: ["exclude"],
-        CONF_INCL_FILTER: ["include"],
+        CONF_EXCL_FILTER: ["ExcludeThis"],
+        CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -140,9 +144,10 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
-        CONF_EXCL_FILTER: ["exclude"],
-        CONF_INCL_FILTER: ["include"],
+        CONF_EXCL_FILTER: ["ExcludeThis"],
+        CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -242,6 +247,7 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         CONF_EXCL_FILTER: [""],
         CONF_INCL_FILTER: [""],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"minutes": 0},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }

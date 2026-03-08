@@ -7,26 +7,35 @@ from typing import Any
 from freezegun.api import FrozenDateTimeFactory
 from pyheos import (
     AddCriteriaType,
+    BrowseResult,
     CommandFailedError,
     HeosError,
     MediaItem,
+    MediaMusicSource,
     MediaType as HeosMediaType,
     PlayerUpdateResult,
     PlayState,
+    QueueItem,
     RepeatType,
     SignalHeosEvent,
     SignalType,
     const,
 )
+from pyheos.util import mediauri
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.heos.const import (
+    ATTR_DESTINATION_POSITION,
+    ATTR_QUEUE_IDS,
     DOMAIN,
+    SERVICE_GET_QUEUE,
     SERVICE_GROUP_VOLUME_DOWN,
     SERVICE_GROUP_VOLUME_SET,
     SERVICE_GROUP_VOLUME_UP,
+    SERVICE_MOVE_QUEUE_ITEM,
+    SERVICE_REMOVE_FROM_QUEUE,
 )
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -51,6 +60,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_source import DOMAIN as MS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -73,6 +83,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import MockHeos
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.conftest import async_setup_component
+from tests.typing import WebSocketGenerator
 
 
 async def test_state_attributes(
@@ -158,7 +170,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
 
     # Disconnected
     controller.load_players.reset_mock()
@@ -170,11 +181,8 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-    assert controller.load_players.call_count == 0
 
-    # Connected handles refresh failure
-    controller.load_players.reset_mock()
-    controller.load_players.side_effect = CommandFailedError("", "Failure", 1)
+    # Reconnect and state updates
     player.available = True
     await controller.dispatcher.wait_send(
         SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
@@ -183,38 +191,6 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state is not None
     assert state.state == STATE_IDLE
-    assert controller.load_players.call_count == 1
-    assert "Unable to refresh players" in caplog.text
-
-
-async def test_updates_from_connection_event_new_player_ids(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
-    controller: MockHeos,
-    change_data_mapped_ids: PlayerUpdateResult,
-) -> None:
-    """Test player ids changed after reconnection updates ids."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    # Assert current IDs
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-
-    # Send event which will result in updated IDs.
-    controller.load_players.return_value = change_data_mapped_ids
-    await controller.dispatcher.wait_send(
-        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
-    )
-    await hass.async_block_till_done()
-
-    # Assert updated IDs and previous don't exist
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
-    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
-    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
 
 
 async def test_updates_from_sources_updated(
@@ -1275,6 +1251,312 @@ async def test_play_media_invalid_type(
         )
 
 
+async def test_play_media_media_uri(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    playlist: MediaItem,
+) -> None:
+    """Test the play media service with HEOS media uri."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    media_content_id = mediauri.to_media_uri(playlist)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
+            ATTR_MEDIA_CONTENT_TYPE: "",
+        },
+        blocking=True,
+    )
+    controller.play_media.assert_called_once()
+
+
+async def test_play_media_media_uri_invalid(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with an invalid HEOS media uri raises."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    media_id = "heos://media/1/music_service?name=Pandora&available=False&image_url="
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape(f"Unable to play media: Invalid media id '{media_id}'"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_ID: media_id,
+                ATTR_MEDIA_CONTENT_TYPE: "",
+            },
+            blocking=True,
+        )
+    controller.play_media.assert_not_called()
+
+
+async def test_play_media_music_source_url(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with a music source url."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/test.mp3",
+            ATTR_MEDIA_CONTENT_TYPE: "",
+        },
+        blocking=True,
+    )
+    controller.play_url.assert_called_once()
+
+
+async def test_play_media_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test the play media service with type queue."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: "queue",
+            ATTR_MEDIA_CONTENT_ID: "2",
+        },
+        blocking=True,
+    )
+    controller.player_play_queue.assert_called_once_with(1, 2)
+
+
+async def test_play_media_queue_invalid(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the play media service with an invalid queue id."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to play media: Invalid queue id 'Invalid'"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_TYPE: "queue",
+                ATTR_MEDIA_CONTENT_ID: "Invalid",
+            },
+            blocking=True,
+        )
+    assert controller.player_play_queue.call_count == 0
+
+
+async def test_browse_media_root(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    music_sources: dict[int, MediaMusicSource],
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing the root."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    controller.mock_set_music_sources(music_sources)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+async def test_browse_media_root_no_media_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    music_sources: dict[int, MediaMusicSource],
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing the root."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.mock_set_music_sources(music_sources)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+async def test_browse_media_root_source_error_continues(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing the root with an error getting sources continues."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.get_music_sources.side_effect = HeosError("error")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+    assert "Unable to load music sources" in caplog.text
+
+
+async def test_browse_media_heos_media(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    hass_ws_client: WebSocketGenerator,
+    pandora_browse_result: BrowseResult,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing a heos media item."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.browse_media.return_value = pandora_browse_result
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user",
+            "media_content_type": "",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+async def test_browse_media_heos_media_error_returns_empty(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing a heos media item results in an error, returns empty children."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.browse_media.side_effect = HeosError("error")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user",
+            "media_content_type": "",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+    assert "Unable to browse media" in caplog.text
+
+
+async def test_browse_media_media_source(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test browsing a media source."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await async_setup_component(hass, MS_DOMAIN, {MS_DOMAIN: {}})
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "media-source://media_source/local/.",
+            "media_content_type": "",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+async def test_browse_media_invalid_content_id(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing an invalid content id fails."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.test_player",
+            "media_content_id": "invalid",
+            "media_content_type": "",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+
 @pytest.mark.parametrize(
     ("members", "expected"),
     [
@@ -1465,3 +1747,84 @@ async def test_media_player_group_fails_wrong_integration(
             blocking=True,
         )
     controller.set_group.assert_not_called()
+
+
+async def test_get_queue(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    queue: list[QueueItem],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the get queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.player_get_queue.return_value = queue
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    controller.player_get_queue.assert_called_once_with(1, None, None)
+    assert response == snapshot
+
+
+async def test_remove_from_queue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the get queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REMOVE_FROM_QUEUE,
+        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_QUEUE_IDS: [1, "2"]},
+        blocking=True,
+    )
+    controller.player_remove_from_queue.assert_called_once_with(1, [1, 2])
+
+
+async def test_move_queue_item_queue(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the move queue service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MOVE_QUEUE_ITEM,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_QUEUE_IDS: [1, "2"],
+            ATTR_DESTINATION_POSITION: 10,
+        },
+        blocking=True,
+    )
+    controller.player_move_queue_item.assert_called_once_with(1, [1, 2], 10)
+
+
+async def test_move_queue_item_queue_error_raises(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test move queue raises error when failed."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.player_move_queue_item.side_effect = HeosError("error")
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to move queue item: error"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MOVE_QUEUE_ITEM,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_QUEUE_IDS: [1, "2"],
+                ATTR_DESTINATION_POSITION: 10,
+            },
+            blocking=True,
+        )

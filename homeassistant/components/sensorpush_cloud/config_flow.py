@@ -61,4 +61,7 @@ class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "dashboard_url": "https://dashboard.sensorpush.com/",
+            },
         )

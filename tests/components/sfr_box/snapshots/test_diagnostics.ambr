@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entry_diagnostics[adsl]
+# name: test_entry_diagnostics[adsl-ftth_get_info]
   dict({
     'data': dict({
       'dsl': dict({
@@ -17,10 +17,7 @@
         'training': 'Showtime',
         'uptime': 450796,
       }),
-      'ftth': dict({
-        'status': 'down',
-        'wanfibre': 'out',
-      }),
+      'ftth': None,
       'system': dict({
         'alimvoltage': 12251,
         'current_datetime': '202212282233',
@@ -58,24 +55,10 @@
     }),
   })
 # ---
-# name: test_entry_diagnostics[ftth]
+# name: test_entry_diagnostics[ftth-dsl_get_info]
   dict({
     'data': dict({
-      'dsl': dict({
-        'attenuation_down': 28.5,
-        'attenuation_up': 20.8,
-        'counter': 16,
-        'crc': 0,
-        'line_status': 'No Defect',
-        'linemode': 'ADSL2+',
-        'noise_down': 5.8,
-        'noise_up': 6.0,
-        'rate_down': 5549,
-        'rate_up': 187,
-        'status': 'up',
-        'training': 'Showtime',
-        'uptime': 450796,
-      }),
+      'dsl': None,
       'ftth': dict({
         'status': 'down',
         'wanfibre': 'out',

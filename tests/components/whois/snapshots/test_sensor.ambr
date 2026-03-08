@@ -33,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -40,6 +41,7 @@
     'original_name': 'Admin',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'admin',
     'unique_id': 'home-assistant.io_admin',
@@ -64,7 +66,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -74,7 +75,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -114,6 +114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -121,6 +122,7 @@
     'original_name': 'Created',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'creation_date',
     'unique_id': 'home-assistant.io_creation_date',
@@ -145,7 +147,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -155,7 +156,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -199,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Days until expiration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,6 +207,7 @@
     'original_name': 'Days until expiration',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'days_until_expiration',
     'unique_id': 'home-assistant.io_days_until_expiration',
@@ -230,7 +232,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -240,7 +241,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -280,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expires',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -287,6 +288,7 @@
     'original_name': 'Expires',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'expiration_date',
     'unique_id': 'home-assistant.io_expiration_date',
@@ -311,7 +313,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -321,7 +322,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -361,6 +361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -368,6 +369,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',
@@ -392,7 +394,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -402,7 +403,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -441,6 +441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
@@ -448,6 +449,7 @@
     'original_name': 'Owner',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'owner',
     'unique_id': 'home-assistant.io_owner',
@@ -472,7 +474,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -482,7 +483,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -521,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -528,6 +529,7 @@
     'original_name': 'Registrant',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'registrant',
     'unique_id': 'home-assistant.io_registrant',
@@ -552,7 +554,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -562,7 +563,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -601,6 +601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -608,6 +609,7 @@
     'original_name': 'Registrar',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'registrar',
     'unique_id': 'home-assistant.io_registrar',
@@ -632,7 +634,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -642,7 +643,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -681,6 +681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reseller',
     'options': dict({
     }),
     'original_device_class': None,
@@ -688,6 +689,7 @@
     'original_name': 'Reseller',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reseller',
     'unique_id': 'home-assistant.io_reseller',
@@ -712,7 +714,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -722,7 +723,138 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'home-assistant.io Status',
+      'options': list([
+        'add_period',
+        'auto_renew_period',
+        'inactive',
+        'active',
+        'pending_create',
+        'pending_renew',
+        'pending_restore',
+        'pending_transfer',
+        'pending_update',
+        'redemption_period',
+        'renew_period',
+        'server_delete_prohibited',
+        'server_hold',
+        'server_renew_prohibited',
+        'server_transfer_prohibited',
+        'server_update_prohibited',
+        'transfer_period',
+        'client_delete_prohibited',
+        'client_hold',
+        'client_renew_prohibited',
+        'client_transfer_prohibited',
+        'client_update_prohibited',
+        'ok',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_io_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_status].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'add_period',
+        'auto_renew_period',
+        'inactive',
+        'active',
+        'pending_create',
+        'pending_renew',
+        'pending_restore',
+        'pending_transfer',
+        'pending_update',
+        'redemption_period',
+        'renew_period',
+        'server_delete_prohibited',
+        'server_hold',
+        'server_renew_prohibited',
+        'server_transfer_prohibited',
+        'server_update_prohibited',
+        'transfer_period',
+        'client_delete_prohibited',
+        'client_hold',
+        'client_renew_prohibited',
+        'client_transfer_prohibited',
+        'client_update_prohibited',
+        'ok',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.home_assistant_io_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'whois',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'home-assistant.io_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_whois_sensors[sensor.home_assistant_io_status].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'whois',
+        'home-assistant.io',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'home-assistant.io',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -762,6 +894,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -769,6 +902,7 @@
     'original_name': 'Last updated',
     'platform': 'whois',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': 'home-assistant.io_last_updated',

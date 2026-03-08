@@ -8,7 +8,11 @@ MOCK_HUB = {
     "product_id": 1,
     "household_id": HOUSEHOLD_ID,
     "name": "Hub",
-    "status": {"online": True, "led_mode": 0, "pairing_mode": 0},
+    "status": {
+        "led_mode": 0,
+        "pairing_mode": 0,
+        "online": True,
+    },
 }
 
 MOCK_FEEDER = {
@@ -22,6 +26,7 @@ MOCK_FEEDER = {
         "locking": {"mode": 0},
         "learn_mode": 0,
         "signal": {"device_rssi": 60, "hub_rssi": 65},
+        "online": True,
     },
 }
 
@@ -72,7 +77,12 @@ MOCK_PET = {
     "id": 24680,
     "household_id": HOUSEHOLD_ID,
     "name": "Pet",
-    "position": {"since": "2020-08-23T23:10:50", "where": 1},
+    "position": {
+        "since": "2020-08-23T23:10:50",
+        "where": 1,
+        "device_id": MOCK_PET_FLAP["id"],
+        "user_id": 112233,
+    },
     "status": {},
 }
 

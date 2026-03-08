@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -27,6 +28,7 @@
     'original_name': 'Filter clean required',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_clean',
     'unique_id': 'BBZZBBZZ-filter_clean',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -75,6 +78,7 @@
     'original_name': 'Pure Boost linked with AC',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_ac_integration',
     'unique_id': 'BBZZBBZZ-pure_ac_integration',
@@ -116,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -123,6 +128,7 @@
     'original_name': 'Pure Boost linked with indoor air quality',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_measure_integration',
     'unique_id': 'BBZZBBZZ-pure_measure_integration',
@@ -164,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -171,6 +178,7 @@
     'original_name': 'Pure Boost linked with outdoor air quality',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_prime_integration',
     'unique_id': 'BBZZBBZZ-pure_prime_integration',
@@ -212,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -219,6 +228,7 @@
     'original_name': 'Pure Boost linked with presence',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_geo_integration',
     'unique_id': 'BBZZBBZZ-pure_geo_integration',
@@ -260,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -267,6 +278,7 @@
     'original_name': 'Filter clean required',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_clean',
     'unique_id': 'ABC999111-filter_clean',
@@ -308,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -315,6 +328,7 @@
     'original_name': 'Connectivity',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AABBCC-alive',
@@ -356,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -363,6 +378,7 @@
     'original_name': 'Main sensor',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'is_main_sensor',
     'unique_id': 'AABBCC-is_main_sensor',
@@ -403,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -410,6 +427,7 @@
     'original_name': 'Motion',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AABBCC-motion',
@@ -451,6 +469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room occupied',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -458,6 +477,7 @@
     'original_name': 'Room occupied',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'room_occupied',
     'unique_id': 'ABC999111-room_occupied',
@@ -499,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter clean required',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -506,6 +527,7 @@
     'original_name': 'Filter clean required',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_clean',
     'unique_id': 'AAZZAAZZ-filter_clean',
@@ -547,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with AC',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -554,6 +577,7 @@
     'original_name': 'Pure Boost linked with AC',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_ac_integration',
     'unique_id': 'AAZZAAZZ-pure_ac_integration',
@@ -595,6 +619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with indoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -602,6 +627,7 @@
     'original_name': 'Pure Boost linked with indoor air quality',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_measure_integration',
     'unique_id': 'AAZZAAZZ-pure_measure_integration',
@@ -643,6 +669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with outdoor air quality',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -650,6 +677,7 @@
     'original_name': 'Pure Boost linked with outdoor air quality',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_prime_integration',
     'unique_id': 'AAZZAAZZ-pure_prime_integration',
@@ -691,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pure Boost linked with presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -698,6 +727,7 @@
     'original_name': 'Pure Boost linked with presence',
     'platform': 'sensibo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pure_geo_integration',
     'unique_id': 'AAZZAAZZ-pure_geo_integration',

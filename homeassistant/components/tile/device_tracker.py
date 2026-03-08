@@ -64,7 +64,7 @@ class TileDeviceTracker(TileEntity, TrackerEntity):
         )
         self._attr_latitude = None if not self._tile.latitude else self._tile.latitude
         self._attr_location_accuracy = (
-            0 if not self._tile.accuracy else int(self._tile.accuracy)
+            0 if not self._tile.accuracy else self._tile.accuracy
         )
 
         self._attr_extra_state_attributes = {

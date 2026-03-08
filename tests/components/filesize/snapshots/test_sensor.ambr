@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -27,6 +28,7 @@
     'original_name': 'Created',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'created',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-created',
@@ -68,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -75,6 +78,7 @@
     'original_name': 'Last updated',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_updated',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-last_updated',
@@ -118,13 +122,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Size',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'size',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X',
@@ -170,13 +179,18 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Size in bytes',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
     'original_name': 'Size in bytes',
     'platform': 'filesize',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'size_bytes',
     'unique_id': '01JD5CTQMH9FKEFQKZJ8MMBQ3X-bytes',

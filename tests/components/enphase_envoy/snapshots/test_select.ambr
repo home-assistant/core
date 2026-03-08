@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,6 +34,7 @@
     'original_name': 'Storage mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_mode',
     'unique_id': '1234_storage_mode',
@@ -84,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +94,7 @@
     'original_name': 'Storage mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'storage_mode',
     'unique_id': '654321_storage_mode',
@@ -143,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -150,6 +155,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC1_generator_action',
@@ -203,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -210,6 +217,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC1_grid_action',
@@ -263,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,6 +279,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC1_microgrid_action',
@@ -321,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -328,6 +339,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC1_mode',
@@ -379,6 +391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +399,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC2_generator_action',
@@ -439,6 +453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -446,6 +461,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC2_grid_action',
@@ -499,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -506,6 +523,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC2_microgrid_action',
@@ -557,6 +575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,6 +583,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC2_mode',
@@ -615,6 +635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Generator action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -622,6 +643,7 @@
     'original_name': 'Generator action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_generator_action',
     'unique_id': '654321_relay_NC3_generator_action',
@@ -675,6 +697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -682,6 +705,7 @@
     'original_name': 'Grid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_grid_action',
     'unique_id': '654321_relay_NC3_grid_action',
@@ -735,6 +759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microgrid action',
     'options': dict({
     }),
     'original_device_class': None,
@@ -742,6 +767,7 @@
     'original_name': 'Microgrid action',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_microgrid_action',
     'unique_id': '654321_relay_NC3_microgrid_action',
@@ -793,6 +819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -800,6 +827,7 @@
     'original_name': 'Mode',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_mode',
     'unique_id': '654321_relay_NC3_mode',

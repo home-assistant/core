@@ -1,0 +1,165 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "46",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "V\u00e4rmelampa",
+  "model": "FK-PW802EC-F",
+  "category": "cz",
+  "product_id": "ipabufmlmodje1ws",
+  "product_name": "",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2022-01-22T12:55:50+00:00",
+  "create_time": "2022-01-21T20:32:42+00:00",
+  "update_time": "2022-01-22T12:55:53+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kwh",
+        "min": 0,
+        "max": 50000,
+        "scale": 3,
+        "step": 100
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "kwh",
+        "min": 0,
+        "max": 50000,
+        "scale": 3,
+        "step": 100
+      }
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "mA",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cur_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 50000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": {
+        "unit": "V",
+        "min": 0,
+        "max": 5000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "test_bit": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 5,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "voltage_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electric_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "power_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electricity_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "countdown_1": 0,
+    "add_ele": 82,
+    "cur_current": 435,
+    "cur_power": 1642,
+    "cur_voltage": 2246,
+    "test_bit": 1,
+    "voltage_coe": 632,
+    "electric_coe": 10795,
+    "power_coe": 10197,
+    "electricity_coe": 4090
+  }
+}

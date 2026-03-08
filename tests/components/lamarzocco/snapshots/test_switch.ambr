@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -27,6 +28,7 @@
     'original_name': 'Auto on/off (Os2OswX)',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
     'unique_id': 'GS012345_auto_on_off_Os2OswX',
@@ -54,6 +56,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -61,6 +64,7 @@
     'original_name': 'Auto on/off (aXFz5bJ)',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
     'unique_id': 'GS012345_auto_on_off_aXFz5bJ',
@@ -114,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -121,6 +126,7 @@
     'original_name': None,
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main',
     'unique_id': 'GS012345_main',
@@ -130,6 +136,7 @@
 # name: test_switches[switch.gs012345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
       'friendly_name': 'GS012345',
     }),
     'context': <ANY>,
@@ -161,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +176,7 @@
     'original_name': 'Auto on/off (aXFz5bJ)',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
     'unique_id': 'GS012345_auto_on_off_aXFz5bJ',
@@ -208,6 +217,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +225,7 @@
     'original_name': 'Auto on/off (Os2OswX)',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off',
     'unique_id': 'GS012345_auto_on_off_Os2OswX',
@@ -255,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +274,7 @@
     'original_name': 'Smart standby enabled',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_standby_enabled',
     'unique_id': 'GS012345_smart_standby_enabled',
@@ -302,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +323,7 @@
     'original_name': 'Steam boiler',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'steam_boiler',
     'unique_id': 'GS012345_steam_boiler_enable',

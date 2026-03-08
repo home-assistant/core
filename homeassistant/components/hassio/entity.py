@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -15,6 +17,7 @@ from .const import (
     DATA_KEY_ADDONS,
     DATA_KEY_CORE,
     DATA_KEY_HOST,
+    DATA_KEY_MOUNTS,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DOMAIN,
@@ -192,3 +195,34 @@ class HassioCoreEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
         )
         if CONTAINER_STATS in update_types:
             await self.coordinator.async_request_refresh()
+
+
+class HassioMountEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):
+    """Base Entity for Mount."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: HassioDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        mount: CIFSMountResponse | NFSMountResponse,
+    ) -> None:
+        """Initialize base entity."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"home_assistant_mount_{mount.name}_{entity_description.key}"
+        )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"mount_{mount.name}")}
+        )
+        self._mount = mount
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self._mount.name in self.coordinator.data[DATA_KEY_MOUNTS]
+        )

@@ -4,43 +4,33 @@ from __future__ import annotations
 
 from phone_modem import PhoneModem
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_IDLE
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.components.sensor import RestoreSensor
+from homeassistant.const import STATE_IDLE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CID, DATA_KEY_API, DOMAIN
+from . import ModemCallerIdConfigEntry
+from .const import CID, DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ModemCallerIdConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Modem Caller ID sensor."""
-    api = hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]
     async_add_entities(
         [
             ModemCalleridSensor(
-                api,
+                entry.runtime_data,
                 entry.entry_id,
             )
         ]
     )
 
-    async def _async_on_hass_stop(event: Event) -> None:
-        """HA is shutting down, close modem port."""
-        if hass.data[DOMAIN][entry.entry_id][DATA_KEY_API]:
-            await hass.data[DOMAIN][entry.entry_id][DATA_KEY_API].close()
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_hass_stop)
-    )
-
-
-class ModemCalleridSensor(SensorEntity):
+class ModemCalleridSensor(RestoreSensor):
     """Implementation of USB modem caller ID sensor."""
 
     _attr_should_poll = False
@@ -62,8 +52,20 @@ class ModemCalleridSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when the modem sensor is added to Home Assistant."""
-        self.api.registercallback(self._async_incoming_call)
         await super().async_added_to_hass()
+
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._attr_extra_state_attributes[CID.CID_NAME] = last_state.attributes.get(
+                CID.CID_NAME, ""
+            )
+            self._attr_extra_state_attributes[CID.CID_NUMBER] = (
+                last_state.attributes.get(CID.CID_NUMBER, "")
+            )
+            self._attr_extra_state_attributes[CID.CID_TIME] = last_state.attributes.get(
+                CID.CID_TIME, 0
+            )
+
+        self.api.registercallback(self._async_incoming_call)
 
     @callback
     def _async_incoming_call(self, new_state: str) -> None:

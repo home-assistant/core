@@ -1,0 +1,13 @@
+{
+  "data": {
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "timestamp": "2025-04-28T05:27:07Z",
+      "batteryLevel": 96,
+      "batteryAutonomy": 182,
+      "plugStatus": 3,
+      "chargingStatus": 0.3,
+      "chargingRemainingTime": 15
+    }
+  }
+}

@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
-from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
+from aioshelly.const import MODEL_2PM_G3, MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,7 +20,6 @@ from homeassistant.components.shelly.const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
@@ -29,19 +28,25 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
     MOCK_MAC,
-    get_entity_state,
     init_integration,
     inject_rpc_device_event,
+    mock_block_device_push_update_failure,
     mock_polling_rpc_update,
     mock_rest_update,
     register_device,
     register_entity,
 )
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import (
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    mock_restore_cache,
+)
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
@@ -57,6 +62,8 @@ async def test_block_reload_on_cfg_change(
 ) -> None:
     """Test block reload on config change."""
     await init_integration(hass, 1)
+    # num_outputs is 2, devicename and channel name is used
+    entity_id = "switch.test_name_channel_1"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
@@ -72,7 +79,7 @@ async def test_block_reload_on_cfg_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
     # Generate config change from switch to light
     monkeypatch.setitem(
@@ -82,14 +89,14 @@ async def test_block_reload_on_cfg_change(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_block_no_reload_on_bulb_changes(
@@ -99,6 +106,9 @@ async def test_block_no_reload_on_bulb_changes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block no reload on bulb mode/effect change."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    # num_outputs is 1, device name is used
+    entity_id = "switch.test_name"
     await init_integration(hass, 1, model=MODEL_BULB)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
@@ -114,14 +124,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
     # Test no reload  on effect change
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect", 1)
@@ -129,14 +139,14 @@ async def test_block_no_reload_on_bulb_changes(
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_name_channel_1") is not None
+    assert hass.states.get(entity_id)
 
 
 async def test_block_polling_auth_error(
@@ -243,16 +253,20 @@ async def test_block_polling_connection_error(
         "update",
         AsyncMock(side_effect=DeviceConnectionError),
     )
+    # num_outputs is 2, device name and channel name is used
+    entity_id = "switch.test_name_channel_1"
     await init_integration(hass, 1)
 
-    assert get_entity_state(hass, "switch.test_name_channel_1") == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, "switch.test_name_channel_1") == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("exc", [DeviceConnectionError, MacAddressMismatchError])
@@ -270,12 +284,14 @@ async def test_block_rest_update_connection_error(
     await init_integration(hass, 1)
 
     await mock_rest_update(hass, freezer)
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     monkeypatch.setattr(mock_block_device, "update_shelly", AsyncMock(side_effect=exc))
     await mock_rest_update(hass, freezer)
 
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_block_sleeping_device_no_periodic_updates(
@@ -297,14 +313,16 @@ async def test_block_sleeping_device_no_periodic_updates(
     mock_block_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) == "22.1"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "22.1"
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 3600))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_block_device_push_updates_failure(
@@ -314,15 +332,7 @@ async def test_block_device_push_updates_failure(
 ) -> None:
     """Test block device with push updates failure."""
     await init_integration(hass, 1)
-
-    # Updates with COAP_REPLAY type should create an issue
-    for _ in range(MAX_PUSH_UPDATE_FAILURES):
-        mock_block_device.mock_update_reply()
-        await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
-    )
+    await mock_block_device_push_update_failure(hass, mock_block_device)
 
     # An update with COAP_PERIODIC type should clear the issue
     mock_block_device.mock_update()
@@ -386,6 +396,9 @@ async def test_rpc_reload_on_cfg_change(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC reload on config change."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     # Generate config change from switch to light
@@ -414,14 +427,14 @@ async def test_rpc_reload_on_cfg_change(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is not None
+    assert hass.states.get(entity_id)
 
     # Wait for debouncer
     freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is None
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_reload_with_invalid_auth(
@@ -538,6 +551,57 @@ async def test_rpc_click_event(
     }
 
 
+async def test_rpc_ignore_virtual_click_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC virtual click events are ignored as they are triggered by the integration."""
+    await init_integration(hass, 2)
+
+    # Generate a virtual button event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "button:200",
+                    "id": 200,
+                    "event": "single_push",
+                    "ts": 1757358109.89,
+                }
+            ],
+            "ts": 757358109.89,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    # Generate valid event
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "data": [],
+                    "event": "single_push",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_rpc_update_entry_sleep_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -552,7 +616,7 @@ async def test_rpc_update_entry_sleep_period(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
@@ -560,7 +624,7 @@ async def test_rpc_update_entry_sleep_period(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 600
+    assert entry.data[CONF_SLEEP_PERIOD] == 600
 
     # Move time to generate sleep period update
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 3600)
@@ -568,7 +632,7 @@ async def test_rpc_update_entry_sleep_period(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entry.data["sleep_period"] == 3600
+    assert entry.data[CONF_SLEEP_PERIOD] == 3600
 
 
 async def test_rpc_sleeping_device_no_periodic_updates(
@@ -586,7 +650,7 @@ async def test_rpc_sleeping_device_no_periodic_updates(
         hass,
         SENSOR_DOMAIN,
         "test_name_temperature",
-        "temperature:0-temperature_0",
+        "temperature:0-temperature_tc",
         entry,
     )
 
@@ -594,14 +658,16 @@ async def test_rpc_sleeping_device_no_periodic_updates(
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) == "22.9"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "22.9"
 
     # Move time to generate polling
     freezer.tick(timedelta(seconds=UPDATE_PERIOD_MULTIPLIER * 1000))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, entity_id) is STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_sleeping_device_firmware_unsupported(
@@ -710,9 +776,13 @@ async def test_rpc_reconnect_error(
     exc: Exception,
 ) -> None:
     """Test RPC reconnect error."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
-    assert get_entity_state(hass, "switch.test_switch_0") == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock(side_effect=exc))
@@ -722,16 +792,21 @@ async def test_rpc_reconnect_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, "switch.test_switch_0") == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_error_running_connected_events(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC error while running connected events."""
+    entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     with patch(
         "homeassistant.components.shelly.coordinator.async_ensure_ble_enabled",
         side_effect=DeviceConnectionError,
@@ -741,14 +816,17 @@ async def test_rpc_error_running_connected_events(
         )
 
     assert "Error running connected events for device" in caplog.text
-    assert get_entity_state(hass, "switch.test_switch_0") == STATE_UNAVAILABLE
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
     # Move time to generate reconnect without error
     freezer.tick(timedelta(seconds=RPC_RECONNECT_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert get_entity_state(hass, "switch.test_switch_0") == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_rpc_polling_connection_error(
@@ -769,11 +847,13 @@ async def test_rpc_polling_connection_error(
         ),
     )
 
-    assert get_entity_state(hass, entity_id) == "-63"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
 
     await mock_polling_rpc_update(hass, freezer)
 
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_polling_disconnected(
@@ -788,11 +868,13 @@ async def test_rpc_polling_disconnected(
 
     monkeypatch.setattr(mock_rpc_device, "connected", False)
 
-    assert get_entity_state(hass, entity_id) == "-63"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "-63"
 
     await mock_polling_rpc_update(hass, freezer)
 
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_update_entry_fw_ver(
@@ -830,12 +912,29 @@ async def test_rpc_update_entry_fw_ver(
     assert device.sw_version == "99.0.0"
 
 
+@pytest.mark.parametrize(
+    ("supports_scripts", "zigbee_firmware", "result"),
+    [
+        (True, False, True),
+        (True, True, False),
+        (False, True, False),
+        (False, False, False),
+    ],
+)
 async def test_rpc_runs_connected_events_when_initialized(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    supports_scripts: bool,
+    zigbee_firmware: bool,
+    result: bool,
 ) -> None:
     """Test RPC runs connected events when initialized."""
+    monkeypatch.setattr(
+        mock_rpc_device, "supports_scripts", AsyncMock(return_value=supports_scripts)
+    )
+    monkeypatch.setattr(mock_rpc_device, "zigbee_firmware", zigbee_firmware)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await init_integration(hass, 2)
 
@@ -846,8 +945,17 @@ async def test_rpc_runs_connected_events_when_initialized(
     mock_rpc_device.mock_initialized()
     await hass.async_block_till_done()
 
-    # BLE script list is called during connected events
-    assert call.script_list() in mock_rpc_device.mock_calls
+    assert call.supports_scripts() in mock_rpc_device.mock_calls
+    # BLE script list is called during connected events if device supports scripts
+    # and Zigbee is disabled
+    assert bool(call.script_list() in mock_rpc_device.mock_calls) == result
+    assert "Device Test name already connected" not in caplog.text
+
+    # Mock initialized event after already initialized
+    caplog.clear()
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+    assert "Device Test name already connected" in caplog.text
 
 
 async def test_rpc_sleeping_device_unload_ignore_ble_scanner(
@@ -896,7 +1004,8 @@ async def test_block_sleeping_device_connection_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     # Make device online event with connection error
     monkeypatch.setattr(
@@ -910,7 +1019,8 @@ async def test_block_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error connecting to Shelly device" in caplog.text
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     # Move time to generate sleep period update
     freezer.tick(timedelta(seconds=sleep_period * UPDATE_PERIOD_MULTIPLIER))
@@ -918,7 +1028,8 @@ async def test_block_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Sleeping device did not update" in caplog.text
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_sleeping_device_connection_error(
@@ -947,7 +1058,8 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     # Make device online event with connection error
     monkeypatch.setattr(
@@ -961,7 +1073,8 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Error connecting to Shelly device" in caplog.text
-    assert get_entity_state(hass, entity_id) == STATE_ON
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
     # Move time to generate sleep period update
     freezer.tick(timedelta(seconds=sleep_period * UPDATE_PERIOD_MULTIPLIER))
@@ -969,7 +1082,8 @@ async def test_rpc_sleeping_device_connection_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Sleeping device did not update" in caplog.text
-    assert get_entity_state(hass, entity_id) == STATE_UNAVAILABLE
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_rpc_sleeping_device_late_setup(
@@ -994,7 +1108,8 @@ async def test_rpc_sleeping_device_late_setup(
     monkeypatch.setattr(mock_rpc_device, "connected", True)
     mock_rpc_device.mock_initialized()
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get("sensor.test_name_temperature") is not None
+
+    assert hass.states.get("sensor.test_name_temperature")
 
 
 async def test_rpc_already_connected(
@@ -1030,3 +1145,70 @@ async def test_xmod_model_lookup(
     )
     assert device
     assert device.model == xmod_model
+
+
+async def test_sub_device_area_from_main_device(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test Shelly sub-device area is set to main device area when created."""
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+
+    config_entry = await init_integration(
+        hass, gen=3, model=MODEL_2PM_G3, skip_setup=True
+    )
+
+    # create main device and set area
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        name="Test name",
+        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC)},
+        identifiers={(DOMAIN, MOCK_MAC)},
+        suggested_area="living_room",
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # verify sub-devices have the same area as main device
+    for relay_index in range(2):
+        entity_id = f"switch.test_name_output_{relay_index}"
+        assert hass.states.get(entity_id) is not None
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+
+        device_entry = device_registry.async_get(entry.device_id)
+        assert device_entry
+        assert device_entry.area_id == "living_room"
+
+
+@pytest.mark.parametrize("restart_required", [True, False])
+async def test_rpc_ble_scanner_enable_reboot(
+    hass: HomeAssistant,
+    mock_rpc_device,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    restart_required: bool,
+) -> None:
+    """Test RPC BLE scanner enabling requires reboot."""
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "ble_getconfig",
+        AsyncMock(return_value={"enable": False}),
+    )
+    monkeypatch.setattr(
+        mock_rpc_device,
+        "ble_setconfig",
+        AsyncMock(return_value={"restart_required": restart_required}),
+    )
+    await init_integration(
+        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
+    )
+    assert bool("BLE enable required a reboot" in caplog.text) == restart_required
+    assert mock_rpc_device.trigger_reboot.call_count == int(restart_required)

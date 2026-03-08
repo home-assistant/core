@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -32,6 +33,7 @@
     'original_name': 'Away extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'away_extract_fan_setpoint',
     'unique_id': '0000-0001-away_extract_fan_setpoint',
@@ -83,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -90,6 +93,7 @@
     'original_name': 'Away supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'away_supply_fan_setpoint',
     'unique_id': '0000-0001-away_supply_fan_setpoint',
@@ -141,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -148,6 +153,7 @@
     'original_name': 'Cooker hood extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooker_hood_extract_fan_setpoint',
     'unique_id': '0000-0001-cooker_hood_extract_fan_setpoint',
@@ -199,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -206,6 +213,7 @@
     'original_name': 'Cooker hood supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cooker_hood_supply_fan_setpoint',
     'unique_id': '0000-0001-cooker_hood_supply_fan_setpoint',
@@ -257,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -264,6 +273,7 @@
     'original_name': 'Fireplace extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_extract_fan_setpoint',
     'unique_id': '0000-0001-fireplace_extract_fan_setpoint',
@@ -315,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace mode runtime',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -322,6 +333,7 @@
     'original_name': 'Fireplace mode runtime',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_mode_runtime',
     'unique_id': '0000-0001-fireplace_mode_runtime',
@@ -373,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -380,6 +393,7 @@
     'original_name': 'Fireplace supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'fireplace_supply_fan_setpoint',
     'unique_id': '0000-0001-fireplace_supply_fan_setpoint',
@@ -431,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -438,6 +453,7 @@
     'original_name': 'High extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'high_extract_fan_setpoint',
     'unique_id': '0000-0001-high_extract_fan_setpoint',
@@ -489,6 +505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -496,6 +513,7 @@
     'original_name': 'High supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'high_supply_fan_setpoint',
     'unique_id': '0000-0001-high_supply_fan_setpoint',
@@ -547,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -554,6 +573,7 @@
     'original_name': 'Home extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'home_extract_fan_setpoint',
     'unique_id': '0000-0001-home_extract_fan_setpoint',
@@ -605,6 +625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -612,6 +633,7 @@
     'original_name': 'Home supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'home_supply_fan_setpoint',
     'unique_id': '0000-0001-home_supply_fan_setpoint',

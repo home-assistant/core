@@ -99,6 +99,12 @@ def deserialize_entity_description(
         descriptions_class = descriptions_class._dataclass  # noqa: SLF001
     for field in cached_fields(descriptions_class):
         field_name = field.name
+        # Only set fields that are in the data
+        # otherwise we would override default values with None
+        # causing side effects
+        if field_name not in data:
+            continue
+
         # It would be nice if field.type returned the actual
         # type instead of a str so we could avoid writing this
         # out, but it doesn't. If we end up using this in more
@@ -374,6 +380,27 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
             self.logger.exception("Unexpected error updating %s data", self.name)
             return
 
+        self._process_update(update, was_available)
+
+    @callback
+    def async_set_updated_data(self, update: _DataT) -> None:
+        """Manually update the processor with new data.
+
+        If the data comes in via a different method, like a
+        notification, this method can be used to update the
+        processor with the new data.
+
+        This is useful for devices that retrieve
+        some of their data via notifications.
+        """
+        was_available = self._available
+        self._available = True
+        self._process_update(update, was_available)
+
+    def _process_update(
+        self, update: _DataT, was_available: bool | None = None
+    ) -> None:
+        """Process the update from the bluetooth device."""
         if not self.last_update_success:
             self.last_update_success = True
             self.logger.info("Coordinator %s recovered", self.name)

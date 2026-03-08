@@ -33,7 +33,6 @@ from .util import valid_publish_topic
 
 PARALLEL_UPDATES = 0
 
-BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
 STATE = "state"
 
@@ -84,7 +83,6 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.STOP: "stop",
     VacuumEntityFeature.RETURN_HOME: "return_home",
     VacuumEntityFeature.FAN_SPEED: "fan_speed",
-    VacuumEntityFeature.BATTERY: "battery",
     VacuumEntityFeature.STATUS: "status",
     VacuumEntityFeature.SEND_COMMAND: "send_command",
     VacuumEntityFeature.LOCATE: "locate",
@@ -96,7 +94,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
 ALL_SERVICES = (
@@ -133,8 +130,6 @@ _FEATURE_PAYLOADS = {
 
 MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
     {
-        vacuum.ATTR_BATTERY_ICON,
-        vacuum.ATTR_BATTERY_LEVEL,
         vacuum.ATTR_FAN_SPEED,
     }
 )
@@ -255,7 +250,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
-        self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @callback
     def _state_message_received(self, msg: ReceiveMessage) -> None:

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "raining": {
+        "default": "mdi:weather-pouring"
+      },
+      "twilight": {
+        "default": "mdi:weather-sunset"
+      }
+    }
+  }
+}

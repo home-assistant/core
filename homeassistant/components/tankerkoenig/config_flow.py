@@ -15,10 +15,9 @@ from aiotankerkoenig import (
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -39,7 +38,8 @@ from homeassistant.helpers.selector import (
     NumberSelectorConfig,
 )
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_TYPES
+from .const import CONF_STATIONS, DEFAULT_RADIUS, DOMAIN
+from .coordinator import TankerkoenigConfigEntry
 
 
 async def async_get_nearby_stations(
@@ -71,7 +71,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TankerkoenigConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -176,10 +176,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
                     ): cv.string,
                     vol.Required(
-                        CONF_FUEL_TYPES,
-                        default=user_input.get(CONF_FUEL_TYPES, list(FUEL_TYPES)),
-                    ): cv.multi_select(FUEL_TYPES),
-                    vol.Required(
                         CONF_LOCATION,
                         default=user_input.get(
                             CONF_LOCATION,
@@ -233,7 +229,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     def __init__(self) -> None:

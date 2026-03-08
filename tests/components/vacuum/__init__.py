@@ -3,7 +3,7 @@
 from typing import Any
 
 from homeassistant.components.vacuum import (
-    DOMAIN,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
@@ -67,7 +67,9 @@ async def help_async_setup_entry_init(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> bool:
     """Set up test config entry."""
-    await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.VACUUM]
+    )
     return True
 
 
@@ -78,3 +80,48 @@ async def help_async_unload_entry(
     return await hass.config_entries.async_unload_platforms(
         config_entry, [Platform.VACUUM]
     )
+
+
+SEGMENTS = [
+    Segment(id="seg_1", name="Kitchen"),
+    Segment(id="seg_2", name="Living Room"),
+    Segment(id="seg_3", name="Bedroom"),
+    Segment(id="seg_4", name="Bedroom", group="Upstairs"),
+    Segment(id="seg_5", name="Bathroom", group="Upstairs"),
+]
+
+
+class MockVacuumWithCleanArea(MockEntity, StateVacuumEntity):
+    """Mock vacuum with clean_area support."""
+
+    _attr_supported_features = (
+        VacuumEntityFeature.STATE
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.CLEAN_AREA
+    )
+
+    def __init__(
+        self,
+        segments: list[Segment] | None = None,
+        unique_id: str = "mock_vacuum_unique_id",
+        **values: Any,
+    ) -> None:
+        """Initialize a mock vacuum entity."""
+        super().__init__(**values)
+        self._attr_unique_id = unique_id
+        self._attr_activity = VacuumActivity.DOCKED
+        self.segments = segments if segments is not None else SEGMENTS
+        self.clean_segments_calls: list[tuple[list[str], dict[str, Any]]] = []
+
+    def start(self) -> None:
+        """Start cleaning."""
+        self._attr_activity = VacuumActivity.CLEANING
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned."""
+        return self.segments
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        self.clean_segments_calls.append((segment_ids, kwargs))
+        self._attr_activity = VacuumActivity.CLEANING

@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "clouds": {
+        "default": "mdi:weather-cloudy"
+      },
+      "precipitation_kind": {
+        "default": "mdi:weather-snowy-rainy"
+      },
+      "rain": {
+        "default": "mdi:weather-rainy"
+      },
+      "snow": {
+        "default": "mdi:weather-snowy"
+      },
+      "uv_index": {
+        "default": "mdi:weather-sunny"
+      },
+      "visibility_distance": {
+        "default": "mdi:eye"
+      },
+      "weather_code": {
+        "default": "mdi:barcode"
+      }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "service": "mdi:weather-snowy-rainy"
+    }
+  }
+}

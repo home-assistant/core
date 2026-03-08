@@ -56,7 +56,6 @@ AUTOMATIC_SETUP_STRING = "Obtain a new token from plex.tv"
 MANUAL_SETUP_STRING = "Configure Plex server manually"
 
 SERVICE_REFRESH_LIBRARY = "refresh_library"
-SERVICE_SCAN_CLIENTS = "scan_for_clients"
 
 PLEX_URI_SCHEME = "plex://"
 

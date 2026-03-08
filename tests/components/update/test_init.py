@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -80,10 +81,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_title = "Title"
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
-    assert (
-        update.entity_picture
-        == "https://brands.home-assistant.io/_/test_platform/icon.png"
-    )
+    assert update.entity_picture == "/api/brands/integration/test_platform/icon.png"
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -818,7 +816,9 @@ async def test_name(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.UPDATE]
+        )
         return True
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -988,7 +988,7 @@ async def test_update_percentage_backwards_compatibility(
     expected_attributes = {
         ATTR_AUTO_UPDATE: False,
         ATTR_DISPLAY_PRECISION: 0,
-        ATTR_ENTITY_PICTURE: "https://brands.home-assistant.io/_/test/icon.png",
+        ATTR_ENTITY_PICTURE: "/api/brands/integration/test/icon.png",
         ATTR_FRIENDLY_NAME: "legacy",
         ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,

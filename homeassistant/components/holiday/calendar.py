@@ -25,17 +25,12 @@ def _get_obj_holidays_and_language(
     selected_categories: list[str] | None,
 ) -> tuple[HolidayBase, str]:
     """Get the object for the requested country and year."""
-    if selected_categories is None:
-        categories = [PUBLIC]
-    else:
-        categories = [PUBLIC, *selected_categories]
-
     obj_holidays = country_holidays(
         country,
         subdiv=province,
         years={dt_util.now().year, dt_util.now().year + 1},
         language=language,
-        categories=categories,
+        categories=selected_categories,
     )
     if language == "en":
         for lang in obj_holidays.supported_languages:
@@ -45,7 +40,7 @@ def _get_obj_holidays_and_language(
                     subdiv=province,
                     years={dt_util.now().year, dt_util.now().year + 1},
                     language=lang,
-                    categories=categories,
+                    categories=selected_categories,
                 )
                 language = lang
                 break
@@ -59,7 +54,7 @@ def _get_obj_holidays_and_language(
             subdiv=province,
             years={dt_util.now().year, dt_util.now().year + 1},
             language=default_language,
-            categories=categories,
+            categories=selected_categories,
         )
         language = default_language
 
@@ -76,6 +71,11 @@ async def async_setup_entry(
     province: str | None = config_entry.data.get(CONF_PROVINCE)
     categories: list[str] | None = config_entry.options.get(CONF_CATEGORIES)
     language = hass.config.language
+
+    if categories is None:
+        categories = [PUBLIC]
+    else:
+        categories = [PUBLIC, *categories]
 
     obj_holidays, language = await hass.async_add_executor_job(
         _get_obj_holidays_and_language, country, province, language, categories

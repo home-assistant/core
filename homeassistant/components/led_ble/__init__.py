@@ -3,28 +3,22 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
-import logging
 
-from led_ble import BLEAK_EXCEPTIONS, LEDBLE
+from led_ble import LEDBLE
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_TIMEOUT, DOMAIN, UPDATE_SECONDS
-from .models import LEDBLEData
+from .const import DEVICE_TIMEOUT
+from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator, LEDBLEData
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bool:
     """Set up LED BLE from a config entry."""
     address: str = entry.data[CONF_ADDRESS]
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
@@ -54,23 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    async def _async_update() -> None:
-        """Update the device state."""
-        try:
-            await led_ble.update()
-        except BLEAK_EXCEPTIONS as ex:
-            raise UpdateFailed(str(ex)) from ex
-
     startup_event = asyncio.Event()
     cancel_first_update = led_ble.register_callback(lambda *_: startup_event.set())
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=led_ble.name,
-        update_method=_async_update,
-        update_interval=timedelta(seconds=UPDATE_SECONDS),
-    )
+    coordinator = LEDBLECoordinator(hass, entry, led_ble)
 
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -89,9 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     finally:
         cancel_first_update()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = LEDBLEData(
-        entry.title, led_ble, coordinator
-    )
+    entry.runtime_data = LEDBLEData(entry.title, led_ble, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
@@ -106,17 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> None:
     """Handle options update."""
-    data: LEDBLEData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.title:
+    if entry.title != entry.runtime_data.title:
         await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: LEDBLEData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.device.stop()
+        await entry.runtime_data.device.stop()
 
     return unload_ok

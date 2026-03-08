@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.const import ATTR_SW_VERSION
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -40,7 +38,5 @@ class RadarrEntity(CoordinatorEntity[RadarrDataUpdateCoordinator[T]]):
             name=self.coordinator.config_entry.title,
         )
         if isinstance(self.coordinator, StatusDataUpdateCoordinator):
-            device_info[ATTR_SW_VERSION] = cast(
-                StatusDataUpdateCoordinator, self.coordinator
-            ).data.version
+            device_info[ATTR_SW_VERSION] = self.coordinator.data.version
         return device_info

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -27,6 +28,7 @@
     'original_name': 'Core firmware',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 21>,
     'translation_key': 'core_update',
     'unique_id': 'aa:bb:cc:dd:ee:ff-core_update',
@@ -39,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'entity_picture': '/api/brands/integration/smlight/icon.png',
       'friendly_name': 'Mock Title Core firmware',
       'in_progress': False,
       'installed_version': 'v2.3.6',
@@ -80,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zigbee firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -87,6 +90,7 @@
     'original_name': 'Zigbee firmware',
     'platform': 'smlight',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 21>,
     'translation_key': 'zigbee_update',
     'unique_id': 'aa:bb:cc:dd:ee:ff-zigbee_update',
@@ -99,7 +103,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
+      'entity_picture': '/api/brands/integration/smlight/icon.png',
       'friendly_name': 'Mock Title Zigbee firmware',
       'in_progress': False,
       'installed_version': '20240314',

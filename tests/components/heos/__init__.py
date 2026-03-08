@@ -2,7 +2,14 @@
 
 from unittest.mock import AsyncMock
 
-from pyheos import ConnectionState, Heos, HeosGroup, HeosOptions, HeosPlayer
+from pyheos import (
+    ConnectionState,
+    Heos,
+    HeosGroup,
+    HeosOptions,
+    HeosPlayer,
+    MediaMusicSource,
+)
 
 
 class MockHeos(Heos):
@@ -13,6 +20,7 @@ class MockHeos(Heos):
         super().__init__(options)
         # Overwrite the methods with async mocks, changing type
         self.add_to_queue: AsyncMock = AsyncMock()
+        self.browse_media: AsyncMock = AsyncMock()
         self.connect: AsyncMock = AsyncMock()
         self.disconnect: AsyncMock = AsyncMock()
         self.get_favorites: AsyncMock = AsyncMock()
@@ -20,6 +28,7 @@ class MockHeos(Heos):
         self.get_input_sources: AsyncMock = AsyncMock()
         self.get_playlists: AsyncMock = AsyncMock()
         self.get_players: AsyncMock = AsyncMock()
+        self.get_music_sources: AsyncMock = AsyncMock()
         self.group_volume_down: AsyncMock = AsyncMock()
         self.group_volume_up: AsyncMock = AsyncMock()
         self.get_system_info: AsyncMock = AsyncMock()
@@ -28,10 +37,14 @@ class MockHeos(Heos):
         self.play_preset_station: AsyncMock = AsyncMock()
         self.play_url: AsyncMock = AsyncMock()
         self.player_clear_queue: AsyncMock = AsyncMock()
+        self.player_get_queue: AsyncMock = AsyncMock()
         self.player_get_quick_selects: AsyncMock = AsyncMock()
+        self.player_move_queue_item: AsyncMock = AsyncMock()
         self.player_play_next: AsyncMock = AsyncMock()
         self.player_play_previous: AsyncMock = AsyncMock()
+        self.player_play_queue: AsyncMock = AsyncMock()
         self.player_play_quick_select: AsyncMock = AsyncMock()
+        self.player_remove_from_queue: AsyncMock = AsyncMock()
         self.player_set_mute: AsyncMock = AsyncMock()
         self.player_set_play_mode: AsyncMock = AsyncMock()
         self.player_set_play_state: AsyncMock = AsyncMock()
@@ -64,3 +77,17 @@ class MockHeos(Heos):
     def mock_set_connection_state(self, connection_state: ConnectionState) -> None:
         """Set the connection state on the mock instance."""
         self._connection._state = connection_state
+
+    def mock_set_current_host(self, host: str) -> None:
+        """Set the current host on the mock instance."""
+        self._connection._host = host
+
+    def mock_set_music_sources(
+        self, music_sources: dict[int, MediaMusicSource]
+    ) -> None:
+        """Set the music sources on the mock instance."""
+        for music_source in music_sources.values():
+            music_source.heos = self
+        self._music_sources = music_sources
+        self._music_sources_loaded = bool(music_sources)
+        self.get_music_sources.return_value = music_sources

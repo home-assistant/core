@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

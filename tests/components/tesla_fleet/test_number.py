@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.number import (
@@ -57,7 +57,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_current"
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.set_charging_amps",
+        "tesla_fleet_api.tesla.VehicleFleet.set_charging_amps",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -72,7 +72,7 @@ async def test_number_services(
 
     entity_id = "number.test_charge_limit"
     with patch(
-        "homeassistant.components.tesla_fleet.VehicleSpecific.set_charge_limit",
+        "tesla_fleet_api.tesla.VehicleFleet.set_charge_limit",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -85,9 +85,24 @@ async def test_number_services(
         assert state.state == "60"
         call.assert_called_once()
 
+    # Test float conversion
+    with patch(
+        "tesla_fleet_api.tesla.VehicleFleet.set_charge_limit",
+        return_value=COMMAND_OK,
+    ) as call:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 60.5},
+            blocking=True,
+        )
+        state = hass.states.get(entity_id)
+        assert state.state == "60"
+        call.assert_called_once_with(60)
+
     entity_id = "number.energy_site_backup_reserve"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.backup",
+        "tesla_fleet_api.tesla.EnergySite.backup",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -105,7 +120,7 @@ async def test_number_services(
 
     entity_id = "number.energy_site_off_grid_reserve"
     with patch(
-        "homeassistant.components.tesla_fleet.EnergySpecific.off_grid_vehicle_charging_reserve",
+        "tesla_fleet_api.tesla.EnergySite.off_grid_vehicle_charging_reserve",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(

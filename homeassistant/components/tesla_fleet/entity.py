@@ -1,10 +1,11 @@
 """Tesla Fleet parent entity class."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Generic, TypeVar
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla.energysite import EnergySite
+from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,6 +21,8 @@ from .coordinator import (
 from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
+_ApiT = TypeVar("_ApiT", bound=VehicleFleet | EnergySite)
+
 
 class TeslaFleetEntity(
     CoordinatorEntity[
@@ -27,13 +30,15 @@ class TeslaFleetEntity(
         | TeslaFleetEnergySiteLiveCoordinator
         | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
-    ]
+    ],
+    Generic[_ApiT],
 ):
     """Parent class for all TeslaFleet entities."""
 
     _attr_has_entity_name = True
     read_only: bool
     scoped: bool
+    api: _ApiT
 
     def __init__(
         self,
@@ -41,7 +46,7 @@ class TeslaFleetEntity(
         | TeslaFleetEnergySiteLiveCoordinator
         | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator,
-        api: VehicleSpecific | EnergySpecific,
+        api: _ApiT,
         key: str,
     ) -> None:
         """Initialize common aspects of a TeslaFleet entity."""
@@ -99,7 +104,7 @@ class TeslaFleetEntity(
             )
 
 
-class TeslaFleetVehicleEntity(TeslaFleetEntity):
+class TeslaFleetVehicleEntity(TeslaFleetEntity[VehicleFleet]):
     """Parent class for TeslaFleet Vehicle entities."""
 
     _last_update: int = 0
@@ -127,7 +132,7 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
         await wake_up_vehicle(self.vehicle)
 
 
-class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
+class TeslaFleetEnergyLiveEntity(TeslaFleetEntity[EnergySite]):
     """Parent class for TeslaFleet Energy Site Live entities."""
 
     def __init__(
@@ -142,7 +147,7 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
         super().__init__(data.live_coordinator, data.api, key)
 
 
-class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity):
+class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity[EnergySite]):
     """Parent class for TeslaFleet Energy Site History entities."""
 
     def __init__(
@@ -157,7 +162,7 @@ class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity):
         super().__init__(data.history_coordinator, data.api, key)
 
 
-class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):
+class TeslaFleetEnergyInfoEntity(TeslaFleetEntity[EnergySite]):
     """Parent class for TeslaFleet Energy Site Info entities."""
 
     def __init__(
@@ -173,7 +178,7 @@ class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):
 
 
 class TeslaFleetWallConnectorEntity(
-    TeslaFleetEntity, CoordinatorEntity[TeslaFleetEnergySiteLiveCoordinator]
+    TeslaFleetEntity[EnergySite], CoordinatorEntity[TeslaFleetEnergySiteLiveCoordinator]
 ):
     """Parent class for Tesla Fleet Wall Connector entities."""
 
@@ -201,7 +206,7 @@ class TeslaFleetWallConnectorEntity(
             manufacturer="Tesla",
             name="Wall Connector",
             via_device=(DOMAIN, str(data.id)),
-            serial_number=din.split("-")[-1],
+            serial_number=din.rsplit("-", maxsplit=1)[-1],
             model=model,
         )
 

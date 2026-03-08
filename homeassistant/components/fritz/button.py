@@ -18,18 +18,16 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
-from .coordinator import (
-    FRITZ_DATA_KEY,
-    AvmWrapper,
-    FritzConfigEntry,
-    FritzData,
-    FritzDevice,
-    _is_tracked,
-)
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, MeshRoles
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
+from .helpers import _is_tracked
+from .models import FritzDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+# Set a sane value to avoid too many updates
+PARALLEL_UPDATES = 5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -166,25 +164,14 @@ def _async_wol_buttons_list(
 class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
     """Defines a FRITZ!Box Tools Wake On LAN button."""
 
-    _attr_icon = "mdi:lan-pending"
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "wake_on_lan"
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize Fritz!Box WOL button."""
         super().__init__(avm_wrapper, device)
-        self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(
-                DOMAIN,
-                avm_wrapper.unique_id,
-            ),
-        )
 
     async def async_press(self) -> None:
         """Press the button."""

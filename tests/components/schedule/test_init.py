@@ -10,7 +10,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
@@ -34,7 +33,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ENTITY_ID,
     CONF_ICON,
-    CONF_ID,
     CONF_NAME,
     EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
@@ -49,98 +47,11 @@ from tests.common import MockUser, async_capture_events, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture
-def schedule_setup(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> Callable[..., Coroutine[Any, Any, bool]]:
-    """Schedule setup."""
-
-    async def _schedule_setup(
-        items: dict[str, Any] | None = None,
-        config: dict[str, Any] | None = None,
-    ) -> bool:
-        if items is None:
-            hass_storage[DOMAIN] = {
-                "key": DOMAIN,
-                "version": STORAGE_VERSION,
-                "minor_version": STORAGE_VERSION_MINOR,
-                "data": {
-                    "items": [
-                        {
-                            CONF_ID: "from_storage",
-                            CONF_NAME: "from storage",
-                            CONF_ICON: "mdi:party-popper",
-                            CONF_FRIDAY: [
-                                {
-                                    CONF_FROM: "17:00:00",
-                                    CONF_TO: "23:59:59",
-                                    CONF_DATA: {"party_level": "epic"},
-                                },
-                            ],
-                            CONF_SATURDAY: [
-                                {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
-                            ],
-                            CONF_SUNDAY: [
-                                {
-                                    CONF_FROM: "00:00:00",
-                                    CONF_TO: "24:00:00",
-                                    CONF_DATA: {"entry": "VIPs only"},
-                                },
-                            ],
-                        }
-                    ]
-                },
-            }
-        else:
-            hass_storage[DOMAIN] = {
-                "key": DOMAIN,
-                "version": 1,
-                "minor_version": STORAGE_VERSION_MINOR,
-                "data": {"items": items},
-            }
-        if config is None:
-            config = {
-                DOMAIN: {
-                    "from_yaml": {
-                        CONF_NAME: "from yaml",
-                        CONF_ICON: "mdi:party-pooper",
-                        CONF_MONDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_TUESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_WEDNESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_THURSDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_FRIDAY: [
-                            {
-                                CONF_FROM: "00:00:00",
-                                CONF_TO: "23:59:59",
-                                CONF_DATA: {"party_level": "epic"},
-                            }
-                        ],
-                        CONF_SATURDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_SUNDAY: [
-                            {
-                                CONF_FROM: "00:00:00",
-                                CONF_TO: "23:59:59",
-                                CONF_DATA: {"entry": "VIPs only"},
-                            }
-                        ],
-                    }
-                }
-            }
-        return await async_setup_component(hass, DOMAIN, config)
-
-    return _schedule_setup
-
-
-async def test_invalid_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("invalid_config", [None, {"name with space": None}])
+async def test_invalid_config(hass: HomeAssistant, invalid_config) -> None:
     """Test invalid configs."""
-    invalid_configs = [
-        None,
-        {},
-        {"name with space": None},
-    ]
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 @pytest.mark.parametrize(
@@ -622,11 +533,26 @@ async def test_ws_delete(
 
 @pytest.mark.freeze_time("2022-08-10 20:10:00-07:00")
 @pytest.mark.parametrize(
-    ("to", "next_event", "saved_to"),
+    ("to", "next_event", "saved_to", "icon_dict"),
     [
-        ("23:59:59", "2022-08-10T23:59:59-07:00", "23:59:59"),
-        ("24:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
-        ("24:00:00", "2022-08-11T00:00:00-07:00", "24:00:00"),
+        (
+            "23:59:59",
+            "2022-08-10T23:59:59-07:00",
+            "23:59:59",
+            {CONF_ICON: "mdi:party-pooper"},
+        ),
+        (
+            "24:00",
+            "2022-08-11T00:00:00-07:00",
+            "24:00:00",
+            {CONF_ICON: "mdi:party-popper"},
+        ),
+        (
+            "24:00:00",
+            "2022-08-11T00:00:00-07:00",
+            "24:00:00",
+            {},
+        ),
     ],
 )
 async def test_update(
@@ -637,6 +563,7 @@ async def test_update(
     to: str,
     next_event: str,
     saved_to: str,
+    icon_dict: dict,
 ) -> None:
     """Test updating the schedule."""
     assert await schedule_setup()
@@ -659,7 +586,7 @@ async def test_update(
             "type": f"{DOMAIN}/update",
             f"{DOMAIN}_id": "from_storage",
             CONF_NAME: "Party pooper",
-            CONF_ICON: "mdi:party-pooper",
+            **icon_dict,
             CONF_MONDAY: [],
             CONF_TUESDAY: [],
             CONF_WEDNESDAY: [{CONF_FROM: "17:00:00", CONF_TO: to}],
@@ -676,7 +603,7 @@ async def test_update(
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Party pooper"
-    assert state.attributes[ATTR_ICON] == "mdi:party-pooper"
+    assert state.attributes.get(ATTR_ICON) == icon_dict.get(CONF_ICON)
     assert state.attributes[ATTR_NEXT_EVENT].isoformat() == next_event
 
     await client.send_json({"id": 2, "type": f"{DOMAIN}/list"})

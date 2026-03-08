@@ -1,6 +1,6 @@
 """The tests for the yale platform."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientResponseError
 import pytest
@@ -19,6 +19,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from .mocks import (
@@ -28,6 +31,8 @@ from .mocks import (
     _mock_inoperative_yale_lock_detail,
     _mock_lock_with_offline_key,
     _mock_operative_yale_lock_detail,
+    mock_client_credentials,
+    mock_yale_config_entry,
 )
 
 from tests.typing import WebSocketGenerator
@@ -36,7 +41,7 @@ from tests.typing import WebSocketGenerator
 async def test_yale_api_is_failing(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale api is failing."""
 
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass,
         authenticate_side_effect=YaleApiError(
             "offline", ClientResponseError(None, None, status=500)
@@ -48,7 +53,7 @@ async def test_yale_api_is_failing(hass: HomeAssistant) -> None:
 async def test_yale_is_offline(hass: HomeAssistant) -> None:
     """Config entry state is SETUP_RETRY when yale is offline."""
 
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass, authenticate_side_effect=TimeoutError
     )
 
@@ -57,7 +62,7 @@ async def test_yale_is_offline(hass: HomeAssistant) -> None:
 
 async def test_yale_late_auth_failure(hass: HomeAssistant) -> None:
     """Test we can detect a late auth failure."""
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass,
         authenticate_side_effect=InvalidAuth(
             "authfailed", ClientResponseError(None, None, status=401)
@@ -174,7 +179,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
     yale_operative_lock = await _mock_operative_yale_lock_detail(hass)
     yale_inoperative_lock = await _mock_inoperative_yale_lock_detail(hass)
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass, [yale_operative_lock, yale_inoperative_lock]
     )
 
@@ -193,7 +198,7 @@ async def test_load_triggers_ble_discovery(
     yale_lock_with_key = await _mock_lock_with_offline_key(hass)
     yale_lock_without_key = await _mock_operative_yale_lock_detail(hass)
 
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass, [yale_lock_with_key, yale_lock_without_key]
     )
     await hass.async_block_till_done()
@@ -218,7 +223,7 @@ async def test_device_remove_devices(
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
     yale_operative_lock = await _mock_operative_yale_lock_detail(hass)
-    config_entry, socketio = await _create_yale_with_devices(
+    config_entry, _socketio = await _create_yale_with_devices(
         hass, [yale_operative_lock]
     )
     entity = entity_registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
@@ -234,3 +239,18 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    await mock_client_credentials(hass)
+    entry = await mock_yale_config_entry(hass)
+
+    with patch(
+        "homeassistant.components.yale.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

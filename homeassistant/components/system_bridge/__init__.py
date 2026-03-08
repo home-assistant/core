@@ -11,13 +11,14 @@ from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
+    DataMissingException,
 )
+from systembridgeconnector.models.keyboard_key import KeyboardKey
+from systembridgeconnector.models.keyboard_text import KeyboardText
+from systembridgeconnector.models.modules.processes import Process
+from systembridgeconnector.models.open_path import OpenPath
+from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import Version
-from systembridgemodels.keyboard_key import KeyboardKey
-from systembridgemodels.keyboard_text import KeyboardText
-from systembridgemodels.modules.processes import Process
-from systembridgemodels.open_path import OpenPath
-from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -184,7 +185,7 @@ async def async_setup_entry(
                 "host": entry.data[CONF_HOST],
             },
         ) from exception
-    except TimeoutError as exception:
+    except (DataMissingException, TimeoutError) as exception:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="timeout",
@@ -421,6 +422,9 @@ async def async_setup_entry(
             },
         ),
         supports_response=SupportsResponse.ONLY,
+        description_placeholders={
+            "syntax_keys_documentation_url": "http://robotjs.io/docs/syntax#keys"
+        },
     )
 
     hass.services.async_register(
