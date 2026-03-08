@@ -1,93 +1,118 @@
-"""Support for Kaiterra devices."""
+"""The Kaiterra integration."""
 
-import voluptuous as vol
+from __future__ import annotations
 
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_DEVICE_ID,
-    CONF_DEVICES,
-    CONF_NAME,
-    CONF_SCAN_INTERVAL,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .api_data import KaiterraApiData
-from .const import (
-    AVAILABLE_AQI_STANDARDS,
-    AVAILABLE_DEVICE_TYPES,
-    AVAILABLE_UNITS,
-    CONF_AQI_STANDARD,
-    CONF_PREFERRED_UNITS,
-    DEFAULT_AQI_STANDARD,
-    DEFAULT_PREFERRED_UNIT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    PLATFORMS,
-)
+from .api_data import KaiterraApiClient
+from .const import CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD, DOMAIN, LOGGER, PLATFORMS
+from .coordinator import KaiterraConfigEntry, KaiterraDataUpdateCoordinator
 
-KAITERRA_DEVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_TYPE): vol.In(AVAILABLE_DEVICE_TYPES),
-        vol.Optional(CONF_NAME): cv.string,
-    }
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-KAITERRA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [KAITERRA_DEVICE_SCHEMA]),
-        vol.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): vol.In(
-            AVAILABLE_AQI_STANDARDS
-        ),
-        vol.Optional(CONF_PREFERRED_UNITS, default=DEFAULT_PREFERRED_UNIT): vol.All(
-            cv.ensure_list, [vol.In(AVAILABLE_UNITS)]
-        ),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-    }
-)
+LEGACY_SENSOR_UNIQUE_ID_MIGRATIONS: dict[str, str] = {
+    "temperature": "rtemp",
+    "humidity": "rhumid",
+}
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: KAITERRA_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+def _async_remove_legacy_air_quality_entity(
+    hass: HomeAssistant, entry: KaiterraConfigEntry
+) -> None:
+    """Remove the legacy air quality entity registry entry."""
+    entity_registry = er.async_get(hass)
+    old_unique_id = f"{entry.unique_id}_air_quality"
+
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if entity_entry.unique_id == old_unique_id:
+            entity_registry.async_remove(entity_entry.entity_id)
+
+
+def _async_migrate_legacy_sensor_unique_ids(
+    hass: HomeAssistant, entry: KaiterraConfigEntry
+) -> None:
+    """Migrate legacy sensor unique IDs to the config entry format."""
+    entity_registry = er.async_get(hass)
+
+    for legacy_suffix, current_suffix in LEGACY_SENSOR_UNIQUE_ID_MIGRATIONS.items():
+        old_unique_id = f"{entry.unique_id}_{legacy_suffix}"
+        new_unique_id = f"{entry.unique_id}_{current_suffix}"
+
+        if not (
+            old_entity_id := entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, old_unique_id
+            )
+        ):
+            continue
+
+        if duplicate_entity_id := entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, new_unique_id
+        ):
+            entity_registry.async_remove(duplicate_entity_id)
+
+        entity_registry.async_update_entity(
+            old_entity_id,
+            config_entry_id=entry.entry_id,
+            new_unique_id=new_unique_id,
+        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Kaiterra integration."""
+    """Set up Kaiterra from configuration.yaml."""
+    return True
 
-    conf = config[DOMAIN]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-    devices = conf[CONF_DEVICES]
-    session = async_get_clientsession(hass)
-    api = hass.data[DOMAIN] = KaiterraApiData(hass, conf, session)
 
-    await api.async_update()
+async def async_setup_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> bool:
+    """Set up Kaiterra from a config entry."""
+    _async_remove_legacy_air_quality_entity(hass, entry)
 
-    async def _update(now=None):
-        """Periodic update."""
-        await api.async_update()
+    coordinator = KaiterraDataUpdateCoordinator(
+        hass,
+        entry,
+        KaiterraApiClient(
+            async_get_clientsession(hass),
+            entry.data[CONF_API_KEY],
+            entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
+        ),
+        entry.data[CONF_DEVICE_ID],
+        entry.data.get(CONF_NAME) or entry.title,
+    )
 
-    async_track_time_interval(hass, _update, scan_interval)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
-    # Load platforms for each device
-    for device in devices:
-        device_name, device_id = (
-            device.get(CONF_NAME) or device[CONF_TYPE],
-            device[CONF_DEVICE_ID],
-        )
-        for platform in PLATFORMS:
-            hass.async_create_task(
-                async_load_platform(
-                    hass,
-                    platform,
-                    DOMAIN,
-                    {CONF_NAME: device_name, CONF_DEVICE_ID: device_id},
-                    config,
-                )
-            )
+
+async def async_unload_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version > 1:
+        return False
+
+    version = entry.version
+    minor_version = entry.minor_version
+
+    if version == 1 and minor_version < 2:
+        _async_remove_legacy_air_quality_entity(hass, entry)
+        minor_version = 2
+
+    if version == 1 and minor_version < 3:
+        _async_migrate_legacy_sensor_unique_ids(hass, entry)
+        minor_version = 3
+
+    if minor_version != entry.minor_version:
+        hass.config_entries.async_update_entry(entry, minor_version=minor_version)
+        LOGGER.debug("Migration to version %s.%s successful", version, minor_version)
 
     return True

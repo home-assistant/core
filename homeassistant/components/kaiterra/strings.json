@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Kaiterra device",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "device_id": "Device ID",
+          "name": "Name"
+        },
+        "data_description": {
+          "api_key": "The API key used to access your Kaiterra device",
+          "device_id": "The device ID from your Kaiterra account",
+          "name": "Optional name to use for this device in Home Assistant"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update Kaiterra API key",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The updated API key used to access your Kaiterra device"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "device_not_found": "Device not found",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kaiterra options",
+        "data": {
+          "aqi_standard": "AQI standard"
+        },
+        "data_description": {
+          "aqi_standard": "The AQI standard used to calculate the overall air quality index"
+        }
+      }
+    }
+  }
+}

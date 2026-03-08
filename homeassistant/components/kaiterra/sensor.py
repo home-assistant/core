@@ -1,113 +1,156 @@
-"""Support for Kaiterra Temperature ahn Humidity Sensors."""
+"""Sensor platform for the Kaiterra integration."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.const import UnitOfTemperature
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .const import DISPATCHER_KAITERRA, DOMAIN
+from .const import ATTR_AQI_LEVEL, ATTR_AQI_POLLUTANT
+from .coordinator import KaiterraConfigEntry
+from .entity import KaiterraEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class KaiterraSensorEntityDescription(SensorEntityDescription):
-    """Class describing Renault sensor entities."""
+    """Describe a Kaiterra sensor entity."""
 
-    suffix: str
+    name: str
 
 
-SENSORS = [
+SENSORS: tuple[KaiterraSensorEntityDescription, ...] = (
     KaiterraSensorEntityDescription(
-        suffix="Temperature",
+        key="aqi",
+        name="AQI",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    KaiterraSensorEntityDescription(
         key="rtemp",
+        name="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     KaiterraSensorEntityDescription(
-        suffix="Humidity",
         key="rhumid",
+        name="Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-]
+    KaiterraSensorEntityDescription(
+        key="rpm25c",
+        name="PM2.5",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    KaiterraSensorEntityDescription(
+        key="rpm10c",
+        name="PM10",
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    KaiterraSensorEntityDescription(
+        key="rco2",
+        name="CO2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    KaiterraSensorEntityDescription(
+        key="tvoc",
+        name="TVOC",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+def _get_state_value(sensor_data: dict[str, Any]) -> StateType:
+    """Return a Home Assistant state-compatible value."""
+    value = sensor_data.get("value")
+    if isinstance(value, str | int | float):
+        return value
+    return None
+
+
+async def async_setup_entry(
+    hass,
+    entry: KaiterraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the kaiterra temperature and humidity sensor."""
-    if discovery_info is None:
-        return
-
-    api = hass.data[DOMAIN]
-    name = discovery_info[CONF_NAME]
-    device_id = discovery_info[CONF_DEVICE_ID]
-
+    """Set up Kaiterra sensors from a config entry."""
+    coordinator = entry.runtime_data
     async_add_entities(
-        [KaiterraSensor(api, name, device_id, description) for description in SENSORS]
+        KaiterraSensor(coordinator, description) for description in SENSORS
     )
 
 
-class KaiterraSensor(SensorEntity):
-    """Implementation of a Kaittera sensor."""
+class KaiterraSensor(KaiterraEntity, SensorEntity):
+    """Representation of a Kaiterra sensor."""
 
-    _attr_should_poll = False
+    entity_description: KaiterraSensorEntityDescription
 
     def __init__(
-        self, api, name, device_id, description: KaiterraSensorEntityDescription
+        self,
+        coordinator,
+        description: KaiterraSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self._api = api
-        self._device_id = device_id
+        super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{name} {description.suffix}"
-        self._attr_unique_id = f"{device_id}_{description.suffix.lower()}"
+        self._attr_name = description.name
+        self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
-    def _sensor(self):
-        """Return the sensor data."""
-        return self._api.data.get(self._device_id, {}).get(
-            self.entity_description.key, {}
-        )
+    def native_value(self) -> StateType:
+        """Return the current sensor value."""
+        return _get_state_value(self._sensor)
 
     @property
-    def available(self) -> bool:
-        """Return the availability of the sensor."""
-        return self._api.data.get(self._device_id) is not None
-
-    @property
-    def native_value(self):
-        """Return the state."""
-        return self._sensor.get("value")
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        if not self._sensor.get("units"):
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the native unit of measurement."""
+        unit = self._sensor.get("unit")
+        if not isinstance(unit, str):
             return None
 
-        value = self._sensor["units"].value
+        if self.entity_description.device_class is SensorDeviceClass.TEMPERATURE:
+            if unit == "C":
+                return UnitOfTemperature.CELSIUS
+            if unit == "F":
+                return UnitOfTemperature.FAHRENHEIT
 
-        if value == "F":
-            return UnitOfTemperature.FAHRENHEIT
-        if value == "C":
-            return UnitOfTemperature.CELSIUS
-        return value
+        return unit
 
-    async def async_added_to_hass(self) -> None:
-        """Register callback."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state
-            )
-        )
+    @property
+    def extra_state_attributes(self) -> dict[str, StateType]:
+        """Return extra state attributes for the AQI sensor."""
+        if self.entity_description.key != "aqi":
+            return {}
+
+        attributes: dict[str, StateType] = {}
+        if (aqi_level := self.coordinator.data.get("aqi_level")) and isinstance(
+            aqi_level, dict
+        ):
+            attributes[ATTR_AQI_LEVEL] = _get_state_value(aqi_level)
+        if (aqi_pollutant := self.coordinator.data.get("aqi_pollutant")) and isinstance(
+            aqi_pollutant, dict
+        ):
+            attributes[ATTR_AQI_POLLUTANT] = _get_state_value(aqi_pollutant)
+        return {key: value for key, value in attributes.items() if value is not None}
+
+    @property
+    def _sensor(self) -> dict[str, Any]:
+        """Return normalized sensor data for this entity."""
+        data = self.coordinator.data.get(self.entity_description.key)
+        if isinstance(data, dict):
+            return data
+        return {}

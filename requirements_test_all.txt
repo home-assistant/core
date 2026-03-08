@@ -1204,6 +1204,9 @@ jsonpath==0.82.2
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
 
+# homeassistant.components.kaiterra
+kaiterra-async-client==1.1.0
+
 # homeassistant.components.kegtron
 kegtron-ble==1.0.2
 
