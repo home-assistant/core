@@ -829,6 +829,9 @@ eternalegypt==0.0.18
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
 
+# homeassistant.components.eurotronic_cometblue
+eurotronic-cometblue-ha==1.3.1
+
 # homeassistant.components.evohome
 evohome-async==1.1.3
 

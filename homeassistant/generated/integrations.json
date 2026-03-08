@@ -1901,6 +1901,12 @@
         }
       }
     },
+    "eurotronic_cometblue": {
+      "name": "Eurotronic Comet Blue",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eve": {
       "name": "Eve",
       "iot_standards": [

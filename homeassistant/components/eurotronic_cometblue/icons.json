@@ -1,0 +1,8 @@
+{
+  "services": {
+    "get_schedule": { "service": "mdi:calendar-search" },
+    "set_datetime": { "service": "mdi:calendar-clock" },
+    "set_holiday": { "service": "mdi:beach" },
+    "set_schedule": { "service": "mdi:calendar-edit" }
+  }
+}
