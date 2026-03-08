@@ -303,6 +303,9 @@
     "failed_to_switch_energy_mode": {
       "message": "Failed to switch to requested energy mode"
     },
+    "multi_device_errors": {
+      "message": "One or more devices reported errors: {errors}"
+    },
     "no_matching_target_entries": {
       "message": "No matching Indevolt devices found in the selected targets"
     },
