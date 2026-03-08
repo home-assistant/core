@@ -1,27 +1,24 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Ready to set up your weather station?"
-      },
-      "finish": {
-        "description": "Configuration finished successfully!"
-      }
+    "create_entry": {
+      "default": "Configuration completed successfully!"
     },
     "progress": {
-      "task_one": "Testing progress step one."
+      "task_one": "Waiting for the first data to be received from the weather station...\n\nPlease open the WSLink app on your mobile device.\nGo to the Settings of your weather station, then select 'Weather server' -> 'Home Assistant'.\nFill in all blanks with keys provided below, and select 'Save' afterwards.\n\nServer IP: {host}\nPort: {port}\n Path: {path}"
     },
-    "create_entry": {
-      "default": "Entry created."
+    "step": {
+      "user": {
+        "description": "Please continue to finish the configuration."
+      }
     }
   },
   "entity": {
     "sensor": {
       "ch_sensor_type": {
         "state": {
-          "thermo-hygro": "Thermo-hygro",
           "pool": "Pool",
-          "soil": "Soil"
+          "soil": "Soil",
+          "thermo-hygro": "Thermo-hygro"
         }
       },
       "uvi": {

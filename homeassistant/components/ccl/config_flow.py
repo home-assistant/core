@@ -17,7 +17,6 @@ from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import progress_step
 from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, NAME
@@ -28,25 +27,20 @@ _LOGGER = logging.getLogger(__name__)
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    data: dict[str, Any] = {}
-    device: CCLDevice
-    task_one: asyncio.Task | None = None
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self.data: dict[str, Any] = {}
+        self.device: CCLDevice | None = None
+        self.task_one: asyncio.Task | None = None
 
-    @progress_step(
-        description_placeholders=lambda self: {
-            CONF_HOST: self.data[CONF_HOST],
-            CONF_PORT: self.data[CONF_PORT],
-            CONF_PATH: self.data[CONF_PATH],
-        }
-    )
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         uncompleted_task: asyncio.Task[None] | None = None
 
-        if len(self.data) == 0:
-            self.data[CONF_WEBHOOK_ID] = DOMAIN + secrets.token_hex(4)
+        if CONF_PATH not in self.data:
+            self.data[CONF_WEBHOOK_ID] = secrets.token_hex(4)
 
             url = URL(get_url(self.hass, prefer_cloud=True))
             assert url.host
@@ -104,6 +98,7 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.task_one:
 
             async def check_task() -> None:
+                assert self.device is not None
                 while self.device.last_update_time is None:
                     await asyncio.sleep(1)
 
@@ -115,8 +110,14 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if uncompleted_task:
             return self.async_show_progress(
+                step_id="user",
                 progress_action=progress_action,
                 progress_task=uncompleted_task,
+                description_placeholders={
+                    CONF_HOST: self.data[CONF_HOST],
+                    CONF_PORT: self.data[CONF_PORT],
+                    CONF_PATH: self.data[CONF_PATH],
+                },
             )
 
         self.async_update_progress(1)
@@ -126,13 +127,11 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the final step."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title="CCL Weather Station",
-                data={
-                    CONF_WEBHOOK_ID: self.data[CONF_WEBHOOK_ID],
-                    CONF_HOST: self.data[CONF_HOST],
-                    CONF_PORT: self.data[CONF_PORT],
-                },
-            )
-        return self.async_show_form(step_id="finish")
+        return self.async_create_entry(
+            title="CCL Weather Station",
+            data={
+                CONF_WEBHOOK_ID: self.data[CONF_WEBHOOK_ID],
+                CONF_HOST: self.data[CONF_HOST],
+                CONF_PORT: self.data[CONF_PORT],
+            },
+        )
