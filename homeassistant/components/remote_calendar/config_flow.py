@@ -125,12 +125,14 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="forbidden")
             else:
                 res.raise_for_status()
-        except TimeoutException:
+        except TimeoutException as err:
             errors["base"] = "timeout_connect"
-        except HTTPError:
+            _LOGGER.debug(
+                "A timeout error occurred: %s", str(err) or type(err).__name__
+            )
+        except (HTTPError, InvalidURL) as err:
             errors["base"] = "cannot_connect"
-        except InvalidURL:
-            errors["base"] = "cannot_connect"
+            _LOGGER.debug("An error occurred: %s", str(err) or type(err).__name__)
         else:
             if not errors:
                 try:
