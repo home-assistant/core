@@ -65,7 +65,6 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
-    _reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,17 +103,14 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle the start of a reauthentication flow."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauthentication with a new API key."""
-        assert self._reauth_entry is not None
         errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
             try:
@@ -122,7 +118,7 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     {
                         CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_DEVICE_ID: self._reauth_entry.data[CONF_DEVICE_ID],
+                        CONF_DEVICE_ID: reauth_entry.data[CONF_DEVICE_ID],
                     },
                 )
             except KaiterraApiAuthError:
@@ -134,7 +130,7 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
+                    reauth_entry,
                     data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
 

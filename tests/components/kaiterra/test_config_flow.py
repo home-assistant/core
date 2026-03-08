@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.kaiterra.const import CONF_AQI_STANDARD, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.components.kaiterra.const import AQI_SCALE, CONF_AQI_STANDARD, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import setup_integration
 
 
 async def test_user_flow_success(hass, mock_kaiterra_device_data) -> None:
@@ -113,6 +115,35 @@ async def test_options_flow(hass, mock_config_entry) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_AQI_STANDARD: "cn"}
+
+
+async def test_options_flow_updates_options_and_reloads(
+    hass, mock_config_entry, mock_kaiterra_device_data
+) -> None:
+    """Test the options flow updates the entry and reloads the integration."""
+    await setup_integration(hass, mock_config_entry)
+
+    original_coordinator = mock_config_entry.runtime_data
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert not mock_config_entry.update_listeners
+    assert original_coordinator.api._scale == AQI_SCALE["us"]
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_AQI_STANDARD: "cn"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_AQI_STANDARD: "cn"}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.options == {CONF_AQI_STANDARD: "cn"}
+    assert mock_config_entry.runtime_data is not original_coordinator
+    assert mock_config_entry.runtime_data.api._scale == AQI_SCALE["cn"]
 
 
 async def test_reauth_flow(hass, mock_config_entry, mock_kaiterra_device_data) -> None:

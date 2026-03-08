@@ -33,6 +33,8 @@ SENSORS: tuple[KaiterraSensorEntityDescription, ...] = (
     KaiterraSensorEntityDescription(
         key="aqi",
         name="AQI",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     KaiterraSensorEntityDescription(
         key="rtemp",
@@ -111,7 +113,7 @@ class KaiterraSensor(KaiterraEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the current sensor value."""
-        return self._sensor.get("value")
+        return _get_state_value(self._sensor)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
