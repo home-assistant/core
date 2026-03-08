@@ -44,7 +44,7 @@ DEVICE_CONFIG = GlobalConfig(
     ),
     power=PowerOption(
         power_mode=0,
-        battery_capacity_mah=b"\x00\x00\x00",
+        battery_capacity_mah=b"\x00" * 3,
         sleep_timeout_ms=0,
         tx_power=0,
         sleep_flags=0,
