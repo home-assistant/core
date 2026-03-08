@@ -1754,6 +1754,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
+/homeassistant/components/trigger/ @home-assistant/core
+/tests/components/trigger/ @home-assistant/core
 /homeassistant/components/triggercmd/ @rvmey
 /tests/components/triggercmd/ @rvmey
 /homeassistant/components/tts/ @home-assistant/core

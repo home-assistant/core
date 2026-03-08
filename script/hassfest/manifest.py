@@ -117,6 +117,7 @@ NO_IOT_CLASS = [
     "tag",
     "timer",
     "trace",
+    "trigger",
     "web_rtc",
     "webhook",
     "websocket_api",

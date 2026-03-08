@@ -2150,6 +2150,7 @@ NO_QUALITY_SCALE = [
     "tag",
     "timer",
     "trace",
+    "trigger",
     "usage_prediction",
     "web_rtc",
     "webhook",

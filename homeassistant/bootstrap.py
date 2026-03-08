@@ -224,6 +224,7 @@ DEFAULT_INTEGRATIONS = {
     "scene",
     "script",
     "tag",
+    "trigger",
     "zone",
     #
     # Built-in helpers:
