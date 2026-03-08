@@ -28,7 +28,7 @@ HueBLE==2.1.0
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.2
+PSNAWP==3.0.3
 
 # homeassistant.components.doods
 # homeassistant.components.generic
