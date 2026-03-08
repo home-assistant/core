@@ -18,6 +18,9 @@ from homeassistant.components.growatt_server.const import (
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+    V1_API_ERROR_NO_PRIVILEGE,
+    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -108,6 +111,142 @@ async def test_coordinator_update_failed(
 
     # Integration should remain loaded despite coordinator error
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_json_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator handles JSONDecodeError gracefully."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_growatt_v1_api.min_detail.side_effect = json.decoder.JSONDecodeError(
+        "Invalid JSON", "", 0
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_total_non_auth_api_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test total coordinator handles non-auth V1 API errors as UpdateFailed."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    error = growattServer.GrowattV1ApiError("Rate limited")
+    error.error_code = V1_API_ERROR_RATE_LIMITED
+    mock_growatt_v1_api.plant_energy_overview.side_effect = error
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Should stay loaded (UpdateFailed is transient), no reauth flow started
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert not any(flow["context"]["source"] == "reauth" for flow in flows)
+
+
+async def test_setup_auth_failed_on_permission_denied(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that error 10011 (no privilege) from device_list triggers reauth during setup."""
+    error = growattServer.GrowattV1ApiError("Permission denied")
+    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    mock_growatt_v1_api.device_list.side_effect = error
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Verify a reauth flow was started
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["context"]["source"] == "reauth"
+        and flow["context"]["entry_id"] == mock_config_entry.entry_id
+        for flow in flows
+    )
+
+
+async def test_coordinator_auth_failed_triggers_reauth(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that error 10011 (no privilege) from coordinator update triggers reauth."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    error = growattServer.GrowattV1ApiError("Permission denied")
+    error.error_code = V1_API_ERROR_NO_PRIVILEGE
+    mock_growatt_v1_api.min_detail.side_effect = error
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify a reauth flow was started
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["context"]["source"] == "reauth"
+        and flow["context"]["entry_id"] == mock_config_entry.entry_id
+        for flow in flows
+    )
+
+
+async def test_classic_api_coordinator_auth_failed_triggers_reauth(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that invalid classic API credentials during coordinator update trigger reauth."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+    mock_growatt_classic_api.plant_info.return_value = {
+        "deviceList": [],
+        "totalEnergy": 1250.0,
+        "todayEnergy": 12.5,
+        "invTodayPpv": 2500,
+        "plantMoneyText": "123.45/USD",
+    }
+    mock_growatt_classic_api.tlx_detail.return_value = {
+        "data": {"deviceSn": "TLX123456"}
+    }
+
+    await setup_integration(hass, mock_config_entry_classic)
+    assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+
+    # Credentials expire between updates
+    mock_growatt_classic_api.login.return_value = {
+        "success": False,
+        "msg": LOGIN_INVALID_AUTH_CODE,
+    }
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert any(
+        flow["context"]["source"] == "reauth"
+        and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
+        for flow in flows
+    )
 
 
 async def test_classic_api_setup(

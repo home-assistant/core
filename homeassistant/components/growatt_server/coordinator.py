@@ -13,7 +13,11 @@ from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -23,6 +27,8 @@ from .const import (
     BATT_MODE_LOAD_FIRST,
     DEFAULT_URL,
     DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
 from .models import GrowattRuntimeData
 
@@ -88,7 +94,15 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # login only required for classic API
         if self.api_version == "classic":
-            self.api.login(self.username, self.password)
+            login_response = self.api.login(self.username, self.password)
+            if not login_response.get("success"):
+                if login_response.get("msg") == LOGIN_INVALID_AUTH_CODE:
+                    raise ConfigEntryAuthFailed(
+                        "Username, password, or URL may be incorrect"
+                    )
+                raise UpdateFailed(
+                    f"Growatt login failed: {login_response.get('msg', 'Unknown error')}"
+                )
 
         if self.device_type == "total":
             if self.api_version == "v1":
@@ -100,7 +114,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # todayEnergy -> today_energy
                 # totalEnergy -> total_energy
                 # invTodayPpv -> current_power
-                total_info = self.api.plant_energy_overview(self.plant_id)
+                try:
+                    total_info = self.api.plant_energy_overview(self.plant_id)
+                except growattServer.GrowattV1ApiError as err:
+                    if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
+                        raise ConfigEntryAuthFailed(
+                            f"Authentication failed for Growatt API: {getattr(err, 'error_msg', None)}"
+                        ) from err
+                    raise UpdateFailed(
+                        f"Error fetching plant energy overview: {err}"
+                    ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
                 total_info["invTodayPpv"] = total_info["current_power"]
@@ -122,6 +145,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
+                if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for Growatt API: {getattr(err, 'error_msg', None)}"
+                    ) from err
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 
             min_info = {**min_details, **min_settings, **min_energy}
