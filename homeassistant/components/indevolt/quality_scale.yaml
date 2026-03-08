@@ -45,8 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Integration does not support network discovery
