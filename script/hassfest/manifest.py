@@ -73,6 +73,7 @@ NO_IOT_CLASS = [
     "diagnostics",
     "door",
     "downloader",
+    "garage_door",
     "ffmpeg",
     "file_upload",
     "frontend",

@@ -2108,6 +2108,7 @@ NO_QUALITY_SCALE = [
     "device_tracker",
     "diagnostics",
     "door",
+    "garage_door",
     "ffmpeg",
     "file_upload",
     "frontend",

@@ -1,10 +1,12 @@
-"""Test door trigger."""
+"""Test garage door trigger."""
 
 from typing import Any
 
 import pytest
 
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
+from homeassistant.components.garage_door.trigger import DEVICE_CLASSES_GARAGE_DOOR
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
@@ -39,14 +41,14 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "door.opened",
-        "door.closed",
+        "garage_door.opened",
+        "garage_door.closed",
     ],
 )
-async def test_door_triggers_gated_by_labs_flag(
+async def test_garage_door_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
-    """Test the door triggers are gated by the labs flag."""
+    """Test the garage door triggers are gated by the labs flag."""
     await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
@@ -65,22 +67,22 @@ async def test_door_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_binary_sensor_behavior_any(
+async def test_garage_door_trigger_binary_sensor_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -91,7 +93,7 @@ async def test_door_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires for binary_sensor entities with device_class door."""
+    """Test garage door trigger fires for binary_sensor entities with device_class garage_door."""
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
@@ -133,7 +135,7 @@ async def test_door_trigger_binary_sensor_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
@@ -147,11 +149,11 @@ async def test_door_trigger_binary_sensor_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
@@ -165,12 +167,12 @@ async def test_door_trigger_binary_sensor_behavior_any(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_cover_behavior_any(
+async def test_garage_door_trigger_cover_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
@@ -181,7 +183,7 @@ async def test_door_trigger_cover_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires for cover entities with device_class door."""
+    """Test garage door trigger fires for cover entities with device_class garage_door."""
     other_entity_ids = set(target_covers["included"]) - {entity_id}
     excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
 
@@ -223,22 +225,22 @@ async def test_door_trigger_cover_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_binary_sensor_behavior_first(
+async def test_garage_door_trigger_binary_sensor_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -249,7 +251,7 @@ async def test_door_trigger_binary_sensor_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires on the first binary_sensor state change."""
+    """Test garage door trigger fires on the first binary_sensor state change."""
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
@@ -290,22 +292,22 @@ async def test_door_trigger_binary_sensor_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage_door"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_binary_sensor_behavior_last(
+async def test_garage_door_trigger_binary_sensor_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
@@ -316,7 +318,7 @@ async def test_door_trigger_binary_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires when the last binary_sensor changes state."""
+    """Test garage door trigger fires when the last binary_sensor changes state."""
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
@@ -359,7 +361,7 @@ async def test_door_trigger_binary_sensor_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
@@ -373,11 +375,11 @@ async def test_door_trigger_binary_sensor_behavior_last(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
@@ -391,12 +393,12 @@ async def test_door_trigger_binary_sensor_behavior_last(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_cover_behavior_first(
+async def test_garage_door_trigger_cover_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
@@ -407,7 +409,7 @@ async def test_door_trigger_cover_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires on the first cover state change."""
+    """Test garage door trigger fires on the first cover state change."""
     other_entity_ids = set(target_covers["included"]) - {entity_id}
     excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
 
@@ -448,7 +450,7 @@ async def test_door_trigger_cover_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="door.opened",
+            trigger="garage_door.opened",
             target_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
@@ -462,11 +464,11 @@ async def test_door_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="door.closed",
+            trigger="garage_door.closed",
             target_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
@@ -480,12 +482,12 @@ async def test_door_trigger_cover_behavior_first(
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
                 (CoverState.OPEN, {}),
             ],
-            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            additional_attributes={ATTR_DEVICE_CLASS: "garage"},
             trigger_from_none=False,
         ),
     ],
 )
-async def test_door_trigger_cover_behavior_last(
+async def test_garage_door_trigger_cover_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_covers: dict[str, list[str]],
@@ -496,7 +498,7 @@ async def test_door_trigger_cover_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test door trigger fires when the last cover changes state."""
+    """Test garage door trigger fires when the last cover changes state."""
     other_entity_ids = set(target_covers["included"]) - {entity_id}
     excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
 
@@ -543,7 +545,7 @@ async def test_door_trigger_cover_behavior_last(
     ),
     [
         (
-            "door.opened",
+            "garage_door.opened",
             STATE_OFF,
             STATE_ON,
             CoverState.CLOSED,
@@ -552,7 +554,7 @@ async def test_door_trigger_cover_behavior_last(
             False,
         ),
         (
-            "door.closed",
+            "garage_door.closed",
             STATE_ON,
             STATE_OFF,
             CoverState.OPEN,
@@ -562,7 +564,7 @@ async def test_door_trigger_cover_behavior_last(
         ),
     ],
 )
-async def test_door_trigger_excludes_non_door_device_class(
+async def test_garage_door_trigger_excludes_non_garage_door_device_class(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_key: str,
@@ -573,28 +575,30 @@ async def test_door_trigger_excludes_non_door_device_class(
     cover_target: str,
     cover_target_is_closed: bool,
 ) -> None:
-    """Test door trigger does not fire for entities without device_class door."""
+    """Test garage door trigger does not fire for entities without device_class garage_door."""
+    entity_id_garage_door = "binary_sensor.test_garage_door"
     entity_id_door = "binary_sensor.test_door"
-    entity_id_window = "binary_sensor.test_window"
+    entity_id_cover_garage_door = "cover.test_garage_door"
     entity_id_cover_door = "cover.test_door"
-    entity_id_cover_garage = "cover.test_garage"
 
     # Set initial states
+    hass.states.async_set(
+        entity_id_garage_door,
+        binary_sensor_initial,
+        {ATTR_DEVICE_CLASS: "garage_door"},
+    )
     hass.states.async_set(
         entity_id_door, binary_sensor_initial, {ATTR_DEVICE_CLASS: "door"}
     )
     hass.states.async_set(
-        entity_id_window, binary_sensor_initial, {ATTR_DEVICE_CLASS: "window"}
+        entity_id_cover_garage_door,
+        cover_initial,
+        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_initial_is_closed},
     )
     hass.states.async_set(
         entity_id_cover_door,
         cover_initial,
         {ATTR_DEVICE_CLASS: "door", ATTR_IS_CLOSED: cover_initial_is_closed},
-    )
-    hass.states.async_set(
-        entity_id_cover_garage,
-        cover_initial,
-        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_initial_is_closed},
     )
     await hass.async_block_till_done()
 
@@ -604,46 +608,56 @@ async def test_door_trigger_excludes_non_door_device_class(
         {},
         {
             CONF_ENTITY_ID: [
+                entity_id_garage_door,
                 entity_id_door,
-                entity_id_window,
+                entity_id_cover_garage_door,
                 entity_id_cover_door,
-                entity_id_cover_garage,
             ]
         },
     )
 
-    # Door binary_sensor changes - should trigger
+    # Garage door binary_sensor changes - should trigger
+    hass.states.async_set(
+        entity_id_garage_door,
+        binary_sensor_target,
+        {ATTR_DEVICE_CLASS: "garage_door"},
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_garage_door
+    service_calls.clear()
+
+    # Door binary_sensor changes - should NOT trigger (wrong device class)
     hass.states.async_set(
         entity_id_door, binary_sensor_target, {ATTR_DEVICE_CLASS: "door"}
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_door
-    service_calls.clear()
-
-    # Window binary_sensor changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_window, binary_sensor_target, {ATTR_DEVICE_CLASS: "window"}
-    )
-    await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    # Cover door changes - should trigger
+    # Cover garage door changes - should trigger
+    hass.states.async_set(
+        entity_id_cover_garage_door,
+        cover_target,
+        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_target_is_closed},
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_cover_garage_door
+    service_calls.clear()
+
+    # Door cover changes - should NOT trigger (wrong device class)
     hass.states.async_set(
         entity_id_cover_door,
         cover_target,
         {ATTR_DEVICE_CLASS: "door", ATTR_IS_CLOSED: cover_target_is_closed},
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].data[CONF_ENTITY_ID] == entity_id_cover_door
-    service_calls.clear()
-
-    # Garage cover changes - should NOT trigger (wrong device class)
-    hass.states.async_set(
-        entity_id_cover_garage,
-        cover_target,
-        {ATTR_DEVICE_CLASS: "garage", ATTR_IS_CLOSED: cover_target_is_closed},
-    )
-    await hass.async_block_till_done()
     assert len(service_calls) == 0
+
+
+def test_door_device_class() -> None:
+    """Test the garage door trigger device classes."""
+    assert DEVICE_CLASSES_GARAGE_DOOR == {
+        "binary_sensor": BinarySensorDeviceClass.GARAGE_DOOR,
+        "cover": CoverDeviceClass.GARAGE,
+    }
