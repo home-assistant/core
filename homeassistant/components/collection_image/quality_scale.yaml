@@ -25,7 +25,7 @@ rules:
   entity-unique-id: done
   has-entity-name:
     status: exempt
-    comment: Config entry only has one entity and the entity has the same name the same as config entry, there is no device name.
+    comment: Config entry only has one entity, and the entity has the same name as the config entry; there is no device name.
   runtime-data:
     status: exempt
     comment: No known use for runtime data.
