@@ -90,9 +90,11 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     login_response = await self.hass.async_add_executor_job(
                         api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                     )
-                except requests.exceptions.RequestException:
+                except requests.exceptions.RequestException as ex:
+                    _LOGGER.debug("Network error during reauth login: %s", ex)
                     errors["base"] = ERROR_CANNOT_CONNECT
-                except ValueError, KeyError, TypeError, AttributeError:
+                except (ValueError, KeyError, TypeError, AttributeError) as ex:
+                    _LOGGER.debug("Invalid response format during reauth login: %s", ex)
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     if not isinstance(login_response, dict):
@@ -118,14 +120,25 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 try:
                     await self.hass.async_add_executor_job(api.plant_list)
-                except requests.exceptions.RequestException:
+                except requests.exceptions.RequestException as ex:
+                    _LOGGER.debug(
+                        "Network error during reauth token validation: %s", ex
+                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError as err:
                     if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
+                        _LOGGER.debug(
+                            "Growatt V1 API error during reauth: %s (Code: %s)",
+                            err.error_msg or str(err),
+                            getattr(err, "error_code", None),
+                        )
                         errors["base"] = ERROR_CANNOT_CONNECT
-                except ValueError, KeyError, TypeError, AttributeError:
+                except (ValueError, KeyError, TypeError, AttributeError) as ex:
+                    _LOGGER.debug(
+                        "Invalid response format during reauth token validation: %s", ex
+                    )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 else:
                     return self.async_update_reload_and_abort(
