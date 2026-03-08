@@ -72,9 +72,7 @@ rules:
   repair-issues:
     status: exempt
     comment: No repair scenarios identified for this integration.
-  stale-devices:
-    status: todo
-    comment: Remove newsletter entities when newsletter is removed
+  stale-devices: done
 
   # Platinum
   async-dependency: done
