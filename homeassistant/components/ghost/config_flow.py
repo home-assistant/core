@@ -17,6 +17,8 @@ from .const import CONF_ADMIN_API_KEY, CONF_API_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+GHOST_INTEGRATION_SETUP_URL = "https://account.ghost.org/?r=settings/integrations/new"
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_URL): str,
@@ -78,7 +80,7 @@ class GhostConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "title": reauth_entry.title,
-                "docs_url": "https://account.ghost.org/?r=settings/integrations/new",
+                "setup_url": GHOST_INTEGRATION_SETUP_URL,
             },
         )
 
@@ -103,9 +105,7 @@ class GhostConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "docs_url": "https://account.ghost.org/?r=settings/integrations/new"
-            },
+            description_placeholders={"setup_url": GHOST_INTEGRATION_SETUP_URL},
         )
 
     async def _validate_credentials(
