@@ -101,10 +101,7 @@ async def async_migrate_entities(
         if (
             entry.platform != DOMAIN
             or entry.domain != Platform.SENSOR
-            or not any(
-                entry.unique_id.endswith(f"_{key}")
-                for key in ("hdr_processing", "picture_mode")
-            )
+            or entry.translation_key not in ("hdr_processing", "picture_mode")
         ):
             continue
 
@@ -117,17 +114,10 @@ async def async_migrate_entities(
             DOMAIN,
             entry.unique_id,
             config_entry=config_entry,
-            disabled_by=entry.disabled_by,
-            object_id_base=(
-                entry.object_id_base
-                or entry.translation_key
-                or entry.unique_id.rsplit("_", 1)[-1]
-            ),
             device_id=entry.device_id,
-            entity_category=entry.entity_category,
+            object_id_base=entry.object_id_base or entry.original_name,
             has_entity_name=entry.has_entity_name,
-            original_name=entry.original_name,
-            translation_key=entry.translation_key,
+            disabled_by=entry.disabled_by,
         )
 
         if entity_id is None:

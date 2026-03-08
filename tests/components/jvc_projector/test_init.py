@@ -105,6 +105,7 @@ async def test_migrate_legacy_sensor_entities_to_select(
         f"{mac}_hdr_processing",
         config_entry=mock_config_entry,
         disabled_by=None,
+        translation_key="hdr_processing",
     )
     entity_registry.async_get_or_create(
         Platform.SENSOR,
@@ -112,6 +113,7 @@ async def test_migrate_legacy_sensor_entities_to_select(
         f"{mac}_picture_mode",
         config_entry=mock_config_entry,
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        translation_key="picture_mode",
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
