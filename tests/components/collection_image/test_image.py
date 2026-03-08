@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components.collection_image.const import DOMAIN
 from homeassistant.components.media_player import BrowseMedia, MediaClass
 from homeassistant.components.media_source import BrowseMediaSource, PlayMedia
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -182,39 +182,38 @@ async def test_no_images(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when there are no images in the media folder."""
-    with freeze_time("2025-11-08T12:00:00.000"):
-        config_entry = MockConfigEntry(
-            data={
-                "name": "Random No Image",
-                "media": {
-                    "media_content_id": "media-source://mymedia/nopictures",
-                    "media_content_type": "",
-                },
+    config_entry = MockConfigEntry(
+        data={
+            "name": "Random No Image",
+            "media": {
+                "media_content_id": "media-source://mymedia/nopictures",
+                "media_content_type": "",
             },
-            domain=DOMAIN,
-            title="Random No Image",
-        )
+        },
+        domain=DOMAIN,
+        title="Random No Image",
+    )
 
-        with patch(
-            "homeassistant.components.collection_image.image.async_browse_media",
-            return_value=BrowseMediaSource(
-                domain=None,
-                identifier=None,
-                media_class="",
-                media_content_type="",
-                title="",
-                can_play=False,
-                can_expand=True,
-                children=[],
-            ),
-        ):
-            config_entry.add_to_hass(hass)
-            assert await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.collection_image.image.async_browse_media",
+        return_value=BrowseMediaSource(
+            domain=None,
+            identifier=None,
+            media_class="",
+            media_content_type="",
+            title="",
+            can_play=False,
+            can_expand=True,
+            children=[],
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     state = hass.states.get("image.random_no_image")
 
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
+    assert state and state.state == STATE_UNAVAILABLE
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -234,26 +233,25 @@ async def test_media_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when media browse throws an error."""
-    with freeze_time("2025-11-08T12:00:00.000"):
-        config_entry = MockConfigEntry(
-            data={
-                "name": "Random No Image",
-                "media": {
-                    "media_content_id": "media-source://badpath",
-                    "media_content_type": "",
-                },
+    config_entry = MockConfigEntry(
+        data={
+            "name": "Random No Image",
+            "media": {
+                "media_content_id": "media-source://badpath",
+                "media_content_type": "",
             },
-            domain=DOMAIN,
-            title="Random No Image",
-        )
+        },
+        domain=DOMAIN,
+        title="Random No Image",
+    )
 
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get("image.random_no_image")
 
-    assert state and state.state == "2025-11-08T12:00:00+00:00"
+    assert state and state.state == STATE_UNAVAILABLE
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -262,3 +260,58 @@ async def test_media_error(
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.random_no_image")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_unresolvable(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test when resolving an image fails."""
+    config_entry = MockConfigEntry(
+        data={
+            "name": "Random Image",
+            "media": {
+                "media_content_id": "media-source://mymedia",
+                "media_content_type": "",
+            },
+        },
+        domain=DOMAIN,
+        title="Random Image",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.collection_image.image.async_browse_media",
+            return_value=BrowseMediaSource(
+                domain=None,
+                identifier=None,
+                media_class="",
+                media_content_type="",
+                title="",
+                can_play=False,
+                can_expand=True,
+                children=[
+                    BrowseMedia(
+                        media_class=MediaClass.IMAGE,
+                        media_content_id="media-source://mymedia/badphoto",
+                        media_content_type="image/png",
+                        title="a picture",
+                        can_play=True,
+                        can_expand=False,
+                    ),
+                ],
+            ),
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("image.random_image")
+
+    assert state and state.state == STATE_UNAVAILABLE
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "image.random_image: Media Source not loaded" in caplog.text

@@ -44,6 +44,8 @@ async def async_setup_entry(
 class CollectionImageImageEntity(ImageEntity):
     """Implement the image entity for Collection Image."""
 
+    _unavailable_logged: bool = False
+
     path: Path | None
 
     def __init__(
@@ -68,35 +70,55 @@ class CollectionImageImageEntity(ImageEntity):
         try:
             media = await async_browse_media(self.hass, self.media_content_id)
         except BrowseError as err:
-            _LOGGER.error("%s: %s", self.entity_id, str(err))
+            if not self._unavailable_logged:
+                _LOGGER.info("%s: %s", self.entity_id, str(err))
+            self._unavailable_logged = True
+            self._attr_available = False
+            self._async_write_ha_state()
+            return
+
+        if media.children and (
+            filtered := [
+                item for item in media.children if item.media_class == MediaClass.IMAGE
+            ]
+        ):
+            child = random.choice(filtered)
+            try:
+                resolved = await async_resolve_media(
+                    self.hass, child.media_content_id, self.entity_id
+                )
+            except Unresolvable as err:
+                if not self._unavailable_logged:
+                    _LOGGER.info("%s: %s", self.entity_id, str(err))
+                self._unavailable_logged = True
+                self._attr_available = False
+                self._async_write_ha_state()
+                return
+
+            path = resolved.path
+            content_type = resolved.mime_type
         else:
-            if media.children and (
-                filtered := [
-                    item
-                    for item in media.children
-                    if item.media_class == MediaClass.IMAGE
-                ]
-            ):
-                child = random.choice(filtered)
-                try:
-                    resolved = await async_resolve_media(
-                        self.hass, child.media_content_id, self.entity_id
-                    )
-                except Unresolvable as err:
-                    _LOGGER.error("%s: %s", self.entity_id, str(err))
-                else:
-                    path = resolved.path
-                    content_type = resolved.mime_type
-            else:
-                _LOGGER.warning(
+            if not self._unavailable_logged:
+                _LOGGER.info(
                     "%s: No valid images in %s",
                     self.entity_id,
                     self.media_content_id,
                 )
+            self._unavailable_logged = True
+            self._attr_available = False
+            self._async_write_ha_state()
+            return
 
         self.path = path
+        self._attr_available = True
         self._attr_content_type = content_type
         self._attr_image_last_updated = dt_util.utcnow()
+        if self._unavailable_logged:
+            _LOGGER.info(
+                "%s: Has become available again",
+                self.entity_id,
+            )
+        self._unavailable_logged = False
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
