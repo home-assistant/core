@@ -47,7 +47,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.9
+PyChromecast==14.0.10
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -794,7 +794,7 @@ energyid-webhooks==0.0.14
 energyzero==4.0.1
 
 # homeassistant.components.enocean
-enocean-async==0.4.1
+enocean-async==0.4.2
 
 # homeassistant.components.environment_canada
 env-canada==0.13.2
@@ -1542,7 +1542,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.2
+plugwise==1.11.3
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
