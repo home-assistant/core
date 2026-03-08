@@ -395,7 +395,9 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
         self.data["discharge_energy"] = total_discharge_energy
         self.data["battery_count"] = battery_count
 
-        LOGGER.debug("Updated SolarEdge storage data: %s, %s", self.data, self.attributes)
+        LOGGER.debug(
+            "Updated SolarEdge storage data: %s, %s", self.data, self.attributes
+        )
 
 
 class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):

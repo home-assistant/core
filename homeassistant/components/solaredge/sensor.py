@@ -251,7 +251,7 @@ async def async_setup_entry(
     # Returns: True (set up), False (no batteries), None (inventory failed)
     storage_result = sensor_factory.setup_storage_sensors()
     if storage_result is True:
-        await sensor_factory._storage_service.coordinator.async_refresh()
+        await sensor_factory.storage_service.coordinator.async_refresh()
     elif storage_result is None:
         # Inventory fetch failed, register listener to retry when data arrives
         def on_inventory_update() -> None:
@@ -259,13 +259,13 @@ async def async_setup_entry(
             result = sensor_factory.setup_storage_sensors()
             if result is True:
                 hass.async_create_task(
-                    sensor_factory._storage_service.coordinator.async_refresh()
+                    sensor_factory.storage_service.coordinator.async_refresh()
                 )
             if result is not None:
                 # Either success or confirmed no batteries - stop listening
                 unsub()
 
-        unsub = sensor_factory._inventory_service.coordinator.async_add_listener(
+        unsub = sensor_factory.inventory_service.coordinator.async_add_listener(
             on_inventory_update
         )
         entry.async_on_unload(unsub)
@@ -304,8 +304,8 @@ class SolarEdgeSensorFactory:
             flow,
             energy,
         ]
-        self._inventory_service = inventory
-        self._storage_service = storage
+        self.inventory_service = inventory
+        self.storage_service = storage
 
         self.services: dict[
             str,
@@ -354,25 +354,23 @@ class SolarEdgeSensorFactory:
             None: Inventory fetch failed, should retry later
         """
         # Check if inventory data was successfully fetched
-        if not self._inventory_service.coordinator.last_update_success:
+        if not self.inventory_service.coordinator.last_update_success:
             LOGGER.debug("Inventory data not available, will retry later")
             return None
 
-        battery_count = self._inventory_service.data.get("batteries", 0)
+        battery_count = self.inventory_service.data.get("batteries", 0)
         if battery_count == 0:
             LOGGER.debug("No batteries found in inventory, skipping storage sensors")
             return False
 
         # Set up storage service and add to services
-        self._storage_service.async_setup()
-        self.all_services.append(self._storage_service)
+        self.storage_service.async_setup()
+        self.all_services.append(self.storage_service)
 
         for key in ("storage_charge_energy", "storage_discharge_energy"):
-            self.services[key] = (SolarEdgeStorageDataSensor, self._storage_service)
+            self.services[key] = (SolarEdgeStorageDataSensor, self.storage_service)
 
-        LOGGER.debug(
-            "Storage sensors enabled, found %d batteries", battery_count
-        )
+        LOGGER.debug("Storage sensors enabled, found %d batteries", battery_count)
         return True
 
     def create_sensor(
@@ -535,7 +533,7 @@ class SolarEdgeStorageDataSensor(SolarEdgeSensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes with per-battery breakdown."""
-        return self.data_service.attributes if self.data_service.attributes else None
+        return self.data_service.attributes or None
 
     @property
     def native_value(self) -> float | None:
