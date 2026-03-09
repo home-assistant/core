@@ -2096,7 +2096,7 @@ pysenz==1.0.2
 pyserial==3.5
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.1.1
+pyseventeentrack==1.1.2
 
 # homeassistant.components.sia
 pysiaalarm==3.2.2
