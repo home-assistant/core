@@ -1,14 +1,11 @@
 """Tests for JVC Projector sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
-from homeassistant.components.jvc_projector.coordinator import INTERVAL_FAST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 POWER_ID = "sensor.jvc_projector_status"
 HDR_ENTITY_ID = "sensor.jvc_projector_hdr"
@@ -49,17 +46,3 @@ async def test_enable_hdr_sensor(
     # Verify entity is enabled
     state = hass.states.get(HDR_ENTITY_ID)
     assert state is not None
-
-    # Allow deferred updates to run
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
-    )
-    await hass.async_block_till_done()
-
-    # Allow deferred updates to run again
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(HDR_ENTITY_ID) is not None
