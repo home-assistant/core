@@ -20,10 +20,8 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
     DEFAULT_COMMUNITY,
+    DOMAIN,
 )
-
-# The 'Domain' is the unique identifier for the integration (e.g., 'snmp').
-DOMAIN = "snmp"
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
