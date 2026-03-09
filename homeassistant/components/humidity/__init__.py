@@ -9,6 +9,8 @@ from homeassistant.helpers.typing import ConfigType
 DOMAIN = "humidity"
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+__all__ = []
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""

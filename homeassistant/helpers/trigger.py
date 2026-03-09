@@ -611,22 +611,11 @@ def _get_numerical_value(
     return entity_or_float
 
 
-class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state attribute changes."""
+class EntityNumericalStateBase(EntityTriggerBase):
+    """Base class for numerical state attribute triggers."""
 
     _attributes: dict[str, str | None]
-    _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
-
-    _above: None | float | str
-    _below: None | float | str
-
     _converter: Callable[[Any], float] = float
-
-    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-        """Initialize the state trigger."""
-        super().__init__(hass, config)
-        self._above = self._options.get(CONF_ABOVE)
-        self._below = self._options.get(CONF_BELOW)
 
     def _get_tracked_value(self, state: State) -> Any:
         """Get the tracked numerical value from a state."""
@@ -635,6 +624,21 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
         if source is None:
             return state.state
         return state.attributes.get(source)
+
+
+class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
+    """Trigger for numerical state attribute changes."""
+
+    _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
+
+    _above: None | float | str
+    _below: None | float | str
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        self._above = self._options.get(CONF_ABOVE)
+        self._below = self._options.get(CONF_BELOW)
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -726,21 +730,20 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 )
 
 
-class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase):
+class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
+    EntityNumericalStateBase
+):
     """Trigger for numerical state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
 
-    _attributes: dict[str, str | None]
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
     _lower_limit: float | str | None = None
     _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
-
-    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -748,14 +751,6 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
         self._lower_limit = self._options.get(CONF_LOWER_LIMIT)
         self._upper_limit = self._options.get(CONF_UPPER_LIMIT)
         self._threshold_type = self._options[CONF_THRESHOLD_TYPE]
-
-    def _get_tracked_value(self, state: State) -> Any:
-        """Get the tracked numerical value from a state."""
-        domain = split_entity_id(state.entity_id)[0]
-        source = self._attributes[domain]
-        if source is None:
-            return state.state
-        return state.attributes.get(source)
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
