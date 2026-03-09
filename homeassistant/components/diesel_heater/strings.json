@@ -1,12 +1,4 @@
 {
-  "exceptions": {
-    "no_heater_found": {
-      "message": "No matching heater found for device: {device_id}"
-    },
-    "command_failed": {
-      "message": "Failed to send command to heater {address}: {error}"
-    }
-  },
   "config": {
     "step": {
       "confirm": {
@@ -51,17 +43,13 @@
       "init": {
         "data": {
           "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]",
-          "preset_away_temp": "Away preset temperature (°C)",
-          "preset_comfort_temp": "Comfort preset temperature (°C)",
-          "external_temp_sensor": "External temperature sensor",
-          "auto_offset_max": "Max auto offset (°C)"
+          "preset_away_temp": "Away preset temperature (\u00b0C)",
+          "preset_comfort_temp": "Comfort preset temperature (\u00b0C)"
         },
         "data_description": {
           "pin": "4-digit PIN for heater authentication. Factory default is 1234. Changes require integration reload.",
-          "preset_away_temp": "Temperature for Away preset (anti-freeze protection). Default: 8°C.",
-          "preset_comfort_temp": "Temperature for Comfort preset (normal heating). Default: 21°C.",
-          "external_temp_sensor": "Select an external temperature sensor to automatically calibrate the heater's internal sensor. Leave empty to disable auto calibration.",
-          "auto_offset_max": "Maximum automatic offset in °C. Limits how much the temperature can be adjusted based on external sensor. Default: 5°C."
+          "preset_away_temp": "Temperature for Away preset (anti-freeze protection). Default: 8\u00b0C.",
+          "preset_comfort_temp": "Temperature for Comfort preset (normal heating). Default: 21\u00b0C."
         }
       }
     }

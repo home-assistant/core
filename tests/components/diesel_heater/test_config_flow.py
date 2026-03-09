@@ -15,12 +15,9 @@ from homeassistant.components.diesel_heater.config_flow import (
     VevorHeaterOptionsFlowHandler,
 )
 from homeassistant.components.diesel_heater.const import (
-    CONF_AUTO_OFFSET_MAX,
-    CONF_EXTERNAL_TEMP_SENSOR,
     CONF_PIN,
     CONF_PRESET_AWAY_TEMP,
     CONF_PRESET_COMFORT_TEMP,
-    DEFAULT_AUTO_OFFSET_MAX,
     DEFAULT_PIN,
     DEFAULT_PRESET_AWAY_TEMP,
     DEFAULT_PRESET_COMFORT_TEMP,
@@ -134,7 +131,6 @@ class TestConfirmStep:
 
         result = await flow.async_step_confirm(user_input={})
 
-        # Title format: "Diesel Heater (EEFF)" where EEFF = address[-5:] without ":"
         assert "Diesel Heater (EEFF)" in result["title"]
 
 
@@ -257,10 +253,8 @@ class TestUserStep:
     async def test_skips_already_discovered_devices(self):
         """Test that devices already discovered in this flow are skipped."""
         flow = _make_flow()
-        # Pre-populate _discovered_devices with a mock discovery info
         existing_discovery = _make_ble_discovery(service_uuids=[SERVICE_UUID])
         flow._discovered_devices = {MOCK_ADDRESS: existing_discovery}
-        # Create a new discovery with the same address
         new_discovery = _make_ble_discovery(service_uuids=[SERVICE_UUID])
 
         with patch(
@@ -269,9 +263,7 @@ class TestUserStep:
             mock_bt.async_discovered_service_info.return_value = [new_discovery]
             result = await flow.async_step_user()
 
-        # Device was already discovered -> shows form with existing device
         assert result["step_id"] == "user"
-        # The device should still be in _discovered_devices (not added again)
         assert len(flow._discovered_devices) == 1
 
     async def test_select_device_creates_entry(self):
@@ -413,7 +405,6 @@ class TestManualStep:
             user_input={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"}
         )
 
-        # Title format: "Diesel Heater (EEFF)"
         assert "Diesel Heater (EEFF)" in result["title"]
 
     async def test_default_pin_when_not_provided(self):
@@ -484,43 +475,6 @@ class TestOptionsFlow:
         assert CONF_PRESET_AWAY_TEMP in schema_keys
         assert CONF_PRESET_COMFORT_TEMP in schema_keys
 
-    async def test_schema_has_external_sensor_field(self):
-        flow = self._create_flow()
-
-        result = await flow.async_step_init()
-
-        schema_keys = {
-            k.schema for k in result["data_schema"].schema.keys()
-            if hasattr(k, "schema")
-        }
-        assert CONF_EXTERNAL_TEMP_SENSOR in schema_keys
-
-    async def test_auto_offset_hidden_without_external_sensor(self):
-        flow = self._create_flow()
-
-        result = await flow.async_step_init()
-
-        schema_keys = {
-            k.schema for k in result["data_schema"].schema.keys()
-            if hasattr(k, "schema")
-        }
-        assert CONF_AUTO_OFFSET_MAX not in schema_keys
-
-    async def test_auto_offset_shown_with_external_sensor(self):
-        flow = self._create_flow(data={
-            CONF_ADDRESS: MOCK_ADDRESS,
-            CONF_PIN: DEFAULT_PIN,
-            CONF_EXTERNAL_TEMP_SENSOR: "sensor.outside_temp",
-        })
-
-        result = await flow.async_step_init()
-
-        schema_keys = {
-            k.schema for k in result["data_schema"].schema.keys()
-            if hasattr(k, "schema")
-        }
-        assert CONF_AUTO_OFFSET_MAX in schema_keys
-
     async def test_updates_pin(self):
         flow = self._create_flow()
 
@@ -545,53 +499,6 @@ class TestOptionsFlow:
         assert result["type"] == "create_entry"
         assert result["data"][CONF_PRESET_AWAY_TEMP] == 10
         assert result["data"][CONF_PRESET_COMFORT_TEMP] == 25
-
-    async def test_sets_external_sensor(self):
-        flow = self._create_flow()
-
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: DEFAULT_PIN,
-            CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
-            CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
-            CONF_EXTERNAL_TEMP_SENSOR: "sensor.outside_temp",
-        })
-
-        assert result["type"] == "create_entry"
-        assert result["data"][CONF_EXTERNAL_TEMP_SENSOR] == "sensor.outside_temp"
-
-    async def test_clears_external_sensor(self):
-        flow = self._create_flow(data={
-            CONF_ADDRESS: MOCK_ADDRESS,
-            CONF_PIN: DEFAULT_PIN,
-            CONF_EXTERNAL_TEMP_SENSOR: "sensor.outside_temp",
-        })
-
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: DEFAULT_PIN,
-            CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
-            CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
-            # No external sensor -> cleared
-        })
-
-        assert result["type"] == "create_entry"
-        assert CONF_EXTERNAL_TEMP_SENSOR not in result["data"]
-
-    async def test_clears_external_sensor_when_none(self):
-        flow = self._create_flow(data={
-            CONF_ADDRESS: MOCK_ADDRESS,
-            CONF_PIN: DEFAULT_PIN,
-            CONF_EXTERNAL_TEMP_SENSOR: "sensor.outside_temp",
-        })
-
-        result = await flow.async_step_init(user_input={
-            CONF_PIN: DEFAULT_PIN,
-            CONF_PRESET_AWAY_TEMP: DEFAULT_PRESET_AWAY_TEMP,
-            CONF_PRESET_COMFORT_TEMP: DEFAULT_PRESET_COMFORT_TEMP,
-            CONF_EXTERNAL_TEMP_SENSOR: None,
-        })
-
-        assert result["type"] == "create_entry"
-        assert CONF_EXTERNAL_TEMP_SENSOR not in result["data"]
 
     async def test_preserves_all_submitted_options(self):
         """Options should contain all submitted fields."""

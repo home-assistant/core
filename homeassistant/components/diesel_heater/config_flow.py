@@ -1,4 +1,4 @@
-"""Config flow for Vevor Diesel Heater integration."""
+"""Config flow for Diesel Heater integration."""
 from __future__ import annotations
 
 import logging
@@ -13,22 +13,15 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 
-from homeassistant.helpers import selector
-
 from .const import (
-    CONF_AUTO_OFFSET_MAX,
-    CONF_EXTERNAL_TEMP_SENSOR,
     CONF_PIN,
     CONF_PRESET_AWAY_TEMP,
     CONF_PRESET_COMFORT_TEMP,
-    DEFAULT_AUTO_OFFSET_MAX,
     DEFAULT_PIN,
     DEFAULT_PRESET_AWAY_TEMP,
     DEFAULT_PRESET_COMFORT_TEMP,
     DOMAIN,
-    MAX_AUTO_OFFSET_MAX,
     MAX_PIN,
-    MIN_AUTO_OFFSET_MAX,
     MIN_PIN,
     SERVICE_UUID,
     SERVICE_UUID_ALT,
@@ -48,7 +41,7 @@ def _normalize_mac_address(address: str) -> str:
 
 
 class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Vevor Diesel Heater."""
+    """Handle a config flow for Diesel Heater."""
 
     VERSION = 1
     MINOR_VERSION = 1
@@ -63,7 +56,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("Discovered Vevor Heater: %s", discovery_info.address)
+        _LOGGER.debug("Discovered Diesel Heater: %s", discovery_info.address)
 
         await self.async_set_unique_id(_normalize_mac_address(discovery_info.address))
         self._abort_if_unique_id_configured()
@@ -128,12 +121,11 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Get current bluetooth devices
         current_addresses = self._async_current_ids()
 
-        # Scan for Vevor heaters
+        # Scan for diesel heaters
         discovered = bluetooth.async_discovered_service_info(self.hass)
 
-        _LOGGER.debug("Scanning for Vevor heaters, found %d BLE devices", len(discovered))
+        _LOGGER.debug("Scanning for diesel heaters, found %d BLE devices", len(discovered))
 
-        # Add explicit check for known Vevor heater MAC address A4:C1:37:24:B8:64
         for discovery_info in discovered:
             address = _normalize_mac_address(discovery_info.address)
 
@@ -148,28 +140,28 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or SERVICE_UUID_ALT.lower() in service_uuids_lower
             )
 
-            # Method 2: Check for known Vevor device names
+            # Method 2: Check for known device names
             device_name = discovery_info.name or ""
-            is_vevor_name = any(name in device_name.upper() for name in [
+            is_heater_name = any(name in device_name.upper() for name in [
                 "VEVOR", "HEATER", "AIR HEATER", "DIESEL"
             ])
 
             # Method 3: Check manufacturer_id 65535 (0xFFFF)
-            has_vevor_manufacturer = 65535 in discovery_info.manufacturer_data
+            has_heater_manufacturer = 65535 in discovery_info.manufacturer_data
 
             _LOGGER.debug(
                 "Device %s (%s): service_uuid=%s, name_match=%s, manufacturer=%s",
-                address, device_name, has_service_uuid, is_vevor_name, has_vevor_manufacturer
+                address, device_name, has_service_uuid, is_heater_name, has_heater_manufacturer
             )
 
             # Accept device if any method matches
-            if has_service_uuid or is_vevor_name or has_vevor_manufacturer:
+            if has_service_uuid or is_heater_name or has_heater_manufacturer:
                 self._discovered_devices[address] = discovery_info
-                _LOGGER.info("Found potential Vevor heater: %s (%s)", address, device_name)
+                _LOGGER.info("Found potential diesel heater: %s (%s)", address, device_name)
 
         if not self._discovered_devices:
             _LOGGER.warning(
-                "No Vevor heaters found. Make sure the heater is powered on and within Bluetooth range. "
+                "No diesel heaters found. Make sure the heater is powered on and within Bluetooth range. "
                 "If using ESPHome Bluetooth Proxy, ensure it has available connection slots (max 3 connections)."
             )
             # Allow manual entry if no devices found
@@ -177,7 +169,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Create selection list
         devices = {
-            address: f"{info.name or 'Vevor Heater'} ({address})"
+            address: f"{info.name or 'Diesel Heater'} ({address})"
             for address, info in self._discovered_devices.items()
         }
 
@@ -246,22 +238,13 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class VevorHeaterOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for Vevor Heater."""
+    """Handle options flow for Diesel Heater."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options.
-
-        Options are stored in entry.options (not entry.data).
-        The coordinator reads from entry.options with fallback to entry.data.
-        """
+        """Manage the options."""
         if user_input is not None:
-            # Handle clearing of external sensor
-            if CONF_EXTERNAL_TEMP_SENSOR not in user_input or user_input.get(CONF_EXTERNAL_TEMP_SENSOR) is None:
-                user_input.pop(CONF_EXTERNAL_TEMP_SENSOR, None)
-                user_input.pop(CONF_AUTO_OFFSET_MAX, None)
-
             # Remove empty/None values
             options = {k: v for k, v in user_input.items() if v is not None and v != ""}
             return self.async_create_entry(title="", data=options)
@@ -269,12 +252,6 @@ class VevorHeaterOptionsFlowHandler(config_entries.OptionsFlow):
         # Read current values from options (with fallback to data for migration)
         opts = self.config_entry.options
         data = self.config_entry.data
-
-        current_external_sensor = opts.get(
-            CONF_EXTERNAL_TEMP_SENSOR, data.get(CONF_EXTERNAL_TEMP_SENSOR)
-        )
-        if not current_external_sensor:
-            current_external_sensor = None
 
         schema_dict = {
             vol.Optional(
@@ -298,25 +275,7 @@ class VevorHeaterOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Coerce(int),
                 vol.Range(min=8, max=36),
             ),
-            vol.Optional(
-                CONF_EXTERNAL_TEMP_SENSOR,
-                description={"suggested_value": current_external_sensor},
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    domain="sensor",
-                    device_class="temperature",
-                )
-            ),
         }
-
-        if current_external_sensor:
-            schema_dict[vol.Optional(
-                CONF_AUTO_OFFSET_MAX,
-                default=opts.get(CONF_AUTO_OFFSET_MAX, data.get(CONF_AUTO_OFFSET_MAX, DEFAULT_AUTO_OFFSET_MAX)),
-            )] = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=MIN_AUTO_OFFSET_MAX, max=MAX_AUTO_OFFSET_MAX),
-            )
 
         return self.async_show_form(
             step_id="init",
