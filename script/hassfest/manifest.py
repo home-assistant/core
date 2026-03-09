@@ -76,6 +76,7 @@ NO_IOT_CLASS = [
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
     "hardkernel",
     "hardware",
     "history",

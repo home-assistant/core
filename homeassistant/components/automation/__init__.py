@@ -144,6 +144,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "device_tracker",
     "door",
     "fan",
+    "garage_door",
     "humidifier",
     "lawn_mower",
     "light",
