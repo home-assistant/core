@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.trigger import EntityTriggerBase
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from . import ATTR_IS_CLOSED, DOMAIN
+from .const import ATTR_IS_CLOSED, DOMAIN
 
 
 def get_device_class_or_undefined(
