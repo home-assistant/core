@@ -2290,6 +2290,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "gaposa": {
+      "name": "Gaposa",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "gaggenau": {
       "name": "Gaggenau",
       "integration_type": "virtual",
