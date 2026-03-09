@@ -1,5 +1,6 @@
 """Tests for the SmartThings integration."""
 
+from functools import cache
 from typing import Any
 from unittest.mock import AsyncMock
 
@@ -118,6 +119,17 @@ def get_device_response(device_name: str) -> DeviceResponse:
     return DeviceResponse.from_json(load_fixture(f"devices/{device_name}.json", DOMAIN))
 
 
+@cache
+def get_fixture_name(device_id: str) -> str:
+    """Get the fixture name for a given device ID."""
+    for fixture_name in DEVICE_FIXTURES:
+        for device in get_device_response(fixture_name).items:
+            if device.device_id == device_id:
+                return fixture_name
+
+    raise KeyError(f"Fixture for device_id {device_id} not found")
+
+
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
@@ -136,8 +148,13 @@ def snapshot_smartthings_entities(
     entities = hass.states.async_all(platform)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+        prefix = ""
+        if platform != Platform.SCENE:
+            # SCENE unique id is not based on device fixture
+            device_id = entity_entry.unique_id[:36]
+            prefix = f"{get_fixture_name(device_id)}]["
+        assert entity_entry == snapshot(name=f"{prefix}{entity_entry.entity_id}-entry")
+        assert entity_state == snapshot(name=f"{prefix}{entity_entry.entity_id}-state")
 
 
 def set_attribute_value(

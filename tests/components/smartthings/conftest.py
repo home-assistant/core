@@ -31,7 +31,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_S
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import DEVICE_FIXTURES, get_device_response, get_device_status
+from . import DEVICE_FIXTURES, get_device_response, get_device_status, get_fixture_name
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -99,23 +99,33 @@ def mock_smartthings() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(params=DEVICE_FIXTURES)
-def device_fixture(
-    mock_smartthings: AsyncMock, request: pytest.FixtureRequest
-) -> Generator[str]:
+@pytest.fixture
+def device_fixture() -> str | None:
     """Return every device."""
-    return request.param
+    return None
 
 
 @pytest.fixture
-def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[AsyncMock]:
+def devices(mock_smartthings: AsyncMock, device_fixture: str | None) -> AsyncMock:
     """Return a specific device."""
-    mock_smartthings.get_devices.return_value = get_device_response(
-        device_fixture
-    ).items
-    mock_smartthings.get_device_status.return_value = get_device_status(
-        device_fixture
-    ).components
+    if device_fixture is not None:
+        mock_smartthings.get_devices.return_value = get_device_response(
+            device_fixture
+        ).items
+        mock_smartthings.get_device_status.return_value = get_device_status(
+            device_fixture
+        ).components
+    else:
+        devices = []
+        for device_name in DEVICE_FIXTURES:
+            devices.extend(get_device_response(device_name).items)
+        mock_smartthings.get_devices.return_value = devices
+
+        async def _get_device_status(device_id: str):
+            return get_device_status(get_fixture_name(device_id)).components
+
+        mock_smartthings.get_device_status.side_effect = _get_device_status
+
     return mock_smartthings
 
 
