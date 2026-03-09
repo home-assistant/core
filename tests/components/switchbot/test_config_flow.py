@@ -277,6 +277,22 @@ async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
+    with patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Meter Pro CO2 EEFF"
+    assert result["data"] == {
+        CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
+        CONF_SENSOR_TYPE: "hygrometer_co2",
+    }
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_setup_wohand(hass: HomeAssistant) -> None:
