@@ -61,6 +61,12 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         """Fetch data from API endpoint."""
         try:
             tanks_data = await self.api.fetch_tanks()
+            # Convert to typed dataclasses and index by GUID
+            return {
+                tank_dict["Guid"]: RotarexTank.from_dict(tank_dict)
+                for tank_dict in tanks_data
+                if "Guid" in tank_dict
+            }
         except InvalidAuth as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -71,10 +77,3 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
-
-        # Convert to typed dataclasses and index by GUID
-        return {
-            tank_dict["Guid"]: RotarexTank.from_dict(tank_dict)
-            for tank_dict in tanks_data
-            if "Guid" in tank_dict
-        }
