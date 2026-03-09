@@ -1,5 +1,7 @@
 """The tests for the vacuum platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.vacuum import (
@@ -230,3 +232,40 @@ async def test_clean_area_invalid_area(hass: HomeAssistant) -> None:
         )
     assert err.value.result.no_match_reason == intent.MatchFailedReason.INVALID_AREA
     assert err.value.result.no_match_name == "Nonexistent room"
+
+
+async def test_clean_area_service_failure(hass: HomeAssistant) -> None:
+    """Test HassVacuumCleanArea intent when the service call fails."""
+    await vacuum_intent.async_setup_intents(hass)
+
+    area_reg = ar.async_get(hass)
+    area_reg.async_create("Kitchen")
+
+    entity_id = f"{DOMAIN}.test_vacuum"
+    hass.states.async_set(
+        entity_id,
+        STATE_IDLE,
+        {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.CLEAN_AREA},
+    )
+
+    kitchen = area_reg.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+
+    with (
+        patch(
+            "homeassistant.core.ServiceRegistry.async_call",
+            side_effect=RuntimeError("Service failed"),
+        ),
+        pytest.raises(intent.IntentHandleError) as err,
+    ):
+        await intent.async_handle(
+            hass,
+            "test",
+            vacuum_intent.INTENT_VACUUM_CLEAN_AREA,
+            {"area": {"value": "Kitchen"}},
+        )
+
+    assert str(err.value) == (
+        f"Failed to call {SERVICE_CLEAN_AREA} for areas: ['{kitchen.id}']"
+        f" with vacuums: ['{entity_id}']"
+    )
