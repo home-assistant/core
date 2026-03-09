@@ -281,8 +281,11 @@ class MqttValve(MqttEntity, ValveEntity):
             else:
                 percentage_payload = min(max(percentage_payload, 0), 100)
                 self._attr_current_valve_position = percentage_payload
-                # Reset closing and opening if the valve is fully opened or fully closed
-                if state is None and percentage_payload in (0, 100):
+                # Reset closing and opening when a position-only update is
+                # received without an explicit opening/closing state.
+                # This handles valves that stop at intermediate positions
+                # (not just 0% or 100%).
+                if state is None:
                     state = RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
