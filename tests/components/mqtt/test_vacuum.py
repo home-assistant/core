@@ -522,7 +522,7 @@ async def test_clean_segments_command_update(
                     },
                 ),
             ),
-            "Option `segments` requires option `unique_id` is configured",
+            "Option `segments` requires `unique_id` to be configured",
         ),
     ],
 )
