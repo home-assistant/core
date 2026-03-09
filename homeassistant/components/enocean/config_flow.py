@@ -24,7 +24,14 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
+from .const import (
+    CONFIG_FLOW_MINOR_VERSION,
+    CONFIG_FLOW_VERSION,
+    DOMAIN,
+    ERROR_INVALID_DONGLE_PATH,
+    LOGGER,
+    MANUFACTURER,
+)
 
 MANUAL_SCHEMA = vol.Schema(
     {
@@ -50,7 +57,8 @@ def get_human_readable_device_name(
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
-    VERSION = 1
+    VERSION = CONFIG_FLOW_VERSION
+    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
     MANUAL_PATH_VALUE = "manual"
 
     def __init__(self) -> None:
