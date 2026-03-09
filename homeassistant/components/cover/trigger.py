@@ -1,7 +1,7 @@
 """Provides triggers for covers."""
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import State, split_entity_id
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.trigger import (
     EntityTriggerBase,
     Trigger,
