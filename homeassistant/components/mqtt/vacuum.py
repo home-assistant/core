@@ -150,10 +150,22 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
             f"Options `{CONF_SEGMENTS}` and "
             f"`{CONF_CLEAN_SEGMENTS_COMMAND_TOPIC}` must be defined together"
         )
-    if config[CONF_SEGMENTS] and CONF_UNIQUE_ID not in config:
-        raise vol.Invalid(
-            f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
-        )
+    segments: list[str]
+    if segments := config[CONF_SEGMENTS]:
+        if CONF_UNIQUE_ID not in config:
+            raise vol.Invalid(
+                f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
+            )
+        unique_segments: set[str] = set()
+        for segment in segments:
+            segment_id, _, _ = segment.partition(".")
+            if segment_id in unique_segments:
+                raise vol.Invalid(
+                    f"The `{CONF_SEGMENTS}` option contains a non "
+                    f"unique segment id {segment_id}. Got {segments}"
+                )
+            unique_segments.add(segment_id)
+
     return config
 
 
@@ -262,7 +274,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             segments: list[str] = config[CONF_SEGMENTS]
             self._segments = [
                 Segment(id=segment_id, name=name or segment_id)
-                for segment_id, _, name in [segment.partition(".") for segment in segments]
+                for segment_id, _, name in [
+                    segment.partition(".") for segment in segments
+                ]
             ]
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC

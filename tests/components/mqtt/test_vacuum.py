@@ -429,6 +429,7 @@ async def test_clean_segments_command_update(
     hass_ws_client: WebSocketGenerator,
     entity_registry: er.EntityRegistry,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test cleanable segments update via discovery."""
     # Prepare original entity config entry
@@ -487,6 +488,51 @@ async def test_clean_segments_command_update(
         {"id": "2", "name": "Kitchen", "group": None},
         {"id": "3", "name": "Diningroom", "group": None},
     ]
+
+    # Test update with a not unique segment list fails
+    config3 = config1.copy()
+    config3["segments"] = ["1.Livingroom", "2.Kitchen", "2.Diningroom"]
+    payload3 = json.dumps(config3)
+    async_fire_mqtt_message(hass, config_topic, payload3)
+    await hass.async_block_till_done()
+    assert (
+        "Error 'The `segments` option contains a non unique segment id 2" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["Livingroom", "Kitchen", "Kitchen"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["1.Livingroom", "1.Kitchen"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+    ],
+)
+async def test_non_unique_segments(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test with non unique list of cleanable segments."""
+    await mqtt_mock_entry()
+    assert "The `segments` option contains a non unique segment id" in caplog.text
 
 
 @pytest.mark.usefixtures("hass")
