@@ -94,6 +94,8 @@ WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_nega
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
+# Keep track of entities for which a warning about non-string unit has been logged
+WARN_NON_STRING_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_non_string_unit")
 # Keep track of entities for which a warning about statistics mean algorithm change has been logged
 WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
     f"{DOMAIN}_warn_statistics_mean_change"
@@ -280,6 +282,20 @@ def _normalize_states(
     state_unit: str | None = None
     statistics_unit: str | None
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    if state_unit is not None and not isinstance(state_unit, str):
+        if WARN_NON_STRING_UNIT not in hass.data:
+            hass.data[WARN_NON_STRING_UNIT] = set()
+        if entity_id not in hass.data[WARN_NON_STRING_UNIT]:
+            hass.data[WARN_NON_STRING_UNIT].add(entity_id)
+            _LOGGER.error(
+                "Entity %s has a non-string unit_of_measurement: %s (type %s); "
+                "this is a bug in the integration providing this entity. "
+                "Statistics will not be tracked for this entity",
+                entity_id,
+                state_unit,
+                type(state_unit).__name__,
+            )
+        return None, None, []
     device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
     if not old_metadata:

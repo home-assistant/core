@@ -717,9 +717,15 @@ def _compile_statistics(
             )
         ):
             continue
-        compiled: PlatformCompiledStatistics = platform_compile_statistics(
-            instance.hass, session, start, end
-        )
+        try:
+            compiled: PlatformCompiledStatistics = platform_compile_statistics(
+                instance.hass, session, start, end
+            )
+        except Exception:
+            _LOGGER.exception(
+                "Error compiling statistics for platform %s; skipping", domain
+            )
+            continue
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s",
             domain,
@@ -735,16 +741,33 @@ def _compile_statistics(
     now_timestamp = time_time()
     # Insert collected statistics in the database
     for stats in platform_stats:
-        modified_statistic_id, metadata_id = statistics_meta_manager.update_or_add(
-            session, stats["meta"], current_metadata
-        )
-        if modified_statistic_id is not None:
-            modified_statistic_ids.add(modified_statistic_id)
-        updated_metadata_ids.add(metadata_id)
-        if new_stat := _insert_statistics(
-            session, StatisticsShortTerm, metadata_id, stats["stat"], now_timestamp
-        ):
-            new_short_term_stats.append(new_stat)
+        try:
+            with session.begin_nested():
+                modified_statistic_id, metadata_id = (
+                    statistics_meta_manager.update_or_add(
+                        session, stats["meta"], current_metadata
+                    )
+                )
+                if modified_statistic_id is not None:
+                    modified_statistic_ids.add(modified_statistic_id)
+                updated_metadata_ids.add(metadata_id)
+                if new_stat := _insert_statistics(
+                    session,
+                    StatisticsShortTerm,
+                    metadata_id,
+                    stats["stat"],
+                    now_timestamp,
+                ):
+                    new_short_term_stats.append(new_stat)
+        except Exception:
+            try:
+                statistic_id = stats["meta"]["statistic_id"]
+            except KeyError, TypeError:
+                statistic_id = "unknown"
+            _LOGGER.exception(
+                "Error while processing statistics for %s; skipping",
+                statistic_id,
+            )
 
     if start.minute == 50:
         # Once every hour, update issues
