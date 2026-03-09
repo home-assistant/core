@@ -71,6 +71,14 @@ CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 
 CONF_OPEN_AND_CLOSE = "open_or_close"
 
+SCRIPT_FIELDS = (
+    CLOSE_ACTION,
+    OPEN_ACTION,
+    POSITION_ACTION,
+    STOP_ACTION,
+    TILT_ACTION,
+)
+
 TILT_FEATURES = (
     CoverEntityFeature.OPEN_TILT
     | CoverEntityFeature.CLOSE_TILT
@@ -165,6 +173,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_COVERS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -181,6 +190,7 @@ async def async_setup_entry(
         StateCoverEntity,
         COVER_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 

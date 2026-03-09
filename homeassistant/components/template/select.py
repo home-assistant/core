@@ -47,6 +47,8 @@ CONF_SELECT_OPTION = "select_option"
 
 DEFAULT_NAME = "Template Select"
 
+SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
+
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_OPTIONS): cv.template,
@@ -79,6 +81,7 @@ async def async_setup_platform(
         TriggerSelectEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -94,6 +97,7 @@ async def async_setup_entry(
         async_add_entities,
         TemplateSelect,
         SELECT_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 

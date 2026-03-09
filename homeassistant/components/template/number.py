@@ -46,6 +46,8 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
+SCRIPT_FIELDS = (CONF_SET_VALUE,)
+
 NUMBER_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
@@ -81,6 +83,7 @@ async def async_setup_platform(
         TriggerNumberEntity,
         async_add_entities,
         discovery_info,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -96,6 +99,7 @@ async def async_setup_entry(
         async_add_entities,
         StateNumberEntity,
         NUMBER_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
