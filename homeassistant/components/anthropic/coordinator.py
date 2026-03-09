@@ -78,9 +78,7 @@ class DynamicIntervalDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             self._schedule_refresh()
 
 
-class AnthropicCoordinator(
-    DynamicIntervalDataUpdateCoordinator[list[anthropic.types.ModelInfo]]
-):
+class AnthropicCoordinator(DynamicIntervalDataUpdateCoordinator[None]):
     """Coordinator for fetching and updating the list of available Anthropic models."""
 
     client: anthropic.AsyncAnthropic
@@ -116,10 +114,10 @@ class AnthropicCoordinator(
             exc.__suppress_context__ = True
         return exc
 
-    async def async_update_data(self) -> list[anthropic.types.ModelInfo]:
+    async def async_update_data(self) -> None:
         """Fetch data from the API."""
         try:
-            return (await self.client.models.list(timeout=10.0)).data
+            await self.client.models.list(timeout=10.0)
         except anthropic.AnthropicError as err:
             raise self._map_exception(err)  # noqa: B904
 
