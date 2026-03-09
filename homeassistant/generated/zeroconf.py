@@ -1003,6 +1003,11 @@ ZEROCONF = {
             "domain": "vizio",
         },
     ],
+    "_wattwaechter._tcp.local.": [
+        {
+            "domain": "wattwaechter",
+        },
+    ],
     "_wled._tcp.local.": [
         {
             "domain": "wled",

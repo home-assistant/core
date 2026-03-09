@@ -1865,6 +1865,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
+/homeassistant/components/wattwaechter/ @simono41
+/tests/components/wattwaechter/ @simono41
 /homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya

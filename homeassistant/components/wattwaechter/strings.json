@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add WattWächter Plus",
+        "description": "Enter the IP address or hostname of your WattWächter device. The API token is optional if authentication is disabled on the device.",
+        "data": {
+          "host": "Host",
+          "token": "API Token (optional)"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "WattWächter Plus discovered",
+        "description": "A WattWächter device was found on your network.\n\nModel: {model}\nFirmware: {firmware}\nHost: {host}\nDevice ID: {device_id}\n\nOptionally enter the API token for authenticated access.",
+        "data": {
+          "token": "API Token (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure WattWächter Plus",
+        "description": "Update the connection settings for your WattWächter device.",
+        "data": {
+          "host": "Host",
+          "token": "API Token (optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate WattWächter Plus",
+        "description": "The API token for WattWächter {device_id} ({host}) is invalid or expired. Please enter a new token.",
+        "data": {
+          "token": "API Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the device. Please check the IP address and make sure the device is powered on.",
+      "invalid_auth": "Invalid API token. Please check your token and try again.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This device is already configured. The IP address has been updated.",
+      "already_configured_mqtt": "This device is already integrated via MQTT auto-discovery. Please disable MQTT on the device or remove the MQTT entities first to use this integration instead.",
+      "no_device_id": "Could not identify the device.",
+      "reconfigure_successful": "Configuration updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WattWächter Plus Options",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to {host}"
+    },
+    "auth_failed": {
+      "message": "Authentication failed: {error}"
+    },
+    "update_failed": {
+      "message": "Failed to fetch data: {error}"
+    },
+    "firmware_update_auth": {
+      "message": "Cannot start firmware update: WRITE API token required."
+    },
+    "firmware_update_failed": {
+      "message": "Cannot start firmware update: {error}"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "import_total": { "name": "Total consumption" },
+      "export_total": { "name": "Total feed-in" },
+      "import_tariff_1": { "name": "Consumption tariff 1" },
+      "import_tariff_2": { "name": "Consumption tariff 2" },
+      "export_tariff_1": { "name": "Feed-in tariff 1" },
+      "export_tariff_2": { "name": "Feed-in tariff 2" },
+      "active_power": { "name": "Active power" },
+      "active_power_l1": { "name": "Active power L1" },
+      "active_power_l2": { "name": "Active power L2" },
+      "active_power_l3": { "name": "Active power L3" },
+      "voltage_l1": { "name": "Voltage L1" },
+      "voltage_l2": { "name": "Voltage L2" },
+      "voltage_l3": { "name": "Voltage L3" },
+      "current_l1": { "name": "Current L1" },
+      "current_l2": { "name": "Current L2" },
+      "current_l3": { "name": "Current L3" },
+      "frequency": { "name": "Grid frequency" },
+      "power_factor": { "name": "Power factor" },
+      "power_factor_l1": { "name": "Power factor L1" },
+      "power_factor_l2": { "name": "Power factor L2" },
+      "power_factor_l3": { "name": "Power factor L3" },
+      "wifi_signal": { "name": "WiFi signal" },
+      "wifi_ssid": { "name": "WiFi SSID" },
+      "ip_address": { "name": "IP address" },
+      "firmware_version": { "name": "Firmware version" },
+      "mdns_name": { "name": "mDNS" }
+    },
+    "update": {
+      "firmware": { "name": "Firmware" }
+    }
+  }
+}
