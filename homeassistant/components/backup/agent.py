@@ -14,6 +14,13 @@ from homeassistant.core import HomeAssistant, callback
 from .models import AgentBackup, BackupAgentError
 
 
+class OnProgressCallback(Protocol):
+    """Protocol for on_progress callback."""
+
+    def __call__(self, *, bytes_uploaded: int, **kwargs: Any) -> None:
+        """Report upload progress."""
+
+
 class BackupAgentUnreachableError(BackupAgentError):
     """Raised when the agent can't reach its API."""
 
@@ -53,12 +60,14 @@ class BackupAgent(abc.ABC):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
 
         :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
+        :param on_progress: A callback to report the number of uploaded bytes.
         """
 
     @abc.abstractmethod

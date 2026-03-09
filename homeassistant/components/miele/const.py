@@ -188,6 +188,7 @@ class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
     finished = 522, 11012
     extra_dry = 523
     hand_iron = 524
+    hygiene_drying = 525
     moisten = 526
     thermo_spin = 527
     timed_drying = 528
