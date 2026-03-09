@@ -648,7 +648,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)  # type: ignore[no-any-return]
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
+        """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
         if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
