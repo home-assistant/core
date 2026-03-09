@@ -1,20 +1,19 @@
 """Provides triggers for covers."""
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State, split_entity_id
 from homeassistant.helpers.trigger import (
     EntityTriggerBase,
+    Trigger,
     get_device_class_or_undefined,
 )
 
-from . import ATTR_IS_CLOSED, DOMAIN
+from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 
 
 class CoverTriggerBase(EntityTriggerBase):
     """Base trigger for cover state changes."""
 
-    _domains = {BINARY_SENSOR_DOMAIN, DOMAIN}
     _binary_sensor_target_state: str
     _cover_is_closed_target_value: bool
     _device_classes: dict[str, str]
@@ -49,15 +48,60 @@ class CoverTriggerBase(EntityTriggerBase):
         return from_state.state != to_state.state
 
 
-class CoverOpenedTriggerBase(CoverTriggerBase):
-    """Base trigger for cover opened state changes."""
+def make_cover_opened_trigger(
+    *, device_classes: dict[str, str], domains: set[str] | None = None
+) -> type[CoverTriggerBase]:
+    """Create a trigger cover_opened."""
 
-    _binary_sensor_target_state = STATE_ON
-    _cover_is_closed_target_value = False
+    class CoverOpenedTrigger(CoverTriggerBase):
+        """Trigger for cover opened state changes."""
+
+        _binary_sensor_target_state = STATE_ON
+        _cover_is_closed_target_value = False
+        _domains = domains or {DOMAIN}
+        _device_classes = device_classes
+
+    return CoverOpenedTrigger
 
 
-class CoverClosedTriggerBase(CoverTriggerBase):
-    """Base trigger for cover closed state changes."""
+def make_cover_closed_trigger(
+    *, device_classes: dict[str, str], domains: set[str] | None = None
+) -> type[CoverTriggerBase]:
+    """Create a trigger cover_closed."""
 
-    _binary_sensor_target_state = STATE_OFF
-    _cover_is_closed_target_value = True
+    class CoverClosedTrigger(CoverTriggerBase):
+        """Trigger for cover closed state changes."""
+
+        _binary_sensor_target_state = STATE_OFF
+        _cover_is_closed_target_value = True
+        _domains = domains or {DOMAIN}
+        _device_classes = device_classes
+
+    return CoverClosedTrigger
+
+
+# Concrete triggers for cover device classes (cover-only, no binary sensor)
+
+DEVICE_CLASSES_AWNING: dict[str, str] = {DOMAIN: CoverDeviceClass.AWNING}
+DEVICE_CLASSES_BLIND: dict[str, str] = {DOMAIN: CoverDeviceClass.BLIND}
+DEVICE_CLASSES_CURTAIN: dict[str, str] = {DOMAIN: CoverDeviceClass.CURTAIN}
+DEVICE_CLASSES_SHADE: dict[str, str] = {DOMAIN: CoverDeviceClass.SHADE}
+DEVICE_CLASSES_SHUTTER: dict[str, str] = {DOMAIN: CoverDeviceClass.SHUTTER}
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    "awning_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_AWNING),
+    "awning_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_AWNING),
+    "blind_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_BLIND),
+    "blind_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_BLIND),
+    "curtain_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_CURTAIN),
+    "curtain_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_CURTAIN),
+    "shade_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_SHADE),
+    "shade_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_SHADE),
+    "shutter_opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_SHUTTER),
+    "shutter_closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_SHUTTER),
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the triggers for covers."""
+    return TRIGGERS
