@@ -489,14 +489,14 @@ async def test_clean_segments_command_update(
         {"id": "3", "name": "Diningroom", "group": None},
     ]
 
-    # Test update with a not unique segment list fails
+    # Test update with a non-unique segment list fails
     config3 = config1.copy()
     config3["segments"] = ["1.Livingroom", "2.Kitchen", "2.Diningroom"]
     payload3 = json.dumps(config3)
     async_fire_mqtt_message(hass, config_topic, payload3)
     await hass.async_block_till_done()
     assert (
-        "Error 'The `segments` option contains an invalid or non unique segment ID '2'"
+        "Error 'The `segments` option contains an invalid or non-unique segment ID '2'"
         in caplog.text
     )
 
@@ -551,10 +551,10 @@ async def test_non_unique_segments(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test with non unique list of cleanable segments with valid segment IDs."""
+    """Test with non-unique list of cleanable segments with valid segment IDs."""
     await mqtt_mock_entry()
     assert (
-        "The `segments` option contains an invalid or non unique segment ID"
+        "The `segments` option contains an invalid or non-unique segment ID"
         in caplog.text
     )
 

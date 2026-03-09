@@ -152,7 +152,7 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
         )
     segments: list[str]
     if segments := config[CONF_SEGMENTS]:
-        if CONF_UNIQUE_ID not in config:
+        if not config.get(CONF_UNIQUE_ID):
             raise vol.Invalid(
                 f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
             )
@@ -161,7 +161,7 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
             segment_id, _, _ = segment.partition(".")
             if not segment_id or segment_id in unique_segments:
                 raise vol.Invalid(
-                    f"The `{CONF_SEGMENTS}` option contains an invalid or non "
+                    f"The `{CONF_SEGMENTS}` option contains an invalid or non-"
                     f"unique segment ID '{segment_id}'. Got {segments}"
                 )
             unique_segments.add(segment_id)
