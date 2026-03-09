@@ -94,19 +94,7 @@ CONF_PRESET_COMFORT_TEMP: Final = "preset_comfort_temp"
 DEFAULT_PRESET_AWAY_TEMP: Final = 8
 DEFAULT_PRESET_COMFORT_TEMP: Final = 21
 
-# Auto temperature offset from external sensor
-CONF_EXTERNAL_TEMP_SENSOR: Final = "external_temp_sensor"
-CONF_AUTO_OFFSET_MAX: Final = "auto_offset_max"
-CONF_AUTO_OFFSET_ENABLED: Final = "auto_offset_enabled"
-DEFAULT_AUTO_OFFSET_MAX: Final = 5
-MIN_AUTO_OFFSET_MAX: Final = 1
-MAX_AUTO_OFFSET_MAX: Final = 9
-AUTO_OFFSET_THROTTLE_SECONDS: Final = 60
-AUTO_OFFSET_THRESHOLD: Final = 1.0  # Only adjust if difference >= 1°C
-
 # Heater temperature offset (sent to heater via cmd 20)
-# Both positive and negative offsets now work via BLE
-# Encoding: arg1 = value % 256, arg2 = (value // 256) % 256
 MIN_HEATER_OFFSET: Final = -9
 MAX_HEATER_OFFSET: Final = 9
 
@@ -115,12 +103,11 @@ CMD_SET_LANGUAGE: Final = 14
 CMD_SET_TEMP_UNIT: Final = 15
 CMD_SET_TANK_VOLUME: Final = 16  # Index-based: 0=None, 1=5L, 2=10L, etc.
 CMD_SET_PUMP_TYPE: Final = 17
-CMD_SET_ALTITUDE_UNIT: Final = 19  # Was incorrectly 16
+CMD_SET_ALTITUDE_UNIT: Final = 19
 CMD_SET_OFFSET: Final = 20
 CMD_SET_BACKLIGHT: Final = 21
 
-# Language options (byte 26) - verified by @Xev testing
-# Note: Values 1, 5, 6 may not be supported by all heaters
+# Language options (byte 26)
 LANGUAGE_OPTIONS: Final = {
     0: "English",
     1: "Chinese",
@@ -141,9 +128,7 @@ ALTITUDE_UNIT_FEET: Final = 1
 MIN_TANK_VOLUME: Final = 0
 MAX_TANK_VOLUME: Final = 10
 
-# Tank volume options - INDEX-BASED (verified by @Xev testing)
-# The heater stores an index (0-10), not the actual volume
-# Index 0 = None/disabled, Index 1 = 5L, Index 2 = 10L, etc.
+# Tank volume options - INDEX-BASED
 TANK_VOLUME_OPTIONS: Final = {
     0: "None",
     1: "5 L",
@@ -158,17 +143,15 @@ TANK_VOLUME_OPTIONS: Final = {
     10: "50 L",
 }
 
-# Pump type options (byte 29) - verified by @Xev testing
-# Values 20/21 indicate RF433 remote status (not pump type)
+# Pump type options (byte 29)
 PUMP_TYPE_OPTIONS: Final = {
-    0: "16µl",
-    1: "22µl",
-    2: "28µl",
-    3: "32µl",
+    0: "16\u00b5l",
+    1: "22\u00b5l",
+    2: "28\u00b5l",
+    3: "32\u00b5l",
 }
 
-# Backlight brightness options (discrete values matching Vevor app)
-# Off, 1-10 fine control, then 20-100 in steps of 10
+# Backlight brightness options
 BACKLIGHT_OPTIONS: Final = {
     0: "Off",
     1: "1",
@@ -194,41 +177,3 @@ BACKLIGHT_OPTIONS: Final = {
 
 # Update interval
 UPDATE_INTERVAL: Final = 30  # seconds
-
-# Fuel consumption tracking (minimal - consumption only)
-# Consumption rates in L/h based on VEVOR specs (0.16-0.52 L/h range)
-FUEL_CONSUMPTION_TABLE: Final = {
-    1: 0.16,  # Minimum consumption
-    2: 0.20,
-    3: 0.24,
-    4: 0.28,
-    5: 0.32,
-    6: 0.36,
-    7: 0.40,
-    8: 0.44,
-    9: 0.48,
-    10: 0.52,  # Maximum consumption
-}
-
-# Data persistence keys
-STORAGE_KEY_TOTAL_FUEL: Final = "total_fuel_consumed"
-STORAGE_KEY_DAILY_FUEL: Final = "daily_fuel_consumed"
-STORAGE_KEY_DAILY_DATE: Final = "daily_fuel_date"
-STORAGE_KEY_DAILY_HISTORY: Final = "daily_fuel_history"
-
-# Runtime tracking persistence keys
-STORAGE_KEY_TOTAL_RUNTIME: Final = "total_runtime_seconds"
-STORAGE_KEY_DAILY_RUNTIME: Final = "daily_runtime_seconds"
-STORAGE_KEY_DAILY_RUNTIME_DATE: Final = "daily_runtime_date"
-STORAGE_KEY_DAILY_RUNTIME_HISTORY: Final = "daily_runtime_history"
-
-# Fuel level tracking persistence keys
-STORAGE_KEY_FUEL_SINCE_RESET: Final = "fuel_consumed_since_reset"
-STORAGE_KEY_TANK_CAPACITY: Final = "tank_capacity_liters"
-STORAGE_KEY_LAST_REFUELED: Final = "last_refueled"
-
-# Auto offset persistence key
-STORAGE_KEY_AUTO_OFFSET_ENABLED: Final = "auto_offset_enabled"
-
-# History settings
-MAX_HISTORY_DAYS: Final = 30  # Keep last 30 days of daily consumption
