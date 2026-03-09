@@ -538,7 +538,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -551,7 +551,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.refrigerator_1_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -574,20 +574,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Cubed ice',
+      'friendly_name': 'Refrigerator 1 Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.refrigerator_1_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -600,7 +600,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.refrigerator_1_power_cool',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -623,20 +623,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power cool',
+      'friendly_name': 'Refrigerator 1 Power cool',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.refrigerator_1_power_cool',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -649,7 +649,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.refrigerator_1_power_freeze',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -672,13 +672,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power freeze',
+      'friendly_name': 'Refrigerator 1 Power freeze',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.refrigerator_1_power_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1077,7 +1077,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-entry]
+# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1090,7 +1090,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_id': 'switch.robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1113,13 +1113,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-state]
+# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
+      'friendly_name': 'Robot vacuum 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_id': 'switch.robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1273,7 +1273,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_sanitize-entry]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1286,7 +1286,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.dishwasher_1_sanitize',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1309,20 +1309,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_sanitize-state]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Sanitize',
+      'friendly_name': 'Dishwasher 1 Sanitize',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.dishwasher_1_sanitize',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_speed_booster-entry]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1335,7 +1335,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.dishwasher_1_speed_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1358,13 +1358,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_speed_booster-state]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Speed booster',
+      'friendly_name': 'Dishwasher 1 Speed booster',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.dishwasher_1_speed_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
