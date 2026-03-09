@@ -399,7 +399,7 @@ async def test_clean_segments_command_with_id(
         "vacuum.test",
         vacuum.DOMAIN,
         {
-            "area_mapping": {"Kitchen": ["1"], "Livingroom": ["2"]},
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
         },
     )
     await hass.async_block_till_done()
@@ -408,7 +408,7 @@ async def test_clean_segments_command_with_id(
     assert state.state == STATE_UNKNOWN
     await common.async_clean_area(hass, ["Kitchen"], entity_id="vacuum.test")
     assert (
-        call("vacuum/clean_segment", '["1"]', 0, False)
+        call("vacuum/clean_segment", '["2"]', 0, False)
         in mqtt_mock.async_publish.mock_calls
     )
 
