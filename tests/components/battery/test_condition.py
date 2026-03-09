@@ -435,7 +435,7 @@ async def test_battery_percentage_condition_invalid_state(
         },
     )
 
-    for value in ["unavailable", "unknown", "abc"]:
+    for value in ("unavailable", "unknown", "abc"):
         hass.states.async_set(entity_id, value, {ATTR_DEVICE_CLASS: "battery"})
         await hass.async_block_till_done()
         assert condition(hass) is False, f"Expected False for '{value}'"
