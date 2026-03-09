@@ -159,10 +159,10 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
         unique_segments: set[str] = set()
         for segment in segments:
             segment_id, _, _ = segment.partition(".")
-            if segment_id in unique_segments:
+            if not segment_id or segment_id in unique_segments:
                 raise vol.Invalid(
-                    f"The `{CONF_SEGMENTS}` option contains a non "
-                    f"unique segment id {segment_id}. Got {segments}"
+                    f"The `{CONF_SEGMENTS}` option contains an invalid or non "
+                    f"unique segment ID '{segment_id}'. Got {segments}"
                 )
             unique_segments.add(segment_id)
 

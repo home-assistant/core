@@ -496,7 +496,8 @@ async def test_clean_segments_command_update(
     async_fire_mqtt_message(hass, config_topic, payload3)
     await hass.async_block_till_done()
     assert (
-        "Error 'The `segments` option contains a non unique segment id 2" in caplog.text
+        "Error 'The `segments` option contains an invalid or non unique segment ID 2"
+        in caplog.text
     )
 
 
@@ -518,7 +519,27 @@ async def test_clean_segments_command_update(
                 vacuum.DOMAIN: {
                     "name": "test",
                     "unique_id": "veryunique",
+                    "segments": ["Livingroom", "Kitchen", ""],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
                     "segments": ["1.Livingroom", "1.Kitchen"],
+                    "clean_segments_command_topic": "vacuum/clean_segment",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                vacuum.DOMAIN: {
+                    "name": "test",
+                    "unique_id": "veryunique",
+                    "segments": ["1.Livingroom", "1.Kitchen", ".Diningroom"],
                     "clean_segments_command_topic": "vacuum/clean_segment",
                 }
             }
@@ -530,9 +551,12 @@ async def test_non_unique_segments(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test with non unique list of cleanable segments."""
+    """Test with non unique list of cleanable segments with valid segment IDs."""
     await mqtt_mock_entry()
-    assert "The `segments` option contains a non unique segment id" in caplog.text
+    assert (
+        "The `segments` option contains an invalid or non unique segment ID"
+        in caplog.text
+    )
 
 
 @pytest.mark.usefixtures("hass")
