@@ -152,7 +152,7 @@ def validate_clean_area_config(config: ConfigType) -> ConfigType:
         )
     if config[CONF_SEGMENTS] and CONF_UNIQUE_ID not in config:
         raise vol.Invalid(
-            f"Option `{CONF_SEGMENTS}` requires option `{CONF_UNIQUE_ID}` is configured"
+            f"Option `{CONF_SEGMENTS}` requires `{CONF_UNIQUE_ID}` to be configured"
         )
     return config
 
