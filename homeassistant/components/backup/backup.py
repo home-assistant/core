@@ -78,6 +78,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
     ) -> None:
         """Upload a backup."""
         self._backups[backup.backup_id] = (backup, self.get_new_backup_path(backup))
+        on_progress(bytes_uploaded=backup.size)
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""

@@ -7,12 +7,14 @@ from io import StringIO
 import json
 from pathlib import Path
 from tarfile import TarError
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, Mock, mock_open, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN, backup
+from homeassistant.components.backup.const import DATA_MANAGER
+from homeassistant.components.backup.manager import UploadBackupEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -83,6 +85,9 @@ async def test_upload(
     await hass.async_block_till_done()
     client = await hass_client()
     open_mock = mock_open()
+    manager = hass.data[DATA_MANAGER]
+    original_on_event = manager.async_on_backup_event
+    on_event = Mock(side_effect=original_on_event)
 
     with (
         patch("pathlib.Path.open", open_mock),
@@ -91,6 +96,7 @@ async def test_upload(
             "homeassistant.components.backup.manager.read_backup",
             return_value=TEST_BACKUP_ABC123,
         ),
+        patch.object(manager, "async_on_backup_event", on_event),
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=backup.local",
@@ -98,9 +104,16 @@ async def test_upload(
         )
 
     assert resp.status == 201
-    assert open_mock.call_count == 1
     assert move_mock.call_count == 1
     assert move_mock.mock_calls[0].args[1].name == "Test_1970-01-01_00.00_00000000.tar"
+    upload_events = [
+        call.args[0]
+        for call in on_event.call_args_list
+        if isinstance(call.args[0], UploadBackupEvent)
+    ]
+    assert len(upload_events) == 1
+    assert upload_events[0].uploaded_bytes == TEST_BACKUP_ABC123.size
+    assert upload_events[0].total_bytes == TEST_BACKUP_ABC123.size
 
 
 @pytest.mark.parametrize(
