@@ -93,14 +93,24 @@ condition_code_to_hass = {
 }
 
 
+def _sum_precipitation(
+    snowfall: float | None, precipitation: float | None
+) -> float | None:
+    """Sum snowfall and precipitation, preserving None when both are absent."""
+    if snowfall is None and precipitation is None:
+        return None
+    return (snowfall or 0) + (precipitation or 0)
+
+
 def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
     return {
         "datetime": forecast["forecastStart"],
         "condition": condition_code_to_hass[forecast["conditionCode"]],
         "native_temperature": forecast["temperatureMax"],
         "native_templow": forecast["temperatureMin"],
-        "native_precipitation": forecast.get("snowfallAmount", 0)
-        + forecast["precipitationAmount"],
+        "native_precipitation": _sum_precipitation(
+            forecast.get("snowfallAmount"), forecast.get("precipitationAmount")
+        ),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "uv_index": forecast["maxUvIndex"],
     }
@@ -118,8 +128,9 @@ def _map_hourly_forecast(forecast: dict[str, Any]) -> Forecast:
         "native_wind_speed": forecast["windSpeed"],
         "wind_bearing": forecast.get("windDirection"),
         "humidity": forecast["humidity"] * 100,
-        "native_precipitation": forecast.get("snowfallAmount", 0)
-        + forecast.get("precipitationAmount", 0),
+        "native_precipitation": _sum_precipitation(
+            forecast.get("snowfallAmount"), forecast.get("precipitationAmount")
+        ),
         "precipitation_probability": forecast["precipitationChance"] * 100,
         "cloud_coverage": forecast["cloudCover"] * 100,
         "uv_index": forecast["uvIndex"],

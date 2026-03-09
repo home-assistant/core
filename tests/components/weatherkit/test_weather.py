@@ -25,6 +25,7 @@ from homeassistant.components.weatherkit.const import ATTRIBUTION
 from homeassistant.components.weatherkit.weather import (
     _map_daily_forecast,
     _map_hourly_forecast,
+    _sum_precipitation,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
@@ -201,3 +202,56 @@ def test_hourly_forecast_precipitation_only_when_no_snowfall() -> None:
     forecast = _hourly_forecast_data(snowfallAmount=0.0, precipitationAmount=3.0)
     result = _map_hourly_forecast(forecast)
     assert result["native_precipitation"] == 3.0
+
+
+@pytest.mark.parametrize(
+    ("snowfall", "precipitation", "expected"),
+    [
+        (10.0, 5.0, 15.0),
+        (0.0, 5.0, 5.0),
+        (10.0, 0.0, 10.0),
+        (0.0, 0.0, 0.0),
+        (None, 5.0, 5.0),
+        (10.0, None, 10.0),
+        (None, None, None),
+    ],
+)
+def test_sum_precipitation(
+    snowfall: float | None, precipitation: float | None, expected: float | None
+) -> None:
+    """Test _sum_precipitation returns None only when both inputs are None."""
+    assert _sum_precipitation(snowfall, precipitation) == expected
+
+
+def test_hourly_forecast_none_when_both_missing() -> None:
+    """Test that native_precipitation is None when both keys are absent."""
+    data = _hourly_forecast_data()
+    del data["snowfallAmount"]
+    del data["precipitationAmount"]
+    result = _map_hourly_forecast(data)
+    assert result["native_precipitation"] is None
+
+
+def test_hourly_forecast_snowfall_only_when_precipitation_missing() -> None:
+    """Test that snowfallAmount is used when precipitationAmount is absent."""
+    data = _hourly_forecast_data(snowfallAmount=7.0)
+    del data["precipitationAmount"]
+    result = _map_hourly_forecast(data)
+    assert result["native_precipitation"] == 7.0
+
+
+def test_hourly_forecast_precipitation_only_when_snowfall_missing() -> None:
+    """Test that precipitationAmount is used when snowfallAmount is absent."""
+    data = _hourly_forecast_data(precipitationAmount=4.0)
+    del data["snowfallAmount"]
+    result = _map_hourly_forecast(data)
+    assert result["native_precipitation"] == 4.0
+
+
+def test_daily_forecast_none_when_both_missing() -> None:
+    """Test that native_precipitation is None when both keys are absent."""
+    data = _daily_forecast_data()
+    del data["snowfallAmount"]
+    del data["precipitationAmount"]
+    result = _map_daily_forecast(data)
+    assert result["native_precipitation"] is None
