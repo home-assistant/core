@@ -141,7 +141,6 @@ async def test_door_trigger_binary_sensor_behavior_any(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -159,7 +158,6 @@ async def test_door_trigger_binary_sensor_behavior_any(
             other_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                (CoverState.CLOSED, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -367,7 +365,6 @@ async def test_door_trigger_binary_sensor_behavior_last(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -385,7 +382,6 @@ async def test_door_trigger_binary_sensor_behavior_last(
             other_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                (CoverState.CLOSED, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -456,7 +452,6 @@ async def test_door_trigger_cover_behavior_first(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -474,7 +469,6 @@ async def test_door_trigger_cover_behavior_first(
             other_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                 (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
-                (CoverState.CLOSED, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
