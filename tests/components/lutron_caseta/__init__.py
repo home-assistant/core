@@ -193,6 +193,7 @@ class MockBridge:
             },
             "802": {
                 "device_id": "802",
+                "battery_status": "Good",
                 "current_state": 100,
                 "fan_speed": None,
                 "zone": "802",
