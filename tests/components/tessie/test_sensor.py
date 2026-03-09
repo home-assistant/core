@@ -4,11 +4,27 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.tessie.sensor import charge_state_to_option
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import StateType
 
 from .common import assert_entities, setup_platform
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("Charging", "charging"),
+        (True, "charging"),
+        (False, "stopped"),
+        ("Unexpected", None),
+    ],
+)
+def test_charge_state_to_option(value: StateType, expected: str | None) -> None:
+    """Test charge state conversion for enum sensor values."""
+    assert charge_state_to_option(value) == expected
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
