@@ -6,6 +6,7 @@ import asyncio
 
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
+from intellifire4py.const import IntelliFireApiMode
 from intellifire4py.model import IntelliFireCommonFireplaceData
 
 from homeassistant.const import (
@@ -55,8 +56,8 @@ def _construct_common_data(
         serial=entry.data[CONF_SERIAL],
         api_key=entry.data[CONF_API_KEY],
         ip_address=entry.data[CONF_IP_ADDRESS],
-        read_mode=entry.options[CONF_READ_MODE],
-        control_mode=entry.options[CONF_CONTROL_MODE],
+        read_mode=IntelliFireApiMode(entry.options[CONF_READ_MODE]),
+        control_mode=IntelliFireApiMode(entry.options[CONF_CONTROL_MODE]),
     )
 
 
@@ -117,7 +118,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     try:
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
-                _construct_common_data(entry)
+                _construct_common_data(entry),
+                polling_enabled=False,
             )
         )
         LOGGER.debug("Waiting for Fireplace to Initialize")
@@ -139,7 +141,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
+
+
+async def async_update_options(
+    hass: HomeAssistant, entry: IntellifireConfigEntry
+) -> None:
+    """Handle options update."""
+    coordinator: IntellifireDataUpdateCoordinator = entry.runtime_data
+
+    new_read_mode = IntelliFireApiMode(entry.options[CONF_READ_MODE])
+    new_control_mode = IntelliFireApiMode(entry.options[CONF_CONTROL_MODE])
+
+    current_read_mode = coordinator.get_read_mode()
+    current_control_mode = coordinator.get_control_mode()
+
+    # Only update modes that actually changed
+    if new_read_mode != current_read_mode:
+        LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
+        await coordinator.set_read_mode(new_read_mode)
+
+    if new_control_mode != current_control_mode:
+        LOGGER.debug(
+            "Updating control mode: %s -> %s", current_control_mode, new_control_mode
+        )
+        await coordinator.set_control_mode(new_control_mode)
+
+    # Refresh data with new mode settings
+    await coordinator.async_request_refresh()
 
 
 async def _async_wait_for_initialization(

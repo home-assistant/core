@@ -109,3 +109,19 @@ async def test_connectivity_bad(
 
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
+
+
+async def test_coordinator_performs_poll(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the coordinator uses perform_poll() for data refresh."""
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify perform_poll was called during initial setup
+    mock_fp.perform_poll.assert_called()
