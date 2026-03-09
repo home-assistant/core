@@ -31,13 +31,27 @@ async def test_auth_failure_on_setup(
     mock_config_entry: MockConfigEntry,
     mock_rotarex_api: AsyncMock,
 ) -> None:
-    """Test config entry requires reauth on auth error during setup."""
+    """Test config entry enters error state on auth error during setup."""
     mock_rotarex_api.login.side_effect = InvalidAuth("Invalid credentials")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_connection_error_on_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rotarex_api: AsyncMock,
+) -> None:
+    """Test config entry enters retry state on connection error during setup."""
+    mock_rotarex_api.login.side_effect = Exception("Connection error")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_update_failure_marks_entities_unavailable(

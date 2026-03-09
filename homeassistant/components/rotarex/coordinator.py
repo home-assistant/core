@@ -8,7 +8,7 @@ from rotarex_dimes_srg_api import InvalidAuth, RotarexApi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,9 +47,14 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         try:
             await self.api.login(self._email, self._password)
         except InvalidAuth as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
+            ) from err
+        except Exception as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
             ) from err
 
     async def _async_update_data(self) -> dict[str, RotarexTank]:
@@ -57,7 +62,7 @@ class RotarexDataUpdateCoordinator(DataUpdateCoordinator[dict[str, RotarexTank]]
         try:
             tanks_data = await self.api.fetch_tanks()
         except InvalidAuth as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
