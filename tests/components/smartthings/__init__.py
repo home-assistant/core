@@ -150,7 +150,7 @@ def snapshot_smartthings_entities(
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         prefix = ""
         if platform != Platform.SCENE:
-            # SCENE does not use `devices` fixture
+            # SCENE unique id is not based on device fixture
             device_id = entity_entry.unique_id[:36]
             prefix = f"{get_fixture_name(device_id)}]["
         assert entity_entry == snapshot(name=f"{prefix}{entity_entry.entity_id}-entry")
