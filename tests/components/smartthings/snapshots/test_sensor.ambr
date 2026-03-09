@@ -19396,7 +19396,7 @@
     'state': '',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_battery-entry]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19409,7 +19409,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_thermostat_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19432,22 +19432,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_battery-state]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'asd Battery',
+      'friendly_name': 'virtual thermostat Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_thermostat_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_temperature-entry]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19462,7 +19462,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.asd_temperature',
+    'entity_id': 'sensor.virtual_thermostat_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19488,23 +19488,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_temperature-state]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'asd Temperature',
+      'friendly_name': 'virtual thermostat Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_temperature',
+    'entity_id': 'sensor.virtual_thermostat_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4734.55260498502',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][sensor.asd_battery-entry]
+# name: test_all_entities[virtual_water_sensor][sensor.virtual_water_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19517,7 +19517,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_water_sensor_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19540,15 +19540,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][sensor.asd_battery-state]
+# name: test_all_entities[virtual_water_sensor][sensor.virtual_water_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'asd Battery',
+      'friendly_name': 'virtual water sensor Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_water_sensor_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

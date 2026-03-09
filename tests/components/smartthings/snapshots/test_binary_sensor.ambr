@@ -4010,7 +4010,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-entry]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4023,7 +4023,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.asd_moisture',
+    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4046,14 +4046,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-state]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'asd Moisture',
+      'friendly_name': 'virtual water sensor Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.asd_moisture',
+    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
