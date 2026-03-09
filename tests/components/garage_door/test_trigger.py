@@ -179,7 +179,7 @@ async def test_garage_door_trigger_cover_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test garage door trigger fires for cover entities with device_class garage_door."""
+    """Test garage door trigger fires for cover entities with device_class garage."""
     other_entity_ids = set(target_covers["included"]) - {entity_id}
     excluded_entity_ids = set(target_covers["excluded"]) - {entity_id}
 
