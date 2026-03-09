@@ -416,7 +416,10 @@ class EntityStateConditionBase(EntityConditionBase):
 
 
 def make_entity_state_condition(
-    domain: str, states: str | set[str]
+    domain: str,
+    states: str | set[str],
+    *,
+    entity_filter: Callable[[HomeAssistant, set[str]], set[str]] | None = None,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s)."""
 
@@ -425,11 +428,20 @@ def make_entity_state_condition(
     else:
         states_set = states
 
+    _entity_filter = entity_filter
+
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
         _domain = domain
         _states = states_set
+
+        if _entity_filter is not None:
+
+            def entity_filter(self, entities: set[str]) -> set[str]:
+                """Filter entities."""
+                entities = super().entity_filter(entities)
+                return _entity_filter(self._hass, entities)
 
     return CustomCondition
 

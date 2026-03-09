@@ -1,0 +1,60 @@
+.condition_common: &condition_common
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: condition_behavior
+        options:
+          - all
+          - any
+
+is_low:
+  fields: *condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery
+
+is_high:
+  fields: *condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery
+
+is_charging:
+  fields: *condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery_charging
+
+is_not_charging:
+  fields: *condition_common
+  target:
+    entity:
+      - domain: binary_sensor
+        device_class: battery_charging
+
+percentage:
+  fields:
+    <<: *condition_common
+    above:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    below:
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+  target:
+    entity:
+      - domain: sensor
+        device_class: battery
+      - domain: number
+        device_class: battery
