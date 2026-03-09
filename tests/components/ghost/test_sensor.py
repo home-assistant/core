@@ -98,7 +98,8 @@ async def test_newsletter_sensor_removed_when_stale(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Entity should be removed from registry
+    # Entity should be removed from state and registry
+    assert hass.states.get("sensor.test_ghost_weekly_subscribers") is None
     assert entity_registry.async_get("sensor.test_ghost_weekly_subscribers") is None
 
 
