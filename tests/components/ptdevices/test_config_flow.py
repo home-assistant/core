@@ -2,11 +2,7 @@
 
 from unittest.mock import patch
 
-from aioptdevices import (
-    PTDevicesForbiddenError,
-    PTDevicesRequestError,
-    PTDevicesUnauthorizedError,
-)
+from aioptdevices import PTDevicesRequestError, PTDevicesUnauthorizedError
 from aioptdevices.interface import PTDevicesResponse
 
 from homeassistant.components.ptdevices.const import DOMAIN
@@ -180,34 +176,3 @@ async def test_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_flow_resp_forbidden_error(hass: HomeAssistant) -> None:
-    """Test A flow that returns a ForbiddenError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with (
-        patch(
-            "aioptdevices.interface.Interface.get_data",
-            side_effect=PTDevicesForbiddenError,
-        ),
-        patch(
-            "homeassistant.components.ptdevices.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_TOKEN: "test-api-tkn",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}

@@ -52,9 +52,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str
     except aioptdevices.PTDevicesUnauthorizedError as err:
         raise InvalidAuth from err
 
-    except aioptdevices.PTDevicesForbiddenError as err:
-        raise InvalidAuth from err
-
     title: str = list(response["body"].values())[0].get("user_name", "")
     unique_id: str = str(list(response["body"].values())[0].get("user_id", ""))
 
@@ -88,8 +85,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except MalformedResponse:
-                errors["base"] = "malformed_response"
             else:
                 # Connection Successful
                 await self.async_set_unique_id(unique_id)
@@ -108,7 +103,3 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class MalformedResponse(HomeAssistantError):
-    """Error to indicate the response was malformed."""

@@ -2,13 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "malformed_response": "A malformed response was received from PTDevices.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -78,9 +76,6 @@
     },
     "invalid_access_token": {
       "message": "[%key:common::config_flow::error::invalid_access_token%]"
-    },
-    "invalid_auth": {
-      "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "malformed_response_missing_key": {
       "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"

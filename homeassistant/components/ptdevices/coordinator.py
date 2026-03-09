@@ -73,13 +73,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                 translation_key="invalid_access_token",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except aioptdevices.PTDevicesForbiddenError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-
         # Remove stale devices
         current_devices = set(data["body"].keys())
         if stale_devices := self.previous_devices - current_devices:
