@@ -67,3 +67,12 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(err.message or str(err)) from err
         except anthropic.APIError as err:
             raise UpdateFailed(err.message or str(err)) from err
+
+    def mark_connection_error(self) -> None:
+        """Mark the connection as having an error and reschedule background check."""
+        self.update_interval = UPDATE_INTERVAL_DISCONNECTED
+        if self.last_update_success:
+            self.last_update_success = False
+            self.async_update_listeners()
+            if self._listeners and not self.hass.is_stopping:
+                self._schedule_refresh()
