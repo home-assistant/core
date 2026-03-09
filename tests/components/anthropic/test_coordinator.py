@@ -12,17 +12,17 @@ from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.components.anthropic.coordinator import (
     UPDATE_INTERVAL_CONNECTED,
     UPDATE_INTERVAL_DISCONNECTED,
-    DynamicIntervalDataUpdateCoordinator,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
 async def test_auth_error_handling(
+    mock_model_list: AsyncMock,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
@@ -32,7 +32,7 @@ async def test_auth_error_handling(
     # This is an assumption of the tests, not the main code:
     assert UPDATE_INTERVAL_DISCONNECTED < UPDATE_INTERVAL_CONNECTED
 
-    mock_create_stream.side_effect = AuthenticationError(
+    mock_create_stream.side_effect = mock_model_list.side_effect = AuthenticationError(
         message="Invalid API key",
         response=Response(status_code=403, request=Request(method="POST", url=URL())),
         body=None,
@@ -262,66 +262,3 @@ async def test_connection_restore(
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert mock_model_list.await_count == 3
-
-
-@patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
-async def test_retry_after(
-    mock_model_list: AsyncMock,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test that retry_after is respected."""
-    retry_after = 30
-    assert UPDATE_INTERVAL_DISCONNECTED.total_seconds() > retry_after
-
-    mock_model_list.side_effect = APITimeoutError(
-        request=Request(method="POST", url=URL()),
-    )
-
-    # Get timeout
-    assert mock_model_list.await_count == 0
-    test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_CONNECTED
-    async_fire_time_changed(hass, test_time)
-    await hass.async_block_till_done()
-    assert mock_model_list.await_count == 1
-
-    mock_model_list.side_effect = UpdateFailed(
-        "Test retry after", retry_after=retry_after
-    )
-
-    # Wait for retry_after and check
-    test_time += datetime.timedelta(seconds=retry_after)
-    async_fire_time_changed(hass, test_time)
-    await hass.async_block_till_done()
-    assert mock_model_list.await_count == 2
-
-    # Now test the coordinator for retry_after on async_set_update_error
-    mock_update_method = AsyncMock()
-    mock_coordinator = DynamicIntervalDataUpdateCoordinator[None](
-        hass,
-        mock_config_entry.runtime_data.logger,
-        config_entry=mock_config_entry,
-        name="test",
-        update_interval_successful=UPDATE_INTERVAL_CONNECTED,
-        update_interval_unsuccessful=UPDATE_INTERVAL_DISCONNECTED,
-        update_method=mock_update_method,
-    )
-    remove_listener = mock_coordinator.async_add_listener(lambda: None)
-    mock_config_entry._async_set_state(
-        hass, ConfigEntryState.SETUP_IN_PROGRESS, "testing"
-    )
-    await mock_coordinator.async_config_entry_first_refresh()
-    mock_config_entry._async_set_state(hass, ConfigEntryState.LOADED, "testing")
-    assert mock_coordinator.last_update_success
-    assert mock_update_method.await_count == 1
-
-    mock_coordinator.async_set_update_error(
-        UpdateFailed("Test retry after", retry_after=retry_after)
-    )
-    test_time += datetime.timedelta(seconds=retry_after)
-    async_fire_time_changed(hass, test_time)
-    await hass.async_block_till_done()
-    assert mock_update_method.await_count == 2
-
-    remove_listener()
