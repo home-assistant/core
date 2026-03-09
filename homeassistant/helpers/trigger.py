@@ -612,7 +612,7 @@ def _get_numerical_value(
 
 
 class EntityNumericalStateBase(EntityTriggerBase):
-    """Base class for numerical state attribute triggers."""
+    """Base class for numerical state and state attribute triggers."""
 
     _attributes: dict[str, str | None]
     _converter: Callable[[Any], float] = float
@@ -627,7 +627,7 @@ class EntityNumericalStateBase(EntityTriggerBase):
 
 
 class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
-    """Trigger for numerical state attribute changes."""
+    """Trigger for numerical state and state attribute changes."""
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
@@ -733,7 +733,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
     EntityNumericalStateBase
 ):
-    """Trigger for numerical state attribute changes.
+    """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.

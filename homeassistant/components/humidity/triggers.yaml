@@ -1,4 +1,4 @@
-.trigger_common_fields: &trigger_common_fields
+.trigger_common_fields:
   behavior: &trigger_behavior
     required: true
     default: any
