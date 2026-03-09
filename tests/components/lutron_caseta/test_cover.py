@@ -51,6 +51,16 @@ async def test_cover_unique_id(
     assert entity_registry.async_get(cover_entity_id).unique_id == "000004d2_802"
 
 
+async def test_cover_exposes_battery_status(hass: HomeAssistant) -> None:
+    """Test that battery status is exposed on the cover entity attributes."""
+    await async_setup_integration(hass, MockBridge)
+
+    state = hass.states.get("cover.basement_bedroom_left_shade")
+
+    assert state is not None
+    assert state.attributes["battery_status"] == "Good"
+
+
 async def test_cover_open_close_using_set_value(
     hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
 ) -> None:
