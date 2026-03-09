@@ -12,14 +12,14 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
+
+PARALLEL_UPDATES = 0
 
 DESCRIPTIONS = [
     SensorEntityDescription(
         key="battery",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gardena Bluetooth sensor based on a config entry."""
-    coordinator: CometBlueDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
 
     entities: list[CometBlueSensorEntity] = [
         CometBlueSensorEntity(coordinator, description) for description in DESCRIPTIONS
@@ -43,8 +43,6 @@ async def async_setup_entry(
 
 class CometBlueSensorEntity(CometBlueBluetoothEntity, SensorEntity):
     """Representation of a sensor."""
-
-    entity_description: SensorEntityDescription
 
     def __init__(
         self,

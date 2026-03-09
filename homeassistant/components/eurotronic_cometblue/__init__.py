@@ -8,7 +8,6 @@ from uuid import UUID
 
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
-import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -21,8 +20,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALL_DAYS,
@@ -32,25 +32,26 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import CometBlueDataUpdateCoordinator
+from .entity import CometBlueBluetoothEntity
 from .utils import (
     SERVICE_DATETIME_SCHEMA,
-    SERVICE_ENTITY_SCHEMA,
     SERVICE_HOLIDAY_SCHEMA,
     SERVICE_SCHEDULE_SCHEMA,
-    get_coordinator_for_service,
 )
 
 DEFAULT_OPTIONS = {
     CONF_TIMEOUT: DEFAULT_TIMEOUT_SECONDS,
     CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
 }
-
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.NUMBER,
     Platform.SENSOR,
 ]
 LOGGER = logging.getLogger(__name__)
+
+type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 
 
 @callback
@@ -64,8 +65,8 @@ def _async_migrate_options_if_missing(hass: HomeAssistant, entry: ConfigEntry) -
         hass.config_entries.async_update_entry(entry, data=data)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Gardena Bluetooth from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
+    """Set up Eurotronic Comet Blue from a config entry."""
 
     _async_migrate_options_if_missing(hass, entry)
 
@@ -118,130 +119,131 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retry_count=entry.data[CONF_RETRY_COUNT],
     )
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def set_datetime(service_call: ServiceCall) -> None:
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Eurotronic Comet Blue entity services."""
+
+    async def set_datetime(
+        entity: CometBlueBluetoothEntity, service_call: ServiceCall
+    ) -> None:
         """Service call to update the datetime on the device."""
-
         target_datetime = service_call.data.get("datetime") or datetime.now()
-
-        for entity_id in service_call.data["entity_id"]:
-            entity_coordinator = await get_coordinator_for_service(hass, entity_id)
-
-            await entity_coordinator.send_command(
-                "set_datetime_async",
-                {"date": target_datetime},
-                service_call.service,
-            )
+        await entity.coordinator.send_command(
+            "set_datetime_async",
+            {"date": target_datetime},
+            service_call.service,
+        )
 
     async def get_schedule(
-        service_call: ServiceCall,
+        entity: CometBlueBluetoothEntity, service_call: ServiceCall
     ) -> ServiceResponse:
         """Service call to retrieve the schedule from the device."""
-
-        entity_coordinator = await get_coordinator_for_service(
-            hass, service_call.data["entity_id"]
-        )
-        return await entity_coordinator.send_command(
+        return await entity.coordinator.send_command(
             "get_multiple_async",
             {"values": ["weekdays"]},
             service_call.service,
         )
 
-    async def set_schedule(service_call: ServiceCall) -> None:
+    async def set_schedule(
+        entity: CometBlueBluetoothEntity, service_call: ServiceCall
+    ) -> None:
         """Service call to update the schedule on the device."""
-
-        data = service_call.data.copy()
-
-        for entity_id in data.pop("entity_id", []):
-            entity_coordinator = await get_coordinator_for_service(hass, entity_id)
+        LOGGER.info(
+            "Setting schedule for %s (%s)",
+            entity.entity_id,
+            entity.coordinator.device.device.address,
+        )
+        for day in CONF_ALL_DAYS:
             LOGGER.info(
-                "Setting schedule for %s (%s)",
-                entity_id,
-                entity_coordinator.device.device.address,
+                "%s - %s",
+                day,
+                service_call.data.get(day),
             )
-            for day in CONF_ALL_DAYS:
-                LOGGER.info(
-                    "%s - %s",
-                    day,
-                    service_call.data.get(day),
-                )
-            values = {
-                day: {k: v.strftime("%H:%M") for k, v in sched.items()}
-                for day, sched in data.items()
-                if sched is not None
-            }
-            await entity_coordinator.send_command(
-                "set_weekdays_async",
-                {"values": values},
-                service_call.service,
-            )
+        values = {
+            day: {k: v.strftime("%H:%M") for k, v in sched.items()}
+            for day, sched in service_call.data.items()
+            if sched is not None and day in CONF_ALL_DAYS
+        }
+        await entity.coordinator.send_command(
+            "set_weekdays_async",
+            {"values": values},
+            service_call.service,
+        )
 
-    async def set_holiday(service_call: ServiceCall) -> None:
+    async def set_holiday(
+        entity: CometBlueBluetoothEntity, service_call: ServiceCall
+    ) -> None:
         """Service call to update the holiday time on the device."""
-
-        data = service_call.data.copy()
-
         if (
             datetime(
-                data["start"].year,
-                data["start"].month,
-                data["start"].day,
-                data["start"].hour,
+                service_call.data["start"].year,
+                service_call.data["start"].month,
+                service_call.data["start"].day,
+                service_call.data["start"].hour,
             )
             < datetime.now()
         ):
             raise ValueError("Start date (truncated to hour) must be in the future")
 
-        for entity_id in data.pop("entity_id", []):
-            entity_coordinator = await get_coordinator_for_service(hass, entity_id)
-            LOGGER.info(
-                "Setting holiday for %s (%s)",
-                entity_id,
-                entity_coordinator.device.device.address,
-            )
-            await entity_coordinator.send_command(
-                "set_holiday_async",
-                {
-                    "number": 1,
-                    "values": {
-                        "start": data["start"],
-                        "end": data["end"],
-                        "temperature": data["temperature"],
-                    },
+        LOGGER.info(
+            "Setting holiday for %s (%s)",
+            entity.entity_id,
+            entity.coordinator.device.device.address,
+        )
+        await entity.coordinator.send_command(
+            "set_holiday_async",
+            {
+                "number": 1,
+                "values": {
+                    "start": service_call.data["start"],
+                    "end": service_call.data["end"],
+                    "temperature": service_call.data["temperature"],
                 },
-                service_call.service,
-            )
+            },
+            service_call.service,
+        )
 
-    hass.services.async_register(
+    service.async_register_platform_entity_service(
+        hass,
         DOMAIN,
         "set_datetime",
-        set_datetime,
+        entity_domain="climate",
         schema=cv.make_entity_service_schema(SERVICE_DATETIME_SCHEMA),
         supports_response=SupportsResponse.NONE,
+        func=set_datetime,
     )
-    hass.services.async_register(
+    service.async_register_platform_entity_service(
+        hass,
         DOMAIN,
         "get_schedule",
-        get_schedule,
-        schema=vol.Schema(SERVICE_ENTITY_SCHEMA),
+        entity_domain="climate",
+        schema=None,
         supports_response=SupportsResponse.ONLY,
+        func=get_schedule,
     )
-    hass.services.async_register(
+    service.async_register_platform_entity_service(
+        hass,
         DOMAIN,
         "set_schedule",
-        set_schedule,
+        entity_domain="climate",
         schema=cv.make_entity_service_schema(SERVICE_SCHEDULE_SCHEMA),
         supports_response=SupportsResponse.NONE,
+        func=set_schedule,
     )
-    hass.services.async_register(
+    service.async_register_platform_entity_service(
+        hass,
         DOMAIN,
         "set_holiday",
-        set_holiday,
+        entity_domain="climate",
         schema=cv.make_entity_service_schema(SERVICE_HOLIDAY_SCHEMA),
         supports_response=SupportsResponse.NONE,
+        func=set_holiday,
     )
 
     return True

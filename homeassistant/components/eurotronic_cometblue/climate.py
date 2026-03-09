@@ -24,12 +24,12 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
 LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
 MIN_TEMP = 7.5
 MAX_TEMP = 28.5
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the client entities."""
 
-    coordinator: CometBlueDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
     async_add_entities([CometBlueClimateEntity(coordinator)])
 
 

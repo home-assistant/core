@@ -21,11 +21,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .climate import MAX_TEMP, MIN_TEMP
-from .const import DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
 LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +48,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="offset",
         cometblue_key="tempOffset",
-        name="Temperature Offset",
+        translation_key="temperature_offset",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -59,7 +60,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="target_temp_low",
         cometblue_key="targetTempLow",
-        name="Target Temperature Low",
+        translation_key="target_temperature_low",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -71,7 +72,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="target_temp_high",
         cometblue_key="targetTempHigh",
-        name="Target Temperature High",
+        translation_key="target_temperature_high",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -83,7 +84,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="window_open_minutes",
         cometblue_key="windowOpenMinutes",
-        name="Window Open Minutes",
+        translation_key="window_open_minutes",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         set_fn=lambda x: x.set_temperature_async,
@@ -101,7 +102,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gardena Bluetooth number based on a config entry."""
-    coordinator: CometBlueDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
 
     entities: list[CometBlueNumberEntity] = [
         CometBlueNumberEntity(coordinator, description) for description in DESCRIPTIONS

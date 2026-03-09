@@ -24,15 +24,25 @@
       }
     }
   },
+  "entity": {
+    "number": {
+      "offset": {
+        "name": "Temperature Offset"
+      },
+      "target_temp_high": {
+        "name": "Target Temperature High"
+      },
+      "target_temp_low": {
+        "name": "Target Temperature Low"
+      },
+      "window_open_minutes": {
+        "name": "Window Open Minutes"
+      }
+    }
+  },
   "services": {
     "get_schedule": {
       "description": "Get schedule from device.",
-      "fields": {
-        "entity_id": {
-          "description": "CometBlue entity to retrieve the schedule from.",
-          "name": "Entity"
-        }
-      },
       "name": "Get schedule"
     },
     "set_datetime": {

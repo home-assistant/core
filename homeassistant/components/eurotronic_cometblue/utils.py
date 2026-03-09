@@ -6,10 +6,7 @@ from datetime import time
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .climate import MAX_TEMP, MIN_TEMP
 from .const import (
@@ -19,9 +16,7 @@ from .const import (
     CONF_END,
     CONF_START,
     CONF_TEMPERATURE,
-    DOMAIN,
 )
-from .coordinator import CometBlueDataUpdateCoordinator
 
 
 def validate_half_precision(value: float) -> float:
@@ -93,7 +88,6 @@ def valid_cometblue_schedule_keys() -> list[str]:
     ]
 
 
-SERVICE_ENTITY_SCHEMA = {vol.Required(CONF_ENTITY_ID): cv.entity_id}
 SERVICE_DATETIME_SCHEMA = {
     vol.Optional(CONF_DATETIME): cv.datetime,
 }
@@ -117,15 +111,3 @@ SERVICE_HOLIDAY_SCHEMA = {
         validate_half_precision,
     ),
 }
-
-
-async def get_coordinator_for_service(
-    hass: HomeAssistant, entity_id: str
-) -> CometBlueDataUpdateCoordinator:
-    """Return the coordinator for a given entity_id."""
-    er = EntityRegistry(hass)
-    await er.async_load()
-    entity = er.async_get(entity_id)
-    if not entity:
-        raise ValueError(f"Entity '{entity_id}' not found")
-    return hass.data[DOMAIN][entity.config_entry_id]
