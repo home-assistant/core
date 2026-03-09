@@ -220,7 +220,6 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
 class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
     """Representation of SwitchBot AirPurifier Light Control."""
 
-    _attr_name = "Light control"
     _attr_translation_key = "air_purifier_light_control"
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_is_on = None
