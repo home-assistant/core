@@ -2995,12 +2995,9 @@ async def test_list_state_class_caught_by_platform_error_isolation(
     killed the entire statistics pipeline for all integrations.
 
     The per-platform try/except around compile_statistics catches this error.
-    Note: the update_statistics_issues path (run at minute=50) has the same
-    bug and needs a separate fix; this test uses a non-50 minute to isolate
-    the compile_statistics path only.
     """
-    # Use a start time where minute != 50 to avoid the update_issues path
-    zero = get_start_time(dt_util.utcnow()).replace(minute=0)
+    # Use a future hour to avoid "Statistics already compiled" guard
+    zero = get_start_time(dt_util.utcnow()).replace(minute=0) + timedelta(hours=1)
     await async_setup_component(hass, "sensor", {})
     await async_recorder_block_till_done(hass)
 
@@ -3021,6 +3018,40 @@ async def test_list_state_class_caught_by_platform_error_isolation(
     # The per-platform try/except should have caught the TypeError
     assert "Error compiling statistics for platform sensor; skipping" in caplog.text
     # The crash should NOT have propagated to the task handler
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+async def test_list_state_class_caught_by_update_issues_error_isolation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a list-typed state_class at minute=50 is caught by error isolation.
+
+    Related to https://github.com/home-assistant/core/issues/158494
+    The update_statistics_issues path (run at minute=50) also calls into
+    the sensor platform and can crash on unhashable state_class values.
+    """
+    fifty = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    hass.states.async_set(
+        "sensor.bad_state_class",
+        "42",
+        {
+            "device_class": "signal_strength",
+            "state_class": ["signal_strength"],
+            "unit_of_measurement": "dBm",
+        },
+    )
+
+    do_adhoc_statistics(hass, start=fifty)
+    await async_wait_recording_done(hass)
+
+    # Both error isolation layers should have caught errors
+    assert "Error compiling statistics for platform sensor; skipping" in caplog.text
+    assert (
+        "Error updating statistics issues for platform sensor; skipping" in caplog.text
+    )
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
