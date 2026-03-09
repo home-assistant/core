@@ -306,6 +306,7 @@ async def test_reconfigure_flow_errors_can_recover(
     assert mock_config_entry.data[CONF_ADMIN_API_KEY] == NEW_API_KEY
 
 
+@pytest.mark.usefixtures("mock_ghost_api", "mock_setup_entry")
 async def test_reconfigure_flow_invalid_api_key_format(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -325,6 +326,19 @@ async def test_reconfigure_flow_invalid_api_key_format(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_URL: NEW_API_URL,
+            CONF_ADMIN_API_KEY: NEW_API_KEY,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_API_URL] == NEW_API_URL
+    assert mock_config_entry.data[CONF_ADMIN_API_KEY] == NEW_API_KEY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
