@@ -318,11 +318,13 @@ async def test_opening_closing_state_is_reset(
     messages = [
         ('{"position": 0, "state": "opening"}', ValveState.OPENING, 0),
         ('{"position": 50, "state": "opening"}', ValveState.OPENING, 50),
-        ('{"position": 60}', ValveState.OPENING, 60),
+        # Position-only update at intermediate position resets opening state
+        ('{"position": 60}', ValveState.OPEN, 60),
         ('{"position": 100, "state": "opening"}', ValveState.OPENING, 100),
         ('{"position": 100, "state": null}', ValveState.OPEN, 100),
         ('{"position": 90, "state": "closing"}', ValveState.CLOSING, 90),
-        ('{"position": 40}', ValveState.CLOSING, 40),
+        # Position-only update at intermediate position resets closing state
+        ('{"position": 40}', ValveState.OPEN, 40),
         ('{"position": 0}', ValveState.CLOSED, 0),
         ('{"position": 10}', ValveState.OPEN, 10),
         ('{"position": 0, "state": "opening"}', ValveState.OPENING, 0),
