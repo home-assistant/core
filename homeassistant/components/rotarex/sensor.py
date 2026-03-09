@@ -36,7 +36,7 @@ def get_tank_name(tank: RotarexTank) -> str:
 class RotarexTankSensorEntityDescription(SensorEntityDescription):
     """Entity description for Rotarex tank sensors."""
 
-    value_fn: Callable[[RotarexSyncData], float | datetime | None]
+    value_fn: Callable[[RotarexSyncData], float | str | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
@@ -56,9 +56,11 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
     ),
     RotarexTankSensorEntityDescription(
         key="last_sync",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_key="last_sync",
         value_fn=lambda sync: (
-            dt_util.parse_datetime(sync.synch_date) if sync.synch_date else None
+            parsed.strftime("%Y-%m-%d %H:%M:%S")
+            if (parsed := dt_util.parse_datetime(sync.synch_date)) is not None
+            else None
         ),
     ),
 )
@@ -113,7 +115,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         return super().available and self._get_latest_sync() is not None
 
     @property
-    def native_value(self) -> float | datetime | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         if (sync := self._get_latest_sync()) is None:
             return None

@@ -27,6 +27,9 @@
     "sensor": {
       "level": {
         "name": "Level"
+      },
+      "last_sync": {
+        "name": "Last synchronization"
       }
     }
   },
