@@ -121,7 +121,7 @@ def get_device_response(device_name: str) -> DeviceResponse:
 
 @cache
 def get_fixture_name(device_id: str) -> str:
-    """Get the fixture name for a given node ID."""
+    """Get the fixture name for a given device ID."""
     for fixture_name in DEVICE_FIXTURES:
         for device in get_device_response(fixture_name).items:
             if device.device_id == device_id:
