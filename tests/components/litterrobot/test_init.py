@@ -85,12 +85,15 @@ async def test_unique_id_migration(
     assert entry.unique_id is None
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.litterrobot.Account",
-        return_value=mock_account,
-    ), patch(
-        "homeassistant.components.litterrobot.coordinator.Account",
-        return_value=mock_account,
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -140,12 +143,15 @@ async def test_unique_id_migration_conflict(
     assert entry.unique_id is None
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.litterrobot.Account",
-        return_value=mock_account,
-    ), patch(
-        "homeassistant.components.litterrobot.coordinator.Account",
-        return_value=mock_account,
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

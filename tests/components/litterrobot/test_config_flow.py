@@ -201,5 +201,3 @@ async def test_reauth_wrong_account(hass: HomeAssistant) -> None:
     assert result["reason"] == "unique_id_mismatch"
     assert entry.unique_id == ACCOUNT_USER_ID
     assert entry.data == CONFIG[DOMAIN]
-
-
