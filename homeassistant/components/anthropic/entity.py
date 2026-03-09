@@ -869,7 +869,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 )
                 messages.extend(new_messages)
             except (anthropic.APIConnectionError, anthropic.AuthenticationError) as err:
-                coordinator.async_set_update_error(err)
+                await coordinator.async_request_refresh()
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_authentication_error" if isinstance(err, anthropic.AuthenticationError) else "api_error",
