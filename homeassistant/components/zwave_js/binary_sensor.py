@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import IntEnum
 from typing import TYPE_CHECKING, cast
 
 from zwave_js_server.const import CommandClass
@@ -29,6 +30,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
+from .helpers import (
+    get_opening_state_notification_value,
+    is_legacy_access_control_window_door_value,
+    is_opening_state_notification_value,
+)
 from .models import (
     NewZWaveDiscoverySchema,
     ValueType,
@@ -58,6 +64,31 @@ NOTIFICATION_WATER_VALVE = "15"
 NOTIFICATION_WEATHER = "16"
 NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
+
+
+class OpeningState(IntEnum):
+    """Opening state values exposed by Access Control notifications."""
+
+    CLOSED = 0
+    OPEN = 1
+    TILTED = 2
+
+
+LEGACY_SIMPLE_DOOR_STATE_MAP: dict[str, set[OpeningState]] = {
+    "22": {OpeningState.OPEN, OpeningState.TILTED},
+    "23": {OpeningState.CLOSED},
+}
+
+LEGACY_DOOR_STATE_MAP: dict[str, OpeningState] = {
+    "22": OpeningState.OPEN,
+    "23": OpeningState.CLOSED,
+    "5632": OpeningState.OPEN,
+    "5633": OpeningState.TILTED,
+}
+
+LEGACY_TILT_STATE_MAP: dict[str, OpeningState] = {
+    "1": OpeningState.TILTED,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -364,6 +395,10 @@ def is_valid_notification_binary_sensor(
     """Return if the notification CC Value is valid as binary sensor."""
     if not info.primary_value.metadata.states:
         return False
+    # Access Control - Opening state is exposed as a single enum sensor instead
+    # of fanning out one binary sensor per state.
+    if is_opening_state_notification_value(info.primary_value):
+        return False
     return len(info.primary_value.metadata.states) > 1
 
 
@@ -525,8 +560,27 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize a ZWaveNotificationBinarySensor entity."""
         super().__init__(config_entry, driver, info)
         self.state_key = state_key
+        self._opening_state_notification_value = get_opening_state_notification_value(
+            self.info.node
+        )
         if description:
             self.entity_description = description
+
+        self._is_legacy_access_control_entity = False
+        if (
+            self._opening_state_notification_value is not None
+            and is_legacy_access_control_window_door_value(self.info.primary_value)
+        ):
+            self._is_legacy_access_control_entity = True
+            # Keep the old Access Control door/window entities for backwards
+            # compatibility, but discover them disabled by default when the new
+            # Opening state value is available. If a user re-enables one of
+            # those legacy entities, derive its state from Opening state so it
+            # stays consistent with the new enum sensor. Once those legacy
+            # entities are removed in a future deprecation cycle, this
+            # compatibility path can go away as well.
+            self._attr_entity_registry_enabled_default = False
+            self.watched_value_ids.add(self._opening_state_notification_value.value_id)
 
         # Entity class attributes
         self._attr_name = self.generate_name(
@@ -534,9 +588,45 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
+    def _derive_legacy_state_from_opening_state(self) -> bool | None:
+        """Derive a legacy Access Control binary sensor state from Opening state."""
+        if self._opening_state_notification_value is None:
+            return None
+
+        opening_state = self.info.node.values[
+            self._opening_state_notification_value.value_id
+        ].value
+        if opening_state is None:
+            return None
+
+        property_key = self.info.primary_value.property_key
+
+        try:
+            opening_state = OpeningState(int(opening_state))
+        except TypeError, ValueError:
+            return None
+
+        # Derive the deprecated legacy Access Control entities from the unified
+        # Opening state for users who explicitly re-enable them.
+        if property_key == "Door state (simple)":
+            expected_states = LEGACY_SIMPLE_DOOR_STATE_MAP.get(self.state_key)
+            return expected_states is not None and opening_state in expected_states
+
+        if property_key == "Door state":
+            expected_state = LEGACY_DOOR_STATE_MAP.get(self.state_key)
+            return expected_state is not None and opening_state == expected_state
+
+        if property_key == "Door tilt state":
+            expected_state = LEGACY_TILT_STATE_MAP.get(self.state_key)
+            return expected_state is not None and opening_state == expected_state
+
+        return None
+
     @property
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
+        if self._is_legacy_access_control_entity:
+            return self._derive_legacy_state_from_opening_state()
         if self.info.primary_value.value is None:
             return None
         return int(self.info.primary_value.value) == int(self.state_key)

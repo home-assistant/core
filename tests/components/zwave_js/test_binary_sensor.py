@@ -1,6 +1,8 @@
 """Test the Z-Wave JS binary sensor platform."""
 
+import copy
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from zwave_js_server.event import Event
@@ -29,6 +31,42 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+def _add_opening_state_value(
+    node_state: dict[str, Any], *, value: int, include_tilt_metadata: bool
+) -> dict[str, Any]:
+    """Return a node state with an Opening state notification value added."""
+    updated_state = copy.deepcopy(node_state)
+    states = {"0": "Closed", "1": "Open"}
+    if include_tilt_metadata:
+        states["2"] = "Tilted"
+
+    updated_state["values"].append(
+        {
+            "commandClass": 113,
+            "commandClassName": "Notification",
+            "property": "Access Control",
+            "propertyKey": "Opening state",
+            "propertyName": "Access Control",
+            "propertyKeyName": "Opening state",
+            "ccVersion": 8,
+            "metadata": {
+                "type": "number",
+                "readable": True,
+                "writeable": False,
+                "label": "Opening state",
+                "ccSpecific": {"notificationType": 6},
+                "min": 0,
+                "max": 255,
+                "states": states,
+                "stateful": True,
+                "secret": False,
+            },
+            "value": value,
+        }
+    )
+    return updated_state
 
 
 @pytest.fixture
@@ -303,6 +341,82 @@ async def test_property_sensor_door_status(
     state = hass.states.get(PROPERTY_DOOR_STATUS_BINARY_SENSOR)
     assert state
     assert state.state == STATE_UNKNOWN
+
+
+async def test_opening_state_notification_does_not_create_binary_sensors(
+    hass: HomeAssistant,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test Opening state does not fan out into per-state binary sensors."""
+    node_state = copy.deepcopy(hoppe_ehandle_connectsense_state)
+    node_state["values"] = []
+    node = Node(
+        client,
+        _add_opening_state_value(
+            node_state,
+            value=1,
+            include_tilt_metadata=True,
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_all("binary_sensor")
+
+
+async def test_opening_state_disables_legacy_window_door_notification_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test Opening state disables legacy Access Control window/door sensors."""
+    node = Node(
+        client,
+        _add_opening_state_value(
+            hoppe_ehandle_connectsense_state,
+            value=1,
+            include_tilt_metadata=True,
+        ),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_entries = [
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.domain == "binary_sensor"
+        and entry.platform == "zwave_js"
+        and (
+            entry.original_name
+            in {
+                "Window/door is open",
+                "Window/door is closed",
+                "Window/door is open in regular position",
+                "Window/door is open in tilt position",
+            }
+            or (
+                entry.original_name == "Window/door is tilted"
+                and entry.original_device_class != BinarySensorDeviceClass.WINDOW
+            )
+        )
+    ]
+
+    assert len(legacy_entries) == 6
+    assert all(
+        entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        for entry in legacy_entries
+    )
+    assert all(hass.states.get(entry.entity_id) is None for entry in legacy_entries)
 
 
 async def test_config_parameter_binary_sensor(
