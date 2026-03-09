@@ -2984,6 +2984,46 @@ async def test_non_string_unit_of_measurement_skipped(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
+async def test_list_state_class_caught_by_platform_error_isolation(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that a list-typed state_class is caught by per-platform try/except.
+
+    Related to https://github.com/home-assistant/core/issues/158494
+    where an integration set state_class to ['signal_strength'] (a list),
+    causing TypeError: unhashable type: 'list' in _get_sensor_states which
+    killed the entire statistics pipeline for all integrations.
+
+    The per-platform try/except around compile_statistics catches this error.
+    Note: the update_statistics_issues path (run at minute=50) has the same
+    bug and needs a separate fix; this test uses a non-50 minute to isolate
+    the compile_statistics path only.
+    """
+    # Use a start time where minute != 50 to avoid the update_issues path
+    zero = get_start_time(dt_util.utcnow()).replace(minute=0)
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Set up a bad sensor with state_class as a list (the bug from #158494)
+    hass.states.async_set(
+        "sensor.bad_state_class",
+        "42",
+        {
+            "device_class": "signal_strength",
+            "state_class": ["signal_strength"],
+            "unit_of_measurement": "dBm",
+        },
+    )
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # The per-platform try/except should have caught the TypeError
+    assert "Error compiling statistics for platform sensor; skipping" in caplog.text
+    # The crash should NOT have propagated to the task handler
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
 @pytest.mark.parametrize(
     (
         "state_class",
