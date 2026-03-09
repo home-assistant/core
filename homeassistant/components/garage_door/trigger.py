@@ -4,9 +4,10 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverDeviceClass
-from homeassistant.components.cover.trigger import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
     CoverClosedTriggerBase,
+    CoverDeviceClass,
     CoverOpenedTriggerBase,
 )
 from homeassistant.core import HomeAssistant

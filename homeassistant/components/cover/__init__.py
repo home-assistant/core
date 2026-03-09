@@ -33,7 +33,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER  # noqa: F401
+from .const import DOMAIN, INTENT_CLOSE_COVER, INTENT_OPEN_COVER
+from .trigger import CoverClosedTriggerBase, CoverOpenedTriggerBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +95,29 @@ ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
 ATTR_TILT_POSITION = "tilt_position"
+
+
+__all__ = [
+    "ATTR_CURRENT_POSITION",
+    "ATTR_CURRENT_TILT_POSITION",
+    "ATTR_IS_CLOSED",
+    "ATTR_POSITION",
+    "ATTR_TILT_POSITION",
+    "DEVICE_CLASSES",
+    "DEVICE_CLASSES_SCHEMA",
+    "DOMAIN",
+    "INTENT_CLOSE_COVER",
+    "INTENT_OPEN_COVER",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "CoverClosedTriggerBase",
+    "CoverDeviceClass",
+    "CoverEntity",
+    "CoverEntityDescription",
+    "CoverEntityFeature",
+    "CoverOpenedTriggerBase",
+    "CoverState",
+]
 
 
 @bind_hass
