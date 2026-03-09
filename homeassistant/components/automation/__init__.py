@@ -146,6 +146,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "fan",
     "garage_door",
     "humidifier",
+    "humidity",
     "lawn_mower",
     "light",
     "lock",
