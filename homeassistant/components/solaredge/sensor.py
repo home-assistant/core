@@ -261,6 +261,18 @@ async def async_setup_entry(
                 hass.async_create_task(
                     sensor_factory.storage_service.coordinator.async_refresh()
                 )
+                # Create and register storage entities now that services are available
+                storage_entities = []
+                for sensor_type in SENSOR_TYPES:
+                    if sensor_type.key in (
+                        "storage_charge_energy",
+                        "storage_discharge_energy",
+                    ):
+                        sensor = sensor_factory.create_sensor(sensor_type)
+                        if sensor is not None:
+                            storage_entities.append(sensor)
+                if storage_entities:
+                    async_add_entities(storage_entities)
             if result is not None:
                 # Either success or confirmed no batteries - stop listening
                 unsub()
