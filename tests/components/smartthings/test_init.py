@@ -43,9 +43,25 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import setup_integration, trigger_update
+from . import DEVICE_FIXTURES, get_device_response, setup_integration, trigger_update
 
 from tests.common import MockConfigEntry, async_load_fixture
+
+
+async def test_fixtures() -> None:
+    """Test all fixtures."""
+    device_ids = set()
+    device_labels = set()
+    for fixture_name in DEVICE_FIXTURES:
+        for device_details in get_device_response(fixture_name).items:
+            assert device_details.device_id not in device_ids, (
+                f"Duplicate device ID {device_details.device_id} found in fixture {fixture_name}"
+            )
+            device_ids.add(device_details.device_id)
+            assert (label := device_details.label.lower()) not in device_labels, (
+                f"Duplicate device label {device_details.label} found in fixture {fixture_name}"
+            )
+            device_labels.add(label)
 
 
 async def test_devices(
