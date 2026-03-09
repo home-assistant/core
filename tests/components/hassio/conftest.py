@@ -4,9 +4,9 @@ from collections.abc import Generator
 from dataclasses import replace
 import os
 import re
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from aiohasupervisor.models import AddonsStats, AddonState
+from aiohasupervisor.models import AddonsStats, AddonState, InstalledAddonComplete
 from aiohttp.test_utils import TestClient
 import pytest
 
@@ -126,20 +126,23 @@ def all_setup_requests(
     addon_installed.return_value.icon = False
 
     def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
         if slug == "test":
-            addon_installed.return_value.name = "test"
-            addon_installed.return_value.slug = "test"
-            addon_installed.return_value.url = (
-                "https://github.com/home-assistant/addons/test"
-            )
-            addon_installed.return_value.auto_update = True
+            addon.name = "test"
+            addon.slug = "test"
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
         else:
-            addon_installed.return_value.name = "test2"
-            addon_installed.return_value.slug = "test2"
-            addon_installed.return_value.url = "https://github.com"
-            addon_installed.return_value.auto_update = False
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.url = "https://github.com"
+            addon.auto_update = False
 
-        return addon_installed.return_value
+        return addon
 
     addon_installed.side_effect = mock_addon_info
 
