@@ -175,29 +175,29 @@ def _hourly_forecast_data(**overrides: Any) -> dict[str, Any]:
     return base
 
 
-def test_daily_forecast_uses_snowfall_when_positive() -> None:
-    """Test that snowfallAmount is used when it is greater than zero."""
+def test_daily_forecast_sums_snowfall_and_precipitation() -> None:
+    """Test that snowfallAmount is added to precipitationAmount."""
     forecast = _daily_forecast_data(snowfallAmount=25.0, precipitationAmount=5.0)
     result = _map_daily_forecast(forecast)
-    assert result["native_precipitation"] == 25.0
+    assert result["native_precipitation"] == 30.0
 
 
-def test_daily_forecast_uses_precipitation_when_no_snowfall() -> None:
-    """Test that precipitationAmount is used when snowfallAmount is zero."""
+def test_daily_forecast_precipitation_only_when_no_snowfall() -> None:
+    """Test that result equals precipitationAmount when snowfallAmount is zero."""
     forecast = _daily_forecast_data(snowfallAmount=0.0, precipitationAmount=5.0)
     result = _map_daily_forecast(forecast)
     assert result["native_precipitation"] == 5.0
 
 
-def test_hourly_forecast_uses_snowfall_when_positive() -> None:
-    """Test that snowfallAmount is used when it is greater than zero."""
+def test_hourly_forecast_sums_snowfall_and_precipitation() -> None:
+    """Test that snowfallAmount is added to precipitationAmount."""
     forecast = _hourly_forecast_data(snowfallAmount=12.0, precipitationAmount=3.0)
     result = _map_hourly_forecast(forecast)
-    assert result["native_precipitation"] == 12.0
+    assert result["native_precipitation"] == 15.0
 
 
-def test_hourly_forecast_uses_precipitation_when_no_snowfall() -> None:
-    """Test that precipitationAmount is used when snowfallAmount is zero."""
+def test_hourly_forecast_precipitation_only_when_no_snowfall() -> None:
+    """Test that result equals precipitationAmount when snowfallAmount is zero."""
     forecast = _hourly_forecast_data(snowfallAmount=0.0, precipitationAmount=3.0)
     result = _map_hourly_forecast(forecast)
     assert result["native_precipitation"] == 3.0
