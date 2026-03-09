@@ -3,6 +3,12 @@
 from enocean_async import Gateway
 import voluptuous as vol
 
+from homeassistant.components.usb import (
+    get_serial_by_id,
+    usb_device_from_path,
+    usb_service_info_from_device,
+    usb_unique_id_from_service_info,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -14,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
+from .const import DOMAIN, LOGGER, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 type EnOceanConfigEntry = ConfigEntry[Gateway]
 
@@ -73,4 +79,62 @@ async def async_unload_entry(
     """Unload EnOcean config entry: stop the gateway."""
 
     config_entry.runtime_data.stop()
+    return True
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: EnOceanConfigEntry
+) -> bool:
+    """Migrate config entry."""
+    if config_entry.version != 1:
+        LOGGER.error(
+            "Cannot migrate config entry %s: unsupported version %s",
+            config_entry.entry_id,
+            config_entry.version,
+        )
+        return False
+
+    if config_entry.minor_version < 2:
+        new_unique_id = config_entry.unique_id
+        new_device_path = config_entry.data[CONF_DEVICE]
+        LOGGER.debug(
+            "Migrating config entry %s to version %s.%s",
+            config_entry.entry_id,
+            1,
+            2,
+        )
+
+        # normalize device path
+        new_device_path = await hass.async_add_executor_job(
+            get_serial_by_id, config_entry.data[CONF_DEVICE]
+        )
+
+        if config_entry.unique_id is None:
+            LOGGER.debug(
+                "Config entry %s has no unique_id, attempting to set it based on the usb device path",
+                config_entry.entry_id,
+            )
+
+            usb_device = await hass.async_add_executor_job(
+                usb_device_from_path, new_device_path
+            )
+            if usb_device is None:
+                LOGGER.warning(
+                    "Cannot migrate config entry %s: device at path %s not found",
+                    config_entry.entry_id,
+                    config_entry.data[CONF_DEVICE],
+                )
+                return False
+            # set unique id
+            new_unique_id = usb_unique_id_from_service_info(
+                usb_service_info_from_device(usb_device)
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={**config_entry.data, CONF_DEVICE: new_device_path},
+            version=1,
+            minor_version=2,
+            unique_id=new_unique_id,
+        )
     return True
