@@ -2111,6 +2111,7 @@ NO_QUALITY_SCALE = [
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
     "hardkernel",
     "hardware",
     "history",
