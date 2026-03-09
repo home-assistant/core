@@ -34,7 +34,7 @@ def mock_ptdevices_level() -> PTDevicesResponse:
 
 
 @pytest.fixture
-def mock_ptdevices_level_missing_title() -> PTDevicesResponse:
+def mock_ptdevices_level_missing_user_name() -> PTDevicesResponse:
     """Mock a malformed PTLevel response."""
     data = json.loads(load_fixture("ptdevices_level.json", integration=DOMAIN))
     data["C0FFEEC0FFEE"].pop("user_name")
@@ -48,7 +48,7 @@ def mock_ptdevices_level_missing_title() -> PTDevicesResponse:
 def mock_ptdevices_level_missing_device_id() -> PTDevicesResponse:
     """Mock a malformed PTLevel response."""
     data = json.loads(load_fixture("ptdevices_level.json", integration=DOMAIN))
-    data["C0FFEEC0FFEE"].pop("id")
+    data["C0FFEEC0FFEE"].pop("device_id")
     return PTDevicesResponse(
         code=200,
         body=data,
