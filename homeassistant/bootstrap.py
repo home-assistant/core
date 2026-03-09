@@ -239,6 +239,10 @@ DEFAULT_INTEGRATIONS = {
     #
     # Base platforms:
     *BASE_PLATFORMS,
+    #
+    # Integrations providing triggers and conditions for base platforms:
+    "door",
+    "garage_door",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.

@@ -44,6 +44,7 @@ from homeassistant.components.backup import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    OnProgressCallback,
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
@@ -183,6 +184,7 @@ class SupervisorBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
