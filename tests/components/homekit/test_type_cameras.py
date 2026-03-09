@@ -46,6 +46,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.components.camera.common import mock_turbo_jpeg
 
+MOCK_AUDIO_PROXY_PORT = 23456
 MOCK_START_STREAM_TLV = "ARUCAQEBEDMD1QMXzEaatnKSQ2pxovYCNAEBAAIJAQECAgECAwEAAwsBAgAFAgLQAgMBHgQXAQFjAgQ768/RAwIrAQQEAAAAPwUCYgUDLAEBAwIMAQEBAgEAAwECBAEUAxYBAW4CBCzq28sDAhgABAQAAKBABgENBAEA"
 MOCK_END_POINTS_TLV = "ARAzA9UDF8xGmrZykkNqcaL2AgEAAxoBAQACDTE5Mi4xNjguMjA4LjUDAi7IBAKkxwQlAQEAAhDN0+Y0tZ4jzoO0ske9UsjpAw6D76oVXnoi7DbawIG4CwUlAQEAAhCyGcROB8P7vFRDzNF2xrK1Aw6NdcLugju9yCfkWVSaVAYEDoAsAAcEpxV8AA=="
 MOCK_START_STREAM_SESSION_UUID = UUID("3303d503-17cc-469a-b672-92436a71a2f6")
@@ -57,6 +58,21 @@ PID_THAT_WILL_NEVER_BE_ALIVE = 2147483647
 async def setup_homeassistant(hass: HomeAssistant) -> None:
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+def mock_audio_proxy():
+    """Mock AudioProxy to avoid spawning real subprocesses."""
+    mock_proxy = MagicMock()
+    mock_proxy.local_port = MOCK_AUDIO_PROXY_PORT
+    mock_proxy.async_start = AsyncMock()
+    mock_proxy.async_stop = AsyncMock()
+
+    with patch(
+        "homeassistant.components.homekit.type_cameras.AudioProxy",
+        return_value=mock_proxy,
+    ):
+        yield mock_proxy
 
 
 async def _async_start_streaming(hass: HomeAssistant, acc: Camera) -> None:
@@ -206,10 +222,9 @@ async def test_camera_stream_source_configured(hass: HomeAssistant, run_driver) 
         "rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
         "zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
         "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
-        "-vn -c:a libopus -application lowdelay -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type "
-        "110 -ssrc {a_ssrc} -f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
-        "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
+        "-vn -c:a libopus -application lowdelay -ac 1 -ar 24k -b:a 24k -bufsize 96k "
+        f"-frame_duration 20 -payload_type 110 -ssrc {{a_ssrc}} -f rtp "
+        f"rtp://127.0.0.1:{MOCK_AUDIO_PROXY_PORT}?pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -540,10 +555,9 @@ async def test_camera_stream_source_configured_and_copy_codec(
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
         "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
-        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
-        "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
-        "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
+        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k "
+        f"-payload_type 110 -ssrc {{a_ssrc}} -f rtp "
+        f"rtp://127.0.0.1:{MOCK_AUDIO_PROXY_PORT}?pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -616,10 +630,9 @@ async def test_camera_stream_source_configured_and_override_profile_names(
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
         "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
-        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
-        "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
-        "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
+        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k "
+        f"-payload_type 110 -ssrc {{a_ssrc}} -f rtp "
+        f"rtp://127.0.0.1:{MOCK_AUDIO_PROXY_PORT}?pkt_size=188"
     )
 
     working_ffmpeg.open.assert_called_with(
@@ -693,10 +706,9 @@ async def test_camera_streaming_fails_after_starting_ffmpeg(
         "-bufsize 1196k -maxrate 299k -payload_type 99 -ssrc {v_ssrc} -f rtp -srtp_out_suite "
         "AES_CM_128_HMAC_SHA1_80 -srtp_out_params zdPmNLWeI86DtLJHvVLI6YPvqhVeeiLsNtrAgbgL "
         "srtp://192.168.208.5:51246?rtcpport=51246&localrtpport=51246&pkt_size=1316 -map 0:a:0 "
-        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k -payload_type 110 -ssrc {a_ssrc} "
-        "-f rtp -srtp_out_suite AES_CM_128_HMAC_SHA1_80 -srtp_out_params "
-        "shnETgfD+7xUQ8zRdsaytY11wu6CO73IJ+RZVJpU "
-        "srtp://192.168.208.5:51108?rtcpport=51108&localrtpport=51108&pkt_size=188"
+        "-vn -c:a copy -ac 1 -ar 24k -b:a 24k -bufsize 96k "
+        f"-payload_type 110 -ssrc {{a_ssrc}} -f rtp "
+        f"rtp://127.0.0.1:{MOCK_AUDIO_PROXY_PORT}?pkt_size=188"
     )
 
     ffmpeg_with_invalid_pid.open.assert_called_with(
