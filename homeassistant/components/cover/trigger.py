@@ -2,23 +2,13 @@
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.trigger import EntityTriggerBase
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.core import State, split_entity_id
+from homeassistant.helpers.trigger import (
+    EntityTriggerBase,
+    get_device_class_or_undefined,
+)
 
 from . import ATTR_IS_CLOSED, DOMAIN
-
-
-def get_device_class_or_undefined(
-    hass: HomeAssistant, entity_id: str
-) -> str | None | UndefinedType:
-    """Get the device class of an entity or UNDEFINED if not found."""
-    try:
-        return get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        return UNDEFINED
 
 
 class CoverTriggerBase(EntityTriggerBase):
