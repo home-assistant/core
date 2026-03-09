@@ -496,7 +496,7 @@ async def test_clean_segments_command_update(
     async_fire_mqtt_message(hass, config_topic, payload3)
     await hass.async_block_till_done()
     assert (
-        "Error 'The `segments` option contains an invalid or non unique segment ID 2"
+        "Error 'The `segments` option contains an invalid or non unique segment ID '2'"
         in caplog.text
     )
 
