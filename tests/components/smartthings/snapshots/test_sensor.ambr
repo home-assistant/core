@@ -9222,7 +9222,7 @@
     'state': '100',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9237,7 +9237,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy',
+    'entity_id': 'sensor.refrigerator_1_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9263,23 +9263,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy',
+      'friendly_name': 'Refrigerator 1 Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy',
+    'entity_id': 'sensor.refrigerator_1_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4381.422',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9294,7 +9294,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy_difference',
+    'entity_id': 'sensor.refrigerator_1_energy_difference',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9320,23 +9320,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_difference-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy difference',
+      'friendly_name': 'Refrigerator 1 Energy difference',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy_difference',
+    'entity_id': 'sensor.refrigerator_1_energy_difference',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.027',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_saved-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9351,7 +9351,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_energy_saved',
+    'entity_id': 'sensor.refrigerator_1_energy_saved',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9377,23 +9377,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_energy_saved-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_energy_saved-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Refrigerator Energy saved',
+      'friendly_name': 'Refrigerator 1 Energy saved',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_energy_saved',
+    'entity_id': 'sensor.refrigerator_1_energy_saved',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_freezer_temperature-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9408,7 +9408,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_freezer_temperature',
+    'entity_id': 'sensor.refrigerator_1_freezer_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9434,23 +9434,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_freezer_temperature-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_freezer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Refrigerator Freezer temperature',
+      'friendly_name': 'Refrigerator 1 Freezer temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_freezer_temperature',
+    'entity_id': 'sensor.refrigerator_1_freezer_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-17.7777777777778',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_fridge_temperature-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9465,7 +9465,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_fridge_temperature',
+    'entity_id': 'sensor.refrigerator_1_fridge_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9491,23 +9491,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_fridge_temperature-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_fridge_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Refrigerator Fridge temperature',
+      'friendly_name': 'Refrigerator 1 Fridge temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_fridge_temperature',
+    'entity_id': 'sensor.refrigerator_1_fridge_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.77777777777778',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9522,7 +9522,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_power',
+    'entity_id': 'sensor.refrigerator_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9548,25 +9548,25 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Refrigerator Power',
+      'friendly_name': 'Refrigerator 1 Power',
       'power_consumption_end': '2025-02-09T00:25:23Z',
       'power_consumption_start': '2025-02-09T00:13:39Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_power',
+    'entity_id': 'sensor.refrigerator_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '144',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9581,7 +9581,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_power_energy',
+    'entity_id': 'sensor.refrigerator_1_power_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9607,23 +9607,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_power_energy-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_power_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Refrigerator Power energy',
+      'friendly_name': 'Refrigerator 1 Power energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_power_energy',
+    'entity_id': 'sensor.refrigerator_1_power_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0270189050030708',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_water_filter_usage-entry]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_water_filter_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9638,7 +9638,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'entity_id': 'sensor.refrigerator_1_water_filter_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9661,15 +9661,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_water_filter_usage-state]
+# name: test_all_entities[da_ref_normal_01001][sensor.refrigerator_1_water_filter_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Water filter usage',
+      'friendly_name': 'Refrigerator 1 Water filter usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.refrigerator_water_filter_usage',
+    'entity_id': 'sensor.refrigerator_1_water_filter_usage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -11019,7 +11019,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-entry]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11032,7 +11032,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.robot_vacuum_battery',
+    'entity_id': 'sensor.robot_vacuum_1_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11055,22 +11055,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_battery-state]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Robot vacuum Battery',
+      'friendly_name': 'Robot vacuum 1 Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.robot_vacuum_battery',
+    'entity_id': 'sensor.robot_vacuum_1_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_cleaning_mode-entry]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_cleaning_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11092,7 +11092,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.robot_vacuum_cleaning_mode',
+    'entity_id': 'sensor.robot_vacuum_1_cleaning_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11115,11 +11115,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_cleaning_mode-state]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_cleaning_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Cleaning mode',
+      'friendly_name': 'Robot vacuum 1 Cleaning mode',
       'options': list([
         'auto',
         'part',
@@ -11130,14 +11130,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.robot_vacuum_cleaning_mode',
+    'entity_id': 'sensor.robot_vacuum_1_cleaning_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_movement-entry]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_movement-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11164,7 +11164,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.robot_vacuum_movement',
+    'entity_id': 'sensor.robot_vacuum_1_movement',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11187,11 +11187,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_movement-state]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_movement-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Movement',
+      'friendly_name': 'Robot vacuum 1 Movement',
       'options': list([
         'homing',
         'idle',
@@ -11207,14 +11207,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.robot_vacuum_movement',
+    'entity_id': 'sensor.robot_vacuum_1_movement',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_turbo_mode-entry]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_turbo_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11234,7 +11234,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.robot_vacuum_turbo_mode',
+    'entity_id': 'sensor.robot_vacuum_1_turbo_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -11257,11 +11257,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_turbo_mode-state]
+# name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_1_turbo_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Robot vacuum Turbo mode',
+      'friendly_name': 'Robot vacuum 1 Turbo mode',
       'options': list([
         'on',
         'off',
@@ -11270,7 +11270,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.robot_vacuum_turbo_mode',
+    'entity_id': 'sensor.robot_vacuum_1_turbo_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -12788,7 +12788,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_completion_time-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12801,7 +12801,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_completion_time',
+    'entity_id': 'sensor.dishwasher_1_completion_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12824,21 +12824,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_completion_time-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_completion_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Dishwasher Completion time',
+      'friendly_name': 'Dishwasher 1 Completion time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_completion_time',
+    'entity_id': 'sensor.dishwasher_1_completion_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-11-15T17:51:16+00:00',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12853,7 +12853,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_energy',
+    'entity_id': 'sensor.dishwasher_1_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12879,23 +12879,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Dishwasher Energy',
+      'friendly_name': 'Dishwasher 1 Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_energy',
+    'entity_id': 'sensor.dishwasher_1_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '98.3',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy_difference-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12910,7 +12910,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_energy_difference',
+    'entity_id': 'sensor.dishwasher_1_energy_difference',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12936,23 +12936,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy_difference-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Dishwasher Energy difference',
+      'friendly_name': 'Dishwasher 1 Energy difference',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_energy_difference',
+    'entity_id': 'sensor.dishwasher_1_energy_difference',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy_saved-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_saved-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12967,7 +12967,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_energy_saved',
+    'entity_id': 'sensor.dishwasher_1_energy_saved',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12993,23 +12993,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_energy_saved-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_energy_saved-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Dishwasher Energy saved',
+      'friendly_name': 'Dishwasher 1 Energy saved',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_energy_saved',
+    'entity_id': 'sensor.dishwasher_1_energy_saved',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_job_state-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_job_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13035,7 +13035,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_job_state',
+    'entity_id': 'sensor.dishwasher_1_job_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13058,11 +13058,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_job_state-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Dishwasher Job state',
+      'friendly_name': 'Dishwasher 1 Job state',
       'options': list([
         'air_wash',
         'cooling',
@@ -13077,14 +13077,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_job_state',
+    'entity_id': 'sensor.dishwasher_1_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_machine_state-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_machine_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13103,7 +13103,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_machine_state',
+    'entity_id': 'sensor.dishwasher_1_machine_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13126,11 +13126,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_machine_state-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Dishwasher Machine state',
+      'friendly_name': 'Dishwasher 1 Machine state',
       'options': list([
         'pause',
         'run',
@@ -13138,14 +13138,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_machine_state',
+    'entity_id': 'sensor.dishwasher_1_machine_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_power-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13160,7 +13160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_power',
+    'entity_id': 'sensor.dishwasher_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13186,25 +13186,25 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_power-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Dishwasher Power',
+      'friendly_name': 'Dishwasher 1 Power',
       'power_consumption_end': '2025-11-15T13:57:48Z',
       'power_consumption_start': '2025-11-15T13:56:40Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_power',
+    'entity_id': 'sensor.dishwasher_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_power_energy-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13219,7 +13219,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_power_energy',
+    'entity_id': 'sensor.dishwasher_1_power_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13245,23 +13245,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_power_energy-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_power_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Dishwasher Power energy',
+      'friendly_name': 'Dishwasher 1 Power energy',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_power_energy',
+    'entity_id': 'sensor.dishwasher_1_power_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_water_consumption-entry]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13276,7 +13276,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.dishwasher_water_consumption',
+    'entity_id': 'sensor.dishwasher_1_water_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -13302,16 +13302,16 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_water_consumption-state]
+# name: test_all_entities[da_wm_dw_01011][sensor.dishwasher_1_water_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Dishwasher Water consumption',
+      'friendly_name': 'Dishwasher 1 Water consumption',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_water_consumption',
+    'entity_id': 'sensor.dishwasher_1_water_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -16762,7 +16762,7 @@
     'state': '1642.2',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_completion_time-entry]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16775,7 +16775,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_completion_time',
+    'entity_id': 'sensor.washer_1_completion_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16798,21 +16798,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_completion_time-state]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_completion_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Washer Completion time',
+      'friendly_name': 'Washer 1 Completion time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_completion_time',
+    'entity_id': 'sensor.washer_1_completion_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-04-18T14:14:00+00:00',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_job_state-entry]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_job_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16844,7 +16844,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_job_state',
+    'entity_id': 'sensor.washer_1_job_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16867,11 +16867,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_job_state-state]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Job state',
+      'friendly_name': 'Washer 1 Job state',
       'options': list([
         'air_wash',
         'ai_rinse',
@@ -16892,14 +16892,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_job_state',
+    'entity_id': 'sensor.washer_1_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'none',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_machine_state-entry]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_machine_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16918,7 +16918,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_machine_state',
+    'entity_id': 'sensor.washer_1_machine_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16941,11 +16941,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][sensor.washer_machine_state-state]
+# name: test_all_entities[da_wm_wm_100001][sensor.washer_1_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Machine state',
+      'friendly_name': 'Washer 1 Machine state',
       'options': list([
         'pause',
         'run',
@@ -16953,14 +16953,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_machine_state',
+    'entity_id': 'sensor.washer_1_machine_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_completion_time-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -16973,7 +16973,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_completion_time',
+    'entity_id': 'sensor.washer_2_completion_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -16996,21 +16996,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_completion_time-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_completion_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Washer Completion time',
+      'friendly_name': 'Washer 2 Completion time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_completion_time',
+    'entity_id': 'sensor.washer_2_completion_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-11-14T02:32:39+00:00',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_job_state-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_job_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17042,7 +17042,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_job_state',
+    'entity_id': 'sensor.washer_2_job_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17065,11 +17065,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_job_state-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Job state',
+      'friendly_name': 'Washer 2 Job state',
       'options': list([
         'air_wash',
         'ai_rinse',
@@ -17090,14 +17090,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_job_state',
+    'entity_id': 'sensor.washer_2_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'spin',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_machine_state-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_machine_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17116,7 +17116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_machine_state',
+    'entity_id': 'sensor.washer_2_machine_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17139,11 +17139,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_machine_state-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Machine state',
+      'friendly_name': 'Washer 2 Machine state',
       'options': list([
         'pause',
         'run',
@@ -17151,14 +17151,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_machine_state',
+    'entity_id': 'sensor.washer_2_machine_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'run',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_completion_time-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_completion_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17171,7 +17171,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_upper_washer_completion_time',
+    'entity_id': 'sensor.washer_2_upper_washer_completion_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17194,21 +17194,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_completion_time-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_completion_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Washer Upper washer completion time',
+      'friendly_name': 'Washer 2 Upper washer completion time',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_upper_washer_completion_time',
+    'entity_id': 'sensor.washer_2_upper_washer_completion_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2025-11-14T03:10:39+00:00',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_job_state-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_job_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17240,7 +17240,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_upper_washer_job_state',
+    'entity_id': 'sensor.washer_2_upper_washer_job_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17263,11 +17263,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_job_state-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Upper washer job state',
+      'friendly_name': 'Washer 2 Upper washer job state',
       'options': list([
         'air_wash',
         'ai_rinse',
@@ -17288,14 +17288,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_upper_washer_job_state',
+    'entity_id': 'sensor.washer_2_upper_washer_job_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'none',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_machine_state-entry]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_machine_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17314,7 +17314,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.washer_upper_washer_machine_state',
+    'entity_id': 'sensor.washer_2_upper_washer_machine_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17337,11 +17337,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][sensor.washer_upper_washer_machine_state-state]
+# name: test_all_entities[da_wm_wm_100002][sensor.washer_2_upper_washer_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Washer Upper washer machine state',
+      'friendly_name': 'Washer 2 Upper washer machine state',
       'options': list([
         'pause',
         'run',
@@ -17349,7 +17349,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.washer_upper_washer_machine_state',
+    'entity_id': 'sensor.washer_2_upper_washer_machine_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -19396,7 +19396,7 @@
     'state': '',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_battery-entry]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19409,7 +19409,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_thermostat_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19432,22 +19432,22 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_battery-state]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'asd Battery',
+      'friendly_name': 'virtual thermostat Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_thermostat_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_temperature-entry]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19462,7 +19462,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.asd_temperature',
+    'entity_id': 'sensor.virtual_thermostat_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19488,23 +19488,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][sensor.asd_temperature-state]
+# name: test_all_entities[virtual_thermostat][sensor.virtual_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'asd Temperature',
+      'friendly_name': 'virtual thermostat Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_temperature',
+    'entity_id': 'sensor.virtual_thermostat_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4734.55260498502',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][sensor.asd_battery-entry]
+# name: test_all_entities[virtual_water_sensor][sensor.virtual_water_sensor_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19517,7 +19517,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_water_sensor_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -19540,15 +19540,15 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][sensor.asd_battery-state]
+# name: test_all_entities[virtual_water_sensor][sensor.virtual_water_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'asd Battery',
+      'friendly_name': 'virtual water sensor Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.asd_battery',
+    'entity_id': 'sensor.virtual_water_sensor_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
