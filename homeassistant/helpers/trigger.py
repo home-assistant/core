@@ -657,24 +657,6 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
         return True
 
 
-class EntityNumericalStateChangedTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state changes."""
-
-    _schema = ENTITY_STATE_TRIGGER_SCHEMA
-
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state matches the expected one."""
-        if state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
-        try:
-            float(state.state)
-        except TypeError, ValueError:
-            # State is not a valid number, don't trigger
-            return False
-        return True
-
-
 CONF_LOWER_LIMIT = "lower_limit"
 CONF_UPPER_LIMIT = "upper_limit"
 CONF_THRESHOLD_TYPE = "threshold_type"
@@ -869,19 +851,6 @@ def make_entity_numerical_state_attribute_crossed_threshold_trigger(
 
         _domains = {domain}
         _attribute = attribute
-
-    return CustomTrigger
-
-
-def make_entity_numerical_state_changed_trigger(
-    domains: set[str],
-) -> type[EntityNumericalStateChangedTriggerBase]:
-    """Create a trigger for numerical state change."""
-
-    class CustomTrigger(EntityNumericalStateChangedTriggerBase):
-        """Trigger for numerical state changes."""
-
-        _domains = domains
 
     return CustomTrigger
 
