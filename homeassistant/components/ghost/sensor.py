@@ -12,7 +12,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -210,36 +212,67 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
+    # Remove stale newsletter entities left over from previous runs.
+    entity_registry = er.async_get(hass)
+    prefix = f"{entry.unique_id}_newsletter_"
+    active_newsletters = {
+        newsletter_id
+        for newsletter_id, newsletter in coordinator.data.newsletters.items()
+        if newsletter.get("status") == "active"
+    }
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if (
+            entity_entry.unique_id.startswith(prefix)
+            and entity_entry.unique_id[len(prefix) :] not in active_newsletters
+        ):
+            entity_registry.async_remove(entity_entry.entity_id)
+
     newsletter_added: set[str] = set()
 
     @callback
-    def _async_add_newsletter_entities() -> None:
-        """Add newsletter entities when new newsletters appear."""
+    def _async_update_newsletter_entities() -> None:
+        """Add new and remove stale newsletter entities."""
         nonlocal newsletter_added
 
-        new_newsletters = {
+        active_newsletters = {
             newsletter_id
             for newsletter_id, newsletter in coordinator.data.newsletters.items()
             if newsletter.get("status") == "active"
-        } - newsletter_added
+        }
 
-        if not new_newsletters:
-            return
+        new_newsletters = active_newsletters - newsletter_added
 
-        async_add_entities(
-            GhostNewsletterSensorEntity(
-                coordinator,
-                entry,
-                newsletter_id,
-                coordinator.data.newsletters[newsletter_id].get("name", "Newsletter"),
+        if new_newsletters:
+            async_add_entities(
+                GhostNewsletterSensorEntity(
+                    coordinator,
+                    entry,
+                    newsletter_id,
+                    coordinator.data.newsletters[newsletter_id].get(
+                        "name", "Newsletter"
+                    ),
+                )
+                for newsletter_id in new_newsletters
             )
-            for newsletter_id in new_newsletters
-        )
-        newsletter_added |= new_newsletters
+            newsletter_added.update(new_newsletters)
 
-    _async_add_newsletter_entities()
+        removed_newsletters = newsletter_added - active_newsletters
+        if removed_newsletters:
+            entity_registry = er.async_get(hass)
+            for newsletter_id in removed_newsletters:
+                unique_id = f"{entry.unique_id}_newsletter_{newsletter_id}"
+                entity_id = entity_registry.async_get_entity_id(
+                    Platform.SENSOR, DOMAIN, unique_id
+                )
+                if entity_id:
+                    entity_registry.async_remove(entity_id)
+            newsletter_added -= removed_newsletters
+
+    _async_update_newsletter_entities()
     entry.async_on_unload(
-        coordinator.async_add_listener(_async_add_newsletter_entities)
+        coordinator.async_add_listener(_async_update_newsletter_entities)
     )
 
 
@@ -310,9 +343,10 @@ class GhostNewsletterSensorEntity(
     @property
     def available(self) -> bool:
         """Return True if the entity is available."""
-        if not super().available or self.coordinator.data is None:
-            return False
-        return self._newsletter_id in self.coordinator.data.newsletters
+        return (
+            super().available
+            and self._newsletter_id in self.coordinator.data.newsletters
+        )
 
     @property
     def native_value(self) -> int | None:
