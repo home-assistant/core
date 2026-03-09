@@ -177,6 +177,9 @@
   "triggers": {
     "changed": {
       "trigger": "mdi:counter"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:counter"
     }
   }
 }

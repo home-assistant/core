@@ -635,6 +635,52 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     ]
 
 
+def parametrize_numerical_crossed_threshold_trigger_states(
+    trigger: str,
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
+    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["50", "60"],
+            other_states=["None", "0", "100"],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["0", "100"],
+            other_states=["None", "50", "60"],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
+                CONF_LOWER_LIMIT: 10,
+            },
+            target_states=["50", "100"],
+            other_states=["None", "0"],
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["0", "50"],
+            other_states=["None", "100"],
+        ),
+    ]
+
+
 async def arm_trigger(
     hass: HomeAssistant,
     trigger: str,
