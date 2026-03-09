@@ -25,6 +25,16 @@ from .coordinator import RotarexDataUpdateCoordinator
 from .models import RotarexSyncData, RotarexTank
 
 
+def _parse_synch_date(synch_date: str) -> datetime | None:
+    """Parse a synch_date string, treating naive datetimes as local time."""
+    parsed = dt_util.parse_datetime(synch_date)
+    if parsed is None:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=dt_util.get_default_time_zone())
+    return parsed
+
+
 def get_tank_name(tank: RotarexTank) -> str:
     """Return a user-friendly name for the tank."""
     if tank.name:
@@ -36,7 +46,7 @@ def get_tank_name(tank: RotarexTank) -> str:
 class RotarexTankSensorEntityDescription(SensorEntityDescription):
     """Entity description for Rotarex tank sensors."""
 
-    value_fn: Callable[[RotarexSyncData], float | str | None]
+    value_fn: Callable[[RotarexSyncData], float | datetime | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
@@ -56,12 +66,8 @@ SENSOR_DESCRIPTIONS: tuple[RotarexTankSensorEntityDescription, ...] = (
     ),
     RotarexTankSensorEntityDescription(
         key="last_sync",
-        translation_key="last_sync",
-        value_fn=lambda sync: (
-            parsed.strftime("%Y-%m-%d %H:%M:%S")
-            if (parsed := dt_util.parse_datetime(sync.synch_date)) is not None
-            else None
-        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sync: _parse_synch_date(sync.synch_date),
     ),
 )
 
@@ -115,7 +121,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         return super().available and self._get_latest_sync() is not None
 
     @property
-    def native_value(self) -> float | str | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         if (sync := self._get_latest_sync()) is None:
             return None
@@ -130,7 +136,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         # Parse synchronization dates to ensure correct chronological ordering.
         parsed_syncs: list[tuple[RotarexSyncData, datetime]] = []
         for sync in tank.synch_datas:
-            parsed = dt_util.parse_datetime(sync.synch_date)
+            parsed = _parse_synch_date(sync.synch_date)
             if parsed is not None:
                 parsed_syncs.append((sync, parsed))
 

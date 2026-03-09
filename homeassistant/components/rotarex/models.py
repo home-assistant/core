@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -23,7 +24,7 @@ class RotarexTank:
     synch_datas: list[RotarexSyncData]
 
     @classmethod
-    def from_dict(cls, data: dict) -> RotarexTank:
+    def from_dict(cls, data: dict[str, Any]) -> RotarexTank:
         """Create a RotarexTank from API dictionary data.
 
         This method transforms raw API responses into typed dataclass instances,
