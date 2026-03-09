@@ -976,6 +976,29 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.info.node.on("metadata updated", self._metadata_updated)
+        )
+
+    @callback
+    def _metadata_updated(self, event_data: dict[str, Any]) -> None:
+        """Handle metadata updates for the list sensor value."""
+        if event_data["value"].value_id != self.info.primary_value.value_id:
+            return
+
+        if not hasattr(self, "_attr_options") or not (
+            states := self.info.primary_value.metadata.states
+        ):
+            return
+
+        options = self._attr_options
+        assert options is not None
+        options[:] = list(states.values())
+        self.async_write_ha_state()
+
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""

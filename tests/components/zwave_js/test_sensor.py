@@ -10,6 +10,7 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -822,6 +823,155 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.state == "100.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+
+
+async def test_enum_sensor_options_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ring_keypad: Node,
+    integration,
+) -> None:
+    """Test enum sensor options update on metadata changes."""
+    initial_metadata_event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Charging status",
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Discharging",
+                        "1": "Charging",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+                "propertyName": "chargingStatus",
+                "nodeId": ring_keypad.node_id,
+            },
+        },
+    )
+    ring_keypad.receive_event(initial_metadata_event)
+
+    initial_value_event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "propertyName": "chargingStatus",
+                "newValue": 1,
+                "prevValue": 2,
+            },
+        },
+    )
+    ring_keypad.receive_event(initial_value_event)
+
+    entity_id = "sensor.keypad_v2_chargingstatus"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Charging"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["Discharging", "Charging"]
+
+    # Add the Maintaining state and ensure it is propagated
+    metadata_event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Charging status",
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Discharging",
+                        "1": "Charging",
+                        "2": "Maintaining",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+                "propertyName": "chargingStatus",
+                "nodeId": ring_keypad.node_id,
+            },
+        },
+    )
+    ring_keypad.receive_event(metadata_event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Discharging",
+        "Charging",
+        "Maintaining",
+    ]
+
+    value_event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "propertyName": "chargingStatus",
+                "newValue": 2,
+                "prevValue": 1,
+            },
+        },
+    )
+    ring_keypad.receive_event(value_event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Maintaining"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Discharging",
+        "Charging",
+        "Maintaining",
+    ]
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
