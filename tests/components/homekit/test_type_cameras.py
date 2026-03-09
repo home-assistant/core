@@ -337,6 +337,52 @@ async def test_camera_stream_source_configured_with_failing_ffmpeg(
         await _async_stop_all_streams(hass, acc)
 
 
+async def test_camera_stream_source_audio_proxy_fails(
+    hass: HomeAssistant, run_driver, mock_audio_proxy: MagicMock
+) -> None:
+    """Test streaming continues without audio when audio proxy fails to start."""
+    await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
+    await async_setup_component(
+        hass, camera.DOMAIN, {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "camera.demo_camera"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Camera(
+        hass,
+        run_driver,
+        "Camera",
+        entity_id,
+        2,
+        {CONF_STREAM_SOURCE: "/dev/null", CONF_SUPPORT_AUDIO: True},
+    )
+
+    acc.run()
+    await _async_setup_endpoints(hass, acc)
+
+    # Simulate audio proxy failing to bind a port
+    mock_audio_proxy.local_port = 0
+    working_ffmpeg = _get_working_mock_ffmpeg()
+
+    with (
+        patch(
+            "homeassistant.components.demo.camera.DemoCamera.stream_source",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homekit.type_cameras.HAFFmpeg",
+            return_value=working_ffmpeg,
+        ),
+    ):
+        await _async_start_streaming(hass, acc)
+        await _async_stop_all_streams(hass, acc)
+
+    mock_audio_proxy.async_stop.assert_called()
+
+
 async def test_camera_stream_source_found(hass: HomeAssistant, run_driver) -> None:
     """Test a camera that can stream and we get the source from the entity."""
     await async_setup_component(hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
