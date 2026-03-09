@@ -9,7 +9,6 @@ from typing import Any
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import (
     RoborockDockDustCollectionModeCode,
-    RoborockDockWashTowelModeCode,
     RoborockEnum,
     WaterLevelMapping,
     ZeoDetergentType,
@@ -165,27 +164,6 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         ),
         parameter_lambda=lambda key, _: [
             RoborockDockDustCollectionModeCode.as_dict().get(key)
-        ],
-        is_dock_entity=True,
-    ),
-    RoborockSelectDescription(
-        key="wash_towel_mode",
-        translation_key="mop_wash_mode",
-        api_command=RoborockCommand.SET_WASH_TOWEL_MODE,
-        value_fn=lambda api: (
-            mode.name
-            if api.wash_towel_mode is not None
-            and (mode := api.wash_towel_mode.wash_mode) is not None
-            else None
-        ),
-        entity_category=EntityCategory.CONFIG,
-        options_lambda=lambda api: (
-            RoborockDockWashTowelModeCode.keys()
-            if api.wash_towel_mode is not None
-            else None
-        ),
-        parameter_lambda=lambda key, _: [
-            RoborockDockWashTowelModeCode.as_dict().get(key)
         ],
         is_dock_entity=True,
     ),

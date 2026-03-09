@@ -202,15 +202,6 @@
           "standard": "Standard"
         }
       },
-      "mop_wash_mode": {
-        "name": "Mop wash mode",
-        "state": {
-          "balanced": "Balanced",
-          "deep": "Deep",
-          "light": "Light",
-          "smart": "Smart"
-        }
-      },
       "program": {
         "name": "Wash program",
         "state": {
