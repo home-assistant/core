@@ -22,7 +22,7 @@ async def test_handle_user_defined_volume_event(
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
 ) -> None:
-    """Test test_handle_user_defined_volume_event callback."""
+    """Verify volume query events update the event entity timestamp."""
     update_callback = find_event_update_callback(
         mock_device.dispatcher.connect, event.EVENT_VOLUME_QUERY
     )
@@ -74,7 +74,7 @@ async def test_handle_user_defined_volume_set_event(
     mock_device: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test test_handle_user_defined_volume_set_event callback."""
+    """Verify volume set events expose parsed volume level and debounce behavior."""
     monkeypatch.setattr(event, "DEBOUNCE_TIME", 0)
     update_callback = find_event_update_callback(
         mock_device.dispatcher.connect, event.EVENT_VOLUME_SET
@@ -136,7 +136,7 @@ async def test_handle_user_defined_event(
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
 ) -> None:
-    """Test test_handle_user_defined_event callback."""
+    """Verify user-defined events expose command/params and ignore volume commands."""
     update_callback = find_event_update_callback(
         mock_device.dispatcher.connect, event.EVENT_USER_DEFINED
     )
