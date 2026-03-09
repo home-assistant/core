@@ -3,6 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Valve',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

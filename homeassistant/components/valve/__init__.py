@@ -195,10 +195,8 @@ class ValveEntity(Entity):
         data: dict[str, Any] = {}
         data[ATTR_IS_CLOSED] = self.is_closed
 
-        if not self.reports_position:
-            return None
-
-        data[ATTR_CURRENT_POSITION] = self.current_valve_position
+        if self.reports_position:
+            data[ATTR_CURRENT_POSITION] = self.current_valve_position
 
         return data
 
