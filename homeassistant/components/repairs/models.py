@@ -10,10 +10,11 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlowResult,
-    FlowType,
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
+
+from .const import NextFlowType
 
 
 class RepairsFlowResult(
@@ -21,7 +22,7 @@ class RepairsFlowResult(
 ):
     """Typed context dict for repairs flow."""
 
-    next_flow: tuple[FlowType, str]
+    next_flow: tuple[NextFlowType, str]
     # Frontend needs this to render the dialog.
     result: ConfigEntry
 
@@ -44,7 +45,7 @@ class RepairsFlow(
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-        next_flow: tuple[FlowType, str] | None = None,
+        next_flow: tuple[NextFlowType, str] | None = None,
     ) -> RepairsFlowResult:
         """Finish a repair flow."""
         result: RepairsFlowResult = super().async_create_entry(
@@ -61,22 +62,23 @@ class RepairsFlow(
     def _async_set_next_flow_if_valid(
         self,
         result: RepairsFlowResult,
-        next_flow: tuple[FlowType, str] | None,
+        next_flow: tuple[NextFlowType, str] | None,
     ) -> None:
         """Validate and set next_flow in result if provided."""
         if next_flow is None:
             return
         flow_type, flow_id = next_flow
-        if flow_type not in FlowType:
+        if flow_type not in NextFlowType:
             raise data_entry_flow.FlowError("Invalid next_flow type")
         flow: ConfigFlowResult | SubentryFlowResult
         entry_id: str
         try:
-            if flow_type in {FlowType.CONFIG_FLOW, FlowType.CONFIG_SUBENTRIES_FLOW}:
-                if flow_type == FlowType.CONFIG_FLOW:
+            if flow_type in {
+                NextFlowType.CONFIG_FLOW,
+                NextFlowType.CONFIG_SUBENTRIES_FLOW,
+            }:
+                if flow_type == NextFlowType.CONFIG_FLOW:
                     flow = self.hass.config_entries.flow.async_get(flow_id)
-                    if "context" not in flow or "entry_id" not in flow["context"]:
-                        raise data_entry_flow.FlowError("entry_id is not in context")
                     entry_id = flow["context"]["entry_id"]
                 else:  # subentry flow
                     flow = self.hass.config_entries.subentries.async_get(flow_id)

@@ -319,8 +319,8 @@ class FlowType(StrEnum):
     """Flow type."""
 
     CONFIG_FLOW = "config_flow"
-    OPTIONS_FLOW = "options_flow"
-    CONFIG_SUBENTRIES_FLOW = "config_subentries_flow"
+    # Add other flow types here as needed in the future,
+    # if we want to support them in the `next_flow` parameter.
 
 
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
