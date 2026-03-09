@@ -476,7 +476,7 @@ async def test_options_flow_hides_members(
     assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by
 
 
-COVER_ATTRS = [{"supported_features": 0}, {}]
+COVER_ATTRS = [{"supported_features": 0}, {"is_closed": False}]
 EVENT_ATTRS = [{"event_types": []}, {"event_type": None}]
 FAN_ATTRS = [{"supported_features": 0}, {}]
 LIGHT_ATTRS = [

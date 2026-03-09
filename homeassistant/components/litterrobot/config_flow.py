@@ -27,8 +27,10 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Litter-Robot."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     username: str
+    _account_user_id: str | None = None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -45,6 +47,8 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             user_input = user_input | {CONF_USERNAME: self.username}
             if not (error := await self._async_validate_input(user_input)):
+                await self.async_set_unique_id(self._account_user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data_updates=user_input
                 )
@@ -65,8 +69,9 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
-
             if not (error := await self._async_validate_input(user_input)):
+                await self.async_set_unique_id(self._account_user_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -91,5 +96,8 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             return "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
+            return "unknown"
+        self._account_user_id = account.user_id
+        if not self._account_user_id:
             return "unknown"
         return ""
