@@ -575,7 +575,7 @@ beautifulsoup4==4.13.3
 bleak-esphome==3.7.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.4.3
+bleak-retry-connector==4.6.0
 
 # homeassistant.components.bluetooth
 bleak==2.1.1
@@ -1040,7 +1040,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.8.0
+habluetooth==5.9.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
