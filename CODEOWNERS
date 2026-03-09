@@ -790,8 +790,8 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
-/homeassistant/components/indevolt/ @xirtnl
-/tests/components/indevolt/ @xirtnl
+/homeassistant/components/indevolt/ @xirt
+/tests/components/indevolt/ @xirt
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221
