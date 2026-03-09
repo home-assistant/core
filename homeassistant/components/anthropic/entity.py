@@ -877,7 +877,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
             except anthropic.AnthropicError as err:
                 # Non-connection error, mark connection as healthy
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.async_set_updated_data(None)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
@@ -889,7 +889,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ) from err
 
             if not chat_log.unresponded_tool_results:
-                coordinator.async_set_updated_data(coordinator.data)
+                coordinator.async_set_updated_data(None)
                 break
 
 
