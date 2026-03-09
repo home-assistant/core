@@ -212,6 +212,7 @@ homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
 homeassistant.components.forecast_solar.*
+homeassistant.components.freshr.*
 homeassistant.components.fritz.*
 homeassistant.components.fritzbox.*
 homeassistant.components.fritzbox_callmonitor.*
