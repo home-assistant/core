@@ -34,6 +34,7 @@ from . import (
     WOHAND_SERVICE_INFO,
     WOHAND_SERVICE_INFO_NOT_CONNECTABLE,
     WOLOCK_SERVICE_INFO,
+    WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
     WORELAY_SWITCH_1PM_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
     init_integration,
@@ -262,6 +263,19 @@ async def test_async_step_bluetooth_not_connectable(hass: HomeAssistant) -> None
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"
+
+
+async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
+    hass: HomeAssistant,
+) -> None:
+    """Test discovery via bluetooth for Meter Pro CO2 from a non-connectable source."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=WOMETERTHPC_SERVICE_INFO_NOT_CONNECTABLE,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
