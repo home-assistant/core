@@ -343,6 +343,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_air_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c02e8cfa-94ba-86f3-59a0-04a280950f2b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARTIK051_TVTL_18K',
+    'model_id': None,
+    'name': 'Air purifier',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'ARTIK051_TVTL_18K_12200115',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_airsensor_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
