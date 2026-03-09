@@ -47,13 +47,10 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             user_input = user_input | {CONF_USERNAME: self.username}
             if not (error := await self._async_validate_input(user_input)):
-                reauth_entry = self._get_reauth_entry()
-                if reauth_entry.unique_id is not None:
-                    await self.async_set_unique_id(self._account_user_id)
-                    self._abort_if_unique_id_mismatch()
+                await self.async_set_unique_id(self._account_user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates=user_input,
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
             errors["base"] = error
