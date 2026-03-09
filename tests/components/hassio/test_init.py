@@ -5,7 +5,7 @@ from datetime import timedelta
 import os
 from pathlib import PurePath
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import (
@@ -14,6 +14,7 @@ from aiohasupervisor.models import (
     AddonState,
     CIFSMountResponse,
     InstalledAddon,
+    InstalledAddonComplete,
     MountsInfo,
     MountState,
     MountType,
@@ -120,20 +121,23 @@ def mock_all(
     addon_stats.side_effect = mock_addon_stats
 
     def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
         if slug == "test":
-            addon_installed.return_value.name = "test"
-            addon_installed.return_value.slug = "test"
-            addon_installed.return_value.url = (
-                "https://github.com/home-assistant/addons/test"
-            )
-            addon_installed.return_value.auto_update = True
+            addon.name = "test"
+            addon.slug = "test"
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
         else:
-            addon_installed.return_value.name = "test2"
-            addon_installed.return_value.slug = "test2"
-            addon_installed.return_value.url = "https://github.com"
-            addon_installed.return_value.auto_update = False
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.url = "https://github.com"
+            addon.auto_update = False
 
-        return addon_installed.return_value
+        return addon
 
     addon_info.side_effect = mock_addon_info
     aioclient_mock.get(

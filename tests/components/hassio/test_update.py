@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 import os
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 from aiohasupervisor import (
@@ -15,6 +15,7 @@ from aiohasupervisor import (
 from aiohasupervisor.models import (
     AddonState,
     HomeAssistantUpdateOptions,
+    InstalledAddonComplete,
     Job,
     JobsInfo,
     OSUpdate,
@@ -85,28 +86,31 @@ def mock_all(
     )
 
     def mock_addon_info(slug: str):
+        addon = Mock(
+            spec=InstalledAddonComplete,
+            to_dict=addon_installed.return_value.to_dict,
+            **addon_installed.return_value.to_dict(),
+        )
         if slug == "test":
-            addon_installed.return_value.name = "test"
-            addon_installed.return_value.slug = "test"
-            addon_installed.return_value.version = "2.0.0"
-            addon_installed.return_value.version_latest = "2.0.1"
-            addon_installed.return_value.update_available = True
-            addon_installed.return_value.state = AddonState.STARTED
-            addon_installed.return_value.url = (
-                "https://github.com/home-assistant/addons/test"
-            )
-            addon_installed.return_value.auto_update = True
+            addon.name = "test"
+            addon.slug = "test"
+            addon.version = "2.0.0"
+            addon.version_latest = "2.0.1"
+            addon.update_available = True
+            addon.state = AddonState.STARTED
+            addon.url = "https://github.com/home-assistant/addons/test"
+            addon.auto_update = True
         else:
-            addon_installed.return_value.name = "test2"
-            addon_installed.return_value.slug = "test2"
-            addon_installed.return_value.version = "3.1.0"
-            addon_installed.return_value.version_latest = "3.1.0"
-            addon_installed.return_value.update_available = False
-            addon_installed.return_value.state = AddonState.STOPPED
-            addon_installed.return_value.url = "https://github.com"
-            addon_installed.return_value.auto_update = False
+            addon.name = "test2"
+            addon.slug = "test2"
+            addon.version = "3.1.0"
+            addon.version_latest = "3.1.0"
+            addon.update_available = False
+            addon.state = AddonState.STOPPED
+            addon.url = "https://github.com"
+            addon.auto_update = False
 
-        return addon_installed.return_value
+        return addon
 
     addon_installed.side_effect = mock_addon_info
 

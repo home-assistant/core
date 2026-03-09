@@ -9,10 +9,21 @@ import logging
 import os
 import re
 import struct
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import GreenOptions, YellowOptions
+from aiohasupervisor.models import (
+    GreenOptions,
+    HomeAssistantInfo,
+    HostInfo,
+    InstalledAddon,
+    NetworkInfo,
+    OSInfo,
+    RootInfo,
+    StoreInfo,
+    SupervisorInfo,
+    YellowOptions,
+)
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
@@ -82,7 +93,9 @@ from .const import (
     ATTR_INPUT,
     ATTR_LOCATION,
     ATTR_PASSWORD,
+    ATTR_REPOSITORIES,
     ATTR_SLUG,
+    DATA_APPS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_CORE_INFO,
@@ -539,14 +552,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 supervisor_info,
                 os_info,
                 network_info,
-            ) = await asyncio.gather(
-                create_eager_task(supervisor_client.info()),
-                create_eager_task(supervisor_client.host.info()),
-                create_eager_task(supervisor_client.store.info()),
-                create_eager_task(supervisor_client.homeassistant.info()),
-                create_eager_task(supervisor_client.supervisor.info()),
-                create_eager_task(supervisor_client.os.info()),
-                create_eager_task(supervisor_client.network.info()),
+                apps_list,
+            ) = cast(
+                tuple[
+                    RootInfo,
+                    HostInfo,
+                    StoreInfo,
+                    HomeAssistantInfo,
+                    SupervisorInfo,
+                    OSInfo,
+                    NetworkInfo,
+                    list[InstalledAddon],
+                ],
+                await asyncio.gather(
+                    create_eager_task(supervisor_client.info()),
+                    create_eager_task(supervisor_client.host.info()),
+                    create_eager_task(supervisor_client.store.info()),
+                    create_eager_task(supervisor_client.homeassistant.info()),
+                    create_eager_task(supervisor_client.supervisor.info()),
+                    create_eager_task(supervisor_client.os.info()),
+                    create_eager_task(supervisor_client.network.info()),
+                    create_eager_task(supervisor_client.addons.list()),
+                ),
             )
 
         except SupervisorError as err:
@@ -559,6 +586,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
             hass.data[DATA_OS_INFO] = os_info.to_dict()
             hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
+            hass.data[DATA_APPS_LIST] = [app.to_dict() for app in apps_list]
+
+            # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
+            # Can drop this after removal period
+            hass.data[DATA_SUPERVISOR_INFO]["repositories"] = hass.data[DATA_STORE][
+                ATTR_REPOSITORIES
+            ]
+            hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_APPS_LIST]
 
         async_call_later(
             hass,

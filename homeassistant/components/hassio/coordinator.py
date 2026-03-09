@@ -134,7 +134,6 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
 
 
 @callback
-@bind_hass
 def get_apps_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
     """Return list of installed apps and subset of details for each.
 
