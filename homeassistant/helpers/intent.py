@@ -915,7 +915,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def __init__(
         self,
         intent_type: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -927,7 +927,6 @@ class DynamicServiceIntentHandler(IntentHandler):
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
-        self.speech = speech
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
@@ -1114,7 +1113,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for floor in match_result.floors
             )
-            speech_name = match_result.floors[0].name
         elif match_result.areas:
             success_results.extend(
                 IntentResponseTarget(
@@ -1122,9 +1120,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for area in match_result.areas
             )
-            speech_name = match_result.areas[0].name
-        else:
-            speech_name = states[0].name
 
         service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
@@ -1165,9 +1160,6 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update all states
         states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
-
-        if self.speech is not None:
-            response.async_set_speech(self.speech.format(speech_name))
 
         return response
 
@@ -1231,7 +1223,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         intent_type: str,
         domain: str,
         service: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -1244,7 +1236,6 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         """Create service handler."""
         super().__init__(
             intent_type,
-            speech=speech,
             required_slots=required_slots,
             optional_slots=optional_slots,
             required_domains=required_domains,

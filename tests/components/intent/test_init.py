@@ -128,12 +128,11 @@ async def test_cover_intents_loading(hass: HomeAssistant) -> None:
     hass.states.async_set("cover.garage_door", "closed")
     calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
 
-    response = await intent.async_handle(
+    await intent.async_handle(
         hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
     )
     await hass.async_block_till_done()
 
-    assert response.speech["plain"]["speech"] == "Opening garage door"
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "cover"
