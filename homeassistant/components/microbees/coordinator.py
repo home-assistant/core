@@ -1,18 +1,23 @@
 """The microBees Coordinator."""
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING
 
 import aiohttp
 from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException, Sensor
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import MicroBeesConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +34,13 @@ class MicroBeesCoordinatorData:
 class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]):
     """MicroBees coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: MicroBeesConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, microbees: MicroBees
+        self,
+        hass: HomeAssistant,
+        config_entry: MicroBeesConfigEntry,
+        microbees: MicroBees,
     ) -> None:
         """Initialize microBees coordinator."""
         super().__init__(

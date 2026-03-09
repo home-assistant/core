@@ -10,7 +10,6 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.14.2"
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
@@ -42,10 +41,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Get information
         id: info
@@ -80,7 +79,7 @@ jobs:
         run: find ./homeassistant/components/*/translations -name "*.json" | tar zcvf translations.tar.gz -T -
 
       - name: Upload translations
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: translations
           path: translations.tar.gz
@@ -112,7 +111,7 @@ jobs:
 
       - name: Download nightly wheels of frontend
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@5c98f0b039f36ef966fdb7dfa9779262785ecb05 # v14
+        uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
@@ -123,7 +122,7 @@ jobs:
 
       - name: Download nightly wheels of intents
         if: needs.init.outputs.channel == 'dev'
-        uses: dawidd6/action-download-artifact@5c98f0b039f36ef966fdb7dfa9779262785ecb05 # v14
+        uses: dawidd6/action-download-artifact@2536c51d3d126276eb39f74d6bc9c72ac6ef30d3 # v16
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: OHF-Voice/intents-package
@@ -132,11 +131,11 @@ jobs:
           workflow_conclusion: success
           name: package
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         if: needs.init.outputs.channel == 'dev'
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Adjust nightly version
         if: needs.init.outputs.channel == 'dev'
@@ -182,7 +181,7 @@ jobs:
           fi
 
       - name: Download translations
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: translations
 
@@ -272,7 +271,7 @@ jobs:
     name: Build ${{ matrix.machine }} machine core image
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: read # To check out the repository
       packages: write # To push to GHCR
@@ -294,6 +293,21 @@ jobs:
           - raspberrypi5-64
           - yellow
           - green
+        include:
+          # Default: aarch64 on native ARM runner
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+          # Overrides for amd64 machines
+          - machine: generic-x86-64
+            arch: amd64
+            runs-on: ubuntu-24.04
+          - machine: qemux86-64
+            arch: amd64
+            runs-on: ubuntu-24.04
+          # TODO: remove, intel-nuc is a legacy name for x86-64, renamed in 2021
+          - machine: intel-nuc
+            arch: amd64
+            runs-on: ubuntu-24.04
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -321,8 +335,9 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@21bc64d76dad7a5184c67826aab41c6b6f89023a # 2025.11.0
+        uses: home-assistant/builder@6cb4fd3d1338b6e22d0958a4bcb53e0965ea63b4 # 2026.02.1
         with:
+          image: ${{ matrix.arch }}
           args: |
             $BUILD_ARGS \
             --target /data/machine \
@@ -522,13 +537,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version-file: ".python-version"
 
       - name: Download translations
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: translations
 
@@ -599,7 +614,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # v3.2.0
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}

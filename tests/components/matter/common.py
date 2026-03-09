@@ -92,6 +92,7 @@ FIXTURES = [
     "mock_window_covering_tilt",
     "onoff_light_with_levelcontrol_present",
     "resideo_x2s_thermostat",
+    "roborock_saros_10",
     "secuyou_smart_lock",
     "silabs_dishwasher",
     "silabs_evse_charging",
