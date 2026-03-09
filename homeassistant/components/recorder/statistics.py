@@ -831,16 +831,24 @@ def _compile_statistics(
 
     if start.minute == 50:
         # Once every hour, update issues
-        for platform in instance.hass.data[DATA_RECORDER].recorder_platforms.values():
+        for domain, platform in instance.hass.data[
+            DATA_RECORDER
+        ].recorder_platforms.items():
             if not (
                 platform_update_issues := getattr(
                     platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
                 )
             ):
                 continue
-            platform_update_issues(
-                instance.hass, session, custom_equivalent_units_per_entity
-            )
+            try:
+                platform_update_issues(
+                    instance.hass, session, custom_equivalent_units_per_entity
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "Error updating statistics issues for platform %s; skipping",
+                    domain,
+                )
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -2758,13 +2766,19 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
     custom_equivalent_units_per_entity = _get_custom_equivalent_units(hass)
 
     with session_scope(hass=hass, read_only=True) as session:
-        for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
+        for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
             if platform_update_statistics_issues := getattr(
                 platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
             ):
-                platform_update_statistics_issues(
-                    hass, session, custom_equivalent_units_per_entity
-                )
+                try:
+                    platform_update_statistics_issues(
+                        hass, session, custom_equivalent_units_per_entity
+                    )
+                except Exception:
+                    _LOGGER.exception(
+                        "Error updating statistics issues for platform %s; skipping",
+                        domain,
+                    )
 
 
 def _statistics_exists(
