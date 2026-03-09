@@ -68,7 +68,9 @@ def mock_solaredge_api() -> AsyncMock:
             }
         }
     )
-    api.get_energy_details = AsyncMock(return_value={"energyDetails": {"unit": "Wh"}})
+    api.get_energy_details = AsyncMock(
+        return_value={"energyDetails": {"unit": "Wh", "meters": []}}
+    )
     api.get_storage_data = AsyncMock(return_value=STORAGE_DATA_SINGLE_BATTERY)
     return api
 
