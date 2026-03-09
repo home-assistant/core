@@ -551,6 +551,8 @@ build.json @home-assistant/supervisor
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
 /tests/components/freedompro/ @stefano055415
+/homeassistant/components/freshr/ @SierraNL
+/tests/components/freshr/ @SierraNL
 /homeassistant/components/fressnapf_tracker/ @eifinger
 /tests/components/fressnapf_tracker/ @eifinger
 /homeassistant/components/fritz/ @AaronDavidSchneider @chemelli74 @mib1185
@@ -743,6 +745,8 @@ build.json @home-assistant/supervisor
 /tests/components/huisbaasje/ @dennisschroer
 /homeassistant/components/humidifier/ @home-assistant/core @Shulyaka
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
+/homeassistant/components/humidity/ @home-assistant/core
+/tests/components/humidity/ @home-assistant/core
 /homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
 /homeassistant/components/husqvarna_automower/ @Thomas55555
@@ -792,8 +796,8 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
-/homeassistant/components/indevolt/ @xirtnl
-/tests/components/indevolt/ @xirtnl
+/homeassistant/components/indevolt/ @xirt
+/tests/components/indevolt/ @xirt
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221

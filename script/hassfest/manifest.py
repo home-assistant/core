@@ -88,6 +88,7 @@ NO_IOT_CLASS = [
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
+    "humidity",
     "image_upload",
     "input_boolean",
     "input_button",
