@@ -38,7 +38,7 @@ class SwitchBotCloudKeypad(SwitchBotCloudEntity, SelectEntity):
         default_option,
     ]
     _attr_current_option = _attr_options[0]
-    _attr_name: str | None = None
+    _attr_name: None = None
 
     _attr_translation_key = "keypad"
 
