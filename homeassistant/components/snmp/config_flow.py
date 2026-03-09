@@ -44,11 +44,18 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         If 'user_input' is None, we show the form.
         If 'user_input' has data, we process it and create the entry.
         """
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            # If the user submitted the form, we create a 'Config Entry'.
-            # 'title' is what appears in the list of integrations (usually the IP address or name).
-            # 'data' is the actual configuration dictionary.
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+            # VALIDATION: SNMP v3 requires an Auth Key if a Privacy Key is used.
+            if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
+                errors["base"] = "auth_key_required_for_priv"
+            
+            if not errors:
+                # If the user submitted the form and it's valid, we create a 'Config Entry'.
+                # 'title' is what appears in the list of integrations (usually the IP address or name).
+                # 'data' is the actual configuration dictionary.
+                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         # 'async_show_form' displays a form in the UI.
         # 'data_schema' defines the fields the user needs to fill out.
@@ -65,6 +72,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PRIV_KEY): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
