@@ -90,6 +90,7 @@ async def test_cover_triggers_gated_by_labs_flag(
                 other_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -182,6 +183,7 @@ async def test_cover_trigger_behavior_any(
                 other_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -273,6 +275,7 @@ async def test_cover_trigger_behavior_first(
                 other_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
                     (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                    (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
                 ],
                 extra_invalid_states=[
                     (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
