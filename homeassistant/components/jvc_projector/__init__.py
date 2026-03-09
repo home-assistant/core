@@ -115,7 +115,7 @@ async def async_migrate_entities(
             entry.unique_id,
             config_entry=config_entry,
             device_id=entry.device_id,
-            object_id_base=entry.object_id_base or entry.original_name,
+            object_id_base=entry.object_id_base,
             has_entity_name=entry.has_entity_name,
             disabled_by=entry.disabled_by,
         )
