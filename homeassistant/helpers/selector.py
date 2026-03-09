@@ -301,6 +301,7 @@ class AreaSelectorConfig(BaseSelectorConfig, total=False):
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
+    reorder: bool
 
 
 @SELECTORS.register("area")
@@ -320,6 +321,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("reorder", default=False): cv.boolean,
         }
     )
 
