@@ -858,8 +858,15 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ]
                 )
                 messages.extend(new_messages)
-            except (anthropic.APIConnectionError, anthropic.AuthenticationError) as err:
+            except anthropic.AuthenticationError as err:
+                # Trigger coordinator to confirm the auth failure and trigger the reauth flow.
                 await coordinator.async_request_refresh()
+                raise HomeAssistantError(
+                    f"Sorry, I had a problem talking to Anthropic: {err}"
+                ) from err
+            except anthropic.APIConnectionError as err:
+                LOGGER.info("Connection error while talking to Anthropic: %s", err)
+                coordinator.mark_connection_error()
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
