@@ -42,16 +42,6 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
         )
 
     @callback
-    def _schedule_refresh(self) -> None:
-        """Schedule the next refresh based on the current update interval."""
-        self.update_interval = (
-            UPDATE_INTERVAL_CONNECTED
-            if self.last_update_success
-            else UPDATE_INTERVAL_DISCONNECTED
-        )
-        super()._schedule_refresh()
-
-    @callback
     def async_set_updated_data(self, data: None) -> None:
         """Manually update data, notify listeners and update refresh interval."""
         self.update_interval = UPDATE_INTERVAL_CONNECTED
@@ -60,7 +50,9 @@ class AnthropicCoordinator(DataUpdateCoordinator[None]):
     async def async_update_data(self) -> None:
         """Fetch data from the API."""
         try:
+            self.update_interval = UPDATE_INTERVAL_DISCONNECTED
             await self.client.models.list(timeout=10.0)
+            self.update_interval = UPDATE_INTERVAL_CONNECTED
         except anthropic.APITimeoutError as err:
             raise TimeoutError(err.message or str(err)) from err
         except anthropic.AuthenticationError as err:
