@@ -339,7 +339,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await self.async_publish_with_config(
             self._clean_segments_command_topic,
             self._clean_segments_command_template(
-                str(segment_ids), {"value": segment_ids}
+                json_dumps(segment_ids), {"value": segment_ids}
             ),
         )
 
