@@ -43,7 +43,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import DEVICE_FIXTURES, get_device_response, setup_integration, trigger_update
+from . import (
+    DEVICE_FIXTURES,
+    get_device_response,
+    get_fixture_name,
+    setup_integration,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry, async_load_fixture
 
@@ -74,12 +80,13 @@ async def test_devices(
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
 
-    device_id = devices.get_devices.return_value[0].device_id
+    for specs in devices.get_devices.return_value:
+        device_id = specs.device_id
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device({(DOMAIN, device_id)})
 
-    assert device is not None
-    assert device == snapshot
+        assert device is not None
+        assert device == snapshot(name=get_fixture_name(device_id))
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
