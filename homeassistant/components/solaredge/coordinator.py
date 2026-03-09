@@ -345,11 +345,13 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
 
     async def async_update_data(self) -> None:
         """Update the data from the SolarEdge Monitoring API."""
+        now = dt_util.now()
+        start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
         try:
             data = await self.api.get_storage_data(
                 self.site_id,
-                datetime.now() - timedelta(days=1),
-                datetime.now(),
+                start_of_day,
+                now,
             )
             # Use direct key access to properly raise UpdateFailed on missing keys
             storage_data = data["storageData"]
@@ -373,13 +375,18 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             serial = battery.get("serialNumber", "unknown")
             telemetries = battery.get("telemetries", [])
 
-            if not telemetries:
+            if len(telemetries) < 2:
                 continue
 
-            # Get the most recent telemetry entry
+            # Compute daily delta from lifetime counters
+            first = telemetries[0]
             latest = telemetries[-1]
-            charge_energy = latest.get("chargeEnergy", 0.0)
-            discharge_energy = latest.get("dischargeEnergy", 0.0)
+            charge_energy = latest.get("lifeTimeEnergyCharged", 0.0) - first.get(
+                "lifeTimeEnergyCharged", 0.0
+            )
+            discharge_energy = latest.get("lifeTimeEnergyDischarged", 0.0) - first.get(
+                "lifeTimeEnergyDischarged", 0.0
+            )
 
             total_charge_energy += charge_energy
             total_discharge_energy += discharge_energy

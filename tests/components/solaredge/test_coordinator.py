@@ -542,10 +542,10 @@ async def test_storage_data_service(
 
     # Look up entity IDs from the entity registry by unique_id
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is not None
     assert discharge_entry is not None
@@ -585,10 +585,10 @@ async def test_storage_data_service_multi_battery(
     await hass.async_block_till_done()
 
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is not None
     assert discharge_entry is not None
@@ -626,10 +626,10 @@ async def test_storage_data_service_no_batteries(
 
     # Sensors should not exist when inventory reports no batteries
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is None
     assert discharge_entry is None
@@ -654,10 +654,10 @@ async def test_storage_data_service_api_error(
     await hass.async_block_till_done()
 
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is not None
     assert discharge_entry is not None
@@ -692,10 +692,10 @@ async def test_storage_data_missing_keys_in_response(
     await hass.async_block_till_done()
 
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is not None
     assert discharge_entry is not None
@@ -732,7 +732,7 @@ async def test_storage_data_missing_batteries_key(
     await hass.async_block_till_done()
 
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is not None
 
@@ -762,7 +762,7 @@ async def test_storage_service_deferred_after_inventory_failure(
 
     # Storage sensors should not exist yet
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is None
 
@@ -781,10 +781,10 @@ async def test_storage_service_deferred_after_inventory_failure(
 
     # Storage sensors should now exist
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     discharge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_discharge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_discharge_energy"
     )
     assert charge_entry is not None
     assert discharge_entry is not None
@@ -820,6 +820,6 @@ async def test_storage_service_not_created_when_inventory_has_no_batteries(
 
     # Storage sensors should still not exist
     charge_entry = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{SITE_ID}_battery_charge_today"
+        "sensor", DOMAIN, f"{SITE_ID}_storage_charge_energy"
     )
     assert charge_entry is None
