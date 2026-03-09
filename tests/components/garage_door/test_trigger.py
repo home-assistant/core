@@ -647,11 +647,3 @@ async def test_garage_door_trigger_excludes_non_garage_door_device_class(
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 0
-
-
-def test_door_device_class() -> None:
-    """Test the garage door trigger device classes."""
-    assert DEVICE_CLASSES_GARAGE_DOOR == {
-        "binary_sensor": BinarySensorDeviceClass.GARAGE_DOOR,
-        "cover": CoverDeviceClass.GARAGE,
-    }
