@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["diesel_heater_ble"],
-  "requirements": ["diesel-heater-ble==0.1.1"],
+  "requirements": ["diesel-heater-ble==0.3.0"],
   "bluetooth": [
     {
       "connectable": true,
