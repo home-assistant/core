@@ -150,7 +150,6 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "light",
     "lock",
     "media_player",
-    "number",
     "person",
     "remote",
     "scene",
