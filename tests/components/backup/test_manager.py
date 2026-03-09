@@ -24,7 +24,7 @@ from unittest.mock import (
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from securetar import SecureTarFile
+from securetar import SecureTarArchive, SecureTarFile
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -49,7 +49,6 @@ from homeassistant.components.backup.manager import (
     RestoreBackupState,
     WrittenBackup,
 )
-from homeassistant.components.backup.util import password_to_key
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -671,8 +670,7 @@ async def test_initiate_backup(
         with SecureTarFile(
             fileobj=core_tar_io,
             gzip=True,
-            key=password_to_key(password) if password is not None else None,
-            mode="r",
+            password=password,
         ) as core_tar:
             assert set(core_tar.getnames()) == expected_files
 
@@ -3312,7 +3310,7 @@ async def test_restore_backup_file_error(
 
 @pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
-    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_key"),
+    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_password"),
     [
         (
             [],
@@ -3326,7 +3324,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3371,7 +3369,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": False},
-            password_to_key("hunter2"),  # Local agent is protected
+            "hunter2",  # Local agent is protected
         ),
         (
             [
@@ -3386,7 +3384,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3416,7 +3414,7 @@ async def test_restore_backup_file_error(
             ["test.remote"],
             "hunter2",
             {"test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3431,7 +3429,7 @@ async def test_restore_backup_file_error(
             ["test.remote"],
             "hunter2",
             {"test.remote": False},
-            password_to_key("hunter2"),  # Temporary backup protected when password set
+            "hunter2",  # Temporary backup protected when password set
         ),
     ],
 )
@@ -3443,7 +3441,7 @@ async def test_initiate_backup_per_agent_encryption(
     agent_ids: list[str],
     password: str | None,
     protected_backup: dict[str, bool],
-    inner_tar_key: bytes | None,
+    inner_tar_password: str | None,
 ) -> None:
     """Test generate backup where encryption is selectively set on agents."""
     await setup_backup_integration(hass, remote_agents=["test.remote"])
@@ -3479,7 +3477,11 @@ async def test_initiate_backup_per_agent_encryption(
 
     with (
         patch("pathlib.Path.open", mock_open(read_data=b"test")),
-        patch("securetar.SecureTarFile.create_inner_tar") as mock_create_inner_tar,
+        patch(
+            "securetar.SecureTarArchive.__init__",
+            autospec=True,
+            wraps=SecureTarArchive.__init__,
+        ) as mock_secure_tar_archive,
     ):
         await ws_client.send_json_auto_id(
             {
@@ -3504,7 +3506,9 @@ async def test_initiate_backup_per_agent_encryption(
 
         await hass.async_block_till_done()
 
-    mock_create_inner_tar.assert_called_once_with(ANY, gzip=True, key=inner_tar_key)
+    assert mock_secure_tar_archive.mock_calls[0] == call(
+        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+    )
 
     result = await ws_client.receive_json()
     assert result["event"] == {

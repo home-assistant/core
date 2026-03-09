@@ -22,7 +22,11 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_NODE, CONF_REALM, DEFAULT_VERIFY_SSL, DOMAIN
@@ -66,6 +70,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         self.known_nodes: set[str] = set()
         self.known_vms: set[tuple[str, int]] = set()
         self.known_containers: set[tuple[str, int]] = set()
+        self.permissions: dict[str, dict[str, int]] = {}
 
         self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
         self.new_vms_callbacks: list[
@@ -80,7 +85,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         try:
             await self.hass.async_add_executor_job(self._init_proxmox)
         except AuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -97,10 +102,26 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ProxmoxServerError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="api_error_details",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except ProxmoxPermissionsError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="permissions_error",
+            ) from err
+        except ProxmoxNodesNotFoundError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
@@ -112,7 +133,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 self._fetch_all_nodes
             )
         except AuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -129,10 +150,15 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except (ResourceException, requests.exceptions.ConnectionError) as err:
+        except ResourceException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="no_nodes_found",
+            ) from err
+        except requests.exceptions.ConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
@@ -164,7 +190,20 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
-        self.proxmox.nodes.get()
+
+        try:
+            self.permissions = self.proxmox.access.permissions.get() or {}
+        except ResourceException as err:
+            if 400 <= err.status_code < 500:
+                raise ProxmoxPermissionsError from err
+            raise ProxmoxServerError from err
+
+        try:
+            self.proxmox.nodes.get()
+        except ResourceException as err:
+            if 400 <= err.status_code < 500:
+                raise ProxmoxNodesNotFoundError from err
+            raise ProxmoxServerError from err
 
     def _fetch_all_nodes(
         self,
@@ -172,7 +211,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         list[dict[str, Any]], list[tuple[list[dict[str, Any]], list[dict[str, Any]]]]
     ]:
         """Fetch all nodes, and then proceed to the VMs and containers."""
-        nodes = self.proxmox.nodes.get()
+        nodes = self.proxmox.nodes.get() or []
         vms_containers = [self._get_vms_containers(node) for node in nodes]
         return nodes, vms_containers
 
@@ -181,9 +220,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms and containers for a node."""
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get()
-        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get()
-        assert vms is not None and containers is not None
+        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         return vms, containers
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
@@ -214,3 +252,19 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+
+class ProxmoxSetupError(Exception):
+    """Base exception for Proxmox setup issues."""
+
+
+class ProxmoxNodesNotFoundError(ProxmoxSetupError):
+    """Raised when the API works but no nodes are visible."""
+
+
+class ProxmoxPermissionsError(ProxmoxSetupError):
+    """Raised when failing to retrieve permissions."""
+
+
+class ProxmoxServerError(ProxmoxSetupError):
+    """Raised when the Proxmox server returns an error."""

@@ -224,6 +224,94 @@ async def test_import_flow_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: "new-token-456",
+            CONF_HOST: "new-splunk.example.com",
+            CONF_PORT: 9088,
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+            CONF_NAME: "Updated Splunk",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "new-splunk.example.com"
+    assert mock_config_entry.data[CONF_PORT] == 9088
+    assert mock_config_entry.data[CONF_TOKEN] == "new-token-456"
+    assert mock_config_entry.data[CONF_SSL] is True
+    assert mock_config_entry.data[CONF_VERIFY_SSL] is False
+    assert mock_config_entry.data[CONF_NAME] == "Updated Splunk"
+    assert mock_config_entry.title == "new-splunk.example.com:9088"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        ([False, True], "cannot_connect"),
+        ([True, False], "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_error_and_recovery(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: list[bool] | Exception,
+    error: str,
+) -> None:
+    """Test reconfigure flow errors and recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_hass_splunk.check.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: "test-token-123",
+            CONF_HOST: "new-splunk.example.com",
+            CONF_PORT: 8088,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error}
+
+    # Test recovery
+    mock_hass_splunk.check.side_effect = None
+    mock_hass_splunk.check.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: "test-token-123",
+            CONF_HOST: "new-splunk.example.com",
+            CONF_PORT: 8088,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
 async def test_reauth_flow_success(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:

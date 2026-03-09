@@ -40,7 +40,7 @@ class HuePresence(GenericZLLSensor, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.sensor.presence
 

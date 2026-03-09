@@ -17,6 +17,7 @@ from homeassistant.components.roborock.services import (
 )
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
+    SERVICE_CLEAN_AREA,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -29,13 +30,18 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .conftest import FakeDevice, set_trait_attributes
 from .mock_data import STATUS
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
@@ -282,6 +288,189 @@ async def test_get_current_position_no_robot_position(
         )
 
 
+async def test_get_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns segments from both maps."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [
+            {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+            {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+            {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
+            {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+            {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+            {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
+        ]
+    }
+
+
+async def test_get_segments_no_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns empty list when no map data."""
+    fake_vacuum.v1_properties.home.home_map_info = {}
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": []}
+
+
+async def test_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+    vacuum_command: Mock,
+) -> None:
+    """Test that clean_area service sends the correct segment clean command."""
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"area_1": ["1_16", "1_17"]},
+            "last_seen_segments": [
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+                {"id": "0_18", "name": "Example room 3", "group": "Upstairs"},
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+                {"id": "1_18", "name": "Example room 3", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        blocking=True,
+    )
+
+    assert fake_vacuum.v1_properties.maps.set_current_map.call_count == 0
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == call(
+        RoborockCommand.APP_SEGMENT_CLEAN,
+        params=[{"segments": [16, 17]}],
+    )
+
+
+async def test_clean_segments_different_map(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+    vacuum_command: Mock,
+) -> None:
+    """Test that clean_area service silently ignores segments from a non-current map."""
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            # Map 0 (Upstairs) is not the current map (current is map 1, Downstairs),
+            # so these segments should be silently ignored.
+            "area_mapping": {"area_1": ["0_16", "0_17"]},
+            "last_seen_segments": [
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "0_17", "name": "Example room 2", "group": "Upstairs"},
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        blocking=True,
+    )
+
+    assert fake_vacuum.v1_properties.maps.set_current_map.call_count == 0
+    assert vacuum_command.send.call_count == 0
+
+
+async def test_clean_segments_mixed_maps(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    vacuum_command: Mock,
+) -> None:
+    """Test that clean_area service cleans only current-map segments when given segments from multiple maps."""
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            # area_1 maps to segments from both maps; only map 1 (Downstairs) is current.
+            "area_mapping": {"area_1": ["0_16", "1_17"]},
+            "last_seen_segments": [
+                {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
+                {"id": "1_17", "name": "Example room 2", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: ENTITY_ID, "cleaning_area_id": ["area_1"]},
+        blocking=True,
+    )
+
+    # Only the segment from the current map (map 1) is cleaned; segment from map 0 is ignored.
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == call(
+        RoborockCommand.APP_SEGMENT_CLEAN,
+        params=[{"segments": [17]}],
+    )
+
+
+async def test_segments_changed_issue(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that a repair issue is created when segments change after area mapping is configured."""
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry is not None
+    entity_registry.async_update_entity_options(
+        ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            # The last-seen segments differ from what the vacuum currently reports,
+            # simulating a remap that added/removed rooms.
+            "last_seen_segments": [
+                {"id": "1_16", "name": "Example room 1", "group": "Downstairs"},
+                {"id": "1_99", "name": "Old room", "group": "Downstairs"},
+            ],
+        },
+    )
+
+    coordinator = setup_entry.runtime_data.v1[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    issue_id = f"segments_changed_{entity_entry.id}"
+    issue = ir.async_get(hass).async_get_issue(VACUUM_DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_key == "segments_changed"
+
+
 # Tests for RoborockQ7Vacuum
 
 
@@ -363,7 +552,7 @@ async def test_q7_state_changing_commands(
     # Verify the entity state was updated
     assert fake_q7_vacuum.b01_q7_properties is not None
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
 
     await coordinator.async_refresh()
     await hass.async_block_till_done()
@@ -489,7 +678,7 @@ async def test_q7_activity_none_status(
     fake_q7_vacuum.b01_q7_properties._props_data.status = None
 
     # Force coordinator refresh to get updated state
-    coordinator = setup_entry.runtime_data.b01[0]
+    coordinator = setup_entry.runtime_data.b01_q7[0]
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

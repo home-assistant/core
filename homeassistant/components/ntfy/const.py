@@ -3,7 +3,7 @@
 from typing import Final
 
 DOMAIN = "ntfy"
-DEFAULT_URL: Final = "https://ntfy.sh"
+DEFAULT_URL: Final = "https://ntfy.sh/"
 
 CONF_TOPIC = "topic"
 CONF_PRIORITY = "filter_priority"

@@ -19,7 +19,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CHAT_MODEL,
-    DATA_REPAIR_DEFER_RELOAD,
     DEFAULT_CONVERSATION_NAME,
     DEPRECATED_MODELS,
     DOMAIN,
@@ -34,7 +33,6 @@ type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Anthropic."""
-    hass.data.setdefault(DOMAIN, {}).setdefault(DATA_REPAIR_DEFER_RELOAD, set())
     await async_migrate_integration(hass)
     return True
 
@@ -85,11 +83,6 @@ async def async_update_options(
     hass: HomeAssistant, entry: AnthropicConfigEntry
 ) -> None:
     """Update options."""
-    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
-        DATA_REPAIR_DEFER_RELOAD, set()
-    )
-    if entry.entry_id in defer_reload_entries:
-        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
