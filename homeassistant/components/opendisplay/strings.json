@@ -1,0 +1,114 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Select the Bluetooth device to set up."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Bluetooth device with address `{address}`."
+    },
+    "invalid_device_id": {
+      "message": "Device `{device_id}` is not a valid OpenDisplay device."
+    },
+    "media_download_error": {
+      "message": "Failed to download media: {error}"
+    },
+    "upload_error": {
+      "message": "Failed to upload image to the display."
+    }
+  },
+  "selector": {
+    "dither_mode": {
+      "options": {
+        "atkinson": "Atkinson",
+        "burkes": "Burkes",
+        "floyd_steinberg": "Floyd-Steinberg",
+        "jarvis_judice_ninke": "Jarvis, Judice & Ninke",
+        "none": "None",
+        "ordered": "Ordered",
+        "sierra": "Sierra",
+        "sierra_lite": "Sierra Lite",
+        "stucki": "Stucki"
+      }
+    },
+    "fit_mode": {
+      "options": {
+        "contain": "Contain",
+        "cover": "Cover",
+        "crop": "Crop",
+        "stretch": "Stretch"
+      }
+    },
+    "refresh_mode": {
+      "options": {
+        "fast": "Fast",
+        "full": "Full"
+      }
+    }
+  },
+  "services": {
+    "upload_image": {
+      "description": "Uploads an image to an OpenDisplay device.",
+      "fields": {
+        "device_id": {
+          "description": "The OpenDisplay device to upload the image to.",
+          "name": "Device"
+        },
+        "dither_mode": {
+          "description": "The dithering algorithm to use for converting the image to the display's color palette.",
+          "name": "Dither mode"
+        },
+        "fit_mode": {
+          "description": "How the image is fitted to the display dimensions.",
+          "name": "Fit mode"
+        },
+        "image": {
+          "description": "The image to upload to the display.",
+          "name": "Image"
+        },
+        "refresh_mode": {
+          "description": "The display refresh mode. Full refresh clears ghosting but is slower. Fast refresh is not supported on all displays.",
+          "name": "Refresh mode"
+        },
+        "rotation": {
+          "description": "The rotation angle in degrees, applied clockwise.",
+          "name": "Rotation"
+        },
+        "tone_compression": {
+          "description": "Dynamic range compression strength. Leave empty for automatic.",
+          "name": "Tone compression"
+        }
+      },
+      "name": "Upload image",
+      "sections": {
+        "advanced_options": {
+          "name": "Advanced options"
+        }
+      }
+    }
+  }
+}
