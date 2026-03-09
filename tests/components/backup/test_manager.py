@@ -24,7 +24,7 @@ from unittest.mock import (
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from securetar import SecureTarFile
+from securetar import SecureTarArchive, SecureTarFile
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -49,7 +49,6 @@ from homeassistant.components.backup.manager import (
     RestoreBackupState,
     WrittenBackup,
 )
-from homeassistant.components.backup.util import password_to_key
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -671,8 +670,7 @@ async def test_initiate_backup(
         with SecureTarFile(
             fileobj=core_tar_io,
             gzip=True,
-            key=password_to_key(password) if password is not None else None,
-            mode="r",
+            password=password,
         ) as core_tar:
             assert set(core_tar.getnames()) == expected_files
 
@@ -3312,7 +3310,7 @@ async def test_restore_backup_file_error(
 
 @pytest.mark.usefixtures("mock_ha_version")
 @pytest.mark.parametrize(
-    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_key"),
+    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_password"),
     [
         (
             [],
@@ -3326,7 +3324,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3371,7 +3369,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": False},
-            password_to_key("hunter2"),  # Local agent is protected
+            "hunter2",  # Local agent is protected
         ),
         (
             [
@@ -3386,7 +3384,7 @@ async def test_restore_backup_file_error(
             ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3416,7 +3414,7 @@ async def test_restore_backup_file_error(
             ["test.remote"],
             "hunter2",
             {"test.remote": True},
-            password_to_key("hunter2"),
+            "hunter2",
         ),
         (
             [
@@ -3431,7 +3429,7 @@ async def test_restore_backup_file_error(
             ["test.remote"],
             "hunter2",
             {"test.remote": False},
-            password_to_key("hunter2"),  # Temporary backup protected when password set
+            "hunter2",  # Temporary backup protected when password set
         ),
     ],
 )
@@ -3443,7 +3441,7 @@ async def test_initiate_backup_per_agent_encryption(
     agent_ids: list[str],
     password: str | None,
     protected_backup: dict[str, bool],
-    inner_tar_key: bytes | None,
+    inner_tar_password: str | None,
 ) -> None:
     """Test generate backup where encryption is selectively set on agents."""
     await setup_backup_integration(hass, remote_agents=["test.remote"])
@@ -3479,7 +3477,11 @@ async def test_initiate_backup_per_agent_encryption(
 
     with (
         patch("pathlib.Path.open", mock_open(read_data=b"test")),
-        patch("securetar.SecureTarFile.create_inner_tar") as mock_create_inner_tar,
+        patch(
+            "securetar.SecureTarArchive.__init__",
+            autospec=True,
+            wraps=SecureTarArchive.__init__,
+        ) as mock_secure_tar_archive,
     ):
         await ws_client.send_json_auto_id(
             {
@@ -3504,7 +3506,9 @@ async def test_initiate_backup_per_agent_encryption(
 
         await hass.async_block_till_done()
 
-    mock_create_inner_tar.assert_called_once_with(ANY, gzip=True, key=inner_tar_key)
+    assert mock_secure_tar_archive.mock_calls[0] == call(
+        ANY, ANY, "w", bufsize=4194304, create_version=2, password=inner_tar_password
+    )
 
     result = await ws_client.receive_json()
     assert result["event"] == {
@@ -3705,3 +3709,77 @@ async def test_manager_not_blocked_after_restore(
         "next_automatic_backup_additional": False,
         "state": "idle",
     }
+
+
+async def test_upload_progress_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+) -> None:
+    """Test that upload progress events are fired when an agent reports progress."""
+    agent_ids = [LOCAL_AGENT_ID, "test.remote"]
+    mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
+
+    remote_agent = mock_agents["test.remote"]
+    original_side_effect = remote_agent.async_upload_backup.side_effect
+
+    async def upload_with_progress(**kwargs: Any) -> None:
+        """Upload and report progress."""
+        on_progress = kwargs["on_progress"]
+        on_progress(bytes_uploaded=500)
+        on_progress(bytes_uploaded=1000)
+        await original_side_effect(**kwargs)
+
+    remote_agent.async_upload_backup.side_effect = upload_with_progress
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with patch("pathlib.Path.open", mock_open(read_data=b"test")):
+        await ws_client.send_json_auto_id(
+            {"type": "backup/generate", "agent_ids": agent_ids}
+        )
+        result = await ws_client.receive_json()
+        assert result["event"]["manager_state"] == BackupManagerState.CREATE_BACKUP
+
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        await hass.async_block_till_done()
+
+    # Consume intermediate stage events (home_assistant, upload_to_agents)
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.HOME_ASSISTANT
+
+    result = await ws_client.receive_json()
+    assert result["event"]["stage"] == CreateBackupStage.UPLOAD_TO_AGENTS
+
+    # Upload progress events for the remote agent
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 500,
+        "total_bytes": ANY,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "agent_id": "test.remote",
+        "uploaded_bytes": 1000,
+        "total_bytes": ANY,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"]["state"] == CreateBackupState.COMPLETED
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}

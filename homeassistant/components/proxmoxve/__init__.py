@@ -37,7 +37,11 @@ from .const import (
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+]
 
 
 CONFIG_SCHEMA = vol.Schema(

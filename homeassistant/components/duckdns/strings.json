@@ -46,6 +46,10 @@
     }
   },
   "issues": {
+    "deprecated_call_without_config_entry": {
+      "description": "Calling the `duckdns.set_txt` action without specifying a config entry is deprecated.\n\nThe `config_entry_id` field will be required in a future release.\n\nPlease update your automations and scripts to include the `config_entry_id` parameter.",
+      "title": "Detected deprecated use of action without config entry"
+    },
     "deprecated_yaml_import_issue_error": {
       "description": "Configuring Duck DNS using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Duck DNS YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
       "title": "The Duck DNS YAML configuration import failed"

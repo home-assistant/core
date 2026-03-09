@@ -301,6 +301,7 @@ class AreaSelectorConfig(BaseSelectorConfig, total=False):
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
     multiple: bool
+    reorder: bool
 
 
 @SELECTORS.register("area")
@@ -320,6 +321,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
                 [DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
             ),
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("reorder", default=False): cv.boolean,
         }
     )
 
@@ -838,6 +840,7 @@ class DurationSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a duration selector config."""
 
     enable_day: bool
+    enable_second: bool
     enable_millisecond: bool
     allow_negative: bool
 
@@ -853,6 +856,8 @@ class DurationSelector(Selector[DurationSelectorConfig]):
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
             vol.Optional("enable_day"): cv.boolean,
+            # Enable seconds field in frontend.
+            vol.Optional("enable_second", default=True): cv.boolean,
             # Enable millisecond field in frontend.
             vol.Optional("enable_millisecond"): cv.boolean,
             # Allow negative durations.

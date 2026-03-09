@@ -51,7 +51,7 @@ class QSToggleEntity(QSEntity):
         super().__init__(qsid, self.device.name)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Check if device is on (non-zero)."""
         return self.device.value > 0
 
