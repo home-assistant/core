@@ -4,9 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
-from homeassistant.components.garage_door.trigger import DEVICE_CLASSES_GARAGE_DOOR
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
