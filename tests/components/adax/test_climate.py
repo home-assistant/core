@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import CLOUD_DEVICE_DATA, LOCAL_DEVICE_DATA
+from .conftest import CLOUD_DEVICE_DATA
 
 from tests.common import AsyncMock, MockConfigEntry, async_fire_time_changed
 from tests.test_setup import FrozenDateTimeFactory
@@ -79,13 +79,8 @@ async def test_climate_local(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
-    assert (
-        state.attributes[ATTR_TEMPERATURE] == (LOCAL_DEVICE_DATA["target_temperature"])
-    )
-    assert (
-        state.attributes[ATTR_CURRENT_TEMPERATURE]
-        == (LOCAL_DEVICE_DATA["current_temperature"])
-    )
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 15
 
     mock_adax_local.get_status.side_effect = Exception()
     freezer.tick(SCAN_INTERVAL)
@@ -111,11 +106,8 @@ async def test_climate_local_initial_state_from_first_refresh(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == LOCAL_DEVICE_DATA["target_temperature"]
-    assert (
-        state.attributes[ATTR_CURRENT_TEMPERATURE]
-        == LOCAL_DEVICE_DATA["current_temperature"]
-    )
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 15
 
 
 async def test_climate_local_initial_state_off_from_first_refresh(
@@ -124,25 +116,18 @@ async def test_climate_local_initial_state_off_from_first_refresh(
     mock_adax_local: AsyncMock,
 ) -> None:
     """Test that local climate initializes correctly when first refresh reports off."""
-    original_target = LOCAL_DEVICE_DATA["target_temperature"]
-    try:
-        LOCAL_DEVICE_DATA["target_temperature"] = 0
+    mock_adax_local.get_status.return_value["target_temperature"] = 0
 
-        await setup_integration(hass, mock_local_config_entry)
+    await setup_integration(hass, mock_local_config_entry)
 
-        assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
-        entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
+    assert len(hass.states.async_entity_ids(Platform.CLIMATE)) == 1
+    entity_id = hass.states.async_entity_ids(Platform.CLIMATE)[0]
 
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.state == HVACMode.OFF
-        assert state.attributes[ATTR_TEMPERATURE] == 5
-        assert (
-            state.attributes[ATTR_CURRENT_TEMPERATURE]
-            == LOCAL_DEVICE_DATA["current_temperature"]
-        )
-    finally:
-        LOCAL_DEVICE_DATA["target_temperature"] = original_target
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_TEMPERATURE] == 5
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 15
 
 
 async def test_climate_local_set_hvac_mode_updates_state_immediately(
@@ -182,9 +167,7 @@ async def test_climate_local_set_hvac_mode_updates_state_immediately(
         blocking=True,
     )
 
-    mock_adax_local.set_target_temperature.assert_called_once_with(
-        LOCAL_DEVICE_DATA["target_temperature"]
-    )
+    mock_adax_local.set_target_temperature.assert_called_once_with(20)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == HVACMode.HEAT
