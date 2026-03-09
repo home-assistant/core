@@ -897,7 +897,7 @@
     'state': 'none',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -916,7 +916,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.dishwasher_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -939,10 +939,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher-state]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher',
+      'friendly_name': 'Dishwasher 1',
       'options': list([
         'stop',
         'run',
@@ -950,14 +950,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.dishwasher_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-entry]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -975,7 +975,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.dishwasher_1_selected_zone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -998,17 +998,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-state]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Selected zone',
+      'friendly_name': 'Dishwasher 1 Selected zone',
       'options': list([
         'lower',
         'all',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.dishwasher_1_selected_zone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2029,7 +2029,7 @@
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer-entry]
+# name: test_all_entities[da_wm_wm_100001][select.washer_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2048,7 +2048,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2071,10 +2071,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer-state]
+# name: test_all_entities[da_wm_wm_100001][select.washer_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer',
+      'friendly_name': 'Washer 1',
       'options': list([
         'run',
         'pause',
@@ -2082,14 +2082,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer-entry]
+# name: test_all_entities[da_wm_wm_100002][select.washer_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2108,7 +2108,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2131,10 +2131,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer-state]
+# name: test_all_entities[da_wm_wm_100002][select.washer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer',
+      'friendly_name': 'Washer 2',
       'options': list([
         'run',
         'pause',
@@ -2142,7 +2142,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
