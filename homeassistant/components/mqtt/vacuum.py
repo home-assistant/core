@@ -261,8 +261,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.CLEAN_AREA
             segments: list[str] = config[CONF_SEGMENTS]
             self._segments = [
-                Segment(id=area_id, name=name or area_id)
-                for area_id, _, name in [segment.partition(".") for segment in segments]
+                Segment(id=segment_id, name=name or segment_id)
+                for segment_id, _, name in [segment.partition(".") for segment in segments]
             ]
             self._clean_segments_command_topic = config[
                 CONF_CLEAN_SEGMENTS_COMMAND_TOPIC
