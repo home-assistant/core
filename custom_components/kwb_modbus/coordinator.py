@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_SLAVE_ID,
     DOMAIN,
     INDEXED_MODULES,
+    MODBUS_HOLDING_REG_START,
     SENSOR_STATUS_OK,
 )
 from .register_map import REGISTERS, SELECT_REGISTERS, VALUE_TABLES, RegisterDef
@@ -185,23 +186,32 @@ class KWBDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Any]]):
         if not active:
             return {}
 
-        # Build batches of consecutive addresses (max gap 10, max 125 registers)
-        batches: list[tuple[int, int]] = []
-        batch_start = active[0].address
-        batch_end = active[0].address + active[0].count
+        # Split registers by Modbus function code:
+        # < MODBUS_HOLDING_REG_START → input registers (func 04, read-only measurements)
+        # ≥ MODBUS_HOLDING_REG_START → holding registers (func 03, control/setpoint params)
+        input_regs = [r for r in active if r.address < MODBUS_HOLDING_REG_START]
+        holding_regs = [r for r in active if r.address >= MODBUS_HOLDING_REG_START]
 
-        for r in active[1:]:
-            if r.address <= batch_end + 10 and (r.address + r.count - batch_start) <= 125:
-                batch_end = max(batch_end, r.address + r.count)
-            else:
-                batches.append((batch_start, batch_end - batch_start))
-                batch_start = r.address
-                batch_end = r.address + r.count
-        batches.append((batch_start, batch_end - batch_start))
+        def _build_batches(registers: list[RegisterDef]) -> list[tuple[int, int]]:
+            """Build consecutive read batches (max gap 10, max 125 registers)."""
+            if not registers:
+                return []
+            batches: list[tuple[int, int]] = []
+            batch_start = registers[0].address
+            batch_end = registers[0].address + registers[0].count
+            for r in registers[1:]:
+                if r.address <= batch_end + 10 and (r.address + r.count - batch_start) <= 125:
+                    batch_end = max(batch_end, r.address + r.count)
+                else:
+                    batches.append((batch_start, batch_end - batch_start))
+                    batch_start = r.address
+                    batch_end = r.address + r.count
+            batches.append((batch_start, batch_end - batch_start))
+            return batches
 
-        # Read batches
         raw_data: dict[int, int] = {}
-        for batch_addr, batch_count in batches:
+
+        for batch_addr, batch_count in _build_batches(input_regs):
             try:
                 result = await self.client.read_input_registers(
                     address=batch_addr,
@@ -210,6 +220,23 @@ class KWBDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Any]]):
                 )
                 if result.isError():
                     _LOGGER.warning("Modbus error at %s count=%s", batch_addr, batch_count)
+                    continue
+                for i, val in enumerate(result.registers):
+                    raw_data[batch_addr + i] = val
+            except ModbusException as err:
+                raise UpdateFailed(f"Modbus read failed: {err}") from err
+
+        for batch_addr, batch_count in _build_batches(holding_regs):
+            try:
+                result = await self.client.read_holding_registers(
+                    address=batch_addr,
+                    count=batch_count,
+                    device_id=self.slave_id,
+                )
+                if result.isError():
+                    _LOGGER.warning(
+                        "Modbus holding register error at %s count=%s", batch_addr, batch_count
+                    )
                     continue
                 for i, val in enumerate(result.registers):
                     raw_data[batch_addr + i] = val

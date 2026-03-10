@@ -81,6 +81,10 @@ EXPERT_SELECT_ADDRESSES = {
     24586,  # Automatic ignition Function
 }
 
+# KWB address space: registers >= this address are holding registers (func 03).
+# Below this threshold are input registers (func 04, read-only sensor data).
+MODBUS_HOLDING_REG_START = 24576
+
 # Indexed modules (BUF 0-14, HC 1.1, etc.) — require discovery
 INDEXED_MODULES = [
     "buffer_tank",
