@@ -44,9 +44,9 @@ async def test_refresh_system(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)  # some don't support AutoWithReset
+@pytest.mark.usefixtures("evohome")
 async def test_reset_system(
     hass: HomeAssistant,
-    ctl_id: str,
 ) -> None:
     """Test Evohome's reset_system service (for a temperature control system)."""
 
