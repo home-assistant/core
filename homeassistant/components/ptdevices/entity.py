@@ -33,6 +33,16 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this device."""
+        device = self.coordinator.data.get(self._device_id)
+
+        if not device:
+            # Device is missing; return minimal information
+            return DeviceInfo(
+                identifiers={(DOMAIN, self._device_id)},
+                configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
+                manufacturer="ParemTech inc.",
+            )
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
