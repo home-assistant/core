@@ -687,6 +687,7 @@ async def test_fan_mode_functionality(
     assert entity_state.attributes[ATTR_FAN_MODE] == expected_fan_modes[0]
 
 
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
 async def test_set_fan_mode_raises_home_assistant_error_on_api_errors(
     hass: HomeAssistant,
     client: MagicMock,
