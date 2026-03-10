@@ -18,11 +18,9 @@ from wiim.models import (
 )
 from wiim.wiim_device import WiimDevice
 
-from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.components.wiim.media_player import WiimMediaPlayerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import MockConfigEntry
@@ -188,14 +186,6 @@ def mock_wiim_api_endpoint():
         }
     )
     return api_endpoint
-
-
-@pytest.fixture
-def mock_hass_for_media_player(mock_hass: HomeAssistant) -> HomeAssistant:
-    """Fixture for HomeAssistant mock specifically for media player tests."""
-    mock_hass.data[DOMAIN] = dr.DeviceRegistry(mock_hass)
-    return mock_hass
-
 
 @pytest.fixture
 def mock_wiim_controller():

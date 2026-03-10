@@ -31,7 +31,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, LOGGER, WiimData
+from .const import DATA_WIIM, DOMAIN, LOGGER, WiimData
 from .entity import WiimBaseEntity, exception_wrap
 
 MEDIA_TYPE_WIIM_LIBRARY = "wiim_library"
@@ -140,7 +140,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @callback
     def _get_entity_id_for_udn(self, udn: str) -> str | None:
         """Helper to get a WiimMediaPlayerEntity ID by UDN from shared data."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if not wiim_data:
             LOGGER.warning("WiimData not found in hass.data")
             return None
@@ -154,7 +154,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     def _get_group_snapshot(self):
         """Return the typed group snapshot for the current device, if available."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if not wiim_data or not wiim_data.controller:
             return None
         return wiim_data.controller.get_group_snapshot(self._device.udn)
@@ -515,7 +515,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         This method is asynchronous and makes a network call.
         """
         # This will ensure _is_group_leader is set based on the latest group info from controller
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if not wiim_data or not wiim_data.controller:
             LOGGER.warning(
                 "Device %s: Controller not available for _from_device_update_supported_features. Cannot determine group role",
@@ -614,7 +614,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if self._device.supports_http_api:
                 await self._update_output_mode()
 
-            wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+            wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
             if wiim_data and self.entity_id:
                 wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
                 LOGGER.debug(
@@ -644,7 +644,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         # Remove entity_id from the global map
         if self.hass and self.entity_id:
-            wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+            wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
             if wiim_data:
                 if self.entity_id in wiim_data.entity_id_to_udn_map:
                     del wiim_data.entity_id_to_udn_map[self.entity_id]
@@ -668,7 +668,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.entity_id,
         )
         self._device.set_available(False)
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if not wiim_data or not wiim_data.controller:
             return
         controller = wiim_data.controller
@@ -723,7 +723,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     async def _call_leader_service(self, service_name: str, **kwargs: Any) -> None:
         """Helper to call a media_player service on the group leader."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if not wiim_data or not wiim_data.controller:
             LOGGER.warning(
                 "WiiM controller not available for redirection on %s", self.entity_id
@@ -777,7 +777,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -813,7 +813,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -850,7 +850,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -886,7 +886,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -923,7 +923,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -962,7 +962,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
+        wiim_data: WiimData | None = self.hass.data.get(DATA_WIIM)
         if wiim_data and wiim_data.controller:
             group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
             if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:

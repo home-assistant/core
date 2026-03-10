@@ -7,9 +7,11 @@ from typing import Final
 from wiim.controller import WiimController
 
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "wiim"
 LOGGER = logging.getLogger(__package__)
+DATA_WIIM: HassKey["WiimData"] = HassKey(DOMAIN)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.MEDIA_PLAYER,

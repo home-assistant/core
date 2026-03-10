@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.controller import WiimController
+from wiim.exceptions import WiimDeviceException
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim import async_setup_entry, async_unload_entry
-from homeassistant.components.wiim.const import DOMAIN, PLATFORMS, WiimData
+from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, PLATFORMS, WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -20,6 +21,8 @@ async def test_async_setup_entry_success(
 ) -> None:
     """Test that async_setup_entry sets up domain data and adds the device."""
     mock_config_entry.add_to_hass(hass)
+    mock_session = AsyncMock()
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
 
     with (
         patch("homeassistant.components.wiim.WiimController") as mock_controller_cls,
@@ -28,16 +31,11 @@ async def test_async_setup_entry_success(
         ) as mock_create_wiim_device,
         patch(
             "homeassistant.components.wiim.async_get_clientsession",
-            return_value=AsyncMock(),
+            return_value=mock_session,
         ),
-        patch("homeassistant.components.wiim.const.PLATFORMS", []),
         patch(
             "homeassistant.components.wiim.get_url",
             return_value="http://192.168.1.10:8123",
-        ),
-        patch(
-            "homeassistant.components.wiim.async_get_source_ip",
-            return_value="192.168.1.10",
         ),
     ):
         mock_controller = MagicMock()
@@ -51,12 +49,22 @@ async def test_async_setup_entry_success(
         mock_device.disconnect = AsyncMock()
         mock_create_wiim_device.return_value = mock_device
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        result = await async_setup_entry(hass, mock_config_entry)
 
-        mock_controller_cls.assert_called_once()
-        mock_create_wiim_device.assert_awaited_once()
+        assert result is True
+        mock_controller_cls.assert_called_once_with(mock_session)
+        assert hass.data[DATA_WIIM] == WiimData(controller=mock_controller)
+        mock_create_wiim_device.assert_awaited_once_with(
+            "http://192.168.1.100:49152/description.xml",
+            mock_session,
+            host="192.168.1.100",
+            local_host="192.168.1.10",
+            polling_interval=60,
+        )
         mock_controller.add_device.assert_awaited_once_with(mock_device)
+        hass.config_entries.async_forward_entry_setups.assert_awaited_once_with(
+            mock_config_entry, PLATFORMS
+        )
 
 
 @pytest.mark.asyncio
@@ -66,24 +74,27 @@ async def test_async_setup_entry_device_init_failure(
 ) -> None:
     """Test async_setup_entry when UPnP device creation fails -> ConfigEntryNotReady."""
     mock_config_entry.add_to_hass(mock_hass)
+    mock_session = AsyncMock()
 
     with (
         patch(
             "homeassistant.components.wiim.async_create_wiim_device",
-            return_value=None,
+            side_effect=WiimDeviceException("Failed to initialize WiiM device"),
         ),
         patch(
             "homeassistant.components.wiim.async_get_clientsession",
-            return_value=AsyncMock(),
+            return_value=mock_session,
         ),
         patch("homeassistant.components.wiim.WiimController") as mock_controller_class,
+        patch(
+            "homeassistant.components.wiim.get_url",
+            return_value="http://192.168.1.10:8123",
+        ),
     ):
         mock_controller_instance = AsyncMock()
         mock_controller_class.return_value = mock_controller_instance
 
-        with pytest.raises(
-            ConfigEntryNotReady, match="Failed to initialize WiiM device"
-        ):
+        with pytest.raises(ConfigEntryNotReady, match="SDK Device error"):
             await async_setup_entry(mock_hass, mock_config_entry)
 
 
@@ -97,7 +108,7 @@ async def test_async_unload_entry_success(
     """Test successful unloading of a config entry."""
     mock_config_entry.runtime_data = mock_wiim_device
 
-    mock_hass.data[DOMAIN] = WiimData(
+    mock_hass.data[DATA_WIIM] = WiimData(
         controller=mock_wiim_controller,
         entity_id_to_udn_map={"media_player.test": "uuid:123"},
     )
@@ -113,7 +124,7 @@ async def test_async_unload_entry_success(
 
         mock_loaded_entries.assert_called_once_with(DOMAIN)
 
-        assert DOMAIN not in mock_hass.data
+        assert DATA_WIIM not in mock_hass.data
 
     mock_hass.config_entries.async_unload_platforms.assert_awaited_once_with(
         mock_config_entry, PLATFORMS

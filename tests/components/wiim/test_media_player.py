@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.wiim.const import DOMAIN, WiimData
+from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, WiimData
 from homeassistant.components.wiim.media_player import (
     MEDIA_CONTENT_ID_FAVORITES,
     MEDIA_CONTENT_ID_PLAYLISTS,
@@ -37,6 +37,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 
+def _set_wiim_data(
+    hass: HomeAssistant,
+    *,
+    controller: MagicMock | None = None,
+    entity_id_to_udn_map: dict[str, str] | None = None,
+) -> None:
+    """Populate the typed WiiM domain data for a test Home Assistant instance."""
+    hass.data[DATA_WIIM] = WiimData(
+        controller=controller or MagicMock(),
+        entity_id_to_udn_map=entity_id_to_udn_map or {},
+    )
+
+
 @pytest.mark.asyncio
 async def test_media_player_setup_entry(
     mock_hass: HomeAssistant,
@@ -46,12 +59,7 @@ async def test_media_player_setup_entry(
 ) -> None:
     """Test the media player setup entry."""
     mock_config_entry.runtime_data = mock_wiim_device
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
     await async_setup_entry(mock_hass, mock_config_entry, mock_add_entities)
 
     mock_add_entities.assert_called_once()
@@ -106,12 +114,7 @@ async def test_media_player_update_ha_state_from_sdk_cache(
 ) -> None:
     """Test _update_ha_state_from_sdk_cache schedules HA state update."""
     entity = mock_wiim_media_player_entity
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
 
@@ -132,7 +135,7 @@ async def test_media_player_update_ha_state_from_sdk_cache(
         patch.object(entity, "schedule_update_ha_state", new=MagicMock()),
         patch.object(entity, "async_write_ha_state", new=MagicMock()),
         patch.object(
-            entity.hass.data[DOMAIN].controller,
+            entity.hass.data[DATA_WIIM].controller,
             "get_group_snapshot",
             new=MagicMock(
                 return_value=MagicMock(
@@ -158,12 +161,7 @@ async def test_media_player_play(
     """Test media player play service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
 
@@ -183,12 +181,7 @@ async def test_media_player_pause(
     """Test media player pause service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
     entity._device = mock_wiim_device
@@ -209,12 +202,7 @@ async def test_media_player_stop(
     """Test media player stop service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
     with patch.object(
@@ -315,12 +303,7 @@ async def test_media_player_seek(
     """Test media player seek service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
 
@@ -340,12 +323,7 @@ async def test_media_player_next(
     """Test media player next track service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
 
@@ -365,12 +343,7 @@ async def test_media_player_previous(
     """Test media player previous track service."""
     entity = mock_wiim_media_player_entity
 
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(),
-            entity_id_to_udn_map={},
-        )
-    }  # type: ignore[assignment]
+    _set_wiim_data(mock_hass)
 
     entity.hass = mock_hass
 
@@ -418,13 +391,12 @@ async def test_media_player_browse_media_root(
     mock_controller.async_ungroup_device = AsyncMock()
     mock_controller.async_join_group = AsyncMock()
     mock_controller.async_update_multiroom_status = AsyncMock()
-    mock_hass.data = {
-        DOMAIN: WiimData(
-            controller=mock_controller,
-            entity_id_to_udn_map={"media_player.other_wiim_device": "uuid:target-456"},
-        ),
-        "media_source": {},
-    }  # type: ignore[assignment]
+    _set_wiim_data(
+        mock_hass,
+        controller=mock_controller,
+        entity_id_to_udn_map={"media_player.other_wiim_device": "uuid:target-456"},
+    )
+    mock_hass.data["media_source"] = {}
     entity.hass = mock_hass
 
     mock_browse_item = BrowseMedia(
