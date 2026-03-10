@@ -30,11 +30,6 @@ from .const import (
 type WiimConfigEntry = ConfigEntry[WiimDevice]
 
 
-def _raise_not_ready(message: str) -> None:
-    """Raise ConfigEntryNotReady with a shared helper for lint compliance."""
-    raise ConfigEntryNotReady(message)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
     """Set up WiiM from a config entry (called after async_setup or UI flow)."""
     LOGGER.debug(
@@ -106,20 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
             ha_host_ip=ha_host,
             polling_interval=DEFAULT_AVAILABILITY_POLLING_INTERVAL,
         )
-        if wiim_device is None:
-            _raise_not_ready(f"Failed to initialize WiiM device at {upnp_location}")
-
-        await controller.add_device(wiim_device)
-
-        entry.runtime_data = wiim_device
-        LOGGER.info(
-            "WiiM device %s (UDN: %s) linked to HASS. Name: '%s', HTTP: %s, UPnP Location: %s",
-            entry.entry_id,
-            wiim_device.udn,
-            wiim_device.name,
-            host,
-            upnp_location or "N/A",
-        )
     except WiimRequestException as err:
         LOGGER.error("HTTP API request failed during setup for %s: %s", host, err)
         raise ConfigEntryNotReady(f"HTTP API request failed for {host}: {err}") from err
@@ -129,6 +110,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     except Exception as err:
         LOGGER.exception("Unexpected error setting up WiiM device %s: %s", host, err)
         raise ConfigEntryNotReady(f"Unexpected error for {host}: {err}") from err
+
+    if wiim_device is None:
+        raise ConfigEntryNotReady(f"Failed to initialize WiiM device at {upnp_location}")
+
+    await controller.add_device(wiim_device)
+
+    entry.runtime_data = wiim_device
+    LOGGER.info(
+        "WiiM device %s (UDN: %s) linked to HASS. Name: '%s', HTTP: %s, UPnP Location: %s",
+        entry.entry_id,
+        wiim_device.udn,
+        wiim_device.name,
+        host,
+        upnp_location or "N/A",
+    )
 
     async def _async_shutdown_event_handler(event: Event) -> None:
         LOGGER.info(
