@@ -54,7 +54,7 @@ async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
     "condition",
     [
         "battery.is_low",
-        "battery.is_high",
+        "battery.is_not_low",
         "battery.is_charging",
         "battery.is_not_charging",
         "battery.percentage",
@@ -67,7 +67,7 @@ async def test_battery_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
-# --- is_low / is_high (binary_sensor with device_class battery) ---
+# --- is_low / is_not_low (binary_sensor with device_class battery) ---
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -85,7 +85,7 @@ async def test_battery_conditions_gated_by_labs_flag(
             additional_attributes={ATTR_DEVICE_CLASS: "battery"},
         ),
         *parametrize_condition_states_any(
-            condition="battery.is_high",
+            condition="battery.is_not_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -102,7 +102,7 @@ async def test_battery_low_high_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the battery is_low/is_high conditions with 'any' behavior."""
+    """Test the battery is_low/is_not_low conditions with 'any' behavior."""
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
 
     for eid in target_binary_sensors["included"]:
@@ -143,7 +143,7 @@ async def test_battery_low_high_condition_behavior_any(
             additional_attributes={ATTR_DEVICE_CLASS: "battery"},
         ),
         *parametrize_condition_states_all(
-            condition="battery.is_high",
+            condition="battery.is_not_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -160,7 +160,7 @@ async def test_battery_low_high_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the battery is_low/is_high conditions with 'all' behavior."""
+    """Test the battery is_low/is_not_low conditions with 'all' behavior."""
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
 
     for eid in target_binary_sensors["included"]:
@@ -317,7 +317,7 @@ async def test_battery_charging_condition_behavior_all(
     ("condition_key", "target_state", "other_state", "device_class"),
     [
         ("battery.is_low", STATE_ON, STATE_OFF, "battery"),
-        ("battery.is_high", STATE_OFF, STATE_ON, "battery"),
+        ("battery.is_not_low", STATE_OFF, STATE_ON, "battery"),
         ("battery.is_charging", STATE_ON, STATE_OFF, "battery_charging"),
         ("battery.is_not_charging", STATE_OFF, STATE_ON, "battery_charging"),
     ],
@@ -414,6 +414,46 @@ async def test_battery_percentage_condition(
         hass.states.async_set(entity_id, value, {ATTR_DEVICE_CLASS: "battery"})
         await hass.async_block_till_done()
         assert condition(hass) is False, f"Expected False for {value}"
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+async def test_battery_percentage_condition_behavior_all(
+    hass: HomeAssistant,
+) -> None:
+    """Test the battery percentage condition with 'all' behavior."""
+    entity_1 = "sensor.battery_1"
+    entity_2 = "sensor.battery_2"
+
+    hass.states.async_set(entity_1, "10", {ATTR_DEVICE_CLASS: "battery"})
+    hass.states.async_set(entity_2, "10", {ATTR_DEVICE_CLASS: "battery"})
+    await hass.async_block_till_done()
+
+    condition = await async_condition_from_config(
+        hass,
+        {
+            CONF_CONDITION: "battery.percentage",
+            CONF_TARGET: {CONF_ENTITY_ID: [entity_1, entity_2]},
+            CONF_OPTIONS: {"behavior": "all", CONF_ABOVE: 50},
+        },
+    )
+
+    # Both below threshold
+    assert condition(hass) is False
+
+    # Only one above threshold - should not match with 'all'
+    hass.states.async_set(entity_1, "90", {ATTR_DEVICE_CLASS: "battery"})
+    await hass.async_block_till_done()
+    assert condition(hass) is False
+
+    # Both above threshold - should match
+    hass.states.async_set(entity_2, "90", {ATTR_DEVICE_CLASS: "battery"})
+    await hass.async_block_till_done()
+    assert condition(hass) is True
+
+    # One drops below again
+    hass.states.async_set(entity_1, "30", {ATTR_DEVICE_CLASS: "battery"})
+    await hass.async_block_till_done()
+    assert condition(hass) is False
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")

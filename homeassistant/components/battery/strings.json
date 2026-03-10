@@ -14,16 +14,6 @@
       },
       "name": "Battery is charging"
     },
-    "is_high": {
-      "description": "Tests if one or more batteries are not low.",
-      "fields": {
-        "behavior": {
-          "description": "[%key:component::battery::common::condition_behavior_description%]",
-          "name": "[%key:component::battery::common::condition_behavior_name%]"
-        }
-      },
-      "name": "Battery is not low"
-    },
     "is_low": {
       "description": "Tests if one or more batteries are low.",
       "fields": {
@@ -43,6 +33,16 @@
         }
       },
       "name": "Battery is not charging"
+    },
+    "is_not_low": {
+      "description": "Tests if one or more batteries are not low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not low"
     },
     "percentage": {
       "description": "Tests if the battery percentage of one or more devices is above a threshold, below a threshold, or in a range of values.",

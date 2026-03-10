@@ -16,7 +16,7 @@
 
 is_low: *condition_common
 
-is_high: *condition_common
+is_not_low: *condition_common
 
 is_charging:
   target:

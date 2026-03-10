@@ -22,7 +22,7 @@ CONDITIONS: dict[str, type[Condition]] = {
         STATE_ON,
         device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY},
     ),
-    "is_high": make_entity_state_condition(
+    "is_not_low": make_entity_state_condition(
         BINARY_SENSOR_DOMAIN,
         STATE_OFF,
         device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY},

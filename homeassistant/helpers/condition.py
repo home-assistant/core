@@ -99,7 +99,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import UNDEFINED, ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -424,21 +424,18 @@ def _filter_by_device_classes(
     hass: HomeAssistant, entities: set[str], device_classes: dict[str, str]
 ) -> set[str]:
     """Filter entities by device class, matching domain to expected device class."""
-    return {
-        entity_id
-        for entity_id in entities
-        if split_entity_id(entity_id)[0] in device_classes
-        and _get_device_class_or_undefined(hass, entity_id)
-        == device_classes[split_entity_id(entity_id)[0]]
-    }
-
-
-def _get_device_class_or_undefined(hass: HomeAssistant, entity_id: str) -> str | None:
-    """Get the device class of an entity or a sentinel if not found."""
-    try:
-        return entity_helper.get_device_class(hass, entity_id)
-    except HomeAssistantError:
-        return UNDEFINED  # type: ignore[return-value]
+    result: set[str] = set()
+    for entity_id in entities:
+        domain = split_entity_id(entity_id)[0]
+        if domain not in device_classes:
+            continue
+        try:
+            device_class = entity_helper.get_device_class(hass, entity_id)
+        except HomeAssistantError:
+            continue
+        if device_class == device_classes[domain]:
+            result.add(entity_id)
+    return result
 
 
 def make_entity_state_condition(
