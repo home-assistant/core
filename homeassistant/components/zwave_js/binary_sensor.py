@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import IntEnum
 from typing import TYPE_CHECKING, cast
@@ -10,6 +11,7 @@ from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
 from zwave_js_server.const.command_class.notification import (
     CC_SPECIFIC_NOTIFICATION_TYPE,
+    AccessControlNotificationEvent,
     NotificationEvent,
     NotificationType,
     SmokeAlarmNotificationEvent,
@@ -65,6 +67,11 @@ NOTIFICATION_WEATHER = "16"
 NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
 
+# Deprecated/legacy synthetic Access Control door state notification
+# event IDs that don't exist in zwave-js-server
+ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
+ACCESS_CONTROL_DOOR_STATE_OPEN_TILT = 5633
+
 
 class OpeningState(IntEnum):
     """Opening state values exposed by Access Control notifications."""
@@ -74,21 +81,25 @@ class OpeningState(IntEnum):
     TILTED = 2
 
 
-LEGACY_SIMPLE_DOOR_STATE_MAP: dict[str, set[OpeningState]] = {
-    "22": {OpeningState.OPEN, OpeningState.TILTED},
-    "23": {OpeningState.CLOSED},
-}
+# parse_opening_state helpers for the DEPRECATED legacy Access Control binary sensors.
+def _legacy_is_closed(opening_state: OpeningState) -> bool:
+    """Return if Opening state represents closed."""
+    return opening_state is OpeningState.CLOSED
 
-LEGACY_DOOR_STATE_MAP: dict[str, OpeningState] = {
-    "22": OpeningState.OPEN,
-    "23": OpeningState.CLOSED,
-    "5632": OpeningState.OPEN,
-    "5633": OpeningState.TILTED,
-}
 
-LEGACY_TILT_STATE_MAP: dict[str, OpeningState] = {
-    "1": OpeningState.TILTED,
-}
+def _legacy_is_open(opening_state: OpeningState) -> bool:
+    """Return if Opening state represents open."""
+    return opening_state is OpeningState.OPEN
+
+
+def _legacy_is_open_or_tilted(opening_state: OpeningState) -> bool:
+    """Return if Opening state represents open or tilted."""
+    return opening_state in (OpeningState.OPEN, OpeningState.TILTED)
+
+
+def _legacy_is_tilted(opening_state: OpeningState) -> bool:
+    """Return if Opening state represents tilted."""
+    return opening_state is OpeningState.TILTED
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -111,6 +122,14 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
     state_key: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
+    """Describe a legacy Access Control binary sensor that derives state from Opening state."""
+
+    state_key: str
+    parse_opening_state: Callable[[OpeningState], bool]
 
 
 # Mappings for Notification sensors
@@ -399,6 +418,12 @@ def is_valid_notification_binary_sensor(
     # of fanning out one binary sensor per state.
     if is_opening_state_notification_value(info.primary_value):
         return False
+    # Access Control legacy door/window states are handled by dedicated discovery
+    # schemas when Opening state is present.
+    if get_opening_state_notification_value(
+        info.node
+    ) is not None and is_legacy_access_control_window_door_value(info.primary_value):
+        return False
     return len(info.primary_value.metadata.states) > 1
 
 
@@ -442,7 +467,7 @@ async def async_setup_entry(
         ):
             entities.append(ZWaveBooleanBinarySensor(config_entry, driver, info))
         elif isinstance(info, NewZwaveDiscoveryInfo):
-            pass  # other entity classes are not migrated yet
+            entities.append(info.entity_class(config_entry, driver, info))
         elif info.platform_hint == "notification":
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
@@ -560,27 +585,8 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         """Initialize a ZWaveNotificationBinarySensor entity."""
         super().__init__(config_entry, driver, info)
         self.state_key = state_key
-        self._opening_state_notification_value = get_opening_state_notification_value(
-            self.info.node
-        )
         if description:
             self.entity_description = description
-
-        self._is_legacy_access_control_entity = False
-        if (
-            self._opening_state_notification_value is not None
-            and is_legacy_access_control_window_door_value(self.info.primary_value)
-        ):
-            self._is_legacy_access_control_entity = True
-            # Keep the old Access Control door/window entities for backwards
-            # compatibility, but discover them disabled by default when the new
-            # Opening state value is available. If a user re-enables one of
-            # those legacy entities, derive its state from Opening state so it
-            # stays consistent with the new enum sensor. Once those legacy
-            # entities are removed in a future deprecation cycle, this
-            # compatibility path can go away as well.
-            self._attr_entity_registry_enabled_default = False
-            self.watched_value_ids.add(self._opening_state_notification_value.value_id)
 
         # Entity class attributes
         self._attr_name = self.generate_name(
@@ -588,48 +594,54 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
-    def _derive_legacy_state_from_opening_state(self) -> bool | None:
-        """Derive a legacy Access Control binary sensor state from Opening state."""
-        if self._opening_state_notification_value is None:
+    @property
+    def is_on(self) -> bool | None:
+        """Return if the sensor is on or off."""
+        if self.info.primary_value.value is None:
             return None
+        return int(self.info.primary_value.value) == int(self.state_key)
 
-        opening_state = self.info.node.values[
-            self._opening_state_notification_value.value_id
-        ].value
-        if opening_state is None:
-            return None
 
-        property_key = self.info.primary_value.property_key
+class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
+    """DEPRECATED: Legacy door state binary sensors.
 
-        try:
-            opening_state = OpeningState(int(opening_state))
-        except TypeError, ValueError:
-            return None
+    These entities exist purely for backwards compatibility with users who had
+    door state binary sensors before the Opening state value was introduced.
+    They are disabled by default when the Opening state value is present and
+    should not be extended. State is derived from the Opening state notification
+    value using the parse_opening_state function defined on the entity description.
+    """
 
-        # Derive the deprecated legacy Access Control entities from the unified
-        # Opening state for users who explicitly re-enable them.
-        if property_key == "Door state (simple)":
-            expected_states = LEGACY_SIMPLE_DOOR_STATE_MAP.get(self.state_key)
-            return expected_states is not None and opening_state in expected_states
+    entity_description: OpeningStateZWaveJSEntityDescription
 
-        if property_key == "Door state":
-            expected_state = LEGACY_DOOR_STATE_MAP.get(self.state_key)
-            return expected_state is not None and opening_state == expected_state
-
-        if property_key == "Door tilt state":
-            expected_state = LEGACY_TILT_STATE_MAP.get(self.state_key)
-            return expected_state is not None and opening_state == expected_state
-
-        return None
+    def __init__(
+        self,
+        config_entry: ZwaveJSConfigEntry,
+        driver: Driver,
+        info: NewZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize a legacy Door state binary sensor entity."""
+        super().__init__(config_entry, driver, info)
+        opening_state_value = get_opening_state_notification_value(self.info.node)
+        assert opening_state_value is not None  # guaranteed by required_values schema
+        self._opening_state_value_id = opening_state_value.value_id
+        self.watched_value_ids.add(opening_state_value.value_id)
+        self._attr_unique_id = (
+            f"{self._attr_unique_id}.{self.entity_description.state_key}"
+        )
 
     @property
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
-        if self._is_legacy_access_control_entity:
-            return self._derive_legacy_state_from_opening_state()
-        if self.info.primary_value.value is None:
+        opening_state = self.info.node.values[self._opening_state_value_id].value
+        if opening_state is None:
             return None
-        return int(self.info.primary_value.value) == int(self.state_key)
+        try:
+            return self.entity_description.parse_opening_state(
+                OpeningState(int(opening_state))
+            )
+        except TypeError, ValueError:
+            return None
 
 
 class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
@@ -676,7 +688,183 @@ class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
         )
 
 
+OPENING_STATE_NOTIFICATION_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.NOTIFICATION},
+    property={"Access Control"},
+    property_key={"Opening state"},
+    type={ValueType.NUMBER},
+    any_available_cc_specific={
+        (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+    },
+)
+
+
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    # -------------------------------------------------------------------
+    # DEPRECATED legacy Access Control door/window binary sensors.
+    # These schemas exist only for backwards compatibility with users who
+    # already have these entities registered. New integrations should use
+    # the Opening state enum sensor instead. Do not add new schemas here.
+    # All schemas below use ZWaveLegacyDoorStateBinarySensor and are
+    # disabled by default (entity_registry_enabled_default=False).
+    # -------------------------------------------------------------------
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state (simple)"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_simple_open",
+            name="Window/door is open",
+            state_key=str(
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            ),
+            parse_opening_state=_legacy_is_open_or_tilted,
+            device_class=BinarySensorDeviceClass.DOOR,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state (simple)"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_simple_closed",
+            name="Window/door is closed",
+            state_key=str(
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
+            ),
+            parse_opening_state=_legacy_is_closed,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_open",
+            name="Window/door is open",
+            state_key=str(
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            ),
+            parse_opening_state=_legacy_is_open,
+            device_class=BinarySensorDeviceClass.DOOR,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_closed",
+            name="Window/door is closed",
+            state_key=str(
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
+            ),
+            parse_opening_state=_legacy_is_closed,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_open_regular",
+            name="Window/door is open in regular position",
+            state_key=str(ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR),
+            parse_opening_state=_legacy_is_open,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={ACCESS_CONTROL_DOOR_STATE_OPEN_TILT},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_state_open_tilt",
+            name="Window/door is open in tilt position",
+            state_key=str(ACCESS_CONTROL_DOOR_STATE_OPEN_TILT),
+            parse_opening_state=_legacy_is_tilted,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    # -------------------------------------------------------------------
     NewZWaveDiscoverySchema(
         # Hoppe eHandle ConnectSense (0x0313:0x0701:0x0002) - window tilt sensor.
         # The window tilt state is exposed as a binary sensor that is disabled by default
