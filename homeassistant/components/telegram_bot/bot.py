@@ -1028,12 +1028,14 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = HTTPXRequest(proxy=proxy)
     else:
         request = HTTPXRequest(
             connection_pool_size=8,
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = None
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1042,6 +1044,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
         base_url=f"{base_url}/bot",
         base_file_url=f"{base_url}/file/bot",
         request=request,
+        get_updates_request=get_updates_request,
     )
 
 

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
+from homeassistant.components.telegram_bot.bot import TelegramNotificationService
 from homeassistant.components.telegram_bot.config_flow import DESCRIPTION_PLACEHOLDERS
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
@@ -12,6 +13,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PARSER_PLAIN_TEXT,
@@ -112,6 +114,14 @@ async def test_reconfigure_flow_broadcast(
     assert mock_webhooks_config_entry.data[CONF_PLATFORM] == PLATFORM_BROADCAST
     assert mock_webhooks_config_entry.data[CONF_PROXY_URL] == "https://test"
 
+    service: TelegramNotificationService = mock_webhooks_config_entry.runtime_data
+    assert (
+        service.bot._request[0]._client_kwargs["proxy"].url == "https://test"
+    )  # get updates request
+    assert (
+        service.bot._request[1]._client_kwargs["proxy"].url == "https://test"
+    )  # all other requests
+
 
 async def test_reconfigure_flow_webhooks(
     hass: HomeAssistant,
@@ -131,7 +141,7 @@ async def test_reconfigure_flow_webhooks(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             SECTION_ADVANCED_SETTINGS: {
-                CONF_API_ENDPOINT: "http://mock_api_endpoint",
+                CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -194,10 +204,7 @@ async def test_reconfigure_flow_webhooks(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_broadcast_config_entry.data[CONF_URL] == "https://reconfigure"
-    assert (
-        mock_broadcast_config_entry.data[CONF_API_ENDPOINT]
-        == "http://mock_api_endpoint"
-    )
+    assert mock_broadcast_config_entry.data[CONF_API_ENDPOINT] == DEFAULT_API_ENDPOINT
     assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
@@ -375,6 +382,75 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["data"][CONF_API_KEY] == "mock api key"
     assert result["data"][CONF_PROXY_URL] == "https://proxy"
     assert result["data"][CONF_URL] == "https://test"
+    assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
+
+
+@pytest.mark.parametrize(
+    ("api_endpoint", "webhook_url"),
+    [
+        (
+            DEFAULT_API_ENDPOINT,
+            "https://mock_webhook",
+        ),
+        (
+            "http://mock_api_endpoint",
+            "https://mock_webhook",
+        ),
+        (
+            "http://mock_api_endpoint",
+            "http://mock_webhook",
+        ),
+    ],
+)
+async def test_create_webhook_entry(
+    hass: HomeAssistant, api_endpoint: str, webhook_url: str
+) -> None:
+    """Test user flow that creates a webhook bot."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
+        return_value=User(123456, "Testbot", True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_WEBHOOKS,
+                CONF_API_KEY: "mock api key",
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: api_endpoint,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["step_id"] == "webhooks"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: webhook_url,
+            CONF_TRUSTED_NETWORKS: "149.154.160.0/20",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Testbot"
+    assert result["data"][CONF_PLATFORM] == PLATFORM_WEBHOOKS
+    assert result["data"][CONF_API_KEY] == "mock api key"
+    assert result["data"][CONF_API_ENDPOINT] == api_endpoint
+    assert result["data"][CONF_URL] == webhook_url
     assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
 
 
