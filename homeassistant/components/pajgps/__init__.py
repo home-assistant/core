@@ -7,9 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN
 from .coordinator import PajGpsCoordinator
 
 type PajGpsConfigEntry = ConfigEntry[PajGpsCoordinator]
@@ -30,24 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def async_remove_config_entry_device(
-    hass: core.HomeAssistant, config_entry: PajGpsConfigEntry, device_entry: DeviceEntry
-) -> bool:
-    """Allow removal of devices that are no longer present in the PAJ GPS account.
-
-    Returns True (permit removal) when the device_entry's identifier is not
-    in the coordinator's live device list, i.e. the device is stale.
-    Returns False (deny removal) when the device is still active in the account.
-    """
-    coordinator = config_entry.runtime_data
-    live_identifiers = {
-        (DOMAIN, f"{config_entry.data['guid']}_{device.id}")
-        for device in coordinator.data.devices
-        if device.id is not None
-    }
-    return not bool(device_entry.identifiers & live_identifiers)
 
 
 async def _async_update_listener(

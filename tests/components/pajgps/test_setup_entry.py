@@ -15,7 +15,6 @@ import pytest
 
 from homeassistant.components.pajgps import (
     _async_update_listener,
-    async_remove_config_entry_device,
     async_setup_entry,
     async_unload_entry,
 )
@@ -163,41 +162,6 @@ class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
         device_entry = MagicMock()
         device_entry.identifiers = {(DOMAIN, identifier)}
         return device_entry
-
-    async def test_stale_device_can_be_removed(self):
-        """A device no longer in the live list must be removable (returns True)."""
-        entry = self._make_entry_and_coordinator(live_device_ids=[1])
-        # device_id=99 is not live
-        device_entry = self._make_device_entry("test-guid_99")
-
-        result = await async_remove_config_entry_device(
-            MagicMock(), entry, device_entry
-        )
-
-        assert result is True
-
-    async def test_active_device_cannot_be_removed(self):
-        """A device still present in the live list must not be removable (returns False)."""
-        entry = self._make_entry_and_coordinator(live_device_ids=[1])
-        # device_id=1 is live
-        device_entry = self._make_device_entry("test-guid_1")
-
-        result = await async_remove_config_entry_device(
-            MagicMock(), entry, device_entry
-        )
-
-        assert result is False
-
-    async def test_removal_allowed_when_no_live_devices(self):
-        """When the coordinator has no live devices every device entry is stale."""
-        entry = self._make_entry_and_coordinator(live_device_ids=[])
-        device_entry = self._make_device_entry("test-guid_1")
-
-        result = await async_remove_config_entry_device(
-            MagicMock(), entry, device_entry
-        )
-
-        assert result is True
 
 
 class TestAsyncUpdateListener(unittest.IsolatedAsyncioTestCase):

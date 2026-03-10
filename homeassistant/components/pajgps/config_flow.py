@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 import uuid
@@ -112,114 +111,6 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=_build_config_schema(), errors=errors
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication when credentials are invalid."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication confirmation form."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            if not user_input.get(CONF_EMAIL):
-                errors["base"] = "email_required"
-            elif not user_input.get(CONF_PASSWORD):
-                errors["base"] = "password_required"
-            else:
-                error_key = await _validate_credentials(
-                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
-                )
-                if error_key:
-                    errors["base"] = error_key
-                else:
-                    self.hass.config_entries.async_update_entry(
-                        reauth_entry,
-                        data={**reauth_entry.data, **user_input},
-                    )
-                    await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_EMAIL, default=reauth_entry.data.get(CONF_EMAIL, "")
-                    ): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
-        errors: dict[str, str] = {}
-        reconfigure_entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            if not user_input.get("entry_name"):
-                errors["base"] = "entry_name_required"
-            elif not user_input.get(CONF_EMAIL):
-                errors["base"] = "email_required"
-            elif not user_input.get(CONF_PASSWORD):
-                errors["base"] = "password_required"
-            else:
-                # Prevent changing to an email that is already configured
-                email = user_input[CONF_EMAIL]
-                if any(
-                    entry.entry_id != reconfigure_entry.entry_id
-                    and entry.data.get(CONF_EMAIL) == email
-                    for entry in self._async_current_entries()
-                ):
-                    errors["base"] = "already_configured"
-                else:
-                    error_key = await _validate_credentials(
-                        email, user_input[CONF_PASSWORD], self.hass
-                    )
-                    if error_key:
-                        errors["base"] = error_key
-                    else:
-                        return self.async_update_reload_and_abort(
-                            reconfigure_entry,
-                            data={
-                                **reconfigure_entry.data,
-                                "entry_name": user_input["entry_name"],
-                                CONF_EMAIL: email,
-                                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            },
-                            title=user_input["entry_name"],
-                        )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=_build_config_schema(
-                entry_name=(
-                    user_input.get("entry_name") or ""
-                    if user_input
-                    else reconfigure_entry.data.get("entry_name", "")
-                ),
-                email=(
-                    user_input.get(CONF_EMAIL) or ""
-                    if user_input
-                    else reconfigure_entry.data.get(CONF_EMAIL, "")
-                ),
-                password=(
-                    user_input.get(CONF_PASSWORD) or ""
-                    if user_input
-                    else reconfigure_entry.data.get(CONF_PASSWORD, "")
-                ),
-            ),
-            errors=errors,
         )
 
     @staticmethod
