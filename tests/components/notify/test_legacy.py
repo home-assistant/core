@@ -276,6 +276,9 @@ async def test_platform_setup_with_error(
     assert "Error setting up platform testnotify" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.testnotify.services.reload."]
+)
 async def test_reload_with_notify_builtin_platform_reload(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
@@ -312,6 +315,15 @@ async def test_reload_with_notify_builtin_platform_reload(
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.testnotify.services.reload.",
+            "component.testnotify2.services.reload.",
+        ]
+    ],
+)
 async def test_setup_platform_and_reload(hass: HomeAssistant, tmp_path: Path) -> None:
     """Test service setup and reload."""
     get_service_called = Mock()
@@ -408,6 +420,15 @@ async def test_setup_platform_and_reload(hass: HomeAssistant, tmp_path: Path) ->
     assert not hass.services.has_service(notify.DOMAIN, "testnotify2_d")
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.testnotify.services.reload.",
+            "component.testnotify2.services.reload.",
+        ]
+    ],
+)
 async def test_setup_platform_before_notify_setup(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
@@ -466,6 +487,15 @@ async def test_setup_platform_before_notify_setup(
     assert hass.services.has_service(notify.DOMAIN, "testnotify2_d")
 
 
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.testnotify.services.reload.",
+            "component.testnotify2.services.reload.",
+        ]
+    ],
+)
 async def test_setup_platform_after_notify_setup(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
