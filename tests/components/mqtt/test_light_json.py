@@ -1974,7 +1974,7 @@ async def test_light_group_discovery_group_before_members(
 
     The group is discovered first, so the group members are
     not (all) known yet in the entity registry.
-    The entity property should be updates as soon as member entities
+    The entity property should be updated as soon as member entities
     are discovered, updated or removed.
     """
     await mqtt_mock_entry()

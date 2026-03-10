@@ -488,8 +488,16 @@ class MqttAttributesMixin(Entity):
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        if self.group is not None and CONF_GROUP in config:
-            self.group.member_unique_ids = config[CONF_GROUP]
+        if CONF_GROUP in config:
+            if self.group is None:
+                # Group was added in the updated discovery config
+                self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
+            else:
+                # Group existed and is still present in the updated config
+                self.group.member_unique_ids = config[CONF_GROUP]
+        elif self.group is not None:
+            # Group was removed from the updated discovery config
+            self.group = None
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 
