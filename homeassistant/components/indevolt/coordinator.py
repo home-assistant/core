@@ -107,7 +107,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (ClientError, ConnectionError, OSError) as err:
             raise DeviceConnectionError(f"Device push failed: {err}") from err
 
-    async def async_switch_energy_mode(self, target_mode: int) -> None:
+    async def async_switch_energy_mode(
+        self, target_mode: int, refresh: bool = True
+    ) -> None:
         """Attempt to switch device to given energy mode."""
         current_mode = self.data.get(ENERGY_MODE_READ_KEY)
 
@@ -128,19 +130,32 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Switch energy mode if required
         if current_mode != target_mode:
             try:
-                await self.async_push_data(ENERGY_MODE_WRITE_KEY, target_mode)
-
+                success = await self.async_push_data(ENERGY_MODE_WRITE_KEY, target_mode)
             except (DeviceTimeoutError, DeviceConnectionError) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="failed_to_switch_energy_mode",
                 ) from err
 
-            await self.async_request_refresh()
+            if not success:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_switch_energy_mode",
+                )
+
+            if refresh:
+                await self.async_request_refresh()
 
     async def async_execute_realtime_action(self, action: list[int]) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
-        await self.async_switch_energy_mode(REALTIME_ACTION_MODE)
-        await self.async_push_data(REALTIME_ACTION_KEY, action)
+        await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
+        success = await self.async_push_data(REALTIME_ACTION_KEY, action)
+
+        if not success:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_execute_realtime_action",
+            )
+
         await self.async_request_refresh()

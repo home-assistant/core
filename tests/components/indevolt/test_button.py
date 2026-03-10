@@ -80,11 +80,11 @@ async def test_button_press_stop_already_in_realtime_mode(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test pressing stop when already in real-time mode skips the mode switch."""
-    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
-        await setup_integration(hass, mock_config_entry)
 
     # Force real-time control mode
     mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = REALTIME_ACTION_MODE
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
 
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
@@ -131,11 +131,11 @@ async def test_button_press_stop_portable_mode_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test pressing stop raises HomeAssistantError when device is in outdoor/portable mode."""
-    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
-        await setup_integration(hass, mock_config_entry)
 
     # Force outdoor/portable mode
     mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = PORTABLE_MODE
+    with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
+        await setup_integration(hass, mock_config_entry)
 
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
