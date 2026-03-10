@@ -9,10 +9,7 @@ from unittest.mock import AsyncMock, patch
 from pajgps_api.pajgps_api_error import AuthenticationError
 import pytest
 
-from homeassistant.components.pajgps.coordinator import (
-    CoordinatorData,
-    PajGpsCoordinator,
-)
+from homeassistant.components.pajgps.coordinator import PajGpsCoordinator, PajGpsData
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .test_common import make_coordinator, make_device
@@ -22,9 +19,9 @@ class TestCoordinatorInit:
     """Tests for coordinator initialisation state."""
 
     def test_initial_snapshot_is_empty(self):
-        """Test that the initial data snapshot is an empty CoordinatorData."""
+        """Test that the initial data snapshot is an empty PajGpsData."""
         coord = make_coordinator()
-        assert isinstance(coord.data, CoordinatorData)
+        assert isinstance(coord.data, PajGpsData)
         assert coord.data.devices == []
 
     def test_tier_timestamps_start_at_zero(self):
@@ -46,7 +43,7 @@ class TestTierScheduling:
         """Return a coordinator whose initial refresh is already done."""
         coord = make_coordinator(**entry_kwargs)
         coord._initial_refresh_done = True
-        coord.data = CoordinatorData(devices=[make_device(1)])
+        coord.data = PajGpsData(devices=[make_device(1)])
         return coord
 
     @pytest.mark.asyncio
@@ -139,16 +136,16 @@ class TestInitialRefresh:
 
     @pytest.mark.asyncio
     async def test_initial_refresh_returns_data(self):
-        """Test that the initial refresh returns a CoordinatorData instance."""
+        """Test that the initial refresh returns a PajGpsData instance."""
         coord = make_coordinator()
-        coord.data = CoordinatorData(devices=[make_device(1)])
+        coord.data = PajGpsData(devices=[make_device(1)])
 
         with (
             patch.object(coord, "_run_devices_tier", new_callable=AsyncMock),
             patch.object(coord, "_run_positions_tier", new_callable=AsyncMock),
         ):
             result = await coord._async_update_data()
-            assert isinstance(result, CoordinatorData)
+            assert isinstance(result, PajGpsData)
 
 
 class TestGetDeviceInfo:
@@ -157,8 +154,7 @@ class TestGetDeviceInfo:
     def test_returns_dict_for_known_device(self):
         """Test that get_device_info returns a populated dict for a known device."""
         coord = make_coordinator()
-        coord.data = CoordinatorData(devices=[make_device(1)])
-
+        coord.data = PajGpsData(devices=[make_device(1)])
         info = coord.get_device_info(1)
 
         assert info is not None
@@ -170,14 +166,14 @@ class TestGetDeviceInfo:
     def test_returns_none_for_unknown_device(self):
         """Test that get_device_info returns None for an unknown device ID."""
         coord = make_coordinator()
-        coord.data = CoordinatorData(devices=[])
+        coord.data = PajGpsData(devices=[])
 
         assert coord.get_device_info(999) is None
 
     def test_identifiers_contain_guid_and_device_id(self):
         """Test that identifiers include both the GUID and device ID."""
         coord = make_coordinator(guid="my-guid")
-        coord.data = CoordinatorData(devices=[make_device(42)])
+        coord.data = PajGpsData(devices=[make_device(42)])
 
         info = coord.get_device_info(42)
         identifiers = info["identifiers"]

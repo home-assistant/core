@@ -19,7 +19,7 @@ from homeassistant.components.pajgps import (
     async_unload_entry,
 )
 from homeassistant.components.pajgps.const import DOMAIN
-from homeassistant.components.pajgps.coordinator import CoordinatorData
+from homeassistant.components.pajgps.coordinator import PajGpsData
 from homeassistant.exceptions import ConfigEntryNotReady
 
 
@@ -153,7 +153,7 @@ class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
             dev = MagicMock()
             dev.id = dev_id
             devices.append(dev)
-        coordinator.data = CoordinatorData(devices=devices)
+        coordinator.data = PajGpsData(devices=devices)
         entry.runtime_data = coordinator
         return entry
 

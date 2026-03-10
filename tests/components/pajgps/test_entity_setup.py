@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.pajgps.coordinator import CoordinatorData
+from homeassistant.components.pajgps.coordinator import PajGpsData
 
 from .test_common import make_device
 from .test_device_tracker import make_coordinator
@@ -26,7 +26,7 @@ class TestGetDeviceInfoModel:
 
     def _make_coord_with_device(self, device):
         coord = make_coordinator()
-        coord.data = CoordinatorData(devices=[device])
+        coord.data = PajGpsData(devices=[device])
         return coord
 
     def test_model_read_from_device_models_first_entry(self):

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.pajgps import device_tracker as dt_module
-from homeassistant.components.pajgps.coordinator import CoordinatorData
+from homeassistant.components.pajgps.coordinator import PajGpsData
 from homeassistant.components.pajgps.device_tracker import PajGPSDeviceTracker
 
 from .test_common import make_coordinator, make_device, make_trackpoint
@@ -24,7 +24,7 @@ def _make_hass_and_config_entry(coordinator):
 def _make_sensor(device_id: int = 1, positions=None):
     """Create a PajGPSDeviceTracker for testing."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(
+    coord.data = PajGpsData(
         devices=[make_device(device_id)],
         positions=positions or {},
     )
@@ -94,7 +94,7 @@ def test_device_info_returned_from_coordinator() -> None:
 async def test_entities_added_for_each_device() -> None:
     """Test that one entity is added per device during setup."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1), make_device(2)])
+    coord.data = PajGpsData(devices=[make_device(1), make_device(2)])
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
@@ -109,7 +109,7 @@ async def test_entities_added_for_each_device() -> None:
 async def test_no_entities_added_and_warning_logged_when_no_devices() -> None:
     """Test that no entities are added and a warning is logged when there are no devices."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[])
+    coord.data = PajGpsData(devices=[])
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
@@ -127,7 +127,7 @@ async def test_devices_with_none_id_are_skipped() -> None:
     no_id_device = make_device(1)
     no_id_device.id = None
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[no_id_device])
+    coord.data = PajGpsData(devices=[no_id_device])
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
@@ -142,7 +142,7 @@ async def test_devices_with_none_id_are_skipped() -> None:
 async def test_new_device_added_on_coordinator_update() -> None:
     """Entities for devices discovered after setup must be added dynamically."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
@@ -152,7 +152,7 @@ async def test_new_device_added_on_coordinator_update() -> None:
     assert len(added) == 1
 
     # Simulate coordinator fetching a second device
-    coord.data = CoordinatorData(devices=[make_device(1), make_device(2)])
+    coord.data = PajGpsData(devices=[make_device(1), make_device(2)])
     coord.async_update_listeners()
 
     assert len(added) == 2
@@ -163,7 +163,7 @@ async def test_new_device_added_on_coordinator_update() -> None:
 async def test_existing_device_not_duplicated_on_coordinator_update() -> None:
     """A device already tracked must not produce a duplicate entity on re-update."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
@@ -181,20 +181,20 @@ async def test_existing_device_not_duplicated_on_coordinator_update() -> None:
 async def test_available_false_when_device_removed_from_coordinator() -> None:
     """Available must be False once a device disappears from coordinator.data.devices."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     sensor = PajGPSDeviceTracker(coord, 1)
 
     assert sensor.available is True
 
     # Simulate device disappearing from the account
-    coord.data = CoordinatorData(devices=[])
+    coord.data = PajGpsData(devices=[])
     assert sensor.available is False
 
 
 async def test_available_true_when_device_present_in_coordinator() -> None:
     """Available must be True when the device is in coordinator.data.devices."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1), make_device(2)])
+    coord.data = PajGpsData(devices=[make_device(1), make_device(2)])
     sensor = PajGPSDeviceTracker(coord, 2)
 
     assert sensor.available is True
@@ -203,11 +203,11 @@ async def test_available_true_when_device_present_in_coordinator() -> None:
 async def test_available_recovers_when_device_reappears() -> None:
     """Available must return to True if a previously missing device comes back."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     sensor = PajGPSDeviceTracker(coord, 1)
 
-    coord.data = CoordinatorData(devices=[])
+    coord.data = PajGpsData(devices=[])
     assert sensor.available is False
 
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     assert sensor.available is True

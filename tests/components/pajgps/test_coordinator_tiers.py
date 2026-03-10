@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pajgps_api.pajgps_api_error import PajGpsApiError
 
-from homeassistant.components.pajgps.coordinator import CoordinatorData
+from homeassistant.components.pajgps.coordinator import PajGpsData
 
 from .test_common import make_coordinator, make_device, make_trackpoint
 
@@ -34,7 +34,7 @@ async def test_devices_stored_in_snapshot() -> None:
 async def test_api_error_preserves_stale_data() -> None:
     """Test that a devices API error leaves existing coordinator data unchanged."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     coord.api.get_devices = AsyncMock(side_effect=PajGpsApiError("fail"))
 
     received = []
@@ -67,7 +67,7 @@ async def test_timestamp_updated_even_on_error() -> None:
 async def _coord_with_device(device_id: int = 1, **entry_kwargs):  # type: ignore[return]
     """Create a coordinator pre-populated with one device and mocked API responses."""
     coord = make_coordinator(**entry_kwargs)
-    coord.data = CoordinatorData(devices=[make_device(device_id)])
+    coord.data = PajGpsData(devices=[make_device(device_id)])
     coord.api.get_all_last_positions = AsyncMock(
         return_value=[make_trackpoint(device_id)]
     )
@@ -95,7 +95,7 @@ async def test_positions_pushed_immediately() -> None:
 async def test_position_api_error_does_not_push() -> None:
     """Test that a positions API error prevents any snapshot from being pushed."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[make_device(1)])
+    coord.data = PajGpsData(devices=[make_device(1)])
     coord.api.get_all_last_positions = AsyncMock(side_effect=PajGpsApiError("fail"))
 
     received = []
@@ -109,7 +109,7 @@ async def test_position_api_error_does_not_push() -> None:
 async def test_no_devices_exits_early() -> None:
     """Test that the positions tier exits early when there are no devices."""
     coord = make_coordinator()
-    coord.data = CoordinatorData(devices=[])
+    coord.data = PajGpsData(devices=[])
     coord.api.get_all_last_positions = AsyncMock()
 
     await coord._run_positions_tier()

@@ -38,12 +38,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# CoordinatorData — immutable snapshot of all PAJ GPS data
+# PajGpsData — immutable snapshot of all PAJ GPS data
 # ---------------------------------------------------------------------------
 
 
 @dataclasses.dataclass(frozen=True)
-class CoordinatorData:
+class PajGpsData:
     """Typed, copy-on-write snapshot of all PAJ GPS data.
 
     Always replace via dataclasses.replace() — never mutate in place.
@@ -61,7 +61,7 @@ class CoordinatorData:
 # ---------------------------------------------------------------------------
 
 
-class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
+class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
     """Coordinator for the PAJ GPS integration.
 
     Drives two update tiers at different rates and pushes partial data
@@ -100,13 +100,13 @@ class PajGpsCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._initial_refresh_done: bool = False
 
         # Snapshot starts empty; entities must handle None gracefully until first refresh
-        self.data = CoordinatorData()
+        self.data = PajGpsData()
 
     # ------------------------------------------------------------------
     # HA entry point
     # ------------------------------------------------------------------
 
-    async def _async_update_data(self) -> CoordinatorData:
+    async def _async_update_data(self) -> PajGpsData:
         """Called by HA on every update_interval tick.
 
         First call: runs all tiers sequentially and returns a fully

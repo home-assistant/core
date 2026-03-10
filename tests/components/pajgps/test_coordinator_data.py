@@ -1,28 +1,28 @@
-"""Tests for CoordinatorData snapshot helpers and apply_alert_flag utility."""
+"""Tests for PajGpsData snapshot helpers and apply_alert_flag utility."""
 
 from __future__ import annotations
 
 import dataclasses
 import unittest
 
-from homeassistant.components.pajgps.coordinator import CoordinatorData
+from homeassistant.components.pajgps.coordinator import PajGpsData
 
 from .test_common import make_device, make_trackpoint
 
 
-class TestCoordinatorData(unittest.TestCase):
-    """Tests for CoordinatorData snapshot helpers and apply_alert_flag utility."""
+class TestPajGpsData(unittest.TestCase):
+    """Tests for PajGpsData snapshot helpers and apply_alert_flag utility."""
 
     def test_default_snapshot_is_empty(self):
-        """Test that a default CoordinatorData instance has empty devices and positions."""
-        data = CoordinatorData()
+        """Test that a default PajGpsData instance has empty devices and positions."""
+        data = PajGpsData()
         assert data.devices == []
         assert data.positions == {}
 
     def test_replace_preserves_other_fields(self):
         """Test that replacing one field preserves the other fields unchanged."""
         device = make_device(1)
-        data = CoordinatorData(devices=[device])
+        data = PajGpsData(devices=[device])
         tp = make_trackpoint(1)
         new_data = dataclasses.replace(data, positions={1: tp})
 
@@ -34,7 +34,7 @@ class TestCoordinatorData(unittest.TestCase):
     def test_snapshot_is_immutable_via_replace(self):
         """Mutating via dataclasses.replace() creates a new object; original is unchanged."""
         device = make_device(1)
-        original = CoordinatorData(devices=[device])
+        original = PajGpsData(devices=[device])
         updated = dataclasses.replace(original, positions={1: make_trackpoint(1)})
         # replace() returns a distinct object
         assert original is not updated
