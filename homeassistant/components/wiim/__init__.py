@@ -18,12 +18,12 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import (
     CONF_UDN,
-    CONF_UPNP_LOCATION,
     DATA_WIIM,
     DEFAULT_AVAILABILITY_POLLING_INTERVAL,
     DOMAIN,
     LOGGER,
     PLATFORMS,
+    UPNP_PORT,
     WiimData,
 )
 
@@ -57,13 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     controller = wiim_domain_data.controller
 
     host = entry.data[CONF_HOST]
-    upnp_location = entry.data[CONF_UPNP_LOCATION]
-    upnp_location_host = urlparse(upnp_location).hostname
-
-    if upnp_location_host is None:
-        raise ConfigEntryNotReady(f"Invalid WiiM UPnP location: {upnp_location}")
-
-    upnp_location = upnp_location.replace(upnp_location_host, host)
+    upnp_location = f"http://{host}:{UPNP_PORT}/description.xml"
 
     try:
         base_url = get_url(hass, prefer_external=False)

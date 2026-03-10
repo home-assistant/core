@@ -53,7 +53,6 @@ def mock_config_entry() -> ConfigEntry:
             "host": "192.168.1.100",
             "udn": "uuid:test-udn-1234",
             "name": "Test WiiM Device",
-            "upnp_location": "http://192.168.1.100:49152/description.xml",
         },
         title="Test WiiM Device",
         source="user",

@@ -18,7 +18,6 @@ PLATFORMS: Final[list[Platform]] = [
 ]
 
 CONF_UDN = "udn"
-CONF_UPNP_LOCATION = "upnp_location"
 UPNP_PORT = 49152
 
 ZEROCONF_TYPE_LINKPLAY: Final = "_linkplay._tcp.local."

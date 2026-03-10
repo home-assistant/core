@@ -10,7 +10,7 @@ from homeassistant.components.wiim.config_flow import (
     WiimConfigFlow,
     _validate_device_and_get_info,
 )
-from homeassistant.components.wiim.const import CONF_UDN, CONF_UPNP_LOCATION
+from homeassistant.components.wiim.const import CONF_UDN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -56,10 +56,6 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
         assert result["title"] == "WiiM Pro"
         assert result["data"][CONF_HOST] == "192.168.1.100"
         assert result["data"][CONF_UDN] == "uuid:test-1234"
-        assert (
-            result["data"][CONF_UPNP_LOCATION]
-            == "http://192.168.1.100:49152/description.xml"
-        )
 
         mock_set_unique_id.assert_called_once_with("uuid:test-1234")
         mock_abort.assert_called_once()
@@ -182,10 +178,6 @@ async def test_async_step_discovery_confirm_create_entry(
     assert result["title"] == "Discovered WiiM Device"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_UDN] == "uuid:test-udn-1234"
-    assert (
-        result["data"][CONF_UPNP_LOCATION]
-        == "http://192.168.1.100:49152/description.xml"
-    )
 
 
 @pytest.mark.asyncio
@@ -220,29 +212,6 @@ async def test_validate_device_and_get_info_success(
         return_value=expected_result,
     ):
         result = await _validate_device_and_get_info(
-            mock_hass, "192.168.1.100", location
+            mock_hass, "192.168.1.100"
         )
         assert result == expected_result
-
-
-@pytest.mark.asyncio
-async def test_validate_device_and_get_info_requires_location_for_host(
-    mock_hass: HomeAssistant,
-) -> None:
-    """Test host validation fails clearly without a description URL."""
-    with pytest.raises(
-        CannotConnect, match="Could not determine device information via UPnP."
-    ):
-        await _validate_device_and_get_info(mock_hass, "192.168.1.100")
-
-
-@pytest.mark.asyncio
-async def test_validate_device_and_get_info_requires_location_for_udn(
-    mock_hass: HomeAssistant,
-) -> None:
-    """Test UDN validation fails with a specific message without a description URL."""
-    with pytest.raises(
-        CannotConnect,
-        match="Validation by UDN \\(uuid:test-1234\\) alone is not supported",
-    ):
-        await _validate_device_and_get_info(mock_hass, "uuid:test-1234")
