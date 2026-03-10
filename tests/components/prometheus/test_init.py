@@ -2826,7 +2826,7 @@ def set_state_with_entry(
         attributes = {**attributes, **additional_attributes}
 
     hass.states.async_set(
-        entity_id=new_entity_id if new_entity_id else entry.entity_id,
+        entity_id=new_entity_id or entry.entity_id,
         new_state=state,
         attributes=attributes,
     )

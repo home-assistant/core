@@ -37,20 +37,23 @@ async def async_setup_platform(
 class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
-    _val: Any | None = None
-
-    def __init__(self, sensor):
+    def __init__(self, sensor: dict[str, Any]) -> None:
         """Initialize the sensor."""
 
         super().__init__(sensor["id"], sensor["name"])
         self.channel = sensor["channel"]
         sensor_type = sensor["type"]
 
-        self._decode, self.unit = SENSORS[sensor_type]
+        self._attr_unique_id = f"qs{self.qsid}:{self.channel}"
+
+        decode, unit = SENSORS[sensor_type]
         # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
-        assert not isinstance(self.unit, type), (
+        assert not isinstance(unit, type), (
             f"boolean sensor id={sensor['id']} name={sensor['name']}"
         )
+
+        self._decode = decode
+        self._attr_native_unit_of_measurement = unit
 
     @callback
     def update_packet(self, packet):
@@ -65,20 +68,5 @@ class QSSensor(QSEntity, SensorEntity):
             packet,
         )
         if val is not None:
-            self._val = val
+            self._attr_native_value = str(val)
             self.async_write_ha_state()
-
-    @property
-    def native_value(self):
-        """Return the value of the sensor."""
-        return None if self._val is None else str(self._val)
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for this sensor."""
-        return f"qs{self.qsid}:{self.channel}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self.unit

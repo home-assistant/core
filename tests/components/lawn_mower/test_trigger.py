@@ -19,11 +19,6 @@ from tests.components import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
     """Create multiple lawn mower entities associated with different targets."""
@@ -37,6 +32,7 @@ async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
         "lawn_mower.errored",
         "lawn_mower.paused_mowing",
         "lawn_mower.started_mowing",
+        "lawn_mower.started_returning",
     ],
 )
 async def test_lawn_mower_triggers_gated_by_labs_flag(
@@ -79,6 +75,11 @@ async def test_lawn_mower_triggers_gated_by_labs_flag(
             trigger="lawn_mower.started_mowing",
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
         ),
     ],
 )
@@ -148,6 +149,11 @@ async def test_lawn_mower_state_trigger_behavior_any(
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
         ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
     ],
 )
 async def test_lawn_mower_state_trigger_behavior_first(
@@ -214,6 +220,11 @@ async def test_lawn_mower_state_trigger_behavior_first(
             trigger="lawn_mower.started_mowing",
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
         ),
     ],
 )

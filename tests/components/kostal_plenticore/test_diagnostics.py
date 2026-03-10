@@ -52,6 +52,7 @@ async def test_entry_diagnostics(
                 "devices:local": [
                     "min='5' max='100' default=None access='readwrite' unit='%' id='Battery:MinSoc' type='byte'",
                     "min='50' max='38000' default=None access='readwrite' unit='W' id='Battery:MinHomeComsumption' type='byte'",
+                    "min='0' max='10000' default=None access='readwrite' unit='W' id='Inverter:ActivePowerLimitation' type='byte'",
                 ],
                 "scb:network": [
                     "min='1' max='63' default=None access='readwrite' unit=None id='Hostname' type='string'"

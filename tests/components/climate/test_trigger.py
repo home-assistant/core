@@ -7,8 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     HVACAction,
@@ -38,11 +36,6 @@ from tests.components import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> list[str]:
     """Create multiple climate entities associated with different targets."""
@@ -52,10 +45,6 @@ async def target_climates(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "climate.current_humidity_changed",
-        "climate.current_humidity_crossed_threshold",
-        "climate.current_temperature_changed",
-        "climate.current_temperature_crossed_threshold",
         "climate.hvac_mode_changed",
         "climate.target_humidity_changed",
         "climate.target_humidity_crossed_threshold",
@@ -217,28 +206,10 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.current_humidity_changed", HVACMode.AUTO, ATTR_CURRENT_HUMIDITY
-        ),
-        *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.current_temperature_changed",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
-        *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed", HVACMode.AUTO, ATTR_TEMPERATURE
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
@@ -386,16 +357,6 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
@@ -540,16 +501,6 @@ async def test_climate_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
         ),

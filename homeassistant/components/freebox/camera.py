@@ -118,7 +118,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
 
         # Parse all endpoints values
         for endpoint in filter(
-            lambda x: (x["ep_type"] == "signal"), node["show_endpoints"]
+            lambda x: x["ep_type"] == "signal", node["show_endpoints"]
         ):
             self._attr_extra_state_attributes[endpoint["name"]] = endpoint["value"]
 

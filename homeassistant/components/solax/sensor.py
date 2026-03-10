@@ -110,9 +110,7 @@ async def async_setup_entry(
                 serial,
                 version,
                 sensor,
-                description.native_unit_of_measurement,
-                description.state_class,
-                description.device_class,
+                description,
             )
         )
     async_add_entities(entities)
@@ -131,17 +129,13 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         serial: str,
         version: str,
         key: str,
-        unit: str | None,
-        state_class: SensorStateClass | str | None,
-        device_class: SensorDeviceClass | None,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = uid
         self._attr_name = f"{manufacturer} {serial} {key}"
-        self._attr_native_unit_of_measurement = unit
-        self._attr_state_class = state_class
-        self._attr_device_class = device_class
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=MANUFACTURER,

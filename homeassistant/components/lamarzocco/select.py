@@ -86,8 +86,10 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             ).target_level
         ],
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -103,12 +105,14 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]).mode
         ],
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (
-                ModelName.LINEA_MICRA,
-                ModelName.LINEA_MINI,
-                ModelName.LINEA_MINI_R,
-                ModelName.GS3_AV,
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (
+                    ModelName.LINEA_MICRA,
+                    ModelName.LINEA_MINI,
+                    ModelName.LINEA_MINI_R,
+                    ModelName.GS3_AV,
+                )
             )
         ),
     ),
@@ -147,10 +151,12 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             ).scale_connected
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
-            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
-            in coordinator.device.dashboard.config
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+                and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+                in coordinator.device.dashboard.config
+            )
         ),
     ),
 )

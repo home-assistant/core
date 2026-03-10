@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.calendar import DOMAIN, CalendarEntity, CalendarEvent
+from homeassistant.components.calendar import (
+    DOMAIN,
+    CalendarEntity,
+    CalendarEntityDescription,
+    CalendarEvent,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -48,12 +53,17 @@ class MockCalendarEntity(CalendarEntity):
         self,
         name: str,
         events: list[CalendarEvent] | None = None,
+        initial_color: str | None = None,
         unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
         self._attr_unique_id = unique_id
+        self.entity_description = CalendarEntityDescription(
+            key=unique_id or name,
+            initial_color=initial_color,
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -72,7 +82,7 @@ class MockCalendarEntity(CalendarEntity):
         event = CalendarEvent(
             start=start,
             end=end,
-            summary=summary if summary else f"Event {secrets.token_hex(16)}",
+            summary=summary or f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
         )
@@ -206,4 +216,9 @@ def create_test_entities() -> list[MockCalendarEntity]:
     )
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 
-    return [entity1, entity2]
+    entity3 = MockCalendarEntity(
+        "Calendar 3", [], initial_color="#FF0000", unique_id="calendar_3"
+    )
+    entity3.async_get_events = AsyncMock(wraps=entity3.async_get_events)
+
+    return [entity1, entity2, entity3]

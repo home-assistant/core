@@ -20,14 +20,29 @@
       "following": {
         "default": "mdi:account-multiple"
       },
+      "last_post": {
+        "default": "mdi:message-text-clock"
+      },
       "posts": {
         "default": "mdi:message-text"
+      },
+      "username": {
+        "default": "mdi:account"
       }
     }
   },
   "services": {
+    "get_account": {
+      "service": "mdi:account-search"
+    },
+    "mute_account": {
+      "service": "mdi:account-voice-off"
+    },
     "post": {
       "service": "mdi:message-text"
+    },
+    "unmute_account": {
+      "service": "mdi:account-voice"
     }
   }
 }

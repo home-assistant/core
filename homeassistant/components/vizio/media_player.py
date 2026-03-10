@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -42,9 +42,7 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
-    SERVICE_UPDATE_SETTING,
     SUPPORTED_COMMANDS,
-    UPDATE_SETTING_SCHEMA,
     VIZIO_AUDIO_SETTINGS,
     VIZIO_DEVICE_CLASSES,
     VIZIO_MUTE,
@@ -122,10 +120,6 @@ async def async_setup_entry(
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
 
     async_add_entities([entity], update_before_add=True)
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_SETTING, UPDATE_SETTING_SCHEMA, "async_update_setting"
-    )
 
 
 class VizioDevice(MediaPlayerEntity):

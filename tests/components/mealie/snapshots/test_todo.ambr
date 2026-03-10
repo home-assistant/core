@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_entities[todo.mealie_special_groceries-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_entities[todo.mealie_supermarket-entry]
@@ -146,6 +146,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---

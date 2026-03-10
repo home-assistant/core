@@ -36,19 +36,18 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
 
     runtime = TibberRuntimeData(
         session=session,
-        tibber_connection=MagicMock(),
     )
 
-    with patch(
-        "homeassistant.components.tibber.tibber_data_api.TibberDataAPI"
-    ) as mock_client_cls:
+    with patch("homeassistant.components.tibber.tibber.Tibber") as mock_client_cls:
         mock_client = MagicMock()
         mock_client.set_access_token = MagicMock()
         mock_client_cls.return_value = mock_client
 
         client = await runtime.async_get_client(hass)
 
-        mock_client_cls.assert_called_once_with("access-token", websession=ANY)
+        mock_client_cls.assert_called_once_with(
+            access_token="access-token", websession=ANY, time_zone=ANY, ssl=ANY
+        )
         session.async_ensure_token_valid.assert_awaited_once()
         mock_client.set_access_token.assert_called_once_with("access-token")
         assert client is mock_client
@@ -73,7 +72,6 @@ async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> Non
 
     runtime = TibberRuntimeData(
         session=session,
-        tibber_connection=MagicMock(),
     )
 
     with pytest.raises(ConfigEntryAuthFailed):

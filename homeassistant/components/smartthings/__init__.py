@@ -6,11 +6,9 @@ from collections.abc import Callable
 import contextlib
 from copy import deepcopy
 from dataclasses import dataclass
-from http import HTTPStatus
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp import ClientResponseError
 from pysmartthings import (
     Attribute,
     Capability,
@@ -46,7 +44,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -107,6 +110,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
     Platform.UPDATE,
     Platform.VACUUM,
     Platform.VALVE,
@@ -131,9 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == HTTPStatus.BAD_REQUEST:
-            raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from err
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
 
     client = SmartThings(session=async_get_clientsession(hass))
@@ -517,6 +521,19 @@ def create_devices(
                     ATTR_SERIAL_NUMBER: matter.serial_number,
                 }
             )
+        if (main_component := device.status.get(MAIN)) is not None and (
+            device_identification := main_component.get(
+                Capability.SAMSUNG_CE_DEVICE_IDENTIFICATION
+            )
+        ) is not None:
+            new_kwargs = {
+                ATTR_SERIAL_NUMBER: device_identification[Attribute.SERIAL_NUMBER].value
+            }
+            if ATTR_MODEL_ID not in kwargs:
+                new_kwargs[ATTR_MODEL_ID] = device_identification[
+                    Attribute.MODEL_NAME
+                ].value
+            kwargs.update(new_kwargs)
         if (
             device_registry.async_get_device({(DOMAIN, device.device.device_id)})
             is None
@@ -578,7 +595,8 @@ def process_status(status: dict[str, ComponentStatus]) -> dict[str, ComponentSta
                 if "burner" in component:
                     burner_id = int(component.split("-")[-1])
                     component = f"burner-0{burner_id}"
-                if component in status:
+                # Don't delete 'lamp' component even when disabled
+                if component in status and component != "lamp":
                     del status[component]
     for component_status in status.values():
         process_component_status(component_status)

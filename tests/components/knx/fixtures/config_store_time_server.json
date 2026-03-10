@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "minor_version": 3,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {},
+    "time_server": {
+      "time": { "write": "1/1/1" },
+      "date": { "write": "2/2/2" },
+      "datetime": { "write": "3/3/3" }
+    }
+  }
+}

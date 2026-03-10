@@ -252,7 +252,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             self._dhcp_discovered_serial = await _async_poll_local_fireplace_for_serial(
                 ip_address, dhcp_mode=True
             )
-        except (ConnectionError, ClientConnectionError):
+        except ConnectionError, ClientConnectionError:
             LOGGER.debug(
                 "DHCP Discovery has determined %s is not an IntelliFire device",
                 ip_address,

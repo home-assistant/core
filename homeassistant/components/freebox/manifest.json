@@ -8,6 +8,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["freebox_api"],
-  "requirements": ["freebox-api==1.2.2"],
+  "requirements": ["freebox-api==1.3.0"],
   "zeroconf": ["_fbx-api._tcp.local."]
 }
