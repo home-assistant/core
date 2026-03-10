@@ -3872,3 +3872,29 @@ async def test_upload_progress_flushed_on_state_change(
     assert len(events) == 3
     assert events[1] == upload_event_2
     assert events[2].manager_state == BackupManagerState.IDLE
+
+
+async def test_coordinator_skips_refresh_on_upload_progress(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the coordinator does not refresh on upload progress events."""
+    await setup_backup_integration(hass)
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = config_entry.runtime_data
+
+    with patch.object(coordinator, "async_refresh") as mock_refresh:
+        coordinator._on_event(
+            UploadBackupEvent(
+                manager_state=BackupManagerState.CREATE_BACKUP,
+                agent_id="test.remote",
+                uploaded_bytes=500,
+                total_bytes=1000,
+            )
+        )
+        await hass.async_block_till_done()
+        mock_refresh.assert_not_called()
+
+        coordinator._on_event(IdleEvent())
+        await hass.async_block_till_done()
+        mock_refresh.assert_called_once()
