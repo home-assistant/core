@@ -38,6 +38,7 @@
       },
       "entry_type": "AI task",
       "error": {
+        "code_interpreter_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::code_interpreter_minimal_reasoning%]",
         "model_not_supported": "[%key:component::openai_conversation::config_subentries::conversation::error::model_not_supported%]",
         "web_search_minimal_reasoning": "[%key:component::openai_conversation::config_subentries::conversation::error::web_search_minimal_reasoning%]"
       },
@@ -93,6 +94,7 @@
       },
       "entry_type": "Conversation agent",
       "error": {
+        "code_interpreter_minimal_reasoning": "Code interpreter is not supported with minimal reasoning effort",
         "model_not_supported": "This model is not supported, please select a different model",
         "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
       },

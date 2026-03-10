@@ -32,6 +32,14 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "host": "[%key:component::proxmoxve::config::step::user::data_description::host%]",
+          "password": "[%key:component::proxmoxve::config::step::user::data_description::password%]",
+          "port": "[%key:component::proxmoxve::config::step::user::data_description::port%]",
+          "realm": "[%key:component::proxmoxve::config::step::user::data_description::realm%]",
+          "username": "[%key:component::proxmoxve::config::step::user::data_description::username%]",
+          "verify_ssl": "[%key:component::proxmoxve::config::step::user::data_description::verify_ssl%]"
+        },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
         "title": "Reconfigure Proxmox VE integration"
       },
@@ -43,6 +51,14 @@
           "realm": "Realm",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Proxmox VE server",
+          "password": "The password for the Proxmox VE server",
+          "port": "The port of your Proxmox VE server (default: 8006)",
+          "realm": "The authentication realm for the Proxmox VE server (default: 'pam')",
+          "username": "The username for the Proxmox VE server",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
         "description": "Enter your Proxmox VE server details to set up the integration.",
         "title": "Connect to Proxmox VE"
@@ -159,6 +175,9 @@
     }
   },
   "exceptions": {
+    "api_error_details": {
+      "message": "An error occurred while communicating with the Proxmox VE instance: {error}"
+    },
     "api_error_no_details": {
       "message": "An error occurred while communicating with the Proxmox VE instance."
     },
@@ -176,6 +195,15 @@
     },
     "no_nodes_found": {
       "message": "No active nodes were found on the Proxmox VE server."
+    },
+    "no_permission_node_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of nodes. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "no_permission_vm_lxc_power": {
+      "message": "The configured Proxmox VE user does not have permission to manage the power state of VMs and containers. Please grant the user the 'VM.PowerMgmt' permission and try again."
+    },
+    "permissions_error": {
+      "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
     "ssl_error": {
       "message": "An SSL error occurred: {error}"

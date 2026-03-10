@@ -126,5 +126,6 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the sensor."""
         await self.entity_description.set_value_fn(
-            self.coordinator.client, self.coordinator.battery_id, int(value)
+            self.coordinator.client, self.coordinator.battery.identifier, int(value)
         )
+        await self.coordinator.async_request_refresh()

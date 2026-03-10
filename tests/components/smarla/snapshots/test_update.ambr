@@ -41,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/smarla/icon.png',
+      'entity_picture': '/api/brands/integration/smarla/icon.png',
       'friendly_name': 'Smarla Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',

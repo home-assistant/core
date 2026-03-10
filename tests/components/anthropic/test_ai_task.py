@@ -3,6 +3,7 @@
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from anthropic.types import Message, TextBlock, Usage
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -54,12 +55,23 @@ async def test_generate_data(
     assert result.data == "The test data"
 
 
+async def test_translation_key(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity translation key."""
+    entry = entity_registry.async_get("ai_task.claude_ai_task")
+    assert entry is not None
+    assert entry.translation_key == "ai_task_data"
+
+
 async def test_empty_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream: AsyncMock,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test AI Task data generation but the data returned is empty."""
     mock_create_stream.return_value = [create_content_block(0, [""])]
@@ -67,6 +79,31 @@ async def test_empty_data(
     with pytest.raises(
         HomeAssistantError, match="Last content in chat log is not an AssistantContent"
     ):
+        await ai_task.async_generate_data(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.claude_ai_task",
+            instructions="Generate test data",
+        )
+
+
+async def test_stream_wrong_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error if the response is not a stream."""
+    mock_create_stream.return_value = Message(
+        type="message",
+        id="message_id",
+        model="claude-opus-4-6",
+        role="assistant",
+        content=[TextBlock(type="text", text="This is not a stream")],
+        usage=Usage(input_tokens=42, output_tokens=42),
+    )
+
+    with pytest.raises(HomeAssistantError, match="Expected a stream of messages"):
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
