@@ -342,7 +342,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][button.refrigerator_reset_water_filter-entry]
+# name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,7 +355,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.refrigerator_1_reset_water_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,13 +378,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][button.refrigerator_reset_water_filter-state]
+# name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Reset water filter',
+      'friendly_name': 'Refrigerator 1 Reset water filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.refrigerator_1_reset_water_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

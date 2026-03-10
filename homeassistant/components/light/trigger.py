@@ -24,7 +24,7 @@ class BrightnessChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     """Trigger for brightness changed."""
 
     _domains = {DOMAIN}
-    _attribute = ATTR_BRIGHTNESS
+    _attributes = {DOMAIN: ATTR_BRIGHTNESS}
 
     _converter = staticmethod(_convert_uint8_to_percentage)
 
@@ -35,7 +35,7 @@ class BrightnessCrossedThresholdTrigger(
     """Trigger for brightness crossed threshold."""
 
     _domains = {DOMAIN}
-    _attribute = ATTR_BRIGHTNESS
+    _attributes = {DOMAIN: ATTR_BRIGHTNESS}
     _converter = staticmethod(_convert_uint8_to_percentage)
 
 
