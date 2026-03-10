@@ -3,12 +3,9 @@
   dict(
     'device_tracker.2021_honda_accord': EntityPlatformTestSnapshot(
       attributes=dict(
-        address='123 Main St, San Francisco, CA 94102',
         friendly_name='2021 Honda Accord',
         gps_accuracy=10,
-        heading=180.0,
         icon='mdi:car',
-        last_polled='2020-02-02T14:00:00Z',
         source_type='gps',
       ),
       context=dict(

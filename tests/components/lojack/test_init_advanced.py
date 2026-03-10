@@ -2,20 +2,20 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import MockApiError, MockAuthenticationError
+from .conftest import MockApiError
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry_with_first_refresh_failure(
+async def test_setup_entry_list_devices_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails gracefully if first refresh fails."""
+    """Test setup fails gracefully if list_devices raises ApiError."""
     client = AsyncMock()
     client.list_devices = AsyncMock(side_effect=MockApiError("API error"))
     client.close = AsyncMock()
@@ -26,15 +26,7 @@ async def test_setup_entry_with_first_refresh_failure(
             return_value=client,
         ),
         patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.ApiError",
+            "homeassistant.components.lojack.ApiError",
             MockApiError,
         ),
     ):
@@ -42,15 +34,15 @@ async def test_setup_entry_with_first_refresh_failure(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-        client.close.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    client.close.assert_called_once()
 
 
-async def test_setup_entry_close_fails_after_refresh_failure(
+async def test_setup_entry_close_fails_after_list_devices_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup retries when refresh fails, even if close also fails."""
+    """Test setup retries when list_devices fails, even if close also fails."""
     client = AsyncMock()
     client.list_devices = AsyncMock(side_effect=MockApiError("API error"))
     client.close = AsyncMock(side_effect=Exception("Close failed"))
@@ -61,15 +53,7 @@ async def test_setup_entry_close_fails_after_refresh_failure(
             return_value=client,
         ),
         patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.ApiError",
+            "homeassistant.components.lojack.ApiError",
             MockApiError,
         ),
     ):
@@ -77,50 +61,7 @@ async def test_setup_entry_close_fails_after_refresh_failure(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # close() failure is caught in the finally block, so the original
-        # ApiError propagates as UpdateFailed → SETUP_RETRY
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_token_refresh_client_close_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_device: AsyncMock,
-    mock_location: AsyncMock,
-) -> None:
-    """Test coordinator handles old client close failure during token refresh."""
-    mock_device.get_location = AsyncMock(return_value=mock_location)
-
-    old_client = AsyncMock()
-    old_client.list_devices = AsyncMock(side_effect=MockAuthenticationError("Token expired"))
-    old_client.close = AsyncMock(side_effect=Exception("Close failed"))
-
-    new_client = AsyncMock()
-    new_client.list_devices = AsyncMock(return_value=[mock_device])
-    new_client.close = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.lojack.LoJackClient.create",
-            side_effect=[old_client, new_client],
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=old_client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.LoJackClient.create",
-            return_value=new_client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.AuthenticationError",
-            MockAuthenticationError,
-        ),
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-        coordinator = mock_config_entry.runtime_data
-        assert coordinator.data is not None
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry_platforms_unload_fails(
@@ -156,8 +97,8 @@ async def test_setup_entry_generic_exception_during_client_create(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Unexpected exceptions should propagate as setup error
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    # Unexpected exceptions should propagate as setup error
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_and_then_reload(
@@ -171,6 +112,10 @@ async def test_setup_entry_and_then_reload(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_lojack_client.reset_mock()
+    # Reset context manager mocks too
+    mock_lojack_client.__aenter__ = AsyncMock(return_value=mock_lojack_client)
+    mock_lojack_client.__aexit__ = AsyncMock(return_value=False)
+
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 

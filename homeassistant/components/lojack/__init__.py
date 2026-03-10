@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
-type LoJackConfigEntry = ConfigEntry[LoJackCoordinator]
+type LoJackConfigEntry = ConfigEntry[list[LoJackCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
@@ -32,19 +32,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
     except ApiError as err:
         raise ConfigEntryNotReady(f"API error during setup: {err}") from err
 
-    coordinator = LoJackCoordinator(hass, client, entry)
-    success = False
     try:
-        await coordinator.async_config_entry_first_refresh()
-        success = True
-    finally:
-        if not success:
-            try:
-                await client.close()
-            except Exception:  # noqa: BLE001 - Best-effort cleanup; preserve original exception
-                _LOGGER.debug("Error closing LoJack client during setup failure", exc_info=True)
+        vehicles = await client.list_devices()
+    except AuthenticationError as err:
+        await client.close()
+        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+    except ApiError as err:
+        await client.close()
+        raise ConfigEntryNotReady(f"API error during setup: {err}") from err
 
-    entry.runtime_data = coordinator
+    coordinators: list[LoJackCoordinator] = []
+    for vehicle in vehicles or []:
+        coordinator = LoJackCoordinator(hass, client, entry, vehicle)
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except Exception:  # noqa: BLE001
+            await client.close()
+            raise
+        coordinators.append(coordinator)
+
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -55,9 +62,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
+    if unload_ok and entry.runtime_data:
+        # All coordinators share the same client; close it once via the first coordinator
         try:
-            await entry.runtime_data.client.close()
+            await entry.runtime_data[0].client.close()
         except Exception as err:  # noqa: BLE001
             _LOGGER.debug("Error closing LoJack client: %s", err)
 

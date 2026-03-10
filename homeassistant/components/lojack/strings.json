@@ -1,10 +1,7 @@
 {
   "config": {
     "abort": {
-      "account_mismatch": "The username does not match the existing configuration",
-      "already_configured": "This account is already configured",
-      "reauth_successful": "Re-authentication was successful",
-      "reconfigure_successful": "Reconfiguration was successful"
+      "already_configured": "This account is already configured"
     },
     "error": {
       "cannot_connect": "Failed to connect to LoJack servers",
@@ -15,21 +12,6 @@
       "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "description": "Please enter your password to re-authenticate.",
-        "title": "Re-authenticate LoJack"
-      },
-      "reconfigure": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "description": "Update your LoJack/Spireon account credentials.",
-        "title": "Reconfigure LoJack"
-      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

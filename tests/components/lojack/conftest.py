@@ -20,6 +20,7 @@ from .const import (
     TEST_MODEL,
     TEST_PASSWORD,
     TEST_TIMESTAMP,
+    TEST_USER_ID,
     TEST_USERNAME,
     TEST_VIN,
     TEST_YEAR,
@@ -41,7 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_USERNAME.lower(),
+        unique_id=TEST_USER_ID,
         data={
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
@@ -84,8 +85,12 @@ def mock_lojack_client(
     mock_device.get_location = AsyncMock(return_value=mock_location)
 
     client = AsyncMock()
+    client.user_id = TEST_USER_ID
     client.list_devices = AsyncMock(return_value=[mock_device])
     client.close = AsyncMock()
+    # Support async context manager usage in config_flow.validate_input
+    client.__aenter__ = AsyncMock(return_value=client)
+    client.__aexit__ = AsyncMock(return_value=False)
 
     with (
         patch(
@@ -94,10 +99,6 @@ def mock_lojack_client(
         ),
         patch(
             "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.LoJackClient.create",
             return_value=client,
         ),
     ):

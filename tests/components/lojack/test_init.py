@@ -25,8 +25,9 @@ async def test_setup_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data is not None
-    assert TEST_DEVICE_ID in mock_config_entry.runtime_data.data
+    coordinators = mock_config_entry.runtime_data
+    assert len(coordinators) == 1
+    assert coordinators[0].data.device_id == TEST_DEVICE_ID
 
 
 async def test_setup_entry_auth_error(
