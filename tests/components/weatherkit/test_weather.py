@@ -220,7 +220,10 @@ def test_sum_precipitation(
     snowfall: float | None, precipitation: float | None, expected: float | None
 ) -> None:
     """Test _sum_precipitation returns None only when both inputs are None."""
-    assert _sum_precipitation(snowfall, precipitation) == expected
+    result = _sum_precipitation(snowfall, precipitation)
+    assert result == expected
+    if expected is not None:
+        assert isinstance(result, float)
 
 
 def test_hourly_forecast_none_when_both_missing() -> None:

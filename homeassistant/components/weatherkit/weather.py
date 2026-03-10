@@ -99,7 +99,9 @@ def _sum_precipitation(
     """Sum snowfall and precipitation, preserving None when both are absent."""
     if snowfall is None and precipitation is None:
         return None
-    return (snowfall or 0) + (precipitation or 0)
+    snowfall_value = 0.0 if snowfall is None else snowfall
+    precipitation_value = 0.0 if precipitation is None else precipitation
+    return snowfall_value + precipitation_value
 
 
 def _map_daily_forecast(forecast: dict[str, Any]) -> Forecast:
