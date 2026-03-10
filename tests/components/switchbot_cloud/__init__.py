@@ -44,7 +44,7 @@ BATTERY_CIRCULATOR_FAN_INFO = Device(
 CIRCULATOR_FAN_INFO = Device(
     version="V1.0",
     deviceId="battery-fan-id-1",
-    deviceName="battery-fan-1",
+    deviceName="fan-1",
     deviceType="Circulator Fan",
     hubDeviceId="test-hub-id",
 )

@@ -42,7 +42,7 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
     ("device_info", "entry_id"),
     [
         (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
-        (CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
     ],
 )
@@ -76,7 +76,7 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = "fan.fan_1"
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_OFF
@@ -107,7 +107,7 @@ async def test_turn_off(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = "fan.fan_1"
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
@@ -138,7 +138,7 @@ async def test_set_percentage(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = "fan.fan_1"
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
@@ -169,7 +169,7 @@ async def test_set_preset_mode(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = "fan.fan_1"
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
