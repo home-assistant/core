@@ -52,8 +52,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str
     except aioptdevices.PTDevicesUnauthorizedError as err:
         raise InvalidAuth from err
 
-    title: str = list(response["body"].values())[0].get("user_name", "")
-    unique_id: str = str(list(response["body"].values())[0].get("user_id", ""))
+    body = response["body"]
+
+    # Ensure the first device exists
+    first_device = next(iter(body.values()), None)
+    if first_device is None:
+        raise NoDevicesFound
+
+    # Ensure the user_name and user_id exist
+    user_name = first_device.get("user_name")
+    user_id = first_device.get("user_id")
+    if user_name is None or user_id is None:
+        raise MalformedResponse
+
+    title: str = str(user_name)
+    unique_id: str = str(user_id)
 
     # Return title to be used for hub name
     return (title, unique_id)
@@ -86,6 +99,10 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except NoDevicesFound:
+                errors["base"] = "no_devices_found"
+            except MalformedResponse:
+                errors["base"] = "malformed_response"
             else:
                 # Connection Successful
                 await self.async_set_unique_id(unique_id)
@@ -104,3 +121,11 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class NoDevicesFound(HomeAssistantError):
+    """No devices were found in the account."""
+
+
+class MalformedResponse(HomeAssistantError):
+    """Error indicating the response from the library is missing something required by the home assistant integration."""
