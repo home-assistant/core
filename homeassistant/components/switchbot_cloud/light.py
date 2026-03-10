@@ -248,7 +248,7 @@ class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
         await self.send_api_command(
             AirPurifierCommands.SET_LIGHT_SENSOR, parameters="off"
         )
-        self._attr_assumed_state = False
+        self._attr_assumed_state = True
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
@@ -256,7 +256,7 @@ class SwitchBotCloudAirPurifierLight(SwitchBotCloudLight):
         """Turn the light on."""
         brightness: int | None = kwargs.get("brightness")
         rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
-        self._attr_assumed_state = True
+        self._attr_assumed_state = False
         if brightness is not None:
             await self._send_brightness_command(brightness)
         elif rgb_color is not None:
