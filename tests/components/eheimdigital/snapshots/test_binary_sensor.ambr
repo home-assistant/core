@@ -70,12 +70,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'UVC Lamp connected',
+    'object_id_base': 'UVC lamp connected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'UVC Lamp connected',
+    'original_name': 'UVC lamp connected',
     'platform': 'eheimdigital',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -89,7 +89,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Mock reeflex UVC Lamp connected',
+      'friendly_name': 'Mock reeflex UVC lamp connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_reeflex_uvc_lamp_connected',
