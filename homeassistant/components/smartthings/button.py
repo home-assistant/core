@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from pysmartthings import Capability, Command, SmartThings
 
@@ -22,7 +22,7 @@ class SmartThingsButtonDescription(ButtonEntityDescription):
 
     key: Capability
     command: Command
-    components: list[str] = field(default_factory=list)
+    components: list[str] | None = None
 
 
 CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = {
