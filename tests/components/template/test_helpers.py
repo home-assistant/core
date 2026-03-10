@@ -399,7 +399,11 @@ async def _setup_mock_devices(
             ),
             async_get_actions=_async_get_actions,
             async_call_action_from_config=AsyncMock(),
-            spec=["ACTION_SCHEMA", "async_get_actions"],
+            spec=[
+                "ACTION_SCHEMA",
+                "async_get_actions",
+                "async_call_action_from_config",
+            ],
         ),
     )
     config_entry = MockConfigEntry(domain="test", data={})
@@ -593,7 +597,7 @@ async def test_yaml_device_actions(
     style: ConfigurationStyle,
     domain: str,
     script_fields,
-    extra_config: str,
+    extra_config: ConfigType,
     test_actions: tuple[tuple[str, dict], ...],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
