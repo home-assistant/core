@@ -8,7 +8,7 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to the device. Make sure it is in range and try again.",
-      "invalid_signature": "Invalid device signature during pairing..",
+      "invalid_signature": "Invalid device signature during pairing.",
       "pairing_failed": "Pairing failed. Please ensure the device is in pairing mode (LED flashing) and try again.",
       "unknown": "An unexpected error occurred during pairing."
     },

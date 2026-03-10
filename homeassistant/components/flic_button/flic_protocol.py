@@ -931,7 +931,7 @@ def _parse_duo_events_from_bytes(
             state.restore(snapshot)
             got_event_count = got_event_snapshot
             break
-        except ValueError, IndexError:
+        except (ValueError, IndexError):
             state.restore(snapshot)
             got_event_count = got_event_snapshot
             had_parse_error = True

@@ -103,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     if ble_device:
         try:
             await coordinator.async_connect()
-        except TimeoutError, BleakError, FlicProtocolError:
+        except (TimeoutError, BleakError, FlicProtocolError):
             _LOGGER.debug(
                 "Initial connection to %s failed, will retry when device is available",
                 address,

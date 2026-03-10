@@ -150,10 +150,8 @@ class FlicFirmwareUpdateEntity(FlicButtonEntity, UpdateEntity):
             installed_clean = installed_version.split("+", maxsplit=1)[0]
             if latest_clean == installed_clean and "+" in latest_version:
                 return True
-            return int(latest_clean) > int(installed_clean) or bool(
-                self.coordinator.firmware_download_url
-            )
-        except ValueError, TypeError:
+            return int(latest_clean) > int(installed_clean)
+        except (ValueError, TypeError):
             return False
 
     async def async_install(
