@@ -159,7 +159,7 @@
           "control_mode": "Send commands to",
           "read_mode": "Read data from"
         },
-        "description": "Select the endpoints to use for reading data and sending commands to your fireplace. The **cloud** endpoint is the same one as used by the **IntelliFire** app. You can also use the **local** endpoint which exists on the fireplace hardware it's self.",
+        "description": "Some users find that their fireplace hardware prioritizes `Cloud` communication and may experience timeouts with `Local` control. If you encounter connectivity issues, try switching to `Cloud` for the affected endpoint.",
         "title": "Endpoint selection"
       }
     }
