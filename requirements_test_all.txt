@@ -28,7 +28,7 @@ HueBLE==2.1.0
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.1
+PSNAWP==3.0.3
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -1462,7 +1462,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.5
+onedrive-personal-sdk==0.1.6
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1919,7 +1919,7 @@ pylitterbot==2025.1.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.2.18
+pylutron==0.3.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2059,7 +2059,7 @@ pyrail==0.4.1
 pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.9.0
+pyrate-limiter==4.0.2
 
 # homeassistant.components.risco
 pyrisco==0.6.7
@@ -2235,7 +2235,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.17.1
+python-roborock==4.17.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
