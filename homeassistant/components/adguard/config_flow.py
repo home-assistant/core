@@ -15,17 +15,18 @@ from homeassistant.const import (
     CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import DEFAULT_BASE_PATH, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_BASE_PATH, DOMAIN
 
 
 def _parse_address(address: str) -> tuple[str, int, str, bool]:
-    """Parse user provided address into host, port, path, and TLS mode."""
+    """Parse user provided URL into host, port, path, and TLS mode."""
     normalized_address = address.strip()
     has_scheme = "://" in normalized_address
 
@@ -45,11 +46,7 @@ def _parse_address(address: str) -> tuple[str, int, str, bool]:
         raise ValueError
 
     tls = url.scheme == "https"
-    if has_scheme:
-        port = url.explicit_port or (443 if tls else 80)
-    else:
-        port = url.explicit_port or DEFAULT_PORT
-
+    port = url.explicit_port or (443 if tls else 80)
     path = DEFAULT_BASE_PATH if url.path in {"", "/"} else url.path
 
     return (
@@ -75,14 +72,13 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             description_placeholders={
                 "example_host": "adguard.local",
-                "example_host_port": "adguard.local:3000",
-                "example_ip_port": "192.168.1.10:3000",
+                "example_host_port": "http://adguard.local:3000",
+                "example_ip_port": "http://192.168.1.10:3000",
                 "example_url": "https://adguard.example.com",
-                "default_port": str(DEFAULT_PORT),
             },
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_URL): str,
                     vol.Optional(CONF_USERNAME): str,
                     vol.Optional(CONF_PASSWORD): str,
                     vol.Required(CONF_VERIFY_SSL, default=True): bool,
@@ -107,12 +103,12 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
-            return await self._show_setup_form()
+            return await self._show_setup_form(user_input)
 
         errors = {}
 
         try:
-            host, port, base_path, use_tls = _parse_address(user_input[CONF_HOST])
+            host, port, base_path, use_tls = _parse_address(user_input[CONF_URL])
         except ValueError:
             errors["base"] = "invalid_url"
             return await self._show_setup_form(errors)

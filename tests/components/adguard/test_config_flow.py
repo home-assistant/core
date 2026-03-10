@@ -5,11 +5,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.adguard.config_flow import _parse_address
-from homeassistant.components.adguard.const import (
-    DEFAULT_BASE_PATH,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from homeassistant.components.adguard.const import DEFAULT_BASE_PATH, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +13,7 @@ from homeassistant.const import (
     CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
@@ -29,7 +26,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
-    CONF_HOST: "127.0.0.1:3000",
+    CONF_URL: "127.0.0.1:3000",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",
     CONF_VERIFY_SSL: True,
@@ -70,7 +67,7 @@ async def test_connection_error(
     [
         (
             "adguard.local",
-            ("adguard.local", DEFAULT_PORT, DEFAULT_BASE_PATH, False),
+            ("adguard.local", 80, DEFAULT_BASE_PATH, False),
         ),
         (
             "adguard.local:3001",
@@ -130,8 +127,15 @@ async def test_invalid_user_address(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: address,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_URL: address,
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
             CONF_VERIFY_SSL: True,
@@ -182,6 +186,113 @@ async def test_full_flow_implementation(
     assert not config_entry.options
 
 
+@pytest.mark.parametrize(
+    ("user_url", "expected_host", "expected_port", "expected_path", "expected_ssl", "status_url"),
+    [
+        (
+            "1.2.3.4",
+            "1.2.3.4",
+            80,
+            DEFAULT_BASE_PATH,
+            False,
+            "http://1.2.3.4:80/control/status",
+        ),
+        (
+            "1.2.3.4:3000",
+            "1.2.3.4",
+            3000,
+            DEFAULT_BASE_PATH,
+            False,
+            "http://1.2.3.4:3000/control/status",
+        ),
+        (
+            "http://adguard.local",
+            "adguard.local",
+            80,
+            DEFAULT_BASE_PATH,
+            False,
+            "http://adguard.local:80/control/status",
+        ),
+        (
+            "http://adguard.local:3000",
+            "adguard.local",
+            3000,
+            DEFAULT_BASE_PATH,
+            False,
+            "http://adguard.local:3000/control/status",
+        ),
+        (
+            "https://adguard.local",
+            "adguard.local",
+            443,
+            DEFAULT_BASE_PATH,
+            True,
+            "https://adguard.local:443/control/status",
+        ),
+        (
+            "https://adguard.local:9443",
+            "adguard.local",
+            9443,
+            DEFAULT_BASE_PATH,
+            True,
+            "https://adguard.local:9443/control/status",
+        ),
+        (
+            "https://sub.domain.tld/proxy/control",
+            "sub.domain.tld",
+            443,
+            "/proxy/control",
+            True,
+            "https://sub.domain.tld:443/proxy/control/status",
+        ),
+        (
+            "adguard.local/proxy/control",
+            "adguard.local",
+            80,
+            "/proxy/control",
+            False,
+            "http://adguard.local:80/proxy/control/status",
+        ),
+    ],
+)
+async def test_user_flow_supported_url_formats(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    user_url: str,
+    expected_host: str,
+    expected_port: int,
+    expected_path: str,
+    expected_ssl: bool,
+    status_url: str,
+) -> None:
+    """Test supported URL/address input formats through full user flow."""
+    aioclient_mock.get(
+        status_url,
+        json={"version": "v0.99.0"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_URL: user_url,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == expected_host
+    assert result["data"][CONF_PORT] == expected_port
+    assert result["data"][CONF_PATH] == expected_path
+    assert result["data"][CONF_SSL] is expected_ssl
+
+
 async def test_full_url_with_path(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -196,7 +307,7 @@ async def test_full_url_with_path(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={
-            CONF_HOST: "https://mock-adguard/proxy/control",
+            CONF_URL: "https://mock-adguard/proxy/control",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "pass",
             CONF_VERIFY_SSL: True,
@@ -225,7 +336,7 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"host": "mock-adguard:3000", "verify_ssl": True},
+        data={"url": "mock-adguard:3000", "verify_ssl": True},
         context={"source": config_entries.SOURCE_USER},
     )
     assert result
