@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
 import voluptuous as vol
@@ -16,12 +16,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
     async_process_advertisements,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -50,6 +45,9 @@ from .const import (
 )
 from .flic_client import FlicAuthenticationError, FlicClient, FlicPairingError
 
+if TYPE_CHECKING:
+    from . import FlicButtonConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,9 +65,22 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_task: asyncio.Task[BluetoothServiceInfoBleak] | None = None
         self._pairing_started: bool = False
 
+    @callback
+    def async_remove(self) -> None:
+        """Clean up BLE client when the flow is removed or cancelled."""
+        if self._client:
+            client = self._client
+            self._client = None
+            self.hass.async_create_background_task(
+                client.disconnect(),
+                name=f"{DOMAIN}_config_flow_cleanup",
+            )
+
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: FlicButtonConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return FlicButtonOptionsFlowHandler()
 

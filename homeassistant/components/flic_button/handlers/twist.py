@@ -487,7 +487,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             wait_for_opcode(TWIST_OPCODE_GET_FIRMWARE_VERSION_RESPONSE),
             timeout=COMMAND_TIMEOUT,
         )
-        return struct.unpack("<I", response[1:5])[0]
+        return int(struct.unpack("<I", response[1:5])[0])
 
     async def get_battery_level(
         self,
@@ -504,7 +504,7 @@ class TwistProtocolHandler(DeviceProtocolHandler):
             timeout=COMMAND_TIMEOUT,
         )
         # Response: [opcode:1][battery_level:2]
-        return struct.unpack("<H", response[1:3])[0]
+        return int(struct.unpack("<H", response[1:3])[0])
 
     async def get_name(
         self,

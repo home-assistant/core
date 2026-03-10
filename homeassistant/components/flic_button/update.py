@@ -145,12 +145,16 @@ class FlicFirmwareUpdateEntity(FlicButtonEntity, UpdateEntity):
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return if latest_version is newer than installed_version."""
-        # Handle the special +update suffix used when API offers a re-flash
-        latest_clean = latest_version.split("+", maxsplit=1)[0]
-        installed_clean = installed_version.split("+", maxsplit=1)[0]
-        if latest_clean == installed_clean:
-            return "+" in latest_version
-        return super().version_is_newer(latest_clean, installed_clean)
+        try:
+            latest_clean = latest_version.split("+", maxsplit=1)[0]
+            installed_clean = installed_version.split("+", maxsplit=1)[0]
+            if latest_clean == installed_clean and "+" in latest_version:
+                return True
+            return int(latest_clean) > int(installed_clean) or bool(
+                self.coordinator.firmware_download_url
+            )
+        except ValueError, TypeError:
+            return False
 
     async def async_install(
         self,

@@ -450,7 +450,10 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._firmware_binary is None:
             firmware = await self.async_download_firmware()
             if firmware is None:
-                raise HomeAssistantError("Failed to download firmware")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="firmware_download_failed",
+                )
             self._firmware_binary = firmware
 
         firmware_binary = self._firmware_binary
@@ -497,7 +500,11 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._firmware_update_in_progress = False
             self._firmware_update_percentage = None
             self.async_set_updated_data(self.data)
-            raise HomeAssistantError(f"Firmware update failed: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except (TimeoutError, BleakError) as err:
             # BLE connection dropped mid-transfer (timeout waiting for ACK,
             # or GATT write failed). Clean up firmware state so the device
@@ -507,7 +514,9 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._firmware_update_percentage = None
             self.async_set_updated_data(self.data)
             raise HomeAssistantError(
-                f"Firmware update interrupted (connection lost): {err}"
+                translation_domain=DOMAIN,
+                translation_key="firmware_update_interrupted",
+                translation_placeholders={"error": str(err)},
             ) from err
 
     async def async_connect(self) -> None:

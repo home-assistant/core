@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.flic_button.const import (
+    DOMAIN,
     DUO_FIRMWARE_DATA_CHUNK_SIZE,
     FIRMWARE_HEADER_SIZE,
     OPCODE_FIRMWARE_UPDATE_DATA_DUO_IND,
@@ -132,10 +133,12 @@ async def test_install_failure(
     """Test firmware install failure raises error."""
     mock_twist_coordinator.latest_firmware_version = 11
     mock_twist_coordinator.async_install_firmware.side_effect = HomeAssistantError(
-        "Firmware update failed"
+        translation_domain=DOMAIN,
+        translation_key="firmware_update_failed",
+        translation_placeholders={"error": "test error"},
     )
 
-    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             "install",
@@ -174,14 +177,16 @@ async def test_duo_install_failure(
     """Test firmware install failure on Duo device raises error."""
     mock_duo_coordinator.latest_firmware_version = 11
     mock_duo_coordinator.async_install_firmware.side_effect = HomeAssistantError(
-        "Firmware update failed"
+        translation_domain=DOMAIN,
+        translation_key="firmware_update_failed",
+        translation_placeholders={"error": "test error"},
     )
 
     states = hass.states.async_entity_ids(UPDATE_DOMAIN)
     assert len(states) == 1
     entity_id = states[0]
 
-    with pytest.raises(HomeAssistantError, match="Firmware update failed"):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             "install",
@@ -502,6 +507,9 @@ def test_duo_firmware_update_data_ind_max_chunk() -> None:
 )
 def test_version_is_newer(latest: str, installed: str, expected: bool) -> None:
     """Test version_is_newer compares firmware versions correctly."""
+    mock_self = MagicMock()
+    mock_self.coordinator.firmware_download_url = None
     assert (
-        FlicFirmwareUpdateEntity.version_is_newer(None, latest, installed) is expected
+        FlicFirmwareUpdateEntity.version_is_newer(mock_self, latest, installed)
+        is expected
     )

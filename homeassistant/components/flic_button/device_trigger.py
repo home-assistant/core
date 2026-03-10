@@ -318,4 +318,5 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate trigger config."""
-    return TRIGGER_SCHEMA(config)
+    config_result: ConfigType = TRIGGER_SCHEMA(config)
+    return config_result

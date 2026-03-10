@@ -206,6 +206,7 @@ homeassistant.components.filter.*
 homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit_bacnet.*
+homeassistant.components.flic_button.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
