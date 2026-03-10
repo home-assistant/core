@@ -635,6 +635,111 @@ def parametrize_numerical_attribute_crossed_threshold_trigger_states(
     ]
 
 
+def parametrize_numerical_state_value_changed_trigger_states(
+    trigger: str, device_class: str
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
+    """Parametrize states and expected service call counts for numerical state-value changed triggers.
+
+    Unlike parametrize_numerical_attribute_changed_trigger_states, this is for
+    entities where the tracked numerical value is in state.state (e.g. sensor
+    entities), not in an attribute.
+    """
+    from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
+
+    additional_attributes = {ATTR_DEVICE_CLASS: device_class}
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={},
+            target_states=["0", "50", "100"],
+            other_states=["none"],
+            additional_attributes=additional_attributes,
+            retrigger_on_target_state=True,
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_ABOVE: 10},
+            target_states=["50", "100"],
+            other_states=["none", "0"],
+            additional_attributes=additional_attributes,
+            retrigger_on_target_state=True,
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_BELOW: 90},
+            target_states=["0", "50"],
+            other_states=["none", "100"],
+            additional_attributes=additional_attributes,
+            retrigger_on_target_state=True,
+            trigger_from_none=False,
+        ),
+    ]
+
+
+def parametrize_numerical_state_value_crossed_threshold_trigger_states(
+    trigger: str, device_class: str
+) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
+    """Parametrize states and expected service call counts for numerical state-value crossed threshold triggers.
+
+    Unlike parametrize_numerical_attribute_crossed_threshold_trigger_states,
+    this is for entities where the tracked numerical value is in state.state
+    (e.g. sensor entities), not in an attribute.
+    """
+    from homeassistant.const import ATTR_DEVICE_CLASS  # noqa: PLC0415
+
+    additional_attributes = {ATTR_DEVICE_CLASS: device_class}
+    return [
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["50", "60"],
+            other_states=["none", "0", "100"],
+            additional_attributes=additional_attributes,
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["0", "100"],
+            other_states=["none", "50", "60"],
+            additional_attributes=additional_attributes,
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
+                CONF_LOWER_LIMIT: 10,
+            },
+            target_states=["50", "100"],
+            other_states=["none", "0"],
+            additional_attributes=additional_attributes,
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=["0", "50"],
+            other_states=["none", "100"],
+            additional_attributes=additional_attributes,
+            trigger_from_none=False,
+        ),
+    ]
+
+
 async def arm_trigger(
     hass: HomeAssistant,
     trigger: str,

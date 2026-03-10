@@ -8,6 +8,7 @@ from arcam.fmj.state import State
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
+from homeassistant.components.arcam_fmj.coordinator import ArcamFmjCoordinator
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -47,7 +48,9 @@ def state_1_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -62,7 +65,9 @@ def state_2_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -74,10 +79,34 @@ def state_fixture(state_1: State) -> State:
     return state_1
 
 
+@pytest.fixture(name="mock_config_entry")
+def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Get a mock config entry."""
+    config_entry = MockConfigEntry(
+        domain="arcam_fmj",
+        data=MOCK_CONFIG_ENTRY,
+        title=MOCK_NAME,
+        unique_id=MOCK_UUID,
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry
+
+
 @pytest.fixture(name="player")
-def player_fixture(hass: HomeAssistant, state: State) -> ArcamFmj:
-    """Get standard player."""
-    player = ArcamFmj(MOCK_NAME, state, MOCK_UUID)
+def player_fixture(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    client: Mock,
+    state_1: Mock,
+) -> ArcamFmj:
+    """Get standard player.
+
+    This fixture tests internals and should not be used going forward.
+    """
+    coordinator = ArcamFmjCoordinator(hass, mock_config_entry, client, 1)
+    coordinator.state = state_1
+    coordinator.last_update_success = True
+    player = ArcamFmj(MOCK_NAME, coordinator, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.platform = MockEntityPlatform(hass)
@@ -88,13 +117,13 @@ def player_fixture(hass: HomeAssistant, state: State) -> ArcamFmj:
 
 @pytest.fixture(name="player_setup")
 async def player_setup_fixture(
-    hass: HomeAssistant, state_1: State, state_2: State, client: Mock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    state_1: State,
+    state_2: State,
+    client: Mock,
 ) -> AsyncGenerator[str]:
     """Get standard player."""
-    config_entry = MockConfigEntry(
-        domain="arcam_fmj", data=MOCK_CONFIG_ENTRY, title=MOCK_NAME
-    )
-    config_entry.add_to_hass(hass)
 
     def state_mock(cli, zone):
         if zone == 1:
@@ -103,16 +132,23 @@ async def player_setup_fixture(
             return state_2
         raise ValueError(f"Unknown player zone: {zone}")
 
+    async def _mock_run_client(hass: HomeAssistant, runtime_data, interval):
+        for coordinator in runtime_data.coordinators.values():
+            coordinator.async_notify_connected()
+
     await async_setup_component(hass, "homeassistant", {})
 
     with (
         patch("homeassistant.components.arcam_fmj.Client", return_value=client),
         patch(
-            "homeassistant.components.arcam_fmj.media_player.State",
+            "homeassistant.components.arcam_fmj.coordinator.State",
             side_effect=state_mock,
         ),
-        patch("homeassistant.components.arcam_fmj._run_client", return_value=None),
+        patch(
+            "homeassistant.components.arcam_fmj._run_client",
+            side_effect=_mock_run_client,
+        ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID
