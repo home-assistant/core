@@ -1,0 +1,72 @@
+name: 同步上游
+
+on:
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        ref: zych_core # 检出你的 zych_ha 分支
+        token: ${{ secrets.GH_TOKEN }} # 使用一个具有写入权限的Personal Access Token (PAT)
+
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Add upstream remote
+      run: |
+        git remote add zych_core https://github.com/home-assistant/core.git || true # || true 防止远程已存在时报错
+        git remote -v # 可选，查看远程列表
+
+    - name: Fetch zych_core dev branch
+      # 只抓取 dev 分支，更高效
+      run: git fetch zych_core dev
+
+    - name: Merge zych_core/dev into zych_core 
+      run: |
+        echo "Attempting to merge zych_core/dev into zych_core, resolving conflicts by preferring upstream changes, allowing unrelated histories if necessary."
+        # 使用 --allow-unrelated-histories 处理不相关的历史
+        # 使用 -Xtheirs 策略来自动解决冲突，倾向于上游（hass/dev）的版本。
+        # 这将保留 zych_core 上独有的文件，并自动解决共同文件的冲突，选择上游版本。
+        git merge --no-edit -Xtheirs --allow-unrelated-histories zych_core/dev
+        echo "Merge attempt complete."
+
+    - name: Push changes
+      run: git push origin zych_core
+
+  cleanup-workflow-runs:
+    runs-on: ubuntu-latest
+    needs: sync # 确保在 sync 任务完成后运行
+
+    steps:
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Delete completed workflow runs
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          echo "Fetching completed workflow runs..."
+          # 获取当前仓库的完成状态的工作流运行
+          RUN_IDS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?status=completed&per_page=100" \
+            | jq '.workflow_runs[] | .id') # 只需要 completed 状态的 ID，jq 筛选已在 URL 中完成
+          
+          if [ -z "$RUN_IDS" ]; then
+            echo "No completed workflow runs found to delete."
+          else
+            for run_id in $RUN_IDS; do
+              echo "Deleting run ID: $run_id"
+              curl -s -X DELETE -H "Authorization: token $GH_TOKEN" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id"
+              # 增加一个小的延迟，避免请求过快被GitHub API限流
+              sleep 10
+            done
+            echo "Finished deleting completed workflow runs."
+          fi
