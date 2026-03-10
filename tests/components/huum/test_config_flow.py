@@ -28,7 +28,7 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: TEST_USERNAME,
@@ -37,9 +37,9 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_USERNAME
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USERNAME
+    assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
     }
@@ -59,7 +59,7 @@ async def test_signup_flow_already_set_up(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: TEST_USERNAME,
@@ -67,7 +67,7 @@ async def test_signup_flow_already_set_up(
         },
     )
     await hass.async_block_till_done()
-    assert result2["type"] is FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(
@@ -96,7 +96,7 @@ async def test_huum_errors(
         "homeassistant.components.huum.config_flow.Huum.status",
         side_effect=raises,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_USERNAME: TEST_USERNAME,
@@ -104,14 +104,14 @@ async def test_huum_errors(
             },
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error_base}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
         },
     )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
