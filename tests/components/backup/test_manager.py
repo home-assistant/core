@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
+from datetime import timedelta
 from io import StringIO
 import json
 from pathlib import Path
@@ -43,16 +44,19 @@ from homeassistant.components.backup.manager import (
     BackupManagerState,
     CreateBackupStage,
     CreateBackupState,
+    IdleEvent,
     NewBackup,
     ReceiveBackupStage,
     ReceiveBackupState,
     RestoreBackupState,
+    UploadBackupEvent,
     WrittenBackup,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -65,6 +69,7 @@ from .common import (
     setup_backup_platform,
 )
 
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _EXPECTED_FILES = [
@@ -3783,3 +3788,87 @@ async def test_upload_progress_event(
 
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+
+async def test_upload_progress_throttled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that rapid upload progress events are throttled."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+
+    events: list[UploadBackupEvent] = []
+    manager.async_subscribe_events(events.append)
+
+    upload_event_1 = UploadBackupEvent(
+        manager_state=BackupManagerState.CREATE_BACKUP,
+        agent_id="test.remote",
+        uploaded_bytes=100,
+        total_bytes=1000,
+    )
+    upload_event_2 = UploadBackupEvent(
+        manager_state=BackupManagerState.CREATE_BACKUP,
+        agent_id="test.remote",
+        uploaded_bytes=500,
+        total_bytes=1000,
+    )
+    upload_event_3 = UploadBackupEvent(
+        manager_state=BackupManagerState.CREATE_BACKUP,
+        agent_id="test.remote",
+        uploaded_bytes=1000,
+        total_bytes=1000,
+    )
+
+    # First event fires immediately
+    manager.async_on_backup_event(upload_event_1)
+    assert len(events) == 1
+    assert events[-1] == upload_event_1
+
+    # Subsequent events within the throttle window are buffered
+    manager.async_on_backup_event(upload_event_2)
+    manager.async_on_backup_event(upload_event_3)
+    assert len(events) == 1
+
+    # After the throttle timer fires, only the latest event per agent is sent
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[-1] == upload_event_3
+
+
+async def test_upload_progress_flushed_on_state_change(
+    hass: HomeAssistant,
+) -> None:
+    """Test that pending upload progress events are flushed on state change."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+
+    events = []
+    manager.async_subscribe_events(events.append)
+
+    upload_event = UploadBackupEvent(
+        manager_state=BackupManagerState.CREATE_BACKUP,
+        agent_id="test.remote",
+        uploaded_bytes=100,
+        total_bytes=1000,
+    )
+
+    # First event fires immediately
+    manager.async_on_backup_event(upload_event)
+    assert len(events) == 1
+
+    # Buffer another event
+    upload_event_2 = UploadBackupEvent(
+        manager_state=BackupManagerState.CREATE_BACKUP,
+        agent_id="test.remote",
+        uploaded_bytes=500,
+        total_bytes=1000,
+    )
+    manager.async_on_backup_event(upload_event_2)
+    assert len(events) == 1
+
+    # A non-upload event flushes pending upload events first
+    manager.async_on_backup_event(IdleEvent())
+    assert len(events) == 3
+    assert events[1] == upload_event_2
+    assert events[2].manager_state == BackupManagerState.IDLE

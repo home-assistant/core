@@ -24,7 +24,7 @@ from securetar import SecureTarArchive, atomic_contents_add
 
 from homeassistant.backup_restore import RESTORE_BACKUP_FILE, RESTORE_BACKUP_RESULT_FILE
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import (
     frame,
     instance_id,
@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
@@ -381,6 +382,10 @@ class BackupManager:
         self._backup_platform_event_subscriptions: list[
             Callable[[BackupPlatformEvent], None]
         ] = []
+
+        # Upload progress throttling
+        self._pending_upload_events: dict[str, UploadBackupEvent] = {}
+        self._upload_progress_unsub: CALLBACK_TYPE | None = None
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -1398,12 +1403,51 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        if not isinstance(event, UploadBackupEvent):
-            self.last_event = event
-            if not isinstance(event, (BlockedEvent, IdleEvent)):
-                self.last_action_event = event
+        if isinstance(event, UploadBackupEvent):
+            self._pending_upload_events[event.agent_id] = event
+            if self._upload_progress_unsub is None:
+                # Send the first event immediately, then throttle
+                self._flush_upload_events()
+                self._schedule_upload_flush()
+            return
+        # Flush any pending upload events before sending a non-upload event
+        self._cancel_upload_flush()
+        self._flush_upload_events()
+        self.last_event = event
+        if not isinstance(event, (BlockedEvent, IdleEvent)):
+            self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
+
+    @callback
+    def _schedule_upload_flush(self) -> None:
+        """Schedule a flush of pending upload events."""
+        self._upload_progress_unsub = async_call_later(
+            self.hass, 1, self._on_upload_flush_timer
+        )
+
+    @callback
+    def _on_upload_flush_timer(self, _now: Any) -> None:
+        """Flush pending upload events on timer."""
+        self._upload_progress_unsub = None
+        self._flush_upload_events()
+        if self._pending_upload_events:
+            self._schedule_upload_flush()
+
+    @callback
+    def _cancel_upload_flush(self) -> None:
+        """Cancel a scheduled upload flush."""
+        if self._upload_progress_unsub is not None:
+            self._upload_progress_unsub()
+            self._upload_progress_unsub = None
+
+    @callback
+    def _flush_upload_events(self) -> None:
+        """Send all pending upload events to subscribers."""
+        for event in self._pending_upload_events.values():
+            for subscription in self._backup_event_subscriptions:
+                subscription(event)
+        self._pending_upload_events.clear()
 
     @callback
     def async_subscribe_events(
