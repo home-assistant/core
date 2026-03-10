@@ -129,12 +129,11 @@ async def test_sensor_video_none_values(
     coordinator_1.async_set_updated_data(state_1)
     await hass.async_block_till_done()
 
-    entity_id = _get_entity_id(
-        entity_registry, 1, "incoming_video_horizontal_resolution"
-    )
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+    for key in SENSOR_KEYS[:5]:
+        entity_id = _get_entity_id(entity_registry, 1, key)
+        state = hass.states.get(entity_id)
+        assert state is not None, f"State missing for {key}"
+        assert state.state == STATE_UNKNOWN, f"Expected unknown for {key}"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
