@@ -114,7 +114,6 @@ from .const import (
     LOGGER,
     SERVICE_RESET_METER,
 )
-from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import (
     NumericSensorDataTemplate,
     NumericSensorDataTemplateData,
@@ -125,6 +124,7 @@ from .migrate import async_migrate_statistics_sensors
 from .models import (
     NewZWaveDiscoverySchema,
     ValueType,
+    ZwaveDiscoveryInfo,
     ZwaveJSConfigEntry,
     ZWaveValueDiscoverySchema,
 )
