@@ -76,13 +76,14 @@ async def test_revenue_sensors_not_created_without_stripe(
     assert hass.states.get("sensor.test_ghost_arr") is None
 
 
-async def test_newsletter_sensor_not_found(
+async def test_newsletter_sensor_removed_when_stale(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_ghost_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test newsletter sensor when newsletter is removed."""
+    """Test newsletter sensor is removed when newsletter disappears."""
     await setup_integration(hass, mock_config_entry)
 
     # Verify newsletter sensor exists
@@ -97,10 +98,35 @@ async def test_newsletter_sensor_not_found(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Sensor should now be unavailable (newsletter not found)
-    state = hass.states.get("sensor.test_ghost_weekly_subscribers")
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    # Entity should be removed from state and registry
+    assert hass.states.get("sensor.test_ghost_weekly_subscribers") is None
+    assert entity_registry.async_get("sensor.test_ghost_weekly_subscribers") is None
+
+
+async def test_newsletter_sensor_removed_on_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ghost_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale newsletter sensor is removed when integration reloads."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Verify newsletter sensor exists
+    assert entity_registry.async_get("sensor.test_ghost_weekly_subscribers") is not None
+
+    # Unload the integration
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Newsletter is gone when integration reloads
+    mock_ghost_api.get_newsletters.return_value = []
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entity should be removed from registry
+    assert entity_registry.async_get("sensor.test_ghost_weekly_subscribers") is None
 
 
 async def test_entities_unavailable_on_update_failure(

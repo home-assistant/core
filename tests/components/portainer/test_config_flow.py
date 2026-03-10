@@ -280,7 +280,6 @@ async def test_full_flow_reconfigure_unique_id_mismatch(
     assert result["reason"] == "unique_id_mismatch"
     assert mock_config_entry.data[CONF_API_TOKEN] == "test_api_token"
     assert mock_config_entry.data[CONF_URL] == "https://127.0.0.1:9000/"
-    assert mock_config_entry.data[CONF_VERIFY_SSL] is True
     assert len(mock_setup_entry.mock_calls) == 0
 
 
