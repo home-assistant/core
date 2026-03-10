@@ -220,6 +220,7 @@ async def test_media_player_set_volume(
 ) -> None:
     """Test media player set volume service."""
     entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
     entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_volume", new_callable=AsyncMock
@@ -236,6 +237,7 @@ async def test_media_player_mute_volume(
 ) -> None:
     """Test media player mute volume service."""
     entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
     entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_mute", new_callable=AsyncMock
@@ -268,6 +270,7 @@ async def test_media_player_select_source(
 ) -> None:
     """Test media player select source service."""
     entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
     entity.hass = mock_hass
 
     with patch.object(
@@ -285,6 +288,7 @@ async def test_media_player_select_sound_mode(
 ) -> None:
     """Test media player select sound mode service."""
     entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
     entity.hass = mock_hass
 
     with patch.object(
@@ -362,6 +366,7 @@ async def test_media_player_set_repeat_mode(
 ) -> None:
     """Test media player set repeat mode service."""
     entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
     entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_loop_mode", new_callable=AsyncMock

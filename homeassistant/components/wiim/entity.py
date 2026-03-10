@@ -2,46 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate
-
-from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.wiim_device import WiimDevice
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityPlatformState
 
-from .const import DOMAIN, LOGGER
-
-
-def exception_wrap[_WiimEntityT: "WiimBaseEntity", **_P, _R](
-    func: Callable[Concatenate[_WiimEntityT, _P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[_WiimEntityT, _P], Coroutine[Any, Any, _R]]:
-    """Define a wrapper to catch SDK exceptions and raise HomeAssistant errors."""
-
-    async def _wrap(self: _WiimEntityT, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        try:
-            return await func(self, *args, **kwargs)
-        except WiimRequestException as err:
-            LOGGER.warning("HTTP API error for %s: %s", self.entity_id, err)
-            raise HomeAssistantError(
-                f"HTTP API not available for action {func.__name__} on entity "
-                f"{self.entity_id}"
-            ) from err
-        except WiimDeviceException as err:
-            LOGGER.warning("Device communication error for %s: %s", self.entity_id, err)
-            raise HomeAssistantError(
-                f"Device communication error for action {func.__name__} on entity "
-                f"{self.entity_id}"
-            ) from err
-        except WiimException as err:
-            LOGGER.warning("An SDK error occurred for %s: %s", self.entity_id, err)
-            raise HomeAssistantError(
-                f"An error occurred with WiiM device {self._device.name}: {err}"
-            ) from err
-
-    return _wrap
+from .const import DOMAIN
 
 
 class WiimBaseEntity(Entity):
@@ -65,6 +31,11 @@ class WiimBaseEntity(Entity):
             )
         elif self._device.http_api_url:
             self._attr_device_info["configuration_url"] = self._device.http_api_url
+
+    @property
+    def _added_to_hass(self) -> bool:
+        """Return True when the entity has been fully added to Home Assistant."""
+        return self._platform_state is EntityPlatformState.ADDED
 
     @property
     def available(self) -> bool:
