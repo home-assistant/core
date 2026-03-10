@@ -6,7 +6,7 @@ from typing import Final
 
 DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=600)
 
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_HUMIDITY = "humidity"
