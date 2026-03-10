@@ -21,6 +21,8 @@ from homeassistant.util.location import vincenty
 from . import RadioBrowserConfigEntry
 from .const import DOMAIN
 
+SEARCH_PREFIX = "search/"
+
 CODEC_TO_MIMETYPE = {
     "MP3": "audio/mpeg",
     "AAC": "audio/aac",
@@ -91,6 +93,7 @@ class RadioMediaSource(MediaSource):
                 *await self._async_build_by_language(radios, item),
                 *await self._async_build_local(radios, item),
                 *await self._async_build_by_country(radios, item),
+                *await self._async_build_search(radios, item),
             ],
         )
 
@@ -354,3 +357,41 @@ class RadioMediaSource(MediaSource):
             ]
 
         return []
+
+    async def _async_build_search(
+        self, radios: RadioBrowser, item: MediaSourceItem
+    ) -> list[BrowseMediaSource]:
+        """Handle searching radio stations by name and optional codec filter.
+
+        Identifier format:
+          search/<query>          - search by name only
+          search/<query>/<codec>  - search by name, then filter by codec (e.g. AAC)
+        """
+        identifier = item.identifier or ""
+        if not identifier.startswith(SEARCH_PREFIX):
+            return []
+
+        remainder = identifier[len(SEARCH_PREFIX) :]
+        if not remainder:
+            return []
+
+        # Split optional codec suffix: "rock/AAC" → query="rock", codec="AAC"
+        query, _, codec = remainder.partition("/")
+        codec = codec.upper() if codec else ""
+
+        if not query:
+            return []
+
+        stations = await radios.stations(
+            filter_by=FilterBy.NAME,
+            filter_term=query,
+            hide_broken=True,
+            limit=100,
+            order=Order.CLICK_COUNT,
+            reverse=True,
+        )
+
+        if codec:
+            stations = [s for s in stations if s.codec.upper() == codec]
+
+        return self._async_build_stations(radios, stations)
