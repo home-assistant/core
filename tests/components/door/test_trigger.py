@@ -4,9 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.cover import ATTR_IS_CLOSED, CoverDeviceClass, CoverState
-from homeassistant.components.door.trigger import DEVICE_CLASS_DOOR
+from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_LABEL_ID,
@@ -42,6 +40,7 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
     "trigger_key",
     [
         "door.opened",
+        "door.closed",
     ],
 )
 async def test_door_triggers_gated_by_labs_flag(
@@ -69,6 +68,13 @@ async def test_door_triggers_gated_by_labs_flag(
             trigger="door.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "door"},
             trigger_from_none=False,
         ),
@@ -135,7 +141,24 @@ async def test_door_trigger_binary_sensor_behavior_any(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
+            ],
+            extra_invalid_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                (CoverState.OPEN, {}),
+            ],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[
+                (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+            ],
+            other_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -205,6 +228,13 @@ async def test_door_trigger_cover_behavior_any(
             additional_attributes={ATTR_DEVICE_CLASS: "door"},
             trigger_from_none=False,
         ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
     ],
 )
 async def test_door_trigger_binary_sensor_behavior_first(
@@ -262,6 +292,13 @@ async def test_door_trigger_binary_sensor_behavior_first(
             trigger="door.opened",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[STATE_OFF],
+            other_states=[STATE_ON],
             additional_attributes={ATTR_DEVICE_CLASS: "door"},
             trigger_from_none=False,
         ),
@@ -329,7 +366,24 @@ async def test_door_trigger_binary_sensor_behavior_last(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
+            ],
+            extra_invalid_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                (CoverState.OPEN, {}),
+            ],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[
+                (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+            ],
+            other_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -400,7 +454,24 @@ async def test_door_trigger_cover_behavior_first(
             other_states=[
                 (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
                 (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
-                (CoverState.OPEN, {ATTR_IS_CLOSED: True}),
+            ],
+            extra_invalid_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
+                (CoverState.OPEN, {}),
+            ],
+            additional_attributes={ATTR_DEVICE_CLASS: "door"},
+            trigger_from_none=False,
+        ),
+        *parametrize_trigger_states(
+            trigger="door.closed",
+            target_states=[
+                (CoverState.CLOSED, {ATTR_IS_CLOSED: True}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: True}),
+            ],
+            other_states=[
+                (CoverState.OPEN, {ATTR_IS_CLOSED: False}),
+                (CoverState.OPENING, {ATTR_IS_CLOSED: False}),
+                (CoverState.CLOSING, {ATTR_IS_CLOSED: False}),
             ],
             extra_invalid_states=[
                 (CoverState.OPEN, {ATTR_IS_CLOSED: None}),
@@ -476,6 +547,15 @@ async def test_door_trigger_cover_behavior_last(
             True,
             CoverState.OPEN,
             False,
+        ),
+        (
+            "door.closed",
+            STATE_ON,
+            STATE_OFF,
+            CoverState.OPEN,
+            False,
+            CoverState.CLOSED,
+            True,
         ),
     ],
 )
@@ -564,9 +644,3 @@ async def test_door_trigger_excludes_non_door_device_class(
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 0
-
-
-def test_door_device_class() -> None:
-    """Test the door trigger device class."""
-    assert BinarySensorDeviceClass.DOOR == DEVICE_CLASS_DOOR
-    assert CoverDeviceClass.DOOR == DEVICE_CLASS_DOOR
