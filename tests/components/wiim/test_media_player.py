@@ -4,6 +4,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.consts import InputMode, PlayingStatus
+from wiim.models import (
+    WiimGroupRole,
+    WiimMediaMetadata,
+    WiimPreset,
+    WiimQueueItem,
+    WiimQueueSnapshot,
+)
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
@@ -110,7 +117,7 @@ async def test_media_player_update_ha_state_from_sdk_cache(
 
     mock_wiim_device.playing_status = PlayingStatus.PLAYING
     mock_wiim_device.volume = 60  # 0.6
-    mock_wiim_device.current_track_info = {"title": "New Song"}
+    mock_wiim_device.current_media = WiimMediaMetadata(title="New Song")
     mock_wiim_device.available = True  # type: ignore[misc]
 
     entity._device = mock_wiim_device
@@ -126,8 +133,13 @@ async def test_media_player_update_ha_state_from_sdk_cache(
         patch.object(entity, "async_write_ha_state", new=MagicMock()),
         patch.object(
             entity.hass.data[DOMAIN].controller,
-            "get_device_group_info",
-            new=MagicMock(return_value={"role": "leader"}),
+            "get_group_snapshot",
+            new=MagicMock(
+                return_value=MagicMock(
+                    role=WiimGroupRole.LEADER,
+                    member_udns=(mock_wiim_device.udn,),
+                )
+            ),
         ),
     ):
         entity._update_ha_state_from_sdk_cache()
@@ -180,13 +192,6 @@ async def test_media_player_pause(
 
     entity.hass = mock_hass
     entity._device = mock_wiim_device
-
-    mock_wiim_device.async_set_AVT_cmd = AsyncMock(
-        return_value={"RelTime": "00:00:10", "TrackDuration": "00:03:30"}
-    )
-    mock_wiim_device.parse_duration = MagicMock(
-        side_effect=lambda s: 10 if s == "00:00:10" else 210
-    )
 
     with patch.object(
         mock_wiim_device, "async_pause", new_callable=AsyncMock
@@ -457,12 +462,12 @@ async def test_media_player_browse_media_favorites(
     """Test Browse favorites (presets)."""
     entity = mock_wiim_media_player_entity
     with patch.object(
-        mock_wiim_device, "async_get_favorites", new_callable=AsyncMock
+        mock_wiim_device, "async_get_presets", new_callable=AsyncMock
     ) as mock_fav:
-        mock_fav.return_value = [
-            {"name": "Preset 1", "uri": "preset_1", "image_url": "http://image1.jpg"},
-            {"name": "Preset 2", "uri": "preset_2", "image_url": "http://image2.jpg"},
-        ]
+        mock_fav.return_value = (
+            WiimPreset(1, "Preset 1", "http://image1.jpg"),
+            WiimPreset(2, "Preset 2", "http://image2.jpg"),
+        )
 
         browse_result = await entity.async_browse_media(
             MediaType.PLAYLIST, MEDIA_CONTENT_ID_FAVORITES
@@ -479,7 +484,7 @@ async def test_media_player_browse_media_favorites(
 
         child_item = browse_result.children[0]
         assert child_item.media_class == MediaClass.PLAYLIST
-        assert child_item.media_content_id == "preset_1"
+        assert child_item.media_content_id == "1"
         assert child_item.media_content_type == MediaType.MUSIC
         assert child_item.title == "Preset 1"
         assert child_item.can_play is True
@@ -494,29 +499,19 @@ async def test_media_player_browse_media_playlists_queue(
     """Test browsing media playlists queues for the Wiim media player entity."""
     entity = mock_wiim_media_player_entity
 
-    with (
-        patch.object(
-            mock_wiim_device, "async_get_queue_items", new_callable=AsyncMock
-        ) as mock_get_queue_items,
-        patch.object(
-            mock_wiim_device, "async_set_AVT_cmd", new_callable=AsyncMock
-        ) as mock_set_AVT_cmd,
-    ):
-        mock_get_queue_items.return_value = [
-            {"SourceName": "SPOTIFY"},
-            {
-                "name": "Song A",
-                "image_url": "Artist A",
-                "uri": "1",
-                "SourceName": "SPOTIFY",
-            },
-            {"name": "Song B", "image_url": "Artist B", "uri": "2"},
-        ]
-
-        mock_set_AVT_cmd.return_value = {
-            "PlayMedium": "SONGLIST-NETWORK",
-            "TrackSource": "SPOTIFY",
-        }
+    with patch.object(
+        mock_wiim_device, "async_get_queue_snapshot", new_callable=AsyncMock
+    ) as mock_get_queue_snapshot:
+        mock_get_queue_snapshot.return_value = WiimQueueSnapshot(
+            items=(
+                WiimQueueItem(1, "Song A", "Artist A"),
+                WiimQueueItem(2, "Song B", "Artist B"),
+            ),
+            source_name="SPOTIFY",
+            play_medium="SONGLIST-NETWORK",
+            track_source="SPOTIFY",
+            is_active=True,
+        )
 
         browse_result = await entity.async_browse_media(
             MediaType.PLAYLIST, MEDIA_CONTENT_ID_PLAYLISTS
@@ -539,9 +534,7 @@ async def test_media_player_browse_media_playlists_queue(
         assert child_item.title == "Song A"
         assert child_item.can_play is True
         assert child_item.can_expand is False
-
-        mock_get_queue_items.assert_awaited_once()
-        mock_set_AVT_cmd.assert_awaited_once()
+        mock_get_queue_snapshot.assert_awaited_once()
 
 
 @pytest.mark.asyncio

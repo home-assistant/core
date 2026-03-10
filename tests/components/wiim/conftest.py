@@ -10,6 +10,12 @@ from wiim.consts import (
     LoopMode,
     PlayingStatus,
 )
+from wiim.models import (
+    WiimLoopState,
+    WiimQueueSnapshot,
+    WiimRepeatMode,
+    WiimTransportCapabilities,
+)
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim.const import DOMAIN
@@ -59,7 +65,7 @@ def mock_config_entry() -> ConfigEntry:
 @pytest.fixture
 def mock_add_entities() -> AddEntitiesCallback:
     """Mock the add_entities callback."""
-    return AsyncMock()
+    return MagicMock()
 
 
 @pytest.fixture
@@ -81,10 +87,15 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.supports_http_api = False
     wiim_device.playing_status = PlayingStatus.STOPPED
     wiim_device.loop_mode = LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
+    wiim_device.loop_state = WiimLoopState(
+        repeat=WiimRepeatMode.OFF,
+        shuffle=False,
+    )
     wiim_device.input_mode = InputMode.LINE_IN
     wiim_device.audio_output_hw_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
     wiim_device.mac_address = "AA:BB:CC:DD:EE:FF"
     wiim_device.current_track_info = {}
+    wiim_device.current_media = None
     wiim_device.current_track_duration = 0
     wiim_device.play_mode = "Network"
     wiim_device.equalizer_mode = ""
@@ -94,6 +105,10 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device._player_properties = ""
     wiim_device._manufacturer = "Linkplay Tech"
     wiim_device.output_mode = "speaker"
+    wiim_device.supported_input_modes = (InputMode.LINE_IN.display_name,)  # type: ignore[attr-defined]
+    wiim_device.supported_output_modes = (
+        AudioOutputHwMode.SPEAKER_OUT.display_name,  # type: ignore[attr-defined]
+    )
 
     wiim_device.upnp_device = MagicMock()
     wiim_device.upnp_device.udn = wiim_device.udn
@@ -122,6 +137,14 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.async_get_input_modes = AsyncMock(return_value=[])
     wiim_device.async_get_play_mediums = AsyncMock(return_value=[])
     wiim_device.sync_device_duration_and_position = AsyncMock()
+    wiim_device.async_get_transport_capabilities = AsyncMock(
+        return_value=WiimTransportCapabilities()
+    )
+    wiim_device.async_get_presets = AsyncMock(return_value=())
+    wiim_device.async_get_queue_snapshot = AsyncMock(
+        return_value=WiimQueueSnapshot(items=())
+    )
+    wiim_device.build_loop_mode = MagicMock(return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE)
 
     return wiim_device
 

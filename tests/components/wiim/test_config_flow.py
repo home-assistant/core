@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_upnp_client.exceptions import UpnpConnectionError
 import pytest
+from wiim.models import WiimProbeResult
 
 from homeassistant.components.wiim.config_flow import (
     CannotConnect,
@@ -11,7 +11,7 @@ from homeassistant.components.wiim.config_flow import (
     _validate_device_and_get_info,
 )
 from homeassistant.components.wiim.const import CONF_UDN, CONF_UPNP_LOCATION
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 
@@ -25,13 +25,13 @@ def flow(mock_hass: HomeAssistant):
 async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
     """Test user step returns entry on successful device validation."""
 
-    mock_device_info = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid:test-1234",
-        CONF_NAME: "WiiM Pro",
-        CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-        "model": "WiiM Pro",
-    }
+    mock_device_info = WiimProbeResult(
+        host="192.168.1.100",
+        udn="uuid:test-1234",
+        name="WiiM Pro",
+        location="http://192.168.1.100:49152/description.xml",
+        model="WiiM Pro",
+    )
 
     flow = WiimConfigFlow()
     flow.hass = mock_hass
@@ -41,7 +41,7 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
             flow, "async_set_unique_id", new_callable=AsyncMock
         ) as mock_set_unique_id,
         patch.object(
-            flow, "_abort_if_unique_id_configured", new_callable=MagicMock
+            flow, "_abort_if_unique_id_configured", new=MagicMock()
         ) as mock_abort,
     ):
         mock_abort.return_value = None
@@ -73,12 +73,13 @@ async def test_async_step_user_already_configured(
 
     domain = "wiim"
     test_udn = "uuid:test-1234"
-    mock_device_info = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: test_udn,
-        CONF_NAME: "WiiM Pro",
-        CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-    }
+    mock_device_info = WiimProbeResult(
+        host="192.168.1.100",
+        udn=test_udn,
+        name="WiiM Pro",
+        location="http://192.168.1.100:49152/description.xml",
+        model="WiiM Pro",
+    )
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, unique_id=test_udn)
 
@@ -118,17 +119,18 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
     flow = WiimConfigFlow()
     flow.hass = mock_hass
 
-    mock_device_info = {
-        "host": "192.168.1.123",
-        "udn": "uuid:sample-udn",
-        "name": "Mock WiiM",
-        "upnp_location": "http://192.168.1.123:49152/description.xml",
-    }
+    mock_device_info = WiimProbeResult(
+        host="192.168.1.123",
+        udn="uuid:sample-udn",
+        name="Mock WiiM",
+        location="http://192.168.1.123:49152/description.xml",
+        model="WiiM Pro",
+    )
 
     with (
         patch.dict(flow.__dict__, {"context": {}}, clear=False),
         patch.object(flow, "async_set_unique_id", new_callable=AsyncMock),
-        patch.object(flow, "_abort_if_unique_id_configured", new_callable=AsyncMock),
+        patch.object(flow, "_abort_if_unique_id_configured", new=MagicMock()),
         patch(
             "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
             return_value=mock_device_info,
@@ -137,17 +139,16 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
         await flow.async_step_zeroconf(MockZeroconfServiceInfo())
 
         assert "title_placeholders" in flow.context
-        assert flow.context["title_placeholders"]["name"] == mock_device_info[CONF_NAME]
+        assert flow.context["title_placeholders"]["name"] == mock_device_info.name
 
 
 @pytest.mark.asyncio
-async def test_async_step_zeroconf_cannot_connect(flow, mock_upnp_factory) -> None:
+async def test_async_step_zeroconf_cannot_connect(flow) -> None:
     """Test zeroconf discovery when connection fails."""
     _flow, _ = flow
-    mock_upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     _flow.async_set_unique_id = AsyncMock()
-    _flow._abort_if_unique_id_configured = AsyncMock()
+    _flow._abort_if_unique_id_configured = MagicMock()
 
     with patch(
         "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
@@ -161,17 +162,18 @@ async def test_async_step_zeroconf_cannot_connect(flow, mock_upnp_factory) -> No
 
 @pytest.mark.asyncio
 async def test_async_step_discovery_confirm_create_entry(
-    flow, mock_upnp_factory, mock_wiim_api_endpoint
+    flow, mock_wiim_api_endpoint
 ) -> None:
     """Test discovery confirm step creates entry with user input."""
     _flow, _ = flow
 
-    _flow._discovered_info = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid:test-udn-1234",
-        CONF_NAME: "Discovered WiiM Device",
-        CONF_UPNP_LOCATION: "http://192.168.1.100:49152/description.xml",
-    }
+    _flow._discovered_info = WiimProbeResult(
+        host="192.168.1.100",
+        udn="uuid:test-udn-1234",
+        name="Discovered WiiM Device",
+        location="http://192.168.1.100:49152/description.xml",
+        model="WiiM Pro",
+    )
 
     user_input = {}
     result = await _flow.async_step_discovery_confirm(user_input)
@@ -203,24 +205,19 @@ async def test_validate_device_and_get_info_success(
     mock_hass: HomeAssistant, mock_upnp_device, mock_wiim_api_endpoint
 ) -> None:
     """Test _validate_device_and_get_info with successful validation."""
-    mock_upnp_device.udn = "uuid:test-udn-1234"
-    mock_upnp_device.friendly_name = "Test WiiM Device"
-    mock_upnp_device.model_name = "WiiM Pro"
-    mock_upnp_device.device_url = "http://192.168.1.100:49152/description.xml"
-
     location = "http://192.168.1.100:49152/description.xml"
 
-    expected_result = {
-        CONF_HOST: "192.168.1.100",
-        CONF_UDN: "uuid:test-udn-1234",
-        CONF_NAME: "Test WiiM Device",
-        CONF_UPNP_LOCATION: location,
-        "model": "WiiM Pro",
-    }
+    expected_result = WiimProbeResult(
+        host="192.168.1.100",
+        udn="uuid:test-udn-1234",
+        name="Test WiiM Device",
+        location=location,
+        model="WiiM Pro",
+    )
 
     with patch(
-        "async_upnp_client.client_factory.UpnpFactory.async_create_device",
-        return_value=mock_upnp_device,
+        "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
+        return_value=expected_result,
     ):
         result = await _validate_device_and_get_info(
             mock_hass, "192.168.1.100", location
