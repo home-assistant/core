@@ -206,6 +206,12 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "degreasing_counter": {
+        "name": "Degreasing cycles"
+      },
+      "descaling_counter": {
+        "name": "Descaling cycles"
+      },
       "drying_step": {
         "name": "Drying step",
         "state": {
@@ -230,6 +236,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "milk_cleaning_counter": {
+        "name": "Milk pipework cleaning cycles"
       },
       "plate": {
         "name": "Plate {plate_no}",
@@ -461,9 +470,11 @@
           "dissolve_gelatine": "Dissolve gelatine",
           "down_duvets": "Down duvets",
           "down_filled_items": "Down-filled items",
+          "downs_duvets": "Downs/Duvets",
           "drain_spin": "Drain/spin",
           "drop_cookies_1_tray": "Drop cookies (1 tray)",
           "drop_cookies_2_trays": "Drop cookies (2 trays)",
+          "drying": "Drying",
           "duck": "Duck",
           "dutch_hash": "Dutch hash",
           "easy_care": "Easy care",
@@ -665,6 +676,7 @@
           "pike_fillet": "Pike (fillet)",
           "pike_piece": "Pike (piece)",
           "pillows": "Pillows",
+          "pillows_sanitize": "Pillows sanitize",
           "pinto_beans": "Pinto beans",
           "pizza_oil_cheese_dough_baking_tray": "Pizza, oil cheese dough (baking tray)",
           "pizza_oil_cheese_dough_round_baking_tine": "Pizza, oil cheese dough (round baking tine)",
@@ -732,8 +744,8 @@
           "potatoes_waxy_whole_small": "Potatoes (waxy, whole, small)",
           "poularde_breast": "Poularde breast",
           "poularde_whole": "Poularde (whole)",
-          "power_fresh": "PowerFresh",
           "power_wash": "PowerWash",
+          "powerfresh": "PowerFresh",
           "prawns": "Prawns",
           "pre_ironing": "Pre-ironing",
           "proofing": "Proofing",
@@ -746,7 +758,9 @@
           "pumpkin_soup": "Pumpkin soup",
           "pyrolytic": "Pyrolytic",
           "quiche_lorraine": "Quiche Lorraine",
+          "quick_hygiene": "QuickHygiene",
           "quick_mw": "Quick MW",
+          "quick_power_dry": "QuickPowerDry",
           "quick_power_wash": "QuickPowerWash",
           "quinces_diced": "Quinces (diced)",
           "quinoa": "Quinoa",
@@ -992,6 +1006,7 @@
           "heating_up_phase": "Heating up phase",
           "hot_milk": "Hot milk",
           "hygiene": "Hygiene",
+          "hygiene_drying": "Hygiene drying",
           "interim_rinse": "Interim rinse",
           "keep_warm": "Keep warm",
           "keeping_warm": "Keeping warm",
@@ -1004,6 +1019,7 @@
           "normal": "Normal",
           "normal_plus": "Normal plus",
           "not_running": "Not running",
+          "perfect_dry_active": "PerfectDry active",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
           "pre_heating": "Pre-heating",
@@ -1018,7 +1034,9 @@
           "rinse_hold": "Rinse hold",
           "rinse_out_lint": "Rinse out lint",
           "rinses": "Rinses",
+          "roasting": "Roasting",
           "safety_cooling": "Safety cooling",
+          "searing": "Searing",
           "slightly_dry": "Slightly dry",
           "slow_roasting": "Slow roasting",
           "smoothing": "Smoothing",

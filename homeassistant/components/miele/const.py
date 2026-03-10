@@ -177,28 +177,31 @@ class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
 
     not_running = 0, 512, 535, 536, 537, 65535
     program_running = 513
-    drying = 514
+    drying = 514, 11018
     machine_iron = 515
     hand_iron_2 = 516
     normal = 517
     normal_plus = 518
     cooling_down = 519
     hand_iron_1 = 520
-    anti_crease = 521
-    finished = 522
+    anti_crease = 521, 11029
+    finished = 522, 11012
     extra_dry = 523
     hand_iron = 524
+    hygiene_drying = 525
     moisten = 526
     thermo_spin = 527
     timed_drying = 528
     warm_air = 529
     steam_smoothing = 530
-    comfort_cooling = 531
+    comfort_cooling = 531, 11055
     rinse_out_lint = 532
     rinses = 533
     smoothing = 534
     slightly_dry = 538
     safety_cooling = 539
+    automatic_start = 11044
+    perfect_dry_active = 11054
 
 
 class ProgramPhaseWasherDryer(MieleEnum, missing_to_none=True):
@@ -265,6 +268,8 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074
     process_finished = 3078
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
@@ -357,6 +362,8 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     heating_up = 3073
     process_running = 3074, 7938
     process_finished = 3078, 7942
+    searing = 3080
+    roasting = 3081
     energy_save = 3084
     pre_heating = 3099
 
@@ -483,7 +490,7 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     no_program = 0, -1
     intensive = 1, 26, 205
     maintenance = 2, 27, 214
-    eco = 3, 28, 200
+    eco = 3, 22, 28, 200
     automatic = 6, 7, 31, 32, 202
     solar_save = 9, 34
     gentle = 10, 35, 210
@@ -505,30 +512,58 @@ class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
 
     no_program = 0, -1
     automatic_plus = 1
-    cottons = 2, 20, 90
-    minimum_iron = 3, 30
-    woollens_handcare = 4, 40
-    delicates = 5, 50
-    warm_air = 6, 60
-    cool_air = 7, 70
-    express = 8, 80
+    cottons = 2, 20, 90, 10001
+    minimum_iron = 3, 30, 10016
+    woollens_handcare = 4, 40, 10081
+    woollens = 10040
+    delicates = 5, 50, 10022
+    warm_air = 6, 60, 10025
+    cool_air = 7, 70, 10027
+    express = 8, 80, 10028
     cottons_eco = 9, 99003
-    proofing = 12, 120
-    denim = 13, 130
+    proofing = 12, 120, 10057
+    denim = 13, 130, 10039
     shirts = 14, 99004
-    sportswear = 15, 150
-    outerwear = 16, 160
-    silks_handcare = 17, 170
+    sportswear = 15, 150, 10052
+    outerwear = 16, 160, 10049
+    silks_handcare = 17, 170, 10082
     standard_pillows = 19, 190
-    basket_program = 22, 220
+    basket_program = 22, 220, 10072
     cottons_hygiene = 11, 23
-    smoothing = 24, 240
-    bed_linen = 31, 99002
-    eco = 66
+    smoothing = 24, 240, 10073
+    bed_linen = 31, 99002, 10047
+    eco = 66, 10079
     gentle_smoothing = 10, 100
     gentle_denim = 131
     steam_smoothing = 99001
     large_pillows = 99005
+    downs_duvets = 10050
+    curtains = 10055
+    quick_power_dry = 10032
+    automatic = 10044
+    quick_hygiene = 10076
+    hygiene = 10080
+    pillows_sanitize = 10092
+    custom_program_1 = 13901
+    custom_program_2 = 13902
+    custom_program_3 = 13903
+    custom_program_4 = 13904
+    custom_program_5 = 13905
+    custom_program_6 = 13906
+    custom_program_7 = 13907
+    custom_program_8 = 13908
+    custom_program_9 = 13909
+    custom_program_10 = 13910
+    custom_program_11 = 13911
+    custom_program_12 = 13912
+    custom_program_13 = 13913
+    custom_program_14 = 13914
+    custom_program_15 = 13915
+    custom_program_16 = 13916
+    custom_program_17 = 13917
+    custom_program_18 = 13918
+    custom_program_19 = 13919
+    custom_program_20 = 13920
 
 
 class OvenProgramId(MieleEnum, missing_to_none=True):
@@ -583,11 +618,11 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     evaporate_water = 327
     shabbat_program = 335
     yom_tov = 336
-    drying = 357
+    drying = 357, 2028
     heat_crockery = 358
-    prove_dough = 359
+    prove_dough = 359, 2023
     low_temperature_cooking = 360
-    steam_cooking = 361
+    steam_cooking = 8, 361
     keeping_warm = 362
     apple_sponge = 364
     apple_pie = 365
@@ -634,9 +669,9 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     saddle_of_roebuck = 456
     salmon_fillet = 461
     potato_cheese_gratin = 464
-    trout = 486
-    carp = 491
-    salmon_trout = 492
+    trout = 486, 2224
+    carp = 491, 2233
+    salmon_trout = 492, 2241
     springform_tin_15cm = 496
     springform_tin_20cm = 497
     springform_tin_25cm = 498
@@ -702,137 +737,15 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     pork_belly = 701
     pikeperch_fillet_with_vegetables = 702
     steam_bake = 99001
-
-
-class DishWarmerProgramId(MieleEnum, missing_to_none=True):
-    """Program Id codes for dish warmers."""
-
-    no_program = 0, -1
-    warm_cups_glasses = 1
-    warm_dishes_plates = 2
-    keep_warm = 3
-    slow_roasting = 4
-
-
-class RobotVacuumCleanerProgramId(MieleEnum, missing_to_none=True):
-    """Program Id codes for robot vacuum cleaners."""
-
-    no_program = 0, -1
-    auto = 1
-    spot = 2
-    turbo = 3
-    silent = 4
-
-
-class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
-    """Program Id codes for coffee systems."""
-
-    no_program = 0, -1
-
-    check_appliance = 17004
-
-    # profile 1
-    ristretto = 24000, 24032, 24064, 24096, 24128
-    espresso = 24001, 24033, 24065, 24097, 24129
-    coffee = 24002, 24034, 24066, 24098, 24130
-    long_coffee = 24003, 24035, 24067, 24099, 24131
-    cappuccino = 24004, 24036, 24068, 24100, 24132
-    cappuccino_italiano = 24005, 24037, 24069, 24101, 24133
-    latte_macchiato = 24006, 24038, 24070, 24102, 24134
-    espresso_macchiato = 24007, 24039, 24071, 24135
-    cafe_au_lait = 24008, 24040, 24072, 24104, 24136
-    caffe_latte = 24009, 24041, 24073, 24105, 24137
-    flat_white = 24012, 24044, 24076, 24108, 24140
-    very_hot_water = 24013, 24045, 24077, 24109, 24141
-    hot_water = 24014, 24046, 24078, 24110, 24142
-    hot_milk = 24015, 24047, 24079, 24111, 24143
-    milk_foam = 24016, 24048, 24080, 24112, 24144
-    black_tea = 24017, 24049, 24081, 24113, 24145
-    herbal_tea = 24018, 24050, 24082, 24114, 24146
-    fruit_tea = 24019, 24051, 24083, 24115, 24147
-    green_tea = 24020, 24052, 24084, 24116, 24148
-    white_tea = 24021, 24053, 24085, 24117, 24149
-    japanese_tea = 24022, 29054, 24086, 24118, 24150
-    # special programs
-    coffee_pot = 24400
-    barista_assistant = 24407
-    # machine settings menu
-    appliance_settings = (
-        16016,  # display brightness
-        16018,  # volume
-        16019,  # buttons volume
-        16020,  # child lock
-        16021,  # water hardness
-        16027,  # welcome sound
-        16033,  # connection status
-        16035,  # remote control
-        16037,  # remote update
-        24500,  # total dispensed
-        24502,  # lights appliance on
-        24503,  # lights appliance off
-        24504,  # turn off lights after
-        24506,  # altitude
-        24513,  # performance mode
-        24516,  # turn off after
-        24537,  # advanced mode
-        24542,  # tea timer
-        24549,  # total coffee dispensed
-        24550,  # total tea dispensed
-        24551,  # total ristretto
-        24552,  # total cappuccino
-        24553,  # total espresso
-        24554,  # total coffee
-        24555,  # total long coffee
-        24556,  # total italian cappuccino
-        24557,  # total latte macchiato
-        24558,  # total caffe latte
-        24560,  # total espresso macchiato
-        24562,  # total flat white
-        24563,  # total coffee with milk
-        24564,  # total black tea
-        24565,  # total herbal tea
-        24566,  # total fruit tea
-        24567,  # total green tea
-        24568,  # total white tea
-        24569,  # total japanese tea
-        24571,  # total milk foam
-        24572,  # total hot milk
-        24573,  # total hot water
-        24574,  # total very hot water
-        24575,  # counter to descaling
-        24576,  # counter to brewing unit degreasing
-        24800,  # maintenance
-        24801,  # profiles settings menu
-        24813,  # add profile
-    )
-    appliance_rinse = 24750, 24759, 24773, 24787, 24788
-    intermediate_rinsing = 24758
-    automatic_maintenance = 24778
-    descaling = 24751
-    brewing_unit_degrease = 24753
-    milk_pipework_rinse = 24754
-    milk_pipework_clean = 24789
-
-
-class SteamOvenMicroProgramId(MieleEnum, missing_to_none=True):
-    """Program Id codes for steam oven micro combo."""
-
-    no_program = 0, -1
-    steam_cooking = 8
-    microwave = 19
-    popcorn = 53
-    quick_mw = 54
     sous_vide = 72
     eco_steam_cooking = 75
     rapid_steam_cooking = 77
-    descale = 326
     menu_cooking = 330
     reheating_with_steam = 2018
     defrosting_with_steam = 2019
     blanching = 2020
     bottling = 2021
     sterilize_crockery = 2022
-    prove_dough = 2023
     soak = 2027
     reheating_with_microwave = 2029
     defrosting_with_microwave = 2030
@@ -986,18 +899,15 @@ class SteamOvenMicroProgramId(MieleEnum, missing_to_none=True):
     gilt_head_bream_fillet = 2220
     codfish_piece = 2221, 2232
     codfish_fillet = 2222, 2231
-    trout = 2224
     pike_fillet = 2225
     pike_piece = 2226
     halibut_fillet_2_cm = 2227
     halibut_fillet_3_cm = 2230
-    carp = 2233
     salmon_fillet_2_cm = 2234
     salmon_fillet_3_cm = 2235
     salmon_steak_2_cm = 2238
     salmon_steak_3_cm = 2239
     salmon_piece = 2240
-    salmon_trout = 2241
     iridescent_shark_fillet = 2244
     red_snapper_fillet_2_cm = 2245
     red_snapper_fillet_3_cm = 2248
@@ -1234,6 +1144,116 @@ class SteamOvenMicroProgramId(MieleEnum, missing_to_none=True):
     round_grain_rice_general_rapid_steam_cooking = 3411
 
 
+class DishWarmerProgramId(MieleEnum, missing_to_none=True):
+    """Program Id codes for dish warmers."""
+
+    no_program = 0, -1
+    warm_cups_glasses = 1
+    warm_dishes_plates = 2
+    keep_warm = 3
+    slow_roasting = 4
+
+
+class RobotVacuumCleanerProgramId(MieleEnum, missing_to_none=True):
+    """Program Id codes for robot vacuum cleaners."""
+
+    no_program = 0, -1
+    auto = 1
+    spot = 2
+    turbo = 3
+    silent = 4
+
+
+class CoffeeSystemProgramId(MieleEnum, missing_to_none=True):
+    """Program Id codes for coffee systems."""
+
+    no_program = 0, -1
+
+    check_appliance = 17004
+
+    # profile 1
+    ristretto = 24000, 24032, 24064, 24096, 24128
+    espresso = 24001, 24033, 24065, 24097, 24129
+    coffee = 24002, 24034, 24066, 24098, 24130
+    long_coffee = 24003, 24035, 24067, 24099, 24131
+    cappuccino = 24004, 24036, 24068, 24100, 24132
+    cappuccino_italiano = 24005, 24037, 24069, 24101, 24133
+    latte_macchiato = 24006, 24038, 24070, 24102, 24134
+    espresso_macchiato = 24007, 24039, 24071, 24135
+    cafe_au_lait = 24008, 24040, 24072, 24104, 24136
+    caffe_latte = 24009, 24041, 24073, 24105, 24137
+    flat_white = 24012, 24044, 24076, 24108, 24140
+    very_hot_water = 24013, 24045, 24077, 24109, 24141
+    hot_water = 24014, 24046, 24078, 24110, 24142
+    hot_milk = 24015, 24047, 24079, 24111, 24143
+    milk_foam = 24016, 24048, 24080, 24112, 24144
+    black_tea = 24017, 24049, 24081, 24113, 24145
+    herbal_tea = 24018, 24050, 24082, 24114, 24146
+    fruit_tea = 24019, 24051, 24083, 24115, 24147
+    green_tea = 24020, 24052, 24084, 24116, 24148
+    white_tea = 24021, 24053, 24085, 24117, 24149
+    japanese_tea = 24022, 29054, 24086, 24118, 24150
+    # special programs
+    coffee_pot = 24400
+    barista_assistant = 24407
+    # machine settings menu
+    appliance_settings = (
+        16016,  # display brightness
+        16018,  # volume
+        16019,  # buttons volume
+        16020,  # child lock
+        16021,  # water hardness
+        16027,  # welcome sound
+        16033,  # connection status
+        16035,  # remote control
+        16037,  # remote update
+        24500,  # total dispensed
+        24502,  # lights appliance on
+        24503,  # lights appliance off
+        24504,  # turn off lights after
+        24506,  # altitude
+        24513,  # performance mode
+        24516,  # turn off after
+        24537,  # advanced mode
+        24542,  # tea timer
+        24549,  # total coffee dispensed
+        24550,  # total tea dispensed
+        24551,  # total ristretto
+        24552,  # total cappuccino
+        24553,  # total espresso
+        24554,  # total coffee
+        24555,  # total long coffee
+        24556,  # total italian cappuccino
+        24557,  # total latte macchiato
+        24558,  # total caffe latte
+        24560,  # total espresso macchiato
+        24562,  # total flat white
+        24563,  # total coffee with milk
+        24564,  # total black tea
+        24565,  # total herbal tea
+        24566,  # total fruit tea
+        24567,  # total green tea
+        24568,  # total white tea
+        24569,  # total japanese tea
+        24571,  # total milk foam
+        24572,  # total hot milk
+        24573,  # total hot water
+        24574,  # total very hot water
+        24575,  # counter to descaling
+        24576,  # counter to brewing unit degreasing
+        24800,  # maintenance
+        24801,  # profiles settings menu
+        24813,  # add profile
+    )
+    appliance_rinse = 24750, 24759, 24773, 24787, 24788
+    intermediate_rinsing = 24758
+    automatic_maintenance = 24778
+    descaling = 24751
+    brewing_unit_degrease = 24753
+    milk_pipework_rinse = 24754
+    milk_pipework_clean = 24789
+
+
 PROGRAM_IDS: dict[int, type[MieleEnum]] = {
     MieleAppliance.WASHING_MACHINE: WashingMachineProgramId,
     MieleAppliance.TUMBLE_DRYER: TumbleDryerProgramId,
@@ -1244,7 +1264,7 @@ PROGRAM_IDS: dict[int, type[MieleEnum]] = {
     MieleAppliance.STEAM_OVEN_MK2: OvenProgramId,
     MieleAppliance.STEAM_OVEN: OvenProgramId,
     MieleAppliance.STEAM_OVEN_COMBI: OvenProgramId,
-    MieleAppliance.STEAM_OVEN_MICRO: SteamOvenMicroProgramId,
+    MieleAppliance.STEAM_OVEN_MICRO: OvenProgramId,
     MieleAppliance.WASHER_DRYER: WashingMachineProgramId,
     MieleAppliance.ROBOT_VACUUM_CLEANER: RobotVacuumCleanerProgramId,
     MieleAppliance.COFFEE_SYSTEM: CoffeeSystemProgramId,

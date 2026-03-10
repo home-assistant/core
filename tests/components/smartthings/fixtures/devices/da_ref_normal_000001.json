@@ -97,6 +97,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.driverState",
+              "version": 1
+            },
+            {
               "id": "samsungce.fridgeVacationMode",
               "version": 1
             },
@@ -117,6 +121,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
               "id": "sec.diagnosticsInformation",
               "version": 1
             }
@@ -130,7 +138,8 @@
               "name": "Refrigerator",
               "categoryType": "user"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "freezer",
@@ -174,7 +183,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "cooler",
@@ -214,7 +224,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "cvroom",
@@ -239,6 +250,10 @@
             {
               "id": "custom.fridgeMode",
               "version": 1
+            },
+            {
+              "id": "samsungce.fridgeZoneInfo",
+              "version": 1
             }
           ],
           "categories": [
@@ -246,7 +261,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "onedoor",
@@ -281,6 +297,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.fridgeZoneInfo",
+              "version": 1
+            },
+            {
               "id": "samsungce.unavailableCapabilities",
               "version": 1
             }
@@ -290,7 +310,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "icemaker",
@@ -301,6 +322,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.fridgeIcemakerInfo",
+              "version": 1
+            },
+            {
               "id": "custom.disabledCapabilities",
               "version": 1
             }
@@ -310,7 +335,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "icemaker-02",
@@ -321,6 +347,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.fridgeIcemakerInfo",
+              "version": 1
+            },
+            {
               "id": "custom.disabledCapabilities",
               "version": 1
             }
@@ -330,13 +360,18 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "pantry-01",
           "label": "pantry-01",
           "capabilities": [
             {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
               "id": "samsungce.fridgePantryInfo",
               "version": 1
             },
@@ -354,13 +389,18 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "pantry-02",
           "label": "pantry-02",
           "capabilities": [
             {
+              "id": "custom.fridgeMode",
+              "version": 1
+            },
+            {
               "id": "samsungce.fridgePantryInfo",
               "version": 1
             },
@@ -378,7 +418,8 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         }
       ],
       "createTime": "2022-01-08T16:50:43.544Z",

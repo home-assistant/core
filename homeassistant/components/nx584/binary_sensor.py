@@ -103,7 +103,7 @@ class NX584ZoneSensor(BinarySensorEntity):
         return self._zone["name"]
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]

@@ -32,6 +32,8 @@ from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
