@@ -1243,7 +1243,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1271,7 +1271,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1553,7 +1553,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_crossed_threshold_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 

@@ -1462,7 +1462,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.5
+onedrive-personal-sdk==0.1.6
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1620,7 +1620,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.2.0
+py-opendisplay==5.5.0
 
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
@@ -1806,6 +1806,9 @@ pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
+
+# homeassistant.components.freshr
+pyfreshr==1.2.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.6.20
@@ -2093,7 +2096,7 @@ pysenz==1.0.2
 pyserial==3.5
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.1.1
+pyseventeentrack==1.1.2
 
 # homeassistant.components.sia
 pysiaalarm==3.2.2
