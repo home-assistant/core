@@ -48,6 +48,9 @@ def state_1_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
+    state.get_incoming_audio_format.return_value = (None, None)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -62,6 +65,9 @@ def state_2_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
+    state.get_incoming_audio_format.return_value = (None, None)
+    state.get_incoming_video_parameters.return_value = None
+    state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     return state
@@ -86,21 +92,21 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-@pytest.fixture(name="coordinator_1")
-def coordinator_1_fixture(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, client: Mock, state_1: Mock
-) -> ArcamFmjCoordinator:
-    """Get a coordinator for zone 1 with mocked state."""
+@pytest.fixture(name="player")
+def player_fixture(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    client: Mock,
+    state_1: Mock,
+) -> ArcamFmj:
+    """Get standard player.
+
+    This fixture tests internals and should not be used going forward.
+    """
     coordinator = ArcamFmjCoordinator(hass, mock_config_entry, client, 1)
     coordinator.state = state_1
     coordinator.last_update_success = True
-    return coordinator
-
-
-@pytest.fixture(name="player")
-def player_fixture(hass: HomeAssistant, coordinator_1: ArcamFmjCoordinator) -> ArcamFmj:
-    """Get standard player."""
-    player = ArcamFmj(MOCK_NAME, coordinator_1, MOCK_UUID)
+    player = ArcamFmj(MOCK_NAME, coordinator, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.platform = MockEntityPlatform(hass)
