@@ -103,8 +103,8 @@
       "control_mode": {
         "name": "Control mode",
         "state": {
-            "local": "Local",
-            "cloud": "Cloud"
+          "cloud": "Cloud",
+          "local": "Local"
         }
       },
       "downtime": {
@@ -123,7 +123,11 @@
         "name": "IP address"
       },
       "read_mode": {
-        "name": "Read mode"
+        "name": "Read mode",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
       },
       "target_temp": {
         "name": "Target temperature"
@@ -154,7 +158,9 @@
         "data": {
           "control_mode": "Send commands to",
           "read_mode": "Read data from"
-        }
+        },
+        "description": "Select the endpoints to use for reading data and sending commands to your fireplace. The **cloud** endpoint is the same one as used by the **IntelliFire** app. You can also use the **local** endpoint which exists on the fireplace hardware it's self.",
+        "title": "Endpoint selection"
       }
     }
   },
