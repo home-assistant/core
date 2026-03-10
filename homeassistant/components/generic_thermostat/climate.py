@@ -509,7 +509,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Update timestamp on toggle
         self._last_toggled_time = new_state.last_changed
 
-        # Clear any lingering timers if the state change didn't originate from us
+        # If the user toggles the switch, assume they want control and clear the timers.
+        # Note: If a manual interaction occurs within the context window of an
+        # internal command, we treat it as an external override just to be safe.
         if new_state.context.id != self._last_context_id:
             _LOGGER.debug("External switch change detected, clearing timers")
             self._last_context_id = None
