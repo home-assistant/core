@@ -146,11 +146,11 @@ async def test_group_entity_removed_from_registry(hass: HomeAssistant) -> None:
     assert "light.test_group" not in get_group_entities(hass)
 
 
-async def test_group_entity_renamed_in_registry(
+async def test_group_entity_id_changed_in_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test get_group_entities reflects new key when group entity is renamed."""
+    """Test get_group_entities reflects new key when group entity ID is changed."""
     platform = MockEntityPlatform(hass, domain="light", platform_name="test")
 
     ent = MockEntity(entity_id="light.old_id", unique_id="test_group")

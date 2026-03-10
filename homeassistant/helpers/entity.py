@@ -462,6 +462,11 @@ class Entity(
 
     # A group information in case the entity represents a group
     group: Group | None = None
+    # Validated internal copy of `group`. This prevents integration authors
+    # from mistakenly overwriting it during the entity's lifetime, which would
+    # break Group functionality. It also lets us check if `group` is actually
+    # a Group instance just once in `async_internal_added_to_hass`, rather
+    # than on every state write.
     __group: Group | None = None
 
     # If we reported if this entity was slow
