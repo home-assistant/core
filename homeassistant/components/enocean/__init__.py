@@ -120,15 +120,16 @@ async def async_migrate_entry(
             )
             if usb_device is None:
                 LOGGER.warning(
-                    "Cannot migrate config entry %s: device at path %s not found",
+                    "Cannot fully migrate config entry %s: USB device at path %s not found; "
+                    "proceeding without setting a unique_id",
                     config_entry.entry_id,
-                    config_entry.data[CONF_DEVICE],
+                    new_device_path,
                 )
-                return False
-            # set unique id
-            new_unique_id = usb_unique_id_from_service_info(
-                usb_service_info_from_device(usb_device)
-            )
+            else:
+                # set unique id
+                new_unique_id = usb_unique_id_from_service_info(
+                    usb_service_info_from_device(usb_device)
+                )
 
         hass.config_entries.async_update_entry(
             config_entry,

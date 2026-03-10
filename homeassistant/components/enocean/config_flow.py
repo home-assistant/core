@@ -221,6 +221,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # validate device path
             if await self.validate_enocean_conf(user_input):
+                usb_device = await self.hass.async_add_executor_job(
+                    usb_device_from_path, user_input[CONF_DEVICE]
+                )
+                if usb_device is not None:
+                    usb_info = usb_service_info_from_device(usb_device)
+                    if usb_info is not None:
+                        await self.async_set_unique_id(
+                            usb_unique_id_from_service_info(usb_info)
+                        )
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
