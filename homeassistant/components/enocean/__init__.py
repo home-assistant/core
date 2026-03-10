@@ -133,8 +133,14 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(
             config_entry,
             data={**config_entry.data, CONF_DEVICE: new_device_path},
+            unique_id=new_unique_id,
             version=1,
             minor_version=2,
-            unique_id=new_unique_id,
+        )
+        LOGGER.debug(
+            "Migrated config entry %s to version %s.%s",
+            config_entry.entry_id,
+            1,
+            2,
         )
     return True
