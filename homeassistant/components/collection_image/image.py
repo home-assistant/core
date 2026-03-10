@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,16 +66,19 @@ class CollectionImageImageEntity(ImageEntity):
     async def get_next_image(self) -> None:
         """Update the image entity with the next image from the source media."""
 
-        path: Path | None = None
-        content_type: str = ""
+        def set_unavailable() -> None:
+            self._unavailable_logged = True
+            self._attr_available = False
+            self.path = None
+            self._attr_image_url = UNDEFINED
+            self._async_write_ha_state()
+
         try:
             media = await async_browse_media(self.hass, self.media_content_id)
         except BrowseError as err:
             if not self._unavailable_logged:
                 _LOGGER.info("%s: %s", self.entity_id, str(err))
-            self._unavailable_logged = True
-            self._attr_available = False
-            self._async_write_ha_state()
+            set_unavailable()
             return
 
         if media.children and (
@@ -90,36 +94,31 @@ class CollectionImageImageEntity(ImageEntity):
             except Unresolvable as err:
                 if not self._unavailable_logged:
                     _LOGGER.info("%s: %s", self.entity_id, str(err))
-                self._unavailable_logged = True
-                self._attr_available = False
-                self._async_write_ha_state()
+                set_unavailable()
                 return
 
-            path = resolved.path
-            content_type = resolved.mime_type
-        else:
-            if not self._unavailable_logged:
+            self.path = resolved.path
+            self._attr_image_url = resolved.url or UNDEFINED
+            self._attr_content_type = resolved.mime_type
+            self._attr_available = True
+            self._attr_image_last_updated = dt_util.utcnow()
+            if self._unavailable_logged:
                 _LOGGER.info(
-                    "%s: No valid images in %s",
+                    "%s: Has become available again",
                     self.entity_id,
-                    self.media_content_id,
                 )
-            self._unavailable_logged = True
-            self._attr_available = False
-            self._async_write_ha_state()
+            self._unavailable_logged = False
+            self.async_write_ha_state()
             return
 
-        self.path = path
-        self._attr_available = True
-        self._attr_content_type = content_type
-        self._attr_image_last_updated = dt_util.utcnow()
-        if self._unavailable_logged:
+        if not self._unavailable_logged:
             _LOGGER.info(
-                "%s: Has become available again",
+                "%s: No valid images in %s",
                 self.entity_id,
+                self.media_content_id,
             )
-        self._unavailable_logged = False
-        self.async_write_ha_state()
+        set_unavailable()
+        return
 
     async def async_added_to_hass(self) -> None:
         """Initialize the first image after entity has been created."""
@@ -135,9 +134,9 @@ class CollectionImageImageEntity(ImageEntity):
         else:
             await get_next_image_on_start()
 
-    async def async_image(self) -> bytes | None:
+    def image(self) -> bytes | None:
         """Return bytes of image."""
         if self.path:
-            return await self.hass.async_add_executor_job(self.path.read_bytes)
+            return self.path.read_bytes()
 
         return None

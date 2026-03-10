@@ -69,7 +69,7 @@ async def test_image(
             patch(
                 "homeassistant.components.collection_image.image.async_resolve_media",
                 return_value=PlayMedia(
-                    url="fake",
+                    url="",
                     mime_type="image/png",
                     path=Path(__file__).parent / "test.png",
                 ),
@@ -151,7 +151,7 @@ async def test_image_during_startup(
             patch(
                 "homeassistant.components.collection_image.image.async_resolve_media",
                 return_value=PlayMedia(
-                    url="fake",
+                    url="",
                     mime_type="image/png",
                     path=Path(__file__).parent / "test.png",
                 ),
