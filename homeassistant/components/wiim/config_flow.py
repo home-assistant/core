@@ -20,10 +20,8 @@ from .const import CONF_UDN, DOMAIN, LOGGER, UPNP_PORT
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
 
-async def _validate_device_and_get_info(
-    hass: HomeAssistant, host: str
-) -> WiimProbeResult:
-    """Validate the given host or UDN can be reached and is a WiiM device."""
+async def _async_probe_wiim_host(hass: HomeAssistant, host: str) -> WiimProbeResult:
+    """Probe the given host and return WiiM device information."""
     session = async_get_clientsession(hass)
     location = f"http://{host}:{UPNP_PORT}/description.xml"
     LOGGER.debug("Validating UPnP device at location: %s", location)
@@ -59,7 +57,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
-                device_info = await _validate_device_and_get_info(self.hass, host)
+                device_info = await _async_probe_wiim_host(self.hass, host)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             else:
@@ -100,7 +98,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         try:
-            device_info = await _validate_device_and_get_info(self.hass, host)
+            device_info = await _async_probe_wiim_host(self.hass, host)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
 

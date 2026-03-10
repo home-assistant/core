@@ -8,7 +8,7 @@ from wiim.models import WiimProbeResult
 from homeassistant.components.wiim.config_flow import (
     CannotConnect,
     WiimConfigFlow,
-    _validate_device_and_get_info,
+    _async_probe_wiim_host,
 )
 from homeassistant.components.wiim.const import CONF_UDN
 from homeassistant.const import CONF_HOST
@@ -47,7 +47,7 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
         mock_abort.return_value = None
 
         with patch(
-            "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
+            "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
             return_value=mock_device_info,
         ):
             result = await flow.async_step_user({CONF_HOST: "192.168.1.100"})
@@ -88,7 +88,7 @@ async def test_async_step_user_already_configured(
     flow_id = result["flow_id"]
 
     with patch(
-        "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
+        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
         return_value=mock_device_info,
     ):
         result = await hass.config_entries.flow.async_configure(flow_id, user_input)
@@ -128,7 +128,7 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
         patch.object(flow, "async_set_unique_id", new_callable=AsyncMock),
         patch.object(flow, "_abort_if_unique_id_configured", new=MagicMock()),
         patch(
-            "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
+            "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
             return_value=mock_device_info,
         ),
     ):
@@ -147,7 +147,7 @@ async def test_async_step_zeroconf_cannot_connect(flow) -> None:
     _flow._abort_if_unique_id_configured = MagicMock()
 
     with patch(
-        "homeassistant.components.wiim.config_flow._validate_device_and_get_info",
+        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
         side_effect=CannotConnect("cannot_connect"),
     ):
         result = await _flow.async_step_zeroconf(MockZeroconfServiceInfo())
@@ -193,10 +193,10 @@ async def test_async_step_discovery_confirm_show_form(flow) -> None:
 
 
 @pytest.mark.asyncio
-async def test_validate_device_and_get_info_success(
+async def test_async_probe_wiim_host_success(
     mock_hass: HomeAssistant, mock_upnp_device, mock_wiim_api_endpoint
 ) -> None:
-    """Test _validate_device_and_get_info with successful validation."""
+    """Test probing a host returns WiiM device information."""
     location = "http://192.168.1.100:49152/description.xml"
 
     expected_result = WiimProbeResult(
@@ -211,7 +211,5 @@ async def test_validate_device_and_get_info_success(
         "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
         return_value=expected_result,
     ):
-        result = await _validate_device_and_get_info(
-            mock_hass, "192.168.1.100"
-        )
+        result = await _async_probe_wiim_host(mock_hass, "192.168.1.100")
         assert result == expected_result
