@@ -4,7 +4,11 @@ from typing import Final
 
 import pytest
 
-from homeassistant.components.enocean.const import DOMAIN
+from homeassistant.components.enocean.const import (
+    CONFIG_FLOW_MINOR_VERSION,
+    CONFIG_FLOW_VERSION,
+    DOMAIN,
+)
 from homeassistant.components.usb import USBDevice
 from homeassistant.const import CONF_DEVICE
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -25,6 +29,8 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="device_chip_id",
         data=ENTRY_CONFIG,
+        version=CONFIG_FLOW_VERSION,
+        minor_version=CONFIG_FLOW_MINOR_VERSION,
     )
 
 

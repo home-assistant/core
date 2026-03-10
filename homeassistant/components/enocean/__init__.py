@@ -82,6 +82,7 @@ async def async_unload_entry(
     return True
 
 
+# Config entry migration can be removed in 2026.10.0
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: EnOceanConfigEntry
 ) -> bool:
@@ -95,8 +96,8 @@ async def async_migrate_entry(
         return False
 
     if config_entry.minor_version < 2:
-        new_unique_id = config_entry.unique_id
         new_device_path = config_entry.data[CONF_DEVICE]
+        new_unique_id = config_entry.unique_id
         LOGGER.debug(
             "Migrating config entry %s to version %s.%s",
             config_entry.entry_id,
