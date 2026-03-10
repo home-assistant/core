@@ -48,7 +48,7 @@ def state_1_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
@@ -65,7 +65,7 @@ def state_2_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
@@ -79,8 +79,8 @@ def state_fixture(state_1: State) -> State:
     return state_1
 
 
-@pytest.fixture(name="coordinator_1")
-def coordinator_1_fixture(
+@pytest.fixture(name="mock_coordinator_1")
+def mock_coordinator_1_fixture(
     hass: HomeAssistant, client: Mock, state_1: Mock
 ) -> ArcamFmjCoordinator:
     """Get a coordinator for zone 1 with mocked state."""
@@ -99,9 +99,11 @@ def coordinator_1_fixture(
 
 
 @pytest.fixture(name="player")
-def player_fixture(hass: HomeAssistant, coordinator_1: ArcamFmjCoordinator) -> ArcamFmj:
+def player_fixture(
+    hass: HomeAssistant, mock_coordinator_1: ArcamFmjCoordinator
+) -> ArcamFmj:
     """Get standard player."""
-    player = ArcamFmj(MOCK_NAME, coordinator_1, MOCK_UUID)
+    player = ArcamFmj(MOCK_NAME, mock_coordinator_1, MOCK_UUID)
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.platform = MockEntityPlatform(hass)
@@ -150,3 +152,21 @@ async def player_setup_fixture(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID
+
+
+@pytest.fixture(name="coordinator_1")
+def coordinator_1_fixture(
+    hass: HomeAssistant, player_setup: str
+) -> ArcamFmjCoordinator:
+    """Get the coordinator for zone 1."""
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    return config_entry.runtime_data.coordinators[1]
+
+
+@pytest.fixture(name="coordinator_2")
+def coordinator_2_fixture(
+    hass: HomeAssistant, player_setup: str
+) -> ArcamFmjCoordinator:
+    """Get the coordinator for zone 2."""
+    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
+    return config_entry.runtime_data.coordinators[2]

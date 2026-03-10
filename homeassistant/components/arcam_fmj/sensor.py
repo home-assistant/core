@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from arcam.fmj.state import State
+from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace
+from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,8 +39,10 @@ SENSORS: tuple[ArcamFmjSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="px",
         suggested_display_precision=0,
-        value_fn=lambda state: getattr(
-            state.get_incoming_video_parameters(), "horizontal_resolution", None
+        value_fn=lambda state: (
+            vp.horizontal_resolution
+            if (vp := state.get_incoming_video_parameters()) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
@@ -49,8 +52,10 @@ SENSORS: tuple[ArcamFmjSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="px",
         suggested_display_precision=0,
-        value_fn=lambda state: getattr(
-            state.get_incoming_video_parameters(), "vertical_resolution", None
+        value_fn=lambda state: (
+            vp.vertical_resolution
+            if (vp := state.get_incoming_video_parameters()) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
@@ -61,44 +66,58 @@ SENSORS: tuple[ArcamFmjSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
-        value_fn=lambda state: getattr(
-            state.get_incoming_video_parameters(), "refresh_rate", None
+        value_fn=lambda state: (
+            vp.refresh_rate
+            if (vp := state.get_incoming_video_parameters()) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
         key="incoming_video_aspect_ratio",
         translation_key="incoming_video_aspect_ratio",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: getattr(
-            getattr(state.get_incoming_video_parameters(), "aspect_ratio", None),
-            "name",
-            None,
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in IncomingVideoAspectRatio],
+        value_fn=lambda state: (
+            vp.aspect_ratio.name.lower()
+            if (vp := state.get_incoming_video_parameters()) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
         key="incoming_video_colorspace",
         translation_key="incoming_video_colorspace",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: getattr(
-            getattr(state.get_incoming_video_parameters(), "colorspace", None),
-            "name",
-            None,
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in IncomingVideoColorspace],
+        value_fn=lambda state: (
+            vp.colorspace.name.lower()
+            if (vp := state.get_incoming_video_parameters()) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
         key="incoming_audio_format",
         translation_key="incoming_audio_format",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: getattr(
-            state.get_incoming_audio_format()[0], "name", None
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in IncomingAudioFormat],
+        value_fn=lambda state: (
+            result.name.lower()
+            if (result := state.get_incoming_audio_format()[0]) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
         key="incoming_audio_config",
         translation_key="incoming_audio_config",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda state: getattr(
-            state.get_incoming_audio_format()[1], "name", None
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.name.lower() for member in IncomingAudioConfig],
+        value_fn=lambda state: (
+            result.name.lower()
+            if (result := state.get_incoming_audio_format()[1]) is not None
+            else None
         ),
     ),
     ArcamFmjSensorEntityDescription(
@@ -161,12 +180,11 @@ class ArcamFmjSensorEntity(CoordinatorEntity[ArcamFmjCoordinator], SensorEntity)
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._state = coordinator.state
-        self._attr_unique_id = f"{uuid}-{self._state.zn}-{description.key}"
+        self._attr_unique_id = f"{uuid}-{coordinator.state.zn}-{description.key}"
         self._attr_device_info = device_info
-        self._attr_translation_placeholders = {"zone": str(self._state.zn)}
+        self._attr_translation_placeholders = {"zone": str(coordinator.state.zn)}
 
     @property
     def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
-        return self.entity_description.value_fn(self._state)
+        return self.entity_description.value_fn(self.coordinator.state)
