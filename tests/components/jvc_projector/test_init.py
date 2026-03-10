@@ -1,6 +1,6 @@
 """Tests for JVC Projector config entry."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
 
@@ -10,6 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from . import MOCK_MAC
 
@@ -89,60 +90,46 @@ async def test_config_entry_auth_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_migrate_legacy_sensor_entities_to_select(
+async def test_deprecated_sensor_issue_lifecycle(
     hass: HomeAssistant,
-    mock_device: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    issue_registry: IssueRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_integration: MockConfigEntry,
 ) -> None:
-    """Test migration of legacy sensor entries that became selects."""
-    entity_registry = er.async_get(hass)
-    mac = format_mac(MOCK_MAC)
-    mock_config_entry.add_to_hass(hass)
+    """Test deprecated sensor cleanup and issue lifecycle."""
+    sensor_unique_id = f"{format_mac(MOCK_MAC)}_hdr_processing"
+    issue_id = f"deprecated_sensor_{mock_integration.entry_id}_hdr_processing"
 
-    legacy_hdr_entry = entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        f"{mac}_hdr_processing",
-        config_entry=mock_config_entry,
-        disabled_by=None,
-        translation_key="hdr_processing",
-    )
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        f"{mac}_picture_mode",
-        config_entry=mock_config_entry,
-        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
-        translation_key="picture_mode",
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get(legacy_hdr_entry.entity_id) is None
     assert (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{mac}_hdr_processing"
-        )
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, sensor_unique_id)
         is None
     )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
-    migrated_hdr_entity_id = entity_registry.async_get_entity_id(
-        Platform.SELECT, DOMAIN, f"{mac}_hdr_processing"
+    sensor_entry = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        sensor_unique_id,
+        config_entry=mock_integration,
+        suggested_object_id="jvc_projector_hdr_processing",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
-    assert migrated_hdr_entity_id is not None
-    migrated_hdr_entry = entity_registry.async_get(migrated_hdr_entity_id)
-    assert migrated_hdr_entry is not None
-    assert migrated_hdr_entry.disabled_by is None
+    entity_id = sensor_entry.entity_id
 
-    migrated_picture_mode_entity_id = entity_registry.async_get_entity_id(
-        Platform.SELECT, DOMAIN, f"{mac}_picture_mode"
-    )
-    assert migrated_picture_mode_entity_id is not None
-    migrated_picture_mode_entry = entity_registry.async_get(
-        migrated_picture_mode_entity_id
-    )
-    assert migrated_picture_mode_entry is not None
-    assert (
-        migrated_picture_mode_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    )
+    with patch(
+        "homeassistant.components.jvc_projector._get_automations_and_scripts_using_entity",
+        return_value=["- [Test Automation](/config/automation/edit/test_automation)"],
+    ):
+        await hass.config_entries.async_reload(mock_integration.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_sensor_scripts"
+    assert entity_registry.async_get(entity_id) is not None
+
+    await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

@@ -44,6 +44,12 @@
       "hdr": {
         "default": "mdi:image-filter-hdr-outline"
       },
+      "hdr_processing": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
+      "picture_mode": {
+        "default": "mdi:movie-roll"
+      },
       "power": {
         "default": "mdi:power",
         "state": {

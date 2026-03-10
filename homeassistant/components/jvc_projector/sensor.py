@@ -60,6 +60,20 @@ SENSORS: tuple[JvcProjectorSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    JvcProjectorSensorDescription(
+        key="hdr_processing",
+        command=cmd.HdrProcessing,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSensorDescription(
+        key="picture_mode",
+        command=cmd.PictureMode,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
