@@ -1,5 +1,6 @@
 """Support for the Pico TTS speech service."""
 
+import contextlib
 import logging
 import os
 import shutil
@@ -90,12 +91,8 @@ class PicoTTSEntity(TextToSpeechEntity):
         cmd = ["pico2wave", "--wave", fname, "-l", language]
         try:
             subprocess.run(cmd, text=True, input=message, check=True)
-
-            try:
-                with open(fname, "rb") as voice:
-                    data = voice.read()
-            finally:
-                os.remove(fname)
+            with open(fname, "rb") as voice:
+                data = voice.read()
         except subprocess.CalledProcessError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -109,6 +106,9 @@ class PicoTTSEntity(TextToSpeechEntity):
                 translation_key="file_read_error",
                 translation_placeholders={"filename": fname},
             ) from exc
+        finally:
+            with contextlib.suppress(OSError):
+                os.remove(fname)
 
         return "wav", data
 
