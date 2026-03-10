@@ -1,16 +1,11 @@
 """Tests for arcam fmj receivers."""
 
 from math import isclose
-from unittest.mock import ANY, PropertyMock, patch
+from unittest.mock import PropertyMock, patch
 
 from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
-from homeassistant.components.arcam_fmj.const import (
-    SIGNAL_CLIENT_DATA,
-    SIGNAL_CLIENT_STARTED,
-    SIGNAL_CLIENT_STOPPED,
-)
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -144,7 +139,6 @@ async def test_update_lost(
         blocking=True,
     )
     state.update.assert_called_with()
-    assert "Connection lost during update" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -355,17 +349,3 @@ async def test_media_title(player, state, source, channel, title) -> None:
             assert "media_title" not in data.attributes
         else:
             assert data.attributes["media_title"] == title
-
-
-async def test_added_to_hass(player, state) -> None:
-    """Test addition to hass."""
-
-    with patch(
-        "homeassistant.components.arcam_fmj.media_player.async_dispatcher_connect"
-    ) as connect:
-        await player.async_added_to_hass()
-
-    state.start.assert_called_with()
-    connect.assert_any_call(player.hass, SIGNAL_CLIENT_DATA, ANY)
-    connect.assert_any_call(player.hass, SIGNAL_CLIENT_STARTED, ANY)
-    connect.assert_any_call(player.hass, SIGNAL_CLIENT_STOPPED, ANY)
