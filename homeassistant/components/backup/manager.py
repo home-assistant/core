@@ -607,6 +607,7 @@ class BackupManager:
                 backup=_backup,
                 on_progress=on_upload_progress,
             )
+            on_upload_progress(bytes_uploaded=_backup.size)
             if streamer:
                 await streamer.wait()
 

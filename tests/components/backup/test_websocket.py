@@ -431,7 +431,7 @@ async def test_generate(
     await client.send_json_auto_id(
         {"type": "backup/generate", **{"agent_ids": ["backup.local"]} | (data or {})}
     )
-    for _ in range(6):
+    for _ in range(7):
         assert await client.receive_json() == snapshot
 
 

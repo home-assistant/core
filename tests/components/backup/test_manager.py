@@ -596,7 +596,10 @@ async def test_initiate_backup(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
@@ -843,7 +846,10 @@ async def test_initiate_backup_with_agent_error(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -1401,7 +1407,10 @@ async def test_initiate_backup_non_agent_upload_error(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -1594,7 +1603,10 @@ async def test_initiate_backup_file_error_upload_to_agents(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": "upload_failed",
@@ -2709,7 +2721,10 @@ async def test_receive_backup_file_read_error(
         "state": ReceiveBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
         "reason": final_state_reason,
@@ -3526,7 +3541,10 @@ async def test_initiate_backup_per_agent_encryption(
         "state": CreateBackupState.IN_PROGRESS,
     }
 
+    # Consume any upload progress events before the final state event
     result = await ws_client.receive_json()
+    while "uploaded_bytes" in result["event"]:
+        result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
         "reason": None,
@@ -3761,24 +3779,25 @@ async def test_upload_progress_event(
     result = await ws_client.receive_json()
     assert result["event"]["stage"] == CreateBackupStage.UPLOAD_TO_AGENTS
 
-    # Upload progress events for the remote agent
+    # Collect all upload progress events until the final state event
+    progress_events = []
     result = await ws_client.receive_json()
-    assert result["event"] == {
-        "manager_state": BackupManagerState.CREATE_BACKUP,
-        "agent_id": "test.remote",
-        "uploaded_bytes": 500,
-        "total_bytes": ANY,
-    }
+    while "uploaded_bytes" in result["event"]:
+        progress_events.append(result["event"])
+        result = await ws_client.receive_json()
 
-    result = await ws_client.receive_json()
-    assert result["event"] == {
-        "manager_state": BackupManagerState.CREATE_BACKUP,
-        "agent_id": "test.remote",
-        "uploaded_bytes": 1000,
-        "total_bytes": ANY,
-    }
+    # Verify progress events from the remote agent (500, 1000 from agent + final from manager)
+    remote_progress = [e for e in progress_events if e["agent_id"] == "test.remote"]
+    assert len(remote_progress) == 3
+    assert remote_progress[0]["uploaded_bytes"] == 500
+    assert remote_progress[1]["uploaded_bytes"] == 1000
+    assert remote_progress[2]["uploaded_bytes"] == remote_progress[2]["total_bytes"]
 
-    result = await ws_client.receive_json()
+    # Verify progress event from the local agent (final from manager)
+    local_progress = [e for e in progress_events if e["agent_id"] == LOCAL_AGENT_ID]
+    assert len(local_progress) == 1
+    assert local_progress[0]["uploaded_bytes"] == local_progress[0]["total_bytes"]
+
     assert result["event"]["state"] == CreateBackupState.COMPLETED
 
     result = await ws_client.receive_json()

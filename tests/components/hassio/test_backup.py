@@ -980,7 +980,10 @@ async def test_reader_writer_create(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
@@ -1094,7 +1097,10 @@ async def test_reader_writer_create_addon_folder_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
@@ -1211,7 +1217,10 @@ async def test_reader_writer_create_report_progress(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
@@ -1273,7 +1282,10 @@ async def test_reader_writer_create_job_done(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
@@ -1536,7 +1548,10 @@ async def test_reader_writer_create_per_agent_encryption(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
@@ -1788,7 +1803,10 @@ async def test_reader_writer_create_download_remove_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": "upload_failed",
@@ -1952,7 +1970,10 @@ async def test_reader_writer_create_remote_backup(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": None,
