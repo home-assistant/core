@@ -8,6 +8,7 @@ from pajgps_api.pajgps_api_error import AuthenticationError, PajGpsApiError
 import pytest
 
 from homeassistant.components.pajgps.coordinator import PajGpsData
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .test_common import make_coordinator, make_device, make_trackpoint
@@ -82,24 +83,22 @@ class TestAsyncSetup:
     """Tests for the _async_setup method (runs once before the first refresh)."""
 
     @pytest.mark.asyncio
-    async def test_login_failure_raises_update_failed(self):
-        """Test that an authentication error during login raises UpdateFailed."""
+    async def test_login_failure_raises_config_entry_auth_failed(self):
+        """Test that an authentication error during login raises ConfigEntryAuthFailed."""
         coord = make_coordinator()
         coord.api.login = AsyncMock(side_effect=AuthenticationError("bad creds"))
 
-        with pytest.raises(UpdateFailed):
+        with pytest.raises(ConfigEntryAuthFailed):
             await coord._async_setup()
 
     @pytest.mark.asyncio
-    async def test_generic_login_exception_raises_update_failed(self):
-        """A non-auth exception during login must also raise UpdateFailed."""
+    async def test_generic_login_exception_raises_config_entry_not_ready(self):
+        """A non-auth exception during login must raise ConfigEntryNotReady."""
         coord = make_coordinator()
         coord.api.login = AsyncMock(side_effect=ConnectionError("network gone"))
 
-        with pytest.raises(UpdateFailed) as ctx:
+        with pytest.raises(ConfigEntryNotReady):
             await coord._async_setup()
-
-        assert "connection error" in str(ctx.value).lower()
 
 
 class TestGetDeviceInfo:
@@ -124,25 +123,13 @@ class TestGetDeviceInfo:
 
         assert coord.get_device_info(999) is None
 
-    def test_identifiers_contain_guid_and_device_id(self):
-        """Test that identifiers include both the GUID and device ID."""
-        coord = make_coordinator(guid="my-guid")
+    def test_identifiers_contain_email_and_device_id(self):
+        """Test that identifiers include both the email and device ID."""
+        coord = make_coordinator(email="owner@example.com")
         coord.data = PajGpsData(devices=[make_device(42)])
 
         info = coord.get_device_info(42)
         identifiers = info["identifiers"]
-        assert any("my-guid" in str(i) and "42" in str(i) for i in identifiers)
-
-
-class TestShutdown:
-    """Tests for coordinator shutdown and cleanup behaviour."""
-
-    @pytest.mark.asyncio
-    async def test_shutdown_closes_api(self):
-        """Test that shutdown awaits the API close method."""
-        coord = make_coordinator()
-        coord.api.close = AsyncMock()
-
-        await coord.async_shutdown()
-
-        coord.api.close.assert_awaited_once()
+        assert any(
+            "owner@example.com" in str(i) and "42" in str(i) for i in identifiers
+        )

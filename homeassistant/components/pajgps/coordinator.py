@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 
-import aiohttp
+from aiohttp import ClientSession
 from pajgps_api import PajGpsApi
 from pajgps_api.models.device import Device
 from pajgps_api.models.trackpoint import TrackPoint
@@ -19,6 +19,7 @@ from pajgps_api.pajgps_api_error import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -42,7 +43,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        websession: aiohttp.ClientSession | None = None,
+        websession: ClientSession | None = None,
     ) -> None:
         """Initialize the coordinator from config-entry data."""
         super().__init__(
@@ -53,25 +54,29 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             config_entry=config_entry,
         )
 
-        self.guid: str = config_entry.data["guid"]
+        self._email: str = config_entry.data[CONF_EMAIL]
         self.api = PajGpsApi(
             email=config_entry.data[CONF_EMAIL],
             password=config_entry.data[CONF_PASSWORD],
             websession=websession,
         )
-        self._owns_websession = websession is None
 
         # Snapshot starts empty; entities must handle None gracefully until first refresh
         self.data = PajGpsData()
+
+    @property
+    def email(self) -> str:
+        """Return the account email address for this coordinator."""
+        return self._email
 
     async def _async_setup(self) -> None:
         """Perform initial and first data refresh."""
         try:
             await self.api.login()
         except (AuthenticationError, TokenRefreshError) as exc:
-            raise UpdateFailed(f"PAJ GPS authentication failed: {exc}") from exc
+            raise ConfigEntryAuthFailed from exc
         except Exception as exc:
-            raise UpdateFailed(f"PAJ GPS connection error: {exc}") from exc
+            raise ConfigEntryNotReady from exc
 
     async def _async_update_data(self) -> PajGpsData:
         """Fetch device list and positions every UPDATE_INTERVAL seconds."""
@@ -103,14 +108,9 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                     model = device_models[0].get("model") or "Unknown"
 
                 return DeviceInfo(
-                    identifiers={(DOMAIN, f"{self.guid}_{device_id}")},
+                    identifiers={(DOMAIN, f"{self._email}_{device_id}")},
                     name=device.name or f"PAJ GPS {device_id}",
                     manufacturer="PAJ GPS",
                     model=model,
                 )
         return None
-
-    async def async_shutdown(self) -> None:
-        """Clean up all resources owned by this coordinator."""
-        if self._owns_websession:
-            await self.api.close()

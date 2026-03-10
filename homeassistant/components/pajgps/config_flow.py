@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-import uuid
 
 from pajgps_api import PajGpsApi
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
@@ -60,8 +59,6 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.data = user_input
-            # Create new guid for the entry
-            self.data["guid"] = str(uuid.uuid4())
             if not errors:
                 # Normalize email for duplicate protection and storage
                 normalized_email = self.data["email"].strip().lower()

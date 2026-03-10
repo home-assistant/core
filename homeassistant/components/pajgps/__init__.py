@@ -24,24 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bo
 
     entry.runtime_data = pajgps_coordinator
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, config_entry: PajGpsConfigEntry
-) -> None:
-    """Reload the integration when options change."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(
     hass: core.HomeAssistant, entry: PajGpsConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await entry.runtime_data.async_shutdown()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

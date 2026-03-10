@@ -13,11 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.pajgps import (
-    _async_update_listener,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.pajgps import async_setup_entry, async_unload_entry
 from homeassistant.components.pajgps.const import DOMAIN
 from homeassistant.components.pajgps.coordinator import PajGpsData
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -29,12 +25,9 @@ def _make_mock_entry(
     """Return a minimal mock ConfigEntry."""
     entry = MagicMock()
     entry.data = {
-        "guid": "test-guid",
         "email": email,
         "password": password,
     }
-    entry.async_on_unload = MagicMock()
-    entry.add_update_listener = MagicMock(return_value=MagicMock())
     return entry
 
 
@@ -163,36 +156,17 @@ class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
         return device_entry
 
 
-class TestAsyncUpdateListener(unittest.IsolatedAsyncioTestCase):
-    """Test _async_update_listener (line 60)."""
-
-    async def test_triggers_reload(self):
-        """Test that _async_update_listener triggers a config entry reload."""
-        hass = MagicMock()
-        hass.config_entries.async_reload = AsyncMock()
-        config_entry = MagicMock()
-        config_entry.entry_id = "test-entry-id"
-
-        await _async_update_listener(hass, config_entry)
-
-        hass.config_entries.async_reload.assert_awaited_once_with("test-entry-id")
-
-
 class TestAsyncUnloadEntry(unittest.IsolatedAsyncioTestCase):
     """Test async_unload_entry (lines 67-68)."""
 
-    async def test_unload_shuts_down_coordinator_and_unloads_platforms(self):
-        """Test that unloading shuts down the coordinator and unloads platforms."""
+    async def test_unload_unloads_platforms(self):
+        """Test that unloading unloads platforms and returns True."""
         hass = MagicMock()
         hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
 
-        mock_coordinator = MagicMock()
-        mock_coordinator.async_shutdown = AsyncMock()
-
         entry = _make_mock_entry()
-        entry.runtime_data = mock_coordinator
+        entry.runtime_data = MagicMock()
 
         result = await async_unload_entry(hass, entry)
 
-        mock_coordinator.async_shutdown.assert_awaited_once()
         assert result

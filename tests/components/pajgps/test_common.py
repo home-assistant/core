@@ -96,7 +96,6 @@ def make_entry_data(**kwargs) -> dict:
         A dictionary with config entry data.
     """
     defaults = {
-        "guid": "test-guid",
         "email": "test@example.com",
         "password": "secret",
     }

@@ -3,7 +3,7 @@
 Coverage:
 - PajGPSConfigFlow.async_step_user:
     * GET (no input) → returns FORM with step_id "user"
-    * Valid full input → CREATE_ENTRY with email as title, data fields, and a generated guid
+    * Valid full input → CREATE_ENTRY with email as title and data fields
     * Duplicate email → AbortFlow raised
     * Invalid credentials → FORM with errors["base"] set accordingly
 """
@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
-import uuid
 
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
@@ -77,22 +76,6 @@ class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
         data = result["data"]
         assert data["email"] == VALID_USER_INPUT["email"]
         assert data["password"] == VALID_USER_INPUT["password"]
-
-    async def test_creates_entry_with_valid_guid(self):
-        """A fresh UUID must be generated and stored as 'guid' in entry data."""
-        flow = _make_flow()
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
-
-        assert "guid" in result["data"]
-        generated_guid = result["data"]["guid"]
-        # Must be a valid UUID string
-        parsed = uuid.UUID(generated_guid)
-        assert str(parsed) == generated_guid
 
     async def test_valid_input_does_not_return_errors(self):
         """Valid input must produce no errors dict key."""
