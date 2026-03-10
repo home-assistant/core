@@ -74,7 +74,12 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from . import config_validation as cv, entity_registry as er, selector
+from . import (
+    config_validation as cv,
+    entity as entity_helper,
+    entity_registry as er,
+    selector,
+)
 from .automation import (
     get_absolute_description_key,
     get_relative_description_key,
@@ -94,7 +99,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -415,11 +420,32 @@ class EntityStateConditionBase(EntityConditionBase):
         return entity_state.state in self._states
 
 
+def _filter_by_device_classes(
+    hass: HomeAssistant, entities: set[str], device_classes: dict[str, str]
+) -> set[str]:
+    """Filter entities by device class, matching domain to expected device class."""
+    return {
+        entity_id
+        for entity_id in entities
+        if split_entity_id(entity_id)[0] in device_classes
+        and _get_device_class_or_undefined(hass, entity_id)
+        == device_classes[split_entity_id(entity_id)[0]]
+    }
+
+
+def _get_device_class_or_undefined(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the device class of an entity or a sentinel if not found."""
+    try:
+        return entity_helper.get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        return UNDEFINED  # type: ignore[return-value]
+
+
 def make_entity_state_condition(
     domain: str,
     states: str | set[str],
     *,
-    entity_filter: Callable[[HomeAssistant, set[str]], set[str]] | None = None,
+    device_classes: dict[str, str] | None = None,
 ) -> type[EntityStateConditionBase]:
     """Create a condition for entity state changes to specific state(s)."""
 
@@ -428,7 +454,7 @@ def make_entity_state_condition(
     else:
         states_set = states
 
-    _entity_filter = entity_filter
+    _device_classes = device_classes
 
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
@@ -436,12 +462,11 @@ def make_entity_state_condition(
         _domain = domain
         _states = states_set
 
-        if _entity_filter is not None:
-
-            def entity_filter(self, entities: set[str]) -> set[str]:
-                """Filter entities."""
-                entities = super().entity_filter(entities)
-                return _entity_filter(self._hass, entities)
+        def entity_filter(self, entities: set[str]) -> set[str]:
+            """Filter entities by domain and device class."""
+            if _device_classes is not None:
+                return _filter_by_device_classes(self._hass, entities, _device_classes)
+            return super().entity_filter(entities)
 
     return CustomCondition
 
@@ -473,6 +498,74 @@ def make_entity_state_attribute_condition(
         _domain = domain
         _attribute = attribute
         _attribute_states = attribute_states_set
+
+    return CustomCondition
+
+
+NUMERICAL_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
+    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        [BEHAVIOR_ANY, BEHAVIOR_ALL]
+    ),
+    vol.Optional(CONF_ABOVE): vol.Coerce(float),
+    vol.Optional(CONF_BELOW): vol.Coerce(float),
+}
+
+NUMERICAL_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS): vol.All(
+            NUMERICAL_CONDITION_OPTIONS_SCHEMA,
+            cv.has_at_least_one_key(CONF_ABOVE, CONF_BELOW),
+        ),
+    }
+)
+
+
+class EntityNumericalConditionBase(EntityConditionBase):
+    """Condition for numerical state comparisons with above/below thresholds."""
+
+    _schema = NUMERICAL_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._above: float | None = config.options.get(CONF_ABOVE)
+        self._below: float | None = config.options.get(CONF_BELOW)
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state is within the specified range."""
+        try:
+            value = float(entity_state.state)
+        except TypeError, ValueError:
+            return False
+
+        if self._above is not None and value <= self._above:
+            return False
+        if self._below is not None and value >= self._below:
+            return False
+        return True
+
+
+def make_entity_numerical_condition(
+    domain: str,
+    *,
+    device_classes: dict[str, str] | None = None,
+) -> type[EntityNumericalConditionBase]:
+    """Create a condition for numerical state comparisons."""
+
+    _device_classes = device_classes
+
+    class CustomCondition(EntityNumericalConditionBase):
+        """Condition for numerical state."""
+
+        _domain = domain
+
+        def entity_filter(self, entities: set[str]) -> set[str]:
+            """Filter entities by domain and device class."""
+            if _device_classes is not None:
+                return _filter_by_device_classes(self._hass, entities, _device_classes)
+            return super().entity_filter(entities)
 
     return CustomCondition
 
