@@ -23,7 +23,7 @@ from .coordinator import EvoDataUpdateCoordinator
 
 # System service schemas (registered as domain services)
 SET_SYSTEM_MODE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
-    vol.Required(ATTR_MODE): str,  # avoid vol.In(SystemMode)
+    vol.Required(ATTR_MODE): cv.string,  # avoid vol.In(SystemMode)
     vol.Exclusive(ATTR_DURATION, "temporary"): vol.All(
         cv.time_period,
         vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
