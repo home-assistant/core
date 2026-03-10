@@ -25,27 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _build_config_schema(
-    entry_name: str = "My Paj GPS Account",
     email: str = "",
     password: str = "",
 ) -> vol.Schema:
     """Build config schema with optional pre-filled defaults."""
     return vol.Schema(
         {
-            vol.Required("entry_name", default=entry_name): cv.string,
             vol.Required(CONF_EMAIL, default=email): cv.string,
             vol.Required(CONF_PASSWORD, default=password): cv.string,
-        }
-    )
-
-
-def _build_options_schema(
-    entry_name: str = "",
-) -> vol.Schema:
-    """Build options schema without password (credentials managed via reconfigure/reauth)."""
-    return vol.Schema(
-        {
-            vol.Required("entry_name", default=entry_name): cv.string,
         }
     )
 
@@ -95,14 +82,11 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
                 if error_key:
                     errors["base"] = error_key
             if not errors:
-                return self.async_create_entry(
-                    title=f"{self.data['entry_name']}", data=self.data
-                )
+                return self.async_create_entry(title=normalized_email, data=self.data)
 
             return self.async_show_form(
                 step_id="user",
                 data_schema=_build_config_schema(
-                    entry_name=user_input.get("entry_name", ""),
                     email=user_input.get(CONF_EMAIL, ""),
                     password=user_input.get(CONF_PASSWORD, ""),
                 ),
@@ -135,9 +119,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Handle options flow."""
         errors: dict[str, str] = {}
 
-        default_entry_name = self._config_entry.options.get(
-            "entry_name", self._config_entry.data.get("entry_name", "")
-        )
         default_email = self._config_entry.options.get(
             CONF_EMAIL, self._config_entry.data.get(CONF_EMAIL, "")
         )
@@ -146,9 +127,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
 
         if user_input is not None:
-            if not user_input.get("entry_name"):
-                errors["base"] = "entry_name_required"
-            elif not user_input.get(CONF_EMAIL):
+            if not user_input.get(CONF_EMAIL):
                 errors["base"] = "email_required"
             elif not user_input.get(CONF_PASSWORD):
                 errors["base"] = "password_required"
@@ -169,23 +148,21 @@ class OptionsFlowHandler(OptionsFlow):
             if not errors:
                 new_data = {
                     "guid": self._config_entry.data["guid"],
-                    "entry_name": user_input["entry_name"],
                     CONF_EMAIL: user_input[CONF_EMAIL],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
                 self.hass.config_entries.async_update_entry(
                     self._config_entry,
                     data=new_data,
-                    title=new_data["entry_name"],
+                    title=user_input[CONF_EMAIL],
                 )
                 return self.async_create_entry(
-                    title=new_data["entry_name"], data=new_data
+                    title=user_input[CONF_EMAIL], data=new_data
                 )
 
             return self.async_show_form(
                 step_id="init",
                 data_schema=_build_config_schema(
-                    entry_name=user_input.get("entry_name", default_entry_name),
                     email=user_input.get(CONF_EMAIL, default_email),
                     password=user_input.get(CONF_PASSWORD, default_password),
                 ),
@@ -195,7 +172,6 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=_build_config_schema(
-                entry_name=default_entry_name,
                 email=default_email,
                 password=default_password,
             ),

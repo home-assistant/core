@@ -3,10 +3,9 @@
 Coverage:
 - CustomFlow.async_step_user:
     * GET (no input) → returns FORM with step_id "user"
-    * Valid full input → CREATE_ENTRY with correct title, all 6 data fields, and a generated guid
-    * Empty entry_name → FORM with errors["base"] == "entry_name_required"
-    * Empty email      → FORM with errors["base"] == "email_required"
-    * Empty password   → FORM with errors["base"] == "password_required"
+    * Valid full input → CREATE_ENTRY with email as title, data fields, and a generated guid
+    * Empty email    → FORM with errors["base"] == "email_required"
+    * Empty password → FORM with errors["base"] == "password_required"
 
 - OptionsFlowHandler.async_step_init:
     * GET (no input) → returns FORM with step_id "init", defaults come from config_entry.data
@@ -68,20 +67,17 @@ def _make_options_flow(
 
 
 VALID_USER_INPUT = {
-    "entry_name": "My PAJ Account",
     "email": "user@example.com",
     "password": "s3cr3t",
 }
 
 VALID_ENTRY_DATA = {
     "guid": "existing-guid-1234",
-    "entry_name": "Original Name",
     "email": "original@example.com",
     "password": "original_pass",
 }
 
 VALID_OPTIONS_INPUT = {
-    "entry_name": "Updated Name",
     "email": "updated@example.com",
     "password": "new_pass",
 }
@@ -116,10 +112,9 @@ class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
 
         assert result["type"] == "create_entry"
-        assert result["title"] == VALID_USER_INPUT["entry_name"]
+        assert result["title"] == VALID_USER_INPUT["email"]
 
         data = result["data"]
-        assert data["entry_name"] == VALID_USER_INPUT["entry_name"]
         assert data["email"] == VALID_USER_INPUT["email"]
         assert data["password"] == VALID_USER_INPUT["password"]
 
@@ -214,14 +209,12 @@ class TestOptionsFlowHandler(unittest.IsolatedAsyncioTestCase):
             for key in schema
             if hasattr(key, "default") and callable(key.default)
         }
-        assert defaults["entry_name"] == VALID_ENTRY_DATA["entry_name"]
         assert defaults["email"] == VALID_ENTRY_DATA["email"]
         assert defaults["password"] == VALID_ENTRY_DATA["password"]
 
     async def test_options_override_data_defaults(self):
         """Values in config_entry.options must take precedence over config_entry.data as form defaults."""
         overriding_options = {
-            "entry_name": "Options Name",
             "email": "options@example.com",
             "password": "options_pass",
         }
@@ -235,7 +228,6 @@ class TestOptionsFlowHandler(unittest.IsolatedAsyncioTestCase):
             for key in schema
             if hasattr(key, "default") and callable(key.default)
         }
-        assert defaults["entry_name"] == overriding_options["entry_name"]
         assert defaults["email"] == overriding_options["email"]
         assert defaults["password"] == overriding_options["password"]
 
@@ -251,7 +243,6 @@ class TestOptionsFlowHandler(unittest.IsolatedAsyncioTestCase):
 
         assert result["type"] == "create_entry"
         data = result["data"]
-        assert data["entry_name"] == VALID_OPTIONS_INPUT["entry_name"]
         assert data["email"] == VALID_OPTIONS_INPUT["email"]
         assert data["password"] == VALID_OPTIONS_INPUT["password"]
 

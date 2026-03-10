@@ -24,12 +24,10 @@
       "reconfigure": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "entry_name": "Entry name",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Email used to log in to Finder Portal (finder-portal.com)",
-          "entry_name": "Entry name to identify the account in Home Assistant",
           "password": "Password used to log in to Finder Portal (finder-portal.com)"
         },
         "description": "Update the configuration for your PAJ GPS account.",
@@ -38,12 +36,10 @@
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "entry_name": "Entry name",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Email used to log in to Finder Portal (finder-portal.com)",
-          "entry_name": "Entry name to identify the account in Home Assistant",
           "password": "Password used to log in to Finder Portal (finder-portal.com)"
         },
         "description": "Set credentials for your PAJ GPS account (finder-portal.com).",
@@ -61,12 +57,10 @@
       "init": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
-          "entry_name": "Entry name",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Email used to log in to Finder Portal (finder-portal.com)",
-          "entry_name": "Entry name to identify the account in Home Assistant",
           "password": "Password used to log in to Finder Portal (finder-portal.com)"
         },
         "description": "Set credentials for your PAJ GPS account (finder-portal.com).",

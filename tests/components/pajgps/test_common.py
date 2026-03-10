@@ -97,7 +97,6 @@ def make_entry_data(**kwargs) -> dict:
     """
     defaults = {
         "guid": "test-guid",
-        "entry_name": "Test Entry",
         "email": "test@example.com",
         "password": "secret",
     }

@@ -30,7 +30,6 @@ def _make_mock_entry(
     entry = MagicMock()
     entry.data = {
         "guid": "test-guid",
-        "entry_name": "Test",
         "email": email,
         "password": password,
     }
