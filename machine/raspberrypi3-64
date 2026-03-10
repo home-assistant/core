@@ -7,15 +7,4 @@ FROM ${BUILD_FROM}
 RUN apk --no-cache add \
     raspberrypi-utils
 
-ARG BUILD_ARCH=aarch64
-ARG BUILD_DATE="1970-01-01 00:00:00+00:00"
-ARG BUILD_REPOSITORY
-ARG BUILD_VERSION=0.0.0-local
-
-LABEL \
-    io.hass.type="core" \
-    io.hass.arch="${BUILD_ARCH}" \
-    io.hass.version="${BUILD_VERSION}" \
-    org.opencontainers.image.created="${BUILD_DATE}" \
-    org.opencontainers.image.version="${BUILD_VERSION}" \
-    org.opencontainers.image.source="${BUILD_REPOSITORY}"
+LABEL io.hass.type="core"

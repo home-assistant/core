@@ -51,18 +51,8 @@ RUN \
 
 WORKDIR /config
 
-ARG BUILD_ARCH=amd64
-ARG BUILD_DATE="1970-01-01 00:00:00+00:00"
-ARG BUILD_REPOSITORY
-ARG BUILD_VERSION=0.0.0-local
-
 LABEL \
     io.hass.type="core" \
-    io.hass.arch="${BUILD_ARCH}" \
-    io.hass.version="${BUILD_VERSION}" \
-    org.opencontainers.image.created="${BUILD_DATE}" \
-    org.opencontainers.image.version="${BUILD_VERSION}" \
-    org.opencontainers.image.source="${BUILD_REPOSITORY}" \
     org.opencontainers.image.authors="The Home Assistant Authors" \
     org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
     org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
