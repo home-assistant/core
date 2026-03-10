@@ -109,7 +109,7 @@ class WattwaechterUpdateEntity(WattwaechterEntity, UpdateEntity):
                     "WattWächter device did not come back online after firmware update"
                 )
         finally:
-            self._attr_in_progress = False
+            self._attr_in_progress = None
             self.async_write_ha_state()
 
     def _set_progress(self, percent: int) -> None:
