@@ -1,6 +1,10 @@
 name: 同步上游
 
 on:
+  schedule:
+    # 北京时间每周一凌晨2点同步一次（UTC时间每周日下午6点）
+    - cron: '0 19 * * 0'
+    
   workflow_dispatch: # 允许手动触发
 
 jobs:
