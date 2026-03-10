@@ -19,6 +19,11 @@ LABS_PREVIEW_FEATURES = {
         },
     },
     "frontend": {
+        "windows_98": {
+            "feedback_url": "",
+            "learn_more_url": "",
+            "report_issue_url": "",
+        },
         "winter_mode": {
             "feedback_url": "",
             "learn_more_url": "",
