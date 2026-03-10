@@ -6,14 +6,15 @@ from unittest.mock import MagicMock
 from opendisplay.models.config import PowerOption
 from opendisplay.models.enums import PowerMode
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import DEVICE_CONFIG, TEST_ADDRESS, VALID_SERVICE_INFO, make_service_info
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -41,52 +42,32 @@ async def test_sensors_before_data(
     )
 
 
-async def test_temperature_sensor(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that temperature sensor reports the parsed advertisement value."""
-    await _setup_entry(hass, mock_config_entry)
-
-    inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
-    await hass.async_block_till_done()
-
-    # V1_ADVERTISEMENT_DATA encodes temperature_c = 25.0
-    state = hass.states.get("sensor.opendisplay_1234_temperature")
-    assert state is not None
-    assert state.state == "25.0"
-
-
-async def test_battery_sensors_not_created_for_usb_devices(
+async def test_sensor_entities_usb_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test battery sensors are not created for USB-powered devices."""
-    # DEVICE_CONFIG has power_mode=0 (not BATTERY or SOLAR)
+    """Test sensor entities for a USB-powered Flex device."""
     await _setup_entry(hass, mock_config_entry)
 
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    # Temperature should be available
-    assert hass.states.get("sensor.opendisplay_1234_temperature").state == "25.0"
-
-    # Battery sensors must not exist at all
-    assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
-    assert entity_registry.async_get("sensor.opendisplay_1234_battery_voltage") is None
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_battery_sensors_with_battery_sense(
+async def test_sensor_entities_battery_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_opendisplay_device: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test battery sensors when device is battery powered with a known chemistry."""
-    # Build a config with BATTERY power mode and LI_ION chemistry
+    """Test sensor entities for a battery-powered Flex device with LI_ION chemistry."""
     device_config = deepcopy(DEVICE_CONFIG)
     power = device_config.power
-    new_power = PowerOption(
+    device_config.power = PowerOption(
         power_mode=PowerMode.BATTERY,
         battery_capacity_mah=power.battery_capacity_mah,
         sleep_timeout_ms=power.sleep_timeout_ms,
@@ -101,24 +82,29 @@ async def test_battery_sensors_with_battery_sense(
         deep_sleep_time_seconds=power.deep_sleep_time_seconds,
         reserved=power.reserved,
     )
-    device_config.power = new_power
     mock_opendisplay_device.config = device_config
 
     await _setup_entry(hass, mock_config_entry)
 
-    # V1_ADVERTISEMENT_DATA encodes battery_mv=3700, temperature_c=25.0
     inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
     await hass.async_block_till_done()
 
-    voltage_state = hass.states.get("sensor.opendisplay_1234_battery_voltage")
-    assert voltage_state is not None
-    assert voltage_state.state == "3700"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    battery_state = hass.states.get("sensor.opendisplay_1234_battery")
-    assert battery_state is not None
-    # 3700 mV with LI_ION chemistry should be > 0%
-    assert battery_state.state not in (STATE_UNAVAILABLE, "unknown")
-    assert int(battery_state.state) > 0
+
+async def test_battery_sensors_not_created_for_usb_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test battery sensors are not created for USB-powered devices."""
+    await _setup_entry(hass, mock_config_entry)
+
+    inject_bluetooth_service_info(hass, VALID_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("sensor.opendisplay_1234_battery") is None
+    assert entity_registry.async_get("sensor.opendisplay_1234_battery_voltage") is None
 
 
 async def test_no_sensors_for_non_flex_devices(
@@ -150,5 +136,5 @@ async def test_coordinator_ignores_unknown_manufacturer(
     inject_bluetooth_service_info(hass, unknown_service_info)
     await hass.async_block_till_done()
 
-    # Coordinator has no data, sensor state is unknown (device visible but no OD data)
-    assert hass.states.get("sensor.opendisplay_1234_temperature").state == "unknown"
+    # Coordinator has no data; device is visible but no OpenDisplay data parsed
+    assert hass.states.get("sensor.opendisplay_1234_temperature").state == STATE_UNKNOWN
