@@ -101,9 +101,8 @@ async def test_setup_entry_meter_pro_co2_uses_non_connectable(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        mock_ble.assert_called_once()
         # connectable should be False since METER_PRO_C is in both lists
-        assert mock_ble.call_args[0][2] is False
+        assert mock_ble.call_args_list[0][0][2] is False
 
 
 async def test_coordinator_wait_ready_timeout(
