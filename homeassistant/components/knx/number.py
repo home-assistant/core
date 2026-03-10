@@ -134,7 +134,6 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
                 dpt_info["sensor_device_class"],
             ),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_mode = config[CONF_MODE]
         self._attr_native_max_value = config.get(
             NumberConf.MAX,

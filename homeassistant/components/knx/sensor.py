@@ -233,7 +233,6 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
             CONF_STATE_CLASS,
             dpt_info["sensor_state_class"],
         )
-        self._attr_unique_id = str(self._device.sensor_value.group_address_state)
 
 
 class KnxUiSensor(_KnxSensor, KnxUiEntity):
