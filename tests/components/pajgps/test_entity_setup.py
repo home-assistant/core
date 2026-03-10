@@ -13,9 +13,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.pajgps.coordinator import PajGpsData
 
-from .test_common import make_device
-from .test_device_tracker import make_coordinator
-
+from .test_common import make_device, make_coordinator
 # ---------------------------------------------------------------------------
 # get_device_info — device model resolution
 # ---------------------------------------------------------------------------
