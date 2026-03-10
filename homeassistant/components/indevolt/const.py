@@ -113,5 +113,6 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         "11009",
         "11010",
         "6105",
+        "1505",
     ],
 }
