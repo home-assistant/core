@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+__all__ = []
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
