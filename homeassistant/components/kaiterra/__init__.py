@@ -152,7 +152,7 @@ async def _async_validate_entry_devices(
             return
 
     if saw_missing_device:
-        raise ConfigEntryNotReady("No valid Kaiterra devices are configured")
+        return
 
 
 def _iter_device_subentries(entry: ConfigEntry) -> list[ConfigSubentry]:

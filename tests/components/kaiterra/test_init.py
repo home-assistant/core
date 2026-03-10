@@ -105,3 +105,25 @@ async def test_setup_entry_auth_failure_sets_setup_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_with_missing_devices_still_loads(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_validate_device_not_found,
+    mock_latest_sensor_readings,
+) -> None:
+    """Test missing configured devices do not leave the entry in retry state."""
+    add_device_subentry(
+        hass,
+        mock_config_entry,
+        device_id="missing-device",
+        name="Missing",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.missing_temperature").state == "unavailable"
+    assert hass.states.get("sensor.missing_humidity").state == "unavailable"
+    assert hass.states.get("air_quality.missing_air_quality").state == "unavailable"
