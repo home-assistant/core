@@ -129,6 +129,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         if self._cancel_delayed_refresh is not None:
             self._cancel_delayed_refresh()
             self._cancel_delayed_refresh = None
+        await super().async_shutdown()
 
 
 # Define the ConfigEntry type here to avoid circular imports

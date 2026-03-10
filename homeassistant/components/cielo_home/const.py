@@ -1,6 +1,5 @@
 """Constants for the Cielo Home integration."""
 
-import asyncio
 import logging
 from typing import Final
 
@@ -20,6 +19,6 @@ LOGGER: Final = logging.getLogger(__package__)
 
 CIELO_ERRORS: Final[tuple] = (
     ClientConnectionError,
-    asyncio.TimeoutError,
+    TimeoutError,
     CieloError,
 )

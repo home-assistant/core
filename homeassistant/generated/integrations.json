@@ -990,18 +990,18 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "chess_com": {
+      "name": "Chess.com",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cielo_home": {
       "name": "Cielo Home",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
-    },
-    "chess_com": {
-      "name": "Chess.com",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "cisco": {
       "name": "Cisco",
