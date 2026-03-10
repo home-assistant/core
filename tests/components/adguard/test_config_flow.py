@@ -67,7 +67,7 @@ async def test_connection_error(
     [
         (
             "adguard.local",
-            ("adguard.local", 80, DEFAULT_BASE_PATH, False),
+            ("adguard.local", 3000, DEFAULT_BASE_PATH, False),
         ),
         (
             "adguard.local:3001",
@@ -192,10 +192,10 @@ async def test_full_flow_implementation(
         (
             "1.2.3.4",
             "1.2.3.4",
-            80,
+            3000,
             DEFAULT_BASE_PATH,
             False,
-            "http://1.2.3.4:80/control/status",
+            "http://1.2.3.4:3000/control/status",
         ),
         (
             "1.2.3.4:3000",
@@ -248,10 +248,10 @@ async def test_full_flow_implementation(
         (
             "adguard.local/proxy/control",
             "adguard.local",
-            80,
+            3000,
             "/proxy/control",
             False,
-            "http://adguard.local:80/proxy/control/status",
+            "http://adguard.local:3000/proxy/control/status",
         ),
     ],
 )

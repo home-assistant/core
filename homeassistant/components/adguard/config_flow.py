@@ -22,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import DEFAULT_BASE_PATH, DOMAIN
+from .const import DEFAULT_BASE_PATH, DEFAULT_PORT, DOMAIN
 
 
 def _parse_address(address: str) -> tuple[str, int, str, bool]:
@@ -46,7 +46,10 @@ def _parse_address(address: str) -> tuple[str, int, str, bool]:
         raise ValueError
 
     tls = url.scheme == "https"
-    port = url.explicit_port or (443 if tls else 80)
+    if has_scheme:
+        port = url.explicit_port or (443 if tls else 80)
+    else:
+        port = url.explicit_port or DEFAULT_PORT
     path = DEFAULT_BASE_PATH if url.path in {"", "/"} else url.path
 
     return (
@@ -75,6 +78,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 "example_host_port": "http://adguard.local:3000",
                 "example_ip_port": "http://192.168.1.10:3000",
                 "example_url": "https://adguard.example.com",
+                "default_port": str(DEFAULT_PORT),
             },
             data_schema=vol.Schema(
                 {

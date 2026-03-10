@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_description_url": "Enter your AdGuard Home URL.\n\nExamples:\n- `{example_host}`\n- `{example_host_port}`\n- `{example_ip_port}`\n- `{example_url}`\n\nIf no scheme is provided, `http://` is assumed.\nIf no port is specified, the standard port for the scheme is used (`443` for HTTPS, `80` for HTTP).",
+    "data_description_url": "Enter your AdGuard Home URL.\n\nExamples:\n- `{example_host}`\n- `{example_host_port}`\n- `{example_ip_port}`\n- `{example_url}`\n\nIf you enter a hostname or IP address without a scheme and without a port, port `{default_port}` is used.\nIf you enter a URL starting with `https://` or `http://` without a port, the standard port for that scheme is used (`443` for HTTPS, `80` for HTTP).\nIf no scheme is provided, `http://` is assumed.",
     "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates. This setting has no effect when using HTTP (no `https://`)."
   },
   "config": {
