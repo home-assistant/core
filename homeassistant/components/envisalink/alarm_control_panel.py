@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -20,10 +21,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
+    CONF_PANEL_TYPE,
     CONF_PANIC,
     CONF_PARTITIONNAME,
     DATA_EVL,
     DOMAIN,
+    PANEL_TYPE_DSC,
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
@@ -54,6 +57,7 @@ async def async_setup_platform(
     configured_partitions = discovery_info["partitions"]
     code = discovery_info[CONF_CODE]
     panic_type = discovery_info[CONF_PANIC]
+    panel_type = discovery_info[CONF_PANEL_TYPE]
 
     entities = []
     for part_num in configured_partitions:
@@ -64,6 +68,7 @@ async def async_setup_platform(
             entity_config_data[CONF_PARTITIONNAME],
             code,
             panic_type,
+            panel_type,
             hass.data[DATA_EVL].alarm_state["partition"][part_num],
             hass.data[DATA_EVL],
         )
@@ -103,11 +108,20 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     )
 
     def __init__(
-        self, hass, partition_number, alarm_name, code, panic_type, info, controller
+        self,
+        hass,
+        partition_number,
+        alarm_name,
+        code,
+        panic_type,
+        panel_type,
+        info,
+        controller,
     ):
         """Initialize the alarm panel."""
         self._partition_number = partition_number
         self._panic_type = panic_type
+        self._panel_type = panel_type
         self._alarm_control_panel_option_default_code = code
         self._attr_code_format = CodeFormat.NUMBER if not code else None
 
@@ -154,16 +168,33 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
             state = AlarmControlPanelState.DISARMED
         return state
 
+    async def _async_wake_panel(self) -> None:
+        """Wake DSC panel from keypad blanking state before sending commands.
+
+        DSC panels enter a low-power display-off (blanking) mode after
+        inactivity. TPI arm/disarm commands sent while blanked are silently
+        rejected. Sending '#' wakes the panel, equivalent to pressing # on
+        the physical keypad.
+        """
+        if self._panel_type != PANEL_TYPE_DSC:
+            return
+        _LOGGER.debug("Sending '#' keypress to wake panel from possible blanking state")
+        self.hass.data[DATA_EVL].keypresses_to_partition(self._partition_number, "#")
+        await asyncio.sleep(1)
+
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        await self._async_wake_panel()
         self.hass.data[DATA_EVL].disarm_partition(code, self._partition_number)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
+        await self._async_wake_panel()
         self.hass.data[DATA_EVL].arm_stay_partition(code, self._partition_number)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        await self._async_wake_panel()
         self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
@@ -172,6 +203,7 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
+        await self._async_wake_panel()
         self.hass.data[DATA_EVL].arm_night_partition(code, self._partition_number)
 
     @callback

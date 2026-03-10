@@ -215,7 +215,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass,
                 Platform.ALARM_CONTROL_PANEL,
                 "envisalink",
-                {CONF_PARTITIONS: partitions, CONF_CODE: code, CONF_PANIC: panic_type},
+                {
+                    CONF_PARTITIONS: partitions,
+                    CONF_CODE: code,
+                    CONF_PANIC: panic_type,
+                    CONF_PANEL_TYPE: panel_type,
+                },
                 config,
             )
         )
