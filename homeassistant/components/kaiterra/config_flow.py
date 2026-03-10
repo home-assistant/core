@@ -155,6 +155,83 @@ def _scan_interval_to_seconds(value: Any) -> int:
     return int(value)
 
 
+def _async_sync_import_subentries(
+    hass,
+    entry: ConfigEntry,
+    subentries: list[ConfigSubentryData],
+    *,
+    remove_missing: bool,
+) -> None:
+    """Synchronize imported device subentries to match YAML."""
+    desired_unique_ids = {subentry_data["unique_id"] for subentry_data in subentries}
+    existing_by_unique_id = {
+        subentry.unique_id: subentry for subentry in entry.subentries.values()
+    }
+
+    if remove_missing:
+        for unique_id, subentry in existing_by_unique_id.items():
+            if unique_id not in desired_unique_ids:
+                hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
+    for subentry_data in subentries:
+        unique_id = subentry_data["unique_id"]
+        if unique_id in existing_by_unique_id:
+            hass.config_entries.async_update_subentry(
+                entry,
+                existing_by_unique_id[unique_id],
+                data=subentry_data["data"],
+                title=subentry_data["title"],
+            )
+            continue
+
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                subentry_type=SUBENTRY_TYPE_DEVICE,
+                title=subentry_data["title"],
+                unique_id=unique_id,
+                data=subentry_data["data"],
+            ),
+        )
+
+
+async def _async_validate_subentries(
+    hass,
+    api_key: str,
+    aqi_standard: str,
+    subentries: list[ConfigSubentry],
+) -> None:
+    """Validate auth against the first readable configured device."""
+    if not subentries:
+        return
+
+    validator = KaiterraApiClient(
+        async_get_clientsession(hass),
+        api_key,
+        aqi_standard,
+    )
+    saw_missing_device = False
+
+    for subentry in subentries:
+        try:
+            await validator.async_validate_device(
+                subentry.data[CONF_TYPE],
+                subentry.data[CONF_DEVICE_ID],
+            )
+        except KaiterraApiAuthError:
+            raise
+        except KaiterraDeviceNotFoundError:
+            saw_missing_device = True
+            continue
+        except KaiterraApiError:
+            raise
+        else:
+            return
+
+    if saw_missing_device:
+        return
+
+
 class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kaiterra."""
 
@@ -214,31 +291,9 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_API_KEY: import_data[CONF_API_KEY]},
                 options=options,
             )
-            existing_by_unique_id = {
-                subentry.unique_id: subentry
-                for subentry in existing_entry.subentries.values()
-            }
-            for subentry_data in subentries:
-                unique_id = subentry_data["unique_id"]
-                if unique_id in existing_by_unique_id:
-                    self.hass.config_entries.async_update_subentry(
-                        existing_entry,
-                        existing_by_unique_id[unique_id],
-                        data=subentry_data["data"],
-                        title=subentry_data["title"],
-                    )
-                    continue
-
-                self.hass.config_entries.async_add_subentry(
-                    existing_entry,
-                    ConfigSubentry(
-                        subentry_type=SUBENTRY_TYPE_DEVICE,
-                        title=subentry_data["title"],
-                        unique_id=unique_id,
-                        data=subentry_data["data"],
-                    ),
-                )
-
+            _async_sync_import_subentries(
+                self.hass, existing_entry, subentries, remove_missing=True
+            )
             return self.async_abort(reason="already_configured")
 
         if existing_entry := next(
@@ -250,31 +305,9 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
         ):
             self.hass.config_entries.async_update_entry(existing_entry, options=options)
-            existing_by_unique_id = {
-                subentry.unique_id: subentry
-                for subentry in existing_entry.subentries.values()
-            }
-            for subentry_data in subentries:
-                unique_id = subentry_data["unique_id"]
-                if unique_id in existing_by_unique_id:
-                    self.hass.config_entries.async_update_subentry(
-                        existing_entry,
-                        existing_by_unique_id[unique_id],
-                        data=subentry_data["data"],
-                        title=subentry_data["title"],
-                    )
-                    continue
-
-                self.hass.config_entries.async_add_subentry(
-                    existing_entry,
-                    ConfigSubentry(
-                        subentry_type=SUBENTRY_TYPE_DEVICE,
-                        title=subentry_data["title"],
-                        unique_id=unique_id,
-                        data=subentry_data["data"],
-                    ),
-                )
-
+            _async_sync_import_subentries(
+                self.hass, existing_entry, subentries, remove_missing=False
+            )
             return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
@@ -299,17 +332,12 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                first_subentry = next(iter(reauth_entry.subentries.values()), None)
-                if first_subentry is not None:
-                    await _async_validate_device(
-                        self.hass,
-                        user_input[CONF_API_KEY],
-                        first_subentry.data[CONF_TYPE],
-                        first_subentry.data[CONF_DEVICE_ID],
-                        reauth_entry.options.get(
-                            CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD
-                        ),
-                    )
+                await _async_validate_subentries(
+                    self.hass,
+                    user_input[CONF_API_KEY],
+                    reauth_entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
+                    list(reauth_entry.subentries.values()),
+                )
             except KaiterraApiAuthError:
                 errors["base"] = "invalid_auth"
             except KaiterraDeviceNotFoundError:

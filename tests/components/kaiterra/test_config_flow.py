@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
+from homeassistant.components.kaiterra.api_data import KaiterraDeviceNotFoundError
 from homeassistant.components.kaiterra.const import (
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
@@ -25,8 +28,11 @@ from . import setup_integration
 from .conftest import (
     API_KEY,
     DEVICE_ID,
+    DEVICE_ID_2,
     DEVICE_NAME,
+    DEVICE_NAME_2,
     DEVICE_TYPE,
+    DEVICE_TYPE_2,
     NEW_API_KEY,
     add_device_subentry,
 )
@@ -244,6 +250,53 @@ async def test_import_flow_updates_existing_entry(
     assert next(iter(mock_config_entry.subentries.values())).title == DEVICE_NAME
 
 
+async def test_import_flow_removes_devices_missing_from_imported_yaml(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import removes stale devices from an imported entry."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kaiterra",
+        source=SOURCE_IMPORT,
+        data={CONF_API_KEY: API_KEY},
+    )
+    mock_config_entry.add_to_hass(hass)
+    add_device_subentry(hass, mock_config_entry)
+    add_device_subentry(
+        hass,
+        mock_config_entry,
+        device_id=DEVICE_ID_2,
+        device_type=DEVICE_TYPE_2,
+        name=DEVICE_NAME_2,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_AQI_STANDARD: "cn",
+            CONF_PREFERRED_UNITS: ["F"],
+            CONF_SCAN_INTERVAL: 60,
+            "devices": [
+                {
+                    CONF_DEVICE_ID: DEVICE_ID,
+                    CONF_TYPE: DEVICE_TYPE,
+                    CONF_NAME: DEVICE_NAME,
+                }
+            ],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_config_entry.subentries) == 1
+    assert (
+        next(iter(mock_config_entry.subentries.values())).unique_id
+        == f"{DEVICE_TYPE}_{DEVICE_ID}"
+    )
+
+
 async def test_import_flow_updates_existing_import_entry_when_api_key_changes(
     hass: HomeAssistant,
 ) -> None:
@@ -280,6 +333,53 @@ async def test_import_flow_updates_existing_import_entry_when_api_key_changes(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
     assert next(iter(mock_config_entry.subentries.values())).title == DEVICE_NAME
+
+
+async def test_reauth_flow_validates_more_than_the_first_subentry(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_latest_sensor_readings,
+) -> None:
+    """Test reauth succeeds when any configured device validates."""
+    add_device_subentry(hass, mock_config_entry)
+    add_device_subentry(
+        hass,
+        mock_config_entry,
+        device_id=DEVICE_ID_2,
+        device_type=DEVICE_TYPE_2,
+        name=DEVICE_NAME_2,
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    async def _validate_device(device_type: str, device_id: str) -> None:
+        if device_id == DEVICE_ID:
+            raise KaiterraDeviceNotFoundError("Device not found")
+
+    with patch(
+        "homeassistant.components.kaiterra.api_data.KaiterraApiClient.async_validate_device",
+        new=AsyncMock(side_effect=_validate_device),
+    ) as mock_validate_device:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+            data=mock_config_entry.data,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: NEW_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
+    validated_device_ids = {
+        call.args[1] for call in mock_validate_device.await_args_list
+    }
+    assert {DEVICE_ID, DEVICE_ID_2} <= validated_device_ids
 
 
 async def test_reauth_flow_updates_api_key(
