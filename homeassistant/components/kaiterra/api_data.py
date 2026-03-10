@@ -139,7 +139,8 @@ class KaiterraApiData:
 
 def _build_device_path(device_type: str, device_id: str) -> str:
     """Build the Kaiterra API path for a device."""
-    return f"/{device_type}s/{device_id}/top"
+    del device_type
+    return f"/devices/{device_id}/top"
 
 
 def _normalize_device_data(
