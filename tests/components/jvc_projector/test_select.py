@@ -72,8 +72,10 @@ async def test_enable_hdr_processing_select(
         hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
     )
     await hass.async_block_till_done()
+    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
 
     async_fire_time_changed(
         hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
     )
     await hass.async_block_till_done()
+    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
