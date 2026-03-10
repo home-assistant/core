@@ -1,19 +1,10 @@
-"""DataUpdateCoordinator for the PAJ GPS integration.
-
-Responsibilities:
-- Own the single PajGpsApi instance for the lifetime of a config entry.
-- Drive two update tiers at different frequencies:
-    Tier 1 — device list       every DEVICES_INTERVAL seconds
-    Tier 2 — positions every POSITIONS_INTERVAL seconds
-- Push CoordinatorData snapshots to entities as soon as each response arrives.
-"""
+"""DataUpdateCoordinator for the PAJ GPS integration."""
 
 from __future__ import annotations
 
 import dataclasses
 from datetime import timedelta
 import logging
-import time
 
 import aiohttp
 from pajgps_api import PajGpsApi
@@ -31,8 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICES_INTERVAL, DOMAIN, POSITIONS_INTERVAL
-from .device_queue import DeviceRequestQueue
+from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,10 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclasses.dataclass(frozen=True)
 class PajGpsData:
-    """Typed, copy-on-write snapshot of all PAJ GPS data.
-
-    Always replace via dataclasses.replace() — never mutate in place.
-    """
+    """Snapshot of all PAJ GPS data for one coordinator tick."""
 
     # All devices in the account (includes alarm enabled/disabled flags)
     devices: list[Device] = dataclasses.field(default_factory=list)
@@ -62,11 +49,7 @@ class PajGpsData:
 
 
 class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
-    """Coordinator for the PAJ GPS integration.
-
-    Drives two update tiers at different rates and pushes partial data
-    snapshots to entities as soon as each response arrives.
-    """
+    """Coordinator for the PAJ GPS integration."""
 
     def __init__(
         self,
@@ -79,7 +62,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=POSITIONS_INTERVAL),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
             config_entry=config_entry,
         )
 
@@ -89,15 +72,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             password=config_entry.data[CONF_PASSWORD],
             websession=websession,
         )
-        self._queue = DeviceRequestQueue()
         self._owns_websession = websession is None
-
-        # Tier timestamps — initialized to 0 so every tier fires on first call
-        self._last_devices_fetch: float = 0.0
-        self._last_positions_fetch: float = 0.0
-
-        # Flag to distinguish first call from subsequent ones
-        self._initial_refresh_done: bool = False
 
         # Snapshot starts empty; entities must handle None gracefully until first refresh
         self.data = PajGpsData()
@@ -107,15 +82,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
     # ------------------------------------------------------------------
 
     async def _async_update_data(self) -> PajGpsData:
-        """Called by HA on every update_interval tick.
-
-        First call: runs all tiers sequentially and returns a fully
-        populated snapshot (so async_config_entry_first_refresh() succeeds).
-
-        Subsequent calls: fires due tiers as independent background tasks and
-        returns the current snapshot immediately; entities receive push updates
-        via async_set_updated_data() as each task completes.
-        """
+        """Fetch device list and positions every UPDATE_INTERVAL seconds."""
         try:
             await self.api.login()
         except (AuthenticationError, TokenRefreshError) as exc:
@@ -123,61 +90,23 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         except Exception as exc:
             raise UpdateFailed(f"PAJ GPS connection error: {exc}") from exc
 
-        if not self._initial_refresh_done:
-            await self._run_devices_tier()
-            await self._run_positions_tier()
-            self._initial_refresh_done = True
-            return self.data
-
-        now = time.monotonic()
-
-        if now - self._last_devices_fetch >= DEVICES_INTERVAL:
-            self.hass.async_create_task(self._run_devices_tier())
-
-        if now - self._last_positions_fetch >= POSITIONS_INTERVAL:
-            self.hass.async_create_task(self._run_positions_tier())
-
-        return self.data
-
-    # ------------------------------------------------------------------
-    # Tier 1 — device list
-    # ------------------------------------------------------------------
-
-    async def _run_devices_tier(self) -> None:
-        """Fetch the full device list and push an updated snapshot."""
-        self._last_devices_fetch = time.monotonic()
         try:
             devices = await self.api.get_devices()
-        except (PajGpsApiError, Exception) as exc:  # noqa: BLE001
-            _LOGGER.warning("Failed to fetch device list: %s", exc)
-            return
+        except PajGpsApiError as exc:
+            raise UpdateFailed(f"Failed to fetch device list: {exc}") from exc
 
-        new_data = dataclasses.replace(self.data, devices=devices)
-        self.async_set_updated_data(new_data)
+        device_ids = [d.id for d in devices if d.id is not None]
+        positions: dict[int, TrackPoint] = {}
+        if device_ids:
+            try:
+                track_points = await self.api.get_all_last_positions(device_ids)
+                positions = {
+                    tp.iddevice: tp for tp in track_points if tp.iddevice is not None
+                }
+            except PajGpsApiError as exc:
+                _LOGGER.warning("Failed to fetch positions: %s", exc)
 
-    # ------------------------------------------------------------------
-    # Tier 2 — positions
-    # ------------------------------------------------------------------
-
-    async def _run_positions_tier(self) -> None:
-        """Fetch all positions in one bulk request."""
-        self._last_positions_fetch = time.monotonic()
-        device_ids = [d.id for d in self.data.devices if d.id is not None]
-        if not device_ids:
-            return
-
-        # --- bulk positions ---
-        try:
-            track_points = await self.api.get_all_last_positions(device_ids)
-        except (PajGpsApiError, Exception) as exc:  # noqa: BLE001
-            _LOGGER.warning("Failed to fetch positions: %s", exc)
-            return
-
-        new_positions = {
-            tp.iddevice: tp for tp in track_points if tp.iddevice is not None
-        }
-        new_data = dataclasses.replace(self.data, positions=new_positions)
-        self.async_set_updated_data(new_data)
+        return PajGpsData(devices=devices, positions=positions)
 
     # ------------------------------------------------------------------
     # Entity helper — device info dict
@@ -206,6 +135,5 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
     async def async_shutdown(self) -> None:
         """Clean up all resources owned by this coordinator."""
-        await self._queue.shutdown()
         if self._owns_websession:
             await self.api.close()
