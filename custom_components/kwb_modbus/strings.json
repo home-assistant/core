@@ -34,5 +34,31 @@
       "already_configured": "This device is already configured.",
       "reconfigure_successful": "Reconfiguration was successful."
     }
+  },
+  "selector": {
+    "heating_device": {
+      "options": {
+        "easyfire": "KWB EasyFire",
+        "multifire": "KWB MultiFire",
+        "pelletfire_plus": "KWB PelletFire+",
+        "combifire": "KWB CombiFire",
+        "cf2": "KWB CF 2",
+        "cf1_5": "KWB CF 1.5",
+        "cf1": "KWB CF 1"
+      }
+    },
+    "addon_modules": {
+      "options": {
+        "buffer_tank": "Buffer Storage Tank",
+        "solar": "Solar",
+        "heating_circuits": "Heating Circuits",
+        "dhwc": "DHWC (Domestic Hot Water)",
+        "circulation": "Circulation",
+        "secondary_heating_sources": "Secondary Heating Sources",
+        "heat_quantity_meter": "Heat Quantity Meter",
+        "boiler_master_slave": "Boiler Master-Slave Circuit",
+        "wmm_autonom": "WMM Autonom"
+      }
+    }
   }
 }

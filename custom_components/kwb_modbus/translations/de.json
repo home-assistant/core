@@ -53,5 +53,31 @@
       "already_configured": "Dieses Gerät ist bereits konfiguriert.",
       "reconfigure_successful": "Neukonfiguration erfolgreich."
     }
+  },
+  "selector": {
+    "heating_device": {
+      "options": {
+        "easyfire": "KWB EasyFire",
+        "multifire": "KWB MultiFire",
+        "pelletfire_plus": "KWB PelletFire+",
+        "combifire": "KWB CombiFire",
+        "cf2": "KWB CF 2",
+        "cf1_5": "KWB CF 1.5",
+        "cf1": "KWB CF 1"
+      }
+    },
+    "addon_modules": {
+      "options": {
+        "buffer_tank": "Pufferspeicher",
+        "solar": "Solar",
+        "heating_circuits": "Heizkreise",
+        "dhwc": "Warmwasserbereitung (DHWC)",
+        "circulation": "Zirkulation",
+        "secondary_heating_sources": "Sekundärwärmequellen",
+        "heat_quantity_meter": "Wärmemengenzähler",
+        "boiler_master_slave": "Kessel Master-Slave",
+        "wmm_autonom": "WMM Autonom"
+      }
+    }
   }
 }

@@ -14,7 +14,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -131,10 +130,8 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({
             vol.Required(CONF_HEATING_DEVICE): SelectSelector(
                 SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(value=k, label=v)
-                        for k, v in HEATING_DEVICES.items()
-                    ],
+                    options=list(HEATING_DEVICES.keys()),
+                    translation_key="heating_device",
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
@@ -162,10 +159,8 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({
             vol.Optional(CONF_ADDON_MODULES, default=[]): SelectSelector(
                 SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(value=k, label=v)
-                        for k, v in ADDON_MODULES.items()
-                    ],
+                    options=list(ADDON_MODULES.keys()),
+                    translation_key="addon_modules",
                     mode=SelectSelectorMode.LIST,
                     multiple=True,
                 )

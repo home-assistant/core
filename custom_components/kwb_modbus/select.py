@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import CONF_HOST, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import KwbModbusConfigEntry
 from .const import (
+    CONF_DISCOVERED_SENSORS,
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
     DOMAIN,
@@ -28,15 +30,25 @@ async def async_setup_entry(
     """Set up KWB Modbus select entities."""
     coordinator: KWBDataUpdateCoordinator = entry.runtime_data
     expert_mode: bool = entry.data.get(CONF_EXPERT_MODE, False)
+    discovered: dict[str, bool] = entry.data.get(CONF_DISCOVERED_SENSORS, {})
+
+    # Build set of indices that were confirmed active during discovery.
+    # If any sensor with a given index (e.g. "HC 1.1") was discovered as enabled,
+    # the corresponding select entities for that index should be enabled too.
+    active_indices: set[str] = {
+        r.index
+        for r in coordinator.get_all_registers()
+        if r.index and discovered.get(f"kwb_{r.address}", True)
+    }
 
     entities = [
-        KWBSelectEntity(coordinator, register, entry, expert_mode)
+        KWBSelectEntity(coordinator, register, entry, expert_mode, active_indices)
         for register in coordinator.get_all_select_registers()
     ]
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
-class KWBSelectEntity(SelectEntity):
+class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity):
     """Select entity for a writable KWB Modbus holding register."""
 
     _attr_has_entity_name = True
@@ -47,12 +59,14 @@ class KWBSelectEntity(SelectEntity):
         register: SelectRegisterDef,
         entry: KwbModbusConfigEntry,
         expert_mode: bool,
+        active_indices: set[str],
     ) -> None:
         """Initialize the select entity."""
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._register = register
         self._entry = entry
         self._attr_unique_id = f"kwb_select_{register.address}"
+
         self._attr_name = (
             f"{register.index} {register.name}".strip()
             if register.index else register.name
@@ -68,27 +82,38 @@ class KWBSelectEntity(SelectEntity):
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = expert_mode
         elif register.index:
-            # Indexed circuit selects (HC, BUF, …) are only useful when expert mode is on
-            self._attr_entity_registry_enabled_default = expert_mode
+            # Indexed selects (HC, BUF, …): only enable when expert mode is on
+            # AND the circuit was confirmed active during discovery.
+            self._attr_entity_registry_enabled_default = (
+                expert_mode and register.index in active_indices
+            )
         else:
             self._attr_entity_registry_enabled_default = True
 
-    async def async_update(self) -> None:
-        """Read current value from holding register."""
-        raw = await self._coordinator.async_read_holding_register(
+    async def async_added_to_hass(self) -> None:
+        """Fetch initial value when entity is added."""
+        await super().async_added_to_hass()
+        await self._async_refresh_value()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Refresh holding register value on each coordinator cycle."""
+        self.hass.async_create_task(self._async_refresh_value())
+
+    async def _async_refresh_value(self) -> None:
+        """Read current value from the holding register and update state."""
+        raw = await self.coordinator.async_read_holding_register(
             self._register.address
         )
-        if raw is not None:
-            self._attr_current_option = self._table.get(raw)
-        else:
-            self._attr_current_option = None
+        self._attr_current_option = self._table.get(raw) if raw is not None else None
+        self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
         """Write selected option to holding register."""
         value = self._reverse_table.get(option)
         if value is None:
             return
-        success = await self._coordinator.async_write_holding_register(
+        success = await self.coordinator.async_write_holding_register(
             self._register.address, value
         )
         if success:
