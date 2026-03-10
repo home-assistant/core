@@ -6,7 +6,14 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from pysaunum import MAX_TEMPERATURE, MIN_TEMPERATURE, SaunumException
+from pysaunum import (
+    DEFAULT_DURATION,
+    DEFAULT_FAN_DURATION,
+    DEFAULT_TEMPERATURE,
+    MAX_TEMPERATURE,
+    MIN_TEMPERATURE,
+    SaunumException,
+)
 
 from homeassistant.components.climate import (
     FAN_HIGH,
@@ -149,7 +156,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         sauna_type = self.coordinator.data.sauna_type
-        if sauna_type is not None and sauna_type in self._preset_name_map:
+        if sauna_type in self._preset_name_map:
             return self._preset_name_map[sauna_type]
         return self._preset_name_map[0]
 
@@ -242,9 +249,9 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     async def async_start_session(
         self,
-        duration: timedelta = timedelta(minutes=120),
-        target_temperature: int = 80,
-        fan_duration: timedelta = timedelta(minutes=10),
+        duration: timedelta = timedelta(minutes=DEFAULT_DURATION),
+        target_temperature: int = DEFAULT_TEMPERATURE,
+        fan_duration: timedelta = timedelta(minutes=DEFAULT_FAN_DURATION),
     ) -> None:
         """Start a sauna session with custom parameters."""
         if self.coordinator.data.door_open:
