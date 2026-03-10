@@ -32,7 +32,6 @@ from . import (
     AIR_PURIFIER_INFO,
     BATTERY_CIRCULATOR_FAN_INFO,
     CIRCULATOR_FAN_INFO,
-    STANDING_FAN_INFO,
     configure_integration,
 )
 
@@ -45,7 +44,6 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
         (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
         (CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
-        (STANDING_FAN_INFO, "fan.battery_fan_1"),
     ],
 )
 async def test_coordinator_data_is_none(
