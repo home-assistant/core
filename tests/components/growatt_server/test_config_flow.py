@@ -7,6 +7,7 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.growatt_server.const import (
@@ -688,9 +689,13 @@ async def test_password_auth_plant_list_invalid_format(
 
 
 @pytest.mark.parametrize(
-    ("stored_url", "user_input"),
+    ("stored_url", "user_input", "expected_region"),
     [
-        (SERVER_URLS_NAMES["other_regions"], FIXTURE_USER_INPUT_PASSWORD),
+        (
+            SERVER_URLS_NAMES["other_regions"],
+            FIXTURE_USER_INPUT_PASSWORD,
+            "other_regions",
+        ),
         (
             SERVER_URLS_NAMES["north_america"],
             {
@@ -698,6 +703,7 @@ async def test_password_auth_plant_list_invalid_format(
                 CONF_PASSWORD: "password",
                 CONF_REGION: "north_america",
             },
+            "north_america",
         ),
     ],
 )
@@ -707,6 +713,7 @@ async def test_reauth_password_success(
     snapshot: SnapshotAssertion,
     stored_url: str,
     user_input: dict,
+    expected_region: str,
 ) -> None:
     """Test successful reauthentication with password auth for default and non-default regions."""
     entry = MockConfigEntry(
@@ -728,6 +735,12 @@ async def test_reauth_password_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result == snapshot(exclude=props("data_schema"))
+    region_key = next(
+        k
+        for k in result["data_schema"].schema
+        if isinstance(k, vol.Required) and k.schema == CONF_REGION
+    )
+    assert region_key.default() == expected_region
 
     mock_growatt_classic_api.login.return_value = GROWATT_LOGIN_RESPONSE
     result = await hass.config_entries.flow.async_configure(

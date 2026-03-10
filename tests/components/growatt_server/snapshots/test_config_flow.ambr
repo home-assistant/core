@@ -51,7 +51,7 @@
     'username': 'username',
   })
 # ---
-# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1]
+# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1-north_america]
   FlowResultSnapshot({
     'description_placeholders': dict({
       'name': 'Mock Title',
@@ -66,7 +66,7 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1].1
+# name: test_reauth_password_success[https://openapi-us.growatt.com/-user_input1-north_america].1
   dict({
     'auth_type': 'password',
     'name': 'Test Plant',
@@ -76,7 +76,7 @@
     'username': 'username',
   })
 # ---
-# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0]
+# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0-other_regions]
   FlowResultSnapshot({
     'description_placeholders': dict({
       'name': 'Mock Title',
@@ -91,7 +91,7 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0].1
+# name: test_reauth_password_success[https://openapi.growatt.com/-user_input0-other_regions].1
   dict({
     'auth_type': 'password',
     'name': 'Test Plant',
