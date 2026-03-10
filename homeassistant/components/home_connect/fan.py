@@ -122,14 +122,22 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
         self._attr_percentage = (
             cast(int, option_value) if option_value is not None else None
         )
-        match (
-            self._attr_supported_features & FanEntityFeature.SET_SPEED,
-            option_key in self.appliance.options,
+
+    @property
+    def supported_features(self) -> FanEntityFeature:
+        """Return the supported features for this fan entity."""
+        features = FanEntityFeature(0)
+        if (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE
+            in self.appliance.options
         ):
-            case (0, True):
-                self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            case (FanEntityFeature.SET_SPEED, False):
-                self._attr_supported_features &= ~FanEntityFeature.SET_SPEED
+            features |= FanEntityFeature.SET_SPEED
+        if (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+            in self.appliance.options
+        ):
+            features |= FanEntityFeature.PRESET_MODE
+        return features
 
     def update_preset_mode(self) -> None:
         """Set the preset mode value."""
@@ -165,14 +173,6 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
                 for key, value in FAN_SPEED_MODE_OPTIONS.items()
                 if value in self._original_speed_modes_keys
             ]
-        match (
-            self._attr_supported_features & FanEntityFeature.PRESET_MODE,
-            option_key in self.appliance.options,
-        ):
-            case (0, True):
-                self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-            case (FanEntityFeature.PRESET_MODE, False):
-                self._attr_supported_features &= ~FanEntityFeature.PRESET_MODE
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
