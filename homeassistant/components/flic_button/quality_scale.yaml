@@ -70,7 +70,9 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single fixed BLE device per config entry.
-  entity-category: done
+  entity-category:
+    status: exempt
+    comment: Event platform has no diagnostic entities; will be implemented when sensor/update platforms are added.
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
