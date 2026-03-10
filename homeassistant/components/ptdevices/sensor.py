@@ -68,7 +68,7 @@ SENSOR_DESCRIPTIONS: tuple[PTDevicesSensorEntityDescription, ...] = (
         key=PTDevicesSensors.LEVEL_VOLUME,
         translation_key=PTDevicesSensors.LEVEL_VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.WATER,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: cast(float, data.get(PTDevicesSensors.LEVEL_VOLUME)),
     ),
