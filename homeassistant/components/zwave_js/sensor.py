@@ -89,7 +89,6 @@ from .const import (
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
-    ENTITY_DESC_KEY_BATTERY_LIST_STATE,
     ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
     ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
@@ -307,12 +306,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
 
 # These descriptions are without unit of measurement.
 ENTITY_DESCRIPTION_KEY_MAP = {
-    ENTITY_DESC_KEY_BATTERY_LIST_STATE: SensorEntityDescription(
-        key=ENTITY_DESC_KEY_BATTERY_LIST_STATE,
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
         key=ENTITY_DESC_KEY_CO,
         state_class=SensorStateClass.MEASUREMENT,
@@ -618,7 +611,7 @@ async def async_setup_entry(
 
         if isinstance(info, NewZwaveDiscoveryInfo) and (
             entity_class := info.entity_class
-        ) in (NewZWaveNumericSensor, NewZWaveMeterSensor):
+        ) in (NewZWaveNumericSensor, NewZWaveMeterSensor, NewZWaveListSensor):
             entities.append(entity_class(config_entry, driver, info))
         elif isinstance(info, NewZwaveDiscoveryInfo):
             pass  # other entity classes are not migrated yet
@@ -948,6 +941,66 @@ class NewZWaveMeterSensor(NewZWaveNumericSensor):
         )
 
 
+class NewZWaveListSensor(ZWaveBaseEntity, SensorEntity):
+    """Representation of a Z-Wave list sensor with enum states."""
+
+    _attr_force_update = True
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: NewZwaveDiscoveryInfo,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(config_entry, driver, info)
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[self.info.primary_value.property_key_name],
+        )
+        self._attr_options = list(self.info.primary_value.metadata.states.values())
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.info.node.on("metadata updated", self._metadata_updated)
+        )
+
+    @callback
+    def _metadata_updated(self, event_data: dict[str, Any]) -> None:
+        """Handle metadata updates for the list sensor value."""
+        if event_data["value"].value_id != self.info.primary_value.value_id:
+            return
+
+        if not (states := self.info.primary_value.metadata.states):
+            return
+
+        new_options = list(states.values())
+        if self._attr_options == new_options:
+            return
+        self._attr_options = new_options
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self) -> str | None:
+        """Return state of the sensor."""
+        if self.info.primary_value.value is None:
+            return None
+        key = str(self.info.primary_value.value)
+        if key in self.info.primary_value.metadata.states:
+            return str(self.info.primary_value.metadata.states[key])
+        return None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return the device specific state attributes."""
+        if (value := self.info.primary_value.value) is None:
+            return None
+        # add the value's int value as property for multi-value (list) items
+        return {ATTR_VALUE: value}
+
+
 class ZWaveListSensor(ZwaveSensor):
     """Representation of a Z-Wave Numeric sensor with multiple states."""
 
@@ -975,29 +1028,6 @@ class ZWaveListSensor(ZwaveSensor):
         if self.info.primary_value.metadata.states:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
-
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.info.node.on("metadata updated", self._metadata_updated)
-        )
-
-    @callback
-    def _metadata_updated(self, event_data: dict[str, Any]) -> None:
-        """Handle metadata updates for the list sensor value."""
-        if event_data["value"].value_id != self.info.primary_value.value_id:
-            return
-
-        if not hasattr(self, "_attr_options") or not (
-            states := self.info.primary_value.metadata.states
-        ):
-            return
-
-        options = self._attr_options
-        assert options is not None
-        options[:] = list(states.values())
-        self.async_write_ha_state()
 
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
@@ -1352,6 +1382,21 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.WATT,
+        ),
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BATTERY},
+            type={ValueType.NUMBER},
+            property={"chargingStatus", "rechargeOrReplace"},
+        ),
+        entity_class=NewZWaveListSensor,
+        entity_description=SensorEntityDescription(
+            key="battery_list_state",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
     ),
 ]

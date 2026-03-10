@@ -885,16 +885,6 @@ DISCOVERY_SCHEMAS = [
     ),
     ZWaveDiscoverySchema(
         platform=Platform.SENSOR,
-        hint="list",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.BATTERY},
-            type={ValueType.NUMBER},
-            property={"chargingStatus", "rechargeOrReplace"},
-        ),
-        data_template=NumericSensorDataTemplate(),
-    ),
-    ZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
         hint="numeric_sensor",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.INDICATOR},

@@ -130,7 +130,6 @@ from homeassistant.const import (
 )
 
 from .const import (
-    ENTITY_DESC_KEY_BATTERY_LIST_STATE,
     ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY,
     ENTITY_DESC_KEY_BATTERY_TEMPERATURE,
     ENTITY_DESC_KEY_CO,
@@ -332,13 +331,6 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
     def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
 
-        if value.command_class == CommandClass.BATTERY and value.property_ in (
-            "chargingStatus",
-            "rechargeOrReplace",
-        ):
-            return NumericSensorDataTemplateData(
-                ENTITY_DESC_KEY_BATTERY_LIST_STATE, None
-            )
         if (
             value.command_class == CommandClass.BATTERY
             and value.property_ == "maximumCapacity"
