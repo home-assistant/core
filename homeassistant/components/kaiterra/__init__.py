@@ -102,7 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: KaiterraConfigEntry) -> 
         async_track_time_interval(
             hass,
             _async_update_listener(api),
-            timedelta(seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS)),
+            timedelta(
+                seconds=entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS
+                )
+            ),
         )
     )
 
@@ -168,7 +172,9 @@ def _entry_config(entry: ConfigEntry) -> dict[str, Any]:
     """Build the legacy runtime config from a config entry."""
     return {
         CONF_API_KEY: entry.data[CONF_API_KEY],
-        CONF_DEVICES: [dict(subentry.data) for subentry in _iter_device_subentries(entry)],
+        CONF_DEVICES: [
+            dict(subentry.data) for subentry in _iter_device_subentries(entry)
+        ],
         CONF_AQI_STANDARD: entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
         CONF_PREFERRED_UNITS: entry.options.get(
             CONF_PREFERRED_UNITS, DEFAULT_PREFERRED_UNIT

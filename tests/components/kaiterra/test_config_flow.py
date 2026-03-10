@@ -30,6 +30,7 @@ from .conftest import (
     NEW_API_KEY,
     add_device_subentry,
 )
+
 from tests.common import MockConfigEntry
 
 

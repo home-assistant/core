@@ -178,7 +178,9 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(USER_DATA_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA, user_input
+            ),
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -304,7 +306,9 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_API_KEY],
                         first_subentry.data[CONF_TYPE],
                         first_subentry.data[CONF_DEVICE_ID],
-                        reauth_entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
+                        reauth_entry.options.get(
+                            CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD
+                        ),
                     )
             except KaiterraApiAuthError:
                 errors["base"] = "invalid_auth"
@@ -351,7 +355,9 @@ class KaiterraDeviceSubentryFlowHandler(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = _subentry_unique_id(user_input[CONF_TYPE], user_input[CONF_DEVICE_ID])
+            unique_id = _subentry_unique_id(
+                user_input[CONF_TYPE], user_input[CONF_DEVICE_ID]
+            )
             if any(
                 subentry.unique_id == unique_id
                 for subentry in self._get_entry().subentries.values()
