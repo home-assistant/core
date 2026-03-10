@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN, LOGGER, TIMEOUT, NoDevicesError, NoUsernameError
+from .const import DEFAULT_NAME, DOMAIN, LOGGER, TIMEOUT
 
 DATA_SCHEMA: Final = vol.Schema(
     {
@@ -67,10 +67,6 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return {"base": "invalid_auth"}
         except ConnectionError, TimeoutError, ClientError, CieloError:
             return {"base": "cannot_connect"}
-        except NoDevicesError:
-            return {"base": "no_devices"}
-        except NoUsernameError:
-            return {"base": "no_username"}
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during config flow validation")
             return {"base": "unknown"}
@@ -106,7 +102,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title="Cielo Home",
+                    title=DEFAULT_NAME,
                     data=user_input,
                 )
 

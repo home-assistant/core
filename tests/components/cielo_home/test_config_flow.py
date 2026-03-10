@@ -7,11 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from cieloconnectapi.exceptions import AuthenticationError
 import pytest
 
-from homeassistant.components.cielo_home.const import (
-    DOMAIN,
-    NoDevicesError,
-    NoUsernameError,
-)
+from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -89,8 +85,6 @@ async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) ->
     ("api_error", "flow_error_key"),
     [
         (ConnectionError, "cannot_connect"),
-        (NoDevicesError, "no_devices"),
-        (NoUsernameError, "no_username"),
         (Exception, "unknown"),
     ],
 )

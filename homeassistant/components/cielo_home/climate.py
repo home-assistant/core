@@ -6,6 +6,8 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
+from cieloconnectapi import AuthenticationError
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -13,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CIELO_ERRORS, LOGGER, TIMEOUT
@@ -78,6 +80,8 @@ def async_handle_api_call(
         try:
             async with asyncio.timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
+        except AuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
 
         except CIELO_ERRORS as err:
             if isinstance(err, TimeoutError):

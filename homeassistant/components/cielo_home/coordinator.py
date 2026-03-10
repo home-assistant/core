@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -60,6 +61,7 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             ),
         )
         self._known_device_ids: set[str] = set()
+        self._cancel_delayed_refresh: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
@@ -111,11 +113,22 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         new_parsed[device_id] = dev
         self.async_set_updated_data(CieloData(raw=self.data.raw, parsed=new_parsed))
 
+        if self._cancel_delayed_refresh is not None:
+            self._cancel_delayed_refresh()
+            self._cancel_delayed_refresh = None
+
         async def _refresh_later(_now: datetime) -> None:
             """Schedule a refresh after the backend has had time to update."""
+            self._cancel_delayed_refresh = None
             self.hass.async_create_task(self.async_request_refresh())
 
-        async_call_later(self.hass, 2.0, _refresh_later)
+        self._cancel_delayed_refresh = async_call_later(self.hass, 2.0, _refresh_later)
+
+    async def async_shutdown(self) -> None:
+        """Cancel pending callbacks when the coordinator shuts down."""
+        if self._cancel_delayed_refresh is not None:
+            self._cancel_delayed_refresh()
+            self._cancel_delayed_refresh = None
 
 
 # Define the ConfigEntry type here to avoid circular imports

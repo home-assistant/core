@@ -5,7 +5,7 @@ import logging
 from typing import Final
 
 from aiohttp.client_exceptions import ClientConnectionError
-from cieloconnectapi.exceptions import AuthenticationError, CieloError
+from cieloconnectapi.exceptions import CieloError
 
 from homeassistant.const import Platform
 
@@ -21,14 +21,5 @@ LOGGER: Final = logging.getLogger(__package__)
 CIELO_ERRORS: Final[tuple] = (
     ClientConnectionError,
     asyncio.TimeoutError,
-    AuthenticationError,
     CieloError,
 )
-
-
-class NoDevicesError(Exception):
-    """No devices from Cielo api."""
-
-
-class NoUsernameError(Exception):
-    """No username from Cielo api."""
