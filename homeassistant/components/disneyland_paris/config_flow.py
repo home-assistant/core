@@ -23,8 +23,6 @@ class DisneylandParisConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             connection = await self._validate_connection()
             if connection:
-                await self.async_set_unique_id(DOMAIN)
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Disneyland Paris", data={})
 
             errors["base"] = "cannot_connect"

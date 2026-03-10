@@ -9,8 +9,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
-
 
 async def test_async_step_user_gets_form_and_creates_entry(
     hass: HomeAssistant,
@@ -27,37 +25,9 @@ async def test_async_step_user_gets_form_and_creates_entry(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-
-
-async def test_abort_if_already_configured(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test that we abort if we attempt to submit the same entry twice."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_successful_recovery_after_connection_error(
@@ -67,8 +37,7 @@ async def test_successful_recovery_after_connection_error(
 ) -> None:
     """Test error is shown when connection fails, and configuration succeeds after retry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Simulate a connection error by raising a DLPWaitError
@@ -87,4 +56,3 @@ async def test_successful_recovery_after_connection_error(
         user_input={},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN

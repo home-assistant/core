@@ -7,5 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
-  "requirements": ["dlpwait==1.0.1"]
+  "requirements": ["dlpwait==1.0.1"],
+  "single_config_entry": true
 }

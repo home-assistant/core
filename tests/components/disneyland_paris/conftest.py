@@ -28,7 +28,6 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=DOMAIN,
         data={},
     )
 
