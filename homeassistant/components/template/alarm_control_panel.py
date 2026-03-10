@@ -162,7 +162,7 @@ async def async_setup_entry(
         StateAlarmControlPanelEntity,
         ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
-        SCRIPT_FIELDS,
+        script_options=SCRIPT_FIELDS,
     )
 
 

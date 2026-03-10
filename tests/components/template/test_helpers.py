@@ -68,6 +68,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -378,7 +379,7 @@ async def _setup_and_test_yaml_device_action(
     style: ConfigurationStyle,
     domain: str,
     script_fields,
-    extra_config: str,
+    extra_config: ConfigType,
     test_actions: tuple[tuple[str, dict], ...],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -625,7 +626,7 @@ async def test_yaml_device_actions_modern_config(
     entity_registry: er.EntityRegistry,
     calls: list,
 ) -> None:
-    """Test device actions in platforms that support both modern configuration only."""
+    """Test device actions in platforms that supports modern configuration only."""
     await _setup_and_test_yaml_device_action(
         hass,
         style,
