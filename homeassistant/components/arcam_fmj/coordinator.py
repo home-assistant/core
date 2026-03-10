@@ -27,7 +27,7 @@ class ArcamFmjRuntimeData:
 type ArcamFmjConfigEntry = ConfigEntry[ArcamFmjRuntimeData]
 
 
-class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
+class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single Arcam FMJ zone."""
 
     config_entry: ArcamFmjConfigEntry
@@ -50,21 +50,7 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
         self.state = State(client, zone)
         self.last_update_success = False
 
-    async def _async_initial_update(self) -> None:
-        """Perform initial state update after connection is established."""
-        try:
-            await self.state.update()
-        except ConnectionFailed:
-            _LOGGER.debug(
-                "Connection lost during initial update for zone %s", self.state.zn
-            )
-            self.last_update_success = False
-            self.async_update_listeners()
-        else:
-            self.last_update_success = True
-            self.async_set_updated_data(self.state)
-
-    async def _async_update_data(self) -> State:
+    async def _async_update_data(self) -> None:
         """Fetch data for manual refresh."""
         try:
             await self.state.update()
@@ -72,17 +58,16 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
             raise UpdateFailed(
                 f"Connection failed during update for zone {self.state.zn}"
             ) from err
-        return self.state
 
     @callback
     def async_notify_data_updated(self) -> None:
         """Notify that new data has been received from the device."""
-        self.async_set_updated_data(self.state)
+        self.async_set_updated_data(None)
 
     @callback
     def async_notify_connected(self) -> None:
         """Handle client connected."""
-        self.hass.async_create_task(self._async_initial_update())
+        self.hass.async_create_task(self.async_refresh())
 
     @callback
     def async_notify_disconnected(self) -> None:
