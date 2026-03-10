@@ -64,7 +64,7 @@ async def setup_picotts(
     config_entry = MockConfigEntry(domain=DOMAIN, data=default_config | config)
     config_entry.add_to_hass(hass)
 
-    with patch("shutil.which", return_value="/usr/local/bin/pico2wave"):
+    with patch("homeassistant.components.picotts.shutil.which", return_value="/usr/local/bin/pico2wave"):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     await hass.async_block_till_done()
