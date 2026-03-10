@@ -26,6 +26,7 @@ DEVICE_FIXTURES = [
     "aq_sensor_3_ikea",
     "aeotec_ms6",
     "da_ac_air_000001",
+    "da_ac_air_01011",
     "da_ac_airsensor_01001",
     "da_ac_rac_000001",
     "da_ac_rac_000003",

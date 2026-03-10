@@ -374,6 +374,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_air_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'a5662f73-57d5-ba89-bf44-8b0008b8b2f3',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'AVT-WW-TP1-22-TOUCHOTN',
+    'model_id': None,
+    'name': 'Air filter',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AVT-WW-TP1-22-TOUCHOTN_12240702',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_airsensor_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
