@@ -252,6 +252,15 @@ class BlockedEvent(ManagerStateEvent):
     manager_state: BackupManagerState = BackupManagerState.BLOCKED
 
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class UploadBackupEvent(ManagerStateEvent):
+    """Backup agent upload progress event."""
+
+    agent_id: str
+    uploaded_bytes: int
+    total_bytes: int
+
+
 class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
@@ -579,9 +588,24 @@ class BackupManager:
                 _backup = replace(
                     backup, protected=should_encrypt, size=streamer.size()
                 )
-            await self.backup_agents[agent_id].async_upload_backup(
+            agent = self.backup_agents[agent_id]
+
+            @callback
+            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+                """Handle upload progress."""
+                self.async_on_backup_event(
+                    UploadBackupEvent(
+                        manager_state=self.state,
+                        agent_id=agent_id,
+                        uploaded_bytes=bytes_uploaded,
+                        total_bytes=_backup.size,
+                    )
+                )
+
+            await agent.async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,
+                on_progress=on_upload_progress,
             )
             if streamer:
                 await streamer.wait()
@@ -1374,9 +1398,10 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        self.last_event = event
-        if not isinstance(event, (BlockedEvent, IdleEvent)):
-            self.last_action_event = event
+        if not isinstance(event, UploadBackupEvent):
+            self.last_event = event
+            if not isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
