@@ -16,7 +16,6 @@ from .manager import (
     BackupManagerState,
     BackupPlatformEvent,
     ManagerStateEvent,
-    UploadBackupEvent,
 )
 
 type BackupConfigEntry = ConfigEntry[BackupDataUpdateCoordinator]
@@ -65,8 +64,6 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
         """Handle new event."""
         LOGGER.debug("Received backup event: %s", event)
         self._last_event = event
-        if isinstance(event, UploadBackupEvent):
-            return
         self.config_entry.async_create_task(self.hass, self.async_refresh())
 
     async def _async_update_data(self) -> BackupCoordinatorData:
