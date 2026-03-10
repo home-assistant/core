@@ -95,6 +95,7 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
 
     entity_description: RotarexTankSensorEntityDescription
     _attr_has_entity_name = True
+    _latest_sync_cache: RotarexSyncData | None = None
 
     def __init__(
         self,
@@ -117,6 +118,11 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             model="DIMES SRG",
         )
 
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._latest_sync_cache = None
+        super()._handle_coordinator_update()
+
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -130,7 +136,13 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
         return self.entity_description.value_fn(sync)
 
     def _get_latest_sync(self) -> RotarexSyncData | None:
-        """Return the most recent synchronization entry for the tank."""
+        """Return the most recent synchronization entry for the tank.
+        
+        Results are cached per coordinator update to avoid duplicate parsing.
+        """
+        if self._latest_sync_cache is not None:
+            return self._latest_sync_cache
+        
         tank = self.coordinator.data.get(self._tank_id)
         if not tank or not tank.synch_datas:
             return None
@@ -146,4 +158,5 @@ class RotarexTankSensor(CoordinatorEntity[RotarexDataUpdateCoordinator], SensorE
             return None
 
         latest_sync, _ = max(parsed_syncs, key=lambda item: item[1])
+        self._latest_sync_cache = latest_sync
         return latest_sync

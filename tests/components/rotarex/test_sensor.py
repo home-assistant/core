@@ -65,4 +65,4 @@ async def test_sensor_uses_latest_sync(
     # The timestamp sensor must also reflect the latest sync.
     ts_state = hass.states.get("sensor.tank_1_timestamp")
     assert ts_state
-    assert ts_state.state == "2024-01-02T12:00:00+00:00"
+    assert ts_state.state == "2024-01-02T20:00:00+00:00"

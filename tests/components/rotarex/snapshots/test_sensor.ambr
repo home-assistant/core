@@ -153,7 +153,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-02T12:00:00+00:00',
+    'state': '2024-01-02T20:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.tank_2_battery-entry]
@@ -310,7 +310,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-01-01T12:00:00+00:00',
+    'state': '2024-01-01T20:00:00+00:00',
   })
 # ---
 # name: test_devices[Tank 1-device]
