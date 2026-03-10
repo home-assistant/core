@@ -176,67 +176,45 @@ class HomeConnectAirConditioningFanEntity(HomeConnectEntity, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        try:
-            # We try to set the active program option first,
-            # if it fails we try to set the selected program option
-            with contextlib.suppress(ActiveProgramNotSetError):
-                await self.coordinator.client.set_active_program_option(
-                    self.appliance.info.ha_id,
-                    option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
-                    value=percentage,
-                )
-                _LOGGER.debug(
-                    "Updated %s's speed percentage for the active program, new state: %s",
-                    self.entity_id,
-                    percentage,
-                )
-                return
-
-            await self.coordinator.client.set_selected_program_option(
-                self.appliance.info.ha_id,
-                option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
-                value=percentage,
-            )
-            _LOGGER.debug(
-                "Updated %s's speed percentage for the selected program, new state: %s",
-                self.entity_id,
-                percentage,
-            )
-        except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_option",
-                translation_placeholders=get_dict_from_home_connect_error(err),
-            ) from err
+        await self._async_set_option(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
+            percentage,
+        )
+        _LOGGER.debug(
+            "Updated %s's speed percentage option, new state: %s",
+            self.entity_id,
+            percentage,
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target fan mode."""
-        value = FAN_SPEED_MODE_OPTIONS[preset_mode]
+        await self._async_set_option(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+            FAN_SPEED_MODE_OPTIONS[preset_mode],
+        )
+        _LOGGER.debug(
+            "Updated %s's speed mode option, new state: %s",
+            self.entity_id,
+            self.state,
+        )
+
+    async def _async_set_option(self, key: OptionKey, value: str | int) -> None:
+        """Set an option for the entity."""
         try:
             # We try to set the active program option first,
             # if it fails we try to set the selected program option
             with contextlib.suppress(ActiveProgramNotSetError):
                 await self.coordinator.client.set_active_program_option(
                     self.appliance.info.ha_id,
-                    option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                    option_key=key,
                     value=value,
-                )
-                _LOGGER.debug(
-                    "Updated %s's speed mode for the active program, new state: %s",
-                    self.entity_id,
-                    self.state,
                 )
                 return
 
             await self.coordinator.client.set_selected_program_option(
                 self.appliance.info.ha_id,
-                option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+                option_key=key,
                 value=value,
-            )
-            _LOGGER.debug(
-                "Updated %s's speed mode for the selected program, new state: %s",
-                self.entity_id,
-                self.state,
             )
         except HomeConnectError as err:
             raise HomeAssistantError(
