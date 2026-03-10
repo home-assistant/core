@@ -73,7 +73,7 @@ async def test_import_flow(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the import flow."""
-    with patch("shutil.which", return_value="/usr/local/bin/pico2wave"):
+    with patch("homeassistant.components.picotts.shutil.which", return_value="/usr/local/bin/pico2wave"):
         assert not hass.config_entries.async_entries(DOMAIN)
         assert await async_setup_component(
             hass,
