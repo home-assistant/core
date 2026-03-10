@@ -10,6 +10,7 @@ from homeassistant.components.usb import (
     get_serial_by_id,
     human_readable_device_name,
     scan_serial_ports,
+    usb_device_from_path,
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
@@ -68,7 +69,15 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        await self._async_update_device_and_set_unique_id(discovery_info)
+        # normalize device path
+        discovery_info.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, discovery_info.device
+        )
+        # set unique id
+        await self.async_set_unique_id(usb_unique_id_from_service_info(discovery_info))
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: discovery_info.device}
+        )
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
@@ -94,14 +103,43 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a yaml configuration."""
 
-        if not await self.validate_enocean_conf(import_data):
+        if CONF_DEVICE not in import_data or import_data[CONF_DEVICE] is None:
             LOGGER.warning(
-                "Cannot import yaml configuration: %s is not a valid dongle path",
+                "Cannot import yaml configuration: %s is missing required key %s",
+                import_data,
+                CONF_DEVICE,
+            )
+            return self.async_abort(reason="invalid_dongle_path")
+        usb_device = await self.hass.async_add_executor_job(
+            usb_device_from_path, import_data[CONF_DEVICE]
+        )
+        if usb_device is None:
+            LOGGER.warning(
+                "Cannot import yaml configuration: device at path %s not found",
                 import_data[CONF_DEVICE],
             )
             return self.async_abort(reason="invalid_dongle_path")
 
-        return self.create_enocean_entry(import_data)
+        usb_service_info = usb_service_info_from_device(usb_device)
+        # normalize device path
+        usb_service_info.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, usb_service_info.device
+        )
+        # set unique id
+        await self.async_set_unique_id(
+            usb_unique_id_from_service_info(usb_service_info)
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: usb_service_info.device}
+        )
+        # validate device path
+        if await self.validate_enocean_conf({CONF_DEVICE: usb_service_info.device}):
+            return self.create_enocean_entry({CONF_DEVICE: usb_service_info.device})
+        LOGGER.warning(
+            "Cannot import yaml configuration: %s is not a valid dongle path",
+            usb_service_info.device,
+        )
+        return self.async_abort(reason="invalid_dongle_path")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -127,11 +165,20 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if selected_device is None:
                 return self.async_abort(reason="unknown_device")
-            selected_service = usb_service_info_from_device(selected_device)
+            usb_service_info = usb_service_info_from_device(selected_device)
+            # normalize device path
+            usb_service_info.device = await self.hass.async_add_executor_job(
+                get_serial_by_id, usb_service_info.device
+            )
+            # set unique id
+            await self.async_set_unique_id(
+                usb_unique_id_from_service_info(usb_service_info)
+            )
+            self._abort_if_unique_id_configured(
+                updates={CONF_DEVICE: usb_service_info.device}
+            )
 
-            await self._async_update_device_and_set_unique_id(selected_service)
-            user_input[CONF_DEVICE] = selected_service.device
-
+            user_input[CONF_DEVICE] = usb_service_info.device
             return await self.async_step_manual(user_input)
 
         if len(self._ports) == 0:
@@ -172,6 +219,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Request manual USB dongle path."""
         errors = {}
         if user_input is not None:
+            # validate device path
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
@@ -200,18 +248,3 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
-
-    async def _async_update_device_and_set_unique_id(
-        self, usb_service_info: UsbServiceInfo
-    ) -> None:
-        """Normalize the USB device serial and set unique ID depending on it."""
-        # normalize device path
-        usb_service_info.device = await self.hass.async_add_executor_job(
-            get_serial_by_id, usb_service_info.device
-        )
-        # set unique id
-        unique_id = usb_unique_id_from_service_info(usb_service_info)
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: usb_service_info.device}
-        )
