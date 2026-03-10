@@ -194,6 +194,7 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
             for app in apps_list:
                 if app[ATTR_SLUG] == self.issue.reference:
                     placeholders[PLACEHOLDER_KEY_ADDON] = app[ATTR_NAME]
+                    break
 
         return placeholders or None
 
