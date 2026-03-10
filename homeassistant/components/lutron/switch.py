@@ -87,11 +87,11 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""
-        self._lutron_device.state = 1
+        self._lutron_device.state = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the LED off."""
-        self._lutron_device.state = 0
+        self._lutron_device.state = False
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

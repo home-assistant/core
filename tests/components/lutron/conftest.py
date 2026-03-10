@@ -83,8 +83,10 @@ def mock_lutron() -> Generator[MagicMock]:
         # Mock a keypad with a button and LED
         keypad = MagicMock()
         keypad.name = "Test Keypad"
-        keypad.id = "keypad_id"
+        keypad.id = 1
         keypad.type = "KEYPAD"
+        keypad.uuid = "keypad_uuid"
+        keypad.legacy_uuid = "1-0"
         area.keypads.append(keypad)
 
         button = MagicMock()
