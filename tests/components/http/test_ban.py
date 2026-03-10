@@ -245,7 +245,9 @@ async def test_ip_ban_manager_never_started(
         )
     ),
 )
-@pytest.mark.usefixtures("hassio_env", "resolution_info", "os_info")
+@pytest.mark.usefixtures(
+    "hassio_env", "resolution_info", "os_info", "store_info", "supervisor_info"
+)
 async def test_access_from_supervisor_ip(
     remote_addr,
     bans,
