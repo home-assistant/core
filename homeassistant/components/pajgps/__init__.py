@@ -2,19 +2,18 @@
 
 import logging
 
-from homeassistant import core
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import PajGpsCoordinator
-
-type PajGpsConfigEntry = ConfigEntry[PajGpsCoordinator]
+from .const import DOMAIN
+from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
-# Target platforms after complete implementation: [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.BINARY_SENSOR, Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bool:
@@ -28,8 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bo
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: PajGpsConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

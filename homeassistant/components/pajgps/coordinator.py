@@ -27,6 +27,8 @@ from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type PajGpsConfigEntry = ConfigEntry[PajGpsCoordinator]
+
 
 @dataclasses.dataclass(frozen=True)
 class PajGpsData:
@@ -39,10 +41,12 @@ class PajGpsData:
 class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
     """Coordinator for the PAJ GPS integration."""
 
+    config_entry: PajGpsConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: PajGpsConfigEntry,
         websession: ClientSession | None = None,
     ) -> None:
         """Initialize the coordinator from config-entry data."""
