@@ -98,6 +98,31 @@ async def test_search_stations(
     assert len(item.children) > 0
 
 
+async def test_search_stations_url_encoded_query(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that URL-encoded queries are decoded correctly (e.g. AC%2FDC, Radio%20Bob%21)."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    # "AC%2FDC" must be decoded to "AC/DC" before being sent to the API,
+    # so the "/" does not get misinterpreted as the codec path separator.
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/AC%2FDC"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="AC/DC",
+        hide_broken=True,
+        limit=100,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    assert item is not None
+
+
 async def test_search_stations_with_codec_filter(
     hass: HomeAssistant, init_integration: AsyncMock, patch_radios
 ) -> None:

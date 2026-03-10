@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
+from urllib.parse import unquote
 
 import pycountry
 from radios import FilterBy, Order, RadioBrowser, Station
@@ -364,8 +365,11 @@ class RadioMediaSource(MediaSource):
         """Handle searching radio stations by name and optional codec filter.
 
         Identifier format:
-          search/<query>          - search by name only
-          search/<query>/<codec>  - search by name, then filter by codec (e.g. AAC)
+          search/<encoded_query>          - search by name only
+          search/<encoded_query>/<codec>  - search by name, then filter by codec (e.g. AAC)
+
+        The query portion must be URL-encoded by the caller (e.g. "AC%2FDC", "Radio%20Bob%21")
+        so that slashes and other special characters do not conflict with the path separator.
         """
         identifier = item.identifier or ""
         if not identifier.startswith(SEARCH_PREFIX):
@@ -375,12 +379,14 @@ class RadioMediaSource(MediaSource):
         if not remainder:
             return []
 
-        # Split optional codec suffix: "rock/AAC" → query="rock", codec="AAC"
-        query, _, codec = remainder.partition("/")
+        # Split optional codec suffix: "rock%20pop/AAC" → query="rock pop", codec="AAC"
+        encoded_query, _, codec = remainder.partition("/")
         codec = codec.upper() if codec else ""
+        query = unquote(encoded_query)
 
         if not query:
             return []
+
 
         stations = await radios.stations(
             filter_by=FilterBy.NAME,
