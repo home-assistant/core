@@ -7,7 +7,11 @@ from pathlib import Path
 import random
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.components.media_player import BrowseError, MediaClass
+from homeassistant.components.media_player import (
+    BrowseError,
+    MediaClass,
+    async_process_play_media_url,
+)
 from homeassistant.components.media_source import (
     Unresolvable,
     async_browse_media,
@@ -98,7 +102,12 @@ class CollectionImageImageEntity(ImageEntity):
                 return
 
             self.path = resolved.path
-            self._attr_image_url = resolved.url or UNDEFINED
+            if resolved.url:
+                self._attr_image_url = async_process_play_media_url(
+                    self.hass, resolved.url
+                )
+            else:
+                self._attr_image_url = UNDEFINED
             self._attr_content_type = resolved.mime_type
             self._attr_available = True
             self._attr_image_last_updated = dt_util.utcnow()
@@ -127,10 +136,9 @@ class CollectionImageImageEntity(ImageEntity):
             await self.get_next_image()
 
         if self.hass.state != CoreState.running:
-            remove_listener = self.hass.bus.async_listen_once(
+            self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, get_next_image_on_start
             )
-            self.async_on_remove(remove_listener)
         else:
             await get_next_image_on_start()
 
