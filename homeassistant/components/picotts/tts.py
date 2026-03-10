@@ -99,7 +99,7 @@ class PicoTTSEntity(TextToSpeechEntity):
                 translation_key="returncode_error",
                 translation_placeholders={"returncode": str(exc.returncode)},
             ) from exc
-        except (FileNotFoundError, OSError, subprocess.TimeoutExpired) as exc:
+        except OSError as exc:
             _LOGGER.debug("Full exception %s", exc)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
