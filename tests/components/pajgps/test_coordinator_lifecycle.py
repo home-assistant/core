@@ -54,26 +54,6 @@ class TestAsyncUpdateData:
         assert result.positions == {}
 
     @pytest.mark.asyncio
-    async def test_login_failure_raises_update_failed(self):
-        """Test that an authentication error during login raises UpdateFailed."""
-        coord = make_coordinator()
-        coord.api.login = AsyncMock(side_effect=AuthenticationError("bad creds"))
-
-        with pytest.raises(UpdateFailed):
-            await coord._async_update_data()
-
-    @pytest.mark.asyncio
-    async def test_generic_login_exception_raises_update_failed(self):
-        """A non-auth exception during login must also raise UpdateFailed."""
-        coord = make_coordinator()
-        coord.api.login = AsyncMock(side_effect=ConnectionError("network gone"))
-
-        with pytest.raises(UpdateFailed) as ctx:
-            await coord._async_update_data()
-
-        assert "connection error" in str(ctx.value).lower()
-
-    @pytest.mark.asyncio
     async def test_get_devices_failure_raises_update_failed(self):
         """Test that a PajGpsApiError from get_devices raises UpdateFailed."""
         coord = make_coordinator()
@@ -96,6 +76,30 @@ class TestAsyncUpdateData:
 
         assert result.devices == [device]
         assert result.positions == {}
+
+
+class TestAsyncSetup:
+    """Tests for the _async_setup method (runs once before the first refresh)."""
+
+    @pytest.mark.asyncio
+    async def test_login_failure_raises_update_failed(self):
+        """Test that an authentication error during login raises UpdateFailed."""
+        coord = make_coordinator()
+        coord.api.login = AsyncMock(side_effect=AuthenticationError("bad creds"))
+
+        with pytest.raises(UpdateFailed):
+            await coord._async_setup()
+
+    @pytest.mark.asyncio
+    async def test_generic_login_exception_raises_update_failed(self):
+        """A non-auth exception during login must also raise UpdateFailed."""
+        coord = make_coordinator()
+        coord.api.login = AsyncMock(side_effect=ConnectionError("network gone"))
+
+        with pytest.raises(UpdateFailed) as ctx:
+            await coord._async_setup()
+
+        assert "connection error" in str(ctx.value).lower()
 
 
 class TestGetDeviceInfo:

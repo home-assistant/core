@@ -64,8 +64,8 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         # Snapshot starts empty; entities must handle None gracefully until first refresh
         self.data = PajGpsData()
 
-    async def _async_update_data(self) -> PajGpsData:
-        """Fetch device list and positions every UPDATE_INTERVAL seconds."""
+    async def _async_setup(self) -> None:
+        """Perform initial and first data refresh."""
         try:
             await self.api.login()
         except (AuthenticationError, TokenRefreshError) as exc:
@@ -73,6 +73,8 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         except Exception as exc:
             raise UpdateFailed(f"PAJ GPS connection error: {exc}") from exc
 
+    async def _async_update_data(self) -> PajGpsData:
+        """Fetch device list and positions every UPDATE_INTERVAL seconds."""
         try:
             devices = await self.api.get_devices()
         except PajGpsApiError as exc:
