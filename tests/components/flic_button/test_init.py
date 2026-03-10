@@ -9,12 +9,10 @@ from homeassistant.components.flic_button.const import (
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
-    CONF_PUSH_TWIST_MODE,
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
     DOMAIN,
     DeviceType,
-    PushTwistMode,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
@@ -240,68 +238,6 @@ async def test_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_coordinator.async_disconnect.assert_called_once()
-
-
-async def test_options_update_triggers_reload(
-    hass: HomeAssistant,
-) -> None:
-    """Test that updating options triggers a reload."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=f"Flic Twist ({TWIST_SERIAL})",
-        unique_id=TWIST_ADDRESS,
-        data={
-            CONF_ADDRESS: TWIST_ADDRESS,
-            CONF_PAIRING_ID: TEST_PAIRING_ID,
-            CONF_PAIRING_KEY: TEST_PAIRING_KEY.hex(),
-            CONF_SERIAL_NUMBER: TWIST_SERIAL,
-            CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
-            CONF_DEVICE_TYPE: DeviceType.TWIST.value,
-            CONF_SIG_BITS: TEST_SIG_BITS,
-        },
-        options={CONF_PUSH_TWIST_MODE: PushTwistMode.DEFAULT},
-    )
-    entry.add_to_hass(hass)
-
-    mock_coordinator = _create_mock_coordinator(
-        address=TWIST_ADDRESS,
-        serial_number=TWIST_SERIAL,
-        is_twist=True,
-    )
-    mock_coordinator.model_name = "Flic Twist"
-    mock_coordinator.device_type = DeviceType.TWIST
-
-    with (
-        patch(
-            "homeassistant.components.bluetooth.async_ble_device_from_address",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.flic_button.FlicClient",
-        ),
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch(
-            "homeassistant.components.flic_button.bluetooth.async_register_callback",
-            return_value=lambda: None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert entry.state is ConfigEntryState.LOADED
-
-        # Update options - this should trigger a reload
-        hass.config_entries.async_update_entry(
-            entry,
-            options={CONF_PUSH_TWIST_MODE: PushTwistMode.SELECTOR},
-        )
-        await hass.async_block_till_done()
-
-        # Entry should be reloaded
-        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_with_twist_device(

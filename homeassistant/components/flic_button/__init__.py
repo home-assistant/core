@@ -12,7 +12,6 @@ from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_BATTERY_LEVEL,
@@ -33,10 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.EVENT,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.UPDATE,
 ]
 
 type FlicButtonConfigEntry = ConfigEntry[FlicCoordinator]
@@ -133,15 +128,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         )
     )
 
-    # Listen for options updates (reload integration when push_twist_mode changes)
-    entry.async_on_unload(entry.add_update_listener(async_options_updated))
-
-    # Clean up orphaned entities from the other push-twist mode.
-    # When switching between DEFAULT and SELECTOR mode, remove entities
-    # that belong to the inactive mode so they don't linger as unavailable.
-    if coordinator.is_twist:
-        _async_cleanup_twist_mode_entities(hass, entry, push_twist_mode)
-
     # Forward entry setup to platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -151,43 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         entry.async_on_unload(unsub)
 
     return True
-
-
-@callback
-def _async_cleanup_twist_mode_entities(
-    hass: HomeAssistant,
-    entry: FlicButtonConfigEntry,
-    push_twist_mode: PushTwistMode,
-) -> None:
-    """Remove entity registry entries that belong to the inactive push-twist mode.
-
-    DEFAULT mode uses: twist-position, push-twist-position
-    SELECTOR mode uses: slot-0..slot-11, selected-slot
-    """
-    entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    if push_twist_mode in (PushTwistMode.DEFAULT, PushTwistMode.CONTINUOUS):
-        # Remove SELECTOR mode entities (12 slots + selected slot select)
-        stale_suffixes = (
-            *[f"-slot-{i}" for i in range(12)],
-            "-selected-slot",
-        )
-    else:
-        # Remove DEFAULT/CONTINUOUS mode entities
-        stale_suffixes = ("-twist-position", "-push-twist-position")
-
-    for entity_entry in entries:
-        if entity_entry.unique_id.endswith(stale_suffixes):
-            entity_registry.async_remove(entity_entry.entity_id)
-
-
-async def async_options_updated(
-    hass: HomeAssistant, entry: FlicButtonConfigEntry
-) -> None:
-    """Handle options update."""
-    # Reload the integration to apply new push_twist_mode
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> bool:
