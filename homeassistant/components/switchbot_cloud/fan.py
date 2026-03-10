@@ -175,7 +175,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
             )
 
         gear = self.coordinator.data.get("fanGear")
-        if gear:
+        if gear is not None:
             self._attr_percentage = ranged_value_to_percentage(
                 low_high_range=(
                     1,

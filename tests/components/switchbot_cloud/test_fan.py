@@ -265,7 +265,7 @@ async def test_air_purifier_controller(
 ) -> None:
     """Test controlling the air purifier with mocked delay."""
     mock_list_devices.return_value = [AIR_PURIFIER_INFO]
-    mock_get_status.return_value = {"power": "OFF", "mode": 1}
+    mock_get_status.return_value = {"power": "OFF", "mode": 1, "fanGear": 1}
 
     await configure_integration(hass)
     fan_id = "fan.air_purifier_1"
