@@ -817,12 +817,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "bmw_connected_drive": {
-      "name": "BMW Connected Drive",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "bond": {
       "name": "Bond",
       "integration_type": "hub",
@@ -2210,6 +2204,12 @@
     },
     "freedompro": {
       "name": "Freedompro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "freshr": {
+      "name": "Fresh-r",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4212,11 +4212,6 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "mini_connected": {
-      "name": "MINI Connected",
-      "integration_type": "virtual",
-      "supported_by": "bmw_connected_drive"
     },
     "minio": {
       "name": "Minio",
