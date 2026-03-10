@@ -49,7 +49,6 @@ class OpenDisplayEntity(PassiveBluetoothCoordinatorEntity[OpenDisplayCoordinator
 
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.address)},
-            name=entry.title,
             manufacturer=manufacturer.manufacturer_name,
             model=f"{size} {color_scheme}",
             sw_version=f"{fw['major']}.{fw['minor']}",
