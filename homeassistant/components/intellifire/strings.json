@@ -101,7 +101,11 @@
         "name": "Connection quality"
       },
       "control_mode": {
-        "name": "Control mode"
+        "name": "Control mode",
+        "state": {
+            "local": "Local",
+            "cloud": "Cloud"
+        }
       },
       "downtime": {
         "name": "Downtime"
