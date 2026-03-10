@@ -8,50 +8,53 @@ from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import CONF_DISCOVERED_SENSORS, DEFAULT_SCAN_INTERVAL
+from .coordinator import KWBDataUpdateCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
-# _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SELECT, Platform.SWITCH, Platform.BUTTON]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BUTTON, Platform.SELECT]
 
-type KwbModbusConfigEntry = ConfigEntry[AsyncModbusTcpClient]
+type KwbModbusConfigEntry = ConfigEntry[KWBDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KwbModbusConfigEntry) -> bool:
     """Set up KWB Modbus from a config entry."""
-
-    # create Async Modbus TCP client
     client = AsyncModbusTcpClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         timeout=10,
     )
-
-    # Test connection
     try:
         await client.connect()
         if not client.connected:
             raise ConfigEntryNotReady(
-                f"Could not connect to KWB Modbus at {entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+                f"Could not connect to KWB at {entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
             )
-
-        # Test basic communication
-        result = await client.read_input_registers(address=8204, count=1)
+        result = await client.read_input_registers(address=8192, count=1)
         if result.isError():
-            raise ConfigEntryNotReady(
-                f"Error reading holding registers from KWB Modbus at {entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
-            )
+            raise ConfigEntryNotReady("Error during Modbus test read")
     except ModbusException as err:
-        raise ConfigEntryNotReady(f"Modbus connection failed: {err}") from err
-    finally:
-        if client.connected:
-            client.close()
+        raise ConfigEntryNotReady(f"Modbus error: {err}") from err
+    # NOTE: Do NOT close the client — coordinator keeps it open
 
-    # Store client for platforms
-    entry.runtime_data = client
+    coordinator = KWBDataUpdateCoordinator(
+        hass=hass,
+        client=client,
+        entry=entry,
+        scan_interval=entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+    )
+
+    # Run discovery if this is the first start (discovered_sensors is empty dict)
+    if entry.data.get(CONF_DISCOVERED_SENSORS) == {}:
+        await coordinator.async_run_discovery()
+
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
@@ -59,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KwbModbusConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: KwbModbusConfigEntry) -> bool:
     """Unload a config entry."""
-    if entry.runtime_data and entry.runtime_data.connected:
-        entry.runtime_data.close()
-
+    coordinator: KWBDataUpdateCoordinator = entry.runtime_data
+    if coordinator.client.connected:
+        coordinator.client.close()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
