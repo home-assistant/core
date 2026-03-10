@@ -873,6 +873,7 @@ class SensorSchema(KNXPlatformSchema):
                 vol.Required(CONF_TYPE): sensor_type_validator,
                 vol.Required(CONF_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
