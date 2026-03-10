@@ -27,7 +27,6 @@ from .coordinator import EvoDataUpdateCoordinator
 # because supported modes can vary for edge-case systems
 
 # Zone service schemas (registered as entity services)
-CLEAR_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {}
 SET_ZONE_OVERRIDE_SCHEMA: Final[dict[str | vol.Marker, Any]] = {
     vol.Required(ATTR_SETPOINT): vol.All(
         vol.Coerce(float), vol.Range(min=4.0, max=35.0)
@@ -47,7 +46,7 @@ def _register_zone_entity_services(hass: HomeAssistant) -> None:
         DOMAIN,
         EvoService.CLEAR_ZONE_OVERRIDE,
         entity_domain=CLIMATE_DOMAIN,
-        schema=CLEAR_ZONE_OVERRIDE_SCHEMA,
+        schema=None,
         func="async_clear_zone_override",
     )
     service.async_register_platform_entity_service(
@@ -79,7 +78,6 @@ def setup_service_functions(
     @verify_domain_control(DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
-        assert coordinator.tcs is not None  # mypy
 
         payload = {
             "unique_id": coordinator.tcs.id,
@@ -91,17 +89,10 @@ def setup_service_functions(
     assert coordinator.tcs is not None  # mypy
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
+    hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     # Enumerate which operating modes are supported by this system
     modes = list(coordinator.tcs.allowed_system_modes)
-
-    # Not all systems support "AutoWithReset": register this handler only if required
-    if any(
-        m[SZ_SYSTEM_MODE]
-        for m in modes
-        if m[SZ_SYSTEM_MODE] == EvoSystemMode.AUTO_WITH_RESET
-    ):
-        hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
     modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
