@@ -361,8 +361,7 @@ async def test_clean_segments_command_without_id(
     mqtt_mock = await mqtt_mock_entry()
     await hass.async_block_till_done()
     issue_registry = ir.async_get(hass)
-    # The area mapping was already set
-    # so we do not expect a repair flow
+    # We do not expect a repair flow
     assert len(issue_registry.issues) == 0
 
     state = hass.states.get("vacuum.test")
@@ -400,6 +399,10 @@ async def test_clean_segments_command_with_id(
         vacuum.DOMAIN,
         {
             "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
         },
     )
     await hass.async_block_till_done()
@@ -463,8 +466,7 @@ async def test_clean_segments_command_update(
     assert state.state == STATE_UNKNOWN
 
     issue_registry = ir.async_get(hass)
-    # The area mapping was already set
-    # so we do not expect a repair flow
+    # We do not expect a repair flow
     assert len(issue_registry.issues) == 0
 
     # Update the segments
@@ -628,7 +630,11 @@ async def test_clean_segments_command_with_id_and_command_template(
         "vacuum.test",
         vacuum.DOMAIN,
         {
-            "area_mapping": {"Kitchen": ["1"], "Livingroom": ["2"]},
+            "area_mapping": {"Livingroom": ["1"], "Kitchen": ["2"]},
+            "last_seen_segments": [
+                {"id": "1", "name": "Livingroom"},
+                {"id": "2", "name": "Kitchen"},
+            ],
         },
     )
     await hass.async_block_till_done()
@@ -636,7 +642,7 @@ async def test_clean_segments_command_with_id_and_command_template(
     state = hass.states.get("vacuum.test")
     assert state.state == STATE_UNKNOWN
     await common.async_clean_area(
-        hass, ["Kitchen", "Livingroom"], entity_id="vacuum.test"
+        hass, ["Livingroom", "Kitchen"], entity_id="vacuum.test"
     )
     assert (
         call("vacuum/clean_segment", "1;2", 0, False)

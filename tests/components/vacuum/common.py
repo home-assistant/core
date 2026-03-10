@@ -84,21 +84,21 @@ async def async_locate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -
 
 
 def clean_area(
-    hass: HomeAssistant, segments: list[str], entity_id: str = ENTITY_MATCH_ALL
+    hass: HomeAssistant, cleaning_area_id: list[str], entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
     """Tell all or specified vacuum to perform an area clean."""
-    hass.add_job(async_clean_area, hass, segments, entity_id)
+    hass.add_job(async_clean_area, hass, cleaning_area_id, entity_id)
 
 
 async def async_clean_area(
     hass: HomeAssistant,
-    segments: list[str],
+    cleaning_area_id: list[str],
     entity_id: str = ENTITY_MATCH_ALL,
 ) -> None:
     """Tell all or specified vacuum to perform an area clean."""
-    data = (
-        {ATTR_ENTITY_ID: entity_id, "cleaning_area_id": segments} if entity_id else None
-    )
+    data = {"cleaning_area_id": cleaning_area_id}
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
     await hass.services.async_call(DOMAIN, SERVICE_CLEAN_AREA, data, blocking=True)
 
 
