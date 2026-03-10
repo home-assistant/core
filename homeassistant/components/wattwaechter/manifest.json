@@ -1,7 +1,7 @@
 {
   "domain": "wattwaechter",
   "name": "WattWächter Plus",
-  "codeowners": ["@simono41"],
+  "codeowners": ["@smartcircuits"],
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/wattwaechter",
