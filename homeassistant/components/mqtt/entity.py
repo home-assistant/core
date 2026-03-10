@@ -471,7 +471,7 @@ class MqttAttributesMixin(Entity):
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
-    group: IntegrationSpecificGroup | None = None
+    group: IntegrationSpecificGroup | None
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes and handle group entities."""
