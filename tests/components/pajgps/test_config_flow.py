@@ -43,12 +43,12 @@ VALID_USER_INPUT = {
 
 
 # ---------------------------------------------------------------------------
-# CustomFlow — initial config
+# PajGPSConfigFlow — initial config
 # ---------------------------------------------------------------------------
 
 
-class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
-    """Tests for CustomFlow.async_step_user."""
+class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
+    """Tests for PajGPSConfigFlow.async_step_user."""
 
     async def test_shows_form_on_get(self):
         """Calling without input must return a FORM with step_id 'user'."""
