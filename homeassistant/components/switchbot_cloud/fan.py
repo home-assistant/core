@@ -111,10 +111,6 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self.send_api_command(
-            command=BatteryCirculatorFanCommands.SET_WIND_MODE,
-            parameters=str(BatteryCirculatorFanMode.DIRECT.value),
-        )
-        await self.send_api_command(
             command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
             parameters=str(percentage),
         )
