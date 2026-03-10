@@ -423,6 +423,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             sdk_status_str = event_data["TransportState"]
             try:
                 sdk_status = SDKPlayingStatus(sdk_status_str)
+            except ValueError:
+                LOGGER.warning(
+                    "Device %s: Unknown TransportState from event: %s",
+                    self.entity_id,
+                    sdk_status_str,
+                )
+            else:
                 self._device.playing_status = sdk_status
                 if sdk_status == SDKPlayingStatus.STOPPED:
                     LOGGER.debug(
@@ -438,36 +445,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.hass.async_create_task(
                         self._device.sync_device_duration_and_position()
                     )
-            except ValueError:
-                LOGGER.warning(
-                    "Device %s: Unknown TransportState from event: %s",
-                    self.entity_id,
-                    sdk_status_str,
-                )
 
         self._update_ha_state_from_sdk_cache()
 
     @callback
-    def _handle_sdk_rendering_control_event(
-        self, service: UpnpService, state_variables: list[UpnpStateVariable]
+    def _handle_sdk_refresh_event(
+        self, _service: UpnpService, state_variables: list[UpnpStateVariable]
     ) -> None:
-        """Handle RenderingControl events from the SDK."""
-        LOGGER.debug(
-            "Device %s: Received RenderingControl event: %s",
-            self.entity_id,
-            state_variables,
-        )
-
-        self._update_ha_state_from_sdk_cache()
-
-    @callback
-    def _handle_sdk_play_queue_event(
-        self, service: UpnpService, state_variables: list[UpnpStateVariable]
-    ) -> None:
-        """Handle PlayQueue events from the SDK (if implemented)."""
-        LOGGER.debug(
-            "Device %s: Received PlayQueue event: %s", self.entity_id, state_variables
-        )
+        """Handle SDK events that only require a state refresh."""
+        LOGGER.debug("Device %s: Received SDK refresh event: %s", self.entity_id, state_variables)
         self._update_ha_state_from_sdk_cache()
 
     def _update_support_features(self, features: MediaPlayerEntityFeature) -> None:
@@ -582,54 +568,47 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        if self._device:
-            self._device.general_event_callback = self._handle_sdk_general_device_update
-            self._device.av_transport_event_callback = (
-                self._handle_sdk_av_transport_event
-            )
-            self._device.rendering_control_event_callback = (
-                self._handle_sdk_rendering_control_event
-            )
-            self._device.play_queue_event_callback = self._handle_sdk_play_queue_event
-            LOGGER.debug(
-                "Entity %s registered callbacks with WiimDevice %s",
-                self.entity_id,
-                self._device.name,
-            )
-            if self._device.supports_http_api:
-                await self._update_output_mode()
+        self._device.general_event_callback = self._handle_sdk_general_device_update
+        self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
+        self._device.rendering_control_event_callback = (
+            self._handle_sdk_refresh_event
+        )
+        self._device.play_queue_event_callback = self._handle_sdk_refresh_event
+        LOGGER.debug(
+            "Entity %s registered callbacks with WiimDevice %s",
+            self.entity_id,
+            self._device.name,
+        )
+        if self._device.supports_http_api:
+            await self._update_output_mode()
 
-            if self.entity_id:
-                self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
-                LOGGER.debug(
-                    "Added %s (UDN: %s) to entity maps in hass.data",
-                    self.entity_id,
-                    self._device.udn,
-                )
+        self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
+        LOGGER.debug(
+            "Added %s (UDN: %s) to entity maps in hass.data",
+            self.entity_id,
+            self._device.udn,
+        )
 
-            self._update_supported_features()
+        await self._from_device_update_supported_features()
 
         self._update_ha_state_from_sdk_cache()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
-        if self._device:
-            # Unregister SDK callbacks
-            self._device.general_event_callback = None
-            self._device.av_transport_event_callback = None
-            self._device.rendering_control_event_callback = None
-            self._device.play_queue_event_callback = None
-            LOGGER.debug(
-                "Entity %s unregistered callbacks from WiimDevice %s",
-                self.entity_id,
-                self._device.name,
-            )
-            await self._device.disconnect()
+        # Unregister SDK callbacks
+        self._device.general_event_callback = None
+        self._device.av_transport_event_callback = None
+        self._device.rendering_control_event_callback = None
+        self._device.play_queue_event_callback = None
+        LOGGER.debug(
+            "Entity %s unregistered callbacks from WiimDevice %s",
+            self.entity_id,
+            self._device.name,
+        )
+        await self._device.disconnect()
 
-        # Remove entity_id from the global map
-        if self.entity_id in self._wiim_data.entity_id_to_udn_map:
-            del self._wiim_data.entity_id_to_udn_map[self.entity_id]
-            LOGGER.debug("Removed %s from entity_id_to_udn_map", self.entity_id)
+        del self._wiim_data.entity_id_to_udn_map[self.entity_id]
+        LOGGER.debug("Removed %s from entity_id_to_udn_map", self.entity_id)
 
         await super().async_will_remove_from_hass()
 

@@ -153,6 +153,103 @@ async def test_media_player_update_ha_state_from_sdk_cache(
 
 
 @pytest.mark.asyncio
+async def test_media_player_async_added_to_hass_refreshes_supported_features(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test entity setup refreshes supported features before initial state write."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.test_device"
+    _set_wiim_data(mock_hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.async_added_to_hass",
+            new=AsyncMock(),
+        ),
+        patch.object(
+            entity, "_from_device_update_supported_features", new_callable=AsyncMock
+        ) as mock_refresh_supported_features,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+    ):
+        await entity.async_added_to_hass()
+
+    assert entity._device.general_event_callback == entity._handle_sdk_general_device_update
+    assert entity._device.av_transport_event_callback == entity._handle_sdk_av_transport_event
+    assert (
+        entity._device.rendering_control_event_callback
+        == entity._handle_sdk_refresh_event
+    )
+    assert entity._device.play_queue_event_callback == entity._handle_sdk_refresh_event
+    assert entity._wiim_data.entity_id_to_udn_map[entity.entity_id] == entity._device.udn
+    mock_refresh_supported_features.assert_awaited_once()
+    mock_update_state.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_media_player_handle_invalid_transport_state_event(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test invalid transport state events only log and still refresh state."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.test_device"
+    entity._device = mock_wiim_device
+    mock_wiim_device.event_data = {"TransportState": "not-a-valid-state"}
+    original_status = mock_wiim_device.playing_status
+
+    with (
+        patch.object(mock_hass, "async_create_task", new=MagicMock()) as mock_create_task,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+    ):
+        entity._handle_sdk_av_transport_event(MagicMock(), [])
+
+    assert mock_wiim_device.playing_status == original_status
+    mock_create_task.assert_not_called()
+    mock_update_state.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_media_player_handle_playing_transport_state_event(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test valid playing transport state events schedule a position refresh."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.test_device"
+    entity._device = mock_wiim_device
+    mock_wiim_device.event_data = {"TransportState": PlayingStatus.PLAYING.value}
+
+    sync_task = object()
+
+    with (
+        patch.object(
+            mock_wiim_device,
+            "sync_device_duration_and_position",
+            new=MagicMock(return_value=sync_task),
+        ),
+        patch.object(mock_hass, "async_create_task", new=MagicMock()) as mock_create_task,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+    ):
+        entity._handle_sdk_av_transport_event(MagicMock(), [])
+
+    assert mock_wiim_device.playing_status is PlayingStatus.PLAYING
+    mock_create_task.assert_called_once_with(sync_task)
+    mock_update_state.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_media_player_play(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
