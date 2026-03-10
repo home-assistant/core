@@ -13,7 +13,7 @@
       "condition": "mdi:battery-off"
     },
     "percentage": {
-      "condition": "mdi:battery"
+      "condition": "mdi:battery-unknown"
     }
   }
 }
