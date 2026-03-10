@@ -20,7 +20,10 @@ from homeassistant.components.climate import FAN_OFF, HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.number import NumberMode
+from homeassistant.components.number import (
+    DEVICE_CLASSES_SCHEMA as NUMBER_DEVICE_CLASSES_SCHEMA,
+    NumberMode,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -39,6 +42,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     Platform,
 )
@@ -787,6 +791,8 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(NumberConf.MAX): vol.Coerce(float),
                 vol.Optional(NumberConf.MIN): vol.Coerce(float),
                 vol.Optional(NumberConf.STEP): cv.positive_float,
+                vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
