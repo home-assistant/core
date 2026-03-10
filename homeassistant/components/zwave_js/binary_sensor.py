@@ -73,6 +73,8 @@ ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR = 5632
 ACCESS_CONTROL_DOOR_STATE_OPEN_TILT = 5633
 
 
+# Numeric State values used by the "Opening state" notification variable.
+# This is only needed temporarily until the legacy Access Control door state binary sensors are removed.
 class OpeningState(IntEnum):
     """Opening state values exposed by Access Control notifications."""
 
