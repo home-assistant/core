@@ -210,6 +210,21 @@ def _format_template(value: Any, field: str | None = None) -> Any:
     return str(value)
 
 
+def _get_config_breadcrumbs(config: ConfigType) -> str:
+    """Try to coerce entity information from the config."""
+    breadcrumb = "Template Entity"
+    # Default entity id should be in most legacy configuration because
+    # it's created from the legacy slug. Vacuum and Lock do not have a
+    # slug, therefore we need to use the name or unique_id.
+    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+        breadcrumb = default_entity_id.split(".")[-1]
+    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
+        breadcrumb = f"unique_id: {unique_id}"
+    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
+        breadcrumb = name.template
+    return breadcrumb
+
+
 def format_migration_config(
     config: ConfigType | list[ConfigType], depth: int = 0
 ) -> ConfigType | list[ConfigType]:
@@ -245,21 +260,6 @@ def format_migration_config(
             formatted_config[field] = _format_template(value)
 
     return formatted_config
-
-
-def _get_config_breadcrumbs(config: ConfigType) -> str:
-    """Try to coerce entity information from the config."""
-    breadcrumb = "Template Entity"
-    # Default entity id should be in most legacy configuration because
-    # it's created from the legacy slug. Vacuum and Lock do not have a
-    # slug, therefore we need to use the name or unique_id.
-    if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
-        breadcrumb = default_entity_id.split(".")[-1]
-    elif (unique_id := config.get(CONF_UNIQUE_ID)) is not None:
-        breadcrumb = f"unique_id: {unique_id}"
-    elif (name := config.get(CONF_NAME)) and isinstance(name, template.Template):
-        breadcrumb = name.template
-    return breadcrumb
 
 
 def create_legacy_template_issue(

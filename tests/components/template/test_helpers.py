@@ -374,17 +374,12 @@ async def test_legacy_to_modern_configs(
     ] == altered_configs
 
 
-async def _setup_and_test_yaml_device_action(
+async def _setup_mock_devices(
     hass: HomeAssistant,
-    style: ConfigurationStyle,
     domain: str,
-    script_fields,
-    extra_config: ConfigType,
-    test_actions: tuple[tuple[str, dict], ...],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list,
-) -> None:
+) -> tuple[TemplatePlatformSetup, dr.DeviceEntry, er.RegistryEntry]:
     FAKE_DOMAIN = "fake_integration"
 
     hass.config.components.add(FAKE_DOMAIN)
@@ -421,6 +416,24 @@ async def _setup_and_test_yaml_device_action(
 
     platform_setup = TemplatePlatformSetup(
         domain, None, "test_entity", make_test_trigger("sensor.trigger")
+    )
+    return (platform_setup, device_entry, entity_entry)
+
+
+async def _setup_and_test_yaml_device_action(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    domain: str,
+    script_fields,
+    extra_config: ConfigType,
+    test_actions: tuple[tuple[str, dict], ...],
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list,
+) -> None:
+
+    platform_setup, device_entry, entity_entry = await _setup_mock_devices(
+        hass, domain, device_registry, entity_registry
     )
 
     actions = {
@@ -785,42 +798,8 @@ async def test_config_entry_device_actions(
 ) -> None:
     """Test device actions in config flow."""
 
-    FAKE_DOMAIN = "fake_integration"
-
-    hass.config.components.add(FAKE_DOMAIN)
-
-    async def _async_get_actions(
-        hass: HomeAssistant, device_id: str
-    ) -> list[dict[str, str]]:
-        """List device actions."""
-        return await toggle_entity.async_get_actions(hass, device_id, FAKE_DOMAIN)
-
-    mock_platform(
-        hass,
-        f"{FAKE_DOMAIN}.device_action",
-        Mock(
-            ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
-            ),
-            async_get_actions=_async_get_actions,
-            async_call_action_from_config=AsyncMock(),
-            spec=["ACTION_SCHEMA", "async_get_actions"],
-        ),
-    )
-    config_entry = MockConfigEntry(domain="test", data={})
-    config_entry.add_to_hass(hass)
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-    entity_entry = entity_registry.async_get_or_create(
-        "fake_integration", "test", "5678", device_id=device_entry.id
-    )
-    await hass.async_block_till_done()
-
-    platform_setup = TemplatePlatformSetup(
-        domain, None, "test_entity", make_test_trigger("sensor.trigger")
+    platform_setup, device_entry, entity_entry = await _setup_mock_devices(
+        hass, domain, device_registry, entity_registry
     )
 
     actions = {
