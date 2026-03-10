@@ -88,7 +88,6 @@ class PicoTTSEntity(TextToSpeechEntity):
             fname = tmpf.name
 
         cmd = ["pico2wave", "--wave", fname, "-l", language]
-        data = None
         try:
             subprocess.run(cmd, text=True, input=message, check=True)
 
