@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -75,6 +75,7 @@ async def async_setup_entry(
 
     known_device_ids: set[int] = set()
 
+    @callback
     def _async_add_new_devices() -> None:
         """Add entities for any device IDs not yet tracked."""
         current_ids = {
