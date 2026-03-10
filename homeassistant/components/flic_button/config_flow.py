@@ -319,7 +319,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=entry_data,
                 )
 
-            except TimeoutError, BleakError:
+            except (TimeoutError, BleakError):
                 _LOGGER.exception("Cannot connect to button")
                 errors["base"] = "cannot_connect"
             except FlicPairingError:
