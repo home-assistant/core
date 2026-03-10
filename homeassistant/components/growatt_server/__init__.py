@@ -252,12 +252,12 @@ def get_device_list_v1(
     try:
         devices_dict = api.device_list(plant_id)
     except growattServer.GrowattV1ApiError as e:
-        if getattr(e, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
+        if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
             raise ConfigEntryAuthFailed(
                 f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
             ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e.error_msg or str(e)} (Code: {getattr(e, 'error_code', None)})"
+            f"API error during device list: {e.error_msg or str(e)} (Code: {e.error_code})"
         ) from e
     devices = devices_dict.get("devices", [])
     # Only MIN device (type = 7) support implemented in current V1 API

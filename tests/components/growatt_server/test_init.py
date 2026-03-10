@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -132,6 +133,9 @@ async def test_coordinator_update_json_error(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.states.get("switch.min123456_charge_from_grid").state == STATE_UNAVAILABLE
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -204,6 +208,9 @@ async def test_coordinator_auth_failed_triggers_reauth(
         flow["context"]["source"] == "reauth"
         and flow["context"]["entry_id"] == mock_config_entry.entry_id
         for flow in flows
+    )
+    assert (
+        hass.states.get("switch.min123456_charge_from_grid").state == STATE_UNAVAILABLE
     )
 
 

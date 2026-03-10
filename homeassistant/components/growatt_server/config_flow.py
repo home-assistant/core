@@ -126,13 +126,13 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = ERROR_CANNOT_CONNECT
                 except growattServer.GrowattV1ApiError as err:
-                    if getattr(err, "error_code", None) == V1_API_ERROR_NO_PRIVILEGE:
+                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
                         errors["base"] = ERROR_INVALID_AUTH
                     else:
                         _LOGGER.debug(
                             "Growatt V1 API error during reauth: %s (Code: %s)",
                             err.error_msg or str(err),
-                            getattr(err, "error_code", None),
+                            err.error_code,
                         )
                         errors["base"] = ERROR_CANNOT_CONNECT
                 except (ValueError, KeyError, TypeError, AttributeError) as ex:
@@ -264,7 +264,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Growatt V1 API error: %s (Code: %s)",
                 e.error_msg or str(e),
-                getattr(e, "error_code", None),
+                e.error_code,
             )
             return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
         except (ValueError, KeyError, TypeError, AttributeError) as ex:
