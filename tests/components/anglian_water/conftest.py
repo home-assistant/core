@@ -1,8 +1,6 @@
 """Common fixtures for the Anglian Water tests."""
 
 from collections.abc import AsyncGenerator, Generator
-import datetime
-from datetime import datetime as dt
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -36,25 +34,19 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_smart_meter(freezer: FrozenDateTimeFactory) -> SmartMeter:
-    """Return a mocked Smart Meter."""
+    """Return a Smart Meter for testing."""
     # Freeze time to June 2, 2024 so "yesterday" is June 1, matching our test readings
     freezer.move_to("2024-06-02T00:00:00Z")
 
-    mock = AsyncMock(spec=SmartMeter)
-    mock.serial_number = "TESTSN"
-    mock.get_yesterday_consumption = 50
-    mock.latest_read = 50
-    mock.yesterday_water_cost = 0.5
-    mock.yesterday_sewerage_cost = 0.5
-    mock.last_updated = dt(
-        year=2025, month=1, day=1, hour=0, minute=0, second=0, tzinfo=datetime.UTC
-    )
-    mock.readings = [
+    meter = SmartMeter("TESTSN")
+    meter.readings = [
         {"read_at": "2024-06-01T12:00:00Z", "consumption": 10, "read": 10},
         {"read_at": "2024-06-01T13:00:00Z", "consumption": 15, "read": 25},
         {"read_at": "2024-06-01T14:00:00Z", "consumption": 25, "read": 50},
     ]
-    return mock
+    meter.yesterday_water_cost = 0.5
+    meter.yesterday_sewerage_cost = 0.5
+    return meter
 
 
 @pytest.fixture
