@@ -266,7 +266,9 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 e.error_msg or str(e),
                 e.error_code,
             )
-            return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
+            if e.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
         except (ValueError, KeyError, TypeError, AttributeError) as ex:
             _LOGGER.error(
                 "Invalid response format during Growatt V1 API plant list: %s", ex

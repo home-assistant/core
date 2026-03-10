@@ -311,11 +311,21 @@ async def test_password_auth_multiple_plants(
 # Token authentication tests
 
 
+@pytest.mark.parametrize(
+    ("error_code", "expected_error"),
+    [
+        (V1_API_ERROR_NO_PRIVILEGE, ERROR_INVALID_AUTH),
+        (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
+    ],
+)
 async def test_token_auth_api_error(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    mock_setup_entry,
+    error_code: int,
+    expected_error: str,
 ) -> None:
-    """Test token authentication with API error, then recovery."""
-
+    """Test token authentication with V1 API error maps to correct error type."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -324,9 +334,8 @@ async def test_token_auth_api_error(
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    # Any GrowattV1ApiError during token verification should result in invalid_auth
     error = growattServer.GrowattV1ApiError("API error")
-    error.error_code = 100
+    error.error_code = error_code
     mock_growatt_v1_api.plant_list.side_effect = error
 
     result = await hass.config_entries.flow.async_configure(
@@ -335,9 +344,9 @@ async def test_token_auth_api_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "token_auth"
-    assert result["errors"] == {"base": ERROR_INVALID_AUTH}
+    assert result["errors"] == {"base": expected_error}
 
-    # Test recovery - reset side_effect and set normal return value
+    # Test recovery
     mock_growatt_v1_api.plant_list.side_effect = None
     mock_growatt_v1_api.plant_list.return_value = GROWATT_V1_PLANT_LIST_RESPONSE
 

@@ -14,7 +14,7 @@
       "password_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "url": "Server region",
+          "region": "Server region",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Enter your Growatt login credentials"
@@ -28,7 +28,7 @@
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "[%key:component::growatt_server::config::step::password_auth::data::url%]",
+          "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
           "token": "[%key:component::growatt_server::config::step::token_auth::data::token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
@@ -37,8 +37,8 @@
       },
       "token_auth": {
         "data": {
-          "token": "API Token",
-          "url": "[%key:component::growatt_server::config::step::password_auth::data::url%]"
+          "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
+          "token": "API Token"
         },
         "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
