@@ -34,7 +34,6 @@ from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import (
     get_opening_state_notification_value,
-    is_legacy_access_control_window_door_value,
     is_opening_state_notification_value,
 )
 from .models import (
@@ -467,14 +466,6 @@ async def async_setup_entry(
         elif info.platform_hint == "notification":
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
-                return
-            # When Opening state is present, legacy door/window values are
-            # represented by ZWaveLegacyDoorStateBinarySensor via new-style discovery.
-            if get_opening_state_notification_value(
-                info.node
-            ) is not None and is_legacy_access_control_window_door_value(
-                info.primary_value
-            ):
                 return
             if (
                 notification_type := info.primary_value.metadata.cc_specific[
