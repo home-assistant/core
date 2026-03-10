@@ -68,7 +68,8 @@ class KWBSelectEntity(SelectEntity):
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = expert_mode
         elif register.index:
-            self._attr_entity_registry_enabled_default = False
+            # Indexed circuit selects (HC, BUF, …) are only useful when expert mode is on
+            self._attr_entity_registry_enabled_default = expert_mode
         else:
             self._attr_entity_registry_enabled_default = True
 
