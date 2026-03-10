@@ -130,7 +130,7 @@ class NewNotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
 class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Describe a legacy Access Control binary sensor that derives state from Opening state."""
 
-    state_key: str
+    state_key: int
     parse_opening_state: Callable[[OpeningState], bool]
 
 
@@ -266,13 +266,6 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
         states={11},
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 6: Access Control - State Id 22 (door/window open)
-        key=NOTIFICATION_ACCESS_CONTROL,
-        not_states={23},
-        states={22},
-        device_class=BinarySensorDeviceClass.DOOR,
     ),
     NotificationZWaveJSEntityDescription(
         # NotificationType 7: Home Security - State Id's 1, 2 (intrusion)
@@ -462,8 +455,15 @@ async def async_setup_entry(
             and info.entity_class is ZWaveBooleanBinarySensor
         ):
             entities.append(ZWaveBooleanBinarySensor(config_entry, driver, info))
+        elif (
+            isinstance(info, NewZwaveDiscoveryInfo)
+            and info.entity_class is ZWaveLegacyDoorStateBinarySensor
+        ):
+            entities.append(
+                ZWaveLegacyDoorStateBinarySensor(config_entry, driver, info)
+            )
         elif isinstance(info, NewZwaveDiscoveryInfo):
-            entities.append(info.entity_class(config_entry, driver, info))
+            pass  # other entity classes are not migrated yet
         elif info.platform_hint == "notification":
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
@@ -731,9 +731,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_simple_open",
             name="Window/door is open",
-            state_key=str(
-                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
-            ),
+            state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN,
             parse_opening_state=_legacy_is_open_or_tilted,
             device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
@@ -759,9 +757,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_simple_closed",
             name="Window/door is closed",
-            state_key=str(
-                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
-            ),
+            state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED,
             parse_opening_state=_legacy_is_closed,
             entity_registry_enabled_default=False,
         ),
@@ -786,9 +782,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_open",
             name="Window/door is open",
-            state_key=str(
-                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
-            ),
+            state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN,
             parse_opening_state=_legacy_is_open,
             device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
@@ -814,9 +808,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_closed",
             name="Window/door is closed",
-            state_key=str(
-                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED
-            ),
+            state_key=AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED,
             parse_opening_state=_legacy_is_closed,
             entity_registry_enabled_default=False,
         ),
@@ -839,7 +831,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_open_regular",
             name="Window/door is open in regular position",
-            state_key=str(ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR),
+            state_key=ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR,
             parse_opening_state=_legacy_is_open,
             entity_registry_enabled_default=False,
         ),
@@ -862,7 +854,7 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_state_open_tilt",
             name="Window/door is open in tilt position",
-            state_key=str(ACCESS_CONTROL_DOOR_STATE_OPEN_TILT),
+            state_key=ACCESS_CONTROL_DOOR_STATE_OPEN_TILT,
             parse_opening_state=_legacy_is_tilted,
             entity_registry_enabled_default=False,
         ),
@@ -885,11 +877,127 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=OpeningStateZWaveJSEntityDescription(
             key="legacy_access_control_door_tilt_state_tilted",
             name="Window/door is tilted",
-            state_key=str(OpeningState.OPEN),
+            state_key=OpeningState.OPEN,
             parse_opening_state=_legacy_is_tilted,
             entity_registry_enabled_default=False,
         ),
         entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    # -------------------------------------------------------------------
+    # Access Control door/window binary sensors for devices that do NOT have the
+    # new "Opening state" notification value. These replace the old-style discovery
+    # that used NOTIFICATION_SENSOR_MAPPINGS.
+    #
+    # Each property_key uses two schemas so that only the "open" state entity gets
+    # device_class=DOOR, while the other state entities (e.g. "closed") do not.
+    # The first schema uses allow_multi=True so it does not consume the value, allowing
+    # the second schema to also match and create entities for the remaining states.
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state (simple)"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        absent_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            key=NOTIFICATION_ACCESS_CONTROL,
+            states={AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN},
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state (simple)"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        absent_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        entity_description=NotificationZWaveJSEntityDescription(
+            key=NOTIFICATION_ACCESS_CONTROL,
+            not_states={AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN},
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        absent_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            key=NOTIFICATION_ACCESS_CONTROL,
+            states={AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN},
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN
+            },
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        absent_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        entity_description=NotificationZWaveJSEntityDescription(
+            key=NOTIFICATION_ACCESS_CONTROL,
+            not_states={AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN},
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door tilt state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={OpeningState.OPEN},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        absent_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        entity_description=NotificationZWaveJSEntityDescription(
+            key=NOTIFICATION_ACCESS_CONTROL,
+            states={OpeningState.OPEN},
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
     ),
     # -------------------------------------------------------------------
     NewZWaveDiscoverySchema(
