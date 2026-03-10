@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Never
+from typing import Final, Never
 
 import voluptuous as vol
 
@@ -19,7 +19,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-CHARGE_SERVICE_SCHEMA = vol.Schema(
+CHARGE_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Required("device_ids"): vol.All(
             cv.ensure_list,
@@ -32,15 +32,6 @@ CHARGE_SERVICE_SCHEMA = vol.Schema(
         vol.Required("power"): vol.All(
             vol.Coerce(int),
             vol.Range(min=1, max=2400),
-        ),
-    }
-)
-
-STOP_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("device_ids"): vol.All(
-            cv.ensure_list,
-            [cv.string],
         ),
     }
 )
@@ -129,14 +120,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         # Perform actions & process results
         await _execute_realtime_action(coordinators, 2, power, target_soc)
 
-    async def stop(call: ServiceCall) -> None:
-        """Handle the service call to stop the battery."""
-        coordinators = await _async_get_coordinators_from_call(hass, call)
-
-        # Perform actions & process results
-        await _execute_realtime_action(coordinators, 0, 0, 0)
-
-    hass.services.async_register(DOMAIN, "stop", stop, schema=STOP_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, "discharge", discharge, schema=CHARGE_SERVICE_SCHEMA

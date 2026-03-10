@@ -97,35 +97,6 @@ async def test_service_discharge(
     )
 
 
-@pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_service_stop(
-    hass: HomeAssistant,
-    mock_indevolt: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test stop service."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Reset mock call count for this iteration
-    mock_indevolt.set_data.reset_mock()
-
-    # Mock call to stop the battery
-    await hass.services.async_call(
-        DOMAIN,
-        "stop",
-        {"device_ids": [_get_device_id(hass, mock_config_entry)]},
-        blocking=True,
-    )
-
-    # Verify set_data was called with correct parameters
-    mock_indevolt.set_data.assert_has_calls(
-        [
-            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [0, 0, 0]),
-        ]
-    )
-
-
 @pytest.mark.parametrize("generation", [1], indirect=True)
 async def test_service_charge_power_too_high(
     hass: HomeAssistant,
@@ -191,8 +162,12 @@ async def test_service_missing_target(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            "stop",
-            {"device_ids": ["non-existent-device-id"]},
+            "discharge",
+            {
+                "device_ids": ["non-existent-device-id"],
+                "power": 500,
+                "target_soc": 50,
+            },
             blocking=True,
         )
 
