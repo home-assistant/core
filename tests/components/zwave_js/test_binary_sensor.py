@@ -69,6 +69,39 @@ def _add_opening_state_value(
     return updated_state
 
 
+def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
+    """Return a node state with a Door tilt state notification value added."""
+    updated_state = copy.deepcopy(node_state)
+    updated_state["values"].append(
+        {
+            "commandClass": 113,
+            "commandClassName": "Notification",
+            "property": "Access Control",
+            "propertyKey": "Door tilt state",
+            "propertyName": "Access Control",
+            "propertyKeyName": "Door tilt state",
+            "ccVersion": 8,
+            "metadata": {
+                "type": "number",
+                "readable": True,
+                "writeable": False,
+                "label": "Door tilt state",
+                "ccSpecific": {"notificationType": 6},
+                "min": 0,
+                "max": 255,
+                "states": {
+                    "0": "Window/door is not tilted",
+                    "1": "Window/door is tilted",
+                },
+                "stateful": True,
+                "secret": False,
+            },
+            "value": 0,
+        }
+    )
+    return updated_state
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -378,10 +411,12 @@ async def test_opening_state_disables_legacy_window_door_notification_sensors(
     """Test Opening state disables legacy Access Control window/door sensors."""
     node = Node(
         client,
-        _add_opening_state_value(
-            hoppe_ehandle_connectsense_state,
-            value=1,
-            include_tilt_metadata=True,
+        _add_door_tilt_state_value(
+            _add_opening_state_value(
+                hoppe_ehandle_connectsense_state,
+                value=1,
+                include_tilt_metadata=True,
+            )
         ),
     )
     client.driver.controller.nodes[node.node_id] = node
@@ -411,7 +446,7 @@ async def test_opening_state_disables_legacy_window_door_notification_sensors(
         )
     ]
 
-    assert len(legacy_entries) == 6
+    assert len(legacy_entries) == 7
     assert all(
         entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         for entry in legacy_entries

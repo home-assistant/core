@@ -418,12 +418,6 @@ def is_valid_notification_binary_sensor(
     # of fanning out one binary sensor per state.
     if is_opening_state_notification_value(info.primary_value):
         return False
-    # Access Control legacy door/window states are handled by dedicated discovery
-    # schemas when Opening state is present.
-    if get_opening_state_notification_value(
-        info.node
-    ) is not None and is_legacy_access_control_window_door_value(info.primary_value):
-        return False
     return len(info.primary_value.metadata.states) > 1
 
 
@@ -471,6 +465,14 @@ async def async_setup_entry(
         elif info.platform_hint == "notification":
             # ensure the notification CC Value is valid as binary sensor
             if not is_valid_notification_binary_sensor(info):
+                return
+            # When Opening state is present, legacy door/window values are
+            # represented by ZWaveLegacyDoorStateBinarySensor via new-style discovery.
+            if get_opening_state_notification_value(
+                info.node
+            ) is not None and is_legacy_access_control_window_door_value(
+                info.primary_value
+            ):
                 return
             if (
                 notification_type := info.primary_value.metadata.cc_specific[
@@ -859,6 +861,29 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
             key="legacy_access_control_door_state_open_tilt",
             name="Window/door is open in tilt position",
             state_key=str(ACCESS_CONTROL_DOOR_STATE_OPEN_TILT),
+            parse_opening_state=_legacy_is_tilted,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=ZWaveLegacyDoorStateBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Door tilt state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={OpeningState.OPEN},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        required_values=[OPENING_STATE_NOTIFICATION_SCHEMA],
+        allow_multi=True,
+        entity_description=OpeningStateZWaveJSEntityDescription(
+            key="legacy_access_control_door_tilt_state_tilted",
+            name="Window/door is tilted",
+            state_key=str(OpeningState.OPEN),
             parse_opening_state=_legacy_is_tilted,
             entity_registry_enabled_default=False,
         ),

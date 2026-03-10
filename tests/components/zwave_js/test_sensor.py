@@ -843,6 +843,15 @@ async def test_opening_state_sensor(
     assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open", "Tilted"]
     assert state.attributes[ATTR_VALUE] == 2
 
+    # Make sure we're not accidentally creating enum sensors for legacy
+    # Door/Window notification variables.
+    legacy_sensor_ids = [
+        "sensor.ehandle_connectsense_door_state",
+        "sensor.ehandle_connectsense_door_state_simple",
+    ]
+    for entity_id in legacy_sensor_ids:
+        assert hass.states.get(entity_id) is None
+
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
 # controller statistics with initial state of 0
