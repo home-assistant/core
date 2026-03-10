@@ -228,6 +228,7 @@ def create_mock_coordinator(
     mock_capabilities.button_count = 2 if is_duo else 1
     mock_capabilities.has_rotation = is_duo or is_twist
     mock_capabilities.has_selector = is_twist
+    mock_capabilities.has_gestures = is_duo
     mock_coordinator.capabilities = mock_capabilities
 
     # Model name

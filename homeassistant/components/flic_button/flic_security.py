@@ -105,7 +105,7 @@ def chaskey_generate_subkeys(key: bytes) -> list[int]:
 
 def _load_int(data: bytes, offset: int) -> int:
     """Load a little-endian 32-bit integer from bytes."""
-    return struct.unpack("<I", data[offset : offset + 4])[0]
+    return int(struct.unpack("<I", data[offset : offset + 4])[0])
 
 
 def chaskey_with_dir_and_counter(

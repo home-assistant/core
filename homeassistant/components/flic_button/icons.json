@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "event": {
+      "button": { "default": "mdi:gesture-tap-button" },
+      "button_big": { "default": "mdi:gesture-tap-button" },
+      "button_small": { "default": "mdi:gesture-tap-button" },
+      "button_twist": { "default": "mdi:gesture-tap-button" },
+      "button_twist_default": { "default": "mdi:gesture-tap-button" }
+    },
+    "number": {
+      "big_dial": { "default": "mdi:knob" },
+      "push_twist_position": { "default": "mdi:knob" },
+      "slot_1": { "default": "mdi:knob" },
+      "slot_10": { "default": "mdi:knob" },
+      "slot_11": { "default": "mdi:knob" },
+      "slot_12": { "default": "mdi:knob" },
+      "slot_2": { "default": "mdi:knob" },
+      "slot_3": { "default": "mdi:knob" },
+      "slot_4": { "default": "mdi:knob" },
+      "slot_5": { "default": "mdi:knob" },
+      "slot_6": { "default": "mdi:knob" },
+      "slot_7": { "default": "mdi:knob" },
+      "slot_8": { "default": "mdi:knob" },
+      "slot_9": { "default": "mdi:knob" },
+      "small_dial": { "default": "mdi:knob" },
+      "twist_position": { "default": "mdi:knob" }
+    },
+    "select": {
+      "selected_slot": { "default": "mdi:knob" }
+    }
+  }
+}

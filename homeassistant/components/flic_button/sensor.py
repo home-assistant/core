@@ -28,15 +28,18 @@ _DISCHARGE_CURVE_COIN_CELL: tuple[tuple[float, int], ...] = (
     (3.0, 100),
 )
 
-# 2x AAA alkaline (Flic Twist) operates in a 1.8-3.2V range.
+# 2x AAA alkaline (Flic Twist) measured through IADC with 1.21V reference and
+# 0.5x gain, giving a max measurable voltage of 2.42V. A reading of 2.42V means
+# the battery is at or above that level (healthy/full). The curve maps the
+# measurable range; 2.0V matches the firmware's low-battery threshold.
 _DISCHARGE_CURVE_AAA: tuple[tuple[float, int], ...] = (
     (1.8, 0),
-    (2.0, 5),
-    (2.4, 10),
-    (2.6, 25),
-    (2.8, 50),
-    (3.0, 80),
-    (3.2, 100),
+    (2.0, 10),
+    (2.1, 20),
+    (2.2, 40),
+    (2.3, 60),
+    (2.4, 80),
+    (2.42, 100),
 )
 
 
@@ -84,9 +87,6 @@ class FlicBatterySensor(FlicButtonEntity, SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return battery level percentage."""
-        if self.coordinator.data is None:
-            return None
-
         voltage = self.coordinator.data.get("battery_voltage")
         if voltage is None:
             return None

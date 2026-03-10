@@ -1,31 +1,31 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This Flic button is already configured.",
-      "cannot_connect": "Failed to connect to button at address {address}.",
-      "device_not_found": "Button not found. Make sure it is in range and powered on.",
+      "already_configured": "This Flic device is already configured.",
+      "cannot_connect": "Failed to connect to device at address {address}.",
+      "device_not_found": "Device not found. Make sure it is in range and powered on.",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
-      "cannot_connect": "Failed to connect to the button. Make sure it is in range and try again.",
-      "invalid_signature": "Invalid button signature during pairing. This may not be a genuine Flic button.",
-      "pairing_failed": "Pairing failed. Please ensure the button is in pairing mode (LED flashing) and try again.",
+      "cannot_connect": "Failed to connect to the device. Make sure it is in range and try again.",
+      "invalid_signature": "Invalid device signature during pairing..",
+      "pairing_failed": "Pairing failed. Please ensure the device is in pairing mode (LED flashing) and try again.",
       "unknown": "An unexpected error occurred during pairing."
     },
     "progress": {
-      "wait_for_discovery": "Put the Flic button into pairing mode by holding it for 7 seconds until the LED starts flashing. Waiting for a button to appear\u2026"
+      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds.\u2026"
     },
     "step": {
       "bluetooth_confirm": {
         "description": "Set up {name}?",
-        "title": "Discovered Flic button"
+        "title": "Discovered Flic device"
       },
       "pair": {
-        "description": "Put the Flic button into pairing mode by holding it for 7 seconds until the LED starts flashing. Then submit this form to complete pairing with {name}.",
-        "title": "Pair with Flic button"
+        "description": "Push and hold your Flic until it connects. This should take no longer than 10 seconds. Then submit this form to complete pairing with {name}.",
+        "title": "Pair with Flic device"
       },
       "user": {
-        "title": "Pair with Flic button"
+        "title": "Pair with Flic device"
       }
     }
   },
@@ -37,9 +37,9 @@
       "twist_button": "Twist"
     },
     "trigger_type": {
-      "click": "{subtype} clicked",
-      "double_click": "{subtype} double clicked",
-      "down": "{subtype} pressed",
+      "click": "{subtype} pushed",
+      "double_click": "{subtype} double pushed",
+      "down": "{subtype} down",
       "duo_dial_changed": "{subtype} dial position changed",
       "hold": "{subtype} held",
       "push_twist_decrement": "{subtype} push-twist decremented",
@@ -65,7 +65,7 @@
       "swipe_up": "{subtype} swiped up",
       "twist_decrement": "{subtype} twist decremented",
       "twist_increment": "{subtype} twist incremented",
-      "up": "{subtype} released"
+      "up": "{subtype} up"
     }
   },
   "entity": {
@@ -75,11 +75,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single click",
-              "double_click": "Double click",
-              "down": "Pressed",
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
               "hold": "Hold",
-              "up": "Released"
+              "up": "Up"
             }
           }
         }
@@ -89,9 +89,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single click",
-              "double_click": "Double click",
-              "down": "Pressed",
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
               "hold": "Hold",
               "rotate_clockwise": "Rotated clockwise",
               "rotate_counter_clockwise": "Rotated counter-clockwise",
@@ -99,7 +99,7 @@
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",
               "swipe_up": "Swipe up",
-              "up": "Released"
+              "up": "Up"
             }
           }
         }
@@ -109,9 +109,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single click",
-              "double_click": "Double click",
-              "down": "Pressed",
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
               "hold": "Hold",
               "rotate_clockwise": "Rotated clockwise",
               "rotate_counter_clockwise": "Rotated counter-clockwise",
@@ -119,7 +119,7 @@
               "swipe_left": "Swipe left",
               "swipe_right": "Swipe right",
               "swipe_up": "Swipe up",
-              "up": "Released"
+              "up": "Up"
             }
           }
         }
@@ -129,14 +129,14 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single click",
-              "double_click": "Double click",
-              "down": "Pressed",
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
               "hold": "Hold",
               "rotate_clockwise": "Rotated clockwise",
               "rotate_counter_clockwise": "Rotated counter-clockwise",
               "selector_changed": "Selector changed",
-              "up": "Released"
+              "up": "Up"
             }
           }
         }
@@ -146,15 +146,15 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "click": "Single click",
-              "double_click": "Double click",
-              "down": "Pressed",
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
               "hold": "Hold",
               "push_twist_decrement": "Push-twist decremented",
               "push_twist_increment": "Push-twist incremented",
               "twist_decrement": "Twist decremented",
               "twist_increment": "Twist incremented",
-              "up": "Released"
+              "up": "Up"
             }
           }
         }
@@ -241,6 +241,15 @@
     }
   },
   "exceptions": {
+    "firmware_download_failed": {
+      "message": "Failed to download firmware."
+    },
+    "firmware_update_failed": {
+      "message": "Firmware update failed: {error}"
+    },
+    "firmware_update_interrupted": {
+      "message": "Firmware update interrupted (connection lost): {error}"
+    },
     "read_only_entity": {
       "message": "This entity is read-only and reflects the physical dial position."
     }

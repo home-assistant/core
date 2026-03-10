@@ -14,7 +14,7 @@ from homeassistant.components.flic_button.const import (
     DeviceType,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -104,7 +104,8 @@ async def test_flic2_device_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    trigger_types = {t["type"] for t in triggers}
+    flic_triggers = [t for t in triggers if t[CONF_DOMAIN] == DOMAIN]
+    trigger_types = {t["type"] for t in flic_triggers}
 
     assert "click" in trigger_types
     assert "double_click" in trigger_types
@@ -143,8 +144,9 @@ async def test_duo_device_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    trigger_types = {t["type"] for t in triggers}
-    trigger_subtypes = {t["subtype"] for t in triggers}
+    flic_triggers = [t for t in triggers if t[CONF_DOMAIN] == DOMAIN]
+    trigger_types = {t["type"] for t in flic_triggers}
+    trigger_subtypes = {t["subtype"] for t in flic_triggers}
 
     # Should have both button subtypes
     assert "big_button" in trigger_subtypes
@@ -186,7 +188,8 @@ async def test_twist_device_triggers_default_mode(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    trigger_types = {t["type"] for t in triggers}
+    flic_triggers = [t for t in triggers if t[CONF_DOMAIN] == DOMAIN]
+    trigger_types = {t["type"] for t in flic_triggers}
 
     assert "twist_increment" in trigger_types
     assert "twist_decrement" in trigger_types

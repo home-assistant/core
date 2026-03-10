@@ -414,7 +414,7 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
             wait_for_opcode(OPCODE_GET_FIRMWARE_VERSION_RESPONSE),
             timeout=COMMAND_TIMEOUT,
         )
-        return struct.unpack("<I", response[2:6])[0]
+        return int(struct.unpack("<I", response[2:6])[0])
 
     async def get_battery_level(
         self,
@@ -433,7 +433,7 @@ class Flic2ProtocolHandler(DeviceProtocolHandler):
             timeout=COMMAND_TIMEOUT,
         )
         # Response: [header:1][opcode:1][battery_level:2]
-        return struct.unpack("<H", response[2:4])[0]
+        return int(struct.unpack("<H", response[2:4])[0])
 
     async def get_name(
         self,

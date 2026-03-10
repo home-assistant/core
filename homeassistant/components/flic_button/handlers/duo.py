@@ -434,7 +434,7 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
 
         return events
 
-    def _map_duo_event_type(self, duo_type: ButtonEventType) -> str | None:
+    def _map_duo_event_type(self, duo_type: ButtonEventType) -> str:
         """Map Flic Duo event type to Home Assistant event type."""
         match duo_type:
             case (
@@ -451,11 +451,8 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
                 return EVENT_TYPE_CLICK
             case ButtonEventType.HOLD:
                 return EVENT_TYPE_HOLD
-            case _:
-                _LOGGER.debug("Unknown Duo button event type: %s", duo_type)
-                return None
 
-    def _map_gesture_to_event(self, gesture: Gesture) -> str | None:
+    def _map_gesture_to_event(self, gesture: Gesture) -> str:
         """Map Flic Duo gesture to Home Assistant swipe event type."""
         match gesture:
             case Gesture.LEFT:
@@ -466,9 +463,6 @@ class DuoProtocolHandler(Flic2ProtocolHandler):
                 return EVENT_TYPE_SWIPE_UP
             case Gesture.DOWN:
                 return EVENT_TYPE_SWIPE_DOWN
-            case _:
-                _LOGGER.debug("Unknown gesture type: %s", gesture)
-                return None
 
     def _parse_push_twist_event(self, event_data: bytes) -> list[RotateEvent]:
         """Parse Flic Duo push twist (rotation) event with swipe filtering."""
