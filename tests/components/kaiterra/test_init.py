@@ -1,168 +1,107 @@
-"""Tests for the Kaiterra integration setup."""
+"""Tests for Kaiterra initialization."""
 
 from __future__ import annotations
 
-from homeassistant.components.kaiterra.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .conftest import DEVICE_ID, DEVICE_ID_2, DEVICE_NAME
+from .conftest import (
+    API_KEY,
+    DEVICE_ID,
+    DEVICE_ID_2,
+    DEVICE_NAME,
+    DEVICE_NAME_2,
+    DEVICE_TYPE,
+    DEVICE_TYPE_2,
+    add_device_subentry,
+)
 
 
-async def test_load_and_unload_entry(
+async def test_yaml_setup_triggers_import_flow(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_kaiterra_device_data,
+    mock_validate_device,
+    mock_latest_sensor_readings,
 ) -> None:
-    """Test loading and unloading a config entry."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    """Test YAML setup imports into a config entry."""
+    assert await async_setup_component(
+        hass,
+        "kaiterra",
+        {
+            "kaiterra": {
+                CONF_API_KEY: API_KEY,
+                "devices": [
+                    {
+                        CONF_DEVICE_ID: DEVICE_ID,
+                        CONF_TYPE: DEVICE_TYPE,
+                        CONF_NAME: DEVICE_NAME,
+                    },
+                    {
+                        CONF_DEVICE_ID: DEVICE_ID_2,
+                        CONF_TYPE: DEVICE_TYPE_2,
+                        CONF_NAME: DEVICE_NAME_2,
+                    },
+                ],
+            }
+        },
+    )
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    entries = hass.config_entries.async_entries("kaiterra")
+    assert len(entries) == 1
+    assert entries[0].data == {CONF_API_KEY: API_KEY}
+    assert len(entries[0].subentries) == 2
 
 
-async def test_setup_registers_all_entities_under_one_device(
+async def test_setup_entry_creates_legacy_entities_from_subentries(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     mock_config_entry,
-    mock_kaiterra_device_data,
+    mock_validate_device,
+    mock_latest_sensor_readings,
 ) -> None:
-    """Test that one configured device owns all created entities."""
+    """Test configured device subentries create the legacy entities."""
+    add_device_subentry(hass, mock_config_entry)
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        device := device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
-    )
-    assert device.name == DEVICE_NAME
-    assert device.manufacturer == MANUFACTURER
-
-    for entity_id in (
-        "sensor.office_aqi",
-        "sensor.office_temperature",
-        "sensor.office_humidity",
-        "sensor.office_pm2_5",
-        "sensor.office_pm10",
-        "sensor.office_co2",
-        "sensor.office_tvoc",
-    ):
-        assert hass.states.get(entity_id) is not None
-        assert (entry := entity_registry.async_get(entity_id))
-        assert entry.device_id == device.id
-
-    assert hass.states.get("air_quality.office_air_quality") is None
-    assert entity_registry.async_get("air_quality.office_air_quality") is None
-
-    assert hass.states.get("sensor.office_aqi").state == "78"
-    assert hass.states.get("sensor.office_aqi").attributes["air_quality_index_level"] == (
-        "Moderate"
-    )
-    assert hass.states.get("sensor.office_aqi").attributes[
-        "air_quality_index_pollutant"
-    ] == "TVOC"
+    assert hass.states.get("sensor.office_temperature") is not None
+    assert hass.states.get("sensor.office_humidity") is not None
+    assert hass.states.get("air_quality.office_air_quality") is not None
     assert hass.states.get("sensor.office_temperature").attributes[
         "unit_of_measurement"
     ] in ("°C", "°F", "K")
+    assert (
+        hass.states.get("air_quality.office_air_quality").attributes[
+            "air_quality_index_level"
+        ]
+        == "Moderate"
+    )
 
 
-async def test_setup_registers_multiple_devices_separately(
+async def test_setup_entry_without_devices_loads_cleanly(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     mock_config_entry,
-    mock_config_entry_2,
-    mock_kaiterra_device_data_multiple,
+    mock_latest_sensor_readings,
 ) -> None:
-    """Test that multiple configured devices get separate HA devices."""
+    """Test a parent entry without device subentries still loads."""
     await setup_integration(hass, mock_config_entry)
-    await setup_integration(hass, mock_config_entry_2)
 
-    assert (
-        office_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, DEVICE_ID)}
-        )
-    )
-    assert (
-        bedroom_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, DEVICE_ID_2)}
-        )
-    )
-    assert office_device.id != bedroom_device.id
-
-    assert (office_temp := entity_registry.async_get("sensor.office_temperature"))
-    assert (bedroom_temp := entity_registry.async_get("sensor.bedroom_temperature"))
-    assert (office_aqi := entity_registry.async_get("sensor.office_aqi"))
-    assert (bedroom_aqi := entity_registry.async_get("sensor.bedroom_aqi"))
-
-    assert office_temp.device_id == office_device.id
-    assert office_aqi.device_id == office_device.id
-    assert bedroom_temp.device_id == bedroom_device.id
-    assert bedroom_aqi.device_id == bedroom_device.id
+    assert hass.states.async_entity_ids("sensor") == []
+    assert hass.states.async_entity_ids("air_quality") == []
 
 
-async def test_setup_handles_invalid_auth(
+async def test_setup_entry_auth_failure_sets_setup_error(
     hass: HomeAssistant,
     mock_config_entry,
-    mock_kaiterra_auth_error,
+    mock_validate_device_auth_error,
+    mock_latest_sensor_readings,
 ) -> None:
-    """Test setup failure on invalid authentication."""
+    """Test auth failures during setup fail the config entry."""
+    add_device_subentry(hass, mock_config_entry)
     mock_config_entry.add_to_hass(hass)
+
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_handles_connection_failure(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_kaiterra_api_error,
-) -> None:
-    """Test setup retry on connection failure."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_handles_missing_device(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_kaiterra_device_not_found,
-) -> None:
-    """Test setup failure when the configured device does not exist."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_migrate_entry_removes_legacy_air_quality_entity(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry,
-    mock_kaiterra_device_data,
-) -> None:
-    """Test migration removes the legacy air quality entity."""
-    mock_config_entry.add_to_hass(hass)
-    old_entry = entity_registry.async_get_or_create(
-        "air_quality",
-        DOMAIN,
-        f"{DEVICE_ID}_air_quality",
-        config_entry=mock_config_entry,
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.minor_version == 2
-    assert entity_registry.async_get(old_entry.entity_id) is None
-    assert entity_registry.async_get("sensor.office_aqi") is not None

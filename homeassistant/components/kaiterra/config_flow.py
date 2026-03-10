@@ -2,25 +2,35 @@
 
 from __future__ import annotations
 
-import logging
+from collections.abc import Mapping
+from datetime import timedelta
+from types import MappingProxyType
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    ConfigSubentry,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_DEVICE_ID,
+    CONF_DEVICES,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_TYPE,
+)
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 
 from .api_data import (
     KaiterraApiAuthError,
@@ -30,77 +40,210 @@ from .api_data import (
 )
 from .const import (
     AVAILABLE_AQI_STANDARDS,
+    AVAILABLE_DEVICE_TYPES,
+    AVAILABLE_UNITS,
     CONF_AQI_STANDARD,
+    CONF_PREFERRED_UNITS,
     DEFAULT_AQI_STANDARD,
+    DEFAULT_PREFERRED_UNIT,
+    DEFAULT_SCAN_INTERVAL_SECONDS,
+    DEFAULT_TITLE,
     DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): TextSelector(
-            TextSelectorConfig(
-                type=TextSelectorType.PASSWORD,
+        vol.Required(CONF_API_KEY): selector.TextSelector(
+            selector.TextSelectorConfig(
+                type=selector.TextSelectorType.PASSWORD,
                 autocomplete="current-password",
             )
         ),
+    }
+)
+
+DEVICE_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Required(CONF_TYPE): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=AVAILABLE_DEVICE_TYPES,
+                translation_key="device_type",
+            )
+        ),
         vol.Optional(CONF_NAME): str,
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): vol.In(
+            AVAILABLE_AQI_STANDARDS
+        ),
+        vol.Optional(
+            CONF_PREFERRED_UNITS,
+            default=DEFAULT_PREFERRED_UNIT,
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=AVAILABLE_UNITS,
+                multiple=True,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(
+            CONF_SCAN_INTERVAL,
+            default=DEFAULT_SCAN_INTERVAL_SECONDS,
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=10,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+            )
+        ),
+    }
+)
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
+
+async def _async_validate_device(
+    hass,
+    api_key: str,
+    device_type: str,
+    device_id: str,
+    aqi_standard: str,
+) -> None:
+    """Validate that a device can be read."""
     await KaiterraApiClient(
         async_get_clientsession(hass),
-        data[CONF_API_KEY],
-        DEFAULT_AQI_STANDARD,
-    ).async_get_latest_sensor_readings(data[CONF_DEVICE_ID])
+        api_key,
+        aqi_standard,
+    ).async_validate_device(device_type, device_id)
+
+
+def _subentry_unique_id(device_type: str, device_id: str) -> str:
+    """Return a stable subentry unique ID."""
+    return f"{device_type}_{device_id}"
+
+
+def _subentry_title(device: Mapping[str, Any]) -> str:
+    """Return the title for a device subentry."""
+    return device.get(CONF_NAME) or device[CONF_DEVICE_ID]
+
+
+def _subentry_data(device: Mapping[str, Any]) -> ConfigSubentryData:
+    """Convert device data into config-subentry payload data."""
+    data = {
+        CONF_DEVICE_ID: device[CONF_DEVICE_ID],
+        CONF_TYPE: device[CONF_TYPE],
+    }
+    if device.get(CONF_NAME):
+        data[CONF_NAME] = device[CONF_NAME]
+
+    return {
+        "subentry_type": SUBENTRY_TYPE_DEVICE,
+        "title": _subentry_title(device),
+        "unique_id": _subentry_unique_id(device[CONF_TYPE], device[CONF_DEVICE_ID]),
+        "data": MappingProxyType(data),
+    }
+
+
+def _scan_interval_to_seconds(value: Any) -> int:
+    """Normalize scan interval values to seconds."""
+    if isinstance(value, timedelta):
+        return int(value.total_seconds())
+    return int(value)
 
 
 class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Kaiterra."""
 
     VERSION = 1
-    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_DEVICE_ID])
-            self._abort_if_unique_id_configured()
-
-            try:
-                await validate_input(self.hass, user_input)
-            except KaiterraApiAuthError:
-                errors["base"] = "invalid_auth"
-            except KaiterraDeviceNotFoundError:
-                errors["base"] = "device_not_found"
-            except KaiterraApiError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                title = user_input.get(CONF_NAME) or user_input[CONF_DEVICE_ID]
-                return self.async_create_entry(title=title, data=user_input)
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
+            return self.async_create_entry(
+                title=DEFAULT_TITLE,
+                data=user_input,
+                options={
+                    CONF_AQI_STANDARD: DEFAULT_AQI_STANDARD,
+                    CONF_PREFERRED_UNITS: DEFAULT_PREFERRED_UNIT,
+                    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL_SECONDS,
+                },
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                USER_DATA_SCHEMA,
-                user_input,
+            data_schema=self.add_suggested_values_to_schema(USER_DATA_SCHEMA, user_input),
+        )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import YAML configuration into a parent entry and device subentries."""
+        options = {
+            CONF_AQI_STANDARD: import_data.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
+            CONF_PREFERRED_UNITS: import_data.get(
+                CONF_PREFERRED_UNITS, DEFAULT_PREFERRED_UNIT
             ),
-            errors=errors,
+            CONF_SCAN_INTERVAL: _scan_interval_to_seconds(
+                import_data.get(
+                    CONF_SCAN_INTERVAL,
+                    timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS),
+                )
+            ),
+        }
+        subentries = [
+            _subentry_data(device) for device in import_data.get(CONF_DEVICES, [])
+        ]
+
+        if existing_entry := next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.data.get(CONF_API_KEY) == import_data[CONF_API_KEY]
+            ),
+            None,
+        ):
+            self.hass.config_entries.async_update_entry(existing_entry, options=options)
+            existing_by_unique_id = {
+                subentry.unique_id: subentry
+                for subentry in existing_entry.subentries.values()
+            }
+            for subentry_data in subentries:
+                unique_id = subentry_data["unique_id"]
+                if unique_id in existing_by_unique_id:
+                    self.hass.config_entries.async_update_subentry(
+                        existing_entry,
+                        existing_by_unique_id[unique_id],
+                        data=subentry_data["data"],
+                        title=subentry_data["title"],
+                    )
+                    continue
+
+                self.hass.config_entries.async_add_subentry(
+                    existing_entry,
+                    ConfigSubentry(
+                        subentry_type=SUBENTRY_TYPE_DEVICE,
+                        title=subentry_data["title"],
+                        unique_id=unique_id,
+                        data=subentry_data["data"],
+                    ),
+                )
+
+        if existing_entry is not None:
+            return self.async_abort(reason="already_configured")
+
+        return self.async_create_entry(
+            title=DEFAULT_TITLE,
+            data={CONF_API_KEY: import_data[CONF_API_KEY]},
+            options=options,
+            subentries=subentries,
         )
 
     async def async_step_reauth(
-        self, entry_data: dict[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle the start of a reauthentication flow."""
         return await self.async_step_reauth_confirm()
@@ -114,20 +257,21 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(
-                    self.hass,
-                    {
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                        CONF_DEVICE_ID: reauth_entry.data[CONF_DEVICE_ID],
-                    },
-                )
+                first_subentry = next(iter(reauth_entry.subentries.values()), None)
+                if first_subentry is not None:
+                    await _async_validate_device(
+                        self.hass,
+                        user_input[CONF_API_KEY],
+                        first_subentry.data[CONF_TYPE],
+                        first_subentry.data[CONF_DEVICE_ID],
+                        reauth_entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
+                    )
             except KaiterraApiAuthError:
                 errors["base"] = "invalid_auth"
+            except KaiterraDeviceNotFoundError:
+                errors["base"] = "device_not_found"
             except KaiterraApiError:
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
@@ -136,30 +280,76 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.PASSWORD,
-                            autocomplete="current-password",
-                        )
-                    )
-                }
-            ),
+            data_schema=USER_DATA_SCHEMA,
             errors=errors,
         )
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> KaiterraOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow."""
         return KaiterraOptionsFlowHandler()
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return supported subentry types."""
+        return {SUBENTRY_TYPE_DEVICE: KaiterraDeviceSubentryFlowHandler}
 
-class KaiterraOptionsFlowHandler(OptionsFlowWithReload):
-    """Handle Kaiterra options."""
+
+class KaiterraDeviceSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for Kaiterra device subentries."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Create a Kaiterra device subentry."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            unique_id = _subentry_unique_id(user_input[CONF_TYPE], user_input[CONF_DEVICE_ID])
+            if any(
+                subentry.unique_id == unique_id
+                for subentry in self._get_entry().subentries.values()
+            ):
+                return self.async_abort(reason="already_configured")
+
+            try:
+                await _async_validate_device(
+                    self.hass,
+                    self._get_entry().data[CONF_API_KEY],
+                    user_input[CONF_TYPE],
+                    user_input[CONF_DEVICE_ID],
+                    self._get_entry().options.get(
+                        CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD
+                    ),
+                )
+            except KaiterraApiAuthError:
+                errors["base"] = "invalid_auth"
+            except KaiterraDeviceNotFoundError:
+                errors["base"] = "device_not_found"
+            except KaiterraApiError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=_subentry_title(user_input),
+                    data=user_input,
+                    unique_id=unique_id,
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(DEVICE_SCHEMA, user_input),
+            errors=errors,
+        )
+
+
+class KaiterraOptionsFlowHandler(OptionsFlow):
+    """Handle Kaiterra account options."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -168,17 +358,20 @@ class KaiterraOptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        options_schema = vol.Schema(
-            {
-                vol.Optional(CONF_AQI_STANDARD, default=DEFAULT_AQI_STANDARD): vol.In(
-                    AVAILABLE_AQI_STANDARDS
-                )
-            }
-        )
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                options_schema,
-                self.config_entry.options or {CONF_AQI_STANDARD: DEFAULT_AQI_STANDARD},
+                OPTIONS_SCHEMA,
+                {
+                    CONF_AQI_STANDARD: self.config_entry.options.get(
+                        CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD
+                    ),
+                    CONF_PREFERRED_UNITS: self.config_entry.options.get(
+                        CONF_PREFERRED_UNITS, DEFAULT_PREFERRED_UNIT
+                    ),
+                    CONF_SCAN_INTERVAL: self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SECONDS
+                    ),
+                },
             ),
         )

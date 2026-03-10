@@ -1,21 +1,34 @@
-"""API helpers for the Kaiterra integration."""
+"""Data helpers for Kaiterra devices."""
 
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
+import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
 from aiohttp.client_exceptions import ClientConnectorError
-from kaiterra_async_client import AQIStandard, KaiterraAPIClient
+from kaiterra_async_client import AQIStandard, KaiterraAPIClient, Units
 
-from .const import AQI_LEVEL, AQI_SCALE
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_DEVICES, CONF_TYPE
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import (
+    AQI_LEVEL,
+    AQI_SCALE,
+    CONF_AQI_STANDARD,
+    CONF_PREFERRED_UNITS,
+    DISPATCHER_KAITERRA,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 POLLUTANTS = {
     "rpm25c": "PM2.5",
     "rpm10c": "PM10",
+    "rtvoc": "TVOC",
     "tvoc": "TVOC",
     "rco2": "CO2",
 }
@@ -43,32 +56,90 @@ class KaiterraApiClient:
             api_key=api_key,
             aqi_standard=AQIStandard.from_str(aqi_standard),
         )
-        self._scale = AQI_SCALE[aqi_standard]
-        self._level = AQI_LEVEL[aqi_standard]
 
-    async def async_get_latest_sensor_readings(
-        self, device_id: str
-    ) -> dict[str, dict[str, Any]]:
-        """Fetch and normalize the latest sensor readings for one device."""
+    async def async_validate_device(self, device_type: str, device_id: str) -> None:
+        """Validate that a device can be read with the provided API key."""
         try:
             async with asyncio.timeout(10):
                 data = await self._api.get_latest_sensor_readings(
-                    [f"/devices/{device_id}/top"]
+                    [_build_device_path(device_type, device_id)]
                 )
         except ClientResponseError as err:
             if err.status == HTTPStatus.UNAUTHORIZED:
-                raise KaiterraApiAuthError from err
-            raise KaiterraApiError from err
+                raise KaiterraApiAuthError("Invalid Kaiterra API key") from err
+            raise KaiterraApiError(str(err) or "Could not connect to Kaiterra") from err
         except (ClientConnectorError, TimeoutError, ValueError) as err:
-            raise KaiterraApiError from err
+            raise KaiterraApiError(str(err) or "Could not connect to Kaiterra") from err
 
         if not data or data[0] is None:
-            raise KaiterraDeviceNotFoundError(device_id)
+            raise KaiterraDeviceNotFoundError(f"Device {device_id} was not found")
+
+
+class KaiterraApiData:
+    """Fetch and normalize data for all configured Kaiterra devices."""
+
+    def __init__(self, hass, config: Mapping[str, Any], session) -> None:
+        """Initialize the API data object."""
+        api_key = config[CONF_API_KEY]
+        aqi_standard = config[CONF_AQI_STANDARD]
+        devices = config[CONF_DEVICES]
+        units = config[CONF_PREFERRED_UNITS]
+
+        self._hass = hass
+        self._api = KaiterraAPIClient(
+            session,
+            api_key=api_key,
+            aqi_standard=AQIStandard.from_str(aqi_standard),
+            preferred_units=[Units.from_str(unit) for unit in units],
+        )
+        self._devices_ids = [device[CONF_DEVICE_ID] for device in devices]
+        self._devices = [
+            _build_device_path(device[CONF_TYPE], device[CONF_DEVICE_ID])
+            for device in devices
+        ]
+        self._scale = AQI_SCALE[aqi_standard]
+        self._level = AQI_LEVEL[aqi_standard]
+        self.data: dict[str, dict[str, dict[str, Any]]] = {}
+
+    async def async_update(self) -> None:
+        """Fetch the latest readings for all configured devices."""
+        if not self._devices:
+            self.data = {}
+            async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+            return
 
         try:
-            return _normalize_device_data(data[0], self._scale, self._level)
-        except (IndexError, TypeError, ValueError) as err:
-            raise KaiterraApiError from err
+            async with asyncio.timeout(10):
+                data = await self._api.get_latest_sensor_readings(self._devices)
+        except (ClientResponseError, ClientConnectorError, TimeoutError) as err:
+            _LOGGER.debug("Couldn't fetch data from Kaiterra API: %s", err)
+            self.data = {}
+            async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+            return
+
+        self.data = {}
+        for index, device in enumerate(data):
+            device_id = self._devices_ids[index]
+            if not device:
+                self.data[device_id] = {}
+                continue
+
+            try:
+                self.data[device_id] = _normalize_device_data(
+                    device,
+                    self._scale,
+                    self._level,
+                )
+            except (IndexError, TypeError, ValueError) as err:
+                _LOGGER.error("Error parsing Kaiterra data for %s: %s", device_id, err)
+                self.data[device_id] = {}
+
+        async_dispatcher_send(self._hass, DISPATCHER_KAITERRA)
+
+
+def _build_device_path(device_type: str, device_id: str) -> str:
+    """Build the Kaiterra API path for a device."""
+    return f"/{device_type}s/{device_id}/top"
 
 
 def _normalize_device_data(
@@ -93,7 +164,7 @@ def _normalize_device_data(
 
         sensor_data: dict[str, Any] = {"value": point.get("value")}
         if (unit := _normalize_unit(sensor.get("units"))) is not None:
-            sensor_data["unit"] = unit
+            sensor_data["units"] = unit
 
         if "aqi" in point:
             sensor_data["aqi"] = point["aqi"]
@@ -102,6 +173,9 @@ def _normalize_device_data(
                 main_pollutant = POLLUTANTS.get(sensor_name)
 
         normalized[sensor_name] = sensor_data
+
+    if "tvoc" in normalized and "rtvoc" not in normalized:
+        normalized["rtvoc"] = dict(normalized["tvoc"])
 
     level: str | None = None
     if overall_aqi is not None:

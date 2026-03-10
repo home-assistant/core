@@ -2,16 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect Kaiterra device",
+        "title": "Set up Kaiterra",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "device_id": "Device ID",
-          "name": "Name"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "The API key used to access your Kaiterra device",
-          "device_id": "The device ID from your Kaiterra account",
-          "name": "Optional name to use for this device in Home Assistant"
+          "api_key": "The API key used to access your Kaiterra account"
         }
       },
       "reauth_confirm": {
@@ -20,19 +16,50 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "The updated API key used to access your Kaiterra device"
+          "api_key": "The updated API key used to access your Kaiterra account"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "device_not_found": "Device not found",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "This Kaiterra account is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "entry_type": "Device",
+      "abort": {
+        "entry_not_loaded": "Cannot add devices while the configuration is disabled.",
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found": "Device not found",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      },
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "step": {
+        "user": {
+          "title": "Add Kaiterra device",
+          "data": {
+            "device_id": "Device ID",
+            "type": "Device type",
+            "name": "Name"
+          },
+          "data_description": {
+            "device_id": "The device ID from your Kaiterra account",
+            "type": "The Kaiterra device family",
+            "name": "Optional name to use for this device in Home Assistant"
+          }
+        }
+      }
     }
   },
   "options": {
@@ -40,11 +67,23 @@
       "init": {
         "title": "Kaiterra options",
         "data": {
-          "aqi_standard": "AQI standard"
+          "aqi_standard": "AQI standard",
+          "preferred_units": "Preferred units",
+          "scan_interval": "Update interval"
         },
         "data_description": {
-          "aqi_standard": "The AQI standard used to calculate the overall air quality index"
+          "aqi_standard": "The AQI standard used to calculate the overall air quality index",
+          "preferred_units": "Preferred units requested from the Kaiterra API",
+          "scan_interval": "How often to poll the Kaiterra API, in seconds"
         }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "laseregg": "Laser Egg",
+        "sensedge": "Sensedge"
       }
     }
   }

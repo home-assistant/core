@@ -1,24 +1,23 @@
-"""Constants for the Kaiterra integration."""
+"""Consts for Kaiterra integration."""
 
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
-from homeassistant.const import Platform
-
-LOGGER = logging.getLogger(__package__)
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    Platform,
+)
 
 DOMAIN = "kaiterra"
-MANUFACTURER = "Kaiterra"
+DEFAULT_TITLE = "Kaiterra"
 
-CONF_AQI_STANDARD = "aqi_standard"
-
-DEFAULT_AQI_STANDARD = "us"
-UPDATE_INTERVAL = timedelta(seconds=30)
-PLATFORMS = [Platform.SENSOR]
-AVAILABLE_AQI_STANDARDS = ["us", "cn", "in"]
-DEFAULT_MODEL = "Air quality monitor"
+DISPATCHER_KAITERRA = "kaiterra_update"
+SUBENTRY_TYPE_DEVICE = "device"
 
 AQI_SCALE = {
     "cn": [0, 50, 100, 150, 200, 300, 400, 500],
@@ -56,3 +55,26 @@ AQI_LEVEL = {
 ATTR_VOC = "volatile_organic_compounds"
 ATTR_AQI_LEVEL = "air_quality_index_level"
 ATTR_AQI_POLLUTANT = "air_quality_index_pollutant"
+
+AVAILABLE_AQI_STANDARDS = ["us", "cn", "in"]
+AVAILABLE_UNITS = [
+    "x",
+    PERCENTAGE,
+    "C",
+    "F",
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONCENTRATION_PARTS_PER_BILLION,
+]
+AVAILABLE_DEVICE_TYPES = ["laseregg", "sensedge"]
+
+CONF_AQI_STANDARD = "aqi_standard"
+CONF_PREFERRED_UNITS = "preferred_units"
+
+DEFAULT_AQI_STANDARD = "us"
+DEFAULT_PREFERRED_UNIT: list[str] = []
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL_SECONDS = int(DEFAULT_SCAN_INTERVAL.total_seconds())
+
+PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
