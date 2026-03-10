@@ -78,6 +78,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             data,
             session,
         )
+        self._session = session
 
         # Last resort as no MAC or S/N can be retrieved via API
         self._id = config_entry.unique_id
@@ -135,11 +136,17 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
 
         try:
-            await self.api.login()
+            if "session_id" not in self._session.cookie_jar.filter_cookies(
+                URL(self.api.base_url)
+            ):
+                _LOGGER.debug(
+                    "Session cookie missing for host %s, re-login",
+                    self.api.base_url.host,
+                )
+                await self.api.login()
             raw_data_devices = await self.api.get_devices_data()
             data_sensors = await self.api.get_sensor_data()
             data_wifi = await self.api.get_wifi_data()
-            await self.api.logout()
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
