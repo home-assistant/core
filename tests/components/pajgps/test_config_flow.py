@@ -1,23 +1,15 @@
-"""Unit tests for config_flow.py — CustomFlow (initial setup) and OptionsFlowHandler (options editing).
+"""Unit tests for config_flow.py — PajGPSConfigFlow (initial setup).
 
 Coverage:
-- CustomFlow.async_step_user:
+- PajGPSConfigFlow.async_step_user:
     * GET (no input) → returns FORM with step_id "user"
     * Valid full input → CREATE_ENTRY with email as title, data fields, and a generated guid
-    * Empty email    → FORM with errors["base"] == "email_required"
-    * Empty password → FORM with errors["base"] == "password_required"
-
-- OptionsFlowHandler.async_step_init:
-    * GET (no input) → returns FORM with step_id "init", defaults come from config_entry.data
-    * Defaults from config_entry.options override config_entry.data
-    * Valid user input → CREATE_ENTRY, preserves original guid, sets new field values
-    * Empty email   → FORM with errors["base"] == "email_required"
-    * Empty password → FORM with errors["base"] == "password_required"
+    * Duplicate email → AbortFlow raised
+    * Invalid credentials → FORM with errors["base"] set accordingly
 """
 
 from __future__ import annotations
 
-from typing import Any
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
@@ -26,7 +18,6 @@ from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
 
 from homeassistant.components.pajgps.config_flow import (
-    OptionsFlowHandler,
     PajGPSConfigFlow,
     _validate_credentials,
 )
@@ -35,16 +26,6 @@ from homeassistant.data_entry_flow import AbortFlow
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-
-def _make_mock_config_entry(
-    data: dict[str, Any], options: dict[str, Any] | None = None
-) -> MagicMock:
-    """Return a minimal mock ConfigEntry with .data and .options dicts."""
-    entry = MagicMock()
-    entry.data = dict(data)
-    entry.options = dict(options) if options is not None else {}
-    return entry
 
 
 def _make_flow() -> PajGPSConfigFlow:
@@ -56,30 +37,9 @@ def _make_flow() -> PajGPSConfigFlow:
     return flow
 
 
-def _make_options_flow(
-    data: dict[str, Any], options: dict[str, Any] | None = None
-) -> OptionsFlowHandler:
-    """Return an OptionsFlowHandler instance with a mocked hass."""
-    entry = _make_mock_config_entry(data, options)
-    handler = OptionsFlowHandler(entry)
-    handler.hass = MagicMock()
-    return handler
-
-
 VALID_USER_INPUT = {
     "email": "user@example.com",
     "password": "s3cr3t",
-}
-
-VALID_ENTRY_DATA = {
-    "guid": "existing-guid-1234",
-    "email": "original@example.com",
-    "password": "original_pass",
-}
-
-VALID_OPTIONS_INPUT = {
-    "email": "updated@example.com",
-    "password": "new_pass",
 }
 
 
@@ -179,103 +139,6 @@ class TestCustomFlow(unittest.IsolatedAsyncioTestCase):
 
 
 # ---------------------------------------------------------------------------
-# OptionsFlowHandler — options editing
-# ---------------------------------------------------------------------------
-
-
-class TestOptionsFlowHandler(unittest.IsolatedAsyncioTestCase):
-    """Tests for OptionsFlowHandler.async_step_init."""
-
-    async def test_shows_form_on_get(self):
-        """Calling without input must return a FORM with step_id 'init'."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        result = await handler.async_step_init(user_input=None)
-
-        assert result["type"] == "form"
-        assert result["step_id"] == "init"
-        assert result.get("errors", {}) == {}
-
-    async def test_valid_update_creates_entry(self):
-        """Valid user input must return CREATE_ENTRY with updated field values."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["type"] == "create_entry"
-        data = result["data"]
-        assert data["email"] == VALID_OPTIONS_INPUT["email"]
-        assert data["password"] == VALID_OPTIONS_INPUT["password"]
-
-    async def test_valid_update_preserves_guid(self):
-        """The original guid from config_entry.data must be preserved after an options update."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["data"]["guid"] == VALID_ENTRY_DATA["guid"]
-
-    async def test_valid_update_calls_async_update_entry(self):
-        """hass.config_entries.async_update_entry must be called once with the new data."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        handler.hass.config_entries.async_update_entry.assert_called_once()
-        call_kwargs = handler.hass.config_entries.async_update_entry.call_args
-        passed_data = (
-            call_kwargs.kwargs.get("data") or call_kwargs.args[1]
-            if len(call_kwargs.args) > 1
-            else call_kwargs.kwargs.get("data")
-        )
-        assert passed_data["guid"] == VALID_ENTRY_DATA["guid"]
-
-    async def test_empty_email_returns_form_with_error(self):
-        """Empty email must return a form with errors['base'] == 'email_required'."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-        user_input = dict(VALID_OPTIONS_INPUT, email="")
-
-        result = await handler.async_step_init(user_input=user_input)
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "email_required"
-
-    async def test_empty_password_returns_form_with_error(self):
-        """Empty password must return a form with errors['base'] == 'password_required'."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-        user_input = dict(VALID_OPTIONS_INPUT, password="")
-
-        result = await handler.async_step_init(user_input=user_input)
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "password_required"
-
-    async def test_valid_input_does_not_return_errors(self):
-        """Valid input must not produce an errors dict."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["type"] != "form"
-
-
-# ---------------------------------------------------------------------------
 # Credential validation — CustomFlow
 # ---------------------------------------------------------------------------
 
@@ -320,67 +183,6 @@ class TestCustomFlowCredentialValidation(unittest.IsolatedAsyncioTestCase):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
 
         assert result["type"] == "create_entry"
-
-
-# ---------------------------------------------------------------------------
-# Credential validation — OptionsFlowHandler
-# ---------------------------------------------------------------------------
-
-
-class TestOptionsFlowCredentialValidation(unittest.IsolatedAsyncioTestCase):
-    """Tests for _validate_credentials being called inside OptionsFlowHandler.async_step_init."""
-
-    async def test_cannot_connect_returns_form_with_error(self):
-        """When the API is unreachable, form must show cannot_connect error."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value="cannot_connect"),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "cannot_connect"
-
-    async def test_invalid_auth_returns_form_with_error(self):
-        """When credentials are rejected by the API, form must show invalid_auth error."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value="invalid_auth"),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "invalid_auth"
-
-    async def test_valid_credentials_create_entry(self):
-        """When _validate_credentials returns None, the entry must be created."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ):
-            result = await handler.async_step_init(user_input=dict(VALID_OPTIONS_INPUT))
-
-        assert result["type"] == "create_entry"
-
-    async def test_credential_check_skipped_when_fields_are_empty(self):
-        """_validate_credentials must NOT be called when empty-field errors are present."""
-        handler = _make_options_flow(VALID_ENTRY_DATA)
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value=None),
-        ) as mock_validate:
-            await handler.async_step_init(
-                user_input=dict(VALID_OPTIONS_INPUT, password="")
-            )
-
-        mock_validate.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -462,13 +264,3 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
             )
 
         assert result == "cannot_connect"
-
-
-class TestAsyncGetOptionsFlow(unittest.TestCase):
-    """Tests for CustomFlow.async_get_options_flow (config_flow.py line 100)."""
-
-    def test_returns_options_flow_handler(self):
-        """async_get_options_flow must return an OptionsFlowHandler instance."""
-        config_entry = MagicMock()
-        result = PajGPSConfigFlow.async_get_options_flow(config_entry)
-        assert isinstance(result, OptionsFlowHandler)

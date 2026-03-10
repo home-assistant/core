@@ -3,23 +3,20 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 import uuid
 
 from pajgps_api import PajGpsApi
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from . import PajGpsConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,77 +85,4 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: PajGpsConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(OptionsFlow):
-    """Handles options flow for the component."""
-
-    def __init__(self, config_entry: PajGpsConfigEntry) -> None:
-        """Initialize the options flow handler."""
-        self._config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle options flow."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            if not user_input.get(CONF_EMAIL):
-                errors["base"] = "email_required"
-            elif not user_input.get(CONF_PASSWORD):
-                errors["base"] = "password_required"
-            if not errors:
-                email = user_input[CONF_EMAIL]
-                if any(
-                    entry.entry_id != self._config_entry.entry_id
-                    and entry.data.get(CONF_EMAIL) == email
-                    for entry in self.hass.config_entries.async_entries(DOMAIN)
-                ):
-                    errors["base"] = "already_configured"
-            if not errors:
-                error_key = await _validate_credentials(
-                    user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
-                )
-                if error_key:
-                    errors["base"] = error_key
-            if not errors:
-                new_data = {
-                    "guid": self._config_entry.data["guid"],
-                    CONF_EMAIL: user_input[CONF_EMAIL],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                }
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry,
-                    data=new_data,
-                    title=user_input[CONF_EMAIL],
-                )
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=new_data
-                )
-
-            return self.async_show_form(
-                step_id="init",
-                data_schema=self.add_suggested_values_to_schema(
-                    CONFIG_SCHEMA, user_input
-                ),
-                errors=errors,
-            )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                CONFIG_SCHEMA,
-                self._config_entry.options or self._config_entry.data,
-            ),
-            errors=errors,
         )
