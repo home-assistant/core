@@ -30,6 +30,7 @@ from .conftest import (
     NEW_API_KEY,
     add_device_subentry,
 )
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow_creates_parent_entry(hass: HomeAssistant) -> None:
@@ -239,6 +240,44 @@ async def test_import_flow_updates_existing_entry(
     assert mock_config_entry.options[CONF_AQI_STANDARD] == "cn"
     assert mock_config_entry.options[CONF_PREFERRED_UNITS] == ["F"]
     assert mock_config_entry.options[CONF_SCAN_INTERVAL] == 60
+    assert next(iter(mock_config_entry.subentries.values())).title == DEVICE_NAME
+
+
+async def test_import_flow_updates_existing_import_entry_when_api_key_changes(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import reuses the imported parent entry when the API key changes."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Kaiterra",
+        source=SOURCE_IMPORT,
+        data={CONF_API_KEY: "old-api-key"},
+    )
+    mock_config_entry.add_to_hass(hass)
+    add_device_subentry(hass, mock_config_entry, name="Old name")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: API_KEY,
+            CONF_AQI_STANDARD: "cn",
+            CONF_PREFERRED_UNITS: ["F"],
+            CONF_SCAN_INTERVAL: 60,
+            "devices": [
+                {
+                    CONF_DEVICE_ID: DEVICE_ID,
+                    CONF_TYPE: DEVICE_TYPE,
+                    CONF_NAME: DEVICE_NAME,
+                }
+            ],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert mock_config_entry.data[CONF_API_KEY] == API_KEY
     assert next(iter(mock_config_entry.subentries.values())).title == DEVICE_NAME
 
 

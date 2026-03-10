@@ -10,6 +10,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IMPORT,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -202,6 +203,46 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
             (
                 entry
                 for entry in self._async_current_entries()
+                if entry.source == SOURCE_IMPORT
+            ),
+            None,
+        ):
+            self.hass.config_entries.async_update_entry(
+                existing_entry,
+                data={CONF_API_KEY: import_data[CONF_API_KEY]},
+                options=options,
+            )
+            existing_by_unique_id = {
+                subentry.unique_id: subentry
+                for subentry in existing_entry.subentries.values()
+            }
+            for subentry_data in subentries:
+                unique_id = subentry_data["unique_id"]
+                if unique_id in existing_by_unique_id:
+                    self.hass.config_entries.async_update_subentry(
+                        existing_entry,
+                        existing_by_unique_id[unique_id],
+                        data=subentry_data["data"],
+                        title=subentry_data["title"],
+                    )
+                    continue
+
+                self.hass.config_entries.async_add_subentry(
+                    existing_entry,
+                    ConfigSubentry(
+                        subentry_type=SUBENTRY_TYPE_DEVICE,
+                        title=subentry_data["title"],
+                        unique_id=unique_id,
+                        data=subentry_data["data"],
+                    ),
+                )
+
+            return self.async_abort(reason="already_configured")
+
+        if existing_entry := next(
+            (
+                entry
+                for entry in self._async_current_entries()
                 if entry.data.get(CONF_API_KEY) == import_data[CONF_API_KEY]
             ),
             None,
@@ -232,7 +273,6 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 )
 
-        if existing_entry is not None:
             return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(
