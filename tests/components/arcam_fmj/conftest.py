@@ -130,8 +130,8 @@ async def player_setup_fixture(
             return state_2
         raise ValueError(f"Unknown player zone: {zone}")
 
-    async def _mock_run_client(hass: HomeAssistant, client, coordinators, interval):
-        for coordinator in coordinators.values():
+    async def _mock_run_client(hass: HomeAssistant, runtime_data, interval):
+        for coordinator in runtime_data.coordinators.values():
             coordinator.async_notify_connected()
 
     await async_setup_component(hass, "homeassistant", {})

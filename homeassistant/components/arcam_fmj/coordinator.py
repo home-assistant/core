@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from arcam.fmj import ConnectionFailed
@@ -15,15 +16,26 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class ArcamFmjRuntimeData:
+    """Runtime data for Arcam FMJ integration."""
+
+    client: Client
+    coordinators: dict[int, ArcamFmjCoordinator]
+
+
+type ArcamFmjConfigEntry = ConfigEntry[ArcamFmjRuntimeData]
+
+
 class ArcamFmjCoordinator(DataUpdateCoordinator[State]):
     """Coordinator for a single Arcam FMJ zone."""
 
-    config_entry: ConfigEntry
+    config_entry: ArcamFmjConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ArcamFmjConfigEntry,
         client: Client,
         zone: int,
     ) -> None:

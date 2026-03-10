@@ -23,17 +23,5 @@
     "trigger_type": {
       "turn_on": "{entity_name} was requested to turn on"
     }
-  },
-  "entity": {
-    "binary_sensor": {
-      "placeholder0": {
-        "name": "Placeholder"
-      }
-    },
-    "sensor": {
-      "placeholder0": {
-        "name": "Placeholder"
-      }
-    }
   }
 }

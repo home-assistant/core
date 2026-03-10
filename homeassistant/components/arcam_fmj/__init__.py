@@ -8,21 +8,16 @@ from typing import Any
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_SCAN_INTERVAL
-from .coordinator import ArcamFmjCoordinator
-
-type ArcamFmjConfigEntry = ConfigEntry[dict[int, ArcamFmjCoordinator]]
+from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator, ArcamFmjRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = [
-    Platform.MEDIA_PLAYER,
-]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
@@ -34,11 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
         coordinator = ArcamFmjCoordinator(hass, entry, client, zone)
         coordinators[zone] = coordinator
 
-    entry.runtime_data = coordinators
+    entry.runtime_data = ArcamFmjRuntimeData(client, coordinators)
 
     entry.async_create_background_task(
         hass,
-        _run_client(hass, client, coordinators, DEFAULT_SCAN_INTERVAL),
+        _run_client(hass, entry.runtime_data, DEFAULT_SCAN_INTERVAL),
         "arcam_fmj",
     )
 
@@ -46,17 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
     """Cleanup before removing config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _run_client(
     hass: HomeAssistant,
-    client: Client,
-    coordinators: dict[int, ArcamFmjCoordinator],
+    runtime_data: ArcamFmjRuntimeData,
     interval: float,
 ) -> None:
+    client = runtime_data.client
+    coordinators = runtime_data.coordinators
+
     def _listen(_: Any) -> None:
         for coordinator in coordinators.values():
             coordinator.async_notify_data_updated()
