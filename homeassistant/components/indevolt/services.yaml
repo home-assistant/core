@@ -47,12 +47,3 @@ discharge:
           max: 2400
           step: 1
           unit_of_measurement: "W"
-
-stop:
-  fields:
-    device_ids:
-      required: true
-      selector:
-        device:
-          multiple: true
-          integration: indevolt

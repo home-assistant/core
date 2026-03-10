@@ -19,7 +19,7 @@ from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-CHARGE_SERVICE_SCHEMA: Final = vol.Schema(
+RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Required("device_ids"): vol.All(
             cv.ensure_list,
@@ -120,9 +120,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         # Perform actions & process results
         await _execute_realtime_action(coordinators, 2, power, target_soc)
 
-    hass.services.async_register(DOMAIN, "charge", charge, schema=CHARGE_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, "discharge", discharge, schema=CHARGE_SERVICE_SCHEMA
+        DOMAIN, "charge", charge, schema=RT_ACTION_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "discharge", discharge, schema=RT_ACTION_SERVICE_SCHEMA
     )
 
 

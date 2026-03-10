@@ -358,16 +358,6 @@
         }
       },
       "name": "Discharge"
-    },
-    "stop": {
-      "description": "Real-time control: Stops battery charging/discharging.",
-      "fields": {
-        "device_ids": {
-          "description": "The Indevolt device(s) to stop charging or discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
-        }
-      },
-      "name": "Stop"
     }
   }
 }

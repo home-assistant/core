@@ -258,9 +258,10 @@ async def test_multi_device_discharge_partial_validation_failure(
         )
 
     # Confirm error references correct device (gen 1 fails, gen 2 does not)
-    error_msg = str(exc_info.value)
-    assert alt_mock_config_entry.title in error_msg
-    assert mock_config_entry.title not in error_msg
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert alt_mock_config_entry.title in errors
+    assert mock_config_entry.title not in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -294,10 +295,11 @@ async def test_multi_device_discharge_full_validation_failure(
         )
 
     # Both device names should appear in the concatenated error message
-    error_msg = str(exc_info.value)
-    assert mock_config_entry.title in error_msg
-    assert alt_mock_config_entry.title in error_msg
-    assert ";" in error_msg
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert mock_config_entry.title in errors
+    assert alt_mock_config_entry.title in errors
+    assert ";" in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -394,9 +396,10 @@ async def test_multi_device_charge_partial_validation_failure(
         )
 
     # Confirm error references correct device (gen 1 fails, gen 2 does not)
-    error_msg = str(exc_info.value)
-    assert alt_mock_config_entry.title in error_msg
-    assert mock_config_entry.title not in error_msg
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert alt_mock_config_entry.title in errors
+    assert mock_config_entry.title not in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -430,10 +433,11 @@ async def test_multi_device_charge_full_validation_failure(
         )
 
     # Both device names should appear in the concatenated error message
-    error_msg = str(exc_info.value)
-    assert mock_config_entry.title in error_msg
-    assert alt_mock_config_entry.title in error_msg
-    assert ";" in error_msg
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert mock_config_entry.title in errors
+    assert alt_mock_config_entry.title in errors
+    assert ";" in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
