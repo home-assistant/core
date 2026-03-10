@@ -1,5 +1,11 @@
 {
   "preview_features": {
+    "windows_98": {
+      "description": "Transforms your dashboard with a nostalgic Windows 98 look.",
+      "disable_confirmation": "Your dashboard will return to its normal look. You can re-enable this at any time in Labs settings.",
+      "enable_confirmation": "Your dashboard will be transformed with a Windows 98 theme. You can turn this off at any time in Labs settings.",
+      "name": "Windows 98"
+    },
     "winter_mode": {
       "description": "Adds falling snowflakes on your screen. Get your home ready for winter! ❄️\n\nIf you have animations disabled in your device accessibility settings, this feature will not work.",
       "disable_confirmation": "Snowflakes will no longer fall on your screen. You can re-enable this at any time in Labs settings.",
