@@ -27,25 +27,12 @@ from .const import DOMAIN, UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# PajGpsData — immutable snapshot of all PAJ GPS data
-# ---------------------------------------------------------------------------
-
-
 @dataclasses.dataclass(frozen=True)
 class PajGpsData:
     """Snapshot of all PAJ GPS data for one coordinator tick."""
 
-    # All devices in the account (includes alarm enabled/disabled flags)
     devices: list[Device] = dataclasses.field(default_factory=list)
-
-    # device_id → last TrackPoint
     positions: dict[int, TrackPoint] = dataclasses.field(default_factory=dict)
-
-
-# ---------------------------------------------------------------------------
-# PajGpsCoordinator — main coordinator
-# ---------------------------------------------------------------------------
 
 
 class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
@@ -77,10 +64,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         # Snapshot starts empty; entities must handle None gracefully until first refresh
         self.data = PajGpsData()
 
-    # ------------------------------------------------------------------
-    # HA entry point
-    # ------------------------------------------------------------------
-
     async def _async_update_data(self) -> PajGpsData:
         """Fetch device list and positions every UPDATE_INTERVAL seconds."""
         try:
@@ -108,10 +91,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
         return PajGpsData(devices=devices, positions=positions)
 
-    # ------------------------------------------------------------------
-    # Entity helper — device info dict
-    # ------------------------------------------------------------------
-
     def get_device_info(self, device_id: int) -> DeviceInfo | None:
         """Return the HA DeviceInfo dict for the given device_id."""
         for device in self.data.devices:
@@ -128,10 +107,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                     model=model,
                 )
         return None
-
-    # ------------------------------------------------------------------
-    # Lifecycle
-    # ------------------------------------------------------------------
 
     async def async_shutdown(self) -> None:
         """Clean up all resources owned by this coordinator."""

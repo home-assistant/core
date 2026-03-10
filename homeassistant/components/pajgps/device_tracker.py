@@ -26,7 +26,7 @@ class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
     """Tracker entity that reads position from the coordinator snapshot."""
 
     _attr_has_entity_name = True
-    _attr_name = None  # Primary feature of the device — entity name equals device name
+    _attr_name = None
     _attr_icon = "mdi:map-marker"
 
     def __init__(self, pajgps_coordinator: PajGpsCoordinator, device_id: int) -> None:
@@ -89,11 +89,9 @@ async def async_setup_entry(
             )
             known_device_ids.update(sorted_new_ids)
 
-    # Initial population
     _async_add_new_devices()
 
     if not known_device_ids:
         _LOGGER.warning("No PAJ GPS devices found to add as trackers")
 
-    # Subscribe to future coordinator updates to pick up newly discovered devices
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
