@@ -173,6 +173,46 @@ async def test_media_player_play(
 
 
 @pytest.mark.asyncio
+async def test_media_player_play_redirects_follower_to_leader(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test play redirects to the group leader for followers."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+
+    mock_controller = MagicMock()
+    mock_controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        command_target_udn="uuid:leader-1234",
+    )
+    _set_wiim_data(
+        mock_hass,
+        controller=mock_controller,
+        entity_id_to_udn_map={"media_player.leader": "uuid:leader-1234"},
+    )
+
+    with (
+        patch.object(
+            entity, "_call_leader_service", new_callable=AsyncMock
+        ) as mock_call_leader_service,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        patch.object(
+            mock_wiim_device, "async_play", new_callable=AsyncMock
+        ) as mock_play,
+    ):
+        await entity.async_media_play()
+
+    mock_call_leader_service.assert_awaited_once_with("media_play")
+    mock_update_state.assert_called_once()
+    mock_play.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_media_player_pause(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -248,12 +288,16 @@ async def test_media_player_mute_volume(
 
 @pytest.mark.asyncio
 async def test_media_player_play_media_url(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player play media service with a URL."""
     entity = mock_wiim_media_player_entity
     mock_wiim_device.supports_http_api = True
     entity._device = mock_wiim_device
+    entity.hass = mock_hass
+    _set_wiim_data(mock_hass)
 
     with patch.object(
         mock_wiim_device, "play_preset", new_callable=AsyncMock
@@ -316,6 +360,48 @@ async def test_media_player_seek(
     ) as mock_seek:
         await entity.async_media_seek(60)
         mock_seek.assert_awaited_once_with(60)
+
+
+@pytest.mark.asyncio
+async def test_media_player_seek_redirects_follower_to_leader(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test seek redirects to the group leader for followers."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+
+    mock_controller = MagicMock()
+    mock_controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        command_target_udn="uuid:leader-1234",
+    )
+    _set_wiim_data(
+        mock_hass,
+        controller=mock_controller,
+        entity_id_to_udn_map={"media_player.leader": "uuid:leader-1234"},
+    )
+
+    with (
+        patch.object(
+            entity, "_call_leader_service", new_callable=AsyncMock
+        ) as mock_call_leader_service,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        patch.object(
+            mock_wiim_device, "async_seek", new_callable=AsyncMock
+        ) as mock_seek,
+    ):
+        await entity.async_media_seek(60)
+
+    mock_call_leader_service.assert_awaited_once_with(
+        "media_seek", seek_position=60
+    )
+    mock_update_state.assert_called_once()
+    mock_seek.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -527,6 +613,7 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
     entity.hass = hass
     entity.entity_id = "media_player.test_device"
     entity._attr_state = MediaPlayerState.IDLE
+    _set_wiim_data(hass)
 
     media_id = "media-source://some-song"
     mock_play_item = MagicMock()

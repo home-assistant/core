@@ -82,43 +82,34 @@ HA_TO_SDK_REPEAT = {
 
 def media_player_exception_wrap[
     _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity", **_P, _R
-](
-    *, refresh_state: bool = False
-) -> Callable[
-    [Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]]],
-    Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
-]:
+ ](
+    func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
+) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]]:
     """Wrap media player commands to handle SDK exceptions consistently."""
 
-    def decorator(
-        func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
-    ) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]]:
-        @wraps(func)
-        async def _wrap(
-            self: _WiimMediaPlayerEntityT, *args: _P.args, **kwargs: _P.kwargs
-        ) -> _R:
-            try:
-                result = await func(self, *args, **kwargs)
-            except (WiimDeviceException, WiimRequestException, WiimException) as err:
-                LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
-                await self._async_handle_critical_error(err)
-                raise HomeAssistantError(
-                    f"{func.__name__} failed for {self.entity_id}"
-                ) from err
-            except RuntimeError as err:
-                LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
-                raise HomeAssistantError(
-                    f"{func.__name__} failed for {self.entity_id}"
-                ) from err
+    @wraps(func)
+    async def _wrap(
+        self: _WiimMediaPlayerEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R:
+        try:
+            result = await func(self, *args, **kwargs)
+        except (WiimDeviceException, WiimRequestException, WiimException) as err:
+            LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
+            await self._async_handle_critical_error(err)
+            raise HomeAssistantError(
+                f"{func.__name__} failed for {self.entity_id}"
+            ) from err
+        except RuntimeError as err:
+            LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
+            raise HomeAssistantError(
+                f"{func.__name__} failed for {self.entity_id}"
+            ) from err
 
-            if refresh_state:
-                self._update_ha_state_from_sdk_cache()
+        self._update_ha_state_from_sdk_cache()
 
-            return result
+        return result
 
-        return _wrap
-
-    return decorator
+    return _wrap
 
 
 async def async_setup_entry(
@@ -680,12 +671,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         self._update_ha_state_from_sdk_cache()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0-1."""
         await self._device.async_set_volume(int(volume * 100))
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.async_set_mute(mute)
@@ -737,7 +728,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         return True
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
         if await self._async_redirect_to_leader("media_play"):
@@ -745,7 +736,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         await self._device.async_play()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_pause(self) -> None:
         """Send pause command."""
         if await self._async_redirect_to_leader("media_pause"):
@@ -754,7 +745,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await self._device.async_pause()
         await self._device.sync_device_duration_and_position()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_stop(self) -> None:
         """Send stop command."""
         if await self._async_redirect_to_leader("media_stop"):
@@ -762,7 +753,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         await self._device.async_stop()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         if await self._async_redirect_to_leader("media_next_track"):
@@ -770,7 +761,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         await self._device.async_next()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         if await self._async_redirect_to_leader("media_previous_track"):
@@ -778,7 +769,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         await self._device.async_previous()
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
         if await self._async_redirect_to_leader("media_seek", seek_position=position):
@@ -786,7 +777,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         await self._device.async_seek(int(position))
 
-    @media_player_exception_wrap()
+    @media_player_exception_wrap
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -829,10 +820,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
             raise ServiceValidationError(f"Unsupported media type: {media_type}")
 
-        if self._added_to_hass:
-            self.async_write_ha_state()
-
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         sdk_repeat = HA_TO_SDK_REPEAT[repeat]
@@ -840,7 +828,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._device.build_loop_mode(sdk_repeat, self._attr_shuffle)
         )
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._device.async_set_loop_mode(
@@ -850,12 +838,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
         )
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
         await self._device.async_set_play_mode(source)
 
-    @media_player_exception_wrap(refresh_state=True)
+    @media_player_exception_wrap
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select output mode (e.g., optical, coaxial)."""
         if sound_mode == AudioOutputHwMode.OTHER_OUT.display_name:  # type: ignore[attr-defined]
