@@ -121,9 +121,9 @@ async def _async_validate_device(
     ).async_validate_device(device_type, device_id)
 
 
-def _subentry_unique_id(device_type: str, device_id: str) -> str:
+def _subentry_unique_id(device_id: str) -> str:
     """Return a stable subentry unique ID."""
-    return f"{device_type}_{device_id}"
+    return device_id
 
 
 def _subentry_title(device: Mapping[str, Any]) -> str:
@@ -143,7 +143,7 @@ def _subentry_data(device: Mapping[str, Any]) -> ConfigSubentryData:
     return {
         "subentry_type": SUBENTRY_TYPE_DEVICE,
         "title": _subentry_title(device),
-        "unique_id": _subentry_unique_id(device[CONF_TYPE], device[CONF_DEVICE_ID]),
+        "unique_id": _subentry_unique_id(device[CONF_DEVICE_ID]),
         "data": MappingProxyType(data),
     }
 
@@ -383,9 +383,7 @@ class KaiterraDeviceSubentryFlowHandler(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = _subentry_unique_id(
-                user_input[CONF_TYPE], user_input[CONF_DEVICE_ID]
-            )
+            unique_id = _subentry_unique_id(user_input[CONF_DEVICE_ID])
             if any(
                 subentry.unique_id == unique_id
                 for subentry in self._get_entry().subentries.values()

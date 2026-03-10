@@ -124,13 +124,13 @@ async def test_device_subentry_flow_creates_subentry_and_reloads(
     assert hass.states.get("air_quality.office_air_quality") is not None
 
 
-async def test_device_subentry_flow_aborts_for_duplicate_device(
+async def test_device_subentry_flow_aborts_for_duplicate_device_id(
     hass: HomeAssistant,
     mock_config_entry,
     mock_validate_device,
     mock_latest_sensor_readings,
 ) -> None:
-    """Test duplicate device subentries are rejected."""
+    """Test duplicate device IDs are rejected even if the type differs."""
     add_device_subentry(hass, mock_config_entry)
     await setup_integration(hass, mock_config_entry)
 
@@ -142,7 +142,7 @@ async def test_device_subentry_flow_aborts_for_duplicate_device(
         result["flow_id"],
         user_input={
             CONF_DEVICE_ID: DEVICE_ID,
-            CONF_TYPE: DEVICE_TYPE,
+            CONF_TYPE: DEVICE_TYPE_2,
             CONF_NAME: DEVICE_NAME,
         },
     )
@@ -291,10 +291,7 @@ async def test_import_flow_removes_devices_missing_from_imported_yaml(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_config_entry.subentries) == 1
-    assert (
-        next(iter(mock_config_entry.subentries.values())).unique_id
-        == f"{DEVICE_TYPE}_{DEVICE_ID}"
-    )
+    assert next(iter(mock_config_entry.subentries.values())).unique_id == DEVICE_ID
 
 
 async def test_import_flow_updates_existing_import_entry_when_api_key_changes(

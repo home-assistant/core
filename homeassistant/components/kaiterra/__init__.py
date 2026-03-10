@@ -128,7 +128,7 @@ async def _async_validate_entry_devices(
     hass: HomeAssistant, entry: KaiterraConfigEntry
 ) -> None:
     """Validate auth against the first readable configured device."""
-    devices = list(_iter_device_subentries(entry))
+    devices = _iter_device_subentries(entry)
     if not devices:
         return
 

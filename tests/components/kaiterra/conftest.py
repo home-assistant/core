@@ -148,7 +148,7 @@ def add_device_subentry(
     subentry = ConfigSubentry(
         subentry_type=SUBENTRY_TYPE_DEVICE,
         title=name or device_id,
-        unique_id=f"{device_type}_{device_id}",
+        unique_id=device_id,
         data=MappingProxyType(data),
     )
     hass.config_entries.async_add_subentry(entry, subentry)
