@@ -70,6 +70,20 @@ LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
 
+MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
+    b"\x89PNG": "image/png",
+    b"GIF8": "image/gif",
+    b"RIFF": "image/webp",
+    b"\x49\x49\x2a\x00": "image/tiff",
+    b"\x4d\x4d\x00\x2a": "image/tiff",
+    b"\xff\xd8\xff\xdb": "image/jpeg",
+    b"\xff\xd8\xff\xe0": "image/jpeg",
+    b"\xff\xd8\xff\xed": "image/jpeg",
+    b"\xff\xd8\xff\xee": "image/jpeg",
+    b"\xff\xd8\xff\xe1": "image/jpeg",
+    b"\xff\xd8\xff\xe2": "image/jpeg",
+}
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -94,6 +108,11 @@ def valid_image_content_type(content_type: str | None) -> str:
     return content_type
 
 
+def infer_image_type(content: bytes) -> str | None:
+    """Infer image type from first 4 bytes (magic number)."""
+    return MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(content[:4])
+
+
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
     with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
@@ -103,6 +122,20 @@ async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
                 return Image(content_type, image_bytes)
 
     raise HomeAssistantError("Unable to get image")
+
+
+async def async_get_image(
+    hass: HomeAssistant,
+    entity_id: str,
+    timeout: int = 10,
+) -> Image:
+    """Fetch an image from an image entity."""
+    component = hass.data[DATA_COMPONENT]
+
+    if (image := component.get_entity(entity_id)) is None:
+        raise HomeAssistantError(f"Image entity {entity_id} not found")
+
+    return await _async_get_image(image, timeout)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -228,7 +261,9 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
-            content_type = response.headers.get("content-type")
+            content_type = response.headers.get("content-type") or infer_image_type(
+                response.content
+            )
             try:
                 return Image(
                     content=response.content,

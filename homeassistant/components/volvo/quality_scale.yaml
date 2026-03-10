@@ -1,19 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      The integration does not provide any additional actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      The integration does not provide any additional actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -26,10 +20,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      The integration does not provide any additional actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -42,7 +33,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -52,12 +43,12 @@ rules:
     comment: |
       No discovery possible.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -70,7 +61,10 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
   stale-devices:
     status: exempt
     comment: |

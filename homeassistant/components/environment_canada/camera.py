@@ -59,6 +59,14 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
 
         self.content_type = "image/gif"
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        # Trigger coordinator refresh when entity is enabled
+        # since radar coordinator skips initial refresh during setup
+        if not self.coordinator.last_update_success:
+            await self.coordinator.async_request_refresh()
+
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -68,7 +76,8 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
         }
         return self.radar_object.image
 
-    async def async_set_radar_type(self, radar_type: str):
+    async def async_set_radar_type(self, radar_type: str) -> None:
         """Set the type of radar to retrieve."""
+        self.radar_object.clear_cache()
         self.radar_object.precip_type = radar_type.lower()
         await self.radar_object.update()

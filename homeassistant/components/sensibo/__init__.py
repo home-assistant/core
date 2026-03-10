@@ -8,14 +8,25 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
+from .services import async_setup_services
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 type SensiboConfigEntry = ConfigEntry[SensiboDataUpdateCoordinator]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sensibo component."""
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
@@ -43,7 +54,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
         try:
             new_unique_id = await async_validate_api(hass, api_key)
-        except (AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError):
+        except AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError:
             return False
 
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)

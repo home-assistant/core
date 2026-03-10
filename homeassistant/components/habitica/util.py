@@ -80,7 +80,7 @@ def build_rrule(task: TaskData) -> rrule:
     bysetpos = None
     if rrule_frequency == MONTHLY and task.weeksOfMonth:
         bysetpos = [i + 1 for i in task.weeksOfMonth]
-        weekdays = weekdays if weekdays else [MO]
+        weekdays = weekdays or [MO]
 
     return rrule(
         freq=rrule_frequency,
@@ -193,6 +193,15 @@ def quest_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
         if party.quest.key
         else None,
         "quest_participants": f"{sum(x is True for x in party.quest.members.values())} / {party.memberCount}",
+    }
+
+
+def rage_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Display name of rage skill and description of it's effect in attributes."""
+    boss = quest_boss(party, content)
+    return {
+        "rage_skill": boss.rage.title if boss and boss.rage else None,
+        "effect": boss.rage.effect if boss and boss.rage else None,
     }
 
 

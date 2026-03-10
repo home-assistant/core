@@ -1,4 +1,7 @@
-"""Support for repeating alerts when conditions are met."""
+"""Support for repeating alerts when conditions are met.
+
+DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TITLE,
-    DOMAIN as DOMAIN_NOTIFY,
+    DOMAIN as NOTIFY_DOMAIN,
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
@@ -27,7 +30,10 @@ from .const import DOMAIN, LOGGER
 
 
 class AlertEntity(Entity):
-    """Representation of an alert."""
+    """Representation of an alert.
+
+    DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+    """
 
     _attr_should_poll = False
 
@@ -179,7 +185,7 @@ class AlertEntity(Entity):
         for target in self._notifiers:
             try:
                 await self.hass.services.async_call(
-                    DOMAIN_NOTIFY, target, msg_payload, context=self._context
+                    NOTIFY_DOMAIN, target, msg_payload, context=self._context
                 )
             except ServiceNotFound:
                 LOGGER.error(

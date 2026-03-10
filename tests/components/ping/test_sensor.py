@@ -17,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
         "round_trip_time_mean_deviation",  # should be None in the snapshot
         "round_trip_time_minimum",
         "jitter",
+        "packet_loss",
     ],
 )
 async def test_setup_and_update(

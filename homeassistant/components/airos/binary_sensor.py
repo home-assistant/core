@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
+from typing import Generic, TypeVar
+
+from airos.data import AirOSDataBaseClass
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,28 +17,27 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import AirOSConfigEntry, AirOSData, AirOSDataUpdateCoordinator
+from .coordinator import AirOS8Data, AirOSConfigEntry, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
+AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
+
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSBinarySensorEntityDescription(BinarySensorEntityDescription):
+class AirOSBinarySensorEntityDescription(
+    BinarySensorEntityDescription,
+    Generic[AirOSDataModel],
+):
     """Describe an AirOS binary sensor."""
 
-    value_fn: Callable[[AirOSData], bool]
+    value_fn: Callable[[AirOSDataModel], bool]
 
 
-BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
-    AirOSBinarySensorEntityDescription(
-        key="portfw",
-        translation_key="port_forwarding",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.portfw,
-    ),
+AirOS8BinarySensorEntityDescription = AirOSBinarySensorEntityDescription[AirOS8Data]
+
+COMMON_BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
     AirOSBinarySensorEntityDescription(
         key="dhcp_client",
         translation_key="dhcp_client",
@@ -53,19 +54,28 @@ BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     AirOSBinarySensorEntityDescription(
-        key="dhcp6_server",
-        translation_key="dhcp6_server",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.services.dhcp6d_stateful,
-        entity_registry_enabled_default=False,
-    ),
-    AirOSBinarySensorEntityDescription(
         key="pppoe",
         translation_key="pppoe",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.services.pppoe,
+        entity_registry_enabled_default=False,
+    ),
+)
+
+AIROS8_BINARY_SENSORS: tuple[AirOS8BinarySensorEntityDescription, ...] = (
+    AirOS8BinarySensorEntityDescription(
+        key="portfw",
+        translation_key="port_forwarding",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.portfw,
+    ),
+    AirOS8BinarySensorEntityDescription(
+        key="dhcp6_server",
+        translation_key="dhcp6_server",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.services.dhcp6d_stateful,
         entity_registry_enabled_default=False,
     ),
 )
@@ -79,9 +89,18 @@ async def async_setup_entry(
     """Set up the AirOS binary sensors from a config entry."""
     coordinator = config_entry.runtime_data
 
-    async_add_entities(
-        AirOSBinarySensor(coordinator, description) for description in BINARY_SENSORS
-    )
+    entities = [
+        AirOSBinarySensor(coordinator, description)
+        for description in COMMON_BINARY_SENSORS
+    ]
+
+    if coordinator.device_data["fw_major"] == 8:
+        entities.extend(
+            AirOSBinarySensor(coordinator, description)
+            for description in AIROS8_BINARY_SENSORS
+        )
+
+    async_add_entities(entities)
 
 
 class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
@@ -98,7 +117,7 @@ class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.host.device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
     def is_on(self) -> bool:

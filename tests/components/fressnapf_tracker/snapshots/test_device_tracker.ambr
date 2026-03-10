@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_state_entity_device_snapshots[device_tracker.fluffy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.fluffy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'fressnapf_tracker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pet',
+    'unique_id': 'ABC123456',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state_entity_device_snapshots[device_tracker.fluffy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
+      'friendly_name': 'Fluffy',
+      'gps_accuracy': 10.0,
+      'latitude': 52.520008,
+      'longitude': 13.404954,
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.fluffy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---

@@ -428,3 +428,35 @@ async def test_play_browse_item_bad_category(
             },
             blocking=True,
         )
+
+
+async def test_synthetic_thumbnail_item_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test synthetic ID generation and url caching for items without stable IDs."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        client = await hass_ws_client()
+
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": "apps",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+
+        children = response["result"]["children"]
+        assert len(children) > 0
+        for child in children:
+            if thumbnail := child.get("thumbnail"):
+                assert not thumbnail.startswith("http://lms.internal")
+                assert thumbnail.startswith("/api/media_player_proxy/")

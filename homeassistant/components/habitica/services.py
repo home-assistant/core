@@ -28,7 +28,6 @@ from habiticalib import (
 import voluptuous as vol
 
 from homeassistant.components.todo import ATTR_RENAME
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DATE, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
@@ -38,7 +37,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.util import dt as dt_util
 
@@ -47,6 +46,7 @@ from .const import (
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
+    ATTR_COLLAPSE_CHECKLIST,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
@@ -130,6 +130,11 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     }
 )
 
+COLLAPSE_CHECKLIST_MAP = {
+    "collapsed": True,
+    "expanded": False,
+}
+
 BASE_TASK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
@@ -160,6 +165,7 @@ BASE_TASK_SCHEMA = vol.Schema(
         vol.Optional(ATTR_REMOVE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_SCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_UNSCORE_CHECKLIST_ITEM): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_COLLAPSE_CHECKLIST): vol.In(COLLAPSE_CHECKLIST_MAP),
         vol.Optional(ATTR_START_DATE): cv.date,
         vol.Optional(ATTR_INTERVAL): vol.All(int, vol.Range(0)),
         vol.Optional(ATTR_REPEAT): vol.All(cv.ensure_list, [vol.In(WEEK_DAYS)]),
@@ -223,6 +229,7 @@ ITEMID_MAP = {
     "shiny_seed": Skill.SHINY_SEED,
 }
 
+
 SERVICE_TASK_TYPE_MAP = {
     SERVICE_UPDATE_REWARD: TaskType.REWARD,
     SERVICE_CREATE_REWARD: TaskType.REWARD,
@@ -235,24 +242,11 @@ SERVICE_TASK_TYPE_MAP = {
 }
 
 
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> HabiticaConfigEntry:
-    """Return config entry or raise if not found or not loaded."""
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-        )
-    return entry
-
-
 async def _cast_skill(call: ServiceCall) -> ServiceResponse:
     """Skill action."""
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
 
     skill = SKILL_MAP[call.data[ATTR_SKILL]]
@@ -316,7 +310,9 @@ async def _cast_skill(call: ServiceCall) -> ServiceResponse:
 
 async def _manage_quests(call: ServiceCall) -> ServiceResponse:
     """Accept, reject, start, leave or cancel quests."""
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
 
     FUNC_MAP = {
@@ -364,7 +360,9 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
 
 async def _score_task(call: ServiceCall) -> ServiceResponse:
     """Score a task action."""
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
 
     direction = (
@@ -428,7 +426,9 @@ async def _score_task(call: ServiceCall) -> ServiceResponse:
 async def _transformation(call: ServiceCall) -> ServiceResponse:
     """User a transformation item on a player character."""
 
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
 
     item = ITEMID_MAP[call.data[ATTR_ITEM]]
@@ -511,7 +511,9 @@ async def _transformation(call: ServiceCall) -> ServiceResponse:
 async def _get_tasks(call: ServiceCall) -> ServiceResponse:
     """Get tasks action."""
 
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
     response: list[TaskData] = coordinator.data.tasks
 
@@ -560,7 +562,9 @@ async def _get_tasks(call: ServiceCall) -> ServiceResponse:
 
 async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa: C901
     """Create or update task action."""
-    entry = get_config_entry(call.hass, call.data[ATTR_CONFIG_ENTRY])
+    entry: HabiticaConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+    )
     coordinator = entry.runtime_data
     await coordinator.async_refresh()
     is_update = call.service in (
@@ -714,6 +718,9 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
     ):
         data["checklist"] = checklist
 
+    if collapse_checklist := call.data.get(ATTR_COLLAPSE_CHECKLIST):
+        data["collapseChecklist"] = COLLAPSE_CHECKLIST_MAP[collapse_checklist]
+
     reminders = current_task.reminders if current_task else []
 
     if add_reminders := call.data.get(ATTR_REMINDER):
@@ -752,8 +759,10 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
         if task_type is TaskType.DAILY:
             reminders = list(
                 filter(
-                    lambda r: r.time.time().replace(second=0, microsecond=0)
-                    not in remove_reminder,
+                    lambda r: (
+                        r.time.time().replace(second=0, microsecond=0)
+                        not in remove_reminder
+                    ),
                     reminders,
                 )
             )
@@ -839,7 +848,7 @@ async def _create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa:
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Habitica integration."""
 
-    for service in (
+    for service_name in (
         SERVICE_ABORT_QUEST,
         SERVICE_ACCEPT_QUEST,
         SERVICE_CANCEL_QUEST,
@@ -849,13 +858,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ):
         hass.services.async_register(
             DOMAIN,
-            service,
+            service_name,
             _manage_quests,
             schema=SERVICE_MANAGE_QUEST_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
 
-    for service in (
+    for service_name in (
         SERVICE_UPDATE_DAILY,
         SERVICE_UPDATE_HABIT,
         SERVICE_UPDATE_REWARD,
@@ -863,12 +872,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ):
         hass.services.async_register(
             DOMAIN,
-            service,
+            service_name,
             _create_or_update_task,
             schema=SERVICE_UPDATE_TASK_SCHEMA,
             supports_response=SupportsResponse.ONLY,
         )
-    for service in (
+    for service_name in (
         SERVICE_CREATE_DAILY,
         SERVICE_CREATE_HABIT,
         SERVICE_CREATE_REWARD,
@@ -876,7 +885,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ):
         hass.services.async_register(
             DOMAIN,
-            service,
+            service_name,
             _create_or_update_task,
             schema=SERVICE_CREATE_TASK_SCHEMA,
             supports_response=SupportsResponse.ONLY,

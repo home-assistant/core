@@ -13,14 +13,45 @@ CONF_DPT: Final = "dpt"
 
 CONF_GA_SENSOR: Final = "ga_sensor"
 CONF_GA_SWITCH: Final = "ga_switch"
+CONF_GA_DATE: Final = "ga_date"
+CONF_GA_DATETIME: Final = "ga_datetime"
+CONF_GA_TIME: Final = "ga_time"
+
+CONF_GA_STEP: Final = "ga_step"
+
+# Climate
+CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"
+CONF_GA_HUMIDITY_CURRENT: Final = "ga_humidity_current"
+CONF_TARGET_TEMPERATURE: Final = "target_temperature"
+CONF_GA_TEMPERATURE_TARGET: Final = "ga_temperature_target"
+CONF_GA_SETPOINT_SHIFT: Final = "ga_setpoint_shift"
+CONF_GA_ACTIVE: Final = "ga_active"
+CONF_GA_VALVE: Final = "ga_valve"
+CONF_GA_OPERATION_MODE: Final = "ga_operation_mode"
+CONF_IGNORE_AUTO_MODE: Final = "ignore_auto_mode"
+CONF_GA_OP_MODE_COMFORT: Final = "ga_operation_mode_comfort"
+CONF_GA_OP_MODE_ECO: Final = "ga_operation_mode_economy"
+CONF_GA_OP_MODE_STANDBY: Final = "ga_operation_mode_standby"
+CONF_GA_OP_MODE_PROTECTION: Final = "ga_operation_mode_protection"
+CONF_GA_HEAT_COOL: Final = "ga_heat_cool"
+CONF_GA_ON_OFF: Final = "ga_on_off"
+CONF_GA_CONTROLLER_MODE: Final = "ga_controller_mode"
+CONF_GA_CONTROLLER_STATUS: Final = "ga_controller_status"
+CONF_GA_FAN_SPEED: Final = "ga_fan_speed"
+CONF_GA_FAN_SWING: Final = "ga_fan_swing"
+CONF_GA_FAN_SWING_HORIZONTAL: Final = "ga_fan_swing_horizontal"
 
 # Cover
 CONF_GA_UP_DOWN: Final = "ga_up_down"
 CONF_GA_STOP: Final = "ga_stop"
-CONF_GA_STEP: Final = "ga_step"
 CONF_GA_POSITION_SET: Final = "ga_position_set"
 CONF_GA_POSITION_STATE: Final = "ga_position_state"
 CONF_GA_ANGLE: Final = "ga_angle"
+
+# Fan
+CONF_SPEED: Final = "speed"
+CONF_GA_SPEED: Final = "ga_speed"
+CONF_GA_OSCILLATION: Final = "ga_oscillation"
 
 # Light
 CONF_COLOR_TEMP_MIN: Final = "color_temp_min"
@@ -40,3 +71,12 @@ CONF_GA_WHITE_BRIGHTNESS: Final = "ga_white_brightness"
 CONF_GA_WHITE_SWITCH: Final = "ga_white_switch"
 CONF_GA_HUE: Final = "ga_hue"
 CONF_GA_SATURATION: Final = "ga_saturation"
+
+# Scene
+CONF_GA_SCENE: Final = "ga_scene"
+
+# Sensor
+CONF_ALWAYS_CALLBACK: Final = "always_callback"
+
+# Text
+CONF_GA_TEXT: Final = "ga_text"

@@ -679,9 +679,15 @@ def test_invalid_entity_properties(
 
 
 def test_ignore_invalid_entity_properties(
-    linter: UnittestLinter, type_hint_checker: BaseChecker
+    hass_enforce_type_hints: ModuleType,
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
 ) -> None:
-    """Check invalid entity properties are ignored by default."""
+    """Check invalid entity properties are ignored by default.
+
+    - ignore missing annotations is set to True
+    - mandatory is set to False for lock and changed_by functions
+    """
     # Set ignore option
     type_hint_checker.linter.config.ignore_missing_annotations = True
 
@@ -710,10 +716,26 @@ def test_ignore_invalid_entity_properties(
     """,
         "homeassistant.components.pylint_test.lock",
     )
-    type_hint_checker.visit_module(class_node.parent)
+    lock_match = next(
+        function_match
+        for class_match in hass_enforce_type_hints._INHERITANCE_MATCH["lock"]
+        for function_match in class_match.matches
+        if function_match.function_name == "lock"
+    )
+    changed_by_match = next(
+        function_match
+        for class_match in hass_enforce_type_hints._INHERITANCE_MATCH["lock"]
+        for function_match in class_match.matches
+        if function_match.function_name == "changed_by"
+    )
+    with (
+        patch.object(lock_match, "mandatory", False),
+        patch.object(changed_by_match, "mandatory", False),
+    ):
+        type_hint_checker.visit_module(class_node.parent)
 
-    with assert_no_messages(linter):
-        type_hint_checker.visit_classdef(class_node)
+        with assert_no_messages(linter):
+            type_hint_checker.visit_classdef(class_node)
 
 
 def test_named_arguments(
@@ -1494,6 +1516,42 @@ def test_invalid_generic(
             col_offset=4,
             end_line=4,
             end_col_offset=end_col_offset,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_missing_argument(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+) -> None:
+    """Ensure missing arg raises an error."""
+    func_node = astroid.extract_node(
+        """
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.sensor",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=(
+                3,
+                "AddConfigEntryEntitiesCallback",
+                "async_setup_entry",
+            ),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=27,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

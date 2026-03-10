@@ -187,13 +187,15 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         zeroconf_instance: Zeroconf = None,
         noise_psk: str | None = None,
         expected_name: str | None = None,
-    ):
+        timezone: str | None = None,
+    ) -> None:
         """Fake the client constructor."""
         mock_client.host = address
         mock_client.port = port
         mock_client.password = password
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
+        mock_client.timezone = timezone
         return mock_client
 
     mock_client.side_effect = mock_constructor
@@ -558,9 +560,10 @@ async def _mock_generic_device_entry(
 
         async def mock_try_connect(self):
             """Set an event when ReconnectLogic._try_connect has been awaited."""
-            result = await super()._try_connect()
-            try_connect_done.set()
-            return result
+            try:
+                return await super()._try_connect()
+            finally:
+                try_connect_done.set()
 
         def stop_callback(self) -> None:
             """Stop the reconnect logic."""

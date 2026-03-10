@@ -14,7 +14,10 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration_with_node_fixture
+from .common import (
+    setup_integration_with_node_fixture,
+    setup_integration_with_node_fixtures,
+)
 
 from tests.common import MockConfigEntry
 
@@ -72,70 +75,10 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(
-    params=[
-        "air_purifier",
-        "air_quality_sensor",
-        "battery_storage",
-        "color_temperature_light",
-        "cooktop",
-        "dimmable_light",
-        "dimmable_plugin_unit",
-        "door_lock",
-        "door_lock_with_unbolt",
-        "eve_contact_sensor",
-        "eve_energy_plug",
-        "eve_energy_plug_patched",
-        "eve_thermo",
-        "eve_weather_sensor",
-        "extended_color_light",
-        "extractor_hood",
-        "fan",
-        "flow_sensor",
-        "generic_switch",
-        "generic_switch_multi",
-        "humidity_sensor",
-        "laundry_dryer",
-        "leak_sensor",
-        "light_sensor",
-        "microwave_oven",
-        "mounted_dimmable_load_control_fixture",
-        "multi_endpoint_light",
-        "occupancy_sensor",
-        "on_off_plugin_unit",
-        "onoff_light",
-        "onoff_light_alt_name",
-        "onoff_light_no_name",
-        "onoff_light_with_levelcontrol_present",
-        "oven",
-        "pressure_sensor",
-        "pump",
-        "room_airconditioner",
-        "silabs_dishwasher",
-        "silabs_evse_charging",
-        "silabs_laundrywasher",
-        "silabs_refrigerator",
-        "silabs_water_heater",
-        "smoke_detector",
-        "solar_power",
-        "switch_unit",
-        "temperature_sensor",
-        "thermostat",
-        "vacuum_cleaner",
-        "valve",
-        "window_covering_full",
-        "window_covering_lift",
-        "window_covering_pa_lift",
-        "window_covering_pa_tilt",
-        "window_covering_tilt",
-        "yandex_smart_socket",
-    ]
-)
-async def matter_devices(
-    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
-) -> MatterNode:
-    """Fixture for a Matter device."""
-    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
+@pytest.fixture
+async def matter_devices(hass: HomeAssistant, matter_client: MagicMock) -> None:
+    """Fixture for all Matter devices."""
+    await setup_integration_with_node_fixtures(hass, matter_client)
 
 
 @pytest.fixture

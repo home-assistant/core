@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Group5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_KeyLock1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Output1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Output2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Regulator1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Relay1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch_Relay2',
     'options': dict({
     }),
     'original_device_class': None,

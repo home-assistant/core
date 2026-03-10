@@ -7,7 +7,7 @@ from copy import deepcopy
 import logging
 from typing import Any
 
-from roborock.containers import UserData
+from roborock.data import UserData
 from roborock.exceptions import (
     RoborockAccountDoesNotExist,
     RoborockException,
@@ -29,16 +29,24 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_REGION,
+    CONF_SHOW_BACKGROUND,
     CONF_USER_DATA,
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,17 +71,35 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             username = user_input[CONF_USERNAME]
+            region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
+            base_url = None
+            if region != "auto":
+                base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
-                username, session=async_get_clientsession(self.hass)
+                username,
+                base_url=base_url,
+                session=async_get_clientsession(self.hass),
             )
             errors = await self._request_code()
             if not errors:
                 return await self.async_step_code()
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_USERNAME): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_REGION, default="auto"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=REGION_OPTIONS,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="region",
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -81,7 +107,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._client
         errors: dict[str, str] = {}
         try:
-            await self._client.request_code()
+            await self._client.request_code_v4()
         except RoborockAccountDoesNotExist:
             errors["base"] = "invalid_email"
         except RoborockUrlException:
@@ -110,9 +136,11 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             code = user_input[CONF_ENTRY_CODE]
             _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
-                user_data = await self._client.code_login(code)
+                user_data = await self._client.code_login_v4(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
+            except RoborockAccountDoesNotExist:
+                errors["base"] = "invalid_email_or_region"
             except RoborockException:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown_roborock"
@@ -128,7 +156,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                         reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
                     )
                 self._abort_if_unique_id_configured(error="already_configured_account")
-                return self._create_entry(self._client, self._username, user_data)
+                return await self._create_entry(self._client, self._username, user_data)
 
         return self.async_show_form(
             step_id="code",
@@ -160,7 +188,9 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username = entry_data[CONF_USERNAME]
         assert self._username
         self._client = RoborockApiClient(
-            self._username, session=async_get_clientsession(self.hass)
+            self._username,
+            base_url=entry_data[CONF_BASE_URL],
+            session=async_get_clientsession(self.hass),
         )
         return await self.async_step_reauth_confirm()
 
@@ -175,7 +205,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_code()
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
-    def _create_entry(
+    async def _create_entry(
         self, client: RoborockApiClient, username: str, user_data: UserData
     ) -> ConfigFlowResult:
         """Finished config flow and create entry."""
@@ -184,7 +214,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: username,
                 CONF_USER_DATA: user_data.as_dict(),
-                CONF_BASE_URL: client.base_url,
+                CONF_BASE_URL: await client.base_url,
             },
         )
 
@@ -215,6 +245,7 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
+            self.options[CONF_SHOW_BACKGROUND] = user_input.pop(CONF_SHOW_BACKGROUND)
             self.options.setdefault(DRAWABLES, {}).update(user_input)
             return self.async_create_entry(title="", data=self.options)
         data_schema = {}
@@ -227,6 +258,12 @@ class RoborockOptionsFlowHandler(OptionsFlowWithReload):
                     ),
                 )
             ] = bool
+        data_schema[
+            vol.Required(
+                CONF_SHOW_BACKGROUND,
+                default=self.config_entry.options.get(CONF_SHOW_BACKGROUND, False),
+            )
+        ] = bool
         return self.async_show_form(
             step_id=DRAWABLES,
             data_schema=vol.Schema(data_schema),

@@ -6,7 +6,10 @@ from easyenergy import EasyEnergyNoDataError
 import pytest
 
 from homeassistant.components.easyenergy.const import DOMAIN
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -303,12 +306,12 @@ async def test_no_gas_today(
     hass: HomeAssistant, mock_easyenergy: MagicMock, init_integration: MockConfigEntry
 ) -> None:
     """Test the easyEnergy - No gas data available."""
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_easyenergy.gas_prices.side_effect = EasyEnergyNoDataError
 
     await hass.services.async_call(
-        "homeassistant",
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: "sensor.easyenergy_today_gas_current_hour_price"},
         blocking=True,

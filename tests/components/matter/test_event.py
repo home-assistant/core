@@ -25,7 +25,7 @@ async def test_events(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
 
 
-@pytest.mark.parametrize("node_fixture", ["generic_switch"])
+@pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
 async def test_generic_switch_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -64,7 +64,7 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
 
 
-@pytest.mark.parametrize("node_fixture", ["generic_switch_multi"])
+@pytest.mark.parametrize("node_fixture", ["mock_generic_switch_multi"])
 async def test_generic_switch_multi_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -84,11 +84,11 @@ async def test_generic_switch_multi_node(
         "long_release",
     ]
     # check button 2
-    state_button_2 = hass.states.get("event.mock_generic_switch_fancy_button")
+    state_button_2 = hass.states.get("event.mock_generic_switch_button_2")
     assert state_button_2
     assert state_button_2.state == "unknown"
-    # name should be 'DeviceName Fancy Button' due to the label set to 'Fancy Button'
-    assert state_button_2.name == "Mock Generic Switch Fancy Button"
+    # name should be 'DeviceName Button (2)'
+    assert state_button_2.name == "Mock Generic Switch Button (2)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
     assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
         "multi_press_1",

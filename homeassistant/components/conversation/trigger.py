@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from hassil.recognize import RecognizeResult
@@ -15,13 +16,18 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
-from .const import DATA_DEFAULT_ENTITY, DOMAIN
+from .agent_manager import get_agent_manager
+from .const import DOMAIN
 from .models import ConversationInput
+
+TRIGGER_CALLBACK_TYPE = Callable[
+    [ConversationInput, RecognizeResult], Awaitable[str | None]
+]
 
 
 def has_no_punctuation(value: list[str]) -> list[str]:
@@ -70,6 +76,8 @@ async def async_attach_trigger(
     trigger_data = trigger_info["trigger_data"]
     sentences = config.get(CONF_COMMAND, [])
 
+    ent_reg = er.async_get(hass)
+
     job = HassJob(action)
 
     async def call_action(
@@ -91,6 +99,14 @@ async def async_attach_trigger(
             for entity_name, entity in result.entities.items()
         }
 
+        satellite_id = user_input.satellite_id
+        device_id = user_input.device_id
+        if (
+            satellite_id is not None
+            and (satellite_entry := ent_reg.async_get(satellite_id)) is not None
+        ):
+            device_id = satellite_entry.device_id
+
         trigger_input: dict[str, Any] = {  # Satisfy type checker
             **trigger_data,
             "platform": DOMAIN,
@@ -99,7 +115,8 @@ async def async_attach_trigger(
             "slots": {  # direct access to values
                 entity_name: entity["value"] for entity_name, entity in details.items()
             },
-            "device_id": user_input.device_id,
+            "device_id": device_id,
+            "satellite_id": satellite_id,
             "user_input": user_input.as_dict(),
         }
 
@@ -122,4 +139,6 @@ async def async_attach_trigger(
         # two trigger copies for who will provide a response.
         return None
 
-    return hass.data[DATA_DEFAULT_ENTITY].register_trigger(sentences, call_action)
+    return get_agent_manager(hass).register_trigger(
+        sentences=sentences, trigger_callback=call_action
+    )

@@ -17,6 +17,7 @@ from homeassistant.components.history_stats.const import (
     DOMAIN,
 )
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.data_entry_flow import FlowResultType
@@ -42,8 +43,14 @@ async def test_form(
         {
             CONF_NAME: DEFAULT_NAME,
             CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
             CONF_TYPE: "count",
+        },
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATE: ["on"],
         },
     )
     await hass.async_block_till_done()
@@ -85,6 +92,7 @@ async def test_options_flow(
         user_input={
             CONF_END: "{{ utcnow() }}",
             CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
+            CONF_STATE_CLASS: "total_increasing",
         },
     )
     await hass.async_block_till_done()
@@ -97,6 +105,7 @@ async def test_options_flow(
         CONF_TYPE: "count",
         CONF_END: "{{ utcnow() }}",
         CONF_DURATION: {"hours": 8, "minutes": 0, "seconds": 0, "days": 20},
+        CONF_STATE_CLASS: "total_increasing",
     }
 
     await hass.async_block_till_done()
@@ -124,11 +133,25 @@ async def test_validation_options(
         {
             CONF_NAME: DEFAULT_NAME,
             CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
             CONF_TYPE: "count",
         },
     )
     await hass.async_block_till_done()
+
+    assert result["step_id"] == "state"
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATE: ["on"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "options"
+    assert result["type"] is FlowResultType.FORM
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -182,8 +205,15 @@ async def test_entry_already_exist(
         {
             CONF_NAME: DEFAULT_NAME,
             CONF_ENTITY_ID: "binary_sensor.test_monitored",
-            CONF_STATE: ["on"],
             CONF_TYPE: "count",
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_STATE: ["on"],
         },
     )
     await hass.async_block_till_done()
@@ -246,7 +276,7 @@ async def test_config_flow_preview_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] is None
 
@@ -256,11 +286,17 @@ async def test_config_flow_preview_success(
             CONF_NAME: DEFAULT_NAME,
             CONF_ENTITY_ID: monitored_entity,
             CONF_TYPE: CONF_TYPE_COUNT,
+        },
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_STATE: ["on"],
         },
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
@@ -354,6 +390,7 @@ async def test_options_flow_preview(
             CONF_STATE: ["on"],
             CONF_END: "{{ now() }}",
             CONF_START: "{{ today_at() }}",
+            CONF_STATE_CLASS: "measurement",
         },
         title=DEFAULT_NAME,
     )
@@ -362,7 +399,7 @@ async def test_options_flow_preview(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 
@@ -389,6 +426,7 @@ async def test_options_flow_preview(
                         CONF_STATE: ["on"],
                         CONF_END: end,
                         CONF_START: "{{ today_at() }}",
+                        CONF_STATE_CLASS: "measurement",
                     },
                 }
             )
@@ -437,7 +475,7 @@ async def test_options_flow_preview_errors(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 
@@ -521,7 +559,7 @@ async def test_options_flow_sensor_preview_config_entry_removed(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == "history_stats"
 

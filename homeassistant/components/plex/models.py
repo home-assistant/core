@@ -2,6 +2,8 @@
 
 import logging
 
+import plexapi.playqueue
+
 from homeassistant.components.media_player import MediaType
 from homeassistant.helpers.template import result_as_boolean
 from homeassistant.util import dt as dt_util
@@ -167,7 +169,10 @@ class PlexMediaSearchResult:
         if isinstance(resume, str):
             resume = result_as_boolean(resume)
         if resume:
-            return self.media.viewOffset
+            media = self.media
+            if isinstance(media, plexapi.playqueue.PlayQueue) and len(media.items) > 0:
+                media = media.items[0]
+            return media.viewOffset
         return 0
 
     @property
@@ -177,3 +182,11 @@ class PlexMediaSearchResult:
         if isinstance(shuffle, str):
             shuffle = result_as_boolean(shuffle)
         return shuffle
+
+    @property
+    def continuous(self) -> bool:
+        """Return value of continuous parameter."""
+        continuous = self._params.get("continuous", False)
+        if isinstance(continuous, str):
+            continuous = result_as_boolean(continuous)
+        return continuous

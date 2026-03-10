@@ -30,13 +30,22 @@ class FoscamDeviceInfo:
     is_open_white_light: bool
     is_siren_alarm: bool
 
-    volume: int
+    device_volume: int
     speak_volume: int
     is_turn_off_volume: bool
     is_turn_off_light: bool
+    supports_speak_volume_adjustment: bool
+    supports_pet_adjustment: bool
+    supports_car_adjustment: bool
+    supports_human_adjustment: bool
+    supports_wdr_adjustment: bool
+    supports_hdr_adjustment: bool
 
     is_open_wdr: bool | None = None
     is_open_hdr: bool | None = None
+    is_pet_detection_on: bool | None = None
+    is_car_detection_on: bool | None = None
+    is_human_detection_on: bool | None = None
 
 
 class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
@@ -106,17 +115,70 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
 
         is_open_wdr = None
         is_open_hdr = None
-        reserve3 = product_info.get("reserve3")
-        reserve3_int = int(reserve3) if reserve3 is not None else 0
-
-        if (reserve3_int & (1 << 8)) != 0:
-            ret_wdr, is_open_wdr_data = self.session.getWdrMode()
-            mode = is_open_wdr_data["mode"] if ret_wdr == 0 and is_open_wdr_data else 0
-            is_open_wdr = bool(int(mode))
+        reserve3 = product_info.get("reserve4")
+        model = product_info.get("model")
+        model_int = int(model) if model is not None else 7002
+        if model_int > 7001:
+            reserve3_int = int(reserve3) if reserve3 is not None else 0
+            supports_wdr_adjustment_val = bool(int(reserve3_int & 256))
+            supports_hdr_adjustment_val = bool(int(reserve3_int & 128))
+            if supports_wdr_adjustment_val:
+                ret_wdr, is_open_wdr_data = self.session.getWdrMode()
+                mode = (
+                    is_open_wdr_data["mode"] if ret_wdr == 0 and is_open_wdr_data else 0
+                )
+                is_open_wdr = bool(int(mode))
+            elif supports_hdr_adjustment_val:
+                ret_hdr, is_open_hdr_data = self.session.getHdrMode()
+                mode = (
+                    is_open_hdr_data["mode"] if ret_hdr == 0 and is_open_hdr_data else 0
+                )
+                is_open_hdr = bool(int(mode))
         else:
-            ret_hdr, is_open_hdr_data = self.session.getHdrMode()
-            mode = is_open_hdr_data["mode"] if ret_hdr == 0 and is_open_hdr_data else 0
-            is_open_hdr = bool(int(mode))
+            supports_wdr_adjustment_val = False
+            supports_hdr_adjustment_val = False
+        ret_sw, software_capabilities = self.session.getSWCapabilities()
+        supports_speak_volume_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities1")) & 32)
+            if ret_sw == 0
+            else False
+        )
+        pet_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities2")) & 512)
+            if ret_sw == 0
+            else False
+        )
+        car_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities2")) & 256)
+            if ret_sw == 0
+            else False
+        )
+        human_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities2")) & 128)
+            if ret_sw == 0
+            else False
+        )
+        ret_md, motion_config_val = self.session.get_motion_detect_config()
+        if pet_adjustment_val:
+            is_pet_detection_on_val = (
+                motion_config_val.get("petEnable") == "1" if ret_md == 0 else False
+            )
+        else:
+            is_pet_detection_on_val = False
+
+        if car_adjustment_val:
+            is_car_detection_on_val = (
+                motion_config_val.get("carEnable") == "1" if ret_md == 0 else False
+            )
+        else:
+            is_car_detection_on_val = False
+
+        if human_adjustment_val:
+            is_human_detection_on_val = (
+                motion_config_val.get("humanEnable") == "1" if ret_md == 0 else False
+            )
+        else:
+            is_human_detection_on_val = False
 
         return FoscamDeviceInfo(
             dev_info=dev_info,
@@ -127,12 +189,21 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             is_asleep=is_asleep,
             is_open_white_light=is_open_white_light_val,
             is_siren_alarm=is_siren_alarm_val,
-            volume=volume_val,
+            device_volume=volume_val,
             speak_volume=speak_volume_val,
             is_turn_off_volume=is_turn_off_volume_val,
             is_turn_off_light=is_turn_off_light_val,
+            supports_speak_volume_adjustment=supports_speak_volume_adjustment_val,
+            supports_pet_adjustment=pet_adjustment_val,
+            supports_car_adjustment=car_adjustment_val,
+            supports_human_adjustment=human_adjustment_val,
+            supports_hdr_adjustment=supports_hdr_adjustment_val,
+            supports_wdr_adjustment=supports_wdr_adjustment_val,
             is_open_wdr=is_open_wdr,
             is_open_hdr=is_open_hdr,
+            is_pet_detection_on=is_pet_detection_on_val,
+            is_car_detection_on=is_car_detection_on_val,
+            is_human_detection_on=is_human_detection_on_val,
         )
 
     async def _async_update_data(self) -> FoscamDeviceInfo:

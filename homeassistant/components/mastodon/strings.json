@@ -1,48 +1,67 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
+    },
+    "error": {
+      "network_error": "The Mastodon instance was not found.",
+      "unauthorized_error": "The credentials are incorrect.",
+      "unknown": "Unknown error occurred when connecting to the Mastodon instance."
+    },
     "step": {
-      "user": {
+      "reauth_confirm": {
         "data": {
-          "base_url": "[%key:common::config_flow::data::url%]",
-          "client_id": "Client key",
-          "client_secret": "Client secret",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
-          "base_url": "The URL of your Mastodon instance e.g. https://mastodon.social.",
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]"
+        },
+        "description": "Please reauthenticate {account_name} with Mastodon."
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data::client_secret%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data_description::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data_description::client_secret%]"
+        },
+        "description": "Reconfigure {account_name} with Mastodon."
+      },
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "base_url": "[%key:common::config_flow::data::url%]",
+          "client_id": "Client key",
+          "client_secret": "Client secret"
+        },
+        "data_description": {
+          "access_token": "The access token for the application created within your Mastodon account.",
+          "base_url": "The URL of your Mastodon instance e.g. {example_url}.",
           "client_id": "The client key for the application created within your Mastodon account.",
-          "client_secret": "The client secret for the application created within your Mastodon account.",
-          "access_token": "The access token for the application created within your Mastodon account."
+          "client_secret": "The client secret for the application created within your Mastodon account."
         }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
-    "error": {
-      "unauthorized_error": "The credentials are incorrect.",
-      "network_error": "The Mastodon instance was not found.",
-      "unknown": "Unknown error occurred when connecting to the Mastodon instance."
-    }
-  },
-  "exceptions": {
-    "not_loaded": {
-      "message": "{target} is not loaded."
-    },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "unable_to_send_message": {
-      "message": "Unable to send message."
-    },
-    "unable_to_upload_image": {
-      "message": "Unable to upload image {media_path}."
-    },
-    "not_whitelisted_directory": {
-      "message": "{media} is not a whitelisted directory."
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bot": { "name": "Bot" },
+      "discoverable": { "name": "Discoverable" },
+      "indexable": { "name": "Indexable" },
+      "limited": { "name": "Limited" },
+      "locked": { "name": "Locked" },
+      "memorial": { "name": "Memorial" },
+      "moved": { "name": "Moved" },
+      "suspended": { "name": "Suspended" }
+    },
     "sensor": {
       "followers": {
         "name": "Followers",
@@ -52,56 +71,163 @@
         "name": "Following",
         "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
       },
+      "last_post": {
+        "name": "Last post"
+      },
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      },
+      "username": {
+        "name": "Username",
+        "state_attributes": {
+          "bio": {
+            "name": "Bio"
+          },
+          "created": {
+            "name": "Created"
+          },
+          "display_name": {
+            "name": "Display name"
+          }
+        }
       }
     }
   },
-  "services": {
-    "post": {
-      "name": "Post",
-      "description": "Posts a status on your Mastodon account.",
-      "fields": {
-        "config_entry_id": {
-          "name": "Mastodon account",
-          "description": "Select the Mastodon account to post to."
-        },
-        "status": {
-          "name": "Status",
-          "description": "The status to post."
-        },
-        "visibility": {
-          "name": "Visibility",
-          "description": "The visibility of the post (default: account setting)."
-        },
-        "content_warning": {
-          "name": "Content warning",
-          "description": "A content warning will be shown before the status text is shown (default: no content warning)."
-        },
-        "media": {
-          "name": "Media",
-          "description": "Attach an image or video to the post."
-        },
-        "media_description": {
-          "name": "Media description",
-          "description": "If an image or video is attached, will add a description for this media for people with visual impairments."
-        },
-        "media_warning": {
-          "name": "Media warning",
-          "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning)."
-        }
-      }
+  "exceptions": {
+    "account_not_found": {
+      "message": "Mastodon account \"{account_name}\" not found."
+    },
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate with Mastodon."
+    },
+    "idempotency_key_too_short": {
+      "message": "Idempotency key must be at least 4 characters long."
+    },
+    "mute_duration_too_long": {
+      "message": "Mute duration is too long."
+    },
+    "not_whitelisted_directory": {
+      "message": "{media} is not a whitelisted directory."
+    },
+    "unable_to_get_account": {
+      "message": "Unable to get account \"{account_name}\"."
+    },
+    "unable_to_mute_account": {
+      "message": "Unable to mute account \"{account_name}\""
+    },
+    "unable_to_send_message": {
+      "message": "Unable to send message."
+    },
+    "unable_to_unmute_account": {
+      "message": "Unable to unmute account \"{account_name}\""
+    },
+    "unable_to_upload_image": {
+      "message": "Unable to upload image {media_path}."
     }
   },
   "selector": {
     "post_visibility": {
       "options": {
-        "public": "Public - Visible to everyone",
-        "unlisted": "Unlisted - Public but not shown in public timelines",
+        "direct": "Direct - Mentioned accounts only",
         "private": "Private - Followers only",
-        "direct": "Direct - Mentioned accounts only"
+        "public": "Public - Visible to everyone",
+        "unlisted": "Unlisted - Public but not shown in public timelines"
       }
+    }
+  },
+  "services": {
+    "get_account": {
+      "description": "Gets information about a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to use to search.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Get account"
+    },
+    "mute_account": {
+      "description": "Mutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to mute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to mute this account on.",
+          "name": "Mastodon instance"
+        },
+        "duration": {
+          "description": "The duration to mute the account for (default: indefinitely).",
+          "name": "Duration"
+        },
+        "hide_notifications": {
+          "description": "Hide notifications from this account while muted.",
+          "name": "Hide notifications"
+        }
+      },
+      "name": "Mute account"
+    },
+    "post": {
+      "description": "Posts a status on your Mastodon account.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Mastodon account to post to.",
+          "name": "Mastodon account"
+        },
+        "content_warning": {
+          "description": "A content warning will be shown before the status text is shown (default: no content warning).",
+          "name": "Content warning"
+        },
+        "idempotency_key": {
+          "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance. Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
+          "name": "Idempotency key"
+        },
+        "language": {
+          "description": "The language of the post (default: Mastodon account preference).",
+          "name": "Language"
+        },
+        "media": {
+          "description": "Attach an image or video to the post.",
+          "name": "Media"
+        },
+        "media_description": {
+          "description": "If an image or video is attached, will add a description for this media for people with visual impairments.",
+          "name": "Media description"
+        },
+        "media_warning": {
+          "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning).",
+          "name": "Media warning"
+        },
+        "status": {
+          "description": "The status to post.",
+          "name": "Status"
+        },
+        "visibility": {
+          "description": "The visibility of the post (default: account setting).",
+          "name": "Visibility"
+        }
+      },
+      "name": "Post"
+    },
+    "unmute_account": {
+      "description": "Unmutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to unmute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to unmute this account on.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Unmute account"
     }
   }
 }

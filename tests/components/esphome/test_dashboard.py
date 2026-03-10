@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from aioesphomeapi import APIClient, DeviceInfo, InvalidAuthAPIError
+from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
@@ -19,9 +19,11 @@ from .conftest import MockESPHomeDeviceType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("init_integration", "mock_dashboard")
+@pytest.mark.usefixtures("mock_dashboard")
 async def test_dashboard_storage(
     hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
@@ -129,6 +131,7 @@ async def test_setup_dashboard_fails(
 
 async def test_setup_dashboard_fails_when_already_setup(
     hass: HomeAssistant,
+    mock_client: APIClient,
     mock_config_entry: MockConfigEntry,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -168,7 +171,9 @@ async def test_setup_dashboard_fails_when_already_setup(
 
 @pytest.mark.usefixtures("mock_dashboard")
 async def test_new_info_reload_config_entries(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test config entries are reloaded when new info is set."""
     assert init_integration.state is ConfigEntryState.LOADED
@@ -194,7 +199,7 @@ async def test_new_dashboard_fix_reauth(
 ) -> None:
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     )
 

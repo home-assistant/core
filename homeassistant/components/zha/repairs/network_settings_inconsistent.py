@@ -12,6 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads_object
 
 from ..const import DOMAIN
 from ..radio_manager import ZhaRadioManager
@@ -99,8 +101,8 @@ async def warn_on_inconsistent_network_settings(
         translation_key=ISSUE_INCONSISTENT_NETWORK_SETTINGS,
         data={
             "config_entry_id": config_entry.entry_id,
-            "old_state": old_state.as_dict(),
-            "new_state": new_state.as_dict(),
+            "old_state": json_dumps(old_state.as_dict()),
+            "new_state": json_dumps(new_state.as_dict()),
         },
     )
 
@@ -111,8 +113,8 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
     def __init__(self, hass: HomeAssistant, data: dict[str, Any]) -> None:
         """Initialize the flow."""
         self.hass = hass
-        self._old_state = NetworkBackup.from_dict(data["old_state"])
-        self._new_state = NetworkBackup.from_dict(data["new_state"])
+        self._old_state = NetworkBackup.from_dict(json_loads_object(data["old_state"]))
+        self._new_state = NetworkBackup.from_dict(json_loads_object(data["new_state"]))
 
         self._entry_id: str = data["config_entry_id"]
 
@@ -136,7 +138,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Step to use the new settings found on the radio."""
-        async with self._radio_mgr.connect_zigpy_app() as app:
+        async with self._radio_mgr.create_zigpy_app(connect=False) as app:
             app.backups.add_backup(self._new_state)
 
         await self.hass.config_entries.async_reload(self._entry_id)

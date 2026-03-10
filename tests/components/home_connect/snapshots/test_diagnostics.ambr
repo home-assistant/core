@@ -31,6 +31,72 @@
       'type': 'CookProcessor',
       'vib': 'HCS000006',
     }),
+    '541513213246313789': dict({
+      'brand': 'BOSCH',
+      'connected': True,
+      'e_number': 'HCS000000/08',
+      'ha_id': '541513213246313789',
+      'name': 'Microwave',
+      'programs': list([
+      ]),
+      'settings': dict({
+      }),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+      'type': 'Microwave',
+      'vib': 'HCS000006',
+    }),
+    '8765432109876543210': dict({
+      'brand': 'BOSCH',
+      'connected': True,
+      'e_number': 'HCS000000/07',
+      'ha_id': '8765432109876543210',
+      'name': 'AirConditioner',
+      'programs': list([
+        'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.Auto',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.Cool',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.Dry',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.Fan',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.Heat',
+      ]),
+      'settings': dict({
+      }),
+      'status': dict({
+        'BSH.Common.Status.DoorState': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Closed',
+        }),
+        'BSH.Common.Status.OperationState': dict({
+          'value': 'BSH.Common.EnumType.OperationState.Ready',
+        }),
+        'BSH.Common.Status.RemoteControlActive': dict({
+          'value': True,
+        }),
+        'BSH.Common.Status.RemoteControlStartAllowed': dict({
+          'value': True,
+        }),
+        'Refrigeration.Common.Status.Door.Refrigerator': dict({
+          'value': 'BSH.Common.EnumType.DoorState.Open',
+        }),
+      }),
+      'type': 'AirConditioner',
+      'vib': 'HCS000006',
+    }),
     'BOSCH-000000000-000000000000': dict({
       'brand': 'BOSCH',
       'connected': True,

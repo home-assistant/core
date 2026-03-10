@@ -4,6 +4,7 @@
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/downloader",
+  "integration_type": "service",
   "quality_scale": "internal",
   "single_config_entry": true
 }

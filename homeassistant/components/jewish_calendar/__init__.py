@@ -94,8 +94,7 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     ):
         coordinator = config_entry.runtime_data
-        if coordinator.event_unsub:
-            coordinator.event_unsub()
+        await coordinator.async_shutdown()
     return unload_ok
 
 

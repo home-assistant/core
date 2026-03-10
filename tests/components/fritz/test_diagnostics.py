@@ -20,6 +20,7 @@ async def test_entry_diagnostics(
     hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""

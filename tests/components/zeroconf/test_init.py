@@ -25,18 +25,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.service_info.zeroconf import (
-    ATTR_PROPERTIES_ID,
-    ZeroconfServiceInfo,
-)
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    import_and_test_deprecated_constant,
-    mock_integration,
-)
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -1440,6 +1431,63 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_zeroconf_removed_dismiss_protected(hass: HomeAssistant) -> None:
+    """Test dismiss-protected flows are not aborted when a PTR record is removed."""
+
+    def _device_removed_mock(zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_http._tcp.local.",
+            "Shelly108._http._tcp.local.",
+            ServiceStateChange.Removed,
+        )
+
+    with (
+        patch.dict(
+            zc_gen.ZEROCONF,
+            {
+                "_http._tcp.local.": [
+                    {
+                        "domain": "shelly",
+                        "name": "shelly*",
+                    }
+                ]
+            },
+            clear=True,
+        ),
+        patch.object(
+            hass.config_entries.flow,
+            "async_progress_by_init_data_type",
+            return_value=[
+                {
+                    "flow_id": "protected_flow_id",
+                    "context": {
+                        "dismiss_protected": True,
+                    },
+                },
+                {"flow_id": "unprotected_flow_id", "context": {}},
+            ],
+        ),
+        patch.object(hass.config_entries.flow, "async_abort") as mock_async_abort,
+        patch.object(
+            discovery, "AsyncServiceBrowser", side_effect=_device_removed_mock
+        ),
+        patch(
+            "homeassistant.components.zeroconf.discovery.AsyncServiceInfo",
+            side_effect=get_zeroconf_info_mock("FFAADDCC11DD"),
+        ),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    # Only the unprotected flow should be aborted
+    assert len(mock_async_abort.mock_calls) == 1
+    assert mock_async_abort.mock_calls[0][1][0] == "unprotected_flow_id"
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
 @pytest.mark.parametrize(
     (
         "entry_domain",
@@ -1695,35 +1743,3 @@ async def test_zeroconf_rediscover_no_match(
 
         assert len(mock_service_browser.mock_calls) == 1
         assert len(mock_config_flow.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "ATTR_PROPERTIES_ID",
-            "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
-            ATTR_PROPERTIES_ID,
-        ),
-        (
-            "ZeroconfServiceInfo",
-            "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
-            ZeroconfServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        zeroconf,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2026.2",
-    )

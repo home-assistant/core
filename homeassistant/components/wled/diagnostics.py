@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import WLEDConfigEntry
+from .coordinator import WLEDConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

@@ -1,79 +1,139 @@
 """Tests for the Aladdin Connect integration."""
 
+import http
+from unittest.mock import AsyncMock, patch
+
+from aiohttp import ClientConnectionError, RequestInfo
+from aiohttp.client_exceptions import ClientResponseError
+import pytest
+
 from homeassistant.components.aladdin_connect import DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IGNORE,
-    ConfigEntryDisabler,
-    ConfigEntryState,
-)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr
+
+from . import init_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_aladdin_connect_repair_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+async def test_setup_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test the Aladdin Connect configuration entry loading/unloading handles the repair."""
-    config_entry_1 = MockConfigEntry(
-        title="Example 1",
-        domain=DOMAIN,
+    """Test a successful setup entry."""
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a successful unload entry."""
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_state"),
+    [
+        (http.HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
+        (http.HTTPStatus.INTERNAL_SERVER_ERROR, ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["auth_failure", "server_error"],
+)
+async def test_setup_entry_token_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    status: http.HTTPStatus,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup entry fails when token validation fails."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientResponseError(
+            RequestInfo("", "POST", {}, ""), None, status=status
+        ),
+    ):
+        await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is expected_state
+
+
+async def test_setup_entry_token_connection_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup entry retries when token validation has a connection error."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientConnectionError(),
+    ):
+        await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_state"),
+    [
+        (http.HTTPStatus.UNAUTHORIZED, ConfigEntryState.SETUP_ERROR),
+        (http.HTTPStatus.INTERNAL_SERVER_ERROR, ConfigEntryState.SETUP_RETRY),
+    ],
+    ids=["auth_failure", "server_error"],
+)
+async def test_setup_entry_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aladdin_connect_api: AsyncMock,
+    status: http.HTTPStatus,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup entry fails when API call fails."""
+    mock_aladdin_connect_api.get_doors.side_effect = ClientResponseError(
+        RequestInfo("", "GET", {}, ""), None, status=status
     )
-    config_entry_1.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_1.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry_1.state is ConfigEntryState.LOADED
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is expected_state
 
-    # Add a second one
-    config_entry_2 = MockConfigEntry(
-        title="Example 2",
-        domain=DOMAIN,
+
+async def test_setup_entry_api_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aladdin_connect_api: AsyncMock,
+) -> None:
+    """Test setup entry retries when API has a connection error."""
+    mock_aladdin_connect_api.get_doors.side_effect = ClientConnectionError()
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_remove_stale_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale devices are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device that the API will no longer return
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "stale_device_id")},
     )
-    config_entry_2.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_2.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_2.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
-
-    # Add an ignored entry
-    config_entry_3 = MockConfigEntry(
-        source=SOURCE_IGNORE,
-        domain=DOMAIN,
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
-    config_entry_3.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_3.entry_id)
+    assert len(device_entries) == 1
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry_3.state is ConfigEntryState.NOT_LOADED
-
-    # Add a disabled entry
-    config_entry_4 = MockConfigEntry(
-        disabled_by=ConfigEntryDisabler.USER,
-        domain=DOMAIN,
+    # The stale device should be gone, only the real door remains
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
     )
-    config_entry_4.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_4.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_4.state is ConfigEntryState.NOT_LOADED
-
-    # Remove the first one
-    await hass.config_entries.async_remove(config_entry_1.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
-    assert config_entry_2.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
-
-    # Remove the second one
-    await hass.config_entries.async_remove(config_entry_2.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
-    assert config_entry_2.state is ConfigEntryState.NOT_LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
-
-    # Check the ignored and disabled entries are removed
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert len(device_entries) == 1
+    assert device_entries[0].identifiers == {(DOMAIN, "test_device_id-1")}

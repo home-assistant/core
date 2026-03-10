@@ -49,11 +49,6 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry, assert_setup_component, get_fixture_path
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(name="values")
 def values_fixture() -> list[State]:
     """Fixture for a list of test States."""

@@ -1,41 +1,25 @@
 """Fixtures for tests."""
 
 from collections.abc import Generator
+from itertools import cycle
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 
-@pytest.fixture
-def credentials_valid() -> bool:
-    """Mark test as credentials invalid."""
-    return True
-
-
-@pytest.fixture
-def maintenance() -> bool:
-    """Mark test as maintenance mode on."""
-    return False
-
-
 @pytest.fixture(autouse=True)
-def patch_mydevolo(credentials_valid: bool, maintenance: bool) -> Generator[None]:
+def mydevolo() -> Generator[None]:
     """Fixture to patch mydevolo into a desired state."""
-    with (
-        patch(
-            "homeassistant.components.devolo_home_control.Mydevolo.credentials_valid",
-            return_value=credentials_valid,
-        ),
-        patch(
-            "homeassistant.components.devolo_home_control.Mydevolo.maintenance",
-            return_value=maintenance,
-        ),
-        patch(
-            "homeassistant.components.devolo_home_control.Mydevolo.get_gateway_ids",
-            return_value=["1400000000000001", "1400000000000002"],
-        ),
+    mydevolo = MagicMock()
+    mydevolo.uuid.return_value = "123456"
+    mydevolo.credentials_valid.return_value = True
+    mydevolo.maintenance.return_value = False
+    mydevolo.get_gateway_ids.return_value = ["1400000000000001", "1400000000000002"]
+    with patch(
+        "homeassistant.components.devolo_home_control.Mydevolo",
+        side_effect=cycle([mydevolo]),
     ):
-        yield
+        yield mydevolo
 
 
 @pytest.fixture(autouse=True)

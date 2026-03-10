@@ -6,7 +6,8 @@ from elgato import ElgatoError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.elgato.const import DOMAIN, SERVICE_IDENTIFY
+from homeassistant.components.elgato.const import DOMAIN
+from homeassistant.components.elgato.services import SERVICE_IDENTIFY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,

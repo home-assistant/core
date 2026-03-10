@@ -37,8 +37,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -104,7 +106,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         )
     session = async_get_clientsession(hass)
     client = WithingsClient(session=session)
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
 
     refresh_lock = asyncio.Lock()
@@ -251,10 +259,16 @@ class WithingsWebhookManager:
                     self.hass, self.entry.data[CONF_WEBHOOK_ID]
                 )
             url = URL(webhook_url)
-            if url.scheme != "https" or url.port != 443:
+            if url.scheme != "https":
                 LOGGER.warning(
-                    "Webhook not registered - "
-                    "https and port 443 is required to register the webhook"
+                    "Webhook not registered - HTTPS is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
+                )
+                return
+            if url.port != 443:
+                LOGGER.warning(
+                    "Webhook not registered - port 443 is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
                 )
                 return
 

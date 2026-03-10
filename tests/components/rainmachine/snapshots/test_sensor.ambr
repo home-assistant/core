@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower Box Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain sensor rain start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -266,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TEST Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -315,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -364,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -413,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -462,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -511,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -560,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -609,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -658,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -707,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 Run Completion Time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

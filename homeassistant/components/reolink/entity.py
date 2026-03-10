@@ -10,13 +10,11 @@ from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ReolinkData
 from .const import DOMAIN
+from .coordinator import ReolinkCoordinator
+from .util import ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,7 +47,7 @@ class ReolinkChimeEntityDescription(ReolinkEntityDescription):
     supported: Callable[[Chime], bool] = lambda chime: True
 
 
-class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
     A camera connected directly to HomeAssistant without using a NVR is in the reolink API
@@ -62,7 +60,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         if coordinator is None:
@@ -161,7 +159,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         channel: int,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
         super().__init__(reolink_data, coordinator)
@@ -243,32 +241,70 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         await super().async_will_remove_from_hass()
 
 
-class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
-    """Parent class for Reolink chime entities connected."""
+class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
+    """Parent class for Reolink chime entities connected to a Host."""
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         chime: Chime,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
-        """Initialize ReolinkChimeCoordinatorEntity for a chime."""
-        super().__init__(reolink_data, chime.channel, coordinator)
-
+        """Initialize ReolinkHostChimeCoordinatorEntity for a chime."""
+        super().__init__(reolink_data, coordinator)
+        self._channel = chime.channel
         self._chime = chime
 
         self._attr_unique_id = (
             f"{self._host.unique_id}_chime{chime.dev_id}_{self.entity_description.key}"
         )
-        cam_dev_id = self._dev_id
+        via_dev_id = self._host.unique_id
         self._dev_id = f"{self._host.unique_id}_chime{chime.dev_id}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._dev_id)},
-            via_device=(DOMAIN, cam_dev_id),
+            via_device=(DOMAIN, via_dev_id),
             name=chime.name,
             model="Reolink Chime",
             manufacturer=self._host.api.manufacturer,
+            sw_version=chime.sw_version,
+            serial_number=str(chime.dev_id),
+            configuration_url=self._conf_url,
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._chime.online
+
+
+class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
+    """Parent class for Reolink chime entities connected through a camera."""
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        coordinator: ReolinkCoordinator | None = None,
+    ) -> None:
+        """Initialize ReolinkChimeCoordinatorEntity for a chime."""
+        assert chime.channel is not None
+        super().__init__(reolink_data, chime.channel, coordinator)
+        self._chime = chime
+
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_chime{chime.dev_id}_{self.entity_description.key}"
+        )
+        via_dev_id = self._dev_id
+        self._dev_id = f"{self._host.unique_id}_chime{chime.dev_id}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._dev_id)},
+            via_device=(DOMAIN, via_dev_id),
+            name=chime.name,
+            model="Reolink Chime",
+            manufacturer=self._host.api.manufacturer,
+            sw_version=chime.sw_version,
             serial_number=str(chime.dev_id),
             configuration_url=self._conf_url,
         )

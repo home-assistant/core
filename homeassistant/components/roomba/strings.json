@@ -1,56 +1,46 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
-    "step": {
-      "user": {
-        "title": "Automatically connect to the device",
-        "description": "Select a Roomba or Braava.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Roomba or Braava."
-        }
-      },
-      "manual": {
-        "title": "Manually connect to the device",
-        "description": "No Roomba or Braava have been discovered on your network.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Roomba or Braava."
-        }
-      },
-      "link": {
-        "title": "Retrieve Password",
-        "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button (or both Home and Spot buttons) on {name} until the device generates a sound (about two seconds), then submit within 30 seconds."
-      },
-      "link_manual": {
-        "title": "Enter Password",
-        "description": "The password could not be retrieved from the device automatically. Please make sure that the iRobot app is not open on any device while trying to retrieve the password. Please follow the steps outlined in the documentation at: {auth_help_url}",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_irobot_device": "Discovered device is not an iRobot device",
+      "short_blid": "The BLID was truncated"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_irobot_device": "Discovered device is not an iRobot device",
-      "short_blid": "The BLID was truncated"
-    }
-  },
-  "options": {
+    "flow_title": "{name} ({host})",
     "step": {
-      "init": {
+      "link": {
+        "description": "Make sure that the iRobot app is not running on any device. Press and hold the Home button (or both Home and Spot buttons) on {name} until the device generates a sound (about two seconds), then submit within 30 seconds.",
+        "title": "Retrieve password"
+      },
+      "link_manual": {
         "data": {
-          "continuous": "Continuous",
-          "delay": "Delay"
-        }
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The password could not be retrieved from the device automatically. Please make sure that the iRobot app is not open on any device while trying to retrieve the password. Please follow the steps outlined in the documentation at: {auth_help_url}",
+        "title": "Enter password"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Roomba or Braava."
+        },
+        "description": "No Roomba or Braava have been discovered on your network.",
+        "title": "Manually connect to the device"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Roomba or Braava."
+        },
+        "description": "Select a Roomba or Braava.",
+        "title": "Automatically connect to the device"
       }
     }
   },
@@ -61,35 +51,51 @@
       }
     },
     "sensor": {
-      "battery_cycles": {
-        "name": "Battery cycles"
-      },
-      "total_cleaning_time": {
-        "name": "Total cleaning time"
-      },
       "average_mission_time": {
         "name": "Average mission time"
       },
-      "total_missions": {
-        "name": "Total missions"
-      },
-      "successful_missions": {
-        "name": "Successful missions"
+      "battery_cycles": {
+        "name": "Battery cycles"
       },
       "canceled_missions": {
         "name": "Canceled missions"
       },
+      "dock_tank_level": {
+        "name": "Dock tank level"
+      },
       "failed_missions": {
         "name": "Failed missions"
+      },
+      "last_mission": {
+        "name": "Last mission start time"
       },
       "scrubs_count": {
         "name": "Scrubs"
       },
+      "successful_missions": {
+        "name": "Successful missions"
+      },
+      "tank_level": {
+        "name": "Tank level"
+      },
       "total_cleaned_area": {
         "name": "Total cleaned area"
       },
-      "last_mission": {
-        "name": "Last mission start time"
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_missions": {
+        "name": "Total missions"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "continuous": "Continuous",
+          "delay": "Delay"
+        }
       }
     }
   }

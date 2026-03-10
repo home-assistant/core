@@ -4,7 +4,8 @@
   "codeowners": ["@Noltari"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airzone_cloud",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioairzone_cloud"],
-  "requirements": ["aioairzone-cloud==0.7.1"]
+  "requirements": ["aioairzone-cloud==0.7.2"]
 }

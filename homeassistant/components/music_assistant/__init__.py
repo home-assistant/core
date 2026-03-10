@@ -8,14 +8,30 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from music_assistant_client import MusicAssistantClient
-from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant_client.exceptions import (
+    CannotConnect,
+    InvalidServerVersion,
+    MusicAssistantClientException,
+)
+from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import ActionUnavailable, MusicAssistantError
+from music_assistant_models.errors import (
+    ActionUnavailable,
+    AuthenticationFailed,
+    AuthenticationRequired,
+    InvalidToken,
+    MusicAssistantError,
+)
+from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -24,8 +40,9 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
-from .actions import get_music_assistant_client, register_actions
-from .const import DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, CONF_TOKEN, DOMAIN, LOGGER
+from .helpers import get_music_assistant_client
+from .services import register_actions
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -56,16 +73,19 @@ class MusicAssistantEntryData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Music Assistant component."""
     register_actions(hass)
+
     return True
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
 ) -> bool:
     """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
-    mass = MusicAssistantClient(mass_url, http_session)
+    # Get token from config entry (for schema >= AUTH_SCHEMA_VERSION)
+    token = entry.data.get(CONF_TOKEN)
+    mass = MusicAssistantClient(mass_url, http_session, token=token)
 
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
@@ -84,6 +104,23 @@ async def async_setup_entry(
             translation_key="invalid_server_version",
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
+    except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
+        assert mass.server_info is not None
+        # Users cannot reauthenticate when running as Home Assistant addon,
+        # so raising ConfigEntryAuthFailed in that case would be incorrect.
+        # Instead we should wait until the addon discovery is completed,
+        # as that will set up authentication and reload the entry automatically.
+        if mass.server_info.homeassistant_addon:
+            raise ConfigEntryError(
+                "Authentication failed, addon discovery not completed yet"
+            ) from err
+        raise ConfigEntryAuthFailed(
+            f"Authentication failed for {mass_url}: {err}"
+        ) from err
+    except MusicAssistantClientException as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to music assistant server {mass_url}: {err}"
+        ) from err
     except MusicAssistantError as err:
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
@@ -126,8 +163,25 @@ async def async_setup_entry(
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    def add_player(player: Player) -> None:
+        """Handle adding Player from MA as HA device + entities."""
+        entry.runtime_data.discovered_players.add(player.player_id)
+        # run callback for each platform
+        for callback in entry.runtime_data.platform_handlers.values():
+            callback(player.player_id)
+
+    def remove_player(player_id: str) -> None:
+        """Handle removing Player from MA as HA device + entities."""
+        if player_id in entry.runtime_data.discovered_players:
+            entry.runtime_data.discovered_players.remove(player_id)
+        dev_reg = dr.async_get(hass)
+        if hass_device := dev_reg.async_get_device({(DOMAIN, player_id)}):
+            dev_reg.async_update_device(
+                hass_device.id, remove_config_entry_id=entry.entry_id
+            )
+
     # register listener for new players
-    async def handle_player_added(event: MassEvent) -> None:
+    def handle_player_added(event: MassEvent) -> None:
         """Handle Mass Player Added event."""
         if TYPE_CHECKING:
             assert event.object_id is not None
@@ -138,10 +192,7 @@ async def async_setup_entry(
             assert player is not None
         if not player.expose_to_ha:
             return
-        entry.runtime_data.discovered_players.add(event.object_id)
-        # run callback for each platform
-        for callback in entry.runtime_data.platform_handlers.values():
-            callback(event.object_id)
+        add_player(player)
 
     entry.async_on_unload(mass.subscribe(handle_player_added, EventType.PLAYER_ADDED))
 
@@ -149,23 +200,38 @@ async def async_setup_entry(
     for player in mass.players:
         if not player.expose_to_ha:
             continue
-        entry.runtime_data.discovered_players.add(player.player_id)
-        for callback in entry.runtime_data.platform_handlers.values():
-            callback(player.player_id)
+        add_player(player)
 
     # register listener for removed players
-    async def handle_player_removed(event: MassEvent) -> None:
+    def handle_player_removed(event: MassEvent) -> None:
         """Handle Mass Player Removed event."""
         if event.object_id is None:
             return
-        dev_reg = dr.async_get(hass)
-        if hass_device := dev_reg.async_get_device({(DOMAIN, event.object_id)}):
-            dev_reg.async_update_device(
-                hass_device.id, remove_config_entry_id=entry.entry_id
-            )
+        remove_player(event.object_id)
 
     entry.async_on_unload(
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
+    )
+
+    # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
+    def handle_player_config_updated(event: MassEvent) -> None:
+        """Handle Mass Player Config Updated event."""
+        if event.object_id is None or not event.data:
+            return
+        player_id = event.object_id
+        player_config = PlayerConfig.from_dict(event.data)
+        expose_to_ha = player_config.get_value(ATTR_CONF_EXPOSE_PLAYER_TO_HA, True)
+        if not expose_to_ha and player_id in entry.runtime_data.discovered_players:
+            # player is no longer exposed to Home Assistant
+            remove_player(player_id)
+        elif expose_to_ha and player_id not in entry.runtime_data.discovered_players:
+            # player is now exposed to Home Assistant
+            if not (player := mass.players.get(player_id)):
+                return  # guard
+            add_player(player)
+
+    entry.async_on_unload(
+        mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
 
     # check if any playerconfigs have been removed while we were disconnected
@@ -207,12 +273,14 @@ async def _client_listen(
         hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: MusicAssistantConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        mass_entry_data: MusicAssistantEntryData = entry.runtime_data
+        mass_entry_data = entry.runtime_data
         mass_entry_data.listen_task.cancel()
         await mass_entry_data.mass.disconnect()
 
@@ -220,7 +288,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: MusicAssistantConfigEntry,
+    device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     player_id = next(

@@ -32,6 +32,8 @@ from .common import (
     assert_states_equal_without_context,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
 )
 
 from tests.typing import RecorderInstanceContextManager
@@ -49,7 +51,7 @@ def multiple_start_time_chunk_sizes(
     to call _generate_significant_states_with_session_stmt multiple times.
     """
     with patch(
-        "homeassistant.components.recorder.history.modern.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        "homeassistant.components.recorder.history.MAX_IDS_FOR_INDEXED_GROUP_BY",
         ids_for_start_time_chunk_sizes,
     ):
         yield
@@ -884,10 +886,10 @@ async def test_get_full_significant_states_handles_empty_last_changed(
                 db_state.entity_id = metadata_id_to_entity_id[
                     db_state.metadata_id
                 ].entity_id
-                state = db_state.to_native()
-                state.attributes = db_state_attributes[
-                    db_state.attributes_id
-                ].to_native()
+                state = db_state_to_native(db_state)
+                state.attributes = db_state_attributes_to_native(
+                    db_state_attributes[db_state.attributes_id]
+                )
                 native_states.append(state)
             return native_states
 

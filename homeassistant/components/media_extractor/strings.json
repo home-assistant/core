@@ -7,33 +7,33 @@
     }
   },
   "services": {
+    "extract_media_url": {
+      "description": "Extract media URL from a service.",
+      "fields": {
+        "format_query": {
+          "description": "Youtube-dl query to select the quality of the result.",
+          "name": "Format query"
+        },
+        "url": {
+          "description": "URL where the media can be found.",
+          "name": "Media URL"
+        }
+      },
+      "name": "Get media URL"
+    },
     "play_media": {
-      "name": "Play media",
       "description": "Downloads file from given URL.",
       "fields": {
         "media_content_id": {
-          "name": "Media content ID",
-          "description": "The ID of the content to play. Platform dependent."
+          "description": "The ID of the content to play. Platform dependent.",
+          "name": "Media content ID"
         },
         "media_content_type": {
-          "name": "Media content type",
-          "description": "The type of the content to play."
+          "description": "The type of the content to play.",
+          "name": "Media content type"
         }
-      }
-    },
-    "extract_media_url": {
-      "name": "Get media URL",
-      "description": "Extract media URL from a service.",
-      "fields": {
-        "url": {
-          "name": "Media URL",
-          "description": "URL where the media can be found."
-        },
-        "format_query": {
-          "name": "Format query",
-          "description": "Youtube-dl query to select the quality of the result."
-        }
-      }
+      },
+      "name": "Play media"
     }
   }
 }

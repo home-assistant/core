@@ -2,27 +2,37 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 import io
 import logging
+import os
+from pathlib import Path
 from ssl import SSLContext
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from telegram import (
     Bot,
     CallbackQuery,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMedia,
+    InputMediaAnimation,
+    InputMediaAudio,
+    InputMediaDocument,
+    InputMediaPhoto,
+    InputMediaVideo,
     InputPollOption,
     Message,
+    PhotoSize,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
     User,
 )
-from telegram.constants import ParseMode
+from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
@@ -37,6 +47,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -50,14 +62,20 @@ from .const import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
+    ATTR_FILE_MIME_TYPE,
+    ATTR_FILE_NAME,
+    ATTR_FILE_PATH,
+    ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
+    ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_MSG,
     ATTR_MSGID,
     ATTR_ONE_TIME_KEYBOARD,
@@ -75,9 +93,12 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    DEFAULT_TIMEOUT_SECONDS,
     DOMAIN,
+    EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
@@ -88,14 +109,15 @@ from .const import (
     PARSER_PLAIN_TEXT,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
-    SERVICE_SEND_ANIMATION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_STICKER,
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
 )
+from .helpers import signal
 
+_FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
 
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
@@ -153,6 +175,7 @@ class BaseTelegramBot:
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
+        async_dispatcher_send(self.hass, signal(self._bot), event_type, event_data)
         return True
 
     @staticmethod
@@ -175,6 +198,10 @@ class BaseTelegramBot:
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
+        elif filters.ATTACHMENT.filter(message):
+            event_type = EVENT_TELEGRAM_ATTACHMENT
+            event_data[ATTR_TEXT] = message.caption
+            event_data.update(self._get_file_id_event_data(message))
         else:
             event_type = EVENT_TELEGRAM_TEXT
             event_data[ATTR_TEXT] = message.text
@@ -183,6 +210,26 @@ class BaseTelegramBot:
             event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_file_id_event_data(self, message: Message) -> dict[str, Any]:
+        """Extract file_id from a message attachment, if any."""
+        if filters.PHOTO.filter(message):
+            photos = cast(Sequence[PhotoSize], message.effective_attachment)
+            return {
+                ATTR_FILE_ID: photos[-1].file_id,
+                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_SIZE: photos[-1].file_size,
+            }
+        return {
+            k: getattr(message.effective_attachment, v)
+            for k, v in (
+                (ATTR_FILE_ID, "file_id"),
+                (ATTR_FILE_NAME, "file_name"),
+                (ATTR_FILE_MIME_TYPE, "mime_type"),
+                (ATTR_FILE_SIZE, "file_size"),
+            )
+            if hasattr(message.effective_attachment, v)
+        }
 
     def _get_user_event_data(self, user: User) -> dict[str, Any]:
         return {
@@ -241,7 +288,7 @@ class TelegramNotificationService:
     def __init__(
         self,
         hass: HomeAssistant,
-        app: BaseTelegramBot,
+        app: BaseTelegramBot | None,
         bot: Bot,
         config: TelegramBotConfigEntry,
         parser: str,
@@ -260,24 +307,6 @@ class TelegramNotificationService:
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
 
-    def _get_allowed_chat_ids(self) -> list[int]:
-        allowed_chat_ids: list[int] = [
-            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
-        ]
-
-        if not allowed_chat_ids:
-            bot_name: str = self.config.title
-            raise ServiceValidationError(
-                "No allowed chat IDs found for bot",
-                translation_domain=DOMAIN,
-                translation_key="missing_allowed_chat_ids",
-                translation_placeholders={
-                    "bot_name": bot_name,
-                },
-            )
-
-        return allowed_chat_ids
-
     def _get_msg_ids(
         self, msg_data: dict[str, Any], chat_id: int
     ) -> tuple[Any | None, int | None]:
@@ -290,8 +319,8 @@ class TelegramNotificationService:
         """
         message_id: Any | None = None
         inline_message_id: int | None = None
-        if ATTR_MESSAGEID in msg_data:
-            message_id = msg_data[ATTR_MESSAGEID]
+        if ATTR_MESSAGE_ID in msg_data:
+            message_id = msg_data[ATTR_MESSAGE_ID]
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
@@ -299,35 +328,8 @@ class TelegramNotificationService:
             ):
                 message_id = self._last_message_id[chat_id]
         else:
-            inline_message_id = msg_data["inline_message_id"]
+            inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
-
-    def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:
-        """Validate chat_id targets or return default target (first).
-
-        :param target: optional list of integers ([12234, -12345])
-        :return list of chat_id targets (integers)
-        """
-        allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
-
-        if target is None:
-            return [allowed_chat_ids[0]]
-
-        chat_ids = [target] if isinstance(target, int) else target
-        valid_chat_ids = [
-            chat_id for chat_id in chat_ids if chat_id in allowed_chat_ids
-        ]
-        if not valid_chat_ids:
-            raise ServiceValidationError(
-                "Invalid chat IDs",
-                translation_domain=DOMAIN,
-                translation_key="invalid_chat_ids",
-                translation_placeholders={
-                    "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
-                    "bot_name": self.config.title,
-                },
-            )
-        return valid_chat_ids
 
     def _get_msg_kwargs(self, data: dict[str, Any]) -> dict[str, Any]:
         """Get parameters in message data kwargs."""
@@ -373,7 +375,10 @@ class TelegramNotificationService:
                             InlineKeyboardButton(text_btn, callback_data=data_btn)
                         )
             else:
-                raise TypeError(str(row_keyboard))
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_inline_keyboard",
+                )
             return buttons
 
         # Defaults
@@ -404,7 +409,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -425,97 +430,107 @@ class TelegramNotificationService:
             params[ATTR_PARSER] = None
         return params
 
+    async def _send_msg_formatted(
+        self,
+        func_send: Callable[..., Awaitable[Message]],
+        message_tag: str | None,
+        *args_msg: Any,
+        context: Context | None = None,
+        **kwargs_msg: Any,
+    ) -> dict[str, JsonValueType]:
+        """Sends a message and formats the response.
+
+        :return: dict with chat_id keys and message_id values for successful sends
+        """
+        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
+
+        response: Message = await self._send_msg(
+            func_send,
+            message_tag,
+            chat_id,
+            *args_msg,
+            context=context,
+            **kwargs_msg,
+        )
+
+        return {str(chat_id): response.id}
+
     async def _send_msg(
         self,
-        func_send: Callable,
-        msg_error: str,
+        func_send: Callable[..., Awaitable[Any]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
         **kwargs_msg: Any,
     ) -> Any:
         """Send one message."""
-        try:
-            out = await func_send(*args_msg, **kwargs_msg)
-            if isinstance(out, Message):
-                chat_id = out.chat_id
-                message_id = out.message_id
-                self._last_message_id[chat_id] = message_id
-                _LOGGER.debug(
-                    "Last message ID: %s (from chat_id %s)",
-                    self._last_message_id,
-                    chat_id,
-                )
-
-                event_data: dict[str, Any] = {
-                    ATTR_CHAT_ID: chat_id,
-                    ATTR_MESSAGEID: message_id,
-                }
-                if message_tag is not None:
-                    event_data[ATTR_MESSAGE_TAG] = message_tag
-                if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
-                    event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
-                        ATTR_MESSAGE_THREAD_ID
-                    ]
-
-                event_data["bot"] = _get_bot_info(self.bot, self.config)
-
-                self.hass.bus.async_fire(
-                    EVENT_TELEGRAM_SENT, event_data, context=context
-                )
-        except TelegramError as exc:
-            _LOGGER.error(
-                "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
+        out = await func_send(*args_msg, **kwargs_msg)
+        if isinstance(out, Message):
+            chat_id = out.chat_id
+            message_id = out.message_id
+            self._last_message_id[chat_id] = message_id
+            _LOGGER.debug(
+                "Last message ID: %s (from chat_id %s)",
+                self._last_message_id,
+                chat_id,
             )
-            return None
+
+            event_data: dict[str, Any] = {
+                ATTR_CHAT_ID: chat_id,
+                ATTR_MESSAGE_ID: message_id,
+            }
+            if message_tag is not None:
+                event_data[ATTR_MESSAGE_TAG] = message_tag
+            if kwargs_msg.get(ATTR_MESSAGE_THREAD_ID) is not None:
+                event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[ATTR_MESSAGE_THREAD_ID]
+
+            event_data["bot"] = _get_bot_info(self.bot, self.config)
+
+            self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data, context=context)
+            async_dispatcher_send(
+                self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
+            )
+
         return out
 
     async def send_message(
         self,
-        message: str = "",
-        target: Any = None,
+        message: str,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
-        msg_ids = {}
-        for chat_id in self.get_target_chat_ids(target):
-            _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
-            msg = await self._send_msg(
-                self.bot.send_message,
-                "Error sending message",
-                params[ATTR_MESSAGE_TAG],
-                chat_id,
-                text,
-                parse_mode=params[ATTR_PARSER],
-                disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
-                disable_notification=params[ATTR_DISABLE_NOTIF],
-                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                reply_markup=params[ATTR_REPLYMARKUP],
-                read_timeout=params[ATTR_TIMEOUT],
-                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                context=context,
-            )
-            if msg is not None:
-                msg_ids[chat_id] = msg.id
-        return msg_ids
+        return await self._send_msg_formatted(
+            self.bot.send_message,
+            params[ATTR_MESSAGE_TAG],
+            text,
+            chat_id=chat_id,
+            parse_mode=params[ATTR_PARSER],
+            disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            reply_markup=params[ATTR_REPLYMARKUP],
+            read_timeout=params[ATTR_TIMEOUT],
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
 
     async def delete_message(
         self,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> bool:
         """Delete a previously sent message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
         deleted: bool = await self._send_msg(
             self.bot.delete_message,
-            "Error deleting message",
             None,
             chat_id,
             message_id,
@@ -527,15 +542,89 @@ class TelegramNotificationService:
             self._last_message_id[chat_id] -= 1
         return deleted
 
+    async def edit_message_media(
+        self,
+        media_type: str,
+        chat_id: int,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        "Edit message media of a previously sent message."
+        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug(
+            "Edit message media %s in chat ID %s with params: %s",
+            message_id or inline_message_id,
+            chat_id,
+            params,
+        )
+
+        file_content = await load_data(
+            self.hass,
+            url=kwargs.get(ATTR_URL),
+            filepath=kwargs.get(ATTR_FILE),
+            username=kwargs.get(ATTR_USERNAME, ""),
+            password=kwargs.get(ATTR_PASSWORD, ""),
+            authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=(
+                get_default_context()
+                if kwargs.get(ATTR_VERIFY_SSL, False)
+                else get_default_no_verify_context()
+            ),
+        )
+
+        media: InputMedia
+        if media_type == InputMediaType.ANIMATION:
+            media = InputMediaAnimation(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
+        elif media_type == InputMediaType.AUDIO:
+            media = InputMediaAudio(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
+        elif media_type == InputMediaType.DOCUMENT:
+            media = InputMediaDocument(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
+        elif media_type == InputMediaType.PHOTO:
+            media = InputMediaPhoto(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
+        else:
+            media = InputMediaVideo(
+                file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                parse_mode=params[ATTR_PARSER],
+            )
+
+        return await self._send_msg(
+            self.bot.edit_message_media,
+            params[ATTR_MESSAGE_TAG],
+            media=media,
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            reply_markup=params[ATTR_REPLYMARKUP],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
+
     async def edit_message(
         self,
         type_edit: str,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
         """Edit a previously sent message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
@@ -551,7 +640,6 @@ class TelegramNotificationService:
             _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
             return await self._send_msg(
                 self.bot.edit_message_text,
-                "Error editing text message",
                 params[ATTR_MESSAGE_TAG],
                 text,
                 chat_id=chat_id,
@@ -566,7 +654,6 @@ class TelegramNotificationService:
         if type_edit == SERVICE_EDIT_CAPTION:
             return await self._send_msg(
                 self.bot.edit_message_caption,
-                "Error editing message attributes",
                 params[ATTR_MESSAGE_TAG],
                 chat_id=chat_id,
                 message_id=message_id,
@@ -580,7 +667,6 @@ class TelegramNotificationService:
 
         return await self._send_msg(
             self.bot.edit_message_reply_markup,
-            "Error editing message attributes",
             params[ATTR_MESSAGE_TAG],
             chat_id=chat_id,
             message_id=message_id,
@@ -608,7 +694,6 @@ class TelegramNotificationService:
         )
         await self._send_msg(
             self.bot.answer_callback_query,
-            "Error sending answer callback query",
             params[ATTR_MESSAGE_TAG],
             callback_query_id,
             text=message,
@@ -617,13 +702,33 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_chat_action(
+        self,
+        chat_id: int,
+        chat_action: str = "",
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[str, JsonValueType]:
+        """Send a chat action to pre-allowed chat IDs."""
+        result: dict[str, JsonValueType] = {}
+        _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
+        is_successful = await self._send_msg(
+            self.bot.send_chat_action,
+            None,
+            chat_id=chat_id,
+            action=chat_action,
+            message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
+            context=context,
+        )
+        result[str(chat_id)] = is_successful
+        return result
+
     async def send_file(
         self,
         file_type: str,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
@@ -640,176 +745,146 @@ class TelegramNotificationService:
             ),
         )
 
-        msg_ids = {}
-        if file_content:
-            for chat_id in self.get_target_chat_ids(target):
-                _LOGGER.debug("Sending file to chat ID %s", chat_id)
+        if file_type == SERVICE_SEND_PHOTO:
+            return await self._send_msg_formatted(
+                self.bot.send_photo,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                photo=file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                parse_mode=params[ATTR_PARSER],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
 
-                if file_type == SERVICE_SEND_PHOTO:
-                    msg = await self._send_msg(
-                        self.bot.send_photo,
-                        "Error sending photo",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        photo=file_content,
-                        caption=kwargs.get(ATTR_CAPTION),
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        parse_mode=params[ATTR_PARSER],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
+        if file_type == SERVICE_SEND_STICKER:
+            return await self._send_msg_formatted(
+                self.bot.send_sticker,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                sticker=file_content,
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
 
-                elif file_type == SERVICE_SEND_STICKER:
-                    msg = await self._send_msg(
-                        self.bot.send_sticker,
-                        "Error sending sticker",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        sticker=file_content,
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
+        if file_type == SERVICE_SEND_VIDEO:
+            return await self._send_msg_formatted(
+                self.bot.send_video,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                video=file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                parse_mode=params[ATTR_PARSER],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
 
-                elif file_type == SERVICE_SEND_VIDEO:
-                    msg = await self._send_msg(
-                        self.bot.send_video,
-                        "Error sending video",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        video=file_content,
-                        caption=kwargs.get(ATTR_CAPTION),
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        parse_mode=params[ATTR_PARSER],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
-                elif file_type == SERVICE_SEND_DOCUMENT:
-                    msg = await self._send_msg(
-                        self.bot.send_document,
-                        "Error sending document",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        document=file_content,
-                        caption=kwargs.get(ATTR_CAPTION),
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        parse_mode=params[ATTR_PARSER],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
-                elif file_type == SERVICE_SEND_VOICE:
-                    msg = await self._send_msg(
-                        self.bot.send_voice,
-                        "Error sending voice",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        voice=file_content,
-                        caption=kwargs.get(ATTR_CAPTION),
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
-                elif file_type == SERVICE_SEND_ANIMATION:
-                    msg = await self._send_msg(
-                        self.bot.send_animation,
-                        "Error sending animation",
-                        params[ATTR_MESSAGE_TAG],
-                        chat_id=chat_id,
-                        animation=file_content,
-                        caption=kwargs.get(ATTR_CAPTION),
-                        disable_notification=params[ATTR_DISABLE_NOTIF],
-                        reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                        reply_markup=params[ATTR_REPLYMARKUP],
-                        read_timeout=params[ATTR_TIMEOUT],
-                        parse_mode=params[ATTR_PARSER],
-                        message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                        context=context,
-                    )
+        if file_type == SERVICE_SEND_DOCUMENT:
+            return await self._send_msg_formatted(
+                self.bot.send_document,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                document=file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                parse_mode=params[ATTR_PARSER],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
 
-                msg_ids[chat_id] = msg.id
-                file_content.seek(0)
-        else:
-            _LOGGER.error("Can't send file with kwargs: %s", kwargs)
+        if file_type == SERVICE_SEND_VOICE:
+            return await self._send_msg_formatted(
+                self.bot.send_voice,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                voice=file_content,
+                caption=kwargs.get(ATTR_CAPTION),
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
 
-        return msg_ids
+        # SERVICE_SEND_ANIMATION
+        return await self._send_msg_formatted(
+            self.bot.send_animation,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=kwargs[ATTR_CHAT_ID],
+            animation=file_content,
+            caption=kwargs.get(ATTR_CAPTION),
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            reply_markup=params[ATTR_REPLYMARKUP],
+            read_timeout=params[ATTR_TIMEOUT],
+            parse_mode=params[ATTR_PARSER],
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
 
     async def send_sticker(
         self,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
 
-        msg_ids = {}
         if stickerid:
-            for chat_id in self.get_target_chat_ids(target):
-                msg = await self._send_msg(
-                    self.bot.send_sticker,
-                    "Error sending sticker",
-                    params[ATTR_MESSAGE_TAG],
-                    chat_id=chat_id,
-                    sticker=stickerid,
-                    disable_notification=params[ATTR_DISABLE_NOTIF],
-                    reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                    reply_markup=params[ATTR_REPLYMARKUP],
-                    read_timeout=params[ATTR_TIMEOUT],
-                    message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                    context=context,
-                )
-                msg_ids[chat_id] = msg.id
-            return msg_ids
-        return await self.send_file(SERVICE_SEND_STICKER, target, context, **kwargs)
+            return await self._send_msg_formatted(
+                self.bot.send_sticker,
+                params[ATTR_MESSAGE_TAG],
+                chat_id=kwargs[ATTR_CHAT_ID],
+                sticker=stickerid,
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+                reply_markup=params[ATTR_REPLYMARKUP],
+                read_timeout=params[ATTR_TIMEOUT],
+                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+                context=context,
+            )
+        return await self.send_file(SERVICE_SEND_STICKER, context, **kwargs)
 
     async def send_location(
         self,
         latitude: Any,
         longitude: Any,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
-        msg_ids = {}
-        for chat_id in self.get_target_chat_ids(target):
-            _LOGGER.debug(
-                "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
-            )
-            msg = await self._send_msg(
-                self.bot.send_location,
-                "Error sending location",
-                params[ATTR_MESSAGE_TAG],
-                chat_id=chat_id,
-                latitude=latitude,
-                longitude=longitude,
-                disable_notification=params[ATTR_DISABLE_NOTIF],
-                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                read_timeout=params[ATTR_TIMEOUT],
-                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                context=context,
-            )
-            msg_ids[chat_id] = msg.id
-        return msg_ids
+        return await self._send_msg_formatted(
+            self.bot.send_location,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=kwargs[ATTR_CHAT_ID],
+            latitude=latitude,
+            longitude=longitude,
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            read_timeout=params[ATTR_TIMEOUT],
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
 
     async def send_poll(
         self,
@@ -817,58 +892,47 @@ class TelegramNotificationService:
         options: Sequence[str | InputPollOption],
         is_anonymous: bool | None,
         allows_multiple_answers: bool | None,
-        target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
-        msg_ids = {}
-        for chat_id in self.get_target_chat_ids(target):
-            _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
-            msg = await self._send_msg(
-                self.bot.send_poll,
-                "Error sending poll",
-                params[ATTR_MESSAGE_TAG],
-                chat_id=chat_id,
-                question=question,
-                options=options,
-                is_anonymous=is_anonymous,
-                allows_multiple_answers=allows_multiple_answers,
-                open_period=openperiod,
-                disable_notification=params[ATTR_DISABLE_NOTIF],
-                reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                read_timeout=params[ATTR_TIMEOUT],
-                message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
-                context=context,
-            )
-            msg_ids[chat_id] = msg.id
-        return msg_ids
+        return await self._send_msg_formatted(
+            self.bot.send_poll,
+            params[ATTR_MESSAGE_TAG],
+            chat_id=kwargs[ATTR_CHAT_ID],
+            question=question,
+            options=options,
+            is_anonymous=is_anonymous,
+            allows_multiple_answers=allows_multiple_answers,
+            open_period=openperiod,
+            disable_notification=params[ATTR_DISABLE_NOTIF],
+            reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
+            read_timeout=params[ATTR_TIMEOUT],
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            context=context,
+        )
 
     async def leave_chat(
         self,
-        chat_id: int | None = None,
+        chat_id: int,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> Any:
         """Remove bot from chat."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        return await self._send_msg(
-            self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
-        )
+        return await self._send_msg(self.bot.leave_chat, None, chat_id, context=context)
 
     async def set_message_reaction(
         self,
         reaction: str,
-        chat_id: int | None = None,
+        chat_id: int,
         is_big: bool = False,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> None:
         """Set the bot's reaction for a given message."""
-        chat_id = self.get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
 
@@ -882,7 +946,6 @@ class TelegramNotificationService:
 
         await self._send_msg(
             self.bot.set_message_reaction,
-            "Error setting message reaction",
             params[ATTR_MESSAGE_TAG],
             chat_id,
             message_id,
@@ -892,18 +955,94 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def download_file(
+        self,
+        file_id: str,
+        directory_path: str | None = None,
+        file_name: str | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[str, JsonValueType]:
+        """Download a file from Telegram."""
+        if not directory_path:
+            directory_path = self.hass.config.path(DOMAIN)
+        file: File = await self._send_msg(
+            self.bot.get_file,
+            None,
+            file_id=file_id,
+            context=context,
+        )
+        if not file.file_path:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={
+                    "error": "No file path returned from Telegram"
+                },
+            )
+        if not file_name:
+            file_name = os.path.basename(file.file_path)
+
+        custom_path = os.path.join(directory_path, file_name)
+        await self.hass.async_add_executor_job(
+            self._prepare_download_directory, directory_path
+        )
+        _LOGGER.debug("Download file %s to %s", file_id, custom_path)
+        try:
+            file_content = await file.download_as_bytearray()
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except (RuntimeError, OSError, TelegramError) as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        return {ATTR_FILE_PATH: custom_path}
+
+    @staticmethod
+    def _prepare_download_directory(directory_path: str) -> None:
+        """Create download directory if it does not exist."""
+        if not os.path.exists(directory_path):
+            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
+            os.makedirs(directory_path, exist_ok=True)
+
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
 
+    api_key: str = p_config[CONF_API_KEY]
+
+    # set up timeouts to handle large file downloads and uploads
+    # server-side file size limit is 2GB
+    read_timeout = DEFAULT_TIMEOUT_SECONDS
+    media_write_timeout = DEFAULT_TIMEOUT_SECONDS
+
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
-        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            proxy=proxy,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
     else:
-        request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
+        request = HTTPXRequest(
+            connection_pool_size=8,
+            read_timeout=read_timeout,
+            media_write_timeout=media_write_timeout,
+        )
+
+    base_url: str = p_config[CONF_API_ENDPOINT]
+
+    return Bot(
+        token=api_key,
+        base_url=f"{base_url}/bot",
+        base_file_url=f"{base_url}/file/bot",
+        request=request,
+    )
 
 
 async def load_data(
@@ -933,13 +1072,14 @@ async def load_data(
             params["verify"] = verify_ssl
 
         retry_num = 0
-        async with httpx.AsyncClient(timeout=15, headers=headers, **params) as client:
+        async with httpx.AsyncClient(
+            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
+        ) as client:
             while retry_num < num_retries:
                 try:
                     req = await client.get(url)
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
                     raise HomeAssistantError(
-                        f"Failed to load URL: {err!s}",
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
                         translation_placeholders={"error": str(err)},
@@ -957,6 +1097,7 @@ async def load_data(
                     if data.read():
                         data.seek(0)
                         data.name = url
+                        _LOGGER.debug("file downloaded: %s", url)
                         return data
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
@@ -965,7 +1106,6 @@ async def load_data(
                         1
                     )  # Add a sleep to allow other async operations to proceed
             raise HomeAssistantError(
-                f"Failed to load URL: {req.status_code}",
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
                 translation_placeholders={"error": str(req.status_code)},
@@ -975,13 +1115,11 @@ async def load_data(
             return await hass.async_add_executor_job(_read_file_as_bytesio, filepath)
 
         raise ServiceValidationError(
-            "File path has not been configured in allowlist_external_dirs.",
             translation_domain=DOMAIN,
             translation_key="allowlist_external_dirs_error",
         )
     else:
         raise ServiceValidationError(
-            "URL or File is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
@@ -996,7 +1134,6 @@ def _validate_credentials_input(
         and not username
     ):
         raise ServiceValidationError(
-            "Username is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Username"},
@@ -1012,7 +1149,6 @@ def _validate_credentials_input(
         and not password
     ):
         raise ServiceValidationError(
-            "Password is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Password"},
@@ -1028,7 +1164,6 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             return data
     except OSError as err:
         raise HomeAssistantError(
-            f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
             translation_key="failed_to_load_file",
             translation_placeholders={"error": str(err)},

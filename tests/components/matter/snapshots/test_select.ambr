@@ -1,4 +1,300 @@
 # serializer version: 1
+# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '10 mm',
+        '20 mm',
+        '30 mm',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-1-AqaraBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_door_window_p2][select.aqara_door_and_window_sensor_p2_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Door and Window Sensor P2 Sensitivity',
+      'options': list([
+        '10 mm',
+        '20 mm',
+        '30 mm',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_door_and_window_sensor_p2_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30 mm',
+  })
+# ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_motion_p2][select.aqara_motion_and_light_sensor_p2_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_motion_and_light_sensor_p2_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standard',
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-AqaraOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_presence_fp300][select.presence_multi_sensor_fp300_1_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Sensitivity',
+      'options': list([
+        'low',
+        'standard',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.presence_multi_sensor_fp300_1_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature display mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.floor_heating_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aqara_smart_lock_u200_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -26,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lighting',
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,7 +333,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -86,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -96,7 +394,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000005-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -119,16 +417,16 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[cooktop][select.mock_cooktop_temperature_level-entry]
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -138,7 +436,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_cooktop_temperature_level',
+    'entity_id': 'select.ecodeebot_clean_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -146,58 +444,54 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature level',
+    'original_name': 'Clean mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-000000000000002F-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[cooktop][select.mock_cooktop_temperature_level-state]
+# name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Cooktop Temperature level',
+      'friendly_name': 'ecodeebot Clean mode',
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'Vacuum & Mop',
+        'Vacuum-Only',
+        'Mop after Vacuum',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_cooktop_temperature_level',
+    'entity_id': 'select.ecodeebot_clean_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Medium',
+    'state': 'Vacuum & Mop',
   })
 # ---
-# name: test_selects[dimmable_light][select.mock_dimmable_light_led_color-entry]
+# name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Red',
-        'Orange',
-        'Lemon',
-        'Lime',
-        'Green',
-        'Teal',
-        'Cyan',
-        'Aqua',
-        'Blue',
-        'Violet',
-        'Magenta',
-        'Pink',
-        'White',
+        'Auto Mop & Vacuum',
+        'Auto Vacuum',
+        'Auto Deep Mop & Vacuum',
+        'Quick Mop & Vacuum',
+        'Quick Vacuum',
+        'Low Noise Mop & Vacuum',
+        'Low Noise Vacuum',
+        'Eufy Customize Mode',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -206,8 +500,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_dimmable_light_led_color',
+    'entity_category': None,
+    'entity_id': 'select.2bavs_ab6031x_44pe_clean_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,49 +509,45 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'LED Color',
+    'original_name': 'Clean mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-0000000000000028-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[dimmable_light][select.mock_dimmable_light_led_color-state]
+# name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light LED Color',
+      'friendly_name': '2BAVS-AB6031X-44PE Clean mode',
       'options': list([
-        'Red',
-        'Orange',
-        'Lemon',
-        'Lime',
-        'Green',
-        'Teal',
-        'Cyan',
-        'Aqua',
-        'Blue',
-        'Violet',
-        'Magenta',
-        'Pink',
-        'White',
+        'Auto Mop & Vacuum',
+        'Auto Vacuum',
+        'Auto Deep Mop & Vacuum',
+        'Quick Mop & Vacuum',
+        'Quick Vacuum',
+        'Low Noise Mop & Vacuum',
+        'Low Noise Vacuum',
+        'Eufy Customize Mode',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_dimmable_light_led_color',
+    'entity_id': 'select.2bavs_ab6031x_44pe_clean_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Aqua',
+    'state': 'Auto Mop & Vacuum',
   })
 # ---
-# name: test_selects[dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-entry]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -277,7 +567,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -285,24 +575,25 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup (bottom)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
+    'original_name': 'Power-on behavior on startup (bottom)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-2-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-state]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light Power-on behavior on startup',
+      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (bottom)',
       'options': list([
         'on',
         'off',
@@ -311,14 +602,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_bottom',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
   })
 # ---
-# name: test_selects[dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-entry]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -338,7 +629,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -346,24 +637,25 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup (top)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
+    'original_name': 'Power-on behavior on startup (top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-state]
+# name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_on_startup_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit Power-on behavior on startup',
+      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior on startup (top)',
       'options': list([
         'on',
         'off',
@@ -372,255 +664,11 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'entity_id': 'select.eve_energy_20ecn4101_power_on_behavior_on_startup_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
-  })
-# ---
-# name: test_selects[door_lock][select.mock_door_lock_power_on_behavior_on_startup-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[door_lock][select.mock_door_lock_power_on_behavior_on_startup-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Power-on behavior on startup',
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_selects[door_lock][select.mock_door_lock_sound_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'silent',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_sound_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound volume',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'door_lock_sound_volume',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[door_lock][select.mock_door_lock_sound_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Sound volume',
-      'options': list([
-        'silent',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_sound_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'silent',
-  })
-# ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_power_on_behavior_on_startup-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_power_on_behavior_on_startup-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Power-on behavior on startup',
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_sound_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'silent',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_door_lock_sound_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Sound volume',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'door_lock_sound_volume',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[door_lock_with_unbolt][select.mock_door_lock_sound_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Sound volume',
-      'options': list([
-        'silent',
-        'low',
-        'medium',
-        'high',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_door_lock_sound_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'silent',
   })
 # ---
 # name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior_on_startup-entry]
@@ -651,6 +699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -661,7 +710,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000003D-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -712,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -745,7 +795,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-entry]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -763,7 +813,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -771,6 +821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature display mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -785,17 +836,75 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-state]
+# name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Temperature display mode',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
       'options': list([
         'Celsius',
         'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.eve_thermo_temperature_display_mode',
+    'entity_id': 'select.eve_thermo_20ebp1701_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_thermo_20ecd1701_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature display mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eve_thermo_20ecd1701_temperature_display_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -829,6 +938,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lighting',
     'options': dict({
     }),
     'original_device_class': None,
@@ -839,7 +949,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -889,6 +999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -899,7 +1010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000000A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -922,16 +1033,16 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[laundry_dryer][select.mock_laundrydryer_temperature_level-entry]
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'low',
+        'standard',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -940,8 +1051,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -949,55 +1060,54 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature level',
+    'original_name': 'Sensitivity',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'translation_key': 'sensitivity_level',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-HeimanOccupancySensorBooleanStateConfigurationCurrentSensitivityLevel-128-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[laundry_dryer][select.mock_laundrydryer_temperature_level-state]
+# name: test_selects[heiman_motion_sensor_m1][select.smart_motion_sensor_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Temperature level',
+      'friendly_name': 'Smart motion sensor Sensitivity',
       'options': list([
-        'Low',
-        'Medium',
-        'High',
+        'low',
+        'standard',
+        'high',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'entity_id': 'select.smart_motion_sensor_sensitivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Low',
+    'state': 'high',
   })
 # ---
-# name: test_selects[microwave_oven][select.microwave_oven_power_level_w-entry]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        '100',
-        '200',
-        '300',
-        '400',
-        '500',
-        '600',
-        '700',
-        '800',
-        '900',
-        '1000',
+        'No Delay',
+        '300ms',
+        '400ms',
+        '500ms',
+        '600ms',
+        '700ms',
+        '800ms',
+        '900ms',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1006,8 +1116,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.microwave_oven_power_level_w',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_button_press_delay',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1015,46 +1125,413 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button Press Delay',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power level (W)',
+    'original_name': 'Button Press Delay',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power_level',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlSelectedWattIndex-95-7',
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-5-MatterModeSelect-80-3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[microwave_oven][select.microwave_oven_power_level_w-state]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Oven Power level (W)',
+      'friendly_name': 'White Series OnOff Switch Button Press Delay',
       'options': list([
-        '100',
-        '200',
-        '300',
-        '400',
-        '500',
-        '600',
-        '700',
-        '800',
-        '900',
-        '1000',
+        'No Delay',
+        '300ms',
+        '400ms',
+        '500ms',
+        '600ms',
+        '700ms',
+        '800ms',
+        '900ms',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.microwave_oven_power_level_w',
+    'entity_id': 'select.white_series_onoff_switch_button_press_delay',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1000',
+    'state': '300ms',
   })
 # ---
-# name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_dimming_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dimming Speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dimming Speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-4-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Dimming Speed',
+      'options': list([
+        'Instant',
+        '500ms',
+        '800ms',
+        '1s',
+        '1.5s',
+        '2s',
+        '2.5s',
+        '3s',
+        '3.5s',
+        '4s',
+        '5s',
+        '6s',
+        '7s',
+        '8s',
+        '10s',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_dimming_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Instant',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_led_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED Color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Color',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch LED Color',
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_led_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Green',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Solid',
+        'Fast Blink',
+        'Slow Blink',
+        'Middle Chase',
+        'Open Close',
+        'Small To Big',
+        'Slow Falling',
+        'Middle Falling',
+        'Fast Falling',
+        'Slow Rising',
+        'Middle Rising',
+        'Fast Rising',
+        'Middle Blink',
+        'Slow Chase',
+        'Fast Chase',
+        'Slow Siren',
+        'Fast Siren',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_led_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED Effect',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Effect',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-7-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch LED Effect',
+      'options': list([
+        'Solid',
+        'Fast Blink',
+        'Slow Blink',
+        'Middle Chase',
+        'Open Close',
+        'Small To Big',
+        'Slow Falling',
+        'Middle Falling',
+        'Fast Falling',
+        'Slow Rising',
+        'Middle Rising',
+        'Fast Rising',
+        'Middle Blink',
+        'Slow Chase',
+        'Fast Chase',
+        'Slow Siren',
+        'Fast Siren',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_led_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Solid',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Local Protection Disable',
+        'Local Protection Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_local_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Local Protection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Local Protection',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-8-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Local Protection',
+      'options': list([
+        'Local Protection Disable',
+        'Local Protection Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_local_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Local Protection Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Local Timer Disable',
+        'Local Timer Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_local_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Local Timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Local Timer',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-3-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Local Timer',
+      'options': list([
+        'Local Timer Disable',
+        'Local Timer Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_local_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Local Timer Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1074,7 +1551,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1082,24 +1559,25 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
+    'original_name': 'Power-on behavior on startup (Load Control)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-state]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior on startup',
+      'friendly_name': 'White Series OnOff Switch Power-on behavior on startup (Load Control)',
       'options': list([
         'on',
         'off',
@@ -1108,14 +1586,196 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'previous',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_dimming_edge-entry]
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup (RGB Indicator)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup (RGB Indicator)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-6-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Power-on behavior on startup (RGB Indicator)',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_power_on_behavior_on_startup_rgb_indicator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_smart_bulb_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Smart Bulb Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart Bulb Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-2-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Smart Bulb Mode',
+      'options': list([
+        'Smart Bulb Disable',
+        'Smart Bulb Enable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_smart_bulb_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Smart Bulb Disable',
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'On/Off+Single',
+        'On/Off+AUX',
+        'Dimmer+Single',
+        'Dimmer+AUX',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.white_series_onoff_switch_switch_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Switch Mode',
+      'options': list([
+        'On/Off+Single',
+        'On/Off+AUX',
+        'Dimmer+Single',
+        'Dimmer+AUX',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.white_series_onoff_switch_switch_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'On/Off+Single',
+  })
+# ---
+# name: test_selects[inovelli_vtm31][select.inovelli_dimming_edge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1141,6 +1801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimming Edge',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1155,7 +1816,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_dimming_edge-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_dimming_edge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Dimming Edge',
@@ -1172,7 +1833,7 @@
     'state': 'Leading',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_dimming_speed-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_dimming_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1211,6 +1872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimming Speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1225,7 +1887,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_dimming_speed-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Dimming Speed',
@@ -1255,7 +1917,7 @@
     'state': '2s',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_led_color-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_led_color-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1292,6 +1954,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED Color',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1306,7 +1969,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_led_color-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli LED Color',
@@ -1334,7 +1997,7 @@
     'state': 'Lemon',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_on_startup_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1362,6 +2025,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup (1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1376,7 +2040,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_1-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_on_startup_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Power-on behavior on startup (1)',
@@ -1395,7 +2059,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_on_startup_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1423,6 +2087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup (6)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1437,7 +2102,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_power_on_behavior_on_startup_6-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_on_startup_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Power-on behavior on startup (6)',
@@ -1456,7 +2121,7 @@
     'state': 'off',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_relay-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_relay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1482,6 +2147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1496,7 +2162,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_relay-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Relay',
@@ -1513,7 +2179,7 @@
     'state': 'Relay Click Disable',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_smart_bulb_mode-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_smart_bulb_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1539,6 +2205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart Bulb Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1553,7 +2220,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_smart_bulb_mode-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Smart Bulb Mode',
@@ -1570,7 +2237,7 @@
     'state': 'Smart Bulb Disable',
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_switch_mode-entry]
+# name: test_selects[inovelli_vtm31][select.inovelli_switch_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1601,6 +2268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1615,7 +2283,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[multi_endpoint_light][select.inovelli_switch_mode-state]
+# name: test_selects[inovelli_vtm31][select.inovelli_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inovelli Switch Mode',
@@ -1637,7 +2305,1009 @@
     'state': 'Dimmer+Single',
   })
 # ---
-# name: test_selects[on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-entry]
+# name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature display mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link HVAC Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_cooktop_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-000000000000002B-MatterNodeDevice-2-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Cooktop Temperature level',
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_cooktop_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Medium',
+  })
+# ---
+# name: test_selects[mock_dimmable_light][select.mock_dimmable_light_led_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_dimmable_light_led_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED Color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED Color',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-6-MatterModeSelect-80-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_dimmable_light][select.mock_dimmable_light_led_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light LED Color',
+      'options': list([
+        'Red',
+        'Orange',
+        'Lemon',
+        'Lime',
+        'Green',
+        'Teal',
+        'Cyan',
+        'Aqua',
+        'Blue',
+        'Violet',
+        'Magenta',
+        'Pink',
+        'White',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_dimmable_light_led_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Aqua',
+  })
+# ---
+# name: test_selects[mock_dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000000D-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_dimmable_light][select.mock_dimmable_light_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_dimmable_light_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[mock_dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dimmable Plugin Unit Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dimmable_plugin_unit_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Operating mode',
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock][select.mock_door_lock_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_door_lock_with_unbolt_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
+  })
+# ---
+# name: test_selects[mock_laundry_dryer][select.mock_laundrydryer_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_laundry_dryer][select.mock_laundrydryer_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Laundrydryer Temperature level',
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_laundrydryer_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Low',
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_lock_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Operating mode',
+      'options': list([
+        'normal',
+        'no_remote_lock_unlock',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_lock_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_sound_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_lock_sound_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock_sound_volume',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockSoundVolume-257-36',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_lock][select.mock_lock_sound_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Sound volume',
+      'options': list([
+        'silent',
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_lock_sound_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'silent',
+  })
+# ---
+# name: test_selects[mock_microwave_oven][select.mock_microwave_oven_power_level_w-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '100',
+        '200',
+        '300',
+        '400',
+        '500',
+        '600',
+        '700',
+        '800',
+        '900',
+        '1000',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_microwave_oven_power_level_w',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power level (W)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power level (W)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_level',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlSelectedWattIndex-95-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_microwave_oven][select.mock_microwave_oven_power_level_w-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Microwave Oven Power level (W)',
+      'options': list([
+        '100',
+        '200',
+        '300',
+        '400',
+        '500',
+        '600',
+        '700',
+        '800',
+        '900',
+        '1000',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_microwave_oven_power_level_w',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_selects[mock_mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_mounted_dimmable_load_control_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_selects[mock_on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1665,6 +3335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1675,11 +3346,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001A-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-state]
+# name: test_selects[mock_on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior_on_startup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOffPluginUnit Power-on behavior on startup',
@@ -1698,7 +3369,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+# name: test_selects[mock_onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1726,6 +3397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1736,11 +3408,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-state]
+# name: test_selects[mock_onoff_light][select.mock_onoff_light_power_on_behavior_on_startup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
@@ -1759,7 +3431,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-entry]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1779,7 +3451,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1787,6 +3459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1797,11 +3470,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup-state]
+# name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_on_startup_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock OnOff Light Power-on behavior on startup',
@@ -1813,14 +3486,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup',
+    'entity_id': 'select.mock_onoff_light_power_on_behavior_on_startup_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
   })
 # ---
-# name: test_selects[onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-entry]
+# name: test_selects[mock_onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1848,6 +3521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1858,11 +3532,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-state]
+# name: test_selects[mock_onoff_light_no_name][select.mock_light_power_on_behavior_on_startup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Light Power-on behavior on startup',
@@ -1879,6 +3553,384 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[mock_oven][select.mock_oven_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Bake',
+        'Convection',
+        'Grill',
+        'Roast',
+        'Clean',
+        'Convection Bake',
+        'Convection Roast',
+        'Warming',
+        'Proofing',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_oven_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mode',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-2-MatterOvenMode-73-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_oven][select.mock_oven_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Oven Mode',
+      'options': list([
+        'Bake',
+        'Convection',
+        'Grill',
+        'Roast',
+        'Clean',
+        'Convection Bake',
+        'Convection Roast',
+        'Warming',
+        'Proofing',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_oven_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Bake',
+  })
+# ---
+# name: test_selects[mock_oven][select.mock_oven_temperature_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_oven_temperature_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_level',
+    'unique_id': '00000000000004D2-0000000000000029-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_oven][select.mock_oven_temperature_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Oven Temperature level',
+      'options': list([
+        'Low',
+        'Medium',
+        'High',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_oven_temperature_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Low',
+  })
+# ---
+# name: test_selects[mock_pump][select.mock_pump_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'minimum',
+        'maximum',
+        'local',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_pump_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_operation_mode',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpConfigurationAndControlOperationMode-512-32',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_pump][select.mock_pump_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump mode',
+      'options': list([
+        'normal',
+        'minimum',
+        'maximum',
+        'local',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_pump_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_selects[mock_switch_unit][select.mock_switchunit_power_on_behavior_on_startup-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power-on behavior on startup',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power-on behavior on startup',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'startup_on_off',
+    'unique_id': '00000000000004D2-0000000000000023-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_switch_unit][select.mock_switchunit_power_on_behavior_on_startup-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock SwitchUnit Power-on behavior on startup',
+      'options': list([
+        'on',
+        'off',
+        'toggle',
+        'previous',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'previous',
+  })
+# ---
+# name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.mock_thermostat_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature display mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000096-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Thermostat Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_thermostat_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
+  })
+# ---
+# name: test_selects[mock_vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Quick',
+        'Auto',
+        'Deep Clean',
+        'Quiet',
+        'Max Vac',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_vacuum_clean_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clean mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clean mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[mock_vacuum_cleaner][select.mock_vacuum_clean_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Vacuum Clean mode',
+      'options': list([
+        'Quick',
+        'Auto',
+        'Deep Clean',
+        'Quiet',
+        'Max Vac',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_vacuum_clean_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Quick',
   })
 # ---
 # name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior_on_startup-entry]
@@ -1909,6 +3961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1919,7 +3972,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-0000000000000030-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---
@@ -1942,22 +3995,22 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[oven][select.mock_oven_mode-entry]
+# name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Bake',
-        'Convection',
-        'Grill',
-        'Roast',
-        'Clean',
-        'Convection Bake',
-        'Convection Roast',
-        'Warming',
-        'Proofing',
+        'Quiet, Vacuum Only',
+        'Auto, Vacuum Only',
+        'Deep Clean, Vacuum Only',
+        'Quiet, Mop Only',
+        'Auto, Mop Only',
+        'Deep Clean, Mop Only',
+        'Quiet, Vacuum and Mop',
+        'Auto, Vacuum and Mop',
+        'Deep Clean, Vacuum and Mop',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1967,7 +4020,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_oven_mode',
+    'entity_id': 'select.robotic_vacuum_cleaner_clean_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1975,104 +4028,46 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mode',
+    'original_name': 'Clean mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-MatterOvenMode-73-1',
+    'translation_key': 'clean_mode',
+    'unique_id': '00000000000004D2-00000000000000CA-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[oven][select.mock_oven_mode-state]
+# name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Mode',
+      'friendly_name': 'Robotic Vacuum Cleaner Clean mode',
       'options': list([
-        'Bake',
-        'Convection',
-        'Grill',
-        'Roast',
-        'Clean',
-        'Convection Bake',
-        'Convection Roast',
-        'Warming',
-        'Proofing',
+        'Quiet, Vacuum Only',
+        'Auto, Vacuum Only',
+        'Deep Clean, Vacuum Only',
+        'Quiet, Mop Only',
+        'Auto, Mop Only',
+        'Deep Clean, Mop Only',
+        'Quiet, Vacuum and Mop',
+        'Auto, Vacuum and Mop',
+        'Deep Clean, Vacuum and Mop',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_oven_mode',
+    'entity_id': 'select.robotic_vacuum_cleaner_clean_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Bake',
+    'state': 'Auto, Vacuum and Mop',
   })
 # ---
-# name: test_selects[oven][select.mock_oven_temperature_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'Low',
-        'Medium',
-        'High',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.mock_oven_temperature_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Temperature level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureControlSelectedTemperatureLevel-86-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[oven][select.mock_oven_temperature_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature level',
-      'options': list([
-        'Low',
-        'Medium',
-        'High',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_oven_temperature_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Low',
-  })
-# ---
-# name: test_selects[pump][select.mock_pump_mode-entry]
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2080,9 +4075,8 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'minimum',
-        'maximum',
-        'local',
+        'privacy',
+        'no_remote_lock_unlock',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2091,8 +4085,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.mock_pump_mode',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2100,33 +4094,33 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating mode',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'mode',
+    'original_name': 'Operating mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pump_operation_mode',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpConfigurationAndControlOperationMode-512-32',
+    'translation_key': 'door_lock_operating_mode',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-DoorLockOperatingMode-257-37',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[pump][select.mock_pump_mode-state]
+# name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump mode',
+      'friendly_name': 'Secuyou Smart Lock Operating mode',
       'options': list([
         'normal',
-        'minimum',
-        'maximum',
-        'local',
+        'privacy',
+        'no_remote_lock_unlock',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_pump_mode',
+    'entity_id': 'select.secuyou_smart_lock_operating_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2162,6 +4156,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy management mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2224,6 +4219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2283,6 +4279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of rinses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2293,7 +4290,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_number_of_rinses',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-MatterLaundryWasherNumberOfRinses-83-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -2342,6 +4339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2352,7 +4350,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'laundry_washer_spin_speed',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-LaundryWasherControlsSpinSpeed-83-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2402,6 +4400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2412,7 +4411,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_level',
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
+    'unique_id': '00000000000004D2-0000000000000038-MatterNodeDevice-1-TemperatureControlSelectedTemperatureLevel-86-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -2461,6 +4460,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2522,6 +4522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy management mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2532,7 +4533,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_energy_management_mode',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-MatterDeviceEnergyManagementMode-159-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2556,125 +4557,7 @@
     'state': 'No energy management (forecast only)',
   })
 # ---
-# name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Power-on behavior on startup',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock SwitchUnit Power-on behavior on startup',
-      'options': list([
-        'on',
-        'off',
-        'toggle',
-        'previous',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.mock_switchunit_power_on_behavior_on_startup',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'previous',
-  })
-# ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Temperature display mode',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_display_mode',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode',
-      'options': list([
-        'Celsius',
-        'Fahrenheit',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Celsius',
-  })
-# ---
-# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
+# name: test_selects[switchbot_k11_plus][select.k11_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2695,7 +4578,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_vacuum_clean_mode',
+    'entity_id': 'select.k11_clean_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2703,6 +4586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2713,14 +4597,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'clean_mode',
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
+    'unique_id': '00000000000004D2-0000000000000061-MatterNodeDevice-1-MatterRvcCleanMode-85-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-state]
+# name: test_selects[switchbot_k11_plus][select.k11_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum Clean mode',
+      'friendly_name': 'K11+ Clean mode',
       'options': list([
         'Quick',
         'Auto',
@@ -2730,7 +4614,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_vacuum_clean_mode',
+    'entity_id': 'select.k11_clean_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2765,6 +4649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power-on behavior on startup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2775,7 +4660,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'startup_on_off',
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
+    'unique_id': '00000000000004D2-000000000000002E-MatterNodeDevice-1-MatterStartUpOnOff-6-16387',
     'unit_of_measurement': None,
   })
 # ---

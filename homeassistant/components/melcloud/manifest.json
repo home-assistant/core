@@ -4,7 +4,8 @@
   "codeowners": ["@erwindouna"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/melcloud",
+  "integration_type": "device",
   "iot_class": "cloud_polling",
-  "loggers": ["pymelcloud"],
-  "requirements": ["python-melcloud==0.1.0"]
+  "loggers": ["melcloud"],
+  "requirements": ["python-melcloud==0.1.2"]
 }

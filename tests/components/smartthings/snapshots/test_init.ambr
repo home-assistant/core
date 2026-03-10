@@ -64,6 +64,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[aeotec_ms6]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '00f9233e-fdaa-4020-99d4-e0073e53996a',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': "Parent's Bedroom Sensor",
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[aq_sensor_3_ikea]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -167,7 +198,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.2.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -183,8 +214,8 @@
     'name': 'Radiator Thermostat II [+M] Wohnzimmer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
+    'serial_number': 'D44867FFFEB37584',
+    'sw_version': '2.00.09',
     'via_device_id': None,
   })
 # ---
@@ -312,6 +343,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_air_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'c02e8cfa-94ba-86f3-59a0-04a280950f2b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARTIK051_TVTL_18K',
+    'model_id': None,
+    'name': 'Air purifier',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'ARTIK051_TVTL_18K_12200115',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_airsensor_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -340,6 +402,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'ASM-KR-TP1-22-ACMB1M_16240426',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ac_cac_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '23c6d296-4656-20d8-f6eb-2ff13e041753',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-AC-CAC-01001_0000',
+    'model_id': None,
+    'name': 'Ar Varanda',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'ASA-WW-TP1-24-PACCOM_14240625',
     'via_device_id': None,
   })
 # ---
@@ -420,7 +513,7 @@
     'identifiers': set({
       tuple(
         'smartthings',
-        'c76d6f38-1b7f-13dd-37b5-db18d5272783',
+        '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977',
       ),
     }),
     'labels': set({
@@ -428,7 +521,7 @@
     'manufacturer': 'Samsung Electronics',
     'model': 'ARTIK051_PRAC_20K',
     'model_id': None,
-    'name': 'Office AirFree',
+    'name': 'Clim Salon',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -498,6 +591,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_cooktop_000001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'MediaTek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '5c202ad1-d112-d746-50b8-bd76a554b362',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP2X_DA-KS-COOKTOP-000001',
+    'model_id': None,
+    'name': 'Table de cuisson',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AKS-WW-TP2X-20-COOKTOP_40230515',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_cooktop_31001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -520,12 +644,43 @@
     }),
     'manufacturer': None,
     'model': None,
-    'model_id': None,
+    'model_id': 'NZ64B5046GK',
     'name': 'Induction Hob',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'B8C878DX900290H',
     'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_hood_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'fa5fca25-fa7a-1807-030a-2f72ee0f7bff',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'AHD-WW-TP1-22-COMMON',
+    'model_id': None,
+    'name': 'Range hood',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AHD-WW-TP1-22-COMMON_40230419',
     'via_device_id': None,
   })
 # ---
@@ -591,6 +746,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ks_oven_0107x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '199d7863-ad04-793d-176d-658f10062575',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-KS-OVEN-0107X',
+    'model_id': None,
+    'name': 'Kitchen oven',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'AKS-WW-TP1-22-OVEN-1_40250221',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ks_range_0101x]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -619,6 +805,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ks_walloven_0107x]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '1c77a562-df00-7d6a-ca73-b67f6d4c4607',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'LCD_S905D3_COMBI_PP_US_23K',
+    'model_id': None,
+    'name': 'Four',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '20230413.181729',
     'via_device_id': None,
   })
 # ---
@@ -676,7 +893,7 @@
     'manufacturer': 'Samsung Electronics',
     'model': '24K_REF_LCD_FHUB9.0',
     'model_id': None,
-    'name': 'Refrigerator',
+    'name': 'Refrigerator 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -737,7 +954,7 @@
     }),
     'manufacturer': 'Samsung Electronics',
     'model': 'TP1X_REF_21K',
-    'model_id': None,
+    'model_id': 'RR39C7EC5B1/EF',
     'name': 'Lodówka',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
@@ -761,19 +978,19 @@
     'identifiers': set({
       tuple(
         'smartthings',
-        '05accb39-2017-c98b-a5ab-04a81f4d3d9a',
+        '01b28624-5907-c8bc-0325-8ad23f03a637',
       ),
     }),
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'JETBOT_COMBO_9X00_24K',
+    'model': 'JETBOT_COMBOT_9X00_24K',
     'model_id': None,
-    'name': 'Robot vacuum',
+    'name': 'Robot Vacuum',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'sw_version': '20250123.105306',
+    'sw_version': '20260120.215157',
     'via_device_id': None,
   })
 # ---
@@ -800,7 +1017,7 @@
     'manufacturer': 'Samsung Electronics',
     'model': 'powerbot_7000_17M',
     'model_id': None,
-    'name': 'Robot vacuum',
+    'name': 'Robot vacuum 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -932,6 +1149,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_wm_dw_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '7ff318f3-3772-524d-3c9f-72fcd26413ed',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_DW_TP1_21_COMMON',
+    'model_id': 'DW60BG850B00ET',
+    'name': 'Dishwasher 1',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'DA_DW_TP1_21_COMMON_30250513',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_wm_sc_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1022,6 +1270,37 @@
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_wd_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '3d39866c-7716-5259-44f0-fd7025efd85f',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_TP1_21_COMMON',
+    'model_id': 'DV90DB8845GHU2',
+    'name': 'Trockner',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'DA_WM_TP1_21_COMMON_30250508',
     'via_device_id': None,
   })
 # ---
@@ -1141,7 +1420,38 @@
     'manufacturer': 'Samsung Electronics',
     'model': 'TP6X_WA54M8750AV',
     'model_id': None,
-    'name': 'Washer',
+    'name': 'Washer 1',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_wm_wm_100002]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'C097276D-C8D4-0000-0000-000000000000',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP6X_WV60M9900AV',
+    'model_id': None,
+    'name': 'Washer 2',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1266,6 +1576,37 @@
     'model': None,
     'model_id': None,
     'name': 'Fake fan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[gas_detector]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'd830b46f-f094-4560-b8c3-7690032fdb4c',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Gas Detector',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1800,6 +2141,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[siemens_washer]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '42a6aa8d-9bce-4f80-bc29-d9f8b8dc1af1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Siemens',
+    'model': 'WM14T6H6NL',
+    'model_id': None,
+    'name': 'Wasmachine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[smart_plug]
   DeviceRegistryEntrySnapshot({
     'area_id': 'theater',
@@ -1855,6 +2227,37 @@
     'model': None,
     'model_id': None,
     'name': 'Elliots Rum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[tesla_powerwall]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'd2595c45-df6e-41ac-a7af-8e275071c19b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Powerwall',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -1947,7 +2350,7 @@
     'manufacturer': 'Samsung Electronics',
     'model': 'HW-S60D',
     'model_id': None,
-    'name': 'Soundbar',
+    'name': 'Soundbar 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2040,7 +2443,7 @@
     'manufacturer': None,
     'model': None,
     'model_id': None,
-    'name': 'asd',
+    'name': 'virtual thermostat',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2102,7 +2505,7 @@
     'manufacturer': None,
     'model': None,
     'model_id': None,
-    'name': 'asd',
+    'name': 'virtual water sensor',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

@@ -126,7 +126,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         self._attr_translation_key = "button"
         self._attr_translation_placeholders = {"key": str(key)}
 
-    def _sync(self, message: tuple) -> None:
+    def sync_callback(self, message: tuple) -> None:
         """Update the binary sensor state."""
         if (
             message[0] == self._remote_control_property.element_uid

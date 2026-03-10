@@ -1,5 +1,7 @@
 """A entity class for Bravia TV integration."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,11 +19,15 @@ class BraviaTVEntity(CoordinatorEntity[BraviaTVCoordinator]):
         super().__init__(coordinator)
 
         self._attr_unique_id = unique_id
+
+        if TYPE_CHECKING:
+            assert coordinator.client.mac is not None
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.system_info["macAddr"])},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.client.mac)},
             manufacturer=ATTR_MANUFACTURER,
-            model_id=coordinator.system_info["model"],
-            hw_version=coordinator.system_info["generation"],
-            serial_number=coordinator.system_info["serial"],
+            model_id=coordinator.system_info.get("model"),
+            hw_version=coordinator.system_info.get("generation"),
+            serial_number=coordinator.system_info.get("serial"),
         )

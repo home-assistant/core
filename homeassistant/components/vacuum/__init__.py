@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -22,13 +23,8 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -36,20 +32,12 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.hass_dict import HassKey
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STATE_CLEANING,
-    _DEPRECATED_STATE_DOCKED,
-    _DEPRECATED_STATE_ERROR,
-    _DEPRECATED_STATE_RETURNING,
-    DOMAIN,
-    VacuumActivity,
-)
+from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
+from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -63,6 +51,7 @@ ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
+SERVICE_CLEAN_AREA = "clean_area"
 SERVICE_LOCATE = "locate"
 SERVICE_RETURN_TO_BASE = "return_to_base"
 SERVICE_SEND_COMMAND = "send_command"
@@ -74,70 +63,10 @@ SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
 
-# These STATE_* constants are deprecated as of Home Assistant 2025.1.
-# Please use the VacuumActivity enum instead.
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
-_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
+ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
-    "mqtt",
-    "template",
-)
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
-
-class VacuumEntityFeature(IntFlag):
-    """Supported features of the vacuum entity."""
-
-    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
-    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
-    PAUSE = 4
-    STOP = 8
-    RETURN_HOME = 16
-    FAN_SPEED = 32
-    BATTERY = 64
-    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
-    SEND_COMMAND = 256
-    LOCATE = 512
-    CLEAN_SPOT = 1024
-    MAP = 2048
-    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
-    START = 8192
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the VacuumEntityFeature enum instead.
-_DEPRECATED_SUPPORT_TURN_ON = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_ON, "2025.10"
-)
-_DEPRECATED_SUPPORT_TURN_OFF = DeprecatedConstantEnum(
-    VacuumEntityFeature.TURN_OFF, "2025.10"
-)
-_DEPRECATED_SUPPORT_PAUSE = DeprecatedConstantEnum(VacuumEntityFeature.PAUSE, "2025.10")
-_DEPRECATED_SUPPORT_STOP = DeprecatedConstantEnum(VacuumEntityFeature.STOP, "2025.10")
-_DEPRECATED_SUPPORT_RETURN_HOME = DeprecatedConstantEnum(
-    VacuumEntityFeature.RETURN_HOME, "2025.10"
-)
-_DEPRECATED_SUPPORT_FAN_SPEED = DeprecatedConstantEnum(
-    VacuumEntityFeature.FAN_SPEED, "2025.10"
-)
-_DEPRECATED_SUPPORT_BATTERY = DeprecatedConstantEnum(
-    VacuumEntityFeature.BATTERY, "2025.10"
-)
-_DEPRECATED_SUPPORT_STATUS = DeprecatedConstantEnum(
-    VacuumEntityFeature.STATUS, "2025.10"
-)
-_DEPRECATED_SUPPORT_SEND_COMMAND = DeprecatedConstantEnum(
-    VacuumEntityFeature.SEND_COMMAND, "2025.10"
-)
-_DEPRECATED_SUPPORT_LOCATE = DeprecatedConstantEnum(
-    VacuumEntityFeature.LOCATE, "2025.10"
-)
-_DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
-    VacuumEntityFeature.CLEAN_SPOT, "2025.10"
-)
-_DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
-_DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
-_DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
 
 # mypy: disallow-any-generics
 
@@ -155,6 +84,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await component.async_setup(config)
+
+    async_register_websocket_handlers(hass)
 
     component.async_register_entity_service(
         SERVICE_START,
@@ -179,6 +110,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_AREA,
+        {
+            vol.Required("cleaning_area_id"): vol.All(cv.ensure_list, [str]),
+        },
+        "async_internal_clean_area",
+        [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
@@ -251,7 +190,9 @@ class StateVacuumEntity(
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
-    __vacuum_legacy_state: bool = False
+    _segments_not_configured_issue_created: bool = False
+    _segments_changed_last_seen: list[dict[str, Any]] | None = None
+
     __vacuum_legacy_battery_level: bool = False
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
@@ -259,10 +200,6 @@ class StateVacuumEntity(
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
-        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
-            # Integrations should use the 'activity' property instead of
-            # setting the state directly.
-            cls.__vacuum_legacy_state = True
         if any(
             method in cls.__dict__
             for method in ("_attr_battery_level", "battery_level")
@@ -278,11 +215,9 @@ class StateVacuumEntity(
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if setting state, battery icon or battery level
+        Deprecation warning if setting battery icon or battery level
         attributes directly unless already reported.
         """
-        if name == "_attr_state":
-            self._report_deprecated_activity_handling()
         if name in {"_attr_battery_level", "_attr_battery_icon"}:
             self._report_deprecated_battery_properties(name[6:])
         return super().__setattr__(name, value)
@@ -296,29 +231,15 @@ class StateVacuumEntity(
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__vacuum_legacy_state:
-            self._report_deprecated_activity_handling()
         if self.__vacuum_legacy_battery_level:
             self._report_deprecated_battery_properties("battery_level")
         if self.__vacuum_legacy_battery_icon:
             self._report_deprecated_battery_properties("battery_icon")
 
     @callback
-    def _report_deprecated_activity_handling(self) -> None:
-        """Report on deprecated handling of vacuum state.
-
-        Integrations should implement activity instead of using state directly.
-        """
-        report_usage(
-            "is setting state directly."
-            f" Entity {self.entity_id} ({type(self)}) should implement the 'activity'"
-            " property and return its state using the VacuumActivity enum",
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.1",
-            integration_domain=self.platform.platform_name if self.platform else None,
-            exclude_integrations={DOMAIN},
-        )
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        self._async_check_segments_issues()
 
     @callback
     def _report_deprecated_battery_properties(self, property: str) -> None:
@@ -423,12 +344,6 @@ class StateVacuumEntity(
         """Return the state of the vacuum cleaner."""
         if (activity := self.activity) is not None:
             return activity
-        if self._attr_state is not None:
-            # Backwards compatibility for integrations that set state directly
-            # Should be removed in 2026.1
-            if TYPE_CHECKING:
-                assert isinstance(self._attr_state, str)
-            return self._attr_state
         return None
 
     @cached_property
@@ -477,6 +392,137 @@ class StateVacuumEntity(
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned.
+
+        Returns a list of segments containing their ids and names.
+        """
+        raise NotImplementedError
+
+    @final
+    @property
+    def last_seen_segments(self) -> list[Segment] | None:
+        """Return segments as seen by the user, when last mapping the areas.
+
+        Returns None if no mapping has been saved yet.
+        This can be used by integrations to detect changes in segments reported
+        by the vacuum and create a repair issue.
+        """
+        if self.registry_entry is None:
+            raise RuntimeError(
+                "Cannot access last_seen_segments, registry entry is not set for"
+                f" {self.entity_id}"
+            )
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        last_seen_segments = options.get("last_seen_segments")
+
+        if last_seen_segments is None:
+            return None
+
+        return [Segment(**segment) for segment in last_seen_segments]
+
+    @final
+    async def async_internal_clean_area(
+        self, cleaning_area_id: list[str], **kwargs: Any
+    ) -> None:
+        """Perform an area clean.
+
+        Calls async_clean_segments.
+        """
+        if self.registry_entry is None:
+            raise RuntimeError(
+                "Cannot perform area clean, registry entry is not set for"
+                f" {self.entity_id}"
+            )
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
+
+        if area_mapping is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="area_mapping_not_configured",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+
+        # We use a dict to preserve the order of segments.
+        segment_ids: dict[str, None] = {}
+        for area_id in cleaning_area_id:
+            for segment_id in area_mapping.get(area_id, []):
+                segment_ids[segment_id] = None
+
+        if not segment_ids:
+            _LOGGER.debug(
+                "No segments found for cleaning_area_id %s on vacuum %s",
+                cleaning_area_id,
+                self.entity_id,
+            )
+            return
+
+        await self.async_clean_segments(list(segment_ids), **kwargs)
+
+    def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        raise NotImplementedError
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        await self.hass.async_add_executor_job(
+            partial(self.clean_segments, segment_ids, **kwargs)
+        )
+
+    @callback
+    def async_create_segments_issue(self) -> None:
+        """Create a repair issue when vacuum segments have changed.
+
+        Integrations should call this method when the vacuum reports
+        different segments than what was previously mapped to areas.
+
+        The issue is not fixable via the standard repair flow. The frontend
+        will handle the fix by showing the segment mapping dialog.
+        """
+        if self.registry_entry is None:
+            raise RuntimeError(
+                "Cannot create segments issue, registry entry is not set for"
+                f" {self.entity_id}"
+            )
+
+        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            data={
+                "entry_id": self.registry_entry.id,
+                "entity_id": self.entity_id,
+            },
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_SEGMENTS_CHANGED,
+            translation_placeholders={
+                "entity_id": self.entity_id,
+            },
+        )
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        self._segments_changed_last_seen = options.get("last_seen_segments")
+
+    @callback
+    def _async_check_segments_issues(self) -> None:
+        """Create or delete segment-related repair issues."""
+        if self.registry_entry is None:
+            return
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+
+        if self._segments_changed_last_seen is not None and (
+            VacuumEntityFeature.CLEAN_AREA not in self.supported_features
+            or options.get("last_seen_segments") != self._segments_changed_last_seen
+        ):
+            issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            self._segments_changed_last_seen = None
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
@@ -548,11 +594,10 @@ class StateVacuumEntity(
         await self.hass.async_add_executor_job(self.pause)
 
 
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
+@dataclass(slots=True)
+class Segment:
+    """Represents a cleanable segment reported by a vacuum."""
+
+    id: str
+    name: str
+    group: str | None = None

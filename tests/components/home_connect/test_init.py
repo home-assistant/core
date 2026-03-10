@@ -25,6 +25,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from script.hassfest.translations import RE_TRANSLATION_KEY
 
 from .conftest import (
@@ -109,6 +112,20 @@ async def test_token_refresh_success(
         config_entry.data["token"]["access_token"]
         == SERVER_ACCESS_TOKEN["access_token"]
     )
+
+
+async def test_setup_implementation_unavailable(
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test setup when OAuth2 implementation is unavailable."""
+
+    with patch(
+        "homeassistant.components.home_connect.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        assert not await integration_setup(MagicMock())
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("token_expiration_time", [12345])
@@ -319,7 +336,13 @@ async def test_entity_migration(
             config_entry=config_entry_v1_1,
         )
 
-    with patch("homeassistant.components.home_connect.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch(
+            "homeassistant.components.home_connect.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         await hass.config_entries.async_setup(config_entry_v1_1.entry_id)
         await hass.async_block_till_done()
 
@@ -347,8 +370,12 @@ async def test_config_entry_unique_id_migration(
     assert config_entry_v1_2.unique_id != "1234567890"
     assert config_entry_v1_2.minor_version == 2
 
-    await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.home_connect.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+        await hass.async_block_till_done()
 
     assert config_entry_v1_2.unique_id == "1234567890"
     assert config_entry_v1_2.minor_version == 3

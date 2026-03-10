@@ -118,7 +118,7 @@ async def test_lcn_devices_scan_command(
     """Test lcn/devices/scan command."""
     # add new module which is not stored in config_entry
     lcn_connection = await init_integration(hass, entry)
-    lcn_connection.get_address_conn(LcnAddr(0, 10, False))
+    lcn_connection.get_device_connection(LcnAddr(0, 10, False))
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({**SCAN_PAYLOAD, "entry_id": entry.entry_id})

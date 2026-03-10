@@ -42,29 +42,46 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SWITCH, async_add_entities)
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
+    """Describe Matter Switch entities."""
+
+    inverted: bool = False
+
+
 class MatterSwitch(MatterEntity, SwitchEntity):
     """Representation of a Matter switch."""
 
+    entity_description: MatterSwitchEntityDescription
     _platform_translation_key = "switch"
+
+    def _get_command_for_value(self, value: bool) -> ClusterCommand:
+        """Get the appropriate command for the desired value.
+
+        Applies inversion if needed (e.g., for inverted logic like mute).
+        """
+        send_value = not value if self.entity_description.inverted else value
+        return (
+            clusters.OnOff.Commands.On()
+            if send_value
+            else clusters.OnOff.Commands.Off()
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.On(),
-        )
+        await self.send_device_command(self._get_command_for_value(True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.send_device_command(
-            clusters.OnOff.Commands.Off(),
-        )
+        await self.send_device_command(self._get_command_for_value(False))
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        self._attr_is_on = self.get_matter_attribute_value(
-            self._entity_info.primary_attribute
-        )
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if self.entity_description.inverted:
+            value = not value
+        self._attr_is_on = value
 
 
 class MatterGenericCommandSwitch(MatterSwitch):
@@ -115,10 +132,8 @@ class MatterGenericCommandSwitch(MatterSwitch):
         )
 
 
-@dataclass(frozen=True)
-class MatterGenericCommandSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class MatterGenericCommandSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Generic command Switch entities."""
 
     # command: a custom callback to create the command to send to the device
@@ -127,10 +142,8 @@ class MatterGenericCommandSwitchEntityDescription(
     command_timeout: int | None = None
 
 
-@dataclass(frozen=True)
-class MatterNumericSwitchEntityDescription(
-    SwitchEntityDescription, MatterEntityDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class MatterNumericSwitchEntityDescription(MatterSwitchEntityDescription):
     """Describe Matter Numeric Switch entities."""
 
 
@@ -141,11 +154,10 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
+        send_value: Any = value
         if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
-        await self.write_attribute(
-            value=send_value,
-        )
+        await self.write_attribute(value=send_value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
@@ -168,7 +180,7 @@ class MatterNumericSwitch(MatterSwitch):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
@@ -179,7 +191,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterPowerToggle",
             device_class=SwitchDeviceClass.SWITCH,
             translation_key="power",
@@ -203,12 +215,11 @@ DISCOVERY_SCHEMAS = [
             device_types.Refrigerator,
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
-            device_types.Speaker,
         ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
-        entity_description=SwitchEntityDescription(
+        entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
@@ -244,6 +255,17 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
+        entity_description=MatterSwitchEntityDescription(
+            key="MatterMuteToggle",
+            translation_key="speaker_mute",
+            inverted=True,
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        device_type=(device_types.Speaker,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
         entity_description=MatterNumericSwitchEntityDescription(
             key="EveTrvChildLock",
             entity_category=EntityCategory.CONFIG,
@@ -262,6 +284,18 @@ DISCOVERY_SCHEMAS = [
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
         vendor_id=(4874,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnablePrivacyModeButton",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="privacy_mode_button",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.DoorLock.Attributes.EnablePrivacyModeButton,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,

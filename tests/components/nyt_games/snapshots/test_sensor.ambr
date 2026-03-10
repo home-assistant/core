@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last played',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -183,6 +186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
     'original_device_class': None,
@@ -235,6 +239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Won',
     'options': dict({
     }),
     'original_device_class': None,
@@ -287,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total pangrams found',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total words found',
     'options': dict({
     }),
     'original_device_class': None,
@@ -443,6 +451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -499,6 +508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest streak',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -555,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Played',
     'options': dict({
     }),
     'original_device_class': None,
@@ -607,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Won',
     'options': dict({
     }),
     'original_device_class': None,

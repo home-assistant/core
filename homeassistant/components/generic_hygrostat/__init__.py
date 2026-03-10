@@ -13,10 +13,7 @@ from homeassistant.helpers import (
     discovery,
     entity_registry as er,
 )
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
@@ -96,18 +93,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
 
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass,
-        entry.entry_id,
-        entry.options[CONF_HUMIDIFIER],
-    )
-
     def set_humidifier_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
             entry,
             options={**entry.options, CONF_HUMIDIFIER: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         # We use async_handle_source_entity_changes to track changes to the humidifer,
@@ -140,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_SENSOR: data["entity_id"]},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
@@ -148,7 +140,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, (Platform.HUMIDIFIER,))
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
 
@@ -184,11 +175,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

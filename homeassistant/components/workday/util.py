@@ -1,5 +1,7 @@
 """Helpers functions for the Workday component."""
 
+from __future__ import annotations
+
 from datetime import date, timedelta
 from functools import partial
 from typing import TYPE_CHECKING
@@ -20,7 +22,7 @@ from .const import CONF_REMOVE_HOLIDAYS, DOMAIN, LOGGER
 
 async def async_validate_country_and_province(
     hass: HomeAssistant,
-    entry: "WorkdayConfigEntry",
+    entry: WorkdayConfigEntry,
     country: str | None,
     province: str | None,
 ) -> None:
@@ -180,7 +182,7 @@ def get_holidays_object(
 
 def add_remove_custom_holidays(
     hass: HomeAssistant,
-    entry: "WorkdayConfigEntry",
+    entry: WorkdayConfigEntry,
     country: str | None,
     calc_add_holidays: list[DateLike],
     calc_remove_holidays: list[str],
@@ -222,7 +224,7 @@ def add_remove_custom_holidays(
                         severity=IssueSeverity.WARNING,
                         translation_key="bad_date_holiday",
                         translation_placeholders={
-                            CONF_COUNTRY: country if country else "-",
+                            CONF_COUNTRY: country or "-",
                             "title": entry.title,
                             CONF_REMOVE_HOLIDAYS: remove_holiday,
                         },
@@ -242,7 +244,7 @@ def add_remove_custom_holidays(
                     severity=IssueSeverity.WARNING,
                     translation_key="bad_named_holiday",
                     translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
+                        CONF_COUNTRY: country or "-",
                         "title": entry.title,
                         CONF_REMOVE_HOLIDAYS: remove_holiday,
                     },

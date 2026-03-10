@@ -19,10 +19,12 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: ToGrillCoordinator) -> None:
+    def __init__(
+        self, coordinator: ToGrillCoordinator, probe_number: int | None = None
+    ) -> None:
         """Initialize coordinator entity."""
         super().__init__(coordinator)
-        self._attr_device_info = coordinator.device_info
+        self._attr_device_info = coordinator.get_device_info(probe_number)
 
     def _get_client(self) -> Client:
         client = self.coordinator.client
@@ -47,3 +49,10 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
                 translation_domain=DOMAIN, translation_key="rejected"
             ) from exc
         await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success and self.coordinator.client is not None
+        )

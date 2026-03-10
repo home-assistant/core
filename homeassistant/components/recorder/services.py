@@ -77,7 +77,9 @@ SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
         vol.Required("start_time"): cv.datetime,
         vol.Optional("end_time"): cv.datetime,
         vol.Required("statistic_ids"): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required("period"): vol.In(["5minute", "hour", "day", "week", "month"]),
+        vol.Required("period"): vol.In(
+            ["5minute", "hour", "day", "week", "month", "year"]
+        ),
         vol.Required("types"): vol.All(
             cv.ensure_list,
             [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
@@ -89,8 +91,7 @@ SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
 
 async def _async_handle_purge_service(service: ServiceCall) -> None:
     """Handle calls to the purge service."""
-    hass = service.hass
-    instance = hass.data[DATA_INSTANCE]
+    instance = service.hass.data[DATA_INSTANCE]
     kwargs = service.data
     keep_days = kwargs.get(ATTR_KEEP_DAYS, instance.keep_days)
     repack = cast(bool, kwargs[ATTR_REPACK])
@@ -101,14 +102,15 @@ async def _async_handle_purge_service(service: ServiceCall) -> None:
 
 async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
-    hass = service.hass
-    entity_ids = await async_extract_entity_ids(hass, service)
+    entity_ids = await async_extract_entity_ids(service)
     domains = service.data.get(ATTR_DOMAINS, [])
     keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
     entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
     entity_filter = generate_filter(domains, list(entity_ids), [], [], entity_globs)
     purge_before = dt_util.utcnow() - timedelta(days=keep_days)
-    hass.data[DATA_INSTANCE].queue_task(PurgeEntitiesTask(entity_filter, purge_before))
+    service.hass.data[DATA_INSTANCE].queue_task(
+        PurgeEntitiesTask(entity_filter, purge_before)
+    )
 
 
 async def _async_handle_enable_service(service: ServiceCall) -> None:

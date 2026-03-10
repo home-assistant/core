@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import patch
 
+import voluptuous_serialize
+
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
@@ -248,6 +250,30 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert step["step_id"] == "init"
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
+    # ensure the schema can be serialized
+    assert voluptuous_serialize.convert(schema) == [
+        {
+            "name": "notify_service",
+            "options": [
+                (
+                    "test1",
+                    "test1",
+                ),
+                (
+                    "test2",
+                    "test2",
+                ),
+            ],
+            "required": True,
+            "type": "select",
+        },
+        {
+            "name": "target",
+            "optional": True,
+            "required": False,
+            "type": "string",
+        },
+    ]
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         step = await flow.async_step_init({"notify_service": "test1"})

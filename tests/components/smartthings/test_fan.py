@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings import Capability, Command
+from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,7 +26,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities, trigger_health_update
+from . import (
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_health_update,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +49,13 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.FAN)
 
 
-@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "device_id"),
+    [
+        ("fake_fan", "fan.fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
+        ("da_ks_hood_01001", "fan.range_hood", "fa5fca25-fa7a-1807-030a-2f72ee0f7bff"),
+    ],
+)
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -58,6 +69,8 @@ async def test_turn_on_off(
     mock_config_entry: MockConfigEntry,
     action: str,
     command: Command,
+    entity_id: str,
+    device_id: str,
 ) -> None:
     """Test turning on and off."""
     await setup_integration(hass, mock_config_entry)
@@ -65,11 +78,11 @@ async def test_turn_on_off(
     await hass.services.async_call(
         FAN_DOMAIN,
         action,
-        {ATTR_ENTITY_ID: "fan.fake_fan"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        device_id,
         Capability.SWITCH,
         command,
         MAIN,
@@ -100,11 +113,19 @@ async def test_set_percentage(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "device_id"),
+    [
+        ("fake_fan", "fan.fake_fan", "f1af21a2-d5a1-437c-b10a-b34a87394b71"),
+        ("da_ks_hood_01001", "fan.range_hood", "fa5fca25-fa7a-1807-030a-2f72ee0f7bff"),
+    ],
+)
 async def test_set_percentage_off(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    device_id: str,
 ) -> None:
     """Test setting the speed percentage of the fan."""
     await setup_integration(hass, mock_config_entry)
@@ -112,11 +133,11 @@ async def test_set_percentage_off(
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 0},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 0},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        device_id,
         Capability.SWITCH,
         Command.OFF,
         MAIN,
@@ -204,3 +225,80 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_set_hood_percentage(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the speed percentage of the hood."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.range_hood", ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+        Command.SET_HOOD_FAN_SPEED,
+        MAIN,
+        argument=16,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_set_hood_preset_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the preset mode of the hood."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.range_hood", ATTR_PRESET_MODE: "smart"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+        Command.SET_HOOD_FAN_SPEED,
+        MAIN,
+        argument=14,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_updating_hood_preset_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating the preset mode of the hood."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("fan.range_hood")
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] is None
+    assert state.attributes[ATTR_PERCENTAGE] == 25
+
+    await trigger_update(
+        hass,
+        devices,
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+        Attribute.HOOD_FAN_SPEED,
+        14,
+    )
+
+    state = hass.states.get("fan.range_hood")
+    assert state
+    assert state.attributes[ATTR_PRESET_MODE] == "smart"
+    assert state.attributes[ATTR_PERCENTAGE] is None

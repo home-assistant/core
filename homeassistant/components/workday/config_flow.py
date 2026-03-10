@@ -155,6 +155,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             subdiv=province,
             years=year,
             language=language,
+            categories=[PUBLIC, *user_input.get(CONF_CATEGORY, [])],
         )
 
     else:

@@ -22,7 +22,7 @@ from homeassistant.helpers import (
 from homeassistant.util import slugify
 
 from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+    MOCK_NOTIFY_SUBENTRY_DATA,
     MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
     MOCK_SUBENTRY_DATA_SET_MIX,
 )
@@ -111,7 +111,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mqtt_sensor",
+            "sensor.mqtt_sensor",
             DEFAULT_SENSOR_NAME,
             None,
             True,
@@ -158,7 +158,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_humidity",
+            "sensor.humidity",
             "Humidity",
             None,
             True,
@@ -192,7 +192,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mysensor",
+            "sensor.mysensor",
             "MySensor",
             None,
             True,
@@ -368,7 +368,7 @@ async def test_name_attribute_is_set_or_not(
         hass,
         "homeassistant/binary_sensor/bla/config",
         '{ "name": "Gate", "state_topic": "test-topic", "device_class": "door", '
-        '"object_id": "gate",'
+        '"default_entity_id": "binary_sensor.gate",'
         '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
         "}",
     )
@@ -384,7 +384,7 @@ async def test_name_attribute_is_set_or_not(
         hass,
         "homeassistant/binary_sensor/bla/config",
         '{ "state_topic": "test-topic", "device_class": "door", '
-        '"object_id": "gate",'
+        '"default_entity_id": "binary_sensor.gate",'
         '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
         "}",
     )
@@ -400,7 +400,7 @@ async def test_name_attribute_is_set_or_not(
         hass,
         "homeassistant/binary_sensor/bla/config",
         '{ "name": null, "state_topic": "test-topic", "device_class": "door", '
-        '"object_id": "gate",'
+        '"default_entity_id": "binary_sensor.gate",'
         '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
         "}",
     )
@@ -558,7 +558,7 @@ async def test_loading_subentry_with_bad_component_schema(
     [
         (
             ConfigSubentryData(
-                data=MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+                data=MOCK_NOTIFY_SUBENTRY_DATA,
                 subentry_type="device",
                 title="Mock subentry",
             ),

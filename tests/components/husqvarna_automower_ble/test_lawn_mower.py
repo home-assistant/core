@@ -156,7 +156,7 @@ OPERATIONAL_STATES = [
         # Operational states are mapped according to the activity
         (
             OPERATIONAL_STATES,
-            [MowerActivity.CHARGING, MowerActivity.NONE, MowerActivity.PARKED],
+            [MowerActivity.CHARGING, MowerActivity.PARKED],
             LawnMowerActivity.DOCKED,
         ),
         (
@@ -172,6 +172,17 @@ OPERATIONAL_STATES = [
         (
             OPERATIONAL_STATES,
             [MowerActivity.STOPPED_IN_GARDEN],
+            LawnMowerActivity.ERROR,
+        ),
+        # Special case for MowerActivity.NONE
+        (
+            [MowerState.IN_OPERATION, MowerState.RESTRICTED],
+            [MowerActivity.NONE],
+            LawnMowerActivity.DOCKED,
+        ),
+        (
+            [MowerState.PENDING_START],
+            [MowerActivity.NONE],
             LawnMowerActivity.ERROR,
         ),
     ],

@@ -1,7 +1,9 @@
 """Template entity base class."""
 
 from abc import abstractmethod
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+import logging
 from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC, CONF_STATE
@@ -12,7 +14,20 @@ from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_OBJECT_ID
+from .const import CONF_DEFAULT_ENTITY_ID
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class EntityTemplate:
+    """Information class for properly handling template results."""
+
+    attribute: str
+    template: Template
+    validator: Callable[[Any], Any] | None
+    on_update: Callable[[Any], None] | None
+    none_on_template_error: bool
 
 
 class AbstractTemplateEntity(Entity):
@@ -31,6 +46,8 @@ class AbstractTemplateEntity(Entity):
         """Initialize the entity."""
 
         self.hass = hass
+        self._config = config
+        self._templates: dict[str, EntityTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
 
         if self._optimistic_entity:
@@ -49,7 +66,8 @@ class AbstractTemplateEntity(Entity):
                 optimistic is None and assumed_optimistic
             )
 
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+        if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
+            _, _, object_id = default_entity_id.partition(".")
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, hass=self.hass
             )
@@ -67,6 +85,72 @@ class AbstractTemplateEntity(Entity):
     @abstractmethod
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
+
+    @abstractmethod
+    def setup_state_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity."""
+
+    @abstractmethod
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        render_complex: bool = False,
+        none_on_template_error: bool = True,
+    ) -> None:
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
+        """
+
+    def add_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        none_on_template_error: bool = False,
+        add_if_static: bool = True,
+    ) -> Template | None:
+        """Add a template."""
+        if (template := self._config.get(option)) and isinstance(template, Template):
+            if add_if_static or (not template.is_static):
+                self._templates[option] = EntityTemplate(
+                    attribute,
+                    template,
+                    validator,
+                    on_update,
+                    none_on_template_error,
+                )
+            return template
+
+        return None
 
     def add_script(
         self,

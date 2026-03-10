@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
 from typing import Any, cast
 
 from simplipy import API
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
+    RequestError,
     SimplipyError,
     WebsocketError,
 )
@@ -46,10 +46,9 @@ from homeassistant.const import (
     CONF_CODE,
     CONF_TOKEN,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -65,7 +64,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     ATTR_ALARM_DURATION,
@@ -86,6 +85,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
 
 ATTR_CATEGORY = "category"
@@ -99,9 +99,9 @@ ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_TIMESTAMP = "timestamp"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-DEFAULT_SOCKET_MIN_RETRY = 15
-
+WEBSOCKET_RECONNECT_RETRIES = 3
+WEBSOCKET_RETRY_DELAY = 2
+WEBSOCKET_LOOP_TASK_NAME = "simplisafe websocket task"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
@@ -290,7 +290,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+    _verify_domain_control = verify_domain_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -419,14 +419,14 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
-        self._websocket_reconnect_task: asyncio.Task | None = None
+        self._websocket_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.subscription_data: dict[int, Any] = api.subscription_data
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator[None] | None = None
+        self.coordinator: SimpliSafeDataUpdateCoordinator | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -465,39 +465,69 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
-    async def _async_start_websocket_loop(self) -> None:
-        """Start a websocket reconnection loop."""
-        assert self._api.websocket
+    @callback
+    def _async_start_websocket_if_needed(self) -> None:
+        """Start the websocket loop task if it isn't already running."""
+        task = self._websocket_task
 
-        try:
-            await self._api.websocket.async_connect()
-            await self._api.websocket.async_listen()
-        except asyncio.CancelledError:
-            LOGGER.debug("Request to cancel websocket loop received")
-            raise
-        except WebsocketError as err:
-            LOGGER.error("Failed to connect to websocket: %s", err)
-        except Exception as err:  # noqa: BLE001
-            LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+        if task and not task.done():
+            return
 
-        LOGGER.debug("Reconnecting to websocket")
-        await self._async_cancel_websocket_loop()
-        self._websocket_reconnect_task = self._hass.async_create_task(
-            self._async_start_websocket_loop()
+        LOGGER.debug("Starting websocket loop task")
+
+        self._websocket_task = self.entry.async_create_background_task(
+            self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
         )
 
-    async def _async_cancel_websocket_loop(self) -> None:
-        """Stop any existing websocket reconnection loop."""
-        if self._websocket_reconnect_task:
-            self._websocket_reconnect_task.cancel()
-            try:
-                await self._websocket_reconnect_task
-            except asyncio.CancelledError:
-                LOGGER.debug("Websocket reconnection task successfully canceled")
-                self._websocket_reconnect_task = None
+    async def _async_websocket_loop(self) -> None:
+        assert self._api.websocket
 
-            assert self._api.websocket
-            await self._api.websocket.async_disconnect()
+        retries = 0
+        while True:
+            try:
+                await self._api.websocket.async_connect()
+                await self._api.websocket.async_listen()
+            except asyncio.CancelledError:
+                await self._api.websocket.async_disconnect()
+                raise
+            except WebsocketError as err:
+                retries += 1
+                delay = WEBSOCKET_RETRY_DELAY * (2 ** (retries - 1))
+                LOGGER.debug(
+                    "Websocket error (%s/%s): %s; retrying in %s seconds",
+                    retries,
+                    WEBSOCKET_RECONNECT_RETRIES,
+                    err,
+                    delay,
+                )
+
+                await asyncio.sleep(delay)
+                if retries >= WEBSOCKET_RECONNECT_RETRIES:
+                    LOGGER.error(
+                        "Websocket connection failed, task exiting (%s/%s): %s",
+                        retries,
+                        WEBSOCKET_RECONNECT_RETRIES,
+                        err,
+                    )
+                    return
+            except Exception as err:  # noqa: BLE001
+                # unexpected errors → log and stop
+                LOGGER.exception("Unexpected error in websocket loop: %s", err)
+                return
+
+    async def _async_cancel_websocket_loop(self) -> None:
+        """Cancel the websocket loop task, if running."""
+        task = self._websocket_task
+        if not task:
+            return
+
+        self._websocket_task = None
+        task.cancel()
+
+        try:
+            await task
+        except asyncio.CancelledError:
+            LOGGER.debug("Websocket loop task cancelled")
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -537,20 +567,7 @@ class SimpliSafe:
         assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        self._websocket_reconnect_task = asyncio.create_task(
-            self._async_start_websocket_loop()
-        )
-
-        async def async_websocket_disconnect_listener(_: Event) -> None:
-            """Define an event handler to disconnect from the websocket."""
-            assert self._api.websocket
-            await self._async_cancel_websocket_loop()
-
-        self.entry.async_on_unload(
-            self._hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, async_websocket_disconnect_listener
-            )
-        )
+        self._async_start_websocket_if_needed()
 
         self.systems = await self._api.async_get_systems()
         for system in self.systems.values():
@@ -569,13 +586,11 @@ class SimpliSafe:
                 LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
-        self.coordinator = DataUpdateCoordinator(
+        self.coordinator = SimpliSafeDataUpdateCoordinator(
             self._hass,
-            LOGGER,
+            self.entry,
             name=self.entry.title,
-            config_entry=self.entry,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-            update_method=self.async_update,
+            simplisafe=self,
         )
 
         @callback
@@ -594,9 +609,7 @@ class SimpliSafe:
             # Open a new websocket connection with the fresh token:
             assert self._api.websocket
             await self._async_cancel_websocket_loop()
-            self._websocket_reconnect_task = self._hass.async_create_task(
-                self._async_start_websocket_loop()
-            )
+            self._async_start_websocket_if_needed()
 
         self.entry.async_on_unload(
             self._api.add_refresh_token_callback(async_handle_refresh_token)
@@ -609,22 +622,37 @@ class SimpliSafe:
         """Get updated data from SimpliSafe."""
 
         async def async_update_system(system: SystemType) -> None:
-            """Update a system."""
+            """Update a single system and process notifications."""
             await system.async_update(cached=system.version != 3)
             self._async_process_new_notifications(system)
 
         tasks = [async_update_system(system) for system in self.systems.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for result in results:
-            if isinstance(result, InvalidCredentialsError):
-                raise ConfigEntryAuthFailed("Invalid credentials") from result
-
-            if isinstance(result, EndpointUnavailableError):
-                # In case the user attempts an action not allowed in their current plan,
-                # we merely log that message at INFO level (so the user is aware,
-                # but not spammed with ERROR messages that they cannot change):
-                LOGGER.debug(result)
-
-            if isinstance(result, SimplipyError):
-                raise UpdateFailed(f"SimpliSafe error while updating: {result}")
+        try:
+            # Gather all system updates; exceptions will propagate
+            await asyncio.gather(*tasks)
+        except InvalidCredentialsError as err:
+            # Stop websocket immediately on auth failure
+            if self._websocket_task:
+                LOGGER.debug("Cancelling websocket loop due to invalid credentials")
+                await self._async_cancel_websocket_loop()
+            # Signal HA that credentials are invalid; user intervention is required
+            raise ConfigEntryAuthFailed("Invalid credentials") from err
+        except RequestError as err:
+            # Cloud-level request errors: wrap aiohttp errors
+            if self._websocket_task:
+                LOGGER.debug("Cancelling websocket loop due to request error")
+                await self._async_cancel_websocket_loop()
+            raise UpdateFailed(
+                f"Request error while updating all systems: {err}"
+            ) from err
+        except EndpointUnavailableError as err:
+            # Currently not raised by the API; included for future-proofing.
+            # Informational per-system (e.g., user plan restrictions)
+            LOGGER.debug("Endpoint unavailable: %s", err)
+        except SimplipyError as err:
+            # Any other SimplipyError not caught per-system
+            raise UpdateFailed(f"SimpliSafe error while updating: {err}") from err
+        else:
+            # Successful update, try to restart websocket if necessary
+            self._async_start_websocket_if_needed()

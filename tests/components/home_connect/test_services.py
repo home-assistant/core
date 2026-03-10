@@ -1,50 +1,24 @@
 """Tests for the Home Connect actions."""
 
 from collections.abc import Awaitable, Callable
-from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 
-from aiohomeconnect.model import HomeAppliance, OptionKey, ProgramKey, SettingKey
+from aiohomeconnect.model import HomeAppliance, ProgramKey, SettingKey
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.issue_registry as ir
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
-
-DEPRECATED_SERVICE_KV_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "set_option_active",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
-            "value": 43200,
-            "unit": "seconds",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "set_option_selected",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
-            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
-        },
-        "blocking": True,
-    },
-]
 
 SERVICE_KV_CALL_PARAMS = [
-    *DEPRECATED_SERVICE_KV_CALL_PARAMS,
     {
         "domain": DOMAIN,
         "service": "change_setting",
@@ -57,70 +31,13 @@ SERVICE_KV_CALL_PARAMS = [
     },
 ]
 
-SERVICE_COMMAND_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "pause_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "resume_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-        },
-        "blocking": True,
-    },
-]
-
-
-SERVICE_PROGRAM_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "select_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
-            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
-            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "start_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
-            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
-            "value": 43200,
-            "unit": "seconds",
-        },
-        "blocking": True,
-    },
-]
 
 SERVICE_APPLIANCE_METHOD_MAPPING = {
-    "set_option_active": "set_active_program_option",
-    "set_option_selected": "set_selected_program_option",
     "change_setting": "set_setting",
-    "pause_program": "put_command",
-    "resume_program": "put_command",
-    "select_program": "set_selected_program",
-    "start_program": "start_program",
 }
 
 SERVICE_VALIDATION_ERROR_MAPPING = {
-    "set_option_active": r"Error.*setting.*options.*active.*program.*",
-    "set_option_selected": r"Error.*setting.*options.*selected.*program.*",
     "change_setting": r"Error.*assigning.*value.*setting.*",
-    "pause_program": r"Error.*executing.*command.*",
-    "resume_program": r"Error.*executing.*command.*",
-    "select_program": r"Error.*selecting.*program.*",
-    "start_program": r"Error.*starting.*program.*",
 }
 
 
@@ -171,10 +88,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
-)
+@pytest.mark.parametrize("service_call", SERVICE_KV_CALL_PARAMS)
 async def test_key_value_services(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -200,81 +114,6 @@ async def test_key_value_services(
     assert (
         getattr(client, SERVICE_APPLIANCE_METHOD_MAPPING[service_name]).call_count == 1
     )
-
-
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    ("service_call", "issue_id"),
-    [
-        *zip(
-            DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
-            ["deprecated_set_program_and_option_actions"]
-            * (
-                len(DEPRECATED_SERVICE_KV_CALL_PARAMS)
-                + len(SERVICE_PROGRAM_CALL_PARAMS)
-            ),
-            strict=True,
-        ),
-        *zip(
-            SERVICE_COMMAND_CALL_PARAMS,
-            ["deprecated_command_actions"] * len(SERVICE_COMMAND_CALL_PARAMS),
-            strict=True,
-        ),
-    ],
-)
-async def test_programs_and_options_actions_deprecation(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    device_registry: dr.DeviceRegistry,
-    issue_registry: ir.IssueRegistry,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    service_call: dict[str, Any],
-    issue_id: str,
-) -> None:
-    """Test deprecated service keys."""
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.ha_id)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-    await hass.services.async_call(**service_call)
-    await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 1
-    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert issue
-
-    _client = await hass_client()
-    resp = await _client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": DOMAIN, "issue_id": issue.issue_id},
-    )
-    assert resp.status == HTTPStatus.OK
-    flow_id = (await resp.json())["flow_id"]
-    resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
-
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
-
-    await hass.services.async_call(**service_call)
-    await hass.async_block_till_done()
-
-    assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(DOMAIN, issue_id)
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Assert the issue is no longer present
-    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
-    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
@@ -357,35 +196,6 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
-)
-async def test_services_exception_device_id(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    service_call: dict[str, Any],
-) -> None:
-    """Raise a HomeAssistantError when there is an API error."""
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.ha_id)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(**service_call)
-
-
 async def test_services_appliance_not_found(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -430,7 +240,7 @@ async def test_services_appliance_not_found(
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
     "service_call",
-    SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+    SERVICE_KV_CALL_PARAMS,
 )
 async def test_services_exception(
     hass: HomeAssistant,
@@ -458,3 +268,34 @@ async def test_services_exception(
         match=SERVICE_VALIDATION_ERROR_MAPPING[service_name],
     ):
         await hass.services.async_call(**service_call)
+
+
+async def test_not_possible_to_use_favorite_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Raise a MultipleInvalid when trying to use a favorite program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "HA_ID")},
+    )
+
+    with pytest.raises(MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program_and_options",
+            {
+                "device_id": device_entry.id,
+                "affects_to": "selected_program",
+                "program": bsh_key_to_translation_key(
+                    ProgramKey.BSH_COMMON_FAVORITE_001.value
+                ),
+            },
+            blocking=True,
+        )

@@ -29,12 +29,12 @@ RECEIVER_INFO_2 = ReceiverInfo(
 def mock_discovery(receiver_infos: Iterable[ReceiverInfo] | None) -> Generator[None]:
     """Mock discovery functions."""
 
-    async def get_info(host: str) -> ReceiverInfo | None:
+    async def get_info(host: str) -> ReceiverInfo:
         """Get receiver info by host."""
         for info in receiver_infos:
             if info.host == host:
                 return info
-        return None
+        raise TimeoutError
 
     def get_infos(host: str) -> MagicMock:
         """Get receiver infos from broadcast."""

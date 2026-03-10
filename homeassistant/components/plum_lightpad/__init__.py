@@ -1,52 +1,36 @@
 """Support for Plum Lightpad devices."""
 
-import logging
-
-from aiohttp import ContentTypeError
-from requests.exceptions import ConnectTimeout, HTTPError
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN
-from .utils import load_plum
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [Platform.LIGHT]
+DOMAIN = "plum_lightpad"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
     """Set up Plum Lightpad from a config entry."""
-    _LOGGER.debug("Setting up config entry with ID = %s", entry.unique_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "entries": "/config/integrations/integration/plum_lightpad",
+        },
+    )
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
+    return True
 
-    try:
-        plum = await load_plum(username, password, hass)
-    except ContentTypeError as ex:
-        _LOGGER.error("Unable to authenticate to Plum cloud: %s", ex)
-        return False
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Plum cloud: %s", ex)
-        raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = plum
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+    if all(
+        config_entry.state is ConfigEntryState.NOT_LOADED
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.entry_id != entry.entry_id
+    ):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    def cleanup(event):
-        """Clean up resources."""
-        plum.cleanup()
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
     return True

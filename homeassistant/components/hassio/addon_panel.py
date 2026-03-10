@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp import web
 
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio: HassIO) -> None:
         # _register_panel never suspends and is only
         # a coroutine because it would be a breaking change
         # to make it a normal function
-        await _register_panel(hass, addon, data)
+        _register_panel(hass, addon, data)
 
 
 class HassIOAddonPanel(HomeAssistantView):
@@ -58,7 +58,7 @@ class HassIOAddonPanel(HomeAssistantView):
         data = panels[addon]
 
         # Register panel
-        await _register_panel(self.hass, addon, data)
+        _register_panel(self.hass, addon, data)
         return web.Response()
 
     async def delete(self, request: web.Request, addon: str) -> web.Response:
@@ -76,18 +76,14 @@ class HassIOAddonPanel(HomeAssistantView):
         return {}
 
 
-async def _register_panel(
-    hass: HomeAssistant, addon: str, data: dict[str, Any]
-) -> None:
+def _register_panel(hass: HomeAssistant, addon: str, data: dict[str, Any]):
     """Init coroutine to register the panel."""
-    await panel_custom.async_register_panel(
+    frontend.async_register_built_in_panel(
         hass,
+        "app",
         frontend_url_path=addon,
-        webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],
         sidebar_icon=data[ATTR_ICON],
-        js_url="/api/hassio/app/entrypoint.js",
-        embed_iframe=True,
         require_admin=data[ATTR_ADMIN],
-        config={"ingress": addon},
+        config={"addon": addon},
     )

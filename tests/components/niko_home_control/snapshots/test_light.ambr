@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -41,7 +42,7 @@
 # name: test_entities[light.dimmable_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
+      'brightness': 100,
       'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'dimmable light',
       'supported_color_modes': list([
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

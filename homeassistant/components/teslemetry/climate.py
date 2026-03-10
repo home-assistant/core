@@ -291,9 +291,7 @@ class TeslemetryStreamingClimateEntity(
             )
         )
         self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_HvacACEnabled(
-                self._async_handle_hvac_ac_enabled
-            )
+            self.vehicle.stream_vehicle.listen_HvacPower(self._async_handle_hvac_power)
         )
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_ClimateKeeperMode(
@@ -331,25 +329,29 @@ class TeslemetryStreamingClimateEntity(
                     )
                 )
 
-    def _async_handle_inside_temp(self, data: float | None):
+    def _async_handle_inside_temp(self, data: float | None) -> None:
         self._attr_current_temperature = data
         self.async_write_ha_state()
 
-    def _async_handle_hvac_ac_enabled(self, data: bool | None):
+    def _async_handle_hvac_power(self, data: str | None) -> None:
         self._attr_hvac_mode = (
-            None if data is None else HVACMode.HEAT_COOL if data else HVACMode.OFF
+            None
+            if data is None
+            else HVACMode.HEAT_COOL
+            if data == "On"
+            else HVACMode.OFF
         )
         self.async_write_ha_state()
 
-    def _async_handle_climate_keeper_mode(self, data: str | None):
+    def _async_handle_climate_keeper_mode(self, data: str | None) -> None:
         self._attr_preset_mode = PRESET_MODES.get(data) if data else None
         self.async_write_ha_state()
 
-    def _async_handle_hvac_temperature_request(self, data: float | None):
+    def _async_handle_hvac_temperature_request(self, data: float | None) -> None:
         self._attr_target_temperature = data
         self.async_write_ha_state()
 
-    def _async_handle_rhd(self, data: bool | None):
+    def _async_handle_rhd(self, data: bool | None) -> None:
         if data is not None:
             self.rhd = data
 
@@ -536,15 +538,15 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             )
         )
 
-    def _async_handle_inside_temp(self, value: float | None):
+    def _async_handle_inside_temp(self, value: float | None) -> None:
         self._attr_current_temperature = value
         self.async_write_ha_state()
 
-    def _async_handle_protection_mode(self, value: str | None):
+    def _async_handle_protection_mode(self, value: str | None) -> None:
         self._attr_hvac_mode = COP_MODES.get(value) if value is not None else None
         self.async_write_ha_state()
 
-    def _async_handle_temperature_limit(self, value: str | None):
+    def _async_handle_temperature_limit(self, value: str | None) -> None:
         self._attr_target_temperature = (
             COP_LEVELS.get(value) if value is not None else None
         )

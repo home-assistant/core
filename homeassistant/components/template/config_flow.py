@@ -12,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -19,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
@@ -29,6 +31,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
@@ -72,6 +75,7 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
+from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
     CONF_OFF_ACTION,
     CONF_ON_ACTION,
@@ -104,6 +108,19 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_selec
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
+from .update import (
+    CONF_BACKUP,
+    CONF_IN_PROGRESS,
+    CONF_INSTALL,
+    CONF_INSTALLED_VERSION,
+    CONF_LATEST_VERSION,
+    CONF_RELEASE_SUMMARY,
+    CONF_RELEASE_URL,
+    CONF_SPECIFIC_VERSION,
+    CONF_TITLE,
+    CONF_UPDATE_PERCENTAGE,
+    async_create_preview_update,
+)
 from .vacuum import (
     CONF_FAN_SPEED,
     CONF_FAN_SPEED_LIST,
@@ -115,6 +132,15 @@ from .vacuum import (
     SERVICE_START,
     SERVICE_STOP,
     async_create_preview_vacuum,
+)
+from .weather import (
+    CONF_CONDITION,
+    CONF_FORECAST_DAILY,
+    CONF_FORECAST_HOURLY,
+    CONF_HUMIDITY,
+    CONF_TEMPERATURE as CONF_WEATHER_TEMPERATURE,
+    CONF_TEMPERATURE_UNIT,
+    async_create_preview_weather,
 )
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
@@ -198,6 +224,24 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                         options=[cls.value for cls in CoverDeviceClass],
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         translation_key="cover_device_class",
+                        sort=True,
+                    ),
+                )
+            }
+
+    if domain == Platform.EVENT:
+        schema |= {
+            vol.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
+            vol.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
+        }
+
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in EventDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="event_device_class",
                         sort=True,
                     ),
                 )
@@ -315,6 +359,31 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
+    if domain == Platform.UPDATE:
+        schema |= {
+            vol.Optional(CONF_INSTALLED_VERSION): selector.TemplateSelector(),
+            vol.Optional(CONF_LATEST_VERSION): selector.TemplateSelector(),
+            vol.Optional(CONF_INSTALL): selector.ActionSelector(),
+            vol.Optional(CONF_IN_PROGRESS): selector.TemplateSelector(),
+            vol.Optional(CONF_RELEASE_SUMMARY): selector.TemplateSelector(),
+            vol.Optional(CONF_RELEASE_URL): selector.TemplateSelector(),
+            vol.Optional(CONF_TITLE): selector.TemplateSelector(),
+            vol.Optional(CONF_UPDATE_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_BACKUP): selector.BooleanSelector(),
+            vol.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in UpdateDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="update_device_class",
+                        sort=True,
+                    ),
+                ),
+            }
+
     if domain == Platform.VACUUM:
         schema |= _SCHEMA_STATE | {
             vol.Required(SERVICE_START): selector.ActionSelector(),
@@ -335,6 +404,22 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    if domain == Platform.WEATHER:
+        schema |= {
+            vol.Required(CONF_CONDITION): selector.TemplateSelector(),
+            vol.Required(CONF_HUMIDITY): selector.TemplateSelector(),
+            vol.Required(CONF_WEATHER_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+            vol.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
+            vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
@@ -353,6 +438,15 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 options_schema = partial(generate_schema, flow_type="options")
 
 config_schema = partial(generate_schema, flow_type="config")
+
+
+async def _get_forecast_description_place_holders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    return {
+        "daily_link": "https://www.home-assistant.io/integrations/template/#daily-weather-forecast",
+        "hourly_link": "https://www.home-assistant.io/integrations/template/#hourly-weather-forecast",
+    }
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
@@ -441,6 +535,7 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -449,11 +544,13 @@ TEMPLATE_TYPES = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WEATHER,
 ]
 
 CONFIG_FLOW = {
-    "user": SchemaFlowMenuStep(TEMPLATE_TYPES),
+    "user": SchemaFlowMenuStep(TEMPLATE_TYPES, True),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         config_schema(Platform.ALARM_CONTROL_PANEL),
         preview="template",
@@ -472,6 +569,11 @@ CONFIG_FLOW = {
         config_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.EVENT: SchemaFlowFormStep(
+        config_schema(Platform.EVENT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.FAN: SchemaFlowFormStep(
         config_schema(Platform.FAN),
@@ -513,10 +615,21 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
+    Platform.UPDATE: SchemaFlowFormStep(
+        config_schema(Platform.UPDATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.UPDATE),
+    ),
     Platform.VACUUM: SchemaFlowFormStep(
         config_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        config_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
     ),
 }
 
@@ -541,6 +654,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.EVENT: SchemaFlowFormStep(
+        options_schema(Platform.EVENT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.FAN: SchemaFlowFormStep(
         options_schema(Platform.FAN),
@@ -582,10 +700,21 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
+    Platform.UPDATE: SchemaFlowFormStep(
+        options_schema(Platform.UPDATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.UPDATE),
+    ),
     Platform.VACUUM: SchemaFlowFormStep(
         options_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        options_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
     ),
 }
 
@@ -596,6 +725,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
     Platform.LOCK: async_create_preview_lock,
@@ -603,7 +733,9 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
+    Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WEATHER: async_create_preview_weather,
 }
 
 
@@ -612,6 +744,10 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    MINOR_VERSION = 2
+    VERSION = 1
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

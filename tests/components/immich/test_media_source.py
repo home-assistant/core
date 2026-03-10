@@ -14,13 +14,8 @@ from homeassistant.components.immich.media_source import (
     ImmichMediaView,
     async_get_media_source,
 )
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import (
-    BrowseError,
-    BrowseMedia,
-    MediaSourceItem,
-    Unresolvable,
-)
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockRequest, MockStreamReaderChunked
@@ -42,14 +37,14 @@ async def test_get_media_source(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("identifier", "exception_msg"),
     [
-        ("unique_id", "Could not resolve identifier that has no mime-type"),
+        ("unique_id", "identifier_no_mime_type_unresolvable"),
         (
             "unique_id|albums|album_id",
-            "Could not resolve identifier that has no mime-type",
+            "identifier_no_mime_type_unresolvable",
         ),
         (
             "unique_id|albums|album_id|asset_id|filename",
-            "Could not parse identifier",
+            "identifier_unresolvable",
         ),
     ],
 )
@@ -107,7 +102,7 @@ async def test_browse_media_unconfigured(hass: HomeAssistant) -> None:
     item = MediaSourceItem(
         hass, DOMAIN, "unique_id/albums/album_id/asset_id/filename.png", None
     )
-    with pytest.raises(BrowseError, match="Immich is not configured"):
+    with pytest.raises(BrowseError, match="not_configured"):
         await source.async_browse_media(item)
 
 

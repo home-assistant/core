@@ -1,20 +1,21 @@
 """Common utilities for VeSync Component."""
 
 import logging
+from typing import TypeGuard
 
-from pyvesync import VeSync
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncWallSwitch
-
-from homeassistant.core import HomeAssistant
-
-from .const import VeSyncFanDevice, VeSyncHumidifierDevice
+from pyvesync.base_devices import VeSyncHumidifier
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.fryer_base import VeSyncFryer
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.purifier_base import VeSyncPurifier
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.const import ProductTypes
+from pyvesync.devices.vesyncswitch import VeSyncWallSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def rgetattr(obj: object, attr: str):
+def rgetattr(obj: object, attr: str) -> object | str | None:
     """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
     _this_func = rgetattr
     sp = attr.split(".", 1)
@@ -36,41 +37,39 @@ def rgetattr(obj: object, attr: str):
     return obj
 
 
-async def async_generate_device_list(
-    hass: HomeAssistant, manager: VeSync
-) -> list[VeSyncBaseDevice]:
-    """Assign devices to proper component."""
-    devices: list[VeSyncBaseDevice] = []
-
-    await hass.async_add_executor_job(manager.update)
-
-    devices.extend(manager.fans)
-    devices.extend(manager.bulbs)
-    devices.extend(manager.outlets)
-    devices.extend(manager.switches)
-
-    return devices
-
-
-def is_humidifier(device: VeSyncBaseDevice) -> bool:
+def is_humidifier(device: VeSyncBaseDevice) -> TypeGuard[VeSyncHumidifier]:
     """Check if the device represents a humidifier."""
 
-    return isinstance(device, VeSyncHumidifierDevice)
+    return device.product_type == ProductTypes.HUMIDIFIER
 
 
-def is_fan(device: VeSyncBaseDevice) -> bool:
+def is_fan(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFanBase]:
     """Check if the device represents a fan."""
 
-    return isinstance(device, VeSyncFanDevice)
+    return device.product_type == ProductTypes.FAN
 
 
-def is_outlet(device: VeSyncBaseDevice) -> bool:
+def is_outlet(device: VeSyncBaseDevice) -> TypeGuard[VeSyncOutlet]:
     """Check if the device represents an outlet."""
 
-    return isinstance(device, VeSyncOutlet)
+    return device.product_type == ProductTypes.OUTLET
 
 
-def is_wall_switch(device: VeSyncBaseDevice) -> bool:
+def is_wall_switch(device: VeSyncBaseDevice) -> TypeGuard[VeSyncWallSwitch]:
     """Check if the device represents a wall switch, note this doessn't include dimming switches."""
+    if device.product_type != ProductTypes.SWITCH:
+        return False
 
-    return isinstance(device, VeSyncWallSwitch)
+    return getattr(device, "supports_dimmable", False) is False
+
+
+def is_purifier(device: VeSyncBaseDevice) -> TypeGuard[VeSyncPurifier]:
+    """Check if the device represents an air purifier."""
+
+    return device.product_type == ProductTypes.PURIFIER
+
+
+def is_air_fryer(device: VeSyncBaseDevice) -> TypeGuard[VeSyncFryer]:
+    """Check if the device represents an air fryer."""
+
+    return device.product_type == ProductTypes.AIR_FRYER

@@ -74,6 +74,7 @@ from .const import (
     CONF_AVAILABILITY_TOPIC,
     CONF_CONFIGURATION_URL,
     CONF_CONNECTIONS,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
@@ -82,7 +83,6 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
-    CONF_OBJECT_ID,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -1406,12 +1406,16 @@ class MqttEntity(
         ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_id(self) -> None:
-        """Set entity_id from object_id if defined in config."""
-        if CONF_OBJECT_ID not in self._config:
+        """Set entity_id from default_entity_id if defined in config."""
+        object_id: str
+        default_entity_id: str | None
+        if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
             return
+        _, _, object_id = default_entity_id.partition(".")
         self.entity_id = async_generate_entity_id(
-            self._entity_id_format, self._config[CONF_OBJECT_ID], None, self.hass
+            self._entity_id_format, object_id, None, self.hass
         )
+
         if self.unique_id is None:
             return
         # Check for previous deleted entities
@@ -1422,7 +1426,8 @@ class MqttEntity(
                 (entity_platform, DOMAIN, self.unique_id)
             )
         ) and deleted_entry.entity_id != self.entity_id:
-            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            # Plan to update the entity_id based on `default_entity_id`
+            # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
 
     @final
@@ -1433,6 +1438,7 @@ class MqttEntity(
             entity_registry.async_update_entity(
                 self.entity_id, new_entity_id=self._update_registry_entity_id
             )
+            self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
         self._subscriptions = {}

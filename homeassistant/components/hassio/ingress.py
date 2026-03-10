@@ -139,21 +139,27 @@ class HassIOIngress(HomeAssistantView):
             url = url.with_query(request.query_string)
 
         # Start proxy
-        async with self._websession.ws_connect(
-            url,
-            headers=source_header,
-            protocols=req_protocols,
-            autoclose=False,
-            autoping=False,
-        ) as ws_client:
-            # Proxy requests
-            await asyncio.wait(
-                [
-                    create_eager_task(_websocket_forward(ws_server, ws_client)),
-                    create_eager_task(_websocket_forward(ws_client, ws_server)),
-                ],
-                return_when=asyncio.FIRST_COMPLETED,
+        try:
+            _LOGGER.debug(
+                "Proxying WebSocket to %s / %s, upstream url: %s", token, path, url
             )
+            async with self._websession.ws_connect(
+                url,
+                headers=source_header,
+                protocols=req_protocols,
+                autoclose=False,
+                autoping=False,
+            ) as ws_client:
+                # Proxy requests
+                await asyncio.wait(
+                    [
+                        create_eager_task(_websocket_forward(ws_server, ws_client)),
+                        create_eager_task(_websocket_forward(ws_client, ws_server)),
+                    ],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+        except TimeoutError:
+            _LOGGER.warning("WebSocket proxy to %s / %s timed out", token, path)
 
         return ws_server
 
@@ -175,8 +181,7 @@ class HassIOIngress(HomeAssistantView):
             skip_auto_headers={hdrs.CONTENT_TYPE},
         ) as result:
             headers = _response_header(result)
-            content_length_int = 0
-            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+
             # Avoid parsing content_type in simple cases for better performance
             if maybe_content_type := result.headers.get(hdrs.CONTENT_TYPE):
                 content_type: str = (maybe_content_type.partition(";"))[0].strip()
@@ -184,17 +189,30 @@ class HassIOIngress(HomeAssistantView):
                 # default value according to RFC 2616
                 content_type = "application/octet-stream"
 
+            # Empty body responses (304, 204, HEAD, etc.) should not be streamed,
+            # otherwise aiohttp < 3.9.0 may generate an invalid "0\r\n\r\n" chunk
+            # This also avoids setting content_type for empty responses.
+            if must_be_empty_body(request.method, result.status):
+                # If upstream contains content-type, preserve it (e.g. for HEAD requests)
+                # Note: This still is omitting content-length. We can't simply forward
+                # the upstream length since the proxy might change the body length
+                # (e.g. due to compression).
+                if maybe_content_type:
+                    headers[hdrs.CONTENT_TYPE] = content_type
+                return web.Response(
+                    headers=headers,
+                    status=result.status,
+                )
+
             # Simple request
-            if (empty_body := must_be_empty_body(result.method, result.status)) or (
+            content_length_int = 0
+            content_length = result.headers.get(hdrs.CONTENT_LENGTH, UNDEFINED)
+            if (
                 content_length is not UNDEFINED
                 and (content_length_int := int(content_length))
                 <= MAX_SIMPLE_RESPONSE_SIZE
             ):
-                # Return Response
-                if empty_body:
-                    body = None
-                else:
-                    body = await result.read()
+                body = await result.read()
                 simple_response = web.Response(
                     headers=headers,
                     status=result.status,
@@ -226,6 +244,7 @@ class HassIOIngress(HomeAssistantView):
                 aiohttp.ClientError,
                 aiohttp.ClientPayloadError,
                 ConnectionResetError,
+                ConnectionError,
             ) as err:
                 _LOGGER.debug("Stream error %s / %s: %s", token, path, err)
 
@@ -303,9 +322,9 @@ async def _websocket_forward(
             elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
             elif msg.type is aiohttp.WSMsgType.PING:
-                await ws_to.ping()
+                await ws_to.ping(msg.data)
             elif msg.type is aiohttp.WSMsgType.PONG:
-                await ws_to.pong()
+                await ws_to.pong(msg.data)
             elif ws_to.closed:
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:

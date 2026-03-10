@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -187,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -290,6 +295,67 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_empty[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -313,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -369,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -423,6 +491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -472,6 +541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -521,6 +591,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -572,6 +643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -628,6 +700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -690,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -748,6 +822,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -801,6 +876,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -857,6 +933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -913,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -978,6 +1056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1016,6 +1095,67 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_sensor_errors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1039,6 +1179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1095,6 +1236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1149,6 +1291,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1198,6 +1341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1247,6 +1391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1298,6 +1443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1354,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1416,6 +1563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1474,6 +1622,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1530,6 +1679,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1563,6 +1713,106 @@
     'state': '3',
   })
 # ---
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_hvac_soc_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_fuel_hvac_soc_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HVAC SoC threshold',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HVAC SoC threshold',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_soc_threshold',
+    'unique_id': 'vf1capturfuelvin_hvac_soc_threshold',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_hvac_soc_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-CAPTUR-FUEL HVAC SoC threshold',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_fuel_hvac_soc_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_hvac_activity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_fuel_last_hvac_activity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last HVAC activity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last HVAC activity',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_last_activity',
+    'unique_id': 'vf1capturfuelvin_hvac_last_activity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_hvac_activity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'REG-CAPTUR-FUEL Last HVAC activity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_fuel_last_hvac_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[captur_fuel][sensor.reg_captur_fuel_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1584,6 +1834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1635,6 +1886,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1668,12 +1920,14 @@
     'state': '5567',
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start-entry]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_outside_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1681,7 +1935,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_fuel_outside_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1689,79 +1943,38 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Remote engine start',
+    'original_name': 'Outside temperature',
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'res_state',
-    'unique_id': 'vf1capturfuelvin_res_state',
-    'unit_of_measurement': None,
+    'translation_key': 'outside_temperature',
+    'unique_id': 'vf1capturfuelvin_outside_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start-state]
+# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR-FUEL Remote engine start',
+      'device_class': 'temperature',
+      'friendly_name': 'REG-CAPTUR-FUEL Outside temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start',
+    'entity_id': 'sensor.reg_captur_fuel_outside_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Stopped, ready for RES',
-  })
-# ---
-# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start_code-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start_code',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Remote engine start code',
-    'platform': 'renault',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'res_state_code',
-    'unique_id': 'vf1capturfuelvin_res_state_code',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[captur_fuel][sensor.reg_captur_fuel_remote_engine_start_code-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR-FUEL Remote engine start code',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.reg_captur_fuel_remote_engine_start_code',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_admissible_charging_power-entry]
@@ -1787,6 +2000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1843,6 +2057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1896,6 +2111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1952,6 +2168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2008,6 +2225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2073,6 +2291,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2111,6 +2330,67 @@
     'state': 'charge_in_progress',
   })
 # ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_phev_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1capturphevvin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-CAPTUR_PHEV Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_phev_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'always',
+  })
+# ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2134,6 +2414,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2190,6 +2471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2246,6 +2528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2279,6 +2562,56 @@
     'state': '3',
   })
 # ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_hvac_soc_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_phev_hvac_soc_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HVAC SoC threshold',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HVAC SoC threshold',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_soc_threshold',
+    'unique_id': 'vf1capturphevvin_hvac_soc_threshold',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_hvac_soc_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-CAPTUR_PHEV HVAC SoC threshold',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_phev_hvac_soc_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2300,6 +2633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2328,6 +2662,56 @@
     'state': '2020-01-12T21:40:16+00:00',
   })
 # ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_hvac_activity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_phev_last_hvac_activity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last HVAC activity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last HVAC activity',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_last_activity',
+    'unique_id': 'vf1capturphevvin_hvac_last_activity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_last_hvac_activity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'REG-CAPTUR_PHEV Last HVAC activity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_phev_last_hvac_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_last_location_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2349,6 +2733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2400,6 +2785,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2433,6 +2819,63 @@
     'state': '5567',
   })
 # ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_outside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_captur_phev_outside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outside temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Outside temperature',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature',
+    'unique_id': 'vf1capturphevvin_outside_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[captur_phev][sensor.reg_captur_phev_outside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'REG-CAPTUR_PHEV Outside temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_captur_phev_outside_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[captur_phev][sensor.reg_captur_phev_plug_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2462,6 +2905,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2497,7 +2941,478 @@
     'state': 'plugged',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_admissible_charging_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_admissible_charging_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Admissible charging power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Admissible charging power',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'admissible_charging_power',
+    'unique_id': 'vf1meganeetechvin_charging_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_admissible_charging_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'REG-MEG-0 Admissible charging power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_admissible_charging_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27.0',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'vf1meganeetechvin_battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'REG-MEG-0 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_autonomy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_battery_autonomy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery autonomy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Battery autonomy',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_autonomy',
+    'unique_id': 'vf1meganeetechvin_battery_autonomy',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_autonomy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'REG-MEG-0 Battery autonomy',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_battery_autonomy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '141',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_available_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_battery_available_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery available energy',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Battery available energy',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_available_energy',
+    'unique_id': 'vf1meganeetechvin_battery_available_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_available_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'REG-MEG-0 Battery available energy',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_battery_available_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_battery_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Battery temperature',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_temperature',
+    'unique_id': 'vf1meganeetechvin_battery_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_battery_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'REG-MEG-0 Battery temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_battery_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charge_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'not_in_charge',
+        'waiting_for_a_planned_charge',
+        'charge_ended',
+        'waiting_for_current_charge',
+        'energy_flap_opened',
+        'charge_in_progress',
+        'charge_error',
+        'unavailable',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_charge_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charge state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charge state',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state',
+    'unique_id': 'vf1meganeetechvin_charge_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charge_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-MEG-0 Charge state',
+      'options': list([
+        'not_in_charge',
+        'waiting_for_a_planned_charge',
+        'charge_ended',
+        'waiting_for_current_charge',
+        'energy_flap_opened',
+        'charge_in_progress',
+        'charge_error',
+        'unavailable',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_charge_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charge_in_progress',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1meganeetechvin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-MEG-0 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'delayed',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_charging_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging remaining time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Charging remaining time',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_remaining_time',
+    'unique_id': 'vf1meganeetechvin_charging_remaining_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_charging_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'REG-MEG-0 Charging remaining time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_charging_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '145',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2510,7 +3425,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_captur_phev_remote_engine_start',
+    'entity_id': 'sensor.reg_meg_0_hvac_soc_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2518,34 +3433,36 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Remote engine start',
+    'original_name': 'HVAC SoC threshold',
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'res_state',
-    'unique_id': 'vf1capturphevvin_res_state',
-    'unit_of_measurement': None,
+    'translation_key': 'hvac_soc_threshold',
+    'unique_id': 'vf1meganeetechvin_hvac_soc_threshold',
+    'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_hvac_soc_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR_PHEV Remote engine start',
+      'friendly_name': 'REG-MEG-0 HVAC SoC threshold',
+      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_captur_phev_remote_engine_start',
+    'entity_id': 'sensor.reg_meg_0_hvac_soc_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Stopped, ready for RES',
+    'state': 'unknown',
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start_code-entry]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_battery_activity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2558,7 +3475,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.reg_captur_phev_remote_engine_start_code',
+    'entity_id': 'sensor.reg_meg_0_last_battery_activity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2566,31 +3483,312 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': 'Remote engine start code',
+    'original_name': 'Last battery activity',
     'platform': 'renault',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'res_state_code',
-    'unique_id': 'vf1capturphevvin_res_state_code',
+    'translation_key': 'battery_last_activity',
+    'unique_id': 'vf1meganeetechvin_battery_last_activity',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[captur_phev][sensor.reg_captur_phev_remote_engine_start_code-state]
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_battery_activity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR_PHEV Remote engine start code',
+      'device_class': 'timestamp',
+      'friendly_name': 'REG-MEG-0 Last battery activity',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.reg_captur_phev_remote_engine_start_code',
+    'entity_id': 'sensor.reg_meg_0_last_battery_activity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10',
+    'state': '2020-01-12T21:40:16+00:00',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_hvac_activity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_last_hvac_activity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last HVAC activity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last HVAC activity',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hvac_last_activity',
+    'unique_id': 'vf1meganeetechvin_hvac_last_activity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_hvac_activity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'REG-MEG-0 Last HVAC activity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_last_hvac_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_location_activity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_last_location_activity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last location activity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last location activity',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'location_last_activity',
+    'unique_id': 'vf1meganeetechvin_location_last_activity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_last_location_activity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'REG-MEG-0 Last location activity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_last_location_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-02-18T16:58:38+00:00',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_mileage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_mileage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mileage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Mileage',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mileage',
+    'unique_id': 'vf1meganeetechvin_mileage',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_mileage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'REG-MEG-0 Mileage',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_mileage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '49114',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_outside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_outside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Outside temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Outside temperature',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature',
+    'unique_id': 'vf1meganeetechvin_outside_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_outside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'REG-MEG-0 Outside temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_outside_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.0',
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_plug_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'unplugged',
+        'plugged',
+        'plugged_waiting_for_charge',
+        'plug_error',
+        'plug_unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_meg_0_plug_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plug state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Plug state',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plug_state',
+    'unique_id': 'vf1meganeetechvin_plug_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[megane_e_tech][sensor.reg_meg_0_plug_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-MEG-0 Plug state',
+      'options': list([
+        'unplugged',
+        'plugged',
+        'plugged_waiting_for_charge',
+        'plug_error',
+        'plug_unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_meg_0_plug_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'plugged',
   })
 # ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_admissible_charging_power-entry]
@@ -2616,6 +3814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2672,6 +3871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2725,6 +3925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2781,6 +3982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2837,6 +4039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2902,6 +4105,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2940,6 +4144,67 @@
     'state': 'waiting_for_current_charge',
   })
 # ---
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_twingo_iii_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1twingoiiivin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-TWINGO-III Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_twingo_iii_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'always',
+  })
+# ---
 # name: test_sensors[twingo_3_electric][sensor.reg_twingo_iii_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2963,6 +4228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3017,6 +4283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3066,6 +4333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3115,6 +4383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3164,6 +4433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3215,6 +4485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3271,6 +4542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3333,6 +4605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3391,6 +4664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3444,6 +4718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3500,6 +4775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3556,6 +4832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3621,6 +4898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3659,6 +4937,67 @@
     'state': 'charge_in_progress',
   })
 # ---
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe40vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-40 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_40_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[zoe_40][sensor.reg_zoe_40_charging_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3682,6 +5021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3738,6 +5078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3792,6 +5133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3841,6 +5183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3890,6 +5233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3941,6 +5285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3997,6 +5342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4059,6 +5405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4117,6 +5464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4173,6 +5521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -4226,6 +5575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4282,6 +5632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4338,6 +5689,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4403,6 +5755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4441,6 +5794,67 @@
     'state': 'charge_error',
   })
 # ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_charging_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charging mode',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_settings_mode',
+    'unique_id': 'vf1zoe50vin_charging_settings_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'REG-ZOE-50 Charging mode',
+      'options': list([
+        'always',
+        'delayed',
+        'scheduled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_charging_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'scheduled',
+  })
+# ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_charging_remaining_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4464,6 +5878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4497,6 +5912,120 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_front_left_tyre_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_front_left_tyre_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front left tyre pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front left tyre pressure',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_left_pressure',
+    'unique_id': 'vf1zoe50vin_front_left_pressure',
+    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_front_left_tyre_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'REG-ZOE-50 Front left tyre pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_front_left_tyre_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2730',
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_front_right_tyre_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_front_right_tyre_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Front right tyre pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Front right tyre pressure',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'front_right_pressure',
+    'unique_id': 'vf1zoe50vin_front_right_pressure',
+    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_front_right_tyre_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'REG-ZOE-50 Front right tyre pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_front_right_tyre_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2790',
+  })
+# ---
 # name: test_sensors[zoe_50][sensor.reg_zoe_50_hvac_soc_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4518,6 +6047,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4567,6 +6097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4616,6 +6147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4665,6 +6197,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4716,6 +6249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4772,6 +6306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4834,6 +6369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4867,5 +6403,119 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unplugged',
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_left_tyre_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_rear_left_tyre_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rear left tyre pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear left tyre pressure',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_left_pressure',
+    'unique_id': 'vf1zoe50vin_rear_left_pressure',
+    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_left_tyre_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'REG-ZOE-50 Rear left tyre pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_rear_left_tyre_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2340',
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_right_tyre_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.reg_zoe_50_rear_right_tyre_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rear right tyre pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Rear right tyre pressure',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rear_right_pressure',
+    'unique_id': 'vf1zoe50vin_rear_right_pressure',
+    'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+  })
+# ---
+# name: test_sensors[zoe_50][sensor.reg_zoe_50_rear_right_tyre_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'REG-ZOE-50 Rear right tyre pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.MBAR: 'mbar'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.reg_zoe_50_rear_right_tyre_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2460',
   })
 # ---

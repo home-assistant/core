@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OllamaConfigEntry
 from .const import (
@@ -75,7 +76,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
     small local tool use models. This will repair invalid json arguments and
     omit unnecessary arguments with empty values that will fail intent parsing.
     """
-    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
+    return {
+        k: _fix_invalid_arguments(v)
+        for k, v in arguments.items()
+        if v is not None and v != ""
+    }
 
 
 def _convert_content(
@@ -89,12 +94,13 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json.dumps(chat_content.tool_result),
+            content=json_dumps(chat_content.tool_result),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
             role=MessageRole.ASSISTANT.value,
             content=chat_content.content,
+            thinking=chat_content.thinking_content,
             tool_calls=[
                 ollama.Message.ToolCall(
                     function=ollama.Message.ToolCall.Function(
@@ -103,7 +109,8 @@ def _convert_content(
                     )
                 )
                 for tool_call in chat_content.tool_calls or ()
-            ],
+            ]
+            or None,
         )
     if isinstance(chat_content, conversation.UserContent):
         images: list[ollama.Image] = []
@@ -162,6 +169,8 @@ async def _transform_stream(
             ]
         if (content := response_message.get("content")) is not None:
             chunk["content"] = content
+        if (thinking := response_message.get("thinking")) is not None:
+            chunk["thinking_content"] = thinking
         if response_message.get("done"):
             new_msg = True
         yield chunk

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
+from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -17,7 +18,11 @@ def mock_config_entry(unique_id: str, entry_id: str = "an_entry_id") -> MockConf
         domain=DOMAIN,
         title="name@example.com",
         unique_id=unique_id,
-        data={ACCOUNT_HASH: "an_account_hash"},
+        data={
+            CONF_EMAIL: "test@rituals.com",
+            CONF_PASSWORD: "test-password",
+        },
+        version=2,
         entry_id=entry_id,
     )
 
@@ -90,13 +95,15 @@ async def init_integration(
     """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.rituals_perfume_genie.Account.get_devices",
-        return_value=mock_diffusers,
-    ):
+        "homeassistant.components.rituals_perfume_genie.Account"
+    ) as mock_account_cls:
+        mock_account = mock_account_cls.return_value
+        mock_account.authenticate = AsyncMock()
+        mock_account.get_devices = AsyncMock(return_value=mock_diffusers)
+
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
     assert hass.data[DOMAIN]
-
-    await hass.async_block_till_done()

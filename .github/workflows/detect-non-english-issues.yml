@@ -5,18 +5,23 @@ on:
   issues:
     types: [opened]
 
-permissions:
-  issues: write
-  models: read
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
 
 jobs:
   detect-language:
+    name: Detect non-English issues
     runs-on: ubuntu-latest
+    permissions:
+      issues: write # To comment on, label, and close issues
+      models: read # For AI-based language detection
 
     steps:
       - name: Check issue language
         id: detect_language
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
@@ -57,7 +62,7 @@ jobs:
       - name: Detect language using AI
         id: ai_language_detection
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/ai-inference@v2.0.0
+        uses: actions/ai-inference@e09e65981758de8b2fdab13c2bfb7c7d5493b0b6 # v2.0.7
         with:
           model: openai/gpt-4o-mini
           system-prompt: |
@@ -90,7 +95,7 @@ jobs:
 
       - name: Process non-English issues
         if: steps.detect_language.outputs.should_continue == 'true'
-        uses: actions/github-script@v7.0.1
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           AI_RESPONSE: ${{ steps.ai_language_detection.outputs.response }}
           ISSUE_NUMBER: ${{ steps.detect_language.outputs.issue_number }}

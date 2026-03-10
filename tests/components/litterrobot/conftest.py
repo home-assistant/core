@@ -13,6 +13,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from .common import (
+    ACCOUNT_USER_ID,
     CONFIG,
     DOMAIN,
     FEEDER_ROBOT_DATA,
@@ -39,6 +40,7 @@ def create_mock_robot(
         robot = LitterRobot4(data={**ROBOT_4_DATA, **robot_data}, account=account)
     elif feeder:
         robot = FeederRobot(data={**FEEDER_ROBOT_DATA, **robot_data}, account=account)
+        robot.set_gravity_mode = AsyncMock(side_effect=side_effect)
     else:
         robot = LitterRobot3(data={**ROBOT_DATA, **robot_data}, account=account)
     robot.start_cleaning = AsyncMock(side_effect=side_effect)
@@ -78,11 +80,15 @@ def create_mock_account(
     account = MagicMock(spec=Account)
     account.connect = AsyncMock()
     account.refresh_robots = AsyncMock()
+    account.user_id = ACCOUNT_USER_ID
     account.robots = (
         []
         if skip_robots
         else [create_mock_robot(robot_data, account, v4, feeder, side_effect)]
     )
+    account.get_robots = lambda robot_class: [
+        robot for robot in account.robots if isinstance(robot, robot_class)
+    ]
     account.pets = [create_mock_pet(PET_DATA, account, side_effect)] if pet else []
     return account
 
@@ -159,6 +165,9 @@ async def setup_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 

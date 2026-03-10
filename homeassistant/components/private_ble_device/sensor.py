@@ -60,10 +60,13 @@ SENSOR_DESCRIPTIONS = (
         key="estimated_distance",
         translation_key="estimated_distance",
         native_unit_of_measurement=UnitOfLength.METERS,
-        value_fn=lambda _, service_info: service_info.advertisement
-        and service_info.advertisement.tx_power
-        and calculate_distance_meters(
-            service_info.advertisement.tx_power * 10, service_info.advertisement.rssi
+        value_fn=lambda _, service_info: (
+            service_info.advertisement
+            and service_info.advertisement.tx_power
+            and calculate_distance_meters(
+                service_info.advertisement.tx_power * 10,
+                service_info.advertisement.rssi,
+            )
         ),
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,

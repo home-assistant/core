@@ -10,6 +10,7 @@ from togrill_bluetooth.packets import (
     PacketA0Notify,
     PacketA6Write,
     PacketA8Notify,
+    PacketA300Write,
     PacketA301Write,
 )
 
@@ -77,6 +78,150 @@ async def test_setup(
 
 
 @pytest.mark.parametrize(
+    "packets",
+    [
+        pytest.param([], id="no_data"),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            id="ambient_with_range",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=None,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            id="ambient_wrong_alarm_type",
+        ),
+    ],
+)
+async def test_setup_with_ambient(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_entry_with_ambient: MockConfigEntry,
+    mock_client: Mock,
+    packets,
+) -> None:
+    """Test the numbers with ambient sensor enabled."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry_with_ambient, [Platform.NUMBER])
+
+    for packet in packets:
+        mock_client.mocked_notify(packet)
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_entry_with_ambient.entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    ("packets", "entity_id", "value", "write_packet"),
+    [
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_minimum_temperature",
+            10.0,
+            PacketA300Write(probe=0, minimum=10.0, maximum=300.0),
+            id="ambient_minimum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_minimum_temperature",
+            0.0,
+            PacketA300Write(probe=0, minimum=None, maximum=300.0),
+            id="ambient_minimum_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_maximum_temperature",
+            350.0,
+            PacketA300Write(probe=0, minimum=5.0, maximum=350.0),
+            id="ambient_maximum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=0,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=5.0,
+                    temperature_2=300.0,
+                ),
+            ],
+            "number.pro_05_ambient_maximum_temperature",
+            0.0,
+            PacketA300Write(probe=0, minimum=5.0, maximum=None),
+            id="ambient_maximum_clear",
+        ),
+    ],
+)
+async def test_set_ambient_number(
+    hass: HomeAssistant,
+    mock_entry_with_ambient: MockConfigEntry,
+    mock_client: Mock,
+    packets,
+    entity_id,
+    value,
+    write_packet,
+) -> None:
+    """Test setting ambient temperature numbers."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry_with_ambient, [Platform.NUMBER])
+
+    for packet in packets:
+        mock_client.mocked_notify(packet)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        service_data={
+            ATTR_VALUE: value,
+        },
+        target={
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+
+    mock_client.write.assert_any_call(write_packet)
+
+
+@pytest.mark.parametrize(
     ("packets", "entity_id", "value", "write_packet"),
     [
         pytest.param(
@@ -87,7 +232,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             100.0,
             PacketA301Write(probe=1, target=100),
             id="probe",
@@ -100,10 +245,66 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             0.0,
             PacketA301Write(probe=1, target=None),
             id="probe_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_minimum_temperature",
+            100.0,
+            PacketA300Write(probe=1, minimum=100.0, maximum=80.0),
+            id="minimum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=None,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_minimum_temperature",
+            0.0,
+            PacketA300Write(probe=1, minimum=None, maximum=80.0),
+            id="minimum_clear",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=80.0,
+                ),
+            ],
+            "number.probe_1_maximum_temperature",
+            100.0,
+            PacketA300Write(probe=1, minimum=50.0, maximum=100.0),
+            id="maximum",
+        ),
+        pytest.param(
+            [
+                PacketA8Notify(
+                    probe=1,
+                    alarm_type=PacketA8Notify.AlarmType.TEMPERATURE_RANGE,
+                    temperature_1=50.0,
+                    temperature_2=None,
+                ),
+            ],
+            "number.probe_1_maximum_temperature",
+            0.0,
+            PacketA300Write(probe=1, minimum=50.0, maximum=None),
+            id="maximum_clear",
         ),
         pytest.param(
             [
@@ -203,7 +404,7 @@ async def test_set_number_write_error(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )
@@ -237,7 +438,7 @@ async def test_set_number_disconnected(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )

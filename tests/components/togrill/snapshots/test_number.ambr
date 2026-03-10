@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -58,7 +59,7 @@
     'state': '0',
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_1-entry]
+# name: test_setup[no_data][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -76,7 +77,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -84,11 +85,134 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Target 1',
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[no_data][number.probe_1_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[no_data][number.probe_1_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[no_data][number.probe_1_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[no_data][number.probe_1_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -98,11 +222,12 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_1-state]
+# name: test_setup[no_data][number.probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 1',
+      'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -110,14 +235,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_2-entry]
+# name: test_setup[no_data][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +260,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,11 +268,134 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Target 2',
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[no_data][number.probe_2_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[no_data][number.probe_2_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[no_data][number.probe_2_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[no_data][number.probe_2_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -157,11 +405,12 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_2-state]
+# name: test_setup[no_data][number.probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 2',
+      'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -169,7 +418,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -202,6 +451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -235,7 +485,7 @@
     'state': '5',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_1-entry]
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -253,7 +503,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -261,11 +511,134 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Target 1',
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -275,11 +648,12 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_1-state]
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 1',
+      'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -287,14 +661,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_2-entry]
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_maximum_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +686,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_maximum_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -320,11 +694,134 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Target 2',
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -334,11 +831,12 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_2-state]
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 2',
+      'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -346,7 +844,1651 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_alarm_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm interval',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Alarm interval',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_interval',
+    'unique_id': '00000000-0000-0000-0000-000000000001_alarm_interval',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_alarm_interval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Pro-05 Alarm interval',
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Ambient maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_maximum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '300.0',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Ambient minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_minimum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.pro_05_ambient_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_1_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_with_range][number.probe_2_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_alarm_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm interval',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Alarm interval',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_interval',
+    'unique_id': '00000000-0000-0000-0000-000000000001_alarm_interval',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_alarm_interval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Pro-05 Alarm interval',
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Ambient maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_maximum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Ambient minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_minimum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.pro_05_ambient_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_1_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[ambient_wrong_alarm_type][number.probe_2_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_alarm_interval-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm interval',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Alarm interval',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_interval',
+    'unique_id': '00000000-0000-0000-0000-000000000001_alarm_interval',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_alarm_interval-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Pro-05 Alarm interval',
+      'max': 15,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 5,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_alarm_interval',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_ambient_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Ambient maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_maximum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_ambient_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_ambient_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Ambient minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_ambient_temperature_minimum',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.pro_05_ambient_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Pro-05 Ambient minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 400,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.pro_05_ambient_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_1_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_1_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 1 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_1_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_maximum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Maximum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-up',
+    'original_name': 'Maximum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_maximum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_maximum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_maximum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Maximum temperature',
+      'icon': 'mdi:thermometer-chevron-up',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_maximum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_minimum_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Minimum temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-chevron-down',
+    'original_name': 'Minimum temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_minimum',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_minimum_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_minimum_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Minimum temperature',
+      'icon': 'mdi:thermometer-chevron-down',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_minimum_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.probe_2_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': 'mdi:thermometer-check',
+    'original_name': 'Target temperature',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_target',
+    'unique_id': '00000000-0000-0000-0000-000000000001_temperature_target_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_setup_with_ambient[no_data][number.probe_2_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Probe 2 Target temperature',
+      'icon': 'mdi:thermometer-check',
+      'max': 250,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

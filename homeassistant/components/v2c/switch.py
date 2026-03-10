@@ -68,8 +68,9 @@ TRYDAN_SWITCHES = (
         key="pause_dynamic",
         translation_key="pause_dynamic",
         icon="mdi:pause",
-        value_fn=lambda evse_data: evse_data.pause_dynamic
-        == PauseDynamicState.NOT_MODULATING,
+        value_fn=lambda evse_data: (
+            evse_data.pause_dynamic == PauseDynamicState.NOT_MODULATING
+        ),
         turn_on_fn=lambda evse: evse.pause_dynamic(),
         turn_off_fn=lambda evse: evse.resume_dynamic(),
     ),

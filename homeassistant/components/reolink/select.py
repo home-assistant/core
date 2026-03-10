@@ -12,9 +12,12 @@ from reolink_aio.api import (
     Chime,
     ChimeToneEnum,
     DayNightEnum,
+    EncodingEnum,
+    ExposureEnum,
     HDREnum,
     Host,
     HubToneEnum,
+    SpotlightEventModeEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -30,6 +33,7 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -72,7 +76,7 @@ class ReolinkChimeSelectEntityDescription(
 
     get_options: list[str]
     method: Callable[[Chime, str], Any]
-    value: Callable[[Chime], str]
+    value: Callable[[Chime], str | None]
 
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
@@ -84,12 +88,26 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.whiteled_mode_list(ch),
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, name: api.set_whiteled(ch, mode=name),
+    ),
+    ReolinkSelectEntityDescription(
+        key="floodlight_event_mode",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_mode",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in SpotlightEventModeEnum],
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: SpotlightEventModeEnum(api.whiteled_event_mode(ch)).name,
+        method=lambda api, ch, name: api.baichuan.set_floodlight(
+            ch, event_mode=SpotlightEventModeEnum[name].value
+        ),
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
@@ -114,8 +132,8 @@ SELECT_ENTITIES = (
         translation_key="play_quick_reply_message",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
-        method=lambda api, ch, mess: (
-            api.play_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.play_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -126,8 +144,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
-        method=lambda api, ch, mess: (
-            api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        method=lambda api, ch, mess: api.set_quick_reply(
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -138,8 +156,8 @@ SELECT_ENTITIES = (
         get_options=[mode.name for mode in HubToneEnum],
         supported=lambda api, ch: api.supported(ch, "hub_audio"),
         value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, alarm_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -152,8 +170,8 @@ SELECT_ENTITIES = (
             api.supported(ch, "hub_audio") and api.is_doorbell(ch)
         ),
         value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
+        method=lambda api, ch, name: api.set_hub_audio(
+            ch, visitor_tone_id=HubToneEnum[name].value
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -174,8 +192,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: api.doorbell_led_list(ch),
         supported=lambda api, ch: api.supported(ch, "doorbell_led"),
         value=lambda api, ch: StatusLedEnum(api.doorbell_led(ch)).name,
-        method=lambda api, ch, name: (
-            api.set_status_led(ch, StatusLedEnum[name].value, doorbell=True)
+        method=lambda api, ch, name: api.set_status_led(
+            ch, StatusLedEnum[name].value, doorbell=True
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -188,6 +206,17 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "HDR"),
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="exposure",
+        cmd_key="GetIsp",
+        translation_key="exposure",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in ExposureEnum],
+        supported=lambda api, ch: api.supported(ch, "exposure"),
+        value=lambda api, ch: ExposureEnum(api.exposure(ch)).name,
+        method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
         key="binning_mode",
@@ -251,6 +280,28 @@ SELECT_ENTITIES = (
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
     ReolinkSelectEntityDescription(
+        key="main_encoding",
+        cmd_key="GetEnc",
+        translation_key="main_encoding",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[val.name for val in EncodingEnum],
+        supported=lambda api, ch: api.supported(ch, "encoding"),
+        value=lambda api, ch: api.encoding(ch, "main"),
+        method=lambda api, ch, value: api.set_encoding(ch, value, "main"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_encoding",
+        cmd_key="GetEnc",
+        translation_key="sub_encoding",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[val.name for val in EncodingEnum],
+        supported=lambda api, ch: api.supported(ch, "encoding"),
+        value=lambda api, ch: api.encoding(ch, "sub"),
+        method=lambda api, ch, value: api.set_encoding(ch, value, "sub"),
+    ),
+    ReolinkSelectEntityDescription(
         key="pre_record_fps",
         cmd_key="594",
         translation_key="pre_record_fps",
@@ -309,7 +360,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         supported=lambda chime: "md" in chime.chime_event_types,
         get_options=[method.name for method in ChimeToneEnum],
-        value=lambda chime: ChimeToneEnum(chime.tone("md")).name,
+        value=lambda chime: chime.tone_name("md"),
         method=lambda chime, name: chime.set_tone("md", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -319,7 +370,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "people" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
+        value=lambda chime: chime.tone_name("people"),
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -329,7 +380,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "vehicle" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        value=lambda chime: chime.tone_name("vehicle"),
         method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -339,7 +390,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "visitor" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("visitor")).name,
+        value=lambda chime: chime.tone_name("visitor"),
         method=lambda chime, name: chime.set_tone("visitor", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -349,8 +400,18 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "package" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("package")).name,
+        value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="pet_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="pet_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "dog_cat" in chime.chime_event_types,
+        value=lambda chime: chime.tone_name("dog_cat"),
+        method=lambda chime, name: chime.set_tone("dog_cat", ChimeToneEnum[name].value),
     ),
 )
 
@@ -363,9 +424,7 @@ async def async_setup_entry(
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[
-        ReolinkSelectEntity | ReolinkHostSelectEntity | ReolinkChimeSelectEntity
-    ] = [
+    entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
         for channel in reolink_data.host.api.channels
@@ -380,7 +439,13 @@ async def async_setup_entry(
         ReolinkChimeSelectEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SELECT_ENTITIES
         for chime in reolink_data.host.api.chime_list
-        if entity_description.supported(chime)
+        if entity_description.supported(chime) and chime.channel is not None
+    )
+    entities.extend(
+        ReolinkHostChimeSelectEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SELECT_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+        if entity_description.supported(chime) and chime.channel is None
     )
     async_add_entities(entities)
 
@@ -414,7 +479,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
 
         try:
             option = self.entity_description.value(self._host.api, self._channel)
-        except (ValueError, KeyError):
+        except ValueError, KeyError:
             if self._log_error:
                 _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
                 self._log_error = False
@@ -458,7 +523,7 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
 
 
 class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
-    """Base select entity class for Reolink IP cameras."""
+    """Base select entity class for Reolink chimes connected through a camera."""
 
     entity_description: ReolinkChimeSelectEntityDescription
 
@@ -471,22 +536,40 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         """Initialize Reolink select entity for a chime."""
         self.entity_description = entity_description
         super().__init__(reolink_data, chime)
-        self._log_error = True
         self._attr_options = entity_description.get_options
 
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        try:
-            option = self.entity_description.value(self._chime)
-        except (ValueError, KeyError):
-            if self._log_error:
-                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
-                self._log_error = False
-            return None
+        return self.entity_description.value(self._chime)
 
-        self._log_error = True
-        return option
+    @raise_translated_error
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        await self.entity_description.method(self._chime, option)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEntity):
+    """Base select entity class for Reolink chimes connected to a host."""
+
+    entity_description: ReolinkChimeSelectEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSelectEntityDescription,
+    ) -> None:
+        """Initialize Reolink select entity for a chime."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+        self._attr_options = entity_description.get_options
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        return self.entity_description.value(self._chime)
 
     @raise_translated_error
     async def async_select_option(self, option: str) -> None:

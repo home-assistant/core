@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
-import re
-from typing import Any
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from functools import wraps
+from http import HTTPStatus
+import logging
+from typing import Any, Concatenate
 
-from xbox.webapi.api.client import XboxLiveClient
-from xbox.webapi.api.provider.smartglass.models import (
-    InputKeyType,
-    PowerState,
-    SmartglassConsole,
-    SmartglassConsoleList,
-)
+from httpx import HTTPStatusError, RequestError, TimeoutException
+from pythonxbox.api.provider.smartglass import SmartglassProvider
+from pythonxbox.api.provider.smartglass.models import InputKeyType, PowerState
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -21,75 +19,123 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ConsoleData, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry
+from .entity import XboxConsoleBaseEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
+
+MAP_COMMAND: dict[str, Callable[[SmartglassProvider], Callable]] = {
+    "WakeUp": lambda x: x.wake_up,
+    "TurnOff": lambda x: x.turn_off,
+    "Reboot": lambda x: x.reboot,
+    "Mute": lambda x: x.mute,
+    "Unmute": lambda x: x.unmute,
+    "Play": lambda x: x.play,
+    "Pause": lambda x: x.pause,
+    "Previous": lambda x: x.previous,
+    "Next": lambda x: x.next,
+    "GoHome": lambda x: x.go_home,
+    "GoBack": lambda x: x.go_back,
+    "ShowGuideTab": lambda x: x.show_guide_tab,
+    "ShowGuide": lambda x: x.show_tv_guide,
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: XboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
-    client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
-    consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
-    coordinator: XboxUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        "coordinator"
-    ]
+    devices_added: set[str] = set()
 
-    async_add_entities(
-        [XboxRemote(client, console, coordinator) for console in consoles.result]
-    )
+    coordinator = entry.runtime_data.status
+    consoles = entry.runtime_data.consoles
+
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxRemote(consoles.data[console_id], coordinator)
+                    for console_id in new_devices
+                ]
+            )
+
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
-class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
+def exception_handler[**_P, _R](
+    func: Callable[Concatenate[XboxRemote, _P], Awaitable[_R]],
+) -> Callable[Concatenate[XboxRemote, _P], Coroutine[Any, Any, _R]]:
+    """Catch Xbox errors."""
+
+    @wraps(func)
+    async def wrapper(
+        self: XboxRemote,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Catch Xbox errors and raise HomeAssistantError."""
+        try:
+            return await func(self, *args, **kwargs)
+        except TimeoutException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+    return wrapper
+
+
+class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     """Representation of an Xbox remote."""
 
-    def __init__(
-        self,
-        client: XboxLiveClient,
-        console: SmartglassConsole,
-        coordinator: XboxUpdateCoordinator,
-    ) -> None:
-        """Initialize the Xbox Media Player."""
-        super().__init__(coordinator)
-        self.client: XboxLiveClient = client
-        self._console: SmartglassConsole = console
-
     @property
-    def name(self):
-        """Return the device name."""
-        return f"{self._console.name} Remote"
-
-    @property
-    def unique_id(self):
-        """Console device ID."""
-        return self._console.id
-
-    @property
-    def data(self) -> ConsoleData:
-        """Return coordinator data for this console."""
-        return self.coordinator.data.consoles[self._console.id]
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if device is on."""
         return self.data.status.power_state == PowerState.On
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
-        await self.client.smartglass.wake_up(self._console.id)
+        try:
+            await self.client.smartglass.wake_up(self._console.id)
+        except HTTPStatusError as e:
+            if e.response.status_code == HTTPStatus.NOT_FOUND:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="turn_on_failed",
+                ) from e
+            raise
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Xbox off."""
         await self.client.smartglass.turn_off(self._console.id)
 
+    @exception_handler
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send controller or text input to the Xbox."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
@@ -97,27 +143,15 @@ class XboxRemote(CoordinatorEntity[XboxUpdateCoordinator], RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                try:
+                if single_command in InputKeyType:
                     button = InputKeyType(single_command)
                     await self.client.smartglass.press_button(self._console.id, button)
-                except ValueError:
+                elif single_command in MAP_COMMAND:
+                    await MAP_COMMAND[single_command](self.client.smartglass)(
+                        self._console.id
+                    )
+                else:
                     await self.client.smartglass.insert_text(
                         self._console.id, single_command
                     )
                 await asyncio.sleep(delay)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        # Turns "XboxOneX" into "Xbox One X" for display
-        matches = re.finditer(
-            ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)",
-            self._console.console_type,
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._console.id)},
-            manufacturer="Microsoft",
-            model=" ".join([m.group(0) for m in matches]),
-            name=self._console.name,
-        )

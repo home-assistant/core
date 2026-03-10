@@ -5,7 +5,7 @@ from typing import Any
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttState, StateAction, StateType
 
-from homeassistant.components.scene import Scene
+from homeassistant.components.scene import BaseScene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
 
 
-class QbusScene(QbusEntity, Scene):
+class QbusScene(QbusEntity, BaseScene):
     """Representation of a Qbus scene entity."""
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
@@ -48,7 +48,7 @@ class QbusScene(QbusEntity, Scene):
 
         self._attr_name = mqtt_output.name.title()
 
-    async def async_activate(self, **kwargs: Any) -> None:
+    async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
         state = QbusMqttState(
             id=self._mqtt_output.id, type=StateType.ACTION, action=StateAction.ACTIVE
@@ -56,5 +56,4 @@ class QbusScene(QbusEntity, Scene):
         await self._async_publish_output_state(state)
 
     async def _handle_state_received(self, state: QbusMqttState) -> None:
-        # Nothing to do
-        pass
+        self._async_record_activation()

@@ -78,16 +78,16 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
+                    "button.dusty_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
+                ),
+                (
                     "button.dusty_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
                 (
                     "button.dusty_reset_unit_care_lifespan",
                     ResetLifeSpan(LifeSpan.UNIT_CARE),
-                ),
-                (
-                    "button.dusty_reset_round_mop_lifespan",
-                    ResetLifeSpan(LifeSpan.ROUND_MOP),
                 ),
                 (
                     "button.dusty_empty_dustbin",

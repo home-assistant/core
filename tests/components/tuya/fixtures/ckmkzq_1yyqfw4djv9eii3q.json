@@ -1,0 +1,59 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Garage door ",
+  "category": "ckmkzq",
+  "product_id": "1yyqfw4djv9eii3q",
+  "product_name": "Garage door ",
+  "online": true,
+  "sub": false,
+  "time_zone": "-05:00",
+  "active_time": "2024-07-31T17:45:05+00:00",
+  "create_time": "2024-07-31T17:45:05+00:00",
+  "update_time": "2024-07-31T17:45:05+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "doorcontact_state": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0,
+    "doorcontact_state": true
+  },
+  "set_up": true,
+  "support_local": true
+}

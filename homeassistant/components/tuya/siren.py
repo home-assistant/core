@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
@@ -17,37 +19,27 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
+SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
+    DeviceCategory.CO2BJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
+    DeviceCategory.DGNBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+    DeviceCategory.SGBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SP: (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
         ),
@@ -55,8 +47,7 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
 }
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-SIRENS["dghsxj"] = SIRENS["sp"]
+SIRENS[DeviceCategory.DGHSXJ] = SIRENS[DeviceCategory.SP]
 
 
 async def async_setup_entry(
@@ -65,24 +56,28 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya siren dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaSirenEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, hass_data.manager, description)
+                    TuyaSirenEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -100,21 +95,37 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if siren is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._read_wrapper(self._dpcode_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

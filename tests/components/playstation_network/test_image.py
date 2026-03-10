@@ -75,8 +75,7 @@ async def test_image_platform(
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("image.testuser_avatar"))
     assert state.state == "2025-06-16T00:00:30+00:00"

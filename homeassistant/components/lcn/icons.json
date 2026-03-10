@@ -1,5 +1,17 @@
 {
   "services": {
+    "dyn_text": {
+      "service": "mdi:form-textbox"
+    },
+    "led": {
+      "service": "mdi:led-on"
+    },
+    "lock_keys": {
+      "service": "mdi:lock"
+    },
+    "lock_regulator": {
+      "service": "mdi:lock"
+    },
     "output_abs": {
       "service": "mdi:brightness-auto"
     },
@@ -9,35 +21,23 @@
     "output_toggle": {
       "service": "mdi:toggle-switch"
     },
+    "pck": {
+      "service": "mdi:package-variant-closed"
+    },
     "relays": {
       "service": "mdi:light-switch-off"
-    },
-    "led": {
-      "service": "mdi:led-on"
-    },
-    "var_abs": {
-      "service": "mdi:wrench"
-    },
-    "var_reset": {
-      "service": "mdi:reload"
-    },
-    "var_rel": {
-      "service": "mdi:wrench"
-    },
-    "lock_regulator": {
-      "service": "mdi:lock"
     },
     "send_keys": {
       "service": "mdi:alarm-panel"
     },
-    "lock_keys": {
-      "service": "mdi:lock"
+    "var_abs": {
+      "service": "mdi:wrench"
     },
-    "dyn_text": {
-      "service": "mdi:form-textbox"
+    "var_rel": {
+      "service": "mdi:wrench"
     },
-    "pck": {
-      "service": "mdi:package-variant-closed"
+    "var_reset": {
+      "service": "mdi:reload"
     }
   }
 }

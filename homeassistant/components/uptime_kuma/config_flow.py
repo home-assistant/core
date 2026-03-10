@@ -10,6 +10,7 @@ from pythonkuma import (
     UptimeKuma,
     UptimeKumaAuthenticationException,
     UptimeKumaException,
+    UptimeKumaParseException,
 )
 import voluptuous as vol
 from yarl import URL
@@ -42,6 +43,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
+PLACEHOLDER = {"example_url": "https://uptime.example.com:3001"}
 
 
 async def validate_connection(
@@ -59,6 +61,8 @@ async def validate_connection(
         await uptime_kuma.metrics()
     except UptimeKumaAuthenticationException:
         errors["base"] = "invalid_auth"
+    except UptimeKumaParseException:
+        errors["base"] = "invalid_data"
     except UptimeKumaException:
         errors["base"] = "cannot_connect"
     except Exception:
@@ -100,6 +104,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_reauth(
@@ -170,12 +175,13 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or entry.data,
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Prepare configuration for Uptime Kuma add-on.
+        """Prepare configuration for Uptime Kuma app.
 
         This flow is triggered by the discovery component.
         """

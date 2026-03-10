@@ -17,6 +17,7 @@ from homeassistant.components.playstation_network.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
+    ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentry,
     ConfigSubentryData,
@@ -118,9 +119,9 @@ async def test_form_already_configured_as_subentry(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (PSNAWPNotFoundError(), "invalid_account"),
-        (PSNAWPAuthenticationError(), "invalid_auth"),
-        (PSNAWPError(), "cannot_connect"),
+        (PSNAWPNotFoundError("error msg"), "invalid_account"),
+        (PSNAWPAuthenticationError("error msg"), "invalid_auth"),
+        (PSNAWPError("error msg"), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
@@ -168,7 +169,7 @@ async def test_parse_npsso_token_failures(
     mock_psnawp_npsso: MagicMock,
 ) -> None:
     """Test parse_npsso_token raises the correct exceptions during config flow."""
-    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError
+    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError("error msg")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -220,9 +221,9 @@ async def test_flow_reauth(
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (PSNAWPNotFoundError(), "invalid_account"),
-        (PSNAWPAuthenticationError(), "invalid_auth"),
-        (PSNAWPError(), "cannot_connect"),
+        (PSNAWPNotFoundError("error msg"), "invalid_account"),
+        (PSNAWPAuthenticationError("error msg"), "invalid_auth"),
+        (PSNAWPError("error msg"), "cannot_connect"),
         (Exception(), "unknown"),
     ],
 )
@@ -286,7 +287,7 @@ async def test_flow_reauth_token_error(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError
+    mock_psnawp_npsso.side_effect = PSNAWPInvalidTokenError("error msg")
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -501,14 +502,13 @@ async def test_add_friend_flow_no_friends(
     mock_psnawpapi: MagicMock,
 ) -> None:
     """Test we abort add friend subentry flow when the user has no friends."""
+    mock_psnawpapi.user.return_value.friends_list.return_value = []
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-
-    mock_psnawpapi.user.return_value.friends_list.return_value = []
 
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "friend"),
@@ -517,3 +517,29 @@ async def test_add_friend_flow_no_friends(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_friends"
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_add_friend_disabled_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test we abort add friend subentry flow when the parent config entry is disabled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_NPSSO: NPSSO_TOKEN,
+        },
+        disabled_by=ConfigEntryDisabler.USER,
+        unique_id=PSN_ID,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "friend"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_disabled"

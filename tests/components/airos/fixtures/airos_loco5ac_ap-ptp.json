@@ -11,12 +11,14 @@
   ],
   "derived": {
     "access_point": true,
+    "fw_major": 8,
     "mac": "01:23:45:67:89:AB",
     "mac_interface": "br0",
     "mode": "point_to_point",
     "ptmp": false,
     "ptp": true,
     "role": "access_point",
+    "sku": "Loco5AC",
     "station": false
   },
   "firewall": {

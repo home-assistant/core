@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
 from zwave_js_server.exceptions import BaseZwaveJSServerError
@@ -18,14 +19,35 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
-from .discovery import ZwaveDiscoveryInfo
+from .const import (
+    DOMAIN,
+    EVENT_VALUE_ADDED,
+    EVENT_VALUE_REMOVED,
+    EVENT_VALUE_UPDATED,
+    LOGGER,
+)
+from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
+from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
 
-EVENT_VALUE_REMOVED = "value removed"
+
+@dataclass(kw_only=True)
+class NewZwaveDiscoveryInfo(PlatformZwaveDiscoveryInfo):
+    """Info discovered from (primary) ZWave Value to create entity.
+
+    This is the new discovery info that will replace ZwaveDiscoveryInfo.
+    """
+
+    entity_class: type[ZWaveBaseEntity]
+    # the entity description to use
+    entity_description: EntityDescription
+    # helper data to use in platform setup
+    platform_data: Any = None
+    # data template to use in platform logic
+    platform_data_template: BaseDiscoverySchemaDataTemplate | None = None
 
 
 class ZWaveBaseEntity(Entity):
@@ -35,12 +57,16 @@ class ZWaveBaseEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self,
+        config_entry: ConfigEntry,
+        driver: Driver,
+        info: ZwaveDiscoveryInfo | NewZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
         self.driver = driver
         self.info = info
+        self._primary_value_removed = False
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -50,14 +76,16 @@ class ZWaveBaseEntity(Entity):
             )
 
         # Entity class attributes
+        if isinstance(info, NewZwaveDiscoveryInfo):
+            self.entity_description = info.entity_description
+        else:
+            if (enabled_default := info.entity_registry_enabled_default) is False:
+                self._attr_entity_registry_enabled_default = enabled_default
+            if (entity_category := info.entity_category) is not None:
+                self._attr_entity_category = entity_category
         self._attr_name = self.generate_name()
         self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
-        if self.info.entity_registry_enabled_default is False:
-            self._attr_entity_registry_enabled_default = False
-        if self.info.entity_category is not None:
-            self._attr_entity_category = self.info.entity_category
-        if self.info.assumed_state:
-            self._attr_assumed_state = True
+        self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
             identifiers={get_device_id(driver, self.info.node)},
@@ -112,6 +140,7 @@ class ZWaveBaseEntity(Entity):
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
         )
+        self.async_on_remove(self.info.node.on(EVENT_VALUE_ADDED, self._value_added))
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_REMOVED, self._value_removed)
         )
@@ -203,7 +232,11 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.driver.client.connected and bool(self.info.node.ready)
+        return (
+            self.driver.client.connected
+            and bool(self.info.node.ready)
+            and not self._primary_value_removed
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
@@ -246,7 +279,30 @@ class ZWaveBaseEntity(Entity):
             value_id,
         )
 
-        self.hass.async_create_task(self.async_remove())
+        self._primary_value_removed = True
+        self.async_write_ha_state()
+
+    @callback
+    def _value_added(self, event_data: dict) -> None:
+        """Call when a value associated with our node is added.
+
+        Should not be overridden by subclasses.
+        """
+        value = event_data["value"]
+
+        if value.value_id != self.info.primary_value.value_id:
+            return
+
+        LOGGER.debug(
+            "[%s] Primary value %s was added",
+            self.entity_id,
+            value.value_id,
+        )
+
+        self.info.primary_value = value
+        self._primary_value_removed = False
+        self.on_value_update()
+        self.async_write_ha_state()
 
     @callback
     def get_zwave_value(

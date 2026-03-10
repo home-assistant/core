@@ -134,7 +134,6 @@ ENTITY_DESCRIPTION_KEY_UNIT_MAP: dict[tuple[str, str], SensorEntityDescription] 
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        suggested_display_precision=0,
     ),
     (
         ENTITY_DESC_KEY_VOLTAGE,
@@ -796,10 +795,10 @@ class ZWaveNumericSensor(ZwaveSensor):
         self._attr_native_unit_of_measurement = data.unit_of_measurement
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
-            return 0
+            return None
         return float(self.info.primary_value.value)
 
 
