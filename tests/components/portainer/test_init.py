@@ -113,7 +113,7 @@ async def test_remove_config_entry_device(
     assert response["success"] == expected_result
 
 
-async def test_migration_v3_to_v4(
+async def test_migration_v3_to_v5(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
