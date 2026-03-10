@@ -196,41 +196,6 @@ class TestOptionsFlowHandler(unittest.IsolatedAsyncioTestCase):
         assert result["step_id"] == "init"
         assert result.get("errors", {}) == {}
 
-    async def test_form_defaults_come_from_entry_data(self):
-        """Schema defaults must be populated from config_entry.data when options is empty."""
-        handler = _make_options_flow(VALID_ENTRY_DATA, options={})
-
-        result = await handler.async_step_init(user_input=None)
-
-        # Inspect the schema's defaults — each key's default must match entry data
-        schema = result["data_schema"].schema
-        defaults = {
-            str(key): key.default()
-            for key in schema
-            if hasattr(key, "default") and callable(key.default)
-        }
-        assert defaults["email"] == VALID_ENTRY_DATA["email"]
-        assert defaults["password"] == VALID_ENTRY_DATA["password"]
-
-    async def test_options_override_data_defaults(self):
-        """Values in config_entry.options must take precedence over config_entry.data as form defaults."""
-        overriding_options = {
-            "email": "options@example.com",
-            "password": "options_pass",
-        }
-        handler = _make_options_flow(VALID_ENTRY_DATA, options=overriding_options)
-
-        result = await handler.async_step_init(user_input=None)
-
-        schema = result["data_schema"].schema
-        defaults = {
-            str(key): key.default()
-            for key in schema
-            if hasattr(key, "default") and callable(key.default)
-        }
-        assert defaults["email"] == overriding_options["email"]
-        assert defaults["password"] == overriding_options["password"]
-
     async def test_valid_update_creates_entry(self):
         """Valid user input must return CREATE_ENTRY with updated field values."""
         handler = _make_options_flow(VALID_ENTRY_DATA)

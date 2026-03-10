@@ -23,18 +23,12 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _build_config_schema(
-    email: str = "",
-    password: str = "",
-) -> vol.Schema:
-    """Build config schema with optional pre-filled defaults."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_EMAIL, default=email): cv.string,
-            vol.Required(CONF_PASSWORD, default=password): cv.string,
-        }
-    )
+CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_EMAIL): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    }
+)
 
 
 async def _validate_credentials(
@@ -86,15 +80,14 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=_build_config_schema(
-                    email=user_input.get(CONF_EMAIL, ""),
-                    password=user_input.get(CONF_PASSWORD, ""),
+                data_schema=self.add_suggested_values_to_schema(
+                    CONFIG_SCHEMA, user_input
                 ),
                 errors=errors,
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=_build_config_schema(), errors=errors
+            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     @staticmethod
@@ -118,13 +111,6 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         errors: dict[str, str] = {}
-
-        default_email = self._config_entry.options.get(
-            CONF_EMAIL, self._config_entry.data.get(CONF_EMAIL, "")
-        )
-        default_password = self._config_entry.options.get(
-            CONF_PASSWORD, self._config_entry.data.get(CONF_PASSWORD, "")
-        )
 
         if user_input is not None:
             if not user_input.get(CONF_EMAIL):
@@ -162,18 +148,17 @@ class OptionsFlowHandler(OptionsFlow):
 
             return self.async_show_form(
                 step_id="init",
-                data_schema=_build_config_schema(
-                    email=user_input.get(CONF_EMAIL, default_email),
-                    password=user_input.get(CONF_PASSWORD, default_password),
+                data_schema=self.add_suggested_values_to_schema(
+                    CONFIG_SCHEMA, user_input
                 ),
                 errors=errors,
             )
 
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_config_schema(
-                email=default_email,
-                password=default_password,
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA,
+                self._config_entry.options or self._config_entry.data,
             ),
             errors=errors,
         )
