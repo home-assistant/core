@@ -2,17 +2,32 @@
   "config": {
     "step": {
       "user": {
-        "title": "Mit KWB Modbus verbinden",
-        "description": "Gib die Modbus-TCP-Verbindungsdaten ein.",
+        "title": "KWB Heizung verbinden",
+        "description": "Gib die Verbindungsdaten deiner KWB Heizungsanlage ein.",
         "data": {
-          "host": "Host",
+          "host": "IP-Adresse",
           "port": "Port",
-          "scan_interval": "Abfrage-Intervall (Sekunden)"
+          "scan_interval": "Abfrageintervall (Sekunden)"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname des KWB-Controllers.",
           "port": "TCP-Port für Modbus (Standard: 502).",
           "scan_interval": "Intervall für die Abfrage von Modbus-Daten in Sekunden."
+        }
+      },
+      "device": {
+        "title": "Heizgerät auswählen",
+        "description": "Wähle dein KWB Heizgerät.",
+        "data": {
+          "heating_device": "Heizgerät"
+        }
+      },
+      "modules": {
+        "title": "Zusatzmodule auswählen",
+        "description": "Wähle die installierten Zusatzmodule. Leer lassen wenn keine vorhanden.",
+        "data": {
+          "addon_modules": "Zusatzmodule",
+          "expert_mode": "Expertenmodus aktivieren (Kesselprogramm, Externe Vorgabe, Zündungseinstellungen)"
         }
       },
       "reconfigure": {
@@ -31,12 +46,12 @@
       }
     },
     "error": {
-      "cannot_connect": "Verbindung fehlgeschlagen. Bitte überprüfe IP-Adresse, Port und Netzwerkverbindung.",
-      "unknown": "Unerwarteter Fehler aufgetreten"
+      "cannot_connect": "Verbindung zur KWB Heizung fehlgeschlagen. IP-Adresse und Port prüfen.",
+      "unknown": "Unerwarteter Fehler."
     },
     "abort": {
-      "already_configured": "Dieses Gerät ist bereits konfiguriert",
-      "reconfigure_successful": "Einstellungen gespeichert; die Integration wurde neu geladen."
+      "already_configured": "Dieses Gerät ist bereits konfiguriert.",
+      "reconfigure_successful": "Neukonfiguration erfolgreich."
     }
   }
 }

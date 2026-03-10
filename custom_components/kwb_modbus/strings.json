@@ -8,11 +8,6 @@
           "host": "IP Address",
           "port": "Port",
           "scan_interval": "Polling interval (seconds)"
-        },
-        "data_description": {
-          "host": "IP address or hostname of the KWB controller.",
-          "port": "TCP port for Modbus (default: 502).",
-          "scan_interval": "Interval for polling Modbus data in seconds."
         }
       },
       "device": {
@@ -28,20 +23,6 @@
         "data": {
           "addon_modules": "Add-on Modules",
           "expert_mode": "Enable expert controls (Boiler program, External specification, Ignition settings)"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure connection",
-        "description": "Update the connection settings for this entry.",
-        "data": {
-          "host": "Host",
-          "port": "Port",
-          "scan_interval": "Scan interval (seconds)"
-        },
-        "data_description": {
-          "host": "IP address or hostname of the KWB controller.",
-          "port": "TCP port for Modbus (default: 502).",
-          "scan_interval": "Interval for polling Modbus data in seconds."
         }
       }
     },

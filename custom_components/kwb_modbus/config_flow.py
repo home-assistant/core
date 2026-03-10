@@ -13,8 +13,24 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    ADDON_MODULES,
+    CONF_ADDON_MODULES,
+    CONF_DISCOVERED_SENSORS,
+    CONF_EXPERT_MODE,
+    CONF_HEATING_DEVICE,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    HEATING_DEVICES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +91,7 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize Config flow."""
         self._host_data: dict[str, Any] | {}  # pyright: ignore[reportInvalidTypeForm]
+        self._connection_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -89,18 +106,73 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                info = await validate_connection(self.hass, user_input)
+                await validate_connection(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                self._connection_data = user_input
+                return await self.async_step_device()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the device selection step."""
+        if user_input is not None:
+            self._connection_data[CONF_HEATING_DEVICE] = user_input[CONF_HEATING_DEVICE]
+            return await self.async_step_modules()
+
+        schema = vol.Schema({
+            vol.Required(CONF_HEATING_DEVICE): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=k, label=v)
+                        for k, v in HEATING_DEVICES.items()
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
+        })
+        return self.async_show_form(step_id="device", data_schema=schema)
+
+    async def async_step_modules(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the add-on modules selection step."""
+        if user_input is not None:
+            heating_device = self._connection_data[CONF_HEATING_DEVICE]
+            host = self._connection_data["host"]
+            title = f"KWB {HEATING_DEVICES[heating_device]} ({host})"
+            return self.async_create_entry(
+                title=title,
+                data={
+                    **self._connection_data,
+                    CONF_ADDON_MODULES: user_input.get(CONF_ADDON_MODULES, []),
+                    CONF_EXPERT_MODE: user_input.get(CONF_EXPERT_MODE, False),
+                    CONF_DISCOVERED_SENSORS: {},
+                },
+            )
+
+        schema = vol.Schema({
+            vol.Optional(CONF_ADDON_MODULES, default=[]): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SelectOptionDict(value=k, label=v)
+                        for k, v in ADDON_MODULES.items()
+                    ],
+                    mode=SelectSelectorMode.LIST,
+                    multiple=True,
+                )
+            ),
+            vol.Optional(CONF_EXPERT_MODE, default=False): bool,
+        })
+        return self.async_show_form(step_id="modules", data_schema=schema)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
