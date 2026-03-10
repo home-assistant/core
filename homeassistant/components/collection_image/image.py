@@ -70,12 +70,14 @@ class CollectionImageImageEntity(ImageEntity):
     async def get_next_image(self) -> None:
         """Update the image entity with the next image from the source media."""
 
+        self._cached_image = None
+
         def set_unavailable() -> None:
             self._unavailable_logged = True
             self._attr_available = False
             self.path = None
             self._attr_image_url = UNDEFINED
-            self._async_write_ha_state()
+            self.async_write_ha_state()
 
         try:
             media = await async_browse_media(self.hass, self.media_content_id)
