@@ -133,29 +133,6 @@ class TestAsyncSetupEntry(unittest.IsolatedAsyncioTestCase):
         assert "unexpected boom" in str(ctx.value)
 
 
-class TestAsyncRemoveConfigEntryDevice(unittest.IsolatedAsyncioTestCase):
-    """Test async_remove_config_entry_device."""
-
-    def _make_entry_and_coordinator(self, live_device_ids: list[int]):
-        """Build a mock config entry and coordinator with the given live device IDs."""
-        entry = _make_mock_entry()
-        coordinator = MagicMock()
-        devices = []
-        for dev_id in live_device_ids:
-            dev = MagicMock()
-            dev.id = dev_id
-            devices.append(dev)
-        coordinator.data = PajGpsData(devices=devices)
-        entry.runtime_data = coordinator
-        return entry
-
-    def _make_device_entry(self, identifier: str):
-        """Build a mock DeviceEntry whose only identifier is (DOMAIN, identifier)."""
-        device_entry = MagicMock()
-        device_entry.identifiers = {(DOMAIN, identifier)}
-        return device_entry
-
-
 class TestAsyncUnloadEntry(unittest.IsolatedAsyncioTestCase):
     """Test async_unload_entry (lines 67-68)."""
 
