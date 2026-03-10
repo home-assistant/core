@@ -5,9 +5,6 @@
     },
     "discharge": {
       "service": "mdi:battery-arrow-down"
-    },
-    "stop": {
-      "service": "mdi:battery-off"
     }
   }
 }
