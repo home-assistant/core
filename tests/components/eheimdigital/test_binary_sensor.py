@@ -90,7 +90,7 @@ async def test_state_update(
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_name: str,
-    entity_list: list[tuple[str, str, str, float, float]],
+    entity_list: list[tuple[str, str, str, bool | int, str]],
     request: pytest.FixtureRequest,
 ) -> None:
     """Test the binary sensor state update."""
