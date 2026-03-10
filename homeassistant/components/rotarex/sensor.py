@@ -26,13 +26,15 @@ from .models import RotarexSyncData, RotarexTank
 
 
 def _parse_synch_date(synch_date: str) -> datetime | None:
-    """Parse a synch_date string, treating naive datetimes as local time."""
+    """Parse a synch_date string, replacing timezone with HA local timezone.
+
+    The API returns local time incorrectly tagged as UTC (+00:00).
+    We strip any timezone info and reattach the HA configured local timezone.
+    """
     parsed = dt_util.parse_datetime(synch_date)
     if parsed is None:
         return None
-    if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=dt_util.get_default_time_zone())
-    return parsed
+    return parsed.replace(tzinfo=dt_util.get_default_time_zone())
 
 
 def get_tank_name(tank: RotarexTank) -> str:
