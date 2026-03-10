@@ -5,12 +5,6 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-        'normal',
-        'auto',
-        'sleep',
-        'pet',
-      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -36,30 +30,9 @@
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <FanEntityFeature: 56>,
+    'supported_features': 0,
     'translation_key': 'air_purifier',
     'unique_id': 'air-purifier-id-1',
     'unit_of_measurement': None,
-  })
-# ---
-# name: test_air_purifier[fan.air_purifier_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'air-purifier-1',
-      'preset_mode': 'auto',
-      'preset_modes': list([
-        'normal',
-        'auto',
-        'sleep',
-        'pet',
-      ]),
-      'supported_features': <FanEntityFeature: 56>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'fan.air_purifier_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
   })
 # ---
