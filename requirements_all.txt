@@ -28,7 +28,7 @@ HueBLE==2.1.0
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.1
+PSNAWP==3.0.3
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -47,7 +47,7 @@ PlexAPI==4.15.16
 ProgettiHWSW==0.1.3
 
 # homeassistant.components.cast
-PyChromecast==14.0.9
+PyChromecast==14.0.10
 
 # homeassistant.components.flume
 PyFlume==0.6.5
@@ -476,7 +476,7 @@ airthings-cloud==0.2.0
 airtouch4pyapi==1.0.5
 
 # homeassistant.components.airtouch5
-airtouch5py==0.3.0
+airtouch5py==0.4.0
 
 # homeassistant.components.alpha_vantage
 alpha-vantage==2.3.1
@@ -638,7 +638,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.7.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.4.3
+bleak-retry-connector==4.6.0
 
 # homeassistant.components.bluetooth
 bleak==2.1.1
@@ -903,7 +903,7 @@ energyid-webhooks==0.0.14
 energyzero==4.0.1
 
 # homeassistant.components.enocean
-enocean-async==0.4.1
+enocean-async==0.4.2
 
 # homeassistant.components.entur_public_transport
 enturclient==0.2.4
@@ -1173,7 +1173,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.8.0
+habluetooth==5.9.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1362,7 +1362,7 @@ jsonpath==0.82.2
 justnimbus==0.7.4
 
 # homeassistant.components.kaiterra
-kaiterra-async-client==1.0.0
+kaiterra-async-client==1.1.0
 
 # homeassistant.components.keba
 keba-kecontact==1.3.0
@@ -1679,7 +1679,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.5
+onedrive-personal-sdk==0.1.6
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1784,7 +1784,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.2
+plugwise==1.11.3
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -1871,7 +1871,7 @@ py-nightscout==1.2.2
 py-nymta==0.4.0
 
 # homeassistant.components.opendisplay
-py-opendisplay==5.2.0
+py-opendisplay==5.5.0
 
 # homeassistant.components.schluter
 py-schluter==0.1.7
@@ -2114,6 +2114,9 @@ pyforked-daapd==0.1.14
 
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
+
+# homeassistant.components.freshr
+pyfreshr==1.2.0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.6.20
@@ -2409,7 +2412,7 @@ pyrail==0.4.1
 pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.9.0
+pyrate-limiter==4.0.2
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2461,7 +2464,7 @@ pyserial==3.5
 pysesame2==1.0.1
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.1.1
+pyseventeentrack==1.1.2
 
 # homeassistant.components.sia
 pysiaalarm==3.2.2
@@ -2639,7 +2642,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.17.1
+python-roborock==4.17.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3316,7 +3319,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.2.7
+yalexs-ble==3.3.0
 
 # homeassistant.components.august
 # homeassistant.components.yale
