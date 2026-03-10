@@ -69,15 +69,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        # normalize device path
-        discovery_info.device = await self.hass.async_add_executor_job(
-            get_serial_by_id, discovery_info.device
-        )
-        # set unique id
-        await self.async_set_unique_id(usb_unique_id_from_service_info(discovery_info))
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: discovery_info.device}
-        )
+        discovery_info.device = await self._async_set_unique_id(discovery_info)
 
         self.data[CONF_DEVICE] = discovery_info.device
         self.context["title_placeholders"] = {
@@ -120,24 +112,13 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_dongle_path")
 
-        usb_service_info = usb_service_info_from_device(usb_device)
-        # normalize device path
-        usb_service_info.device = await self.hass.async_add_executor_job(
-            get_serial_by_id, usb_service_info.device
-        )
-        # set unique id
-        await self.async_set_unique_id(
-            usb_unique_id_from_service_info(usb_service_info)
-        )
-        self._abort_if_unique_id_configured(
-            updates={CONF_DEVICE: usb_service_info.device}
-        )
+        usb_device_path = await self._async_set_unique_id(usb_device)
         # validate device path
-        if await self.validate_enocean_conf({CONF_DEVICE: usb_service_info.device}):
-            return self.create_enocean_entry({CONF_DEVICE: usb_service_info.device})
+        if await self.validate_enocean_conf({CONF_DEVICE: usb_device_path}):
+            return self.create_enocean_entry({CONF_DEVICE: usb_device_path})
         LOGGER.warning(
             "Cannot import yaml configuration: %s is not a valid dongle path",
-            usb_service_info.device,
+            usb_device_path,
         )
         return self.async_abort(reason="invalid_dongle_path")
 
@@ -165,20 +146,8 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if selected_device is None:
                 return self.async_abort(reason="unknown_device")
-            usb_service_info = usb_service_info_from_device(selected_device)
-            # normalize device path
-            usb_service_info.device = await self.hass.async_add_executor_job(
-                get_serial_by_id, usb_service_info.device
-            )
-            # set unique id
-            await self.async_set_unique_id(
-                usb_unique_id_from_service_info(usb_service_info)
-            )
-            self._abort_if_unique_id_configured(
-                updates={CONF_DEVICE: usb_service_info.device}
-            )
-
-            user_input[CONF_DEVICE] = usb_service_info.device
+            usb_device_path = await self._async_set_unique_id(selected_device)
+            user_input[CONF_DEVICE] = usb_device_path
             return await self.async_step_manual(user_input)
 
         if len(self._ports) == 0:
@@ -225,11 +194,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                     usb_device_from_path, user_input[CONF_DEVICE]
                 )
                 if usb_device is not None:
-                    usb_info = usb_service_info_from_device(usb_device)
-                    if usb_info is not None:
-                        await self.async_set_unique_id(
-                            usb_unique_id_from_service_info(usb_info)
-                        )
+                    user_input[CONF_DEVICE] = await self._async_set_unique_id(
+                        usb_device
+                    )
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
@@ -257,3 +224,21 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     def create_enocean_entry(self, user_input):
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
+
+    async def _async_set_unique_id(self, usb_device: USBDevice | UsbServiceInfo) -> str:
+        """Set the unique ID for the given USB device."""
+        if isinstance(usb_device, UsbServiceInfo):
+            usb_service_info = usb_device
+        else:
+            usb_service_info = usb_service_info_from_device(usb_device)
+        # normalize device path
+        usb_service_info.device = await self.hass.async_add_executor_job(
+            get_serial_by_id, usb_service_info.device
+        )
+        await self.async_set_unique_id(
+            usb_unique_id_from_service_info(usb_service_info)
+        )
+        self._abort_if_unique_id_configured(
+            updates={CONF_DEVICE: usb_service_info.device}
+        )
+        return usb_service_info.device

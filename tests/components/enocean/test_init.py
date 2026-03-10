@@ -29,7 +29,7 @@ async def test_device_not_connected(
 
 
 # Config entry migration can be removed in 2026.10.0
-async def test_config_entity_migration_from_v1_1_to_v1_2(
+async def test_config_entry_migration_from_v1_1_to_v1_2(
     hass: HomeAssistant,
 ) -> None:
     """Test that the config entry is updated correctly."""
@@ -58,7 +58,7 @@ async def test_config_entity_migration_from_v1_1_to_v1_2(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Migration should have added unique_id to entry data
+    # Migration should have added unique_id to entry and normalized device path
     assert mock_usb_device_from_path.call_count == 1
     assert mock_config_entry.version == 1
     assert mock_config_entry.minor_version == 2

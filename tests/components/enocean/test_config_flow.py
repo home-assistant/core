@@ -85,20 +85,33 @@ async def test_user_flow_with_valid_path(
     assert result["context"]["unique_id"] == "0403:6001_1234_EnOcean GmbH_USB 300"
 
 
-async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
+async def test_manual_flow_with_valid_path(
+    hass: HomeAssistant, mock_usb_device: USBDevice
+) -> None:
     """Test the manual flow with a valid path."""
-    USER_PROVIDED_PATH = "/user/provided/path"
-
-    with patch(
-        f"{MODULE}.config_flow.Gateway",
-        return_value=Mock(start=AsyncMock(), stop=Mock()),
+    with (
+        patch(
+            f"{MODULE}.config_flow.usb_device_from_path",
+            Mock(return_value=mock_usb_device),
+        ) as usb_device_from_path,
+        patch(
+            f"{MODULE}.config_flow.get_serial_by_id",
+            return_value=MOCK_SERIAL_BY_ID,
+        ),
+        patch(
+            f"{MODULE}.config_flow.Gateway",
+            return_value=Mock(start=AsyncMock(), stop=Mock()),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
+            DOMAIN,
+            context={"source": "manual"},
+            data={CONF_DEVICE: MOCK_USB_DEVICE.device},
         )
 
+    assert usb_device_from_path.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
+    assert result["data"][CONF_DEVICE] == MOCK_SERIAL_BY_ID
 
 
 async def test_user_flow_with_invalid_manual_path(hass: HomeAssistant) -> None:
@@ -129,7 +142,8 @@ async def test_user_flow_with_invalid_option(
 ) -> None:
     """Test the user flow with unknown selected usb device."""
     with patch(
-        f"{MODULE}.config_flow.scan_serial_ports", Mock(return_value=[mock_usb_device])
+        f"{MODULE}.config_flow.scan_serial_ports",
+        Mock(return_value=[mock_usb_device]),
     ) as mock_scan_serial_ports:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
