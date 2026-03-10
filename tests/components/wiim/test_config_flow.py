@@ -223,3 +223,26 @@ async def test_validate_device_and_get_info_success(
             mock_hass, "192.168.1.100", location
         )
         assert result == expected_result
+
+
+@pytest.mark.asyncio
+async def test_validate_device_and_get_info_requires_location_for_host(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test host validation fails clearly without a description URL."""
+    with pytest.raises(
+        CannotConnect, match="Could not determine device information via UPnP."
+    ):
+        await _validate_device_and_get_info(mock_hass, "192.168.1.100")
+
+
+@pytest.mark.asyncio
+async def test_validate_device_and_get_info_requires_location_for_udn(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test UDN validation fails with a specific message without a description URL."""
+    with pytest.raises(
+        CannotConnect,
+        match="Validation by UDN \\(uuid:test-1234\\) alone is not supported",
+    ):
+        await _validate_device_and_get_info(mock_hass, "uuid:test-1234")

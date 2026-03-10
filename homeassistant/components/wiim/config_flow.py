@@ -15,67 +15,54 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_UDN,
-    CONF_UPNP_LOCATION,
-    DOMAIN,
-    LOGGER,
-    UPNP_PORT,
-    ZEROCONF_TYPE_LINKPLAY,
-)
+from .const import CONF_UDN, CONF_UPNP_LOCATION, DOMAIN, LOGGER, UPNP_PORT
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
-
-VERSION = 1
-MINOR_VERSION = 1
 
 
 async def _validate_device_and_get_info(
     hass: HomeAssistant, host_or_udn: str, location: str | None = None
 ) -> WiimProbeResult:
-    """Validate the given host or UDN can be reached and is a WiiM device.
-
-    If location is provided, uses that directly for UPnP device creation.
-    Otherwise, assumes host_or_udn is an IP and tries to discover UPnP info.
-    Returns normalized device info for the config flow.
-    """
+    """Validate the given host or UDN can be reached and is a WiiM device."""
     session = async_get_clientsession(hass)
-    try:
-        if location:
-            LOGGER.debug("Validating UPnP device at location: %s", location)
+
+    if location is not None:
+        LOGGER.debug("Validating UPnP device at location: %s", location)
+        try:
             probe_result = await async_probe_wiim_device(
                 location,
                 session,
                 host=host_or_udn,
             )
-            if probe_result is None:
-                raise CannotConnect("Could not determine device information via UPnP.")
-            return probe_result
-        if "uuid:" in host_or_udn.lower():
-            raise CannotConnect(
-                f"Validation by UDN ({host_or_udn}) alone is not supported for connection. Use IP/host or discovery."
+        except TimeoutError as err:
+            LOGGER.warning(
+                "Timeout while validating WiiM device at %s: %s",
+                location,
+                err,
             )
-        LOGGER.debug(
-            "No UPnP location provided for %s, attempting HTTP validation",
-            host_or_udn,
+            raise CannotConnect(f"Timeout connecting to device: {err}") from err
+
+        if probe_result is None:
+            raise CannotConnect("Could not determine device information via UPnP.")
+        return probe_result
+
+    is_udn = "uuid:" in host_or_udn.lower()
+    LOGGER.debug(
+        "No UPnP location provided for %s, validation cannot continue",
+        host_or_udn,
+    )
+    if is_udn:
+        raise CannotConnect(
+            f"Validation by UDN ({host_or_udn}) alone is not supported for connection. Use IP/host or discovery."
         )
 
-        raise CannotConnect("Could not determine device information via UPnP or HTTP.")
-    except TimeoutError as err:
-        LOGGER.warning(
-            "Timeout while validating WiiM device at %s: %s",
-            host_or_udn or location,
-            err,
-        )
-        raise CannotConnect(f"Timeout connecting to device: {err}") from err
+    raise CannotConnect("Could not determine device information via UPnP.")
 
 
 class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiiM."""
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._discovered_info: WiimProbeResult | None = None
+    _discovered_info: WiimProbeResult
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -85,19 +72,13 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
-                constructed_location = f"http://{host}:{UPNP_PORT}/description.xml"
                 device_info = await _validate_device_and_get_info(
-                    self.hass, host, location=constructed_location
+                    self.hass,
+                    host,
+                    location=f"http://{host}:{UPNP_PORT}/description.xml",
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except (OSError, ValueError) as err:
-                LOGGER.exception(
-                    "Unexpected exception during user step validation for host %s: %s",
-                    host,
-                    err,
-                )
-                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_info.udn)
                 self._abort_if_unique_id_configured(
@@ -106,12 +87,14 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_UPNP_LOCATION: device_info.location,
                     }
                 )
-                entry_data = {
-                    CONF_HOST: device_info.host,
-                    CONF_UDN: device_info.udn,
-                    CONF_UPNP_LOCATION: device_info.location,
-                }
-                return self.async_create_entry(title=device_info.name, data=entry_data)
+                return self.async_create_entry(
+                    title=device_info.name,
+                    data={
+                        CONF_HOST: device_info.host,
+                        CONF_UDN: device_info.udn,
+                        CONF_UPNP_LOCATION: device_info.location,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -133,14 +116,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.properties,
         )
 
-        if ZEROCONF_TYPE_LINKPLAY not in discovery_info.type:
-            LOGGER.debug(
-                "Ignoring Zeroconf discovery for type: %s (expected %s)",
-                discovery_info.type,
-                ZEROCONF_TYPE_LINKPLAY,
-            )
-            return self.async_abort(reason="not_supported")
-
         host = discovery_info.host
         udn_from_txt = discovery_info.properties.get("uuid")
         if udn_from_txt:
@@ -148,32 +123,14 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         try:
-            # If Zeroconf TXT records provide a direct path to description.xml, construct location.
-            constructed_location = f"http://{host}:49152/description.xml"
-            LOGGER.info(
-                "Zeroconf for host %s. Attempting validation (UPnP location may not be derived from this step directly)",
-                host,
-            )
             device_info = await _validate_device_and_get_info(
-                self.hass, host, location=constructed_location
-            )
-
-        except CannotConnect:
-            try:
-                device_info = await _validate_device_and_get_info(
-                    self.hass, host, location=None
-                )
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-        except (OSError, ValueError) as err:
-            LOGGER.error(
-                "Unexpected error during Zeroconf validation for %s: %s",
+                self.hass,
                 host,
-                err,
+                location=f"http://{host}:{UPNP_PORT}/description.xml",
             )
-            return self.async_abort(reason="unknown")
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
 
-        # If UDN wasn't in TXT, it's now in device_info from HTTP validation
         await self.async_set_unique_id(device_info.udn)
         self._abort_if_unique_id_configured(
             updates={
@@ -190,20 +147,23 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovered device."""
-        if user_input is not None and self._discovered_info is not None:
-            entry_data = {
-                CONF_HOST: self._discovered_info.host,
-                CONF_UDN: self._discovered_info.udn,
-                CONF_UPNP_LOCATION: self._discovered_info.location,
-            }
-            return self.async_create_entry(title=self._discovered_info.name, data=entry_data)
+        discovered_info = getattr(self, "_discovered_info", None)
+        if user_input is not None and discovered_info is not None:
+            return self.async_create_entry(
+                title=discovered_info.name,
+                data={
+                    CONF_HOST: discovered_info.host,
+                    CONF_UDN: discovered_info.udn,
+                    CONF_UPNP_LOCATION: discovered_info.location,
+                },
+            )
 
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
                 "name": (
-                    self._discovered_info.name
-                    if self._discovered_info is not None
+                    discovered_info.name
+                    if discovered_info is not None
                     else "Discovered WiiM Device"
                 )
             },
