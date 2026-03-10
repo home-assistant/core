@@ -1,9 +1,6 @@
 """Provides fan entities for Home Connect."""
 
-from collections import defaultdict
-from collections.abc import Callable
 import contextlib
-from functools import partial
 import logging
 from typing import cast
 
@@ -19,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import _handle_depaired_appliance
+from .common import setup_home_connect_entry
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
@@ -43,76 +40,9 @@ AIR_CONDITIONER_ENTITY_DESCRIPTION = FanEntityDescription(
 )
 
 
-def _create_option_entities(
-    appliance_coordinator: HomeConnectApplianceCoordinator,
-    known_entity_unique_ids: dict[str, str],
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Create the required option entities for the appliances."""
-    option_entities_to_add = [
-        entity
-        for entity in _get_entities_for_appliance(appliance_coordinator)
-        if entity.unique_id not in known_entity_unique_ids
-    ]
-    known_entity_unique_ids.update(
-        {
-            cast(str, entity.unique_id): appliance_coordinator.data.info.ha_id
-            for entity in option_entities_to_add
-        }
-    )
-    async_add_entities(option_entities_to_add)
-
-
-def _handle_paired_or_connected_appliance(
-    entry: HomeConnectConfigEntry,
-    known_entity_unique_ids: dict[str, str],
-    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Handle a new paired appliance or an appliance that has been connected.
-
-    This function is used to handle connected events also, because some appliances
-    don't report any data while they are off because they disconnect themselves
-    when they are turned off, so we need to check if the entities have been added
-    already or it is the first time we see them when the appliance is connected.
-    """
-    entities: list[HomeConnectAirConditioningFanEntity] = []
-    for appliance_coordinator in entry.runtime_data.appliance_coordinators.values():
-        appliance_ha_id = appliance_coordinator.data.info.ha_id
-        entities_to_add = [
-            entity
-            for entity in _get_entities_for_appliance(appliance_coordinator)
-            if entity.unique_id not in known_entity_unique_ids
-        ]
-        for event_key in (
-            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-        ):
-            changed_options_listener_remove_callback = (
-                appliance_coordinator.async_add_listener(
-                    partial(
-                        _create_option_entities,
-                        appliance_coordinator,
-                        known_entity_unique_ids,
-                        async_add_entities,
-                    ),
-                    event_key,
-                )
-            )
-            entry.async_on_unload(changed_options_listener_remove_callback)
-            changed_options_listener_remove_callbacks[appliance_ha_id].append(
-                changed_options_listener_remove_callback
-            )
-        known_entity_unique_ids.update(
-            {cast(str, entity.unique_id): appliance_ha_id for entity in entities_to_add}
-        )
-        entities.extend(entities_to_add)
-    async_add_entities(entities)
-
-
 def _get_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
-) -> list[HomeConnectAirConditioningFanEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return (
         [HomeConnectAirConditioningFanEntity(appliance_coordinator)]
@@ -134,36 +64,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect fan entities."""
-    known_entity_unique_ids: dict[str, str] = {}
-    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]] = (
-        defaultdict(list)
-    )
-
-    entry.async_on_unload(
-        entry.runtime_data.async_add_global_listener(
-            partial(
-                _handle_paired_or_connected_appliance,
-                entry,
-                known_entity_unique_ids,
-                changed_options_listener_remove_callbacks,
-                async_add_entities,
-            ),
-            (
-                EventKey.BSH_COMMON_APPLIANCE_PAIRED,
-                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
-            ),
-        )
-    )
-    entry.async_on_unload(
-        entry.runtime_data.async_add_global_listener(
-            partial(
-                _handle_depaired_appliance,
-                entry,
-                known_entity_unique_ids,
-                changed_options_listener_remove_callbacks,
-            ),
-            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
-        )
+    setup_home_connect_entry(
+        hass,
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+        lambda appliance_coordinator, _: _get_entities_for_appliance(
+            appliance_coordinator
+        ),
     )
 
 
