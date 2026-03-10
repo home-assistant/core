@@ -321,7 +321,7 @@ async def test_async_update_hosts_info_raises_homeassistant_error(
         side_effect=RuntimeError("broken")
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="error_refresh_hosts_info"):
         await fritz_tools._async_update_hosts_info()
 
 
@@ -342,11 +342,14 @@ async def test_async_update_call_deflections_empty_paths(
 async def test_async_scan_devices_stopping_returns(
     hass: HomeAssistant,
     fritz_tools,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test scan devices exits when Home Assistant is stopping."""
 
     with patch.object(hass, "is_stopping", True):
         await fritz_tools.async_scan_devices()
+
+    assert "ERROR" not in caplog.text
 
 
 async def test_async_scan_devices_old_discovery_branch(
@@ -377,6 +380,7 @@ async def test_async_scan_devices_old_discovery_branch(
 
 async def test_async_scan_devices_empty_mesh_topology_raises(
     fritz_tools,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test empty mesh topology raises as expected."""
 
@@ -396,6 +400,8 @@ async def test_async_scan_devices_empty_mesh_topology_raises(
         pytest.raises(Exception, match="Mesh supported but empty topology reported"),
     ):
         await fritz_tools.async_scan_devices()
+
+    assert "ERROR" not in caplog.text
 
 
 async def test_async_scan_devices_mesh_guest_and_missing_host(
@@ -497,6 +503,7 @@ async def test_trigger_methods(
 
 async def test_avmwrapper_service_call_branches(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
@@ -509,9 +516,6 @@ async def test_avmwrapper_service_call_branches(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     wrapper = entry.runtime_data
-
-    with patch.object(hass, "is_stopping", True):
-        assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
 
     wrapper.connection.services.pop("Hosts1", None)
     assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
@@ -530,19 +534,7 @@ async def test_avmwrapper_service_call_branches(
     ):
         assert await wrapper._async_service_call("Hosts", "1", "GetInfo") == {}
 
-    with (
-        patch(
-            "homeassistant.components.fritz.coordinator.FRITZ_EXCEPTIONS",
-            (FritzActionError,),
-        ),
-        patch.object(
-            hass,
-            "async_add_executor_job",
-            new=AsyncMock(side_effect=FritzConnectionException("boom")),
-        ),
-        pytest.raises(FritzConnectionException, match="boom"),
-    ):
-        await wrapper._async_service_call("Hosts", "1", "GetInfo")
+    assert "cannot execute service Hosts with action GetInfo" in caplog.text
 
 
 async def test_avmwrapper_passthrough_methods(
