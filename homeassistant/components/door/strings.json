@@ -1,0 +1,38 @@
+{
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted doors to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Door",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more doors close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::door::common::trigger_behavior_description%]",
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more doors open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::door::common::trigger_behavior_description%]",
+          "name": "[%key:component::door::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Door opened"
+    }
+  }
+}

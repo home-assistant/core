@@ -1,7 +1,7 @@
 {
   "domain": "wled",
   "name": "WLED",
-  "codeowners": ["@frenck"],
+  "codeowners": ["@frenck", "@mik-laj"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wled",
   "integration_type": "device",

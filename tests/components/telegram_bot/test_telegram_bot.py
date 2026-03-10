@@ -119,8 +119,10 @@ async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
+@pytest.mark.usefixtures("mock_external_calls", "mock_polling_calls")
 async def test_polling_platform_init(
-    hass: HomeAssistant, mock_polling_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test initialization of the polling platform."""
     mock_polling_config_entry.add_to_hass(hass)
@@ -203,7 +205,7 @@ async def test_send_message(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert response == {
         "chats": [
@@ -811,7 +813,7 @@ async def test_polling_platform_message_text_update(
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
-    assert events[0].data["bot"]["username"] == "mock username"
+    assert events[0].data["bot"]["username"] == "mock_bot"
 
     assert isinstance(events[0].context, Context)
 
@@ -1500,7 +1502,7 @@ async def test_send_video(
                 {
                     ATTR_URL: "https://mock",
                     ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-                    ATTR_USERNAME: "mock username",
+                    ATTR_USERNAME: "mock_bot",
                     ATTR_PASSWORD: "mock password",
                 },
                 blocking=True,
@@ -1612,7 +1614,7 @@ async def test_send_video(
             {
                 ATTR_URL: "https://mock",
                 ATTR_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-                ATTR_USERNAME: "mock username",
+                ATTR_USERNAME: "mock_bot",
                 ATTR_PASSWORD: "mock password",
             },
             blocking=True,

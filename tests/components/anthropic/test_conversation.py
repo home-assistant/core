@@ -8,10 +8,13 @@ from anthropic import AuthenticationError, RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    Message,
+    TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
     TextEditorCodeExecutionStrReplaceResultBlock,
     TextEditorCodeExecutionToolResultError,
     TextEditorCodeExecutionViewResultBlock,
+    Usage,
     WebSearchResultBlock,
 )
 from anthropic.types.text_editor_code_execution_tool_result_block import (
@@ -581,6 +584,68 @@ async def test_refusal(
     assert (
         result.response.speech["plain"]["speech"]
         == "Potential policy violation detected"
+    )
+
+
+async def test_stream_wrong_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error if the response is not a stream."""
+    mock_create_stream.return_value = Message(
+        type="message",
+        id="message_id",
+        model="claude-opus-4-6",
+        role="assistant",
+        content=[TextBlock(type="text", text="This is not a stream")],
+        usage=Usage(input_tokens=42, output_tokens=42),
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "Hi",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert result.response.speech["plain"]["speech"] == "Expected a stream of messages"
+
+
+async def test_double_system_messages(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error for two or more system prompts."""
+    conversation_id = "conversation_id"
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.content = [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.SystemContent("And I am the user."),
+        ]
+
+        result = await conversation.async_converse(
+            hass,
+            "What time is it?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Unexpected content type in chat log"
     )
 
 
