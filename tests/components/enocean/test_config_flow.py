@@ -236,16 +236,21 @@ async def test_import_flow_with_valid_path(
         )
 
     assert mock_usb_device_from_path.call_count == 1
-    # assert mock_scan_serial_ports.call_count == 1
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == MOCK_SERIAL_BY_ID
 
 
 async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
     """Test the import flow with an invalid path."""
-    DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
-
     with (
+        patch(
+            f"{MODULE}.config_flow.usb_device_from_path",
+            return_value=MOCK_USB_DEVICE,
+        ) as mock_usb_device_from_path,
+        patch(
+            f"{MODULE}.config_flow.get_serial_by_id",
+            return_value=MOCK_SERIAL_BY_ID,
+        ),
         patch(
             f"{MODULE}.config_flow.Gateway",
             return_value=Mock(
@@ -257,24 +262,46 @@ async def test_import_flow_with_invalid_path(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=DATA_TO_IMPORT,
+            data={CONF_DEVICE: "/invalid/path/to/import"},
         )
 
+    assert mock_usb_device_from_path.call_count == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_dongle_path"
+
+
+async def test_import_flow_with_invalid_usb_device(hass: HomeAssistant) -> None:
+    """Test the import flow with an invalid USB device."""
+    with (
+        patch(
+            f"{MODULE}.config_flow.usb_device_from_path",
+            return_value=None,
+        ) as mock_usb_device_from_path,
+        patch(
+            f"{MODULE}.config_flow.get_serial_by_id",
+            return_value=MOCK_SERIAL_BY_ID,
+        ),
+        patch(
+            f"{MODULE}.config_flow.Gateway",
+            return_value=Mock(
+                start=AsyncMock(side_effect=ConnectionError("invalid path")),
+                stop=Mock(),
+            ),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_DEVICE: "/invalid/path/to/import"},
+        )
+
+    assert mock_usb_device_from_path.call_count == 1
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_dongle_path"
 
 
 async def test_import_flow_without_path(hass: HomeAssistant) -> None:
-    """Test the import flow with an invalid path."""
-    # with (
-    #     # patch(
-    #     #     # f"{MODULE}.config_flow.Gateway",
-    #     #     # return_value=Mock(
-    #     #     #     start=AsyncMock(side_effect=ConnectionError("invalid path")),
-    #     #     #     stop=Mock(),
-    #     #     # ),
-    #     # ),
-    # ):
+    """Test the import flow without a path."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
