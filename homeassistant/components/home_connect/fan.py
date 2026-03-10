@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .common import _handle_depaired_appliance
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
@@ -107,22 +108,6 @@ def _handle_paired_or_connected_appliance(
         )
         entities.extend(entities_to_add)
     async_add_entities(entities)
-
-
-def _handle_depaired_appliance(
-    entry: HomeConnectConfigEntry,
-    known_entity_unique_ids: dict[str, str],
-    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
-) -> None:
-    """Handle a removed appliance."""
-    for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
-        if appliance_id not in entry.runtime_data.appliance_coordinators:
-            known_entity_unique_ids.pop(entity_unique_id, None)
-            if appliance_id in changed_options_listener_remove_callbacks:
-                for listener in changed_options_listener_remove_callbacks.pop(
-                    appliance_id
-                ):
-                    listener()
 
 
 def _get_entities_for_appliance(
