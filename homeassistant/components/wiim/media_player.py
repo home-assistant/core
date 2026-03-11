@@ -300,9 +300,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_type = MediaType.MUSIC
             self._attr_media_duration = media.duration
             self._attr_media_position = media.position
-            self._attr_media_position_updated_at = (
-                utcnow() if self._attr_state == MediaPlayerState.PLAYING else None
-            )
+            self._attr_media_position_updated_at = utcnow()
         else:
             self._clear_media_metadata()
 
@@ -317,7 +315,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_group_members = [self.entity_id] if self._added_to_hass else None
 
         if update_supported_features:
-            self._async_update_supported_features(write_state=write_state)
+            self._async_schedule_update_supported_features(write_state=write_state)
 
         if write_state and self._added_to_hass:
             self.async_write_ha_state()
@@ -502,7 +500,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @callback
-    def _async_update_supported_features(self, *, write_state: bool = True) -> None:
+    def _async_schedule_update_supported_features(self, *, write_state: bool = True) -> None:
         """Update supported features based on current state."""
         if not self.hass:
             return

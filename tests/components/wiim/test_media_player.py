@@ -199,7 +199,9 @@ async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_
         entity_id_to_udn_map={"media_player.follower": mock_wiim_device.udn},
     )
 
-    with patch.object(entity, "_async_update_supported_features", new=MagicMock()):
+    with patch.object(
+        entity, "_async_schedule_update_supported_features", new=MagicMock()
+    ):
         entity._update_ha_state_from_sdk_cache(
             write_state=False,
             update_supported_features=False,
