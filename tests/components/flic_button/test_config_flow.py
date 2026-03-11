@@ -41,6 +41,19 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+async def _init_visible_bt_flow(hass: HomeAssistant, service_info):
+    """Start a bluetooth flow with the device present in HA's discovered cache."""
+    with patch(
+        "homeassistant.components.flic_button.config_flow.async_discovered_service_info",
+        return_value=[service_info],
+    ):
+        return await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_BLUETOOTH},
+            data=service_info,
+        )
+
+
 async def test_user_flow_shows_discovery_progress(hass: HomeAssistant) -> None:
     """Test user-initiated flow starts discovery progress."""
     result = await hass.config_entries.flow.async_init(
@@ -56,33 +69,25 @@ async def test_user_flow_shows_discovery_progress(hass: HomeAssistant) -> None:
 
 
 async def test_bluetooth_discovery_flic2(hass: HomeAssistant) -> None:
-    """Test Bluetooth discovery flow for Flic 2 shows confirmation."""
+    """Test Bluetooth discovery flow for Flic 2 goes to the pair form."""
     service_info = create_flic2_service_info()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
-    )
+    result = await _init_visible_bt_flow(hass, service_info)
 
-    # Bluetooth discovery shows confirmation form before pairing
+    # Bluetooth discovery skips confirmation and shows the pairing form
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
+    assert result["step_id"] == "pair"
 
 
 async def test_bluetooth_discovery_twist(hass: HomeAssistant) -> None:
-    """Test Bluetooth discovery flow for Flic Twist shows confirmation."""
+    """Test Bluetooth discovery flow for Flic Twist goes to the pair form."""
     service_info = create_twist_service_info()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
-    )
+    result = await _init_visible_bt_flow(hass, service_info)
 
-    # Bluetooth discovery shows confirmation form before pairing
+    # Bluetooth discovery skips confirmation and shows the pairing form
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
+    assert result["step_id"] == "pair"
 
 
 async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
@@ -95,11 +100,7 @@ async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> No
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
-    )
+    result = await _init_visible_bt_flow(hass, service_info)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -131,16 +132,11 @@ async def test_pairing_success_flic2(hass: HomeAssistant) -> None:
         ),
         patch_async_setup_entry(),
     ):
-        # Bluetooth discovery shows confirmation
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_BLUETOOTH},
-            data=service_info,
-        )
+        result = await _init_visible_bt_flow(hass, service_info)
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "bluetooth_confirm"
+        assert result["step_id"] == "pair"
 
-        # Confirm → pairing starts immediately → entry created
+        # Submitting the pair form starts pairing immediately
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
@@ -186,12 +182,8 @@ async def test_pairing_success_duo(hass: HomeAssistant) -> None:
         ),
         patch_async_setup_entry(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_BLUETOOTH},
-            data=service_info,
-        )
-        assert result["step_id"] == "bluetooth_confirm"
+        result = await _init_visible_bt_flow(hass, service_info)
+        assert result["step_id"] == "pair"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -229,12 +221,8 @@ async def test_pairing_success_twist(hass: HomeAssistant) -> None:
         ),
         patch_async_setup_entry(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_BLUETOOTH},
-            data=service_info,
-        )
-        assert result["step_id"] == "bluetooth_confirm"
+        result = await _init_visible_bt_flow(hass, service_info)
+        assert result["step_id"] == "pair"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -246,14 +234,10 @@ async def test_pairing_success_twist(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE_TYPE] == DeviceType.TWIST.value
 
 
-async def _init_bt_and_confirm(hass: HomeAssistant, service_info):
-    """Start bluetooth flow, confirm, and return result after pairing attempt."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
-    )
-    assert result["step_id"] == "bluetooth_confirm"
+async def _init_bt_pair_flow(hass: HomeAssistant, service_info):
+    """Start a bluetooth flow and return the pairing form result."""
+    result = await _init_visible_bt_flow(hass, service_info)
+    assert result["step_id"] == "pair"
     return result
 
 
@@ -261,7 +245,7 @@ async def test_pairing_error_cannot_connect_bleak(hass: HomeAssistant) -> None:
     """Test pairing error when BleakError occurs during connection."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock(side_effect=BleakError("Connection failed"))
@@ -285,7 +269,7 @@ async def test_pairing_error_cannot_connect_timeout(hass: HomeAssistant) -> None
     """Test pairing error when timeout occurs during connection."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock(side_effect=TimeoutError())
@@ -308,7 +292,7 @@ async def test_pairing_error_pairing_failed(hass: HomeAssistant) -> None:
     """Test pairing error when FlicPairingError occurs."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock()
@@ -334,7 +318,7 @@ async def test_pairing_error_invalid_signature(hass: HomeAssistant) -> None:
     """Test pairing error when FlicAuthenticationError occurs."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock()
@@ -360,7 +344,7 @@ async def test_pairing_error_unknown(hass: HomeAssistant) -> None:
     """Test pairing error when unexpected exception occurs."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock()
@@ -386,7 +370,7 @@ async def test_pairing_retry_after_error(hass: HomeAssistant) -> None:
     """Test pairing can be retried after an error."""
     service_info = create_flic2_service_info()
 
-    result = await _init_bt_and_confirm(hass, service_info)
+    result = await _init_bt_pair_flow(hass, service_info)
 
     mock_client = MagicMock()
     mock_client.connect = AsyncMock(side_effect=BleakError("Connection failed"))
@@ -500,26 +484,18 @@ async def test_config_flow_version() -> None:
 async def test_bluetooth_confirm_device_no_longer_advertising(
     hass: HomeAssistant,
 ) -> None:
-    """Test bluetooth_confirm falls back to scanner when device stops advertising."""
+    """Test Bluetooth discovery falls back to scanner when the device disappears."""
     service_info = create_flic2_service_info()
 
-    # Start the flow - shows bluetooth confirmation form
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_BLUETOOTH},
-        data=service_info,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-
-    # Device is no longer advertising — confirm should fall back to scanner
+    # Device is no longer advertising, so the bluetooth flow falls back to scanner
     with patch(
         "homeassistant.components.flic_button.config_flow.async_discovered_service_info",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_BLUETOOTH},
+            data=service_info,
         )
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
