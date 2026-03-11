@@ -69,7 +69,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
-    }
+        vol.Optional(CONF_API_KEY, default=""): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    },
 )
 
 
@@ -94,7 +97,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         url = user_input[CONF_URL]
-        api_key = user_input[CONF_API_KEY]
+        api_key = user_input.get(CONF_API_KEY) or ""
 
         self._async_abort_entries_match({CONF_URL: url})
 
@@ -111,9 +114,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            headers = (
-                {"Authorization": f"Bearer {api_key}"} if len(api_key) > 0 else None
-            )
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else None
             client = ollama.AsyncClient(
                 host=url, headers=headers, verify=get_default_context()
             )
