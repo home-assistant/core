@@ -243,6 +243,7 @@ DEFAULT_INTEGRATIONS = {
     # Integrations providing triggers and conditions for base platforms:
     "door",
     "garage_door",
+    "gate",
     "humidity",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {

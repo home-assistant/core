@@ -2112,6 +2112,7 @@ NO_QUALITY_SCALE = [
     "file_upload",
     "frontend",
     "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",

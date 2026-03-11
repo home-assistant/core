@@ -77,6 +77,7 @@ NO_IOT_CLASS = [
     "file_upload",
     "frontend",
     "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
