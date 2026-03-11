@@ -18,17 +18,22 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.driver import Driver
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
@@ -403,6 +408,71 @@ def is_valid_notification_binary_sensor(
     return len(info.primary_value.metadata.states) > 1
 
 
+@callback
+def _async_check_legacy_entity_repair(
+    hass: HomeAssistant,
+    driver: Driver,
+    entity: ZWaveLegacyDoorStateBinarySensor,
+) -> None:
+    """Create a repair issue if a deprecated legacy door state entity is used."""
+    ent_reg = er.async_get(hass)
+    if entity.unique_id is None:
+        return
+    entity_id = ent_reg.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, entity.unique_id
+    )
+    if entity_id is None:
+        return
+
+    entity_entry = ent_reg.async_get(entity_id)
+    if entity_entry is None or entity_entry.disabled:
+        return
+
+    entity_automations = automations_with_entity(hass, entity_id)
+    entity_scripts = scripts_with_entity(hass, entity_id)
+
+    if not entity_automations and not entity_scripts:
+        return
+
+    items = [
+        f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
+        for integration, entities in (
+            ("automation", entity_automations),
+            ("script", entity_scripts),
+        )
+        for eid in entities
+        if (item := ent_reg.async_get(eid))
+    ]
+
+    # Try to find the replacement Opening state sensor entity_id.
+    opening_state_value = get_opening_state_notification_value(entity.info.node)
+    opening_state_entity_id = ""
+    if opening_state_value is not None:
+        opening_state_unique_id = (
+            f"{driver.controller.home_id}.{opening_state_value.value_id}"
+        )
+        opening_state_entity_id = (
+            ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, opening_state_unique_id)
+            or ""
+        )
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_legacy_door_state.{entity_id}",
+        is_fixable=False,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_legacy_door_state",
+        translation_placeholders={
+            "entity_id": entity_id,
+            "entity_name": entity_entry.original_name or entity_id,
+            "opening_state_entity_id": opening_state_entity_id,
+            "items": "\n".join(items),
+        },
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ZwaveJSConfigEntry,
@@ -446,9 +516,9 @@ async def async_setup_entry(
             isinstance(info, NewZwaveDiscoveryInfo)
             and info.entity_class is ZWaveLegacyDoorStateBinarySensor
         ):
-            entities.append(
-                ZWaveLegacyDoorStateBinarySensor(config_entry, driver, info)
-            )
+            entity = ZWaveLegacyDoorStateBinarySensor(config_entry, driver, info)
+            entities.append(entity)
+            _async_check_legacy_entity_repair(hass, driver, entity)
         elif isinstance(info, NewZwaveDiscoveryInfo):
             pass  # other entity classes are not migrated yet
         elif info.platform_hint == "notification":
