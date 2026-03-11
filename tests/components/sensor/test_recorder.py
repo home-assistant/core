@@ -4160,7 +4160,7 @@ async def test_compile_hourly_statistics_custom_equivalent_units(
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
 
-    def _mock_custom_equivalent_units() -> dict:
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
         return {"sensor.test1": {"KB/s": "kB/s"}}
 
     recorder_platform = Mock(

@@ -3884,7 +3884,7 @@ async def test_recorder_platform_with_partial_statistics_support(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    def _mock_custom_equivalent_units() -> dict:
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
         return {}
 
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:

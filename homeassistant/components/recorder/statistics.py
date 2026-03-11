@@ -711,7 +711,7 @@ def _compile_statistics(
         if custom_equivalent_units := getattr(
             platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
         ):
-            custom_equivalent_units_per_entity |= custom_equivalent_units()
+            custom_equivalent_units_per_entity |= custom_equivalent_units(instance.hass)
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
