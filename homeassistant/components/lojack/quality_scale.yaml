@@ -38,7 +38,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
   # Gold
   devices: done
@@ -69,10 +69,10 @@ rules:
   entity-translations: done
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
-    comment: No user-actionable repair scenarios beyond reauthentication, which is already handled.
+    comment: No user-actionable repair scenarios identified for this integration.
   stale-devices:
     status: exempt
     comment: Vehicles removed from the LoJack account stop appearing in API responses and become unavailable.

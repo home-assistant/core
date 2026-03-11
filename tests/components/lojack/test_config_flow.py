@@ -44,7 +44,6 @@ async def test_full_user_flow(
 
 
 
-
 async def test_user_flow_invalid_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

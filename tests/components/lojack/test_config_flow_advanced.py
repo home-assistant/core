@@ -54,7 +54,6 @@ async def test_config_flow_validate_input_succeeds(
 
 
 
-
 async def test_setup_entry_client_close_error_on_setup_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

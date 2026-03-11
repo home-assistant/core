@@ -164,3 +164,4 @@ async def test_coordinator_empty_device_list(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data == []
+    client.close.assert_called_once()

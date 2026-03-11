@@ -51,6 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
             raise
         coordinators.append(coordinator)
 
+    if not coordinators:
+        await client.close()
+
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
