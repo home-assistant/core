@@ -172,7 +172,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         periods = []
         for i in range(1, 4):
             cached = current["periods"][i - 1]
-            if f"period_{i}_start" in call.data:
+            has_start = f"period_{i}_start" in call.data
+            has_end = f"period_{i}_end" in call.data
+            if has_start != has_end:
+                raise ServiceValidationError(
+                    f"period_{i}_start and period_{i}_end must both be provided or both omitted"
+                )
+            if has_start:
                 start = _parse_time_str(
                     call.data[f"period_{i}_start"], f"period_{i}_start"
                 )
@@ -211,7 +217,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         periods = []
         for i in range(1, 4):
             cached = current["periods"][i - 1]
-            if f"period_{i}_start" in call.data:
+            has_start = f"period_{i}_start" in call.data
+            has_end = f"period_{i}_end" in call.data
+            if has_start != has_end:
+                raise ServiceValidationError(
+                    f"period_{i}_start and period_{i}_end must both be provided or both omitted"
+                )
+            if has_start:
                 start = _parse_time_str(
                     call.data[f"period_{i}_start"], f"period_{i}_start"
                 )

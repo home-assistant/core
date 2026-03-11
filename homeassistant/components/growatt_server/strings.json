@@ -649,11 +649,11 @@
           "name": "Period 1 enabled"
         },
         "period_1_end": {
-          "description": "End time for period 1 (HH:MM).",
+          "description": "End time for period 1 (HH:MM or HH:MM:SS).",
           "name": "Period 1 end"
         },
         "period_1_start": {
-          "description": "Start time for period 1 (HH:MM).",
+          "description": "Start time for period 1 (HH:MM or HH:MM:SS).",
           "name": "Period 1 start"
         },
         "period_2_enabled": {
@@ -661,11 +661,11 @@
           "name": "Period 2 enabled"
         },
         "period_2_end": {
-          "description": "End time for period 2 (HH:MM).",
+          "description": "End time for period 2 (HH:MM or HH:MM:SS).",
           "name": "Period 2 end"
         },
         "period_2_start": {
-          "description": "Start time for period 2 (HH:MM).",
+          "description": "Start time for period 2 (HH:MM or HH:MM:SS).",
           "name": "Period 2 start"
         },
         "period_3_enabled": {
@@ -673,11 +673,11 @@
           "name": "Period 3 enabled"
         },
         "period_3_end": {
-          "description": "End time for period 3 (HH:MM).",
+          "description": "End time for period 3 (HH:MM or HH:MM:SS).",
           "name": "Period 3 end"
         },
         "period_3_start": {
-          "description": "Start time for period 3 (HH:MM).",
+          "description": "Start time for period 3 (HH:MM or HH:MM:SS).",
           "name": "Period 3 start"
         }
       },
