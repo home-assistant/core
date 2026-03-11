@@ -28,7 +28,7 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
-      "inch_level": {
+      "depth_level": {
         "name": "Level depth"
       },
       "percent_level": {

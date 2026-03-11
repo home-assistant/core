@@ -4,7 +4,7 @@
       "battery_voltage": {
         "default": "mdi:battery"
       },
-      "inch_level": {
+      "depth_level": {
         "default": "mdi:water"
       },
       "percent_level": {
