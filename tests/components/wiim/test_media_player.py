@@ -158,6 +158,63 @@ async def test_media_player_update_ha_state_from_sdk_cache(
 
 
 @pytest.mark.asyncio
+async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_device(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test follower metadata is pulled from the leader device cache."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+    entity._device = mock_wiim_device
+
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.playing_status = PlayingStatus.PLAYING
+    leader_device.play_mode = "Network"
+    leader_device.loop_state = mock_wiim_device.loop_state
+    leader_device.output_mode = "speaker"
+    leader_device.current_media = WiimMediaMetadata(
+        title="Leader Song",
+        artist="Leader Artist",
+        album="Leader Album",
+        image_url="http://leader/image.jpg",
+        uri="http://leader/track.flac",
+        duration=180,
+        position=42,
+    )
+
+    mock_controller = MagicMock()
+    mock_controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    mock_controller.get_device.return_value = leader_device
+    _set_wiim_data(
+        mock_hass,
+        controller=mock_controller,
+        entity_id_to_udn_map={"media_player.follower": mock_wiim_device.udn},
+    )
+
+    with patch.object(entity, "_async_update_supported_features", new=MagicMock()):
+        entity._update_ha_state_from_sdk_cache(
+            write_state=False,
+            update_supported_features=False,
+        )
+
+    assert entity.state == MediaPlayerState.PLAYING
+    assert entity.media_title == "Leader Song"
+    assert entity.media_artist == "Leader Artist"
+    assert entity.media_album_name == "Leader Album"
+    assert entity.media_image_url == "http://leader/image.jpg"
+    assert entity.media_content_id == "http://leader/track.flac"
+    assert entity.media_duration == 180
+    assert entity.media_position == 42
+
+
+@pytest.mark.asyncio
 async def test_media_player_async_added_to_hass_refreshes_supported_features(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_hass: HomeAssistant,
@@ -262,6 +319,46 @@ async def test_media_player_update_supported_features_can_skip_state_write(
 
     assert entity.supported_features == expected_features
     mock_write.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_media_player_update_supported_features_follower_uses_leader_device(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test follower supported features are read from the leader device."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+    _set_wiim_data(mock_hass)
+
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.async_get_transport_capabilities = AsyncMock(
+        return_value=WiimTransportCapabilities(
+            can_next=True,
+            can_previous=False,
+            can_repeat=True,
+            can_shuffle=False,
+        )
+    )
+
+    entity._wiim_data.controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    entity._wiim_data.controller.get_device.return_value = leader_device
+
+    await entity._from_device_update_supported_features(write_state=False)
+
+    assert entity.supported_features == (
+        SUPPORT_WIIM_BASE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.REPEAT_SET
+    )
+    leader_device.async_get_transport_capabilities.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -379,33 +476,36 @@ async def test_media_player_play_redirects_follower_to_leader(
     entity.hass = mock_hass
     entity.entity_id = "media_player.follower"
 
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+
     mock_controller = MagicMock()
     mock_controller.get_group_snapshot.return_value = MagicMock(
         role=WiimGroupRole.FOLLOWER,
         command_target_udn="uuid:leader-1234",
     )
+    mock_controller.get_device.return_value = leader_device
     _set_wiim_data(
         mock_hass,
         controller=mock_controller,
-        entity_id_to_udn_map={"media_player.leader": "uuid:leader-1234"},
     )
 
     with (
-        patch.object(
-            entity, "_call_leader_service", new_callable=AsyncMock
-        ) as mock_call_leader_service,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
         ) as mock_update_state,
         patch.object(
             mock_wiim_device, "async_play", new_callable=AsyncMock
         ) as mock_play,
+        patch.object(
+            leader_device, "async_play", new_callable=AsyncMock
+        ) as mock_leader_play,
     ):
         await entity.async_media_play()
 
-    mock_call_leader_service.assert_awaited_once_with("media_play")
     mock_update_state.assert_called_once()
     mock_play.assert_not_awaited()
+    mock_leader_play.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -569,35 +669,36 @@ async def test_media_player_seek_redirects_follower_to_leader(
     entity.hass = mock_hass
     entity.entity_id = "media_player.follower"
 
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+
     mock_controller = MagicMock()
     mock_controller.get_group_snapshot.return_value = MagicMock(
         role=WiimGroupRole.FOLLOWER,
         command_target_udn="uuid:leader-1234",
     )
+    mock_controller.get_device.return_value = leader_device
     _set_wiim_data(
         mock_hass,
         controller=mock_controller,
-        entity_id_to_udn_map={"media_player.leader": "uuid:leader-1234"},
     )
 
     with (
-        patch.object(
-            entity, "_call_leader_service", new_callable=AsyncMock
-        ) as mock_call_leader_service,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
         ) as mock_update_state,
         patch.object(
             mock_wiim_device, "async_seek", new_callable=AsyncMock
         ) as mock_seek,
+        patch.object(
+            leader_device, "async_seek", new_callable=AsyncMock
+        ) as mock_leader_seek,
     ):
         await entity.async_media_seek(60)
 
-    mock_call_leader_service.assert_awaited_once_with(
-        "media_seek", seek_position=60
-    )
     mock_update_state.assert_called_once()
     mock_seek.assert_not_awaited()
+    mock_leader_seek.assert_awaited_once_with(60)
 
 
 @pytest.mark.asyncio

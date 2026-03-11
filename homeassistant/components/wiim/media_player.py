@@ -172,6 +172,46 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self._wiim_data.controller.get_group_snapshot(self._device.udn)
 
     @callback
+    def _get_group_leader_device(self) -> WiimDevice | None:
+        """Return the leader device when this entity is a follower."""
+        if not (
+            (group_snapshot := self._get_group_snapshot())
+            and group_snapshot.role == WiimGroupRole.FOLLOWER
+        ):
+            return None
+
+        return self._wiim_data.controller.get_device(group_snapshot.leader_udn)
+
+    async def _async_get_command_target_device(self, action_name: str) -> WiimDevice:
+        """Return the device that should receive a grouped playback command."""
+        if not (
+            (group_snapshot := self._get_group_snapshot())
+            and group_snapshot.role == WiimGroupRole.FOLLOWER
+        ):
+            return self._device
+
+        if not (
+            target_device := self._wiim_data.controller.get_device(
+                group_snapshot.command_target_udn
+            )
+        ):
+            if self._attr_available:
+                await self._async_handle_critical_error(
+                    WiimException(f"Leader unavailable for {action_name}")
+                )
+            raise HomeAssistantError(
+                f"Cannot route {action_name}: leader device for {self.entity_id} was not found."
+            )
+
+        LOGGER.info(
+            "Routing %s command from follower %s to leader %s",
+            action_name,
+            self.entity_id,
+            target_device.udn,
+        )
+        return target_device
+
+    @callback
     def _update_ha_state_from_sdk_cache(
         self,
         *,
@@ -276,52 +316,49 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         elif group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
             # This device is a follower. It should actively pull metadata from its leader.
-            if (
-                (leader_udn := group_snapshot.leader_udn)
-                and (leader_entity_id := self._get_entity_id_for_udn(leader_udn))
-                and (leader_state := self.hass.states.get(leader_entity_id))
-            ):
+            if leader_device := self._get_group_leader_device():
                 LOGGER.debug(
                     "Follower %s: Actively pulling metadata from leader %s",
                     self.entity_id,
-                    leader_entity_id,
+                    leader_device.udn,
                 )
-                # Pull metadata from leader's state machine state
-                self._attr_media_title = leader_state.attributes.get("media_title")
-                self._attr_media_artist = leader_state.attributes.get("media_artist")
-                self._attr_media_album_name = leader_state.attributes.get(
-                    "media_album_name"
-                )
-                # For image, use entity_picture from attributes, which might be a local proxy path
-                self._attr_media_image_url = leader_state.attributes.get(
-                    "entity_picture"
-                )
-                self._attr_media_content_id = leader_state.attributes.get(
-                    "media_content_id"
-                )
-                self._attr_media_content_type = leader_state.attributes.get(
-                    "media_content_type"
-                )
-                self._attr_media_duration = leader_state.attributes.get(
-                    "media_duration"
-                )
-                self._attr_media_position = leader_state.attributes.get(
-                    "media_position"
-                )
-                self._attr_media_position_updated_at = leader_state.attributes.get(
-                    "media_position_updated_at"
-                )
-                self._attr_source = leader_state.attributes.get("source")
-                self._attr_shuffle = leader_state.attributes.get("shuffle", False)
-                self._attr_repeat = leader_state.attributes.get(
-                    "repeat", RepeatMode.OFF
-                )
-                self._attr_supported_features = leader_state.attributes.get(
-                    "supported_features", SUPPORT_WIIM_BASE
-                )
+                if leader_device.playing_status is not None:
+                    self._attr_state = SDK_TO_HA_STATE.get(
+                        leader_device.playing_status, MediaPlayerState.IDLE
+                    )
+
+                self._attr_source = leader_device.play_mode
+                self._attr_repeat = SDK_TO_HA_REPEAT[leader_device.loop_state.repeat]
+                self._attr_shuffle = leader_device.loop_state.shuffle
+                self._attr_sound_mode = leader_device.output_mode
+
+                if media := leader_device.current_media:
+                    self._attr_media_title = media.title
+                    self._attr_media_artist = media.artist
+                    self._attr_media_album_name = media.album
+                    self._attr_media_image_url = media.image_url
+                    self._attr_media_content_id = media.uri
+                    self._attr_media_content_type = MediaType.MUSIC
+                    self._attr_media_duration = media.duration
+                    self._attr_media_position = media.position
+                    self._attr_media_position_updated_at = (
+                        utcnow()
+                        if self._attr_state == MediaPlayerState.PLAYING
+                        else None
+                    )
+                else:
+                    self._attr_media_title = None
+                    self._attr_media_artist = None
+                    self._attr_media_album_name = None
+                    self._attr_media_image_url = None
+                    self._attr_media_content_id = None
+                    self._attr_media_content_type = None
+                    self._attr_media_duration = None
+                    self._attr_media_position = None
+                    self._attr_media_position_updated_at = None
             elif group_snapshot.leader_udn:
                 LOGGER.debug(
-                    "Follower %s: Leader entity %s not found. Clearing own media metadata",
+                    "Follower %s: Leader device %s not found. Clearing own media metadata",
                     self.entity_id,
                     group_snapshot.leader_udn,
                 )
@@ -462,10 +499,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return False
 
         if (
-            (leader_entity_id := self._get_entity_id_for_udn(group_snapshot.leader_udn))
-            and (leader_state := self.hass.states.get(leader_entity_id))
+            (leader_device := wiim_data.controller.get_device(group_snapshot.leader_udn))
             and (
-                leader_features := leader_state.attributes.get("supported_features")
+                leader_features := await self._async_get_supported_features_for_device(
+                    leader_device
+                )
             )
             is not None
         ):
@@ -476,7 +514,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             LOGGER.debug(
                 "Device %s: Follower features synchronized from leader %s",
                 self.entity_id,
-                leader_entity_id,
+                leader_device.udn,
             )
             return True
 
@@ -487,6 +525,40 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.async_write_ha_state()
         LOGGER.debug("Device %s: Follower set to base features", self.entity_id)
         return True
+
+    async def _async_get_supported_features_for_device(
+        self, device: WiimDevice
+    ) -> MediaPlayerEntityFeature | None:
+        """Return the supported media player features for a device."""
+        try:
+            capabilities = await device.async_get_transport_capabilities()
+        except WiimRequestException as err:
+            LOGGER.warning(
+                "Device %s: Failed to fetch transport capabilities for supported features: %s",
+                device.udn,
+                err,
+            )
+            return None
+        except RuntimeError as err:
+            LOGGER.error(
+                "Device %s: Unexpected error in supported feature detection: %s",
+                device.udn,
+                err,
+            )
+            return None
+
+        current_features = SUPPORT_WIIM_BASE
+
+        if capabilities.can_next:
+            current_features |= MediaPlayerEntityFeature.NEXT_TRACK
+        if capabilities.can_previous:
+            current_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+        if capabilities.can_repeat:
+            current_features |= MediaPlayerEntityFeature.REPEAT_SET
+        if capabilities.can_shuffle:
+            current_features |= MediaPlayerEntityFeature.SHUFFLE_SET
+
+        return current_features
 
     async def _from_device_update_supported_features(
         self, *, write_state: bool = True
@@ -499,32 +571,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return
 
         previous_features = self._attr_supported_features
-        try:
-            capabilities = await self._device.async_get_transport_capabilities()
-        except WiimRequestException as err:
-            LOGGER.warning(
-                "Device %s: Failed to fetch transport capabilities for supported features: %s",
-                self.entity_id,
-                err,
+        if (
+            current_features := await self._async_get_supported_features_for_device(
+                self._device
             )
-        except RuntimeError as err:
-            LOGGER.error(
-                "Device %s: Unexpected error in _from_device_update_supported_features: %s",
-                self.entity_id,
-                err,
-            )
-        else:
-            current_features = SUPPORT_WIIM_BASE
-
-            if capabilities.can_next:
-                current_features |= MediaPlayerEntityFeature.NEXT_TRACK
-            if capabilities.can_previous:
-                current_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-            if capabilities.can_repeat:
-                current_features |= MediaPlayerEntityFeature.REPEAT_SET
-            if capabilities.can_shuffle:
-                current_features |= MediaPlayerEntityFeature.SHUFFLE_SET
-
+        ) is not None:
             if self._attr_supported_features != current_features:
                 self._attr_supported_features = current_features
                 LOGGER.debug(
@@ -532,14 +583,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.entity_id,
                     current_features,
                 )
-        finally:
-            if (
-                write_state
-                and
-                self._added_to_hass
-                and self._attr_supported_features != previous_features
-            ):
-                self.async_write_ha_state()
+
+        if (
+            write_state
+            and self._added_to_hass
+            and self._attr_supported_features != previous_features
+        ):
+            self.async_write_ha_state()
 
     @callback
     def _async_update_supported_features(self, *, write_state: bool = True) -> None:
@@ -659,104 +709,41 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Mute (true) or unmute (false) media player."""
         await self._device.async_set_mute(mute)
 
-    async def _call_leader_service(self, service_name: str, **kwargs: Any) -> None:
-        """Helper to call a media_player service on the group leader."""
-        group_snapshot = self._get_group_snapshot()
-        if group_snapshot is None or group_snapshot.role != WiimGroupRole.FOLLOWER:
-            raise HomeAssistantError(
-                f"Internal error: {service_name} redirection called for non-follower {self.entity_id}."
-            )
-
-        if not (
-            leader_entity_id := self._get_entity_id_for_udn(
-                group_snapshot.command_target_udn
-            )
-        ):
-            raise HomeAssistantError(
-                f"Cannot redirect {service_name}: leader entity for {self.entity_id} was not found."
-            )
-
-        LOGGER.info(
-            "Redirecting %s command from follower %s to leader %s",
-            service_name,
-            self.entity_id,
-            leader_entity_id,
-        )
-        await self.hass.services.async_call(
-            "media_player",
-            service_name,
-            {"entity_id": leader_entity_id, **kwargs},
-            blocking=True,
-            context=self._context,
-        )
-
-    async def _async_redirect_to_leader(
-        self, service_name: str, **kwargs: Any
-    ) -> bool:
-        """Redirect a command to the leader when this entity is a follower."""
-        group_snapshot = self._get_group_snapshot()
-        if group_snapshot is None or group_snapshot.role != WiimGroupRole.FOLLOWER:
-            return False
-
-        try:
-            await self._call_leader_service(service_name, **kwargs)
-        except HomeAssistantError:
-            if self._attr_available:
-                await self._async_handle_critical_error(
-                    WiimException(f"Leader unavailable for {service_name}")
-                )
-            raise
-
-        return True
-
     @media_player_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        if await self._async_redirect_to_leader("media_play"):
-            return
-
-        await self._device.async_play()
+        await (await self._async_get_command_target_device("media_play")).async_play()
 
     @media_player_exception_wrap
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if await self._async_redirect_to_leader("media_pause"):
-            return
-
-        await self._device.async_pause()
-        await self._device.sync_device_duration_and_position()
+        target_device = await self._async_get_command_target_device("media_pause")
+        await target_device.async_pause()
+        await target_device.sync_device_duration_and_position()
 
     @media_player_exception_wrap
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        if await self._async_redirect_to_leader("media_stop"):
-            return
-
-        await self._device.async_stop()
+        await (await self._async_get_command_target_device("media_stop")).async_stop()
 
     @media_player_exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        if await self._async_redirect_to_leader("media_next_track"):
-            return
-
-        await self._device.async_next()
+        await (await self._async_get_command_target_device("media_next_track")).async_next()
 
     @media_player_exception_wrap
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        if await self._async_redirect_to_leader("media_previous_track"):
-            return
-
-        await self._device.async_previous()
+        await (
+            await self._async_get_command_target_device("media_previous_track")
+        ).async_previous()
 
     @media_player_exception_wrap
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
-        if await self._async_redirect_to_leader("media_seek", seek_position=position):
-            return
-
-        await self._device.async_seek(int(position))
+        await (await self._async_get_command_target_device("media_seek")).async_seek(
+            int(position)
+        )
 
     @media_player_exception_wrap
     async def async_play_media(
