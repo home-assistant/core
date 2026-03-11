@@ -73,12 +73,6 @@ def state_2_fixture(client: Mock) -> State:
     return state
 
 
-@pytest.fixture(name="state")
-def state_fixture(state_1: State) -> State:
-    """Get a mocked state."""
-    return state_1
-
-
 @pytest.fixture(name="mock_config_entry")
 def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Get a mock config entry."""
