@@ -10,6 +10,7 @@ from .const import DOMAIN
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
     Platform.NUMBER,

@@ -905,7 +905,7 @@ gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==1.6.0
+gardena-bluetooth==2.1.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.14
@@ -1046,7 +1046,7 @@ habluetooth==5.9.1
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.15.0
+hass-nabucasa==2.0.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1449,7 +1449,7 @@ objgraph==3.5.0
 odp-amsterdam==6.1.2
 
 # homeassistant.components.ohme
-ohme==1.6.0
+ohme==1.7.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -1868,7 +1868,7 @@ pyisy==3.4.1
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.2
+pyjvcprojector==2.0.3
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.1.3
@@ -2220,7 +2220,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.8.0
+python-otbr-api==2.9.0
 
 # homeassistant.components.overseerr
 python-overseerr==0.9.0
@@ -2235,7 +2235,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.17.2
+python-roborock==4.20.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
