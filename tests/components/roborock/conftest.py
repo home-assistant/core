@@ -300,7 +300,7 @@ def make_home_trait(
                 NamedRoomMapping(
                     segment_id=room_mapping[room.id],
                     iot_id=room.id,
-                    name=room.name,
+                    raw_name=room.name,
                 )
                 for room in rooms
             ],

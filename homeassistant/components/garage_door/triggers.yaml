@@ -10,16 +10,20 @@
           - last
           - any
 
-occupancy_cleared:
+closed:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: binary_sensor
-      device_class: occupancy
+      - domain: binary_sensor
+        device_class: garage_door
+      - domain: cover
+        device_class: garage
 
-occupancy_detected:
+opened:
   fields: *trigger_common_fields
   target:
     entity:
-      domain: binary_sensor
-      device_class: occupancy
+      - domain: binary_sensor
+        device_class: garage_door
+      - domain: cover
+        device_class: garage

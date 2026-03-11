@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
+from librehardwaremonitor_api.model import DeviceId, LibreHardwareMonitorSensorData
 from librehardwaremonitor_api.sensor_type import SensorType
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -15,6 +16,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -30,10 +33,28 @@ async def async_setup_entry(
     """Set up the LibreHardwareMonitor platform."""
     lhm_coordinator = config_entry.runtime_data
 
-    async_add_entities(
-        LibreHardwareMonitorSensor(lhm_coordinator, config_entry.entry_id, sensor_data)
-        for sensor_data in lhm_coordinator.data.sensor_data.values()
-    )
+    known_devices: set[DeviceId] = set()
+
+    def _check_device() -> None:
+        current_devices = set(lhm_coordinator.data.main_device_ids_and_names)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            _LOGGER.debug("New Device(s) detected, adding: %s", new_devices)
+            known_devices.update(new_devices)
+            new_devices_sensor_data = [
+                sensor_data
+                for sensor_data in lhm_coordinator.data.sensor_data.values()
+                if sensor_data.device_id in new_devices
+            ]
+            async_add_entities(
+                LibreHardwareMonitorSensor(
+                    lhm_coordinator, config_entry.entry_id, sensor_data
+                )
+                for sensor_data in new_devices_sensor_data
+            )
+
+    _check_device()
+    config_entry.async_on_unload(lhm_coordinator.async_add_listener(_check_device))
 
 
 class LibreHardwareMonitorSensor(
