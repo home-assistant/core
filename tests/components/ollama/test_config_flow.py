@@ -8,8 +8,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
-from homeassistant.components.ollama.const import CONF_API_KEY, DOMAIN
-from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.components.ollama.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

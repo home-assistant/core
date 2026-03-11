@@ -10,7 +10,7 @@ import httpx
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_URL, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -22,7 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .const import (
-    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,

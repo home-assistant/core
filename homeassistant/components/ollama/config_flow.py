@@ -20,7 +20,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME, CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
@@ -40,7 +40,6 @@ from homeassistant.util.ssl import get_default_context
 
 from . import OllamaConfigEntry
 from .const import (
-    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
