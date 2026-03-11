@@ -257,7 +257,6 @@ class MyBatterySensor(MySensorNodeEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_force_update = True
-    _attr_should_poll = False
 
     @property
     def unique_id(self) -> str:
