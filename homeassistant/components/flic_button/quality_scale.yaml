@@ -55,7 +55,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: Single device per config entry, no network address to update.
@@ -78,7 +78,9 @@ rules:
     status: exempt
     comment: All entities are essential for the device's function (battery, button events, firmware update, rotation position).
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: exempt
+    comment: Event-only platform has no user-facing exceptions.
   icon-translations: done
   reconfiguration-flow:
     status: exempt
@@ -92,5 +94,7 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession:
+    status: exempt
+    comment: Event-only platform makes no external HTTP calls.
   strict-typing: done

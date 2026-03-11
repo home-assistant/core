@@ -3,60 +3,26 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
-from datetime import datetime
 import logging
 from typing import Any
 
 from bleak import BleakError
+from pyflic_ble import DeviceCapabilities, FlicClient, FlicProtocolError
+from pyflic_ble.handlers.base import DeviceProtocolHandler
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import (
-    async_call_later,
-    async_track_device_registry_updated_event,
-)
-from homeassistant.helpers.storage import Store
+from homeassistant.helpers.event import async_track_device_registry_updated_event
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.dt import utcnow
 
-from .const import (
-    CONF_BUTTON_UUID,
-    DEVICE_TYPE_MODEL_NAMES,
-    DOMAIN,
-    EVENT_TYPE_DUO_DIAL_CHANGED,
-    EVENT_TYPE_PUSH_TWIST_DECREMENT,
-    EVENT_TYPE_PUSH_TWIST_INCREMENT,
-    EVENT_TYPE_ROTATE_CLOCKWISE,
-    EVENT_TYPE_SELECTOR_CHANGED,
-    EVENT_TYPE_SLOT_CHANGED,
-    EVENT_TYPE_TWIST_DECREMENT,
-    EVENT_TYPE_TWIST_INCREMENT,
-    FLIC_BUTTON_EVENT,
-    FLIC_FIRMWARE3_API_URL,
-    FLIC_FIRMWARE_API_URL,
-    DeviceType,
-    PushTwistMode,
-)
-from .flic_client import FlicClient, FlicFirmwareUpdateError, FlicProtocolError
-from .handlers import DeviceCapabilities, DeviceProtocolHandler
+from .const import DEVICE_TYPE_MODEL_NAMES, DOMAIN, FLIC_BUTTON_EVENT, DeviceType
 
 _LOGGER = logging.getLogger(__name__)
 
-SLOT_STORE_VERSION = 1
-SLOT_SAVE_DELAY = 5  # seconds to debounce slot value saves
-FIRMWARE_CHECK_INTERVAL = 86400  # seconds (24 hours) between cloud firmware checks
 SIGNAL_BUTTON_EVENT = f"{DOMAIN}_button_event_{{0}}"
 SIGNAL_ROTATE_EVENT = f"{DOMAIN}_rotate_event_{{0}}"
-SIGNAL_SELECTOR_EVENT = f"{DOMAIN}_selector_event_{{0}}"
-SIGNAL_SLOT_EVENT = f"{DOMAIN}_slot_{{mode}}_{{address}}"
-SIGNAL_DUO_DIAL_EVENT = f"{DOMAIN}_duo_dial_{{button}}_{{address}}"
-SIGNAL_TWIST_POSITION_EVENT = f"{DOMAIN}_twist_position_{{address}}"
-SIGNAL_PUSH_TWIST_POSITION_EVENT = f"{DOMAIN}_push_twist_position_{{address}}"
 
 
 def _address_key(address: str) -> str:
@@ -74,33 +40,6 @@ def format_rotate_dispatcher_name(address: str) -> str:
     return SIGNAL_ROTATE_EVENT.format(_address_key(address))
 
 
-def format_selector_dispatcher_name(address: str) -> str:
-    """Format dispatcher signal name for selector slot events."""
-    return SIGNAL_SELECTOR_EVENT.format(_address_key(address))
-
-
-def format_duo_dial_dispatcher_name(address: str, button_index: int) -> str:
-    """Format dispatcher signal name for Duo dial position events."""
-    return SIGNAL_DUO_DIAL_EVENT.format(
-        button=button_index, address=_address_key(address)
-    )
-
-
-def format_slot_dispatcher_name(address: str, mode_index: int) -> str:
-    """Format dispatcher signal name for slot position events."""
-    return SIGNAL_SLOT_EVENT.format(mode=mode_index, address=_address_key(address))
-
-
-def format_twist_position_dispatcher_name(address: str) -> str:
-    """Format dispatcher signal name for Twist free-rotation position."""
-    return SIGNAL_TWIST_POSITION_EVENT.format(address=_address_key(address))
-
-
-def format_push_twist_position_dispatcher_name(address: str) -> str:
-    """Format dispatcher signal name for push-twist position."""
-    return SIGNAL_PUSH_TWIST_POSITION_EVENT.format(address=_address_key(address))
-
-
 class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for managing Flic button connection and data."""
 
@@ -111,7 +50,6 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         config_entry: ConfigEntry,
         serial_number: str | None = None,
         battery_level: int | None = None,
-        push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
     ) -> None:
         """Initialize the coordinator."""
         # Disable polling - battery level is fetched on each connection via command
@@ -124,30 +62,10 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self._serial_number = serial_number
-        self._push_twist_mode = push_twist_mode
         self._connected = False
         self._reconnect_lock = asyncio.Lock()
         self._battery_level = battery_level
         self._firmware_version: int | None = None
-
-        # Firmware update state
-        self._last_firmware_check: datetime | None = None
-        self._latest_firmware_version: int | None = None
-        self._firmware_download_url: str | None = None
-        self._firmware_binary: bytes | None = None
-        self._firmware_update_in_progress: bool = False
-        self._firmware_update_percentage: int | None = None
-        self._firmware_awaiting_reboot: bool = False
-        # Slot value persistence (Twist devices)
-        self._slot_values: dict[int, float] = {}
-        self._slot_store: Store[dict[str, Any]] = Store(
-            hass, SLOT_STORE_VERSION, f"{DOMAIN}.{config_entry.entry_id}.slots"
-        )
-        self._slot_save_unsub: CALLBACK_TYPE | None = None
-
-        # Track previous integer percentage per mode for DEFAULT mode
-        # gating: only fire increment/decrement when int(%) changes
-        self._prev_int_pct: dict[int, int] = {}
 
         # Set up client callbacks
         self.client.on_button_event = self._handle_button_event
@@ -156,7 +74,11 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Set initial data with battery level from pairing
         if battery_level is not None:
-            self.data = {"battery_voltage": self._raw_to_voltage(battery_level)}
+            self.data = {
+                "battery_voltage": FlicClient.battery_raw_to_voltage(
+                    battery_level, self.device_type
+                )
+            }
         else:
             self.data = {}
 
@@ -182,18 +104,8 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @property
     def device_type(self) -> DeviceType:
-        """Return the device type.
-
-        Prioritizes client detection (protocol handler type), falling back
-        to serial number prefix if client detection is unavailable.
-        """
-        if self.client.is_twist:
-            return DeviceType.TWIST
-        if self.client.is_duo:
-            return DeviceType.DUO
-        if self._serial_number:
-            return DeviceType.from_serial_number(self._serial_number)
-        return DeviceType.FLIC2
+        """Return the device type."""
+        return self.client.device_type
 
     @property
     def model_name(self) -> str:
@@ -210,45 +122,10 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return if the coordinator is connected to the button."""
         return self._connected
 
-    def _raw_to_voltage(self, battery_level: int) -> float:
-        """Convert raw battery level to voltage.
-
-        Twist returns millivolts directly (2 AAA batteries).
-        Flic 2/Duo return a 10-bit ADC value (0-1024, 3.6V reference).
-        """
-        if self.is_twist:
-            return battery_level / 1000.0
-        return battery_level * 3.6 / 1024.0
-
     @property
     def firmware_version(self) -> int | None:
         """Return the firmware version of the device."""
         return self._firmware_version
-
-    @property
-    def latest_firmware_version(self) -> int | None:
-        """Return the latest available firmware version."""
-        return self._latest_firmware_version
-
-    @property
-    def firmware_download_url(self) -> str | None:
-        """Return the firmware download URL."""
-        return self._firmware_download_url
-
-    @property
-    def firmware_update_in_progress(self) -> bool:
-        """Return if a firmware update is in progress."""
-        return self._firmware_update_in_progress
-
-    @property
-    def firmware_update_percentage(self) -> int | None:
-        """Return firmware update progress percentage."""
-        return self._firmware_update_percentage
-
-    @property
-    def firmware_awaiting_reboot(self) -> bool:
-        """Return if waiting for device reboot after firmware update."""
-        return self._firmware_awaiting_reboot
 
     @property
     def device_id(self) -> str | None:
@@ -260,264 +137,6 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             identifiers={(DOMAIN, self.client.address)}
         )
         return device.id if device else None
-
-    async def async_load_slot_values(self) -> None:
-        """Load persisted slot values from storage."""
-        data = await self._slot_store.async_load()
-        if data and "slots" in data:
-            self._slot_values = {int(k): float(v) for k, v in data["slots"].items()}
-            _LOGGER.debug(
-                "Loaded %d persisted slot values for %s",
-                len(self._slot_values),
-                self.client.address,
-            )
-
-    def get_slot_value(self, mode_index: int) -> float:
-        """Get the persisted value for a slot."""
-        return self._slot_values.get(mode_index, 0.0)
-
-    @callback
-    def set_slot_value(self, mode_index: int, percentage: float) -> None:
-        """Set and persist a slot value."""
-        self._slot_values[mode_index] = percentage
-        self._schedule_slot_save()
-
-    @callback
-    def _schedule_slot_save(self) -> None:
-        """Schedule a debounced save of slot values."""
-        if self._slot_save_unsub is not None:
-            self._slot_save_unsub()
-        self._slot_save_unsub = async_call_later(
-            self.hass, SLOT_SAVE_DELAY, self._async_save_slot_values
-        )
-
-    async def _async_save_slot_values(self, _now: datetime | None = None) -> None:
-        """Save slot values to storage."""
-        self._slot_save_unsub = None
-        await self._slot_store.async_save(
-            {"slots": {str(k): v for k, v in self._slot_values.items()}}
-        )
-
-    async def _async_restore_slot_positions(self) -> None:
-        """Restore persisted slot positions to the device after reconnect."""
-        if not self.is_twist or not self._slot_values:
-            return
-
-        for mode_index, percentage in self._slot_values.items():
-            if percentage == 0:
-                continue
-            try:
-                await self.async_update_twist_position(mode_index, percentage)
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug(
-                    "Failed to restore slot %d position to %.1f%%",
-                    mode_index,
-                    percentage,
-                )
-
-    async def async_check_firmware_update(self) -> None:
-        """Check the Flic cloud API for firmware updates.
-
-        Applicable for all device types with a stored button_uuid
-        and a known firmware version. Duo uses firmware3 API,
-        Flic 2 and Twist use firmware2 API.
-        """
-        if self._firmware_version is None:
-            return
-
-        if not self.config_entry:
-            return
-
-        # Throttle checks to once per 24 hours
-        now = utcnow()
-        if (
-            self._last_firmware_check is not None
-            and (now - self._last_firmware_check).total_seconds()
-            < FIRMWARE_CHECK_INTERVAL
-        ):
-            return
-
-        button_uuid_hex = self.config_entry.data.get(CONF_BUTTON_UUID)
-        if not button_uuid_hex:
-            _LOGGER.debug(
-                "No button UUID stored for %s, skipping firmware check",
-                self.client.address,
-            )
-            return
-
-        # Duo uses firmware3 API, Flic 2 and Twist use firmware2 API
-        api_url = (
-            FLIC_FIRMWARE3_API_URL
-            if self.device_type == DeviceType.DUO
-            else FLIC_FIRMWARE_API_URL
-        )
-
-        try:
-            session = async_get_clientsession(self.hass)
-            request_body = {
-                "uuid": button_uuid_hex,
-                "current_version": self._firmware_version,
-                "platform": "Linux",
-            }
-            _LOGGER.debug(
-                "Checking firmware update for %s: POST %s body=%s",
-                self.client.address,
-                api_url,
-                request_body,
-            )
-            response = await session.post(
-                api_url,
-                json=request_body,
-            )
-
-            response_body = await response.text()
-            _LOGGER.debug(
-                "Firmware API response for %s: status=%s body=%s",
-                self.client.address,
-                response.status,
-                response_body,
-            )
-
-            if response.status == 404:
-                return
-
-            response.raise_for_status()
-            data = await response.json(content_type=None)
-
-            if data is None:
-                _LOGGER.debug(
-                    "Firmware is up to date for %s (version %d)",
-                    button_uuid_hex,
-                    self._firmware_version,
-                )
-                self._last_firmware_check = now
-                self._latest_firmware_version = None
-                self._firmware_download_url = None
-                self.async_set_updated_data(self.data)
-                return
-
-            firmware_url = data.get("firmware_download_url")
-
-            if firmware_url:
-                self._firmware_download_url = firmware_url
-                latest_firmware_version = data.get("firmware_version")
-                # API doesn't return a version number directly;
-                # use current + 1 as a placeholder to indicate update available
-                self._latest_firmware_version = (
-                    int(latest_firmware_version)
-                    if latest_firmware_version
-                    else self._firmware_version + 1
-                )
-                self._last_firmware_check = now
-                _LOGGER.info(
-                    "Firmware update available for %s (current: %d, latest: %d)",
-                    self.client.address,
-                    self._firmware_version,
-                    self._latest_firmware_version,
-                )
-                self.async_set_updated_data(self.data)
-
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug(
-                "Failed to check firmware update for %s",
-                self.client.address,
-            )
-
-    async def async_download_firmware(self) -> bytes | None:
-        """Download firmware binary from the stored URL."""
-        if not self._firmware_download_url:
-            return None
-
-        try:
-            session = async_get_clientsession(self.hass)
-            response = await session.get(self._firmware_download_url)
-            response.raise_for_status()
-            self._firmware_binary = await response.read()
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.error("Failed to download firmware: %s", err)
-            return None
-
-        _LOGGER.debug(
-            "Downloaded firmware binary: %d bytes", len(self._firmware_binary)
-        )
-        return self._firmware_binary
-
-    async def async_install_firmware(
-        self,
-        progress_callback: Callable[[int, int], None] | None = None,
-    ) -> None:
-        """Install firmware update on the device."""
-        if self._firmware_binary is None:
-            firmware = await self.async_download_firmware()
-            if firmware is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="firmware_download_failed",
-                )
-            self._firmware_binary = firmware
-
-        firmware_binary = self._firmware_binary
-        self._firmware_update_in_progress = True
-        self._firmware_update_percentage = 0
-        self.async_set_updated_data(self.data)
-
-        def _internal_progress(bytes_acked: int, total_bytes: int) -> None:
-            """Update progress percentage and notify entities."""
-            if total_bytes > 0:
-                new_pct = int(bytes_acked * 100 / total_bytes)
-                if new_pct != self._firmware_update_percentage:
-                    self._firmware_update_percentage = new_pct
-                    self.async_set_updated_data(self.data)
-            if progress_callback:
-                progress_callback(bytes_acked, total_bytes)
-
-        try:
-            await self.client.async_firmware_update(
-                firmware_binary,
-                progress_callback=_internal_progress,
-            )
-
-            # Reset firmware state after successful update
-            self._latest_firmware_version = None
-            self._firmware_download_url = None
-            self._firmware_binary = None
-            _LOGGER.info(
-                "Firmware update complete for %s, device will reboot",
-                self.client.address,
-            )
-
-            # Keep in_progress visible while waiting for device reboot.
-            # The device will disconnect on its own after ForceBtDisconnectInd;
-            # the BLE callback will handle reconnection once it reboots.
-
-            self._firmware_awaiting_reboot = True
-            self._firmware_update_in_progress = False
-            self._firmware_update_percentage = 100
-            self.async_set_updated_data(self.data)
-            self._connected = False
-
-        except (FlicFirmwareUpdateError, FlicProtocolError) as err:
-            self._firmware_update_in_progress = False
-            self._firmware_update_percentage = None
-            self.async_set_updated_data(self.data)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="firmware_update_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except (TimeoutError, BleakError) as err:
-            # BLE connection dropped mid-transfer (timeout waiting for ACK,
-            # or GATT write failed). Clean up firmware state so the device
-            # can reconnect and retry. The firmware binary is kept so the
-            # next attempt can resume from where the device left off.
-            self._firmware_update_in_progress = False
-            self._firmware_update_percentage = None
-            self.async_set_updated_data(self.data)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="firmware_update_interrupted",
-                translation_placeholders={"error": str(err)},
-            ) from err
 
     async def async_connect(self) -> None:
         """Connect to button and authenticate."""
@@ -532,13 +151,11 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # Request battery level (non-fatal on failure)
             try:
-                battery_level = await self.client.get_battery_level()
-                voltage = self._raw_to_voltage(battery_level)
+                voltage = await self.client.get_battery_voltage()
                 self.data = {"battery_voltage": voltage}
-                _LOGGER.info(
-                    "Battery level for %s: raw=%d, voltage=%.3fV",
+                _LOGGER.debug(
+                    "Battery voltage for %s: %.3fV",
                     self.client.address,
-                    battery_level,
                     voltage,
                 )
             except Exception:  # noqa: BLE001
@@ -571,7 +188,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self.client.address,
                 )
 
-            # Update device registry with firmware version and name (single lookup)
+            # Update device registry with firmware version and name
             device_registry = dr.async_get(self.hass)
             device = device_registry.async_get_device(
                 identifiers={(DOMAIN, self.client.address)}
@@ -593,29 +210,8 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         device_name,
                     )
 
-            # Schedule firmware update check (non-blocking)
-            if self._firmware_version is not None:
-                self.hass.async_create_background_task(
-                    self.async_check_firmware_update(),
-                    name=f"{DOMAIN}_firmware_check_{self.client.address}",
-                )
-
             self._connected = True
-
-            # Clear firmware reboot state if reconnecting after update
-            if self._firmware_awaiting_reboot:
-                self._firmware_awaiting_reboot = False
-                self._firmware_update_in_progress = False
-                self._firmware_update_percentage = None
-                _LOGGER.info(
-                    "Reconnected to %s after firmware update",
-                    self.client.address,
-                )
-
             _LOGGER.info("Successfully connected to %s", self.client.address)
-
-            # Restore persisted slot positions to the device
-            await self._async_restore_slot_positions()
 
         except (TimeoutError, BleakError, FlicProtocolError) as err:
             self._connected = False
@@ -624,13 +220,6 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_disconnect(self) -> None:
         """Disconnect from button."""
-        # Cancel pending save timer and flush slot values to disk
-        if self._slot_save_unsub is not None:
-            self._slot_save_unsub()
-            self._slot_save_unsub = None
-        if self._slot_values:
-            await self._async_save_slot_values()
-
         self._connected = False
         await self.client.disconnect()
 
@@ -638,8 +227,6 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Reconnect to button if disconnected."""
 
         async with self._reconnect_lock:
-            # Re-check inside the lock: firmware may have started while
-            # this task was waiting for the lock.
             _LOGGER.debug("Client is connected: %s", self.client.is_connected)
             if self.client.is_connected:
                 return
@@ -657,13 +244,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _handle_disconnect(self) -> None:
-        """Handle BLE disconnection detected by the client.
-
-        Updates coordinator state, notifies entities, and schedules
-        a reconnection attempt. Skips reconnection when a firmware
-        update just completed and the device is rebooting (the BLE
-        advertisement callback will handle that case).
-        """
+        """Handle BLE disconnection detected by the client."""
         if self._connected:
             _LOGGER.info("Connection lost to %s", self.client.address)
             self._connected = False
@@ -684,15 +265,6 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             event_data,
         )
 
-        # In DEFAULT/CONTINUOUS mode, suppress selector_changed events from Twist
-        if (
-            self.is_twist
-            and self._push_twist_mode
-            in (PushTwistMode.DEFAULT, PushTwistMode.CONTINUOUS)
-            and event_type == EVENT_TYPE_SELECTOR_CHANGED
-        ):
-            return
-
         # Dispatch to event entities via signal
         async_dispatcher_send(
             self.hass,
@@ -702,11 +274,10 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         # Fire Home Assistant event for automations
-        device_id = self.device_id
         self.hass.bus.async_fire(
             FLIC_BUTTON_EVENT,
             {
-                "device_id": device_id,
+                "device_id": self.device_id,
                 "address": self.client.address,
                 "event_type": event_type,
                 **event_data,
@@ -715,34 +286,18 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _handle_rotate_event(self, event_type: str, event_data: dict[str, Any]) -> None:
-        """Handle rotate event from client."""
+        """Handle rotate event from client.
+
+        The library pre-processes rotation events: in DEFAULT/CONTINUOUS mode
+        it emits quantized increment/decrement events, in SELECTOR mode it
+        emits raw rotate_clockwise/rotate_counter_clockwise events.
+        """
         _LOGGER.debug(
             "Rotate event from %s: %s (data: %s)",
             self.client.address,
             event_type,
             event_data,
         )
-
-        is_default_twist = self.is_twist and self._push_twist_mode in (
-            PushTwistMode.DEFAULT,
-            PushTwistMode.CONTINUOUS,
-        )
-
-        if not is_default_twist:
-            self._handle_rotate_event_non_default(event_type, event_data)
-            return
-
-        self._handle_rotate_event_default(event_type, event_data)
-
-    @callback
-    def _handle_rotate_event_non_default(
-        self, event_type: str, event_data: dict[str, Any]
-    ) -> None:
-        """Handle rotate event for non-DEFAULT modes (SELECTOR, Duo, Flic 2).
-
-        Dispatches rotate events, position updates, and bus events unchanged.
-        """
-        device_id = self.device_id
 
         # Dispatch to event entities via signal
         async_dispatcher_send(
@@ -752,183 +307,16 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             event_data,
         )
 
-        # For Duo: dispatch dial position updates and fire event (per button)
-        dial_percentage = event_data.get("dial_percentage")
-        button_index = event_data.get("button_index")
-        if dial_percentage is not None and button_index is not None and self.is_duo:
-            _LOGGER.debug(
-                "Duo dial position update (button %d): %.1f%%",
-                button_index,
-                dial_percentage,
-            )
-            async_dispatcher_send(
-                self.hass,
-                format_duo_dial_dispatcher_name(self.client.address, button_index),
-                dial_percentage,
-            )
-
-            # Fire dial changed event for device triggers
-            self.hass.bus.async_fire(
-                FLIC_BUTTON_EVENT,
-                {
-                    "device_id": device_id,
-                    "address": self.client.address,
-                    "event_type": EVENT_TYPE_DUO_DIAL_CHANGED,
-                    "button_index": button_index,
-                    "position": dial_percentage,
-                },
-            )
-
-        twist_mode_index = event_data.get("twist_mode_index")
-        selector_index = event_data.get("selector_index")
-        mode_percentage = event_data.get("mode_percentage")
-
-        # Modes 0-11: slot rotation (SELECTOR mode)
-        if (
-            twist_mode_index is not None
-            and 0 <= twist_mode_index <= 11
-            and mode_percentage is not None
-        ):
-            self.set_slot_value(twist_mode_index, mode_percentage)
-            _LOGGER.debug(
-                "Slot %d position update: %.1f%%",
-                twist_mode_index,
-                mode_percentage,
-            )
-            async_dispatcher_send(
-                self.hass,
-                format_slot_dispatcher_name(self.client.address, twist_mode_index),
-                mode_percentage,
-            )
-
-            # Fire slot changed event for device triggers
-            self.hass.bus.async_fire(
-                FLIC_BUTTON_EVENT,
-                {
-                    "device_id": device_id,
-                    "address": self.client.address,
-                    "event_type": EVENT_TYPE_SLOT_CHANGED[twist_mode_index],
-                    "slot_index": twist_mode_index,
-                    "position": mode_percentage,
-                },
-            )
-
-        # Mode 12: selector (which slot is selected)
-        if twist_mode_index == 12 and selector_index is not None:
-            _LOGGER.debug("Push-twist selector update: slot %d", selector_index)
-            async_dispatcher_send(
-                self.hass,
-                format_selector_dispatcher_name(self.client.address),
-                selector_index,
-            )
-
         # Fire Home Assistant event for automations
         self.hass.bus.async_fire(
             FLIC_BUTTON_EVENT,
             {
-                "device_id": device_id,
+                "device_id": self.device_id,
                 "address": self.client.address,
                 "event_type": event_type,
                 **event_data,
             },
         )
-
-    @callback
-    def _handle_rotate_event_default(
-        self, event_type: str, event_data: dict[str, Any]
-    ) -> None:
-        """Handle rotate event for Twist DEFAULT mode.
-
-        Rounds percentages to integers. Fires increment/decrement events
-        only when the integer percentage crosses a 1% boundary.
-        Position updates to number entities happen on every raw event.
-        """
-        twist_mode_index = event_data.get("twist_mode_index")
-        mode_percentage = event_data.get("mode_percentage")
-
-        if twist_mode_index is None or mode_percentage is None:
-            return
-
-        int_pct = int(mode_percentage)
-
-        # Modes 0-11: free twist (only mode 0 is used in DEFAULT)
-        if 0 <= twist_mode_index <= 11:
-            self.set_slot_value(twist_mode_index, int_pct)
-
-            if twist_mode_index == 0:
-                # Always update the number entity slider
-                async_dispatcher_send(
-                    self.hass,
-                    format_twist_position_dispatcher_name(self.client.address),
-                    int_pct,
-                )
-
-        # Mode 12: push-twist position
-        elif twist_mode_index == 12:
-            self.set_slot_value(12, int_pct)
-
-            # Always update the number entity slider
-            async_dispatcher_send(
-                self.hass,
-                format_push_twist_position_dispatcher_name(self.client.address),
-                int_pct,
-            )
-
-        # Gate increment/decrement events on 1% boundary crossings.
-        # Fire one event per 1% crossed so a jump from 1% to 4% fires 3 events.
-        prev_pct = self._prev_int_pct.get(twist_mode_index)
-        self._prev_int_pct[twist_mode_index] = int_pct
-
-        if prev_pct is not None and int_pct != prev_pct:
-            is_push_twist = twist_mode_index == 12
-            if event_type == EVENT_TYPE_ROTATE_CLOCKWISE:
-                inc_event = (
-                    EVENT_TYPE_PUSH_TWIST_INCREMENT
-                    if is_push_twist
-                    else EVENT_TYPE_TWIST_INCREMENT
-                )
-            else:
-                inc_event = (
-                    EVENT_TYPE_PUSH_TWIST_DECREMENT
-                    if is_push_twist
-                    else EVENT_TYPE_TWIST_DECREMENT
-                )
-
-            diff = abs(int_pct - prev_pct)
-            # In continuous mode, use the shorter path around the wrap
-            if self._push_twist_mode == PushTwistMode.CONTINUOUS and diff > 50:
-                steps = 100 - diff
-            else:
-                steps = diff
-
-            # Cache signal name and device_id outside the loop
-            rotate_signal = format_rotate_dispatcher_name(self.client.address)
-            device_id = self.device_id
-            for _ in range(steps):
-                # Dispatch to event entities
-                async_dispatcher_send(
-                    self.hass,
-                    rotate_signal,
-                    inc_event,
-                    event_data,
-                )
-
-                # Fire Home Assistant event for automations
-                self.hass.bus.async_fire(
-                    FLIC_BUTTON_EVENT,
-                    {
-                        "device_id": device_id,
-                        "address": self.client.address,
-                        "event_type": inc_event,
-                        **event_data,
-                    },
-                )
-
-    async def async_update_twist_position(
-        self, mode_index: int, percentage: float
-    ) -> None:
-        """Update a twist slot position and send to the device."""
-        await self.client.async_send_update_twist_position(mode_index, percentage)
 
     @callback
     def async_register_device_name_listener(self) -> CALLBACK_TYPE | None:

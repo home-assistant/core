@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components.flic_button.const import (
     CONF_BATTERY_LEVEL,
-    CONF_BUTTON_UUID,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -111,8 +110,12 @@ def mock_flic_client() -> Generator[MagicMock]:
         mock_client.init_button_events = AsyncMock()
         mock_client.get_firmware_version = AsyncMock(return_value=10)
         mock_client.get_battery_level = AsyncMock(return_value=TEST_BATTERY_LEVEL)
+        mock_client.get_battery_voltage = AsyncMock(
+            return_value=TEST_BATTERY_LEVEL * 3.6 / 1024.0
+        )
         mock_client.get_name = AsyncMock(return_value=("", 0))
         mock_client.set_name = AsyncMock(return_value=("", 0))
+        mock_client.device_type = DeviceType.FLIC2
 
         # Event callbacks
         mock_client.on_button_event = None
@@ -150,22 +153,14 @@ def mock_coordinator(mock_flic_client: MagicMock) -> Generator[MagicMock]:
 
         # Firmware version
         mock_coordinator.firmware_version = 10
-        mock_coordinator.latest_firmware_version = None
-        mock_coordinator.firmware_download_url = None
-        mock_coordinator.firmware_update_in_progress = False
-        mock_coordinator.firmware_update_percentage = None
-        mock_coordinator.firmware_awaiting_reboot = False
 
         # Async methods
         mock_coordinator.async_connect = AsyncMock()
         mock_coordinator.async_disconnect = AsyncMock()
         mock_coordinator.async_reconnect_if_needed = AsyncMock()
-        mock_coordinator.async_load_slot_values = AsyncMock()
         mock_coordinator.async_request_refresh = AsyncMock()
         mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
         mock_coordinator.async_set_updated_data = MagicMock()
-        mock_coordinator.async_install_firmware = AsyncMock()
-        mock_coordinator.async_check_firmware_update = AsyncMock()
 
         yield mock_coordinator
 
@@ -184,7 +179,7 @@ def mock_ble_device_from_address() -> Generator[MagicMock]:
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Return list of platforms to test."""
-    return [Platform.SENSOR, Platform.EVENT]
+    return [Platform.EVENT]
 
 
 @pytest.fixture
@@ -220,7 +215,6 @@ def mock_twist_config_entry() -> MockConfigEntry:
             CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
             CONF_DEVICE_TYPE: DeviceType.TWIST.value,
             CONF_SIG_BITS: TEST_SIG_BITS,
-            CONF_BUTTON_UUID: TEST_BUTTON_UUID.hex(),
         },
     )
 
@@ -272,10 +266,9 @@ def mock_twist_flic_client() -> Generator[MagicMock]:
         mock_client.init_button_events = AsyncMock()
         mock_client.get_firmware_version = AsyncMock(return_value=10)
         mock_client.get_battery_level = AsyncMock(return_value=2800)
+        mock_client.get_battery_voltage = AsyncMock(return_value=2.8)
         mock_client.get_name = AsyncMock(return_value=("", 0))
         mock_client.set_name = AsyncMock(return_value=("", 0))
-        mock_client.async_firmware_update = AsyncMock(return_value=True)
-
         # Event callbacks
         mock_client.on_button_event = None
         mock_client.on_rotate_event = None
@@ -306,31 +299,19 @@ def mock_twist_coordinator(mock_twist_flic_client: MagicMock) -> Generator[Magic
         mock_coordinator.handler = mock_twist_flic_client.handler
         mock_coordinator.last_update_success = True
 
-        # Slot value methods (for number entities)
-        mock_coordinator.get_slot_value = MagicMock(return_value=0.0)
-        mock_coordinator.set_slot_value = MagicMock()
-
         # Data - battery voltage for Twist (millivolts / 1000)
         mock_coordinator.data = {"battery_voltage": 2.8}
 
         # Firmware version
         mock_coordinator.firmware_version = 10
-        mock_coordinator.latest_firmware_version = None
-        mock_coordinator.firmware_download_url = None
-        mock_coordinator.firmware_update_in_progress = False
-        mock_coordinator.firmware_update_percentage = None
-        mock_coordinator.firmware_awaiting_reboot = False
 
         # Async methods
         mock_coordinator.async_connect = AsyncMock()
         mock_coordinator.async_disconnect = AsyncMock()
         mock_coordinator.async_reconnect_if_needed = AsyncMock()
-        mock_coordinator.async_load_slot_values = AsyncMock()
         mock_coordinator.async_request_refresh = AsyncMock()
         mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
         mock_coordinator.async_set_updated_data = MagicMock()
-        mock_coordinator.async_install_firmware = AsyncMock()
-        mock_coordinator.async_check_firmware_update = AsyncMock()
 
         yield mock_coordinator
 
@@ -379,7 +360,6 @@ def mock_duo_config_entry() -> MockConfigEntry:
             CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
             CONF_DEVICE_TYPE: DeviceType.DUO.value,
             CONF_SIG_BITS: TEST_SIG_BITS,
-            CONF_BUTTON_UUID: TEST_BUTTON_UUID.hex(),
         },
     )
 
@@ -432,10 +412,11 @@ def mock_duo_flic_client() -> Generator[MagicMock]:
         mock_client.init_button_events = AsyncMock()
         mock_client.get_firmware_version = AsyncMock(return_value=10)
         mock_client.get_battery_level = AsyncMock(return_value=TEST_BATTERY_LEVEL)
+        mock_client.get_battery_voltage = AsyncMock(
+            return_value=TEST_BATTERY_LEVEL * 3.6 / 1024.0
+        )
         mock_client.get_name = AsyncMock(return_value=("", 0))
         mock_client.set_name = AsyncMock(return_value=("", 0))
-        mock_client.async_firmware_update = AsyncMock(return_value=True)
-
         # Event callbacks
         mock_client.on_button_event = None
         mock_client.on_rotate_event = None
@@ -472,22 +453,14 @@ def mock_duo_coordinator(mock_duo_flic_client: MagicMock) -> Generator[MagicMock
 
         # Firmware version
         mock_coordinator.firmware_version = 10
-        mock_coordinator.latest_firmware_version = None
-        mock_coordinator.firmware_download_url = None
-        mock_coordinator.firmware_update_in_progress = False
-        mock_coordinator.firmware_update_percentage = None
-        mock_coordinator.firmware_awaiting_reboot = False
 
         # Async methods
         mock_coordinator.async_connect = AsyncMock()
         mock_coordinator.async_disconnect = AsyncMock()
         mock_coordinator.async_reconnect_if_needed = AsyncMock()
-        mock_coordinator.async_load_slot_values = AsyncMock()
         mock_coordinator.async_request_refresh = AsyncMock()
         mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
         mock_coordinator.async_set_updated_data = MagicMock()
-        mock_coordinator.async_install_firmware = AsyncMock()
-        mock_coordinator.async_check_firmware_update = AsyncMock()
 
         yield mock_coordinator
 

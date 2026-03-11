@@ -72,15 +72,6 @@ def _create_mock_coordinator(
     # Firmware version
     mock_coordinator.firmware_version = None
 
-    # Firmware update state
-    mock_coordinator.latest_firmware_version = None
-    mock_coordinator.firmware_download_url = None
-    mock_coordinator.firmware_update_in_progress = False
-    mock_coordinator.firmware_update_percentage = None
-
-    # Async methods that may be awaited during setup
-    mock_coordinator.async_load_slot_values = AsyncMock()
-
     return mock_coordinator
 
 

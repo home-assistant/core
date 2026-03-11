@@ -8,6 +8,12 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
+from pyflic_ble import (
+    FlicAuthenticationError,
+    FlicClient,
+    FlicPairingError,
+    FlicProtocolError,
+)
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -28,7 +34,6 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_BATTERY_LEVEL,
-    CONF_BUTTON_UUID,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -43,7 +48,6 @@ from .const import (
     DeviceType,
     PushTwistMode,
 )
-from .flic_client import FlicAuthenticationError, FlicClient, FlicPairingError
 
 if TYPE_CHECKING:
     from . import FlicButtonConfigEntry
@@ -119,12 +123,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_progress_done(next_step_id="discovery_done")
 
-        # Check if a Flic device is already visible
-        for info in async_discovered_service_info(self.hass):
-            if self._is_unconfigured_flic_device(info):
-                self._discovery_info = info
-                break
-
         # Already found a device — go straight to pairing
         if self._discovery_info is not None:
             return await self._async_set_device_and_pair(
@@ -194,7 +192,12 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = discovery_info
         service_uuids = [str(uuid).lower() for uuid in discovery_info.service_uuids]
-
+        _LOGGER.debug(
+            "Discovered Bluetooth device during config flow: %s, service_uuids=%s, connectable: %s",
+            discovery_info.address,
+            service_uuids,
+            discovery_info.connectable,
+        )
         if TWIST_SERVICE_UUID.lower() in service_uuids:
             self._device_type = DeviceType.TWIST
         else:
@@ -204,7 +207,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": discovery_info.name or discovery_info.address
         }
 
-        return await self.async_step_bluetooth_confirm()
+        return await self.async_step_bluetooth_confirm({})
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -213,6 +216,8 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._discovery_info is None:
             return self.async_abort(reason="no_devices_found")
 
+        self._abort_if_unique_id_configured()
+
         if user_input is None:
             name = self._discovery_info.name or self._discovery_info.address
             return self.async_show_form(
@@ -220,6 +225,17 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": name},
             )
 
+        # Check if the device is still advertising
+
+        device_still_visible = any(
+            info.address == self._discovery_info.address and info.connectable
+            for info in async_discovered_service_info(self.hass)
+        )
+        if not device_still_visible:
+            # Device no longer advertising — fall back to scanner flow
+            self._discovery_info = None
+            return await self.async_step_user()
+        # Device still visible — pair immediately
         return await self.async_step_pair()
 
     async def async_step_pair(
@@ -236,8 +252,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             # synchronously before the first await to prevent races.
             if self._pairing_started:
                 _LOGGER.debug("Ignoring duplicate pair submission")
-                # Never create the entry here — the firmware check/update
-                # chain will handle it. Just show the pair form as a no-op.
                 return self.async_show_form(
                     step_id="pair",
                     description_placeholders={
@@ -276,8 +290,8 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     serial_number,
                     battery_level,
                     sig_bits,
-                    button_uuid,
-                    _firmware_version,
+                    _,
+                    _,
                 ) = await asyncio.wait_for(
                     self._client.full_verify_pairing(),
                     timeout=PAIRING_TIMEOUT,
@@ -310,23 +324,19 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_SIG_BITS: sig_bits,
                 }
 
-                # Store button UUID for firmware updates
-                if button_uuid is not None:
-                    entry_data[CONF_BUTTON_UUID] = button_uuid.hex()
-
                 return self.async_create_entry(
                     title=title,
                     data=entry_data,
                 )
 
-            except (TimeoutError, BleakError):
-                _LOGGER.exception("Cannot connect to button")
+            except (TimeoutError, BleakError, FlicProtocolError):
+                _LOGGER.debug("Cannot connect to button", exc_info=True)
                 errors["base"] = "cannot_connect"
             except FlicPairingError:
-                _LOGGER.exception("Pairing failed")
+                _LOGGER.debug("Pairing failed", exc_info=True)
                 errors["base"] = "pairing_failed"
             except FlicAuthenticationError:
-                _LOGGER.exception("Authentication failed")
+                _LOGGER.debug("Authentication failed", exc_info=True)
                 errors["base"] = "invalid_signature"
             except Exception:
                 _LOGGER.exception("Unexpected exception during pairing")
