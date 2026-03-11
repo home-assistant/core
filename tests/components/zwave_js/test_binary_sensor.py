@@ -66,6 +66,40 @@ def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
     return updated_state
 
 
+def _add_barrier_status_value(node_state: dict[str, Any]) -> dict[str, Any]:
+    """Return a node state with a Barrier status Access Control notification value added."""
+    updated_state = copy.deepcopy(node_state)
+    updated_state["values"].append(
+        {
+            "commandClass": 113,
+            "commandClassName": "Notification",
+            "property": "Access Control",
+            "propertyKey": "Barrier status",
+            "propertyName": "Access Control",
+            "propertyKeyName": "Barrier status",
+            "ccVersion": 8,
+            "metadata": {
+                "type": "number",
+                "readable": True,
+                "writeable": False,
+                "label": "Barrier status",
+                "ccSpecific": {"notificationType": 6},
+                "min": 0,
+                "max": 255,
+                "states": {
+                    "0": "idle",
+                    "64": "Barrier performing initialization process",
+                    "72": "Barrier safety beam obstacle",
+                },
+                "stateful": True,
+                "secret": False,
+            },
+            "value": 0,
+        }
+    )
+    return updated_state
+
+
 def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str, Any]:
     """Return a node state with Access Control lock state notification states 1-4."""
     updated_state = copy.deepcopy(node_state)
@@ -638,6 +672,43 @@ async def test_access_control_lock_state_notification_sensors(
     jammed_state = hass.states.get(jammed_entry.entity_id)
     assert jammed_state
     assert jammed_state.state == STATE_OFF
+
+
+async def test_access_control_catch_all_with_opening_state_present(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test that unrelated Access Control values are discovered even when Opening state is present."""
+    node = Node(
+        client,
+        _add_barrier_status_value(hoppe_ehandle_connectsense_state),
+    )
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The two non-idle barrier states should each become a diagnostic binary sensor
+    barrier_entries = [
+        reg_entry
+        for reg_entry in entity_registry.entities.values()
+        if reg_entry.domain == "binary_sensor"
+        and reg_entry.platform == "zwave_js"
+        and reg_entry.entity_category == EntityCategory.DIAGNOSTIC
+        and reg_entry.original_name
+        and "barrier" in reg_entry.original_name.lower()
+    ]
+    assert len(barrier_entries) == 2, (
+        f"Expected 2 barrier status sensors, got {[e.original_name for e in barrier_entries]}"
+    )
+    for reg_entry in barrier_entries:
+        state = hass.states.get(reg_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
 
 async def test_config_parameter_binary_sensor(

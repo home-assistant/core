@@ -211,8 +211,3 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
 # notification
 NOTIFICATION_ACCESS_CONTROL_PROPERTY = "Access Control"
 OPENING_STATE_PROPERTY_KEY = "Opening state"
-LEGACY_DOOR_STATE_PROPERTY_KEYS: set[str] = {
-    "Door state",
-    "Door state (simple)",
-    "Door tilt state",
-}

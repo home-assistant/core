@@ -616,7 +616,10 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
-        opening_state = self.info.node.values[self._opening_state_value_id].value
+        value = self.info.node.values.get(self._opening_state_value_id)
+        if value is None:
+            return None
+        opening_state = value.value
         if opening_state is None:
             return None
         try:
@@ -1017,6 +1020,42 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         entity_description=NotificationZWaveJSEntityDescription(
             key=NOTIFICATION_ACCESS_CONTROL,
             states={OpeningState.OPEN},
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            type={ValueType.NUMBER},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 6: Access Control - All other notification values.
+            # not_states excludes states already handled by more specific schemas above,
+            # so this catch-all only fires for genuinely unhandled property keys
+            # (e.g. barrier, keypad, credential events).
+            key=NOTIFICATION_ACCESS_CONTROL,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            not_states={
+                0,
+                # Lock state values (Lock state schemas consume the value when state 11 is
+                # available, but may not when state 11 is absent)
+                1,
+                2,
+                3,
+                4,
+                11,
+                # Door state (simple) / Door state values
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_OPEN,
+                AccessControlNotificationEvent.DOOR_STATE_WINDOW_DOOR_IS_CLOSED,
+                ACCESS_CONTROL_DOOR_STATE_OPEN_REGULAR,
+                ACCESS_CONTROL_DOOR_STATE_OPEN_TILT,
+            },
         ),
         entity_class=ZWaveNotificationBinarySensor,
     ),
