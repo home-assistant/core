@@ -55,7 +55,6 @@ from .const import (
     ATTR_PROPERTY,
     ATTR_PROPERTY_KEY,
     DOMAIN,
-    LEGACY_DOOR_STATE_PROPERTY_KEYS,
     LIB_LOGGER,
     LOGGER,
     NOTIFICATION_ACCESS_CONTROL_PROPERTY,
@@ -162,17 +161,6 @@ def get_opening_state_notification_value(node: ZwaveNode) -> ZwaveValue | None:
         OPENING_STATE_PROPERTY_KEY,
     )
     return node.values.get(value_id)
-
-
-def is_legacy_access_control_window_door_value(value: ZwaveValue) -> bool:
-    """Return if the value is a legacy Access Control door/window notification."""
-    if (
-        value.command_class != CommandClass.NOTIFICATION
-        or _get_notification_type(value) != NotificationType.ACCESS_CONTROL
-    ):
-        return False
-
-    return value.property_key in LEGACY_DOOR_STATE_PROPERTY_KEYS
 
 
 async def async_enable_statistics(driver: Driver) -> None:

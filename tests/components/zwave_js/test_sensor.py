@@ -2,7 +2,6 @@
 
 import copy
 from datetime import timedelta
-from typing import Any
 
 import pytest
 from zwave_js_server.const.command_class.meter import MeterType
@@ -64,42 +63,6 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-def _add_opening_state_value(
-    node_state: dict[str, Any], *, value: int, include_tilt_metadata: bool
-) -> dict[str, Any]:
-    """Return a node state with an Opening state notification value added."""
-    updated_state = copy.deepcopy(node_state)
-    states = {"0": "Closed", "1": "Open"}
-    if include_tilt_metadata:
-        states["2"] = "Tilted"
-
-    updated_state["values"].append(
-        {
-            "commandClass": 113,
-            "commandClassName": "Notification",
-            "property": "Access Control",
-            "propertyKey": "Opening state",
-            "propertyName": "Access Control",
-            "propertyKeyName": "Opening state",
-            "ccVersion": 11,
-            "metadata": {
-                "type": "number",
-                "readable": True,
-                "writeable": False,
-                "label": "Opening state",
-                "ccSpecific": {"notificationType": 6},
-                "min": 0,
-                "max": 255,
-                "states": states,
-                "stateful": True,
-                "secret": False,
-            },
-            "value": value,
-        }
-    )
-    return updated_state
 
 
 @pytest.fixture
@@ -821,14 +784,7 @@ async def test_opening_state_sensor(
     hoppe_ehandle_connectsense_state,
 ) -> None:
     """Test Opening state is exposed as an enum sensor."""
-    node = Node(
-        client,
-        _add_opening_state_value(
-            hoppe_ehandle_connectsense_state,
-            value=2,
-            include_tilt_metadata=True,
-        ),
-    )
+    node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
@@ -838,10 +794,10 @@ async def test_opening_state_sensor(
 
     state = hass.states.get("sensor.ehandle_connectsense_opening_state")
     assert state
-    assert state.state == "Tilted"
+    assert state.state == "Closed"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open", "Tilted"]
-    assert state.attributes[ATTR_VALUE] == 2
+    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
+    assert state.attributes[ATTR_VALUE] == 0
 
     # Make sure we're not accidentally creating enum sensors for legacy
     # Door/Window notification variables.

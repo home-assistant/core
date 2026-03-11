@@ -33,42 +33,6 @@ from .common import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _add_opening_state_value(
-    node_state: dict[str, Any], *, value: int, include_tilt_metadata: bool
-) -> dict[str, Any]:
-    """Return a node state with an Opening state notification value added."""
-    updated_state = copy.deepcopy(node_state)
-    states = {"0": "Closed", "1": "Open"}
-    if include_tilt_metadata:
-        states["2"] = "Tilted"
-
-    updated_state["values"].append(
-        {
-            "commandClass": 113,
-            "commandClassName": "Notification",
-            "property": "Access Control",
-            "propertyKey": "Opening state",
-            "propertyName": "Access Control",
-            "propertyKeyName": "Opening state",
-            "ccVersion": 8,
-            "metadata": {
-                "type": "number",
-                "readable": True,
-                "writeable": False,
-                "label": "Opening state",
-                "ccSpecific": {"notificationType": 6},
-                "min": 0,
-                "max": 255,
-                "states": states,
-                "stateful": True,
-                "secret": False,
-            },
-            "value": value,
-        }
-    )
-    return updated_state
-
-
 def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
     """Return a node state with a Door tilt state notification value added."""
     updated_state = copy.deepcopy(node_state)
@@ -403,16 +367,15 @@ async def test_opening_state_notification_does_not_create_binary_sensors(
     hoppe_ehandle_connectsense_state,
 ) -> None:
     """Test Opening state does not fan out into per-state binary sensors."""
-    node_state = copy.deepcopy(hoppe_ehandle_connectsense_state)
-    node_state["values"] = []
-    node = Node(
-        client,
-        _add_opening_state_value(
-            node_state,
-            value=1,
-            include_tilt_metadata=True,
-        ),
-    )
+    # The eHandle fixture has a Binary Sensor CC value for tilt, which we
+    # want to ignore in the assertion below
+    state = copy.deepcopy(hoppe_ehandle_connectsense_state)
+    state["values"] = [
+        v
+        for v in state["values"]
+        if v.get("commandClass") != 48  # Binary Sensor CC
+    ]
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
