@@ -11,6 +11,7 @@
     "step": {
       "user": {
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "url": "[%key:common::config_flow::data::url%]"
         }
       }

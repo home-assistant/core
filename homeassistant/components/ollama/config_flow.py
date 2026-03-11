@@ -40,6 +40,7 @@ from homeassistant.util.ssl import get_default_context
 
 from . import OllamaConfigEntry
 from .const import (
+    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
@@ -93,6 +94,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         url = user_input[CONF_URL]
+        api_key = user_input[CONF_API_KEY]
 
         self._async_abort_entries_match({CONF_URL: url})
 
@@ -109,7 +111,13 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            client = ollama.AsyncClient(host=url, verify=get_default_context())
+            headers = (
+                {"Authorization": f"Bearer {api_key}"} if len(api_key) > 0 else None
+            )
+            client = ollama.AsyncClient(
+                host=url, headers=headers, verify=get_default_context()
+            )
+
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 await client.list()
         except TimeoutError, httpx.ConnectError:

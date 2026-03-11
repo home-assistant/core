@@ -4,6 +4,7 @@ DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
 
+CONF_API_KEY = "api_key"
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 CONF_THINK = "think"

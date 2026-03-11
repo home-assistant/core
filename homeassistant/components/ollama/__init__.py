@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.ssl import get_default_context
 
 from .const import (
+    CONF_API_KEY,
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
@@ -62,7 +63,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
-    client = ollama.AsyncClient(host=settings[CONF_URL], verify=get_default_context())
+    api_key = settings.get(CONF_API_KEY, "")
+    headers = {"Authorization": f"Bearer {api_key}"} if len(api_key) > 0 else None
+    client = ollama.AsyncClient(
+        host=settings[CONF_URL], headers=headers, verify=get_default_context()
+    )
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
             await client.list()
