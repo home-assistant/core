@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted valves to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::valve::title%]",
@@ -20,6 +24,15 @@
     },
     "water": {
       "name": "Water"
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -50,5 +63,27 @@
       "name": "[%key:common::action::toggle%]"
     }
   },
-  "title": "Valve"
+  "title": "Valve",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more valves close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more valves open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::valve::common::trigger_behavior_description%]",
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Valve opened"
+    }
+  }
 }
