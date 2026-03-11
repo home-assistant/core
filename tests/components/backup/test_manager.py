@@ -3885,3 +3885,12 @@ async def test_upload_progress_debounced(
             hass, dt_util.utcnow() + timedelta(seconds=10), fire_all=True
         )
         await hass.async_block_till_done()
+
+    # Check the final 100% progress event is sent, that is sent for every agent
+    remote_events = [
+        e
+        for e in events
+        if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+    ]
+    assert len(remote_events) == 3
+    assert remote_events[2].uploaded_bytes == remote_events[2].total_bytes
