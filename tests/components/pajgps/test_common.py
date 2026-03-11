@@ -6,7 +6,7 @@ Import from this module in each test file to avoid duplication.
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pajgps_api.models.device import Device
 from pajgps_api.models.trackpoint import TrackPoint
@@ -108,10 +108,14 @@ def make_coordinator(
 ) -> PajGpsCoordinator:
     """Build a coordinator with a mocked hass and mocked api.login."""
     if hass is None:
-        hass = MagicMock()
+        hass = MagicMock(spec=HomeAssistant)
         hass.async_create_task = asyncio.ensure_future
     config_entry = MagicMock()
     config_entry.data = make_entry_data(**entry_kwargs)
-    coord = PajGpsCoordinator(hass, config_entry)
+    with patch(
+        "homeassistant.components.pajgps.coordinator.async_get_clientsession",
+        return_value=MagicMock(),
+    ):
+        coord = PajGpsCoordinator(hass, config_entry)
     coord.api.login = AsyncMock()
     return coord

@@ -11,8 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -27,17 +25,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_credentials(
-    email: str, password: str, hass: HomeAssistant
-) -> str | None:
+async def _validate_credentials(email: str, password: str) -> str | None:
     """Attempt a real login with the given credentials.
 
     Returns an error key string on failure, or None on success.
     """
-    websession = async_get_clientsession(hass)
     api: PajGpsApi | None = None
     try:
-        api = PajGpsApi(email=email, password=password, websession=websession)
+        api = PajGpsApi(email=email, password=password)
         await api.login()
     except AuthenticationError, TokenRefreshError:
         return "invalid_auth"

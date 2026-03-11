@@ -6,7 +6,6 @@ import dataclasses
 from datetime import timedelta
 import logging
 
-from aiohttp import ClientSession
 from pajgps_api import PajGpsApi
 from pajgps_api.models.device import Device
 from pajgps_api.models.trackpoint import TrackPoint
@@ -20,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,7 +47,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         self,
         hass: HomeAssistant,
         config_entry: PajGpsConfigEntry,
-        websession: ClientSession | None = None,
     ) -> None:
         """Initialize the coordinator from config-entry data."""
         super().__init__(
@@ -62,7 +61,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         self.api = PajGpsApi(
             email=config_entry.data[CONF_EMAIL],
             password=config_entry.data[CONF_PASSWORD],
-            websession=websession,
+            websession=async_get_clientsession(hass),
         )
 
         # Snapshot starts empty; entities must handle None gracefully until first refresh
