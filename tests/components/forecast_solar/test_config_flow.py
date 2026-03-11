@@ -215,7 +215,6 @@ async def test_subentry_flow_add_plane(
             CONF_MODULES_POWER: 3000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "45° / 270° / 3000W"
