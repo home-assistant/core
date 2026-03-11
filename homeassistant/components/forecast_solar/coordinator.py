@@ -19,6 +19,7 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    DEFAULT_DAMPING,
     DOMAIN,
     LOGGER,
     SUBENTRY_TYPE_PLANE,
@@ -74,8 +75,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             declination=main_plane.data[CONF_DECLINATION],
             azimuth=(main_plane.data[CONF_AZIMUTH] - 180),
             kwp=(main_plane.data[CONF_MODULES_POWER] / 1000),
-            damping_morning=entry.options.get(CONF_DAMPING_MORNING, 0.0),
-            damping_evening=entry.options.get(CONF_DAMPING_EVENING, 0.0),
+            damping_morning=entry.options.get(CONF_DAMPING_MORNING, DEFAULT_DAMPING),
+            damping_evening=entry.options.get(CONF_DAMPING_EVENING, DEFAULT_DAMPING),
             inverter=inverter_size,
             planes=planes,
         )

@@ -26,6 +26,10 @@ from .const import (
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
+    DEFAULT_AZIMUTH,
+    DEFAULT_DAMPING,
+    DEFAULT_DECLINATION,
+    DEFAULT_MODULES_POWER,
     DOMAIN,
     MAX_PLANES,
     SUBENTRY_TYPE_PLANE,
@@ -123,9 +127,9 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: self.hass.config.location_name,
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
-                    CONF_DECLINATION: 25,
-                    CONF_AZIMUTH: 180,
-                    CONF_MODULES_POWER: 10000,
+                    CONF_DECLINATION: DEFAULT_DECLINATION,
+                    CONF_AZIMUTH: DEFAULT_AZIMUTH,
+                    CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
                 },
             ),
         )
@@ -164,13 +168,13 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                     vol.Optional(
                         CONF_DAMPING_MORNING,
                         default=self.config_entry.options.get(
-                            CONF_DAMPING_MORNING, 0.0
+                            CONF_DAMPING_MORNING, DEFAULT_DAMPING
                         ),
                     ): vol.Coerce(float),
                     vol.Optional(
                         CONF_DAMPING_EVENING,
                         default=self.config_entry.options.get(
-                            CONF_DAMPING_EVENING, 0.0
+                            CONF_DAMPING_EVENING, DEFAULT_DAMPING
                         ),
                     ): vol.Coerce(float),
                     vol.Optional(
@@ -219,7 +223,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 PLANE_SCHEMA,
-                {CONF_DECLINATION: 25, CONF_AZIMUTH: 180, CONF_MODULES_POWER: 10000},
+                {CONF_DECLINATION: DEFAULT_DECLINATION, CONF_AZIMUTH: DEFAULT_AZIMUTH, CONF_MODULES_POWER: DEFAULT_MODULES_POWER},
             ),
         )
 

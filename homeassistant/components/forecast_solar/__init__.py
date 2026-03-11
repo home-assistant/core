@@ -16,6 +16,10 @@ from .const import (
     CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_MODULES_POWER,
+    DEFAULT_AZIMUTH,
+    DEFAULT_DAMPING,
+    DEFAULT_DECLINATION,
+    DEFAULT_MODULES_POWER,
     SUBENTRY_TYPE_PLANE,
 )
 from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
@@ -32,8 +36,8 @@ async def async_migrate_entry(
         new_options = entry.options.copy()
         new_options |= {
             CONF_MODULES_POWER: new_options.pop("modules power"),
-            CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, 0.0),
-            CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, 0.0),
+            CONF_DAMPING_MORNING: new_options.get(CONF_DAMPING, DEFAULT_DAMPING),
+            CONF_DAMPING_EVENING: new_options.pop(CONF_DAMPING, DEFAULT_DAMPING),
         }
 
         hass.config_entries.async_update_entry(
@@ -42,9 +46,9 @@ async def async_migrate_entry(
 
     if entry.version == 2:
         # Migrate the main plane from options to a subentry
-        declination = entry.options.get(CONF_DECLINATION, 25)
-        azimuth = entry.options.get(CONF_AZIMUTH, 180)
-        modules_power = entry.options.get(CONF_MODULES_POWER, 10000)
+        declination = entry.options.get(CONF_DECLINATION, DEFAULT_DECLINATION)
+        azimuth = entry.options.get(CONF_AZIMUTH, DEFAULT_AZIMUTH)
+        modules_power = entry.options.get(CONF_MODULES_POWER, DEFAULT_MODULES_POWER)
 
         subentry = ConfigSubentry(
             data=MappingProxyType(
