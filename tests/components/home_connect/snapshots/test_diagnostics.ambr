@@ -76,6 +76,9 @@
         'HeatingVentilationAirConditioning.AirConditioner.Program.Heat',
       ]),
       'settings': dict({
+        'BSH.Common.Setting.PowerState': dict({
+          'value': 'BSH.Common.EnumType.PowerState.On',
+        }),
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': dict({
