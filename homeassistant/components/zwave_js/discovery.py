@@ -1563,10 +1563,9 @@ def check_value(
         )
     ):
         return False
-    if (
-        schema.any_available_cc_specific is not None
-        and value.metadata.cc_specific is not None
-        and not any(
+    if schema.any_available_cc_specific is not None and (
+        value.metadata.cc_specific is None
+        or not any(
             key in value.metadata.cc_specific and value.metadata.cc_specific[key] == val
             for key, val in schema.any_available_cc_specific
         )

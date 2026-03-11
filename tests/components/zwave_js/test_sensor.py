@@ -2,6 +2,7 @@
 
 import copy
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from zwave_js_server.const.command_class.meter import MeterType
@@ -822,6 +823,75 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.state == "100.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+
+
+async def test_new_sensor_invalid_scale(
+    hass: HomeAssistant, multisensor_6, client, integration
+) -> None:
+    """Test new-style numeric sensor handles UnknownValueData from invalid scale."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+
+    # Update the metadata to an invalid scale (255) to trigger UnknownValueData
+    # in _get_scale_type on the next value update
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Air temperature",
+                    "ccSpecific": {"sensorType": 1, "scale": 255},
+                    "unit": None,
+                },
+                "propertyName": "Air temperature",
+                "nodeId": multisensor_6.node_id,
+            },
+        },
+    )
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Fire a value updated event to trigger on_value_update which calls
+    # _get_scale_type - the invalid scale should raise UnknownValueData
+    # which is caught and returns None, triggering a reload since
+    # None != original TemperatureScale.CELSIUS
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        event = Event(
+            "value updated",
+            {
+                "source": "node",
+                "event": "value updated",
+                "nodeId": multisensor_6.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 0,
+                    "property": "Air temperature",
+                    "newValue": 68,
+                    "prevValue": 9,
+                    "propertyName": "Air temperature",
+                },
+            },
+        )
+        multisensor_6.receive_event(event)
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_called_once_with(integration.entry_id)
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
