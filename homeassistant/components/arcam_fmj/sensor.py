@@ -17,9 +17,9 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfFrequency
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
+from .entity import ArcamFmjEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -152,11 +152,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ArcamFmjSensorEntity(CoordinatorEntity[ArcamFmjCoordinator], SensorEntity):
+class ArcamFmjSensorEntity(ArcamFmjEntity, SensorEntity):
     """Representation of an Arcam FMJ sensor."""
 
     entity_description: ArcamFmjSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -170,7 +169,6 @@ class ArcamFmjSensorEntity(CoordinatorEntity[ArcamFmjCoordinator], SensorEntity)
             f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
             f"-{coordinator.state.zn}-{description.key}"
         )
-        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self) -> int | float | str | None:
