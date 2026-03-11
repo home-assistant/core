@@ -11,7 +11,13 @@ import time
 from typing import Any, Final
 
 from aiohttp import hdrs
-from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web import (
+    Application,
+    HTTPInternalServerError,
+    Request,
+    StreamResponse,
+    middleware,
+)
 import jwt
 from jwt import api_jws
 from yarl import URL
@@ -240,7 +246,13 @@ async def async_setup_auth(  # noqa: C901
                 # doesn't use refresh tokens.
                 request[KEY_HASS_USER] = user
                 return True
-        return False
+
+        # The Unix socket should not be serving before the hassio integration
+        # has created the Supervisor user. If we get here, something is wrong.
+        _LOGGER.error(
+            "Supervisor user not found; cannot authenticate Unix socket request"
+        )
+        raise HTTPInternalServerError
 
     @middleware
     async def auth_middleware(

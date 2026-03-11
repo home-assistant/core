@@ -689,7 +689,7 @@ async def test_unix_socket_auth_without_supervisor_user(
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test that Unix socket requests fail when no Supervisor user exists."""
+    """Test that Unix socket requests return 500 when no Supervisor user exists."""
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
@@ -697,7 +697,7 @@ async def test_unix_socket_auth_without_supervisor_user(
         "homeassistant.components.http.auth.is_unix_socket_request", return_value=True
     ):
         req = await client.get("/")
-    assert req.status == HTTPStatus.UNAUTHORIZED
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 async def test_unix_socket_auth_caches_user_id(
