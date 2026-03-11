@@ -9,7 +9,7 @@ from typing import Any, Concatenate
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import AudioOutputHwMode, PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
-from wiim.models import WiimGroupRole, WiimRepeatMode
+from wiim.models import WiimGroupRole, WiimGroupSnapshot, WiimRepeatMode
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components import media_source
@@ -166,24 +166,18 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         LOGGER.debug("No entity ID found for UDN: %s", udn)
         return None
 
-    def _get_group_snapshot(self):
-        """Return the typed group snapshot for the current device, if available."""
+    def _get_group_snapshot(self) -> WiimGroupSnapshot:
+        """Return the typed group snapshot for the current device."""
         return self._wiim_data.controller.get_group_snapshot(self._device.udn)
 
     @property
     def _metadata_device(self) -> WiimDevice:
         """Return the device whose metadata should back this entity."""
-        if not (group_snapshot := self._get_group_snapshot()):
+        group_snapshot = self._get_group_snapshot()
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
             return self._device
 
-        if group_snapshot.role == WiimGroupRole.FOLLOWER:
-            leader_device = self._wiim_data.controller.get_device(
-                group_snapshot.leader_udn
-            )
-            assert leader_device is not None
-            return leader_device
-
-        return self._device
+        return self._wiim_data.controller.get_device(group_snapshot.leader_udn)
 
     @callback
     def _clear_media_metadata(self) -> None:
@@ -201,16 +195,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:
         """Return the device that should receive a grouped playback command."""
-        if not (
-            (group_snapshot := self._get_group_snapshot())
-            and group_snapshot.role == WiimGroupRole.FOLLOWER
-        ):
+        group_snapshot = self._get_group_snapshot()
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
             return self._device
 
         target_device = self._wiim_data.controller.get_device(
             group_snapshot.command_target_udn
         )
-        assert target_device is not None
 
         LOGGER.info(
             "Routing %s command from follower %s to leader %s",
@@ -266,12 +257,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         # Determine current group role (leader/follower/standalone)
         group_snapshot = self._get_group_snapshot()
-        self._is_group_leader = (
-            group_snapshot is not None and group_snapshot.role == WiimGroupRole.LEADER
-        )
+        self._is_group_leader = group_snapshot.role == WiimGroupRole.LEADER
 
         metadata_device = self._metadata_device
-        if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
+        if group_snapshot.role == WiimGroupRole.FOLLOWER:
             LOGGER.debug(
                 "Follower %s: Actively pulling metadata from leader %s",
                 self.entity_id,
@@ -304,15 +293,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         else:
             self._clear_media_metadata()
 
-        if group_snapshot is not None:
-            group_members = [
-                entity_id
-                for udn in group_snapshot.member_udns
-                if (entity_id := self._get_entity_id_for_udn(udn)) is not None
-            ]
-            self._attr_group_members = group_members or None
-        else:
-            self._attr_group_members = [self.entity_id] if self._added_to_hass else None
+        group_members = [
+            entity_id
+            for udn in group_snapshot.member_udns
+            if (entity_id := self._get_entity_id_for_udn(udn)) is not None
+        ]
+        self._attr_group_members = group_members or (
+            [self.entity_id] if self._added_to_hass else None
+        )
 
         if update_supported_features:
             self._async_schedule_update_supported_features(write_state=write_state)
@@ -404,11 +392,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     ) -> bool:
         """Synchronize features if this device is a follower."""
         group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
-        if group_snapshot is None or group_snapshot.role != WiimGroupRole.FOLLOWER:
+        if group_snapshot.role != WiimGroupRole.FOLLOWER:
             return False
 
         leader_device = wiim_data.controller.get_device(group_snapshot.leader_udn)
-        assert leader_device is not None
 
         if (
             leader_features := await self._async_get_supported_features_for_device(
@@ -588,20 +575,19 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         controller = self._wiim_data.controller
         group_snapshot = controller.get_group_snapshot(self._device.udn)
 
-        if group_snapshot is not None:
-            if group_snapshot.role == WiimGroupRole.LEADER:
-                LOGGER.info(
-                    "Device %s was a leader. Attempting to ungroup all its followers",
-                    self.entity_id,
-                )
+        if group_snapshot.role == WiimGroupRole.LEADER:
+            LOGGER.info(
+                "Device %s was a leader. Attempting to ungroup all its followers",
+                self.entity_id,
+            )
 
-                # Cannot clear followers metadata directly anymore as we don't have access to their entities.
-                # Followers must handle leader unavailability themselves.
-            elif group_snapshot.role == WiimGroupRole.FOLLOWER:
-                LOGGER.info(
-                    "Device %s was a follower. Attempting to unjoin from its group",
-                    self.entity_id,
-                )
+            # Cannot clear followers metadata directly anymore as we don't have access to their entities.
+            # Followers must handle leader unavailability themselves.
+        elif group_snapshot.role == WiimGroupRole.FOLLOWER:
+            LOGGER.info(
+                "Device %s was a follower. Attempting to unjoin from its group",
+                self.entity_id,
+            )
 
         await controller.async_update_all_multiroom_status()
 
