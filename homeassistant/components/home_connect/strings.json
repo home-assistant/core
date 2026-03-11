@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -116,6 +117,18 @@
       },
       "stop_program": {
         "name": "Stop program"
+      }
+    },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
       }
     },
     "light": {
@@ -1289,6 +1302,9 @@
     }
   },
   "exceptions": {
+    "appliance_disconnected": {
+      "message": "Appliance {appliance_name} ({ha_id}) is disconnected"
+    },
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },

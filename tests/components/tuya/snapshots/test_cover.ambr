@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -40,6 +41,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'bedroom blinds Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -71,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -91,6 +94,7 @@
       'current_position': 36,
       'device_class': 'curtain',
       'friendly_name': 'blinds Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -122,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -142,6 +147,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Dining 1 Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -173,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -192,6 +199,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'curtain',
       'friendly_name': 'Estore Sala Curtain',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -223,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -243,6 +252,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Fenster Küche Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -274,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door 1',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -293,6 +304,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Garage door  Door 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -324,6 +336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -343,6 +356,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'curtain',
       'friendly_name': 'Kit-Blinds Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -374,6 +388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blind',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -394,6 +409,7 @@
       'current_position': 100,
       'device_class': 'blind',
       'friendly_name': 'Kitchen Blinds Blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -425,6 +441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -445,6 +462,7 @@
       'current_position': 48,
       'device_class': 'curtain',
       'friendly_name': 'Kitchen Blinds Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -476,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -496,6 +515,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Lounge Dark Blind Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -527,6 +547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -547,6 +568,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Pergola Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -578,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -598,6 +621,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Persiana do Quarto Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -629,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -649,6 +674,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Projector Screen Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -680,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -700,6 +727,7 @@
       'current_position': 75,
       'device_class': 'curtain',
       'friendly_name': 'Roller shutter Living Room Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -731,6 +759,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -751,6 +780,7 @@
       'current_position': 0,
       'device_class': 'curtain',
       'friendly_name': 'Tapparelle studio Curtain',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -782,6 +812,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Curtain',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
@@ -802,6 +833,7 @@
       'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'VIVIDSTORM SCREEN Curtain',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

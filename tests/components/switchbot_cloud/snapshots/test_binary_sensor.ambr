@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -412,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,

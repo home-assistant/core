@@ -49,3 +49,10 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
                 translation_domain=DOMAIN, translation_key="rejected"
             ) from exc
         await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success and self.coordinator.client is not None
+        )

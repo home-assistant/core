@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pysaunum import SaunumException
 
@@ -14,6 +14,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import LeilSaunaConfigEntry
 from .const import DOMAIN
 from .entity import LeilSaunaEntity
+
+if TYPE_CHECKING:
+    from .coordinator import LeilSaunaCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -35,7 +38,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, coordinator) -> None:
+    def __init__(self, coordinator: LeilSaunaCoordinator) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
         # Override unique_id to differentiate from climate entity

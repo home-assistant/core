@@ -230,6 +230,52 @@ async def test_vehicle_refresh_ratelimited(
     assert state.state == "unknown"
 
 
+async def test_vehicle_refresh_ratelimited_no_after(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429 without after."""
+
+    await setup_platform(hass, normal_config_entry)
+    # mock_vehicle_data called once during setup
+    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.side_effect = RateLimited({})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again during refresh, failed with RateLimited
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again because skip refresh doesn't change interval
+    assert mock_vehicle_data.call_count == 3
+
+
+async def test_init_invalid_region(
+    hass: HomeAssistant,
+    expires_at: int,
+) -> None:
+    """Test init with an invalid region in the token."""
+
+    # ou_code 'other' should be caught by the region validation and set to None
+    config_entry = create_config_entry(
+        expires_at, [Scope.VEHICLE_DEVICE_DATA], region="other"
+    )
+
+    with patch("homeassistant.components.tesla_fleet.TeslaFleetApi") as mock_api:
+        await setup_platform(hass, config_entry)
+        # Check if TeslaFleetApi was called with region=None
+        mock_api.assert_called()
+        assert mock_api.call_args.kwargs.get("region") is None
+
+
 async def test_vehicle_sleep(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,

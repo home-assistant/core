@@ -224,7 +224,7 @@ def add_remove_custom_holidays(
                         severity=IssueSeverity.WARNING,
                         translation_key="bad_date_holiday",
                         translation_placeholders={
-                            CONF_COUNTRY: country if country else "-",
+                            CONF_COUNTRY: country or "-",
                             "title": entry.title,
                             CONF_REMOVE_HOLIDAYS: remove_holiday,
                         },
@@ -244,7 +244,7 @@ def add_remove_custom_holidays(
                     severity=IssueSeverity.WARNING,
                     translation_key="bad_named_holiday",
                     translation_placeholders={
-                        CONF_COUNTRY: country if country else "-",
+                        CONF_COUNTRY: country or "-",
                         "title": entry.title,
                         CONF_REMOVE_HOLIDAYS: remove_holiday,
                     },

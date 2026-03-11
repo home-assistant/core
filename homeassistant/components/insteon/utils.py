@@ -203,7 +203,7 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
 
 def compute_device_name(ha_device) -> str:
     """Return the HA device name."""
-    return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
+    return ha_device.name_by_user or ha_device.name
 
 
 async def async_device_name(dev_registry: dr.DeviceRegistry, address: Address) -> str:

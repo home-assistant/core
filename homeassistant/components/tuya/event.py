@@ -6,6 +6,13 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+    DPCodeStringWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.event import (
@@ -20,26 +27,19 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeEnumWrapper,
-    DPCodeRawWrapper,
-    DPCodeStringWrapper,
-    DPCodeTypeInformationWrapper,
-)
 
 
-class _EventEnumWrapper(DPCodeEnumWrapper):
+class _EventEnumWrapper(DPCodeEnumWrapper[tuple[str, None]]):
     """Wrapper for event enum DP codes."""
 
     def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
         """Return the event details."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return (raw_value, None)
 
 
-class _AlarmMessageWrapper(DPCodeStringWrapper):
+class _AlarmMessageWrapper(DPCodeStringWrapper[tuple[str, dict[str, Any]]]):
     """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
 
     def __init__(self, dpcode: str, type_information: Any) -> None:
@@ -51,12 +51,12 @@ class _AlarmMessageWrapper(DPCodeStringWrapper):
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the alarm message."""
-        if (raw_value := super().read_device_status(device)) is None:
+        if (raw_value := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
 
 
-class _DoorbellPicWrapper(DPCodeRawWrapper):
+class _DoorbellPicWrapper(DPCodeRawWrapper[tuple[str, dict[str, Any]]]):
     """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
 
     It is expected that the RAW data is base64/utf8 encoded URL of the picture.
@@ -71,7 +71,7 @@ class _DoorbellPicWrapper(DPCodeRawWrapper):
         self, device: CustomerDevice
     ) -> tuple[str, dict[str, Any]] | None:
         """Return the event attributes for the doorbell picture."""
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return ("triggered", {"message": status.decode("utf-8")})
 
@@ -215,16 +215,21 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self._dpcode_wrapper = dpcode_wrapper
         self._attr_event_types = dpcode_wrapper.options
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
-    ) -> None:
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
         if self._dpcode_wrapper.skip_update(
-            self.device, updated_status_properties
+            self.device, updated_status_properties, dp_timestamps
         ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
-            return
+            return False
 
         event_type, event_attributes = event_data
         self._trigger_event(event_type, event_attributes)
-        self.async_write_ha_state()
+        return True

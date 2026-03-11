@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.GARAGE_DOOR: 'garage_door'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -362,6 +369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -411,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -459,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -508,6 +518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -557,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -605,6 +617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -653,6 +666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -702,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -750,6 +765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -798,6 +814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -847,6 +864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -874,6 +892,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_second_cavity_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kitchen_oven_second_cavity_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second cavity status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second cavity status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cavity_status',
+    'unique_id': '199d7863-ad04-793d-176d-658f10062575_cavity-01_custom.ovenCavityStatus_ovenCavityStatus_ovenCavityStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_oven_0107x][binary_sensor.kitchen_oven_second_cavity_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen oven Second cavity status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kitchen_oven_second_cavity_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -895,6 +962,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -943,6 +1011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -992,6 +1061,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1019,6 +1089,55 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_second_cavity_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vulcan_second_cavity_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second cavity status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second cavity status',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oven_cavity_status',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_cavity-01_custom.ovenCavityStatus_ovenCavityStatus_ovenCavityStatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_second_cavity_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vulcan Second cavity status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vulcan_second_cavity_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ks_walloven_0107x][binary_sensor.four_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1040,6 +1159,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1088,6 +1208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -1137,6 +1258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1185,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1234,6 +1357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1283,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1311,7 +1436,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_coolselect_door-entry]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_coolselect_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1324,7 +1449,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_coolselect_door',
+    'entity_id': 'binary_sensor.refrigerator_1_coolselect_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1332,6 +1457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoolSelect+ door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1346,21 +1472,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_coolselect_door-state]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_coolselect_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Refrigerator CoolSelect+ door',
+      'friendly_name': 'Refrigerator 1 CoolSelect+ door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_coolselect_door',
+    'entity_id': 'binary_sensor.refrigerator_1_coolselect_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_filter_status-entry]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_filter_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1373,7 +1499,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'entity_id': 'binary_sensor.refrigerator_1_filter_status',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1381,6 +1507,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1395,21 +1522,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_filter_status-state]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_filter_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Refrigerator Filter status',
+      'friendly_name': 'Refrigerator 1 Filter status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_filter_status',
+    'entity_id': 'binary_sensor.refrigerator_1_filter_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-entry]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_freezer_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1422,7 +1549,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'entity_id': 'binary_sensor.refrigerator_1_freezer_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1430,6 +1557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1444,21 +1572,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_freezer_door-state]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_freezer_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Refrigerator Freezer door',
+      'friendly_name': 'Refrigerator 1 Freezer door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_freezer_door',
+    'entity_id': 'binary_sensor.refrigerator_1_freezer_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_fridge_door-entry]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_fridge_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1471,7 +1599,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.refrigerator_fridge_door',
+    'entity_id': 'binary_sensor.refrigerator_1_fridge_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1479,6 +1607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1493,14 +1622,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_fridge_door-state]
+# name: test_all_entities[da_ref_normal_01001][binary_sensor.refrigerator_1_fridge_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Refrigerator Fridge door',
+      'friendly_name': 'Refrigerator 1 Fridge door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.refrigerator_fridge_door',
+    'entity_id': 'binary_sensor.refrigerator_1_fridge_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1528,6 +1657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1577,6 +1707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1626,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1675,6 +1807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1703,6 +1836,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_rvc_map_01011][binary_sensor.robot_vacuum_dust_bag_full-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.robot_vacuum_dust_bag_full',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Dust bag full',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust bag full',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_dust_bag',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_station_samsungce.robotCleanerDustBag_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][binary_sensor.robot_vacuum_dust_bag_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Dust bag full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.robot_vacuum_dust_bag_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_000001][binary_sensor.dishwasher_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1724,6 +1906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1772,6 +1955,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1821,6 +2005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1848,7 +2033,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_child_lock-entry]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1861,7 +2046,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.dishwasher_1_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1869,6 +2054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1883,20 +2069,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_child_lock-state]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Child lock',
+      'friendly_name': 'Dishwasher 1 Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_child_lock',
+    'entity_id': 'binary_sensor.dishwasher_1_child_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_power-entry]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1909,7 +2095,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_power',
+    'entity_id': 'binary_sensor.dishwasher_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1917,6 +2103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1931,21 +2118,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_power-state]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Dishwasher Power',
+      'friendly_name': 'Dishwasher 1 Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_power',
+    'entity_id': 'binary_sensor.dishwasher_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_remote_control-entry]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1958,7 +2145,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.dishwasher_remote_control',
+    'entity_id': 'binary_sensor.dishwasher_1_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1966,6 +2153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1980,13 +2168,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_remote_control-state]
+# name: test_all_entities[da_wm_dw_01011][binary_sensor.dishwasher_1_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Remote control',
+      'friendly_name': 'Dishwasher 1 Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dishwasher_remote_control',
+    'entity_id': 'binary_sensor.dishwasher_1_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2014,6 +2202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2062,6 +2251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep fresh mode active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2110,6 +2300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2159,6 +2350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2207,6 +2399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2255,6 +2448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2304,6 +2498,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2352,6 +2547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2400,6 +2596,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2448,6 +2645,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2497,6 +2695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2545,6 +2744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2593,6 +2793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2641,6 +2842,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2690,6 +2892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2738,6 +2941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent active',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2786,6 +2990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2834,6 +3039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2883,6 +3089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2931,6 +3138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2979,6 +3187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -3028,6 +3237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3076,6 +3286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3124,6 +3335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -3173,6 +3385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3200,7 +3413,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_power-entry]
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_1_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3213,7 +3426,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.washer_1_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3221,6 +3434,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -3235,21 +3449,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_power-state]
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Washer Power',
+      'friendly_name': 'Washer 1 Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.washer_1_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_remote_control-entry]
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_1_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3262,7 +3476,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.washer_1_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3270,6 +3484,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3284,20 +3499,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_remote_control-state]
+# name: test_all_entities[da_wm_wm_100001][binary_sensor.washer_1_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Remote control',
+      'friendly_name': 'Washer 1 Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.washer_1_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_power-entry]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3310,7 +3525,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.washer_2_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3318,6 +3533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -3332,21 +3548,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_power-state]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Washer Power',
+      'friendly_name': 'Washer 2 Power',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_power',
+    'entity_id': 'binary_sensor.washer_2_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_remote_control-entry]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3359,7 +3575,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.washer_2_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3367,6 +3583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3381,20 +3598,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_remote_control-state]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Remote control',
+      'friendly_name': 'Washer 2 Remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_remote_control',
+    'entity_id': 'binary_sensor.washer_2_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_upper_washer_remote_control-entry]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_upper_washer_remote_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3407,7 +3624,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.washer_upper_washer_remote_control',
+    'entity_id': 'binary_sensor.washer_2_upper_washer_remote_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3415,6 +3632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upper washer remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3429,13 +3647,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_upper_washer_remote_control-state]
+# name: test_all_entities[da_wm_wm_100002][binary_sensor.washer_2_upper_washer_remote_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Upper washer remote control',
+      'friendly_name': 'Washer 2 Upper washer remote control',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.washer_upper_washer_remote_control',
+    'entity_id': 'binary_sensor.washer_2_upper_washer_remote_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3463,6 +3681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -3512,6 +3731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -3561,6 +3781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
@@ -3610,6 +3831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -3659,6 +3881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -3708,6 +3931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOVING: 'moving'>,
@@ -3736,7 +3960,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-entry]
+# name: test_all_entities[siemens_washer][binary_sensor.wasmachine_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3749,7 +3973,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.asd_moisture',
+    'entity_id': 'binary_sensor.wasmachine_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3757,6 +3981,57 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '42a6aa8d-9bce-4f80-bc29-d9f8b8dc1af1_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[siemens_washer][binary_sensor.wasmachine_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Wasmachine Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.wasmachine_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -3771,14 +4046,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_water_sensor][binary_sensor.asd_moisture-state]
+# name: test_all_entities[virtual_water_sensor][binary_sensor.virtual_water_sensor_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'asd Moisture',
+      'friendly_name': 'virtual water sensor Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.asd_moisture',
+    'entity_id': 'binary_sensor.virtual_water_sensor_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

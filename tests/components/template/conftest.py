@@ -51,11 +51,40 @@ def make_test_trigger(*entities: str) -> dict:
     }
 
 
+def make_test_action(action: str, extra_data: ConfigType | None = None) -> ConfigType:
+    """Make a test action."""
+    data = extra_data or {}
+    return {
+        action: {
+            "action": "test.automation",
+            "data": {"caller": "{{ this.entity_id }}", "action": action, **data},
+        }
+    }
+
+
+def assert_action(
+    platform_setup: TemplatePlatformSetup,
+    calls: list[ServiceCall],
+    expected_calls: int,
+    expected_action: str,
+    **kwargs,
+) -> None:
+    """Validate the action was properly called."""
+    assert len(calls) == expected_calls
+    assert calls[-1].data["action"] == expected_action
+    assert calls[-1].data["caller"] == platform_setup.entity_id
+    for key, value in kwargs.items():
+        assert calls[-1].data[key] == value
+
+
 async def async_trigger(
-    hass: HomeAssistant, entity_id: str, state: str | None = None
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None = None,
+    attributes: dict | None = None,
 ) -> None:
     """Trigger a state change."""
-    hass.states.async_set(entity_id, state)
+    hass.states.async_set(entity_id, state, attributes)
     await hass.async_block_till_done()
 
 
@@ -160,19 +189,20 @@ async def setup_entity(
 ) -> None:
     """Do setup of a template entity based on the configuration style."""
     if style == ConfigurationStyle.LEGACY:
+        entity_config = {
+            **({"value_template": state_template} if state_template else {}),
+            **config,
+            **(extra_config or {}),
+            **({"attribute_templates": attributes} if attributes else {}),
+        }
+        # Lock and weather platforms do not use a slug.
+        if platform_setup.legacy_slug is None:
+            config = {"name": platform_setup.object_id, **entity_config}
+        else:
+            config = {platform_setup.object_id: entity_config}
+
         await async_setup_legacy_platforms(
-            hass,
-            platform_setup.domain,
-            platform_setup.legacy_slug,
-            count,
-            {
-                platform_setup.object_id: {
-                    **({"value_template": state_template} if state_template else {}),
-                    **config,
-                    **(extra_config or {}),
-                    **({"attribute_templates": attributes} if attributes else {}),
-                }
-            },
+            hass, platform_setup.domain, platform_setup.legacy_slug, count, config
         )
         return
 
@@ -333,11 +363,6 @@ async def start_ha(
 async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def async_get_flow_preview_state(

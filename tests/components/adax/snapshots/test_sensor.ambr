@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -137,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -196,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -311,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -367,6 +373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -426,6 +433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

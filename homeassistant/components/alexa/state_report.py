@@ -358,7 +358,7 @@ async def async_send_changereport_message(
     """
     try:
         token = await config.async_get_access_token()
-    except (RequireRelink, NoTokenAvailable):
+    except RequireRelink, NoTokenAvailable:
         await config.set_authorized(False)
         _LOGGER.error(
             "Error when sending ChangeReport to Alexa, could not get access token"
@@ -392,7 +392,7 @@ async def async_send_changereport_message(
                 allow_redirects=True,
             )
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
@@ -549,7 +549,7 @@ async def async_send_doorbell_event_message(
                 allow_redirects=True,
             )
 
-    except (TimeoutError, aiohttp.ClientError):
+    except TimeoutError, aiohttp.ClientError:
         _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 

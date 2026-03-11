@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DayNight 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Object Analytics Device1Scenario8',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PIR sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PIR 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fence Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Loitering Guard Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -412,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VMD4 Profile 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -461,6 +470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Object Analytics Scenario 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -510,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VMD4 Camera1Profile9',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,

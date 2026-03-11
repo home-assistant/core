@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -75,7 +76,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Air Purifier 131s Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -150,6 +151,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -171,7 +173,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Air Purifier 200s Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -246,6 +248,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -267,7 +270,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Air Purifier 400s Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -342,6 +345,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -363,7 +367,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Air Purifier 600s Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -438,6 +442,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -459,7 +464,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'CS158-AF Air Fryer Cooking Firmware',
       'in_progress': False,
       'installed_version': None,
@@ -534,6 +539,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -555,7 +561,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'CS158-AF Air Fryer Standby Firmware',
       'in_progress': False,
       'installed_version': None,
@@ -630,6 +636,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -649,7 +656,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'firmware',
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Dimmable Light Firmware',
       'supported_features': <UpdateEntityFeature: 0>,
     }),
@@ -716,6 +723,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -737,7 +745,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Dimmer Switch Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -812,6 +820,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -833,7 +842,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Humidifier 200s Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -908,6 +917,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -929,7 +939,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Humidifier 6000s Firmware',
       'in_progress': False,
       'installed_version': None,
@@ -1004,6 +1014,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1025,7 +1036,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Humidifier 600S Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -1100,6 +1111,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1121,7 +1133,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Outlet Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -1196,6 +1208,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1217,7 +1230,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'SmartTowerFan Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -1292,6 +1305,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1313,7 +1327,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Temperature Light Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',
@@ -1388,6 +1402,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1409,7 +1424,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'entity_picture': '/api/brands/integration/vesync/icon.png',
       'friendly_name': 'Wall Switch Firmware',
       'in_progress': False,
       'installed_version': '1.0.0',

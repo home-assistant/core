@@ -201,5 +201,5 @@ class ArwnSensor(SensorEntity):
         ev: dict[str, Any] = {}
         ev.update(event)
         self._attr_extra_state_attributes = ev
-        self._attr_native_value = ev.get(self._state_key, None)
+        self._attr_native_value = ev.get(self._state_key)
         self.async_write_ha_state()

@@ -16,8 +16,7 @@ on:
       - "requirements.txt"
       - "script/gen_requirements_all.py"
 
-env:
-  DEFAULT_PYTHON: "3.13"
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -29,15 +28,16 @@ jobs:
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
-      - &checkout
-        name: Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          persist-credentials: false
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
           check-latest: true
 
       - name: Create Python virtual environment
@@ -50,7 +50,7 @@ jobs:
 
       - name: Create requirements_diff file
         run: |
-          if [[ ${{ github.event_name }} =~ (schedule|workflow_dispatch) ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" =~ (schedule|workflow_dispatch) ]]; then
             touch requirements_diff.txt
           else
             curl -s -o requirements_diff.txt https://raw.githubusercontent.com/home-assistant/core/master/requirements.txt
@@ -74,7 +74,7 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: env_file
           path: ./.env_file
@@ -82,7 +82,7 @@ jobs:
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: *actions-upload-artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -94,7 +94,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: *actions-upload-artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -106,8 +106,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: &matrix-build
-        abi: ["cp313", "cp314"]
+      matrix:
+        abi: ["cp314"]
         arch: ["amd64", "aarch64"]
         include:
           - arch: amd64
@@ -115,17 +115,18 @@ jobs:
           - arch: aarch64
             os: ubuntu-24.04-arm
     steps:
-      - *checkout
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
-      - &download-env-file
-        name: Download env_file
-        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      - name: Download env_file
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: env_file
 
-      - &download-requirements-diff
-        name: Download requirements_diff
-        uses: *actions-download-artifact
+      - name: Download requirements_diff
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: requirements_diff
 
@@ -136,7 +137,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -156,16 +157,32 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
-      matrix: *matrix-build
+      matrix:
+        abi: ["cp314"]
+        arch: ["amd64", "aarch64"]
+        include:
+          - arch: amd64
+            os: ubuntu-latest
+          - arch: aarch64
+            os: ubuntu-24.04-arm
     steps:
-      - *checkout
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
-      - *download-env-file
+      - name: Download env_file
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          name: env_file
 
-      - *download-requirements-diff
+      - name: Download requirements_diff
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
+        with:
+          name: requirements_diff
 
       - name: Download requirements_all_wheels
-        uses: *actions-download-artifact
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: requirements_all_wheels
 
@@ -178,7 +195,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: *home-assistant-wheels
+        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -189,4 +206,4 @@ jobs:
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
-          requirements: "requirements_all.txt"
+          requirements: "requirements_all_wheels_${{ matrix.arch }}.txt"
