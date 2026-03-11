@@ -114,7 +114,7 @@ async def test_flow_duplicate_device(
     assert result2["reason"] == "already_configured"
 
 
-async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
+async def test_flow_invalid_access_token(hass: HomeAssistant) -> None:
     """Test A flow with an invalid API Token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -142,7 +142,7 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "invalid_access_token"}
 
 
 async def test_flow_cannot_connect(
