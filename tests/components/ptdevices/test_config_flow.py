@@ -176,3 +176,105 @@ async def test_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_missing_user_id(
+    hass: HomeAssistant,
+    mock_ptdevices_level_missing_user_id: PTDevicesResponse,
+) -> None:
+    """Test A flow with an invalid API Token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "aioptdevices.interface.Interface.get_data",
+            return_value=mock_ptdevices_level_missing_user_id,
+        ),
+        patch(
+            "homeassistant.components.ptdevices.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: "test-api-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "malformed_response"}
+
+
+async def test_flow_missing_user_name(
+    hass: HomeAssistant,
+    mock_ptdevices_level_missing_user_name: PTDevicesResponse,
+) -> None:
+    """Test A flow with an invalid API Token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "aioptdevices.interface.Interface.get_data",
+            return_value=mock_ptdevices_level_missing_user_name,
+        ),
+        patch(
+            "homeassistant.components.ptdevices.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: "test-api-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "malformed_response"}
+
+
+async def test_flow_no_devices(
+    hass: HomeAssistant,
+    mock_ptdevices_level_no_devices: PTDevicesResponse,
+) -> None:
+    """Test A flow with an invalid API Token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with (
+        patch(
+            "aioptdevices.interface.Interface.get_data",
+            return_value=mock_ptdevices_level_no_devices,
+        ),
+        patch(
+            "homeassistant.components.ptdevices.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: "test-api-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_devices_found"}
