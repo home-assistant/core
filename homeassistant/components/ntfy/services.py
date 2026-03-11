@@ -3,6 +3,7 @@
 from datetime import timedelta
 from typing import Any
 
+from aiontfy import BroadcastAction, CopyAction, HttpAction, ViewAction
 import voluptuous as vol
 from yarl import URL
 
@@ -34,6 +35,28 @@ ATTR_ATTACH_FILE = "attach_file"
 ATTR_FILENAME = "filename"
 GRP_ATTACHMENT = "attachment"
 MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
+ATTR_ACTIONS = "actions"
+ATTR_ACTION = "action"
+ATTR_VIEW = "view"
+ATTR_BROADCAST = "broadcast"
+ATTR_HTTP = "http"
+ATTR_LABEL = "label"
+ATTR_URL = "url"
+ATTR_CLEAR = "clear"
+ATTR_INTENT = "intent"
+ATTR_EXTRAS = "extras"
+ATTR_METHOD = "method"
+ATTR_HEADERS = "headers"
+ATTR_BODY = "body"
+ATTR_VALUE = "value"
+ATTR_COPY = "copy"
+ACTIONS_MAP = {
+    ATTR_VIEW: ViewAction,
+    ATTR_BROADCAST: BroadcastAction,
+    ATTR_HTTP: HttpAction,
+    ATTR_COPY: CopyAction,
+}
+MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
 
 
 def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
@@ -44,6 +67,40 @@ def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
         raise vol.Invalid("Filename only allowed when attachment is provided")
     return params
 
+
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_LABEL): cv.string,
+        vol.Optional(ATTR_CLEAR, default=False): cv.boolean,
+    }
+)
+VIEW_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ACTION): vol.Equal("view"),
+        vol.Required(ATTR_URL): vol.All(vol.Url(), vol.Coerce(URL)),
+    }
+)
+BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ACTION): vol.Equal("broadcast"),
+        vol.Optional(ATTR_INTENT): cv.string,
+        vol.Optional(ATTR_EXTRAS): dict[str, str],
+    }
+)
+HTTP_SCHEMA = VIEW_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ACTION): vol.Equal("http"),
+        vol.Optional(ATTR_METHOD): cv.string,
+        vol.Optional(ATTR_HEADERS): dict[str, str],
+        vol.Optional(ATTR_BODY): cv.string,
+    }
+)
+COPY_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Required(ATTR_ACTION): vol.Equal("copy"),
+        vol.Required(ATTR_VALUE): cv.string,
+    }
+)
 
 SERVICE_PUBLISH_SCHEMA = vol.All(
     cv.make_entity_service_schema(
@@ -69,6 +126,14 @@ SERVICE_PUBLISH_SCHEMA = vol.All(
                 ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
             ): MediaSelector({"accept": ["*/*"]}),
             vol.Optional(ATTR_FILENAME): cv.string,
+            vol.Optional(ATTR_ACTIONS): vol.All(
+                cv.ensure_list,
+                vol.Length(
+                    max=MAX_ACTIONS_ALLOWED,
+                    msg="Too many actions defined. A maximum of 3 is supported",
+                ),
+                [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA, COPY_SCHEMA)],
+            ),
         }
     ),
     validate_filename,

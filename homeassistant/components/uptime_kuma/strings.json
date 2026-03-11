@@ -8,6 +8,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_data": "Invalid data received, check the URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -157,6 +158,9 @@
   "exceptions": {
     "auth_failed_exception": {
       "message": "Authentication with Uptime Kuma failed. Please check that your API key is correct and still valid"
+    },
+    "parsing_failed_exception": {
+      "message": "Invalid data received. Please verify that the Uptime Kuma URL is correct"
     },
     "request_failed_exception": {
       "message": "Connection to Uptime Kuma failed"

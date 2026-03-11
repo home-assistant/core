@@ -41,7 +41,7 @@
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/paperless_ngx/icon.png',
+      'entity_picture': '/api/brands/integration/paperless_ngx/icon.png',
       'friendly_name': 'Paperless-ngx Software',
       'in_progress': False,
       'installed_version': '2.3.0',

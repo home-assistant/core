@@ -215,10 +215,7 @@ async def test_doortag_opening_status_change(
     for _ in range(11):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Change mocked status
     doortag_entity_id = "12:34:56:00:86:99"
@@ -231,10 +228,7 @@ async def test_doortag_opening_status_change(
     for _ in range(11):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
