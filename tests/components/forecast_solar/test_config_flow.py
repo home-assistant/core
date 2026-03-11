@@ -14,7 +14,7 @@ from homeassistant.components.forecast_solar.const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -272,41 +272,19 @@ async def test_subentry_flow_reconfigure_plane(
     assert subentry.title == "50° / 200° / 6000W"
 
 
+@pytest.mark.parametrize("api_key_present", [False])
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_subentry_flow_no_api_key(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that adding more than one plane without API key is not allowed."""
-    config_entry = MockConfigEntry(
-        title="Green House",
-        unique_id="unique",
-        version=3,
-        domain=DOMAIN,
-        data={
-            CONF_LATITUDE: 52.42,
-            CONF_LONGITUDE: 4.42,
-        },
-        options={},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_DECLINATION: 30,
-                    CONF_AZIMUTH: 190,
-                    CONF_MODULES_POWER: 5100,
-                },
-                subentry_id="mock_plane_id",
-                subentry_type=SUBENTRY_TYPE_PLANE,
-                title="30° / 190° / 5100W",
-                unique_id=None,
-            ),
-        ],
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, SUBENTRY_TYPE_PLANE),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
         context={"source": "user"},
     )
 
