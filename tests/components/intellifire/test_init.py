@@ -349,12 +349,10 @@ async def test_coordinator_performs_poll(
     mock_config_entry_current: MockConfigEntry,
     mock_apis_single_fp,
 ) -> None:
-    """Test that the coordinator uses perform_poll() for data refresh.
+    """Test that the library only polls when instructed by the coordinator.
 
-    This verifies the double-polling fix: instead of the library polling
-    automatically AND Home Assistant polling on its schedule, we disable
-    the library's auto-polling and have HA explicitly call perform_poll()
-    when it wants fresh data.
+    The library auto-polls by default; ensure the coordinator disables that
+    and drives polling explicitly via perform_poll().
     """
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
@@ -363,7 +361,7 @@ async def test_coordinator_performs_poll(
     await hass.async_block_till_done()
 
     # Verify perform_poll was called during initial setup/refresh
-    mock_fp.perform_poll.assert_called()
+    mock_fp.perform_poll.assert_called_once()
 
 
 async def test_fireplace_built_with_polling_disabled(
