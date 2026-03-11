@@ -78,6 +78,9 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
 
+        if self._async_in_progress():
+            return self.async_abort(reason="already_in_progress")
+
         self._discovered_serial = serial
         device_name = self._get_device_name(serial)
         self.context.update({"title_placeholders": {"name": f"{device_name} {serial}"}})
@@ -172,7 +175,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_create_entry(self, serial: str) -> config_entries.ConfigFlowResult:
         """Finalize entry creation for selected device."""
-        await self.async_set_unique_id(serial)
+        await self.async_set_unique_id(serial, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         device_name = self._get_device_name(serial)

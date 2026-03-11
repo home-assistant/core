@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+import time
 from unittest.mock import patch
 
 import pytest
@@ -65,7 +65,7 @@ async def _init_flow_and_fire_discovery(
     payloads: list[str],
     delay: float = 0.05,
 ) -> config_entries.ConfigFlowResult:
-    """Initialize flow and fire discovery messages concurrently."""
+    """Initialize user flow and fire discovery messages concurrently."""
 
     async def fire_messages() -> None:
         await asyncio.sleep(delay)
@@ -88,13 +88,15 @@ async def test_user_setup_single_device(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """Test user setup with single device triggers selections."""
+    """Test user setup with single device creates entry."""
     result = await _init_flow_and_fire_discovery(
         hass,
         [f'{{"id": "{HABU_DEN_SERIAL}"}}'],
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"{GREENCELL_HABU_DEN} {HABU_DEN_SERIAL}"
+    assert result["data"] == {"serial_number": HABU_DEN_SERIAL}
 
 
 async def test_user_setup_multiple_devices(
@@ -298,7 +300,7 @@ def _mqtt_service_info(payload: str) -> MqttServiceInfo:
         qos=0,
         retain=False,
         subscribed_topic="greencell/broadcast/device",
-        timestamp=datetime.now(),
+        timestamp=time.time(),
     )
 
 

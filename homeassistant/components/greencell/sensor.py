@@ -249,8 +249,8 @@ class Habu3PhaseSensor(HabuSensor):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique ID for the sensor based on type, phase, and serial number."""
-        return f"{self._serial_number}_{self._sensor_type}_{self._phase}"
+        """Return a unique ID for the sensor based on description key and serial number."""
+        return f"{self._serial_number}_{self.entity_description.key}"
 
 
 class HabuSingleSensor(HabuSensor):

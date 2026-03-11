@@ -1,6 +1,6 @@
 """Shared test fixtures and constants for Greencell integration tests."""
 
-from datetime import datetime
+import time
 
 import pytest
 
@@ -79,7 +79,7 @@ def mqtt_service_info():
             qos=0,
             retain=False,
             subscribed_topic="greencell/broadcast/device",
-            timestamp=datetime.now(),
+            timestamp=time.time(),
         )
 
     return _make

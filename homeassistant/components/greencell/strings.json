@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "discovery_timeout": "No device responded to the discovery request.",
       "invalid_discovery_data": "The received discovery data is invalid.",
       "mqtt_not_configured": "MQTT is not configured. Please configure MQTT first",
@@ -48,12 +49,12 @@
       "status": {
         "name": "Status",
         "state": {
-          "charging": "Charging",
-          "connected": "Connected",
+          "charging": "[%key:common::state::charging%]",
+          "connected": "[%key:common::state::connected%]",
           "error_car": "Car error",
           "error_evse": "EVSE error",
           "finished": "Finished",
-          "idle": "Idle",
+          "idle": "[%key:common::state::idle%]",
           "waiting_for_car": "Waiting for car"
         }
       },

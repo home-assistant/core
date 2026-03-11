@@ -1,4 +1,4 @@
-"""Greencell integration initialization tests cases."""
+"""Greencell integration initialization test cases."""
 
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -131,7 +131,7 @@ async def test_async_unload_entry_success(
 async def test_async_setup_entry_mqtt_readiness_by_broadcast(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
-    caplog: pytest.LogCaptureFixture,  # Dodaj caplog
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test device readiness event is set via broadcast topic."""
     caplog.set_level("DEBUG")
