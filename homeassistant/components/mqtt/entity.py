@@ -488,8 +488,16 @@ class MqttAttributesMixin(Entity):
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
-        if self.group is not None and CONF_GROUP in config:
-            self.group.member_unique_ids = config[CONF_GROUP]
+        if CONF_GROUP in config:
+            if self.group is not None:
+                self.group.member_unique_ids = config[CONF_GROUP]
+            else:
+                _LOGGER.info(
+                    "Group member update received for entity %s, "
+                    "but this entity was not initialized with the `group` option. "
+                    "Reload the MQTT integration or restart Home Assistant to activate"
+                )
+
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 

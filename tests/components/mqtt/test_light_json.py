@@ -224,6 +224,16 @@ GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_EXPANDED = json.dumps(
         "group": ["very_unique_member1", "very_unique_member2", "very_unique_member3"],
     }
 )
+GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_NO_GROUP = json.dumps(
+    {
+        "schema": "json",
+        "command_topic": "test-command-topic-group",
+        "state_topic": "test-state-topic-group",
+        "unique_id": "very_unique_group",
+        "name": "group",
+        "default_entity_id": "light.group",
+    }
+)
 
 
 class JsonValidator:
@@ -2021,6 +2031,36 @@ async def test_light_group_discovery_group_before_members(
     group_state = hass.states.get("light.group")
     assert group_state is not None
     assert group_state.attributes.get("group_entities") == ["light.member2_updated"]
+
+
+async def test_update_discovery_with_members_without_init(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the discovery update of a light group and linked entity IDs."""
+    await mqtt_mock_entry()
+    # Discover light group members
+    async_fire_mqtt_message(hass, GROUP_MEMBER_1_TOPIC, GROUP_DISCOVERY_MEMBER_1_CONFIG)
+    async_fire_mqtt_message(hass, GROUP_MEMBER_2_TOPIC, GROUP_DISCOVERY_MEMBER_2_CONFIG)
+    await hass.async_block_till_done()
+
+    # Discover group without members
+    async_fire_mqtt_message(
+        hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG_NO_GROUP
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.member1") is not None
+    assert hass.states.get("light.member2") is not None
+    group_state = hass.states.get("light.group")
+    assert group_state is not None
+    assert group_state.attributes.get("group_entities") is None
+
+    # Update the discovery with group members
+    async_fire_mqtt_message(hass, GROUP_TOPIC, GROUP_DISCOVERY_LIGHT_GROUP_CONFIG)
+    await hass.async_block_till_done()
+    assert "Group member update received for entity" in caplog.text
 
 
 @pytest.mark.parametrize(
