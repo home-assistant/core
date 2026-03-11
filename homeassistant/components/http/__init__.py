@@ -279,6 +279,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_when_setup_or_start(hass, "frontend", start_server)
 
+    if server.unix_socket_path is not None:
+
+        async def start_unix_socket(*_: Any) -> None:
+            """Start the Unix socket after the Supervisor user is available."""
+            await server.async_start_unix_socket()
+
+        async_when_setup_or_start(hass, "hassio", start_unix_socket)
+
     hass.http = server
 
     local_ip = await source_ip_task
@@ -625,6 +633,29 @@ class HomeAssistantHTTP:
             context.load_cert_chain(cert_pem.name, key_pem.name)
         return context
 
+    async def async_start_unix_socket(self) -> None:
+        """Start listening on the Unix socket.
+
+        This is called separately from start() to delay serving the Unix
+        socket until the Supervisor user exists (created by the hassio
+        integration).  Without this delay, Supervisor could connect before
+        its user is available and receive 401 responses it won't retry.
+        """
+        if self.unix_socket_path is None or self.runner is None:
+            return
+        self.unix_site = HomeAssistantUnixSite(self.runner, self.unix_socket_path)
+        try:
+            await self.unix_site.start()
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to create HTTP server on unix socket %s: %s",
+                self.unix_socket_path,
+                error,
+            )
+            self.unix_site = None
+        else:
+            _LOGGER.info("Now listening on unix socket %s", self.unix_socket_path)
+
     async def start(self) -> None:
         """Start the aiohttp server."""
         # Aiohttp freezes apps after start so that no changes can be made.
@@ -637,20 +668,6 @@ class HomeAssistantHTTP:
             self.app, handler_cancellation=True, shutdown_timeout=10
         )
         await self.runner.setup()
-
-        if self.unix_socket_path is not None:
-            self.unix_site = HomeAssistantUnixSite(self.runner, self.unix_socket_path)
-            try:
-                await self.unix_site.start()
-            except OSError as error:
-                _LOGGER.error(
-                    "Failed to create HTTP server on unix socket %s: %s",
-                    self.unix_socket_path,
-                    error,
-                )
-                self.unix_site = None
-            else:
-                _LOGGER.info("Now listening on unix socket %s", self.unix_socket_path)
 
         self.site = HomeAssistantTCPSite(
             self.runner, self.server_host, self.server_port, ssl_context=self.context
