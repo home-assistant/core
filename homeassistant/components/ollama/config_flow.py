@@ -99,7 +99,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         url = user_input[CONF_URL]
         api_key = user_input.get(CONF_API_KEY) or ""
 
-        self._async_abort_entries_match({CONF_URL: url})
+        self._async_abort_entries_match({CONF_URL: url, CONF_API_KEY: api_key})
 
         try:
             url = cv.url(url)
@@ -138,7 +138,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=url,
-            data={CONF_URL: url},
+            data={CONF_URL: url, CONF_API_KEY: api_key},
         )
 
     @classmethod
