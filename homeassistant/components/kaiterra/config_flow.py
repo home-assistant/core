@@ -340,8 +340,6 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except KaiterraApiAuthError:
                 errors["base"] = "invalid_auth"
-            except KaiterraDeviceNotFoundError:
-                errors["base"] = "device_not_found"
             except KaiterraApiError:
                 errors["base"] = "cannot_connect"
             else:
