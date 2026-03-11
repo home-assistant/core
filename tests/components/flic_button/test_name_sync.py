@@ -2,11 +2,11 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyflic_ble.handlers.base import DeviceProtocolHandler
 import pytest
 
 from homeassistant.components.flic_button.const import DOMAIN
 from homeassistant.components.flic_button.coordinator import FlicCoordinator
-from homeassistant.components.flic_button.handlers.base import DeviceProtocolHandler
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Return list of platforms to test."""
-    return [Platform.SENSOR]
+    return [Platform.EVENT]
 
 
 async def test_name_read_on_reconnect_sets_name_by_user(

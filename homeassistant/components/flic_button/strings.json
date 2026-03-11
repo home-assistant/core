@@ -29,45 +29,6 @@
       }
     }
   },
-  "device_automation": {
-    "trigger_subtype": {
-      "big_button": "Big button",
-      "button": "Button",
-      "small_button": "Small button",
-      "twist_button": "Twist"
-    },
-    "trigger_type": {
-      "click": "{subtype} pushed",
-      "double_click": "{subtype} double pushed",
-      "down": "{subtype} down",
-      "duo_dial_changed": "{subtype} dial position changed",
-      "hold": "{subtype} held",
-      "push_twist_decrement": "{subtype} push-twist decremented",
-      "push_twist_increment": "{subtype} push-twist incremented",
-      "rotate_clockwise": "{subtype} rotated clockwise",
-      "rotate_counter_clockwise": "{subtype} rotated counter-clockwise",
-      "selector_changed": "{subtype} selector changed",
-      "slot_10_changed": "Slot 10 position changed",
-      "slot_11_changed": "Slot 11 position changed",
-      "slot_12_changed": "Slot 12 position changed",
-      "slot_1_changed": "Slot 1 position changed",
-      "slot_2_changed": "Slot 2 position changed",
-      "slot_3_changed": "Slot 3 position changed",
-      "slot_4_changed": "Slot 4 position changed",
-      "slot_5_changed": "Slot 5 position changed",
-      "slot_6_changed": "Slot 6 position changed",
-      "slot_7_changed": "Slot 7 position changed",
-      "slot_8_changed": "Slot 8 position changed",
-      "slot_9_changed": "Slot 9 position changed",
-      "swipe_down": "{subtype} swiped down",
-      "swipe_left": "{subtype} swiped left",
-      "swipe_right": "{subtype} swiped right",
-      "swipe_up": "{subtype} swiped up",
-      "twist_decrement": "{subtype} twist decremented",
-      "twist_increment": "{subtype} twist incremented",
-      "up": "{subtype} up"
-    }
-  },
   "entity": {
     "event": {
       "button": {
@@ -161,20 +122,6 @@
       }
     }
   },
-  "exceptions": {
-    "firmware_download_failed": {
-      "message": "Failed to download firmware."
-    },
-    "firmware_update_failed": {
-      "message": "Firmware update failed: {error}"
-    },
-    "firmware_update_interrupted": {
-      "message": "Firmware update interrupted (connection lost): {error}"
-    },
-    "read_only_entity": {
-      "message": "This entity is read-only and reflects the physical dial position."
-    }
-  },
   "options": {
     "abort": {
       "not_twist_device": "Options are only available for Flic Twist devices."
@@ -185,7 +132,7 @@
           "push_twist_mode": "Push twist mode"
         },
         "data_description": {
-          "push_twist_mode": "Controls the behavior when holding the button and twisting. Default mode shows two sliders (twist position and push-twist position) that clamp at boundaries. Continuous mode is like default but wraps around instead of clamping. Selector mode shows 12 per-slot sliders, enables click and double-click events, and shows the selected slot entity."
+          "push_twist_mode": "Controls the behavior when holding the button and twisting. Default mode fires increment and decrement events that clamp at boundaries. Continuous mode is like default but wraps around instead of clamping. Selector mode fires rotation and selector changed events."
         },
         "title": "Flic Twist options"
       }

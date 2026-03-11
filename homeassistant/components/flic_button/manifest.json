@@ -18,5 +18,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": []
+  "requirements": ["pyflic-ble==0.2.0"]
 }

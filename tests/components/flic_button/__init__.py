@@ -251,14 +251,8 @@ def create_mock_coordinator(
 
     # Firmware state
     mock_coordinator.firmware_version = None
-    mock_coordinator.latest_firmware_version = None
-    mock_coordinator.firmware_download_url = None
-    mock_coordinator.firmware_update_in_progress = False
-    mock_coordinator.firmware_update_percentage = None
-    mock_coordinator.firmware_awaiting_reboot = False
 
     # Mock methods
     mock_coordinator.async_reconnect_if_needed = AsyncMock()
-    mock_coordinator.async_load_slot_values = AsyncMock()
 
     return mock_coordinator

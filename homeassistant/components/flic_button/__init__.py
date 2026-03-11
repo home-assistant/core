@@ -6,6 +6,7 @@ import contextlib
 import logging
 
 from bleak import BleakError
+from pyflic_ble import FlicClient, FlicProtocolError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
@@ -26,7 +27,6 @@ from .const import (
     PushTwistMode,
 )
 from .coordinator import FlicCoordinator
-from .flic_client import FlicClient, FlicProtocolError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ type FlicButtonConfigEntry = ConfigEntry[FlicCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> bool:
     """Set up Flic Button from a config entry."""
+
     address: str = entry.data[CONF_ADDRESS]
 
     # Try to get BLE device (may be None if device is not in range)
@@ -86,19 +87,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     )
 
     # Create coordinator
-    coordinator = FlicCoordinator(
-        hass, client, entry, serial_number, battery_level, push_twist_mode
-    )
+    coordinator = FlicCoordinator(hass, client, entry, serial_number, battery_level)
     entry.runtime_data = coordinator
-
-    # Load persisted slot values for Twist devices
-    await coordinator.async_load_slot_values()
 
     # Try to connect if device is currently available
     if ble_device:
         try:
             await coordinator.async_connect()
-        except (TimeoutError, BleakError, FlicProtocolError):
+        except TimeoutError, BleakError, FlicProtocolError:
             _LOGGER.debug(
                 "Initial connection to %s failed, will retry when device is available",
                 address,
@@ -144,4 +140,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok and entry.runtime_data:
         await entry.runtime_data.async_disconnect()
+
     return unload_ok
