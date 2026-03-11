@@ -215,6 +215,7 @@ async def test_subentry_flow_add_plane(
             CONF_MODULES_POWER: 3000,
         },
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "45° / 270° / 3000W"
@@ -238,8 +239,7 @@ async def test_subentry_flow_reconfigure_plane(
     await hass.async_block_till_done()
 
     # Get the existing plane subentry id
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    subentry_id = next(iter(entry.subentries))
+    subentry_id = next(iter(mock_config_entry.subentries))
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
@@ -262,9 +262,8 @@ async def test_subentry_flow_reconfigure_plane(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert len(entry.subentries) == 1
-    subentry = entry.subentries[subentry_id]
+    assert len(mock_config_entry.subentries) == 1
+    subentry = mock_config_entry.subentries[subentry_id]
     assert subentry.data == {
         CONF_DECLINATION: 50,
         CONF_AZIMUTH: 200,
@@ -344,8 +343,7 @@ async def test_subentry_flow_max_planes(
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert len(entry.subentries) == 4
+    assert len(mock_config_entry.subentries) == 4
 
     # Attempt to add a 5th plane should be aborted
     result = await hass.config_entries.subentries.async_init(
