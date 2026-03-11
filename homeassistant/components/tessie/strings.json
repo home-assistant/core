@@ -458,9 +458,6 @@
       "energy_left": {
         "name": "Energy left"
       },
-      "energy_remaining": {
-        "name": "Energy remaining"
-      },
       "generator_energy_exported": {
         "name": "Generator exported"
       },

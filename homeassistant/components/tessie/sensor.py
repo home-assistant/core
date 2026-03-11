@@ -300,14 +300,6 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         suggested_display_precision=2,
     ),
     TessieSensorEntityDescription(
-        key="energy_remaining",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=1,
-    ),
-    TessieSensorEntityDescription(
         key="lifetime_energy_used",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
