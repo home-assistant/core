@@ -29,12 +29,12 @@ from .entity import TuyaEntity
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(value)
 
@@ -104,7 +104,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         description,
-                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        current_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, description.current_humidity
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
@@ -115,7 +115,7 @@ async def async_setup_entry(
                             description.dpcode or description.key,
                             prefer_function=True,
                         ),
-                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(  # type: ignore[arg-type]
+                        target_humidity_wrapper=_RoundedIntegerWrapper.find_dpcode(
                             device, description.humidity, prefer_function=True
                         ),
                     )

@@ -190,6 +190,8 @@ async def make_device_data(
         "Smart Lock Vision",
         "Smart Lock Vision Pro",
         "Smart Lock Pro Wifi",
+        "Lock Vision",
+        "Lock Vision Pro",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id

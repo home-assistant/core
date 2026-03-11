@@ -21,6 +21,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
