@@ -18,7 +18,8 @@
     "plane": {
       "abort": {
         "api_key_required": "An API key is required to add more than one plane. You can configure it in the integration options.",
-        "max_planes": "You can add a maximum of 4 planes."
+        "max_planes": "You can add a maximum of 4 planes.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Plane",
       "initiate_flow": {
