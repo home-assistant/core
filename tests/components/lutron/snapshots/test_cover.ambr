@@ -41,7 +41,7 @@
       'current_position': 0,
       'friendly_name': 'Test Cover',
       'is_closed': True,
-      'lutron_integration_id': 'cover_id',
+      'lutron_integration_id': 3,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
