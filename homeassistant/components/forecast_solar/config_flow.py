@@ -258,7 +258,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
-            return self.async_update_reload_and_abort(
+            return self.async_update_and_abort(
                 self._get_entry(),
                 subentry,
                 data={

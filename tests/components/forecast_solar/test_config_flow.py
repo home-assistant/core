@@ -223,7 +223,7 @@ async def test_subentry_flow_add_plane(
     assert len(mock_config_entry.subentries) == 2
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_forecast_solar")
 async def test_subentry_flow_reconfigure_plane(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
