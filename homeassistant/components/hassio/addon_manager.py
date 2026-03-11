@@ -10,7 +10,11 @@ from functools import partial, wraps
 import logging
 from typing import Any, Concatenate
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import (
+    AddonNotSupportedError,
+    SupervisorError,
+    SupervisorNotFoundError,
+)
 from aiohasupervisor.models import (
     AddonsOptions,
     AddonState as SupervisorAddonState,
@@ -165,15 +169,7 @@ class AddonManager:
             )
 
         addon_info = await self._supervisor_client.addons.addon_info(self.addon_slug)
-        addon_state = self.async_get_addon_state(addon_info)
-        return AddonInfo(
-            available=addon_info.available,
-            hostname=addon_info.hostname,
-            options=addon_info.options,
-            state=addon_state,
-            update_available=addon_info.update_available,
-            version=addon_info.version,
-        )
+        return self.async_convert_installed_app_info(addon_info)
 
     @callback
     def async_get_addon_state(self, addon_info: InstalledAddonComplete) -> AddonState:
@@ -188,6 +184,20 @@ class AddonManager:
             addon_state = AddonState.UPDATING
 
         return addon_state
+
+    @callback
+    def async_convert_installed_app_info(
+        self, app_info: InstalledAddonComplete
+    ) -> AddonInfo:
+        """Convert InstalledAddonComplete model to AddonInfo model."""
+        return AddonInfo(
+            available=app_info.available,
+            hostname=app_info.hostname,
+            options=app_info.options,
+            state=self.async_get_addon_state(app_info),
+            update_available=app_info.update_available,
+            version=app_info.version,
+        )
 
     @api_error(
         "Failed to set the {addon_name} app options",
@@ -209,11 +219,12 @@ class AddonManager:
     )
     async def async_install_addon(self) -> None:
         """Install the managed add-on."""
-        addon_info = await self.async_get_addon_info()
-
-        self._check_addon_available(addon_info)
-
-        await self._supervisor_client.store.install_addon(self.addon_slug)
+        try:
+            await self._supervisor_client.store.install_addon(self.addon_slug)
+        except AddonNotSupportedError as err:
+            raise AddonError(
+                f"{self.addon_name} app is not available: {err!s}"
+            ) from None
 
     @api_error(
         "Failed to uninstall the {addon_name} app",
@@ -226,17 +237,24 @@ class AddonManager:
     @api_error("Failed to update the {addon_name} app")
     async def async_update_addon(self) -> None:
         """Update the managed add-on if needed."""
-        addon_info = await self.async_get_addon_info()
+        try:
+            app_info = await self._supervisor_client.addons.addon_info(self.addon_slug)
+        except SupervisorNotFoundError:
+            raise AddonError(f"{self.addon_name} app is not installed") from None
 
-        self._check_addon_available(addon_info)
-
-        if addon_info.state is AddonState.NOT_INSTALLED:
-            raise AddonError(f"{self.addon_name} app is not installed")
-
-        if not addon_info.update_available:
+        if not app_info.update_available:
             return
 
-        await self.async_create_backup()
+        try:
+            await self._supervisor_client.store.addon_availability(self.addon_slug)
+        except AddonNotSupportedError as err:
+            raise AddonError(
+                f"{self.addon_name} app is not available: {err!s}"
+            ) from None
+
+        await self.async_create_backup(
+            app_info=self.async_convert_installed_app_info(app_info)
+        )
         await self._supervisor_client.store.update_addon(
             self.addon_slug, StoreAddonUpdate(backup=False)
         )
@@ -266,10 +284,14 @@ class AddonManager:
         "Failed to create a backup of the {addon_name} app",
         expected_error_type=SupervisorError,
     )
-    async def async_create_backup(self) -> None:
+    async def async_create_backup(self, *, app_info: AddonInfo | None = None) -> None:
         """Create a partial backup of the managed add-on."""
-        addon_info = await self.async_get_addon_info()
-        name = f"addon_{self.addon_slug}_{addon_info.version}"
+        if app_info:
+            app_version = app_info.version
+        else:
+            app_version = (await self.async_get_addon_info()).version
+
+        name = f"addon_{self.addon_slug}_{app_version}"
 
         self._logger.debug("Creating backup: %s", name)
         await self._supervisor_client.backups.partial_backup(
