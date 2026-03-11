@@ -115,7 +115,9 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
     @property
     def vm_data(self) -> dict[str, Any]:
         """Return the VM data."""
-        return self.coordinator.data[self._node_name].vms[self.device_id]
+        node_name = self._node_name
+        assert node_name is not None
+        return self.coordinator.data[node_name].vms[self.device_id]
 
 
 class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
@@ -171,4 +173,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
     @property
     def container_data(self) -> dict[str, Any]:
         """Return the Container data."""
-        return self.coordinator.data[self._node_name].containers[self.device_id]
+        node_name = self._node_name
+        assert node_name is not None
+        return self.coordinator.data[node_name].containers[self.device_id]
