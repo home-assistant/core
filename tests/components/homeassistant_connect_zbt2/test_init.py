@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
@@ -65,7 +65,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("force_usb_polling_watcher")
 async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
     """Test setting up USB monitoring."""
-    assert await async_setup_component(hass, "usb", {"usb": {}})
+    assert await async_setup_component(hass, USB_DOMAIN, {"usb": {}})
 
     await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)

@@ -1,6 +1,7 @@
 """Test the Home Assistant SkyConnect hardware platform."""
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -37,7 +38,7 @@ async def test_hardware_info(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
 ) -> None:
     """Test we can get the board info."""
-    assert await async_setup_component(hass, "usb", {})
+    assert await async_setup_component(hass, USB_DOMAIN, {})
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
     # Setup the config entry

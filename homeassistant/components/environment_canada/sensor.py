@@ -322,7 +322,7 @@ class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
     """Environment Canada sensor for alerts."""
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         value = self.entity_description.value_fn(self._ec_data)
         if not value:

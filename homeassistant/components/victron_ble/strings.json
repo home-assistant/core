@@ -63,6 +63,7 @@
           "low_v_ac_out": "AC-out undervoltage",
           "low_voltage": "Undervoltage",
           "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "no_alarm": "No alarm",
           "overload": "Overload",
           "short_circuit": "Short circuit"
         }
@@ -224,6 +225,7 @@
           "analysing_input_voltage": "Analyzing input voltage",
           "bms": "Battery management system",
           "engine_shutdown": "Engine shutdown",
+          "load_output_disabled": "Load output disabled",
           "no_input_power": "No input power",
           "no_reason": "No reason",
           "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",

@@ -5280,7 +5280,7 @@ async def async_get_broker_settings(  # noqa: C901
             )
             schema = vol.Schema({cv.string: cv.template})
             schema(validated_user_input[CONF_WS_HEADERS])
-        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):  # fmt: off
+        except (*JSON_DECODE_EXCEPTIONS, vol.MultipleInvalid):
             errors["base"] = "bad_ws_headers"
             return False
         return True

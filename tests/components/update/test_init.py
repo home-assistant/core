@@ -81,10 +81,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update._attr_title = "Title"
 
     assert update.entity_category is EntityCategory.DIAGNOSTIC
-    assert (
-        update.entity_picture
-        == "https://brands.home-assistant.io/_/test_platform/icon.png"
-    )
+    assert update.entity_picture == "/api/brands/integration/test_platform/icon.png"
     assert update.installed_version == "1.0.0"
     assert update.latest_version == "1.0.1"
     assert update.release_summary == "Summary"
@@ -629,6 +626,7 @@ async def test_entity_without_progress_support(
         {ATTR_ENTITY_ID: "update.update_available"},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert len(events) == 2
     assert events[0].data.get("old_state").attributes[ATTR_IN_PROGRESS] is False
@@ -991,7 +989,7 @@ async def test_update_percentage_backwards_compatibility(
     expected_attributes = {
         ATTR_AUTO_UPDATE: False,
         ATTR_DISPLAY_PRECISION: 0,
-        ATTR_ENTITY_PICTURE: "https://brands.home-assistant.io/_/test/icon.png",
+        ATTR_ENTITY_PICTURE: "/api/brands/integration/test/icon.png",
         ATTR_FRIENDLY_NAME: "legacy",
         ATTR_INSTALLED_VERSION: "1.0.0",
         ATTR_IN_PROGRESS: False,

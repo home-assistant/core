@@ -2388,7 +2388,7 @@ async def test_report_no_color_mode(
 
 
 @pytest.mark.parametrize(
-    ("color_mode", "supported_color_modes", "warning_expected"),
+    ("color_mode", "supported_color_modes", "error_expected"),
     [
         (light.ColorMode.ONOFF, None, True),
         (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
@@ -2399,7 +2399,7 @@ async def test_report_no_color_modes(
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
     supported_color_modes: set[str],
-    warning_expected: bool,
+    error_expected: bool,
 ) -> None:
     """Test a light setting no color mode."""
 
@@ -2412,9 +2412,13 @@ async def test_report_no_color_modes(
     entity = MockLightEntityEntity()
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     await platform.async_add_entities([entity])
-    entity._async_calculate_state()
-    expected_warning = "does not set supported color modes"
-    assert (expected_warning in caplog.text) is warning_expected
+    raised_error = ""
+    try:
+        entity._async_calculate_state()
+    except HomeAssistantError as err:
+        raised_error = str(err)
+    expected_error = "does not set supported color modes"
+    assert (expected_error in raised_error) is error_expected
 
 
 @pytest.mark.parametrize(

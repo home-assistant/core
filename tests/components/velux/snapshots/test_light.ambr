@@ -65,7 +65,7 @@
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -101,11 +101,10 @@
 # name: test_light_setup[mock_onoff_light][light.test_on_off_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
       'color_mode': None,
       'friendly_name': 'Test On Off Light',
       'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+        <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
     }),

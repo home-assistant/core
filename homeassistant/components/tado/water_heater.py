@@ -66,8 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado water heater platform."""
 
-    data = entry.runtime_data
-    coordinator = data.coordinator
+    coordinator = entry.runtime_data
     entities = await _generate_entities(coordinator)
 
     platform = entity_platform.async_get_current_platform()

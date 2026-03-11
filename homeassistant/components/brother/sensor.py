@@ -10,7 +10,7 @@ import logging
 from brother import BrotherSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -314,7 +314,7 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.brother.serial.lower()}_b/w_counter"
     if entity_id := entity_registry.async_get_entity_id(
-        PLATFORM, DOMAIN, old_unique_id
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     ):
         new_unique_id = f"{coordinator.brother.serial.lower()}_bw_counter"
         _LOGGER.debug(

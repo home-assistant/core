@@ -20,14 +20,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado switch platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     entities: list[TadoChildLockSwitchEntity] = []
     for zone in tado.zones:
-        zoneChildLockSupported = (
+        zone_child_lock_supported = (
             len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
         )
 
-        if not zoneChildLockSupported:
+        if not zone_child_lock_supported:
             continue
 
         entities.append(

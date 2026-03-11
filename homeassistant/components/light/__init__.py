@@ -363,14 +363,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         ):
             profiles.apply_default(light.entity_id, light.is_on, params)
 
-        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
-        supported_color_modes = light.supported_color_modes
+        supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
 
         # If a color temperature is specified, emulate it if not supported by the light
         if ATTR_COLOR_TEMP_KELVIN in params:
             if (
-                supported_color_modes
-                and ColorMode.COLOR_TEMP not in supported_color_modes
+                ColorMode.COLOR_TEMP not in supported_color_modes
                 and ColorMode.RGBWW in supported_color_modes
             ):
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
@@ -381,35 +379,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     light.min_color_temp_kelvin,
                     light.max_color_temp_kelvin,
                 )
-            elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
+            elif ColorMode.COLOR_TEMP not in supported_color_modes:
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-                if color_supported(legacy_supported_color_modes):
+                if color_supported(supported_color_modes):
                     params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
                         color_temp
                     )
 
         # If a color is specified, convert to the color space supported by the light
-        # Backwards compatibility: Fall back to hs color if light.supported_color_modes
-        # is not implemented
         rgb_color: tuple[int, int, int] | None
         rgbww_color: tuple[int, int, int, int, int] | None
-        if not supported_color_modes:
-            if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            elif (rgbw_color := params.pop(ATTR_RGBW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                # https://github.com/python/mypy/issues/13673
-                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
-                    *rgbww_color,
-                    light.min_color_temp_kelvin,
-                    light.max_color_temp_kelvin,
-                )
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-        elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
+        if ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
             hs_color = params.pop(ATTR_HS_COLOR)
             if ColorMode.RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
@@ -517,11 +497,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             params[ATTR_WHITE] = light.brightness
 
         # If both white and brightness are specified, override white
-        if (
-            supported_color_modes
-            and ATTR_WHITE in params
-            and ColorMode.WHITE in supported_color_modes
-        ):
+        if ATTR_WHITE in params and ColorMode.WHITE in supported_color_modes:
             params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
 
         # Remove deprecated white value if the light supports color mode
@@ -793,8 +769,6 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
-    __color_mode_reported = False
-
     @cached_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
@@ -1007,10 +981,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features
-        supported_color_modes = self.supported_color_modes
-        legacy_supported_color_modes = (
-            supported_color_modes or self._light_internal_supported_color_modes
-        )
+        supported_color_modes = self._light_internal_supported_color_modes
 
         _is_on = self.is_on
         color_mode = self.color_mode if _is_on else None
@@ -1025,7 +996,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 effect = self.effect
             data[ATTR_EFFECT] = effect
 
-        self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
+        self.__validate_color_mode(color_mode, supported_color_modes, effect)
 
         data[ATTR_COLOR_MODE] = color_mode
 
@@ -1041,15 +1012,15 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
 
-        if color_supported(legacy_supported_color_modes) or color_temp_supported(
-            legacy_supported_color_modes
+        if color_supported(supported_color_modes) or color_temp_supported(
+            supported_color_modes
         ):
             data[ATTR_HS_COLOR] = None
             data[ATTR_RGB_COLOR] = None
             data[ATTR_XY_COLOR] = None
-            if ColorMode.RGBW in legacy_supported_color_modes:
+            if ColorMode.RGBW in supported_color_modes:
                 data[ATTR_RGBW_COLOR] = None
-            if ColorMode.RGBWW in legacy_supported_color_modes:
+            if ColorMode.RGBWW in supported_color_modes:
                 data[ATTR_RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
@@ -1058,27 +1029,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     def _light_internal_supported_color_modes(self) -> set[ColorMode]:
-        """Calculate supported color modes with backwards compatibility."""
-        if (_supported_color_modes := self.supported_color_modes) is not None:
-            self.__validate_supported_color_modes(_supported_color_modes)
-            return _supported_color_modes
-
-        # Backwards compatibility for supported_color_modes added in 2021.4
-        # Warning added in 2024.3, remove in 2025.3
-        if not self.__color_mode_reported and self.__should_report_light_issue():
-            self.__color_mode_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                (
-                    "%s (%s) does not set supported color modes, this will stop working"
-                    " in Home Assistant Core 2025.3, please %s"
-                ),
-                self.entity_id,
-                type(self),
-                report_issue,
+        """Get validated supported color modes."""
+        if (_supported_color_modes := self.supported_color_modes) is None:
+            raise HomeAssistantError(
+                f"{self.entity_id} ({type(self)}) does not set supported color modes"
             )
-
-        return {ColorMode.ONOFF}
+        self.__validate_supported_color_modes(_supported_color_modes)
+        return _supported_color_modes
 
     @cached_property
     def supported_color_modes(self) -> set[ColorMode] | None:
@@ -1089,10 +1046,3 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
-
-    def __should_report_light_issue(self) -> bool:
-        """Return if light color mode issues should be reported."""
-        if not self.platform:
-            return True
-        # philips_js has known issues, we don't need users to open issues
-        return self.platform.platform_name != "philips_js"
