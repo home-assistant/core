@@ -363,9 +363,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
             or []
         )
-        # Build preset mapping and list
+        # Build preset mapping
         self._preset_handle_by_name.clear()
-        presets = []
         if self._matter_presets:
             for i, preset in enumerate(self._matter_presets, start=1):
                 # Map Matter PresetScenarioEnum to HA standard presets for translations
@@ -378,14 +377,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 else:
                     ha_preset_name = f"Preset{i}"
 
-                presets.append(ha_preset_name)
                 self._preset_handle_by_name[ha_preset_name] = preset.presetHandle
 
         # Always include PRESET_NONE to allow users to clear the preset
-        presets.append(PRESET_NONE)
         self._preset_handle_by_name[PRESET_NONE] = None
 
-        self._attr_preset_modes = presets
+        self._attr_preset_modes = list(self._preset_handle_by_name)
 
         # Update active preset mode
         active_preset_handle = self.get_matter_attribute_value(
