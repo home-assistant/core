@@ -1,5 +1,7 @@
 """Constants for the Motionblinds component."""
 
+from motionblinds import BlindType
+
 from homeassistant.const import Platform
 
 DOMAIN = "motion_blinds"
@@ -9,9 +11,12 @@ DEFAULT_GATEWAY_NAME = "Motionblinds Gateway"
 PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 CONF_BLIND_TYPE_LIST = "blind_type_list"
+CONF_BLIND_TYPE = "blind_type"
+CONF_COVER_DETAILS = "cover_details"
 CONF_WAIT_FOR_PUSH = "wait_for_push"
 CONF_INTERFACE = "interface"
 DEFAULT_WAIT_FOR_PUSH = False
+DEFAULT_BLIND_TYPE = BlindType.Unknown
 DEFAULT_INTERFACE = "any"
 
 KEY_GATEWAY = "gateway"

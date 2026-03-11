@@ -25,6 +25,7 @@ from .const import (
     ATTR_ABSOLUTE_POSITION,
     ATTR_AVAILABLE,
     ATTR_WIDTH,
+    CONF_BLIND_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
@@ -93,39 +94,54 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     for blind in motion_gateway.device_list.values():
-        if blind.type in POSITION_DEVICE_MAP:
+        option_key = f"{blind.mac}_{CONF_BLIND_TYPE}"
+        if option_key in config_entry.options:
+            try:
+                blind_type = BlindType(int(config_entry.options[option_key]))
+            except ValueError:
+                blind_type = blind.type
+            else:
+                _LOGGER.debug(
+                    "Blind %s: using overridden blind type %s",
+                    blind.mac,
+                    blind_type.name,
+                )
+        else:
+            blind_type = blind.type
+
+        if blind_type in POSITION_DEVICE_MAP:
             entities.append(
                 MotionPositionDevice(
                     coordinator,
                     blind,
-                    POSITION_DEVICE_MAP[blind.type],
+                    POSITION_DEVICE_MAP[blind_type],
                 )
             )
 
-        elif blind.type in TILT_DEVICE_MAP:
+        elif blind_type in TILT_DEVICE_MAP:
             entities.append(
                 MotionTiltDevice(
                     coordinator,
                     blind,
-                    TILT_DEVICE_MAP[blind.type],
+                    TILT_DEVICE_MAP[blind_type],
                 )
             )
 
-        elif blind.type in TILT_ONLY_DEVICE_MAP:
+        elif blind_type in TILT_ONLY_DEVICE_MAP:
             entities.append(
                 MotionTiltOnlyDevice(
                     coordinator,
                     blind,
-                    TILT_ONLY_DEVICE_MAP[blind.type],
+                    TILT_ONLY_DEVICE_MAP[blind_type],
                 )
             )
 
-        elif blind.type in TDBU_DEVICE_MAP:
+        elif blind_type in TDBU_DEVICE_MAP:
             entities.append(
                 MotionTDBUDevice(
                     coordinator,
                     blind,
-                    TDBU_DEVICE_MAP[blind.type],
+                    TDBU_DEVICE_MAP[blind_type],
                     "Top",
                 )
             )
@@ -133,7 +149,7 @@ async def async_setup_entry(
                 MotionTDBUDevice(
                     coordinator,
                     blind,
-                    TDBU_DEVICE_MAP[blind.type],
+                    TDBU_DEVICE_MAP[blind_type],
                     "Bottom",
                 )
             )
@@ -141,7 +157,7 @@ async def async_setup_entry(
                 MotionTDBUDevice(
                     coordinator,
                     blind,
-                    TDBU_DEVICE_MAP[blind.type],
+                    TDBU_DEVICE_MAP[blind_type],
                     "Combined",
                 )
             )
@@ -149,7 +165,7 @@ async def async_setup_entry(
         else:
             _LOGGER.warning(
                 "Blind type '%s' not yet supported, assuming RollerBlind",
-                blind.blind_type,
+                blind_type.name,
             )
             entities.append(
                 MotionPositionDevice(

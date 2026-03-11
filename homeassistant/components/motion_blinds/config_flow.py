@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from motionblinds import MotionDiscovery, MotionGateway
+from motionblinds import BlindType, MotionDiscovery, MotionGateway
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -18,9 +18,17 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers import (
+    device_registry,
+    entity_registry,
+    selector,
+)
 
 from .const import (
+    CONF_BLIND_TYPE,
+    CONF_COVER_DETAILS,
     CONF_INTERFACE,
+    DEFAULT_BLIND_TYPE,
     CONF_WAIT_FOR_PUSH,
     DEFAULT_GATEWAY_NAME,
     DEFAULT_INTERFACE,
@@ -45,15 +53,33 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+
+        if not hasattr(self, "_staged_options"):
+            self._staged_options = self.config_entry.options.copy()
+
         errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if CONF_COVER_DETAILS not in user_input:
+                self._staged_options.update(user_input)
+                return self.async_create_entry(title="", data=self._staged_options)
+
+            selected_cover = user_input.pop(CONF_COVER_DETAILS)
+            self._staged_options.update(user_input)
+            return await self.async_show_details(selected_cover)
 
         settings_schema = vol.Schema(
             {
+                vol.Optional(CONF_COVER_DETAILS): selector.DeviceSelector(
+                    selector.DeviceSelectorConfig(
+                        entity=selector.EntityFilterSelectorConfig(
+                            domain="cover",
+                            integration=DOMAIN,
+                        )
+                    )
+                ),
                 vol.Optional(
                     CONF_WAIT_FOR_PUSH,
-                    default=self.config_entry.options.get(
+                    default=self._staged_options.get(
                         CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH
                     ),
                 ): bool,
@@ -64,6 +90,78 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             step_id="init", data_schema=settings_schema, errors=errors
         )
 
+    async def async_show_details(self, selected_cover: str) -> ConfigFlowResult:
+        dev_reg = device_registry.async_get(self.hass)
+        device = dev_reg.async_get(selected_cover)
+        if device is None:
+            return await self.async_step_init()
+
+        self._selected_cover_mac = next(
+            (
+                identifier
+                for domain, identifier in device.identifiers
+                if domain == DOMAIN
+            ),
+            None,
+        )
+        device_name = device.name_by_user or device.name_by_user or self._selected_cover_mac
+
+        blind_type_key = f"{self._selected_cover_mac}_{CONF_BLIND_TYPE}"
+
+        try:
+            blind_type = BlindType(int(self._staged_options[blind_type_key]))
+        except (KeyError, ValueError):
+            blind_type = DEFAULT_BLIND_TYPE
+
+        schema = {
+            vol.Required(
+                CONF_BLIND_TYPE, default=f"blind_type_{blind_type.name.lower()}"
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {
+                            "value": f"blind_type_{v.name.lower()}",
+                            "label": v.name,
+                        }
+                        for v in BlindType
+                    ],
+                    translation_key=CONF_BLIND_TYPE,
+                    mode=selector.SelectSelectorMode.DROPDOWN
+                )
+            )
+        }
+
+        return self.async_show_form(
+            step_id="details",
+            data_schema=vol.Schema(schema),
+            errors={},
+            description_placeholders={"device_name": device_name},
+        )
+
+    async def async_step_details(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        blind_type = DEFAULT_BLIND_TYPE
+
+        if user_input:
+            raw = user_input.get(CONF_BLIND_TYPE)
+            if raw:
+                prefix = "blind_type_"
+                if raw.startswith(prefix):
+                    name = raw[len(prefix):]
+                    for v in BlindType:
+                        if v.name.lower() == name:
+                            blind_type = v
+                            break
+
+        blind_type_key = f"{self._selected_cover_mac}_{CONF_BLIND_TYPE}"
+
+        if blind_type == DEFAULT_BLIND_TYPE:
+            self._staged_options.pop(blind_type_key, None)
+        else:
+            self._staged_options[blind_type_key] = blind_type.value
+
+        return await self.async_step_init()
 
 class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Motionblinds config flow."""

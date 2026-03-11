@@ -63,10 +63,52 @@
   },
   "options": {
     "step": {
+      "details": {
+        "data": {
+          "blind_type": "Blind type"
+        },
+        "description": "Advanced options for {device_name}"
+      },
       "init": {
         "data": {
+          "cover_details": "Select a cover for advanced options",
           "wait_for_push": "Wait for multicast push on update"
-        }
+        },
+        "description": "Select a cover for advanced options"
+      }
+    }
+  },
+  "selector": {
+    "blind_type": {
+      "options": {
+        "blind_type_awning": "Awning",
+        "blind_type_curtain": "Curtain",
+        "blind_type_curtainleft": "Curtain Left",
+        "blind_type_curtainright": "Curtain Right",
+        "blind_type_daynightblind": "Day Night Blind",
+        "blind_type_dimmingblind": "Dimming Blind",
+        "blind_type_doubleroller": "Double Roller",
+        "blind_type_dualshade": "Dual Shade",
+        "blind_type_honeycombblind": "Honeycomb Blind",
+        "blind_type_insectscreen": "Insect Screen",
+        "blind_type_radioreceiver": "Radio Receiver",
+        "blind_type_rollerblind": "Roller Blind",
+        "blind_type_rollergate": "Roller Gate",
+        "blind_type_rollershutter": "Roller Shutter",
+        "blind_type_rollertiltmotor": "Roller Tilt Motor",
+        "blind_type_romanblind": "Roman Blind",
+        "blind_type_shangrilablind": "Shangri-La Blind",
+        "blind_type_skylightblind": "Skylight Blind",
+        "blind_type_switch": "Switch",
+        "blind_type_topdownbottomup": "Top Down Bottom Up",
+        "blind_type_triangleblind": "Triangle Blind",
+        "blind_type_unknown": "(auto detect)",
+        "blind_type_venetianblind": "Venetian Blind",
+        "blind_type_verticalblind": "Vertical Blind",
+        "blind_type_verticalblindleft": "Vertical Blind Left",
+        "blind_type_verticalblindright": "Vertical Blind Right",
+        "blind_type_woodshutter": "Wood Shutter",
+        "blind_type_wovenwoodshades": "Woven Wood Shades"
       }
     }
   },
