@@ -619,6 +619,7 @@ class BackupManager:
                 backup=_backup,
                 on_progress=on_upload_progress,
             )
+            upload_progress_debouncer.async_cancel()
             if streamer:
                 await streamer.wait()
 
