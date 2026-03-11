@@ -1,7 +1,10 @@
 """Main Hub class."""
 
+from __future__ import annotations
+
 from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
 from victron_mqtt import (
     AuthenticationError,
@@ -111,7 +114,8 @@ class Hub:
         metric: VictronVenusMetric,
     ) -> None:
         _LOGGER.debug("New metric received. Device: %s, Metric: %s", device, metric)
-        assert hub.installation_id is not None
+        if TYPE_CHECKING:
+            assert hub.installation_id is not None
         device_info = Hub._map_device_info(device, hub.installation_id)
         callback = self.new_metric_callbacks.get(metric.metric_kind)
         if callback is not None:
