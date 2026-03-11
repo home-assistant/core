@@ -14,7 +14,7 @@ from homeassistant.components.forecast_solar.const import (
     DOMAIN,
     SUBENTRY_TYPE_PLANE,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -243,7 +243,7 @@ async def test_subentry_flow_reconfigure_plane(
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
-        context={"source": "reconfigure", "subentry_id": subentry_id},
+        context={"source": SOURCE_RECONFIGURE, "subentry_id": subentry_id},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -285,7 +285,7 @@ async def test_subentry_flow_no_api_key(
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -306,7 +306,7 @@ async def test_subentry_flow_max_planes(
     for i in range(3):
         result = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
-            context={"source": "user"},
+            context={"source": SOURCE_USER},
         )
         assert result["type"] is FlowResultType.FORM
 
@@ -326,7 +326,7 @@ async def test_subentry_flow_max_planes(
     # Attempt to add a 5th plane should be aborted
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT
