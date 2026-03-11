@@ -102,6 +102,27 @@ def _add_door_tilt_state_value(node_state: dict[str, Any]) -> dict[str, Any]:
     return updated_state
 
 
+def _add_lock_state_notification_states(node_state: dict[str, Any]) -> dict[str, Any]:
+    """Return a node state with Access Control lock state notification states 1-4."""
+    updated_state = copy.deepcopy(node_state)
+    for value_data in updated_state["values"]:
+        if (
+            value_data.get("commandClass") == 113
+            and value_data.get("property") == "Access Control"
+            and value_data.get("propertyKey") == "Lock state"
+        ):
+            value_data["metadata"].setdefault("states", {}).update(
+                {
+                    "1": "Manual lock operation",
+                    "2": "Manual unlock operation",
+                    "3": "RF lock operation",
+                    "4": "RF unlock operation",
+                }
+            )
+            break
+    return updated_state
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -616,6 +637,44 @@ async def test_legacy_door_state_entities_follow_opening_state(
         assert state.state == STATE_OFF, (
             f"{e.entity_id} ({e.original_name}) should be OFF when Opening state=Open"
         )
+
+
+async def test_access_control_lock_state_notification_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client,
+    lock_august_asl03_state,
+) -> None:
+    """Test Access Control lock state notification sensors from new discovery schemas."""
+    node = Node(client, _add_lock_state_notification_states(lock_august_asl03_state))
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    lock_state_entities = [
+        state
+        for state in hass.states.async_all("binary_sensor")
+        if state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.LOCK
+    ]
+    assert len(lock_state_entities) == 4
+    assert all(state.state == STATE_OFF for state in lock_state_entities)
+
+    jammed_entry = next(
+        entry
+        for entry in entity_registry.entities.values()
+        if entry.domain == "binary_sensor"
+        and entry.platform == "zwave_js"
+        and entry.original_name == "Lock jammed"
+    )
+    assert jammed_entry.original_device_class == BinarySensorDeviceClass.PROBLEM
+    assert jammed_entry.entity_category == EntityCategory.DIAGNOSTIC
+
+    jammed_state = hass.states.get(jammed_entry.entity_id)
+    assert jammed_state
+    assert jammed_state.state == STATE_OFF
 
 
 async def test_config_parameter_binary_sensor(

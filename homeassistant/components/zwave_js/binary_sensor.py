@@ -178,6 +178,7 @@ class OpeningStateZWaveJSEntityDescription(BinarySensorEntityDescription):
 # to use the new discovery schema and we've removed the old discovery code.
 MIGRATED_NOTIFICATION_TYPES = {
     NotificationType.SMOKE_ALARM,
+    NotificationType.ACCESS_CONTROL,
 }
 
 NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] = (
@@ -251,19 +252,6 @@ NOTIFICATION_SENSOR_MAPPINGS: tuple[NotificationZWaveJSEntityDescription, ...] =
     NotificationZWaveJSEntityDescription(
         # NotificationType 5: Water - All other State Id's
         key=NOTIFICATION_WATER,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 6: Access Control - State Id's 1, 2, 3, 4 (Lock)
-        key=NOTIFICATION_ACCESS_CONTROL,
-        states={1, 2, 3, 4},
-        device_class=BinarySensorDeviceClass.LOCK,
-    ),
-    NotificationZWaveJSEntityDescription(
-        # NotificationType 6: Access Control - State Id's 11 (Lock jammed)
-        key=NOTIFICATION_ACCESS_CONTROL,
-        states={11},
-        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NotificationZWaveJSEntityDescription(
@@ -695,6 +683,48 @@ OPENING_STATE_NOTIFICATION_SCHEMA = ZWaveValueDiscoverySchema(
 
 
 DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Lock state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={1, 2, 3, 4},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        allow_multi=True,
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 6: Access Control - State Id's 1, 2, 3, 4 (Lock)
+            key=NOTIFICATION_ACCESS_CONTROL,
+            states={1, 2, 3, 4},
+            device_class=BinarySensorDeviceClass.LOCK,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
+    NewZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            property={"Access Control"},
+            property_key={"Lock state"},
+            type={ValueType.NUMBER},
+            any_available_states_keys={11},
+            any_available_cc_specific={
+                (CC_SPECIFIC_NOTIFICATION_TYPE, NotificationType.ACCESS_CONTROL)
+            },
+        ),
+        entity_description=NotificationZWaveJSEntityDescription(
+            # NotificationType 6: Access Control - State Id's 11 (Lock jammed)
+            key=NOTIFICATION_ACCESS_CONTROL,
+            states={11},
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=ZWaveNotificationBinarySensor,
+    ),
     # -------------------------------------------------------------------
     # DEPRECATED legacy Access Control door/window binary sensors.
     # These schemas exist only for backwards compatibility with users who
