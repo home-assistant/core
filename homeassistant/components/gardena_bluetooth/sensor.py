@@ -41,7 +41,7 @@ class GardenaBluetoothSensorEntityDescription(SensorEntityDescription):
 
 DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
-        key=Valve.activation_reason.uuid,
+        key=Valve.activation_reason.unique_id,
         translation_key="activation_reason",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -49,7 +49,7 @@ DESCRIPTIONS = (
         char=Valve.activation_reason,
     ),
     GardenaBluetoothSensorEntityDescription(
-        key=Battery.battery_level.uuid,
+        key=Battery.battery_level.unique_id,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -57,7 +57,7 @@ DESCRIPTIONS = (
         char=Battery.battery_level,
     ),
     GardenaBluetoothSensorEntityDescription(
-        key=Sensor.battery_level.uuid,
+        key=Sensor.battery_level.unique_id,
         translation_key="sensor_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
@@ -67,7 +67,7 @@ DESCRIPTIONS = (
         connected_state=Sensor.connected_state,
     ),
     GardenaBluetoothSensorEntityDescription(
-        key=Sensor.value.uuid,
+        key=Sensor.value.unique_id,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.MOISTURE,
         native_unit_of_measurement=PERCENTAGE,
@@ -75,14 +75,14 @@ DESCRIPTIONS = (
         connected_state=Sensor.connected_state,
     ),
     GardenaBluetoothSensorEntityDescription(
-        key=Sensor.type.uuid,
+        key=Sensor.type.unique_id,
         translation_key="sensor_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Sensor.type,
         connected_state=Sensor.connected_state,
     ),
     GardenaBluetoothSensorEntityDescription(
-        key=Sensor.measurement_timestamp.uuid,
+        key=Sensor.measurement_timestamp.unique_id,
         translation_key="sensor_measurement_timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -102,9 +102,9 @@ async def async_setup_entry(
     entities: list[GardenaBluetoothEntity] = [
         GardenaBluetoothSensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
-    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+    if Valve.remaining_open_time.unique_id in coordinator.characteristics:
         entities.append(GardenaBluetoothRemainSensor(coordinator))
     async_add_entities(entities)
 

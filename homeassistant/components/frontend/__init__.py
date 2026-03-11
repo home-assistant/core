@@ -18,7 +18,7 @@ from yarl import URL
 
 from homeassistant.components import onboarding, websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
-from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ActiveConnection
 from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import (
     CONF_MODE,
@@ -78,6 +78,16 @@ THEMES_STORAGE_VERSION = 1
 THEMES_SAVE_DELAY = 60
 DATA_THEMES_STORE: HassKey[Store] = HassKey("frontend_themes_store")
 DATA_THEMES: HassKey[dict[str, Any]] = HassKey("frontend_themes")
+
+PANELS_STORAGE_KEY = f"{DOMAIN}_panels"
+PANELS_STORAGE_VERSION = 1
+PANELS_SAVE_DELAY = 10
+DATA_PANELS_STORE: HassKey[Store[dict[str, dict[str, Any]]]] = HassKey(
+    "frontend_panels_store"
+)
+DATA_PANELS_CONFIG: HassKey[dict[str, dict[str, Any]]] = HassKey(
+    "frontend_panels_config"
+)
 DATA_DEFAULT_THEME = "frontend_default_theme"
 DATA_DEFAULT_DARK_THEME = "frontend_default_dark_theme"
 DEFAULT_THEME = "default"
@@ -287,6 +297,9 @@ class Panel:
     # If the panel should only be visible to admins
     require_admin = False
 
+    # If the panel should be shown in the sidebar
+    show_in_sidebar = True
+
     # If the panel is a configuration panel for a integration
     config_panel_domain: str | None = None
 
@@ -300,6 +313,7 @@ class Panel:
         config: dict[str, Any] | None,
         require_admin: bool,
         config_panel_domain: str | None,
+        show_in_sidebar: bool,
     ) -> None:
         """Initialize a built-in panel."""
         self.component_name = component_name
@@ -309,12 +323,15 @@ class Panel:
         self.config = config
         self.require_admin = require_admin
         self.config_panel_domain = config_panel_domain
+        self.show_in_sidebar = show_in_sidebar
         self.sidebar_default_visible = sidebar_default_visible
 
     @callback
-    def to_response(self) -> PanelResponse:
+    def to_response(
+        self, config_override: dict[str, Any] | None = None
+    ) -> PanelResponse:
         """Panel as dictionary."""
-        return {
+        response: PanelResponse = {
             "component_name": self.component_name,
             "icon": self.sidebar_icon,
             "title": self.sidebar_title,
@@ -323,7 +340,18 @@ class Panel:
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
             "config_panel_domain": self.config_panel_domain,
+            "show_in_sidebar": self.show_in_sidebar,
         }
+        if config_override:
+            if "require_admin" in config_override:
+                response["require_admin"] = config_override["require_admin"]
+            if "show_in_sidebar" in config_override:
+                response["show_in_sidebar"] = config_override["show_in_sidebar"]
+            if "icon" in config_override:
+                response["icon"] = config_override["icon"]
+            if "title" in config_override:
+                response["title"] = config_override["title"]
+        return response
 
 
 @bind_hass
@@ -340,6 +368,7 @@ def async_register_built_in_panel(
     *,
     update: bool = False,
     config_panel_domain: str | None = None,
+    show_in_sidebar: bool = True,
 ) -> None:
     """Register a built-in panel."""
     panel = Panel(
@@ -351,6 +380,7 @@ def async_register_built_in_panel(
         config,
         require_admin,
         config_panel_domain,
+        show_in_sidebar,
     )
 
     panels = hass.data.setdefault(DATA_PANELS, {})
@@ -415,12 +445,24 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+
+    panels_store = hass.data[DATA_PANELS_STORE] = Store[dict[str, dict[str, Any]]](
+        hass, PANELS_STORAGE_VERSION, PANELS_STORAGE_KEY
+    )
+    loaded: Any = await panels_store.async_load()
+    if not isinstance(loaded, dict):
+        if loaded is not None:
+            _LOGGER.warning("Ignoring invalid panel storage data")
+        loaded = {}
+    hass.data[DATA_PANELS_CONFIG] = loaded
+
     websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
     websocket_api.async_register_command(hass, websocket_get_version)
     websocket_api.async_register_command(hass, websocket_subscribe_extra_js)
+    websocket_api.async_register_command(hass, websocket_update_panel)
     hass.http.register_view(ManifestJSONView())
 
     conf = config.get(DOMAIN, {})
@@ -534,31 +576,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "light",
         sidebar_icon="mdi:lamps",
         sidebar_title="light",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "security",
         sidebar_icon="mdi:security",
         sidebar_title="security",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "climate",
         sidebar_icon="mdi:home-thermometer",
         sidebar_title="climate",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
     async_register_built_in_panel(
         hass,
         "home",
         sidebar_icon="mdi:home",
         sidebar_title="home",
-        sidebar_default_visible=False,
+        show_in_sidebar=False,
     )
 
     async_register_built_in_panel(hass, "profile")
+    async_register_built_in_panel(hass, "notfound")
 
     @callback
     def async_change_listener(
@@ -883,11 +926,18 @@ def websocket_get_panels(
 ) -> None:
     """Handle get panels command."""
     user_is_admin = connection.user.is_admin
-    panels = {
-        panel_key: panel.to_response()
-        for panel_key, panel in connection.hass.data[DATA_PANELS].items()
-        if user_is_admin or not panel.require_admin
-    }
+    panels_config = hass.data[DATA_PANELS_CONFIG]
+    panels: dict[str, PanelResponse] = {}
+    for panel_key, panel in connection.hass.data[DATA_PANELS].items():
+        config_override = panels_config.get(panel_key)
+        require_admin = (
+            config_override.get("require_admin", panel.require_admin)
+            if config_override
+            else panel.require_admin
+        )
+        if not user_is_admin and require_admin:
+            continue
+        panels[panel_key] = panel.to_response(config_override)
 
     connection.send_message(websocket_api.result_message(msg["id"], panels))
 
@@ -986,6 +1036,50 @@ def websocket_subscribe_extra_js(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "frontend/update_panel",
+        vol.Required("url_path"): str,
+        vol.Optional("title"): vol.Any(cv.string, None),
+        vol.Optional("icon"): vol.Any(cv.icon, None),
+        vol.Optional("require_admin"): vol.Any(cv.boolean, None),
+        vol.Optional("show_in_sidebar"): vol.Any(cv.boolean, None),
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_update_panel(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle update panel command."""
+    url_path: str = msg["url_path"]
+
+    if url_path not in hass.data.get(DATA_PANELS, {}):
+        connection.send_error(msg["id"], ERR_NOT_FOUND, "Panel not found")
+        return
+
+    panels_config = hass.data[DATA_PANELS_CONFIG]
+    panel_config = dict(panels_config.get(url_path, {}))
+
+    for key in ("title", "icon", "require_admin", "show_in_sidebar"):
+        if key in msg:
+            if (value := msg[key]) is None:
+                panel_config.pop(key, None)
+            else:
+                panel_config[key] = value
+
+    if panel_config:
+        panels_config[url_path] = panel_config
+    else:
+        panels_config.pop(url_path, None)
+
+    hass.data[DATA_PANELS_STORE].async_delay_save(
+        lambda: hass.data[DATA_PANELS_CONFIG], PANELS_SAVE_DELAY
+    )
+    hass.bus.async_fire(EVENT_PANELS_UPDATED)
+    connection.send_result(msg["id"])
+
+
 class PanelResponse(TypedDict):
     """Represent the panel response type."""
 
@@ -997,3 +1091,4 @@ class PanelResponse(TypedDict):
     url_path: str
     require_admin: bool
     config_panel_domain: str | None
+    show_in_sidebar: bool
