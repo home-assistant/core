@@ -31,7 +31,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import TessieConfigEntry
 from .entity import TessieEnergyEntity, TessieEntity
-from .helpers import handle_command
+from .helpers import handle_command, is_charging_or_starting
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -71,7 +71,7 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         unique_id="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
-        value_func=lambda state: state in {"Starting", "Charging"},
+        value_func=is_charging_or_starting,
     ),
 )
 

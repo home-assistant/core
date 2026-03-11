@@ -47,6 +47,7 @@ from .entity import (
     TessieEntity,
     TessieWallConnectorEntity,
 )
+from .helpers import charge_state_to_option
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -55,15 +56,6 @@ def minutes_to_datetime(value: StateType) -> datetime | None:
     """Convert relative minutes into absolute datetime."""
     if isinstance(value, (int, float)) and value > 0:
         return dt_util.now() + timedelta(minutes=value)
-    return None
-
-
-def charge_state_to_option(value: StateType) -> str | None:
-    """Convert Tessie charge state to the enum option."""
-    if isinstance(value, str):
-        return TessieChargeStates.get(value)
-    if isinstance(value, bool):
-        return TessieChargeStates["Charging" if value else "Stopped"]
     return None
 
 
