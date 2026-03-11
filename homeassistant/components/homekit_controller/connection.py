@@ -965,7 +965,7 @@ class HKDevice:
                     # visible on the network.
                     self.async_set_available_state(False)
                     return
-                except (AccessoryDisconnectedError, EncryptionError):
+                except AccessoryDisconnectedError, EncryptionError:
                     # Temporary connection failure. Device may still available but our
                     # connection was dropped or we are reconnecting
                     self._poll_failures += 1

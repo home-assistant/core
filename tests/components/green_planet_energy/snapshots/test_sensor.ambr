@@ -1,0 +1,363 @@
+# serializer version: 1
+# name: test_sensors[sensor.green_planet_energy_current_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_current_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current price',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 4,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current price',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_price',
+    'unique_id': 'gpe_current_price',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_current_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Green Planet Energy Current price',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_current_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.25',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_highest_price_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_highest_price_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest price time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Highest price time',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_price_time',
+    'unique_id': 'gpe_highest_price_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_highest_price_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Green Planet Energy Highest price time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_highest_price_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T07:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_highest_price_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_highest_price_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Highest price today',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 4,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Highest price today',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'highest_price_today',
+    'unique_id': 'gpe_highest_price_today',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_highest_price_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Green Planet Energy Highest price today',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_highest_price_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.43',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_day_06_00_18_00-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_day_06_00_18_00',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest price day (06:00-18:00)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 4,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest price day (06:00-18:00)',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_price_day',
+    'unique_id': 'gpe_lowest_price_day',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_day_06_00_18_00-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Green Planet Energy Lowest price day (06:00-18:00)',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_day_06_00_18_00',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.26',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_day_time_06_00_18_00-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_day_time_06_00_18_00',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest price day time (06:00-18:00)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Lowest price day time (06:00-18:00)',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_price_day_time',
+    'unique_id': 'gpe_lowest_price_day_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_day_time_06_00_18_00-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Green Planet Energy Lowest price day time (06:00-18:00)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_day_time_06_00_18_00',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T14:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_night_18_00_06_00-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_night_18_00_06_00',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest price night (18:00-06:00)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 4,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lowest price night (18:00-06:00)',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_price_night',
+    'unique_id': 'gpe_lowest_price_night',
+    'unit_of_measurement': '€/kWh',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_night_18_00_06_00-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Green Planet Energy Lowest price night (18:00-06:00)',
+      'unit_of_measurement': '€/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_night_18_00_06_00',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_night_time_18_00_06_00-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_night_time_18_00_06_00',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lowest price night time (18:00-06:00)',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Lowest price night time (18:00-06:00)',
+    'platform': 'green_planet_energy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lowest_price_night_time',
+    'unique_id': 'gpe_lowest_price_night_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.green_planet_energy_lowest_price_night_time_18_00_06_00-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Green Planet Energy Lowest price night time (18:00-06:00)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.green_planet_energy_lowest_price_night_time_18_00_06_00',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T08:00:00+00:00',
+  })
+# ---

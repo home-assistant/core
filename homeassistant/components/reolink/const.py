@@ -1,5 +1,7 @@
 """Constants for the Reolink Camera integration."""
 
+from homeassistant.components.camera import CameraEntityFeature
+
 DOMAIN = "reolink"
 
 CONF_USE_HTTPS = "use_https"
@@ -13,3 +15,5 @@ CONF_FIRMWARE_CHECK_TIME = "firmware_check_time"
 BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL = 3600  # seconds
 BATTERY_WAKE_UPDATE_INTERVAL = 6 * BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
 BATTERY_ALL_WAKE_UPDATE_INTERVAL = 2 * BATTERY_WAKE_UPDATE_INTERVAL
+
+SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM

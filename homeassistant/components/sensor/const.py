@@ -64,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     MassVolumeConcentrationConverter,
     NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
@@ -285,13 +286,13 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
     """Amount of NO.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROUS_OXIDE = "nitrous_oxide"
@@ -303,7 +304,7 @@ class SensorDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `ppb` (parts per billion),`μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `μg/m³`
     """
 
     PH = "ph"
@@ -566,6 +567,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
+    SensorDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,
     SensorDeviceClass.OZONE: OzoneConcentrationConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
@@ -637,12 +639,17 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
     SensorDeviceClass.NITROGEN_DIOXIDE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
-    SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.NITROGEN_MONOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     SensorDeviceClass.PH: {None},
@@ -830,12 +837,13 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
 }
 
 
-STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]] = {
+STATE_CLASS_UNITS: dict[SensorStateClass, set[type[StrEnum] | str | None]] = {
     SensorStateClass.MEASUREMENT_ANGLE: {DEGREE},
 }
 
 # We translate units that were using using the legacy coding of μ \u00b5
-# to units using recommended coding of μ \u03bc
+# to units using recommended coding of μ \u03bc and
+# we convert alternative accepted units to the preferred unit.
 AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -845,4 +853,9 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
     "\u00b5g": UnitOfMass.MICROGRAMS,
     "\u00b5s": UnitOfTime.MICROSECONDS,
+    "mVAr": UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+    "VAr": UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "kVAr": UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+    "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }

@@ -7,7 +7,6 @@ from typing import Any
 
 from pylitterbot import LitterRobot
 from pylitterbot.enums import LitterBoxStatus
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -16,14 +15,11 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
-
-SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
 
 LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
@@ -55,16 +51,6 @@ async def async_setup_entry(
             robot=robot, coordinator=coordinator, description=LITTER_BOX_ENTITY
         )
         for robot in coordinator.litter_robots()
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_SLEEP_MODE,
-        {
-            vol.Required("enabled"): cv.boolean,
-            vol.Optional("start_time"): cv.time,
-        },
-        "async_set_sleep_mode",
     )
 
 

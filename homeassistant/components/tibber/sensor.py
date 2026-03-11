@@ -605,7 +605,7 @@ async def _async_setup_graphql_sensors(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = entry.runtime_data.tibber_connection
+    tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     entity_registry = er.async_get(hass)
 
@@ -803,7 +803,7 @@ class TibberSensorElPrice(TibberSensor):
         _LOGGER.debug("Fetching data")
         try:
             await self._tibber_home.update_info_and_price_info()
-        except (TimeoutError, aiohttp.ClientError):
+        except TimeoutError, aiohttp.ClientError:
             return
         data = self._tibber_home.info["viewer"]["home"]
         self._attr_extra_state_attributes["app_nickname"] = data["appNickname"]

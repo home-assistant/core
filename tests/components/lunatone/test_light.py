@@ -22,8 +22,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry
 
-TEST_ENTITY_ID = "light.device_1"
-
 
 async def test_setup(
     hass: HomeAssistant,
@@ -52,10 +50,13 @@ async def test_turn_on_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on and off."""
+    device_id = 1
+    entity_id = f"light.device_{device_id}"
+
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
-        device = mock_lunatone_devices.data.devices[0]
+        device = mock_lunatone_devices.data.devices[device_id - 1]
         device.features.switchable.status = not device.features.switchable.status
 
     mock_lunatone_devices.async_update.side_effect = fake_update
@@ -63,22 +64,22 @@ async def test_turn_on_off(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
 
@@ -90,16 +91,16 @@ async def test_turn_on_off_with_brightness(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on with brightness."""
+    device_id = 2
+    entity_id = f"light.device_{device_id}"
     expected_brightness = 128
     brightness_percentages = iter([50.0, 0.0, 50.0])
-
-    mock_lunatone_devices.set_is_dimmable(True)
 
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
         brightness = next(brightness_percentages)
-        device = mock_lunatone_devices.data.devices[0]
+        device = mock_lunatone_devices.data.devices[device_id - 1]
         device.features.switchable.status = brightness > 0
         device.features.dimmable.status = brightness
 
@@ -108,11 +109,11 @@ async def test_turn_on_off_with_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_BRIGHTNESS: expected_brightness},
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: expected_brightness},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == expected_brightness
@@ -120,11 +121,11 @@ async def test_turn_on_off_with_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
     assert not state.attributes["brightness"]
@@ -132,11 +133,11 @@ async def test_turn_on_off_with_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
     assert state.attributes["brightness"] == expected_brightness

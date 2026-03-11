@@ -139,7 +139,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
 class CoordinatorStub:
     """Coordinator stub for testing entity restoration behavior."""
 
-    instances: list["CoordinatorStub"] = []
+    instances: list[CoordinatorStub] = []
 
     def __init__(
         self,

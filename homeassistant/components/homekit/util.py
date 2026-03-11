@@ -455,7 +455,7 @@ def convert_to_float(state: Any) -> float | None:
     """Return float of state, catch errors."""
     try:
         return float(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return None
 
 
@@ -463,7 +463,7 @@ def coerce_int(state: str) -> int:
     """Return int."""
     try:
         return int(state)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         return 0
 
 

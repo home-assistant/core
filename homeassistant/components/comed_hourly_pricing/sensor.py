@@ -126,5 +126,5 @@ class ComedHourlyPricingSensor(SensorEntity):
 
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Could not get data from ComEd API: %s", err)
-        except (ValueError, KeyError):
+        except ValueError, KeyError:
             _LOGGER.warning("Could not update status for %s", self.name)

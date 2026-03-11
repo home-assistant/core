@@ -57,7 +57,7 @@ class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the switch."""
         return not self.coordinator.data["status"].get("DownloadPaused", False)
 

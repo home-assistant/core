@@ -24,12 +24,18 @@ async def wake_up_vehicle(vehicle: TeslaFleetVehicleData) -> None:
                     cmd = await vehicle.api.vehicle()
                 state = cmd["response"]["state"]
             except TeslaFleetError as e:
-                raise HomeAssistantError(str(e)) from e
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="wake_up_failed",
+                ) from e
             vehicle.coordinator.data["state"] = state
             if state != TeslaFleetState.ONLINE:
                 times += 1
                 if times >= 4:  # Give up after 30 seconds total
-                    raise HomeAssistantError("Could not wake up vehicle")
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="wake_up_timeout",
+                    )
                 await asyncio.sleep(times * 5)
 
 

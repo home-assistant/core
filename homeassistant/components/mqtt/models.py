@@ -58,7 +58,7 @@ def convert_outgoing_mqtt_payload(
     if isinstance(payload, str) and payload.startswith(("b'", 'b"')):
         try:
             native_object = literal_eval(payload)
-        except (ValueError, TypeError, SyntaxError, MemoryError):
+        except ValueError, TypeError, SyntaxError, MemoryError:
             pass
         else:
             if isinstance(native_object, bytes):

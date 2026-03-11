@@ -1,0 +1,179 @@
+# serializer version: 1
+# name: test_select_entities_snapshot[select.nano_color_2_bypass-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'auto',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.nano_color_2_bypass',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bypass',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bypass',
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aero_by_pass',
+    'unique_id': '2___aerokonfbypass',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities_snapshot[select.nano_color_2_bypass-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nano Color 2 Bypass',
+      'options': list([
+        'off',
+        'auto',
+        'on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.nano_color_2_bypass',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_select_entities_snapshot[select.nano_color_2_language-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'polish',
+        'english',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.nano_color_2_language',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Language',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Language',
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'language',
+    'unique_id': '2__jezyk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities_snapshot[select.nano_color_2_language-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Nano Color 2 Language',
+      'options': list([
+        'polish',
+        'english',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.nano_color_2_language',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'english',
+  })
+# ---
+# name: test_select_entities_snapshot[select.r_900_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'eco',
+        'hybrid',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.r_900_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operating_mode',
+    'unique_id': '1___tr_pracy_pc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities_snapshot[select.r_900_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'R 900 Operating mode',
+      'options': list([
+        'disabled',
+        'eco',
+        'hybrid',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.r_900_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eco',
+  })
+# ---
