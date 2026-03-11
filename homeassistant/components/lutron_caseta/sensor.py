@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry
+
+BATTERY_REFRESH_INTERVAL = timedelta(days=1)
 
 
 async def async_setup_entry(
@@ -22,8 +26,11 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     async_add_entities(
-        LutronCasetaBatterySensor(device, data)
-        for device in bridge.get_devices_by_domain("cover")
+        (
+            LutronCasetaBatterySensor(device, data)
+            for device in bridge.get_devices_by_domain("cover")
+        ),
+        update_before_add=True,
     )
 
 
@@ -46,8 +53,18 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, SensorEntity):
 
     # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
-        """Set up the entity without bridge subscriptions."""
-        pass
+        """Schedule periodic refreshes without bridge subscriptions."""
+        self.async_on_remove(
+            async_track_time_interval(
+                self.hass,
+                self._async_schedule_refresh,
+                BATTERY_REFRESH_INTERVAL,
+            )
+        )
+
+    async def _async_schedule_refresh(self, _now) -> None:
+        """Refresh the battery sensor on a long interval."""
+        await self.async_update_ha_state(True)
 
     async def async_update(self) -> None:
         """Fetch the latest battery status from the bridge."""
