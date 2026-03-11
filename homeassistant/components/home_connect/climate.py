@@ -1,11 +1,10 @@
 """Provides climate entities for Home Connect."""
 
-import contextlib
 import logging
 from typing import Any, cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
-from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
+from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.climate import (
@@ -323,36 +322,10 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        value = FAN_MODES_OPTIONS[fan_mode]
-        try:
-            # We try to set the active program option first,
-            # if it fails we try to set the selected program option
-            with contextlib.suppress(ActiveProgramNotSetError):
-                await self.coordinator.client.set_active_program_option(
-                    self.appliance.info.ha_id,
-                    option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
-                    value=value,
-                )
-                _LOGGER.debug(
-                    "Updated %s for the active program, new state: %s",
-                    self.entity_id,
-                    self.state,
-                )
-                return
-
-            await self.coordinator.client.set_selected_program_option(
-                self.appliance.info.ha_id,
-                option_key=OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
-                value=value,
-            )
-            _LOGGER.debug(
-                "Updated %s for the selected program, new state: %s",
-                self.entity_id,
-                self.state,
-            )
-        except HomeConnectError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_option",
-                translation_placeholders=get_dict_from_home_connect_error(err),
-            ) from err
+        await super().async_set_option_with_key(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+            FAN_MODES_OPTIONS[fan_mode],
+        )
+        _LOGGER.debug(
+            "Updated %s's speed mode option, new state: %s", self.entity_id, self.state
+        )
