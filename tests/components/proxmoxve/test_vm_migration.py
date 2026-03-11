@@ -32,7 +32,21 @@ async def test_vm_migration_updates_entity(
     # Simulate migration: VM 100 moves from pve1 to pve2
     new_data = {
         "pve1": ProxmoxNodeData(
-            node={"id": "node/pve1", "node": "pve1"},
+            node={
+                "id": "node/pve1",
+                "node": "pve1",
+                "status": "online",
+                "level": "",
+                "type": "node",
+                "maxmem": 34359738368,
+                "mem": 12884901888,
+                "maxcpu": 8,
+                "cpu": 0.12,
+                "uptime": 86400,
+                "maxdisk": 500000000000,
+                "disk": 100000000000,
+                "ssl_fingerprint": "5C:D2:AB:...:D9",
+            },
             vms={
                 101: {
                     "vmid": 101,
@@ -75,7 +89,21 @@ async def test_vm_migration_updates_entity(
             },
         ),
         "pve2": ProxmoxNodeData(
-            node={"id": "node/pve2", "node": "pve2"},
+            node={
+                "id": "node/pve2",
+                "node": "pve2",
+                "status": "online",
+                "level": "",
+                "type": "node",
+                "maxmem": 34359738368,
+                "mem": 16106127360,
+                "maxcpu": 8,
+                "cpu": 0.25,
+                "uptime": 72000,
+                "maxdisk": 500000000000,
+                "disk": 120000000000,
+                "ssl_fingerprint": "7A:E1:DF:...:AC",
+            },
             vms={
                 100: {
                     "vmid": 100,
@@ -121,7 +149,21 @@ async def test_container_migration_updates_entity(
     # Simulate migration: container 200 moves from pve1 to pve2
     new_data = {
         "pve1": ProxmoxNodeData(
-            node={"id": "node/pve1", "node": "pve1"},
+            node={
+                "id": "node/pve1",
+                "node": "pve1",
+                "status": "online",
+                "level": "",
+                "type": "node",
+                "maxmem": 34359738368,
+                "mem": 12884901888,
+                "maxcpu": 8,
+                "cpu": 0.12,
+                "uptime": 86400,
+                "maxdisk": 500000000000,
+                "disk": 100000000000,
+                "ssl_fingerprint": "5C:D2:AB:...:D9",
+            },
             vms={
                 100: {
                     "vmid": 100,
@@ -164,7 +206,21 @@ async def test_container_migration_updates_entity(
             },
         ),
         "pve2": ProxmoxNodeData(
-            node={"id": "node/pve2", "node": "pve2"},
+            node={
+                "id": "node/pve2",
+                "node": "pve2",
+                "status": "online",
+                "level": "",
+                "type": "node",
+                "maxmem": 34359738368,
+                "mem": 16106127360,
+                "maxcpu": 8,
+                "cpu": 0.25,
+                "uptime": 72000,
+                "maxdisk": 500000000000,
+                "disk": 120000000000,
+                "ssl_fingerprint": "7A:E1:DF:...:AC",
+            },
             vms={},
             containers={
                 200: {
