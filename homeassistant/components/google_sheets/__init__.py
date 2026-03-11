@@ -45,7 +45,9 @@ async def async_setup_entry(
     try:
         await session.async_ensure_token_valid()
     except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed("OAuth session is not valid, reauth required") from err
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauth required"
+        ) from err
     except OAuth2TokenRequestError as err:
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:

@@ -207,7 +207,7 @@ async def test_expired_token_refresh_failure(
 async def test_setup_oauth_reauth_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test a token refresh reauth error sets the config entry in setup error."""
+    """Test a token refresh reauth error puts the config entry in setup error state."""
     config_entry.add_to_hass(hass)
 
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
