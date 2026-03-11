@@ -42,10 +42,9 @@ def mock_disneyland_paris_client() -> Generator[AsyncMock]:
         ) as mock_cf_client,
         patch(
             "homeassistant.components.disneyland_paris.coordinator.DLPWaitAPI",
-            autospec=True,
-        ) as mock_coord_client,
+            new=mock_cf_client,
+        ),
     ):
-        # Config flow client
         cf_client = mock_cf_client.return_value
         cf_client.update = AsyncMock(return_value=None)
         cf_client.parks = {
@@ -123,9 +122,4 @@ def mock_disneyland_paris_client() -> Generator[AsyncMock]:
             ),
         }
 
-        # Coordinator client
-        coord_client = mock_coord_client.return_value
-        coord_client.update = cf_client.update
-        coord_client.parks = cf_client.parks
-
-        yield coord_client
+        yield cf_client
