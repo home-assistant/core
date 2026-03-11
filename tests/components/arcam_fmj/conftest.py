@@ -8,14 +8,11 @@ from arcam.fmj.state import State
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
-from homeassistant.components.arcam_fmj.coordinator import ArcamFmjCoordinator
-from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockEntityPlatform
+from tests.common import MockConfigEntry
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -48,7 +45,7 @@ def state_1_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
@@ -65,7 +62,7 @@ def state_2_fixture(client: Mock) -> State:
     state.get_power.return_value = True
     state.get_volume.return_value = 0.0
     state.get_source_list.return_value = []
-    state.get_incoming_audio_format.return_value = (0, 0)
+    state.get_incoming_audio_format.return_value = (None, None)
     state.get_incoming_video_parameters.return_value = None
     state.get_incoming_audio_sample_rate.return_value = 0
     state.get_mute.return_value = None
@@ -73,17 +70,9 @@ def state_2_fixture(client: Mock) -> State:
     return state
 
 
-@pytest.fixture(name="state")
-def state_fixture(state_1: State) -> State:
-    """Get a mocked state."""
-    return state_1
-
-
-@pytest.fixture(name="coordinator_1")
-def coordinator_1_fixture(
-    hass: HomeAssistant, client: Mock, state_1: Mock
-) -> ArcamFmjCoordinator:
-    """Get a coordinator for zone 1 with mocked state."""
+@pytest.fixture(name="mock_config_entry")
+def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
+    """Get a mock config entry."""
     config_entry = MockConfigEntry(
         domain="arcam_fmj",
         data=MOCK_CONFIG_ENTRY,
@@ -91,37 +80,18 @@ def coordinator_1_fixture(
         unique_id=MOCK_UUID,
     )
     config_entry.add_to_hass(hass)
-    coordinator = ArcamFmjCoordinator(hass, config_entry, client, 1)
-    coordinator.state = state_1
-    coordinator.data = state_1
-    coordinator.last_update_success = True
-    return coordinator
-
-
-@pytest.fixture(name="player")
-def player_fixture(hass: HomeAssistant, coordinator_1: ArcamFmjCoordinator) -> ArcamFmj:
-    """Get standard player."""
-    player = ArcamFmj(MOCK_NAME, coordinator_1, MOCK_UUID)
-    player.entity_id = MOCK_ENTITY_ID
-    player.hass = hass
-    player.platform = MockEntityPlatform(hass)
-    player._platform_state = EntityPlatformState.ADDED
-    player.async_write_ha_state = Mock()
-    return player
+    return config_entry
 
 
 @pytest.fixture(name="player_setup")
 async def player_setup_fixture(
-    hass: HomeAssistant, state_1: State, state_2: State, client: Mock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    state_1: State,
+    state_2: State,
+    client: Mock,
 ) -> AsyncGenerator[str]:
     """Get standard player."""
-    config_entry = MockConfigEntry(
-        domain="arcam_fmj",
-        data=MOCK_CONFIG_ENTRY,
-        title=MOCK_NAME,
-        unique_id=MOCK_UUID,
-    )
-    config_entry.add_to_hass(hass)
 
     def state_mock(cli, zone):
         if zone == 1:
@@ -147,6 +117,6 @@ async def player_setup_fixture(
             side_effect=_mock_run_client,
         ),
     ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID

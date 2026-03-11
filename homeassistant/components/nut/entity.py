@@ -13,13 +13,11 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PyNUTData
 from .const import DOMAIN
+from .coordinator import NutCoordinator
 
 NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
@@ -29,14 +27,14 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
 }
 
 
-class NUTBaseEntity(CoordinatorEntity[DataUpdateCoordinator]):
+class NUTBaseEntity(CoordinatorEntity[NutCoordinator]):
     """NUT base entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: NutCoordinator,
         entity_description: EntityDescription,
         data: PyNUTData,
         unique_id: str,
