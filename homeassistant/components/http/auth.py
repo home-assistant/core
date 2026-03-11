@@ -216,7 +216,13 @@ async def async_setup_auth(  # noqa: C901
     supervisor_user_id: str | None = None
 
     async def async_authenticate_unix_socket(request: Request) -> bool:
-        """Authenticate a request from a Unix socket as the Supervisor user."""
+        """Authenticate a request from a Unix socket as the Supervisor user.
+
+        The Unix Socket is dedicated and only available to Supervisor. To
+        avoid the extra overhead and round trips for the authentication and
+        refresh tokens, we directly authenticate requests from the socket as
+        the Supervisor user.
+        """
         nonlocal supervisor_user_id
 
         # Fast path: use cached user ID
@@ -230,6 +236,8 @@ async def async_setup_auth(  # noqa: C901
         for user in await hass.auth.async_get_users():
             if user.system_generated and user.name == HASSIO_USER_NAME:
                 supervisor_user_id = user.id
+                # Not setting KEY_HASS_REFRESH_TOKEN_ID since Supervisor user
+                # doesn't use refresh tokens.
                 request[KEY_HASS_USER] = user
                 return True
         return False
