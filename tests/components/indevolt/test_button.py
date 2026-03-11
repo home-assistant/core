@@ -23,8 +23,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-ENTITY_ID_GEN2 = "button.cms_sf2000_pause_battery"
-ENTITY_ID_GEN1 = "button.bk1600_pause_battery"
+ENTITY_ID_GEN2 = "button.cms_sf2000_enable_standby_mode"
+ENTITY_ID_GEN1 = "button.bk1600_enable_standby_mode"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
