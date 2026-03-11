@@ -64,9 +64,6 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
             websession=async_get_clientsession(hass),
         )
 
-        # Snapshot starts empty; entities must handle None gracefully until first refresh
-        self.data = PajGpsData(devices={}, positions={})
-
     @property
     def email(self) -> str:
         """Return the account email address for this coordinator."""
@@ -98,7 +95,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                     tp.iddevice: tp for tp in track_points if tp.iddevice is not None
                 }
             except PajGpsApiError as exc:
-                _LOGGER.warning("Failed to fetch positions: %s", exc)
+                raise UpdateFailed(f"Failed to fetch positions: {exc}") from exc
 
         return PajGpsData(devices=devices, positions=positions)
 

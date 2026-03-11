@@ -17,13 +17,6 @@ from .test_common import make_coordinator, make_device, make_trackpoint
 class TestCoordinatorInit:
     """Tests for coordinator initialisation state."""
 
-    def test_initial_snapshot_is_empty(self):
-        """Test that the initial data snapshot is an empty PajGpsData."""
-        coord = make_coordinator()
-        assert isinstance(coord.data, PajGpsData)
-        assert coord.data.devices == {}
-        assert coord.data.positions == {}
-
 
 class TestAsyncUpdateData:
     """Tests for the _async_update_data method."""
@@ -64,19 +57,17 @@ class TestAsyncUpdateData:
             await coord._async_update_data()
 
     @pytest.mark.asyncio
-    async def test_positions_failure_returns_empty_positions(self):
-        """Test that a positions fetch error logs a warning and returns empty positions."""
+    async def test_positions_failure_raises_update_failed(self):
+        """Test that a PajGpsApiError from get_all_last_positions raises UpdateFailed."""
         coord = make_coordinator()
         device = make_device(1)
         coord.api.get_devices = AsyncMock(return_value={1: device})
         coord.api.get_all_last_positions = AsyncMock(
-            side_effect=PajGpsApiError("timeout")
+            side_effect=PajGpsApiError("positions api down")
         )
 
-        result = await coord._async_update_data()
-
-        assert result.devices == {1: device}
-        assert result.positions == {}
+        with pytest.raises(UpdateFailed):
+            await coord._async_update_data()
 
 
 class TestAsyncSetup:
