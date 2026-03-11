@@ -73,19 +73,20 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
                 translation_key="invalid_access_token",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        # Remove stale devices
-        current_devices = set(data["body"].keys())
-        if stale_devices := self.previous_devices - current_devices:
-            device_registry = dr.async_get(self.hass)
-            for device_id in stale_devices:
-                # Remove the device from the device registry
-                stale_device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+
+        # Purge stale devices
+        device_reg = dr.async_get(self.hass)
+        identifiers = {
+            (DOMAIN, f"{device_data['user_id']}_{device_id}")
+            for device_id, device_data in data["body"].items()
+        }
+        for device in dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        ):
+            if not set(device.identifiers) & identifiers:
+                _LOGGER.warning("Removing stale device entry %s", device.name)
+                device_reg.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
-                if stale_device:
-                    device_registry.async_update_device(
-                        device_id=stale_device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
 
         return data["body"]
