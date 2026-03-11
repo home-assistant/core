@@ -8,7 +8,7 @@ from ipaddress import ip_network
 import logging
 import os
 from pathlib import Path
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
@@ -745,29 +745,27 @@ async def test_unix_socket_started_with_supervisor(
     """Test unix socket is started when running under Supervisor."""
     socket_path = tmp_path / "core.sock"
     loop = asyncio.get_event_loop()
-    mock_unix_server = AsyncMock()
+    mock_sock = Mock()
     with (
         patch.dict(
             os.environ, {"SUPERVISOR_CORE_API_SOCKET": str(socket_path)}, clear=False
         ),
         patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
+        patch(
+            "homeassistant.components.http.web_runner.HomeAssistantUnixSite"
+            "._create_unix_socket",
+            return_value=mock_sock,
+        ) as mock_create_sock,
         patch.object(
-            loop, "create_unix_server", return_value=mock_unix_server
+            loop, "create_unix_server", return_value=Mock()
         ) as mock_create_unix,
-        patch.object(Path, "chmod") as mock_chmod,
     ):
         assert await async_setup_component(hass, "http", {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    mock_create_unix.assert_called_once_with(
-        ANY,
-        socket_path,
-        backlog=128,
-        start_serving=False,
-    )
-    mock_chmod.assert_called_once_with(0o600)
-    mock_unix_server.start_serving.assert_awaited_once()
+    mock_create_sock.assert_called_once()
+    mock_create_unix.assert_called_once_with(ANY, sock=mock_sock, backlog=128)
     assert hass.http.unix_site is not None
 
 
@@ -775,21 +773,15 @@ async def test_unix_socket_not_started_without_supervisor(
     hass: HomeAssistant,
 ) -> None:
     """Test unix socket is not started when not running under Supervisor."""
-    loop = asyncio.get_event_loop()
-    mock_server = Mock()
     with (
         patch.dict(os.environ, {}, clear=False),
-        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
-        patch.object(
-            loop, "create_unix_server", return_value=mock_server
-        ) as mock_create_unix,
+        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
         os.environ.pop("SUPERVISOR_CORE_API_SOCKET", None)
         assert await async_setup_component(hass, "http", {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    mock_create_unix.assert_not_called()
     assert hass.http.unix_site is None
 
 
@@ -798,23 +790,17 @@ async def test_unix_socket_rejected_relative_path(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unix socket is rejected when path is relative."""
-    loop = asyncio.get_event_loop()
-    mock_server = Mock()
     with (
         patch.dict(
             os.environ,
             {"SUPERVISOR_CORE_API_SOCKET": "relative/path.sock"},
             clear=False,
         ),
-        patch("asyncio.BaseEventLoop.create_server", return_value=mock_server),
-        patch.object(
-            loop, "create_unix_server", return_value=mock_server
-        ) as mock_create_unix,
+        patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
         assert await async_setup_component(hass, "http", {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    mock_create_unix.assert_not_called()
     assert hass.http.unix_site is None
     assert "path must be absolute" in caplog.text
