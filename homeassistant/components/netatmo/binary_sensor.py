@@ -471,16 +471,15 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
                     EVENT_TYPE_TAG_SMALL_MOVE,
                     EVENT_TYPE_TAG_BIG_MOVE,
                 ]:
-                    # Interpret move as open event only if actually closed
-                    # (to avoid false open events when the tag is moved while already open)
-                    if (
-                        self.available
-                        and self._attr_is_on is not None
-                        and not self._attr_is_on
-                    ):
+                    # If the door is closed and it's moved it must have been opened
+                    # (to avoid false open events when the tag is moved while already open,
+                    # also move event is not necessarily meaning the result is closed)
+                    if self.available and self._attr_is_on is False:
                         self._attr_is_on = True
-                        self._attr_available = True
-                        # Push new state to API
+
+                        # Updating our (stale) copy of the state in the device object
+                        # to avoid any inconsistency between the two (we use it for event handling
+                        # and we want to make sure it's up to date with the event we just received)
                         setattr(
                             self.device,
                             NETATMO_OPENING_STATUS,
