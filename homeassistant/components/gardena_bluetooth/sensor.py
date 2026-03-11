@@ -132,6 +132,7 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=FlowStatistics.overall.unique_id,
         translation_key="flow_statistics_overall",
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.VOLUME,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -148,6 +149,7 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=FlowStatistics.resettable.unique_id,
         translation_key="flow_statistics_resettable",
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.VOLUME,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.LITERS,
