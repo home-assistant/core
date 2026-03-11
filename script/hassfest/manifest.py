@@ -117,6 +117,7 @@ NO_IOT_CLASS = [
     "system_health",
     "system_log",
     "tag",
+    "temperature",
     "timer",
     "trace",
     "web_rtc",

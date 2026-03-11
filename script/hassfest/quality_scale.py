@@ -2150,6 +2150,7 @@ NO_QUALITY_SCALE = [
     "system_health",
     "system_log",
     "tag",
+    "temperature",
     "timer",
     "trace",
     "usage_prediction",
