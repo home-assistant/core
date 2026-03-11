@@ -3824,6 +3824,9 @@ async def test_upload_progress_debounced(
     remote_agent = mock_agents["test.remote"]
     original_side_effect = remote_agent.async_upload_backup.side_effect
 
+    progress_done = asyncio.Event()
+    upload_done = asyncio.Event()
+
     async def upload_with_progress(**kwargs: Any) -> None:
         """Upload and report progress."""
         on_progress = kwargs["on_progress"]
@@ -3832,6 +3835,8 @@ async def test_upload_progress_debounced(
         # These two are buffered during cooldown; 1000 should replace 500
         on_progress(bytes_uploaded=500)
         on_progress(bytes_uploaded=1000)
+        progress_done.set()
+        await upload_done.wait()
         await original_side_effect(**kwargs)
 
     remote_agent.async_upload_backup.side_effect = upload_with_progress
