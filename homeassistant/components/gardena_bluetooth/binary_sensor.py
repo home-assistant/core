@@ -34,14 +34,14 @@ class GardenaBluetoothBinarySensorEntityDescription(BinarySensorEntityDescriptio
 
 DESCRIPTIONS = (
     GardenaBluetoothBinarySensorEntityDescription(
-        key=Valve.connected_state.uuid,
+        key=Valve.connected_state.unique_id,
         translation_key="valve_connected_state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.connected_state,
     ),
     GardenaBluetoothBinarySensorEntityDescription(
-        key=Sensor.connected_state.uuid,
+        key=Sensor.connected_state.unique_id,
         translation_key="sensor_connected_state",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -60,7 +60,7 @@ async def async_setup_entry(
     entities = [
         GardenaBluetoothBinarySensor(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
     async_add_entities(entities)
 
