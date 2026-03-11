@@ -33,16 +33,15 @@ async def test_sensors_created(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensor entities are created for both zones, disabled by default."""
+    """Test that sensor entities are created for both zones."""
     for zone in (1, 2):
         for key in SENSOR_KEYS:
             entity_id = _get_entity_id(entity_registry, zone, key)
             entry = entity_registry.async_get(entity_id)
             assert entry is not None
-            assert entry.disabled_by is not None
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "player_setup")
+@pytest.mark.usefixtures("player_setup")
 async def test_sensor_video_none_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -55,7 +54,7 @@ async def test_sensor_video_none_values(
         assert state.state == STATE_UNKNOWN, f"Expected unknown for {key}"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "player_setup")
+@pytest.mark.usefixtures("player_setup")
 async def test_sensor_audio_none_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

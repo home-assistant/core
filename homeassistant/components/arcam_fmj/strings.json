@@ -27,7 +27,7 @@
   "entity": {
     "sensor": {
       "incoming_audio_config": {
-        "name": "Zone {zone} incoming audio configuration",
+        "name": "Incoming audio configuration",
         "state": {
           "auro_10_1": "Auro 10.1",
           "auro_11_1": "Auro 11.1",
@@ -75,7 +75,7 @@
         }
       },
       "incoming_audio_format": {
-        "name": "Zone {zone} incoming audio format",
+        "name": "Incoming audio format",
         "state": {
           "analogue_direct": "Analogue direct",
           "auro_3d": "Auro-3D",
@@ -104,10 +104,10 @@
         }
       },
       "incoming_audio_sample_rate": {
-        "name": "Zone {zone} incoming audio sample rate"
+        "name": "Incoming audio sample rate"
       },
       "incoming_video_aspect_ratio": {
-        "name": "Zone {zone} incoming video aspect ratio",
+        "name": "Incoming video aspect ratio",
         "state": {
           "aspect_16_9": "16:9",
           "aspect_4_3": "4:3",
@@ -115,7 +115,7 @@
         }
       },
       "incoming_video_colorspace": {
-        "name": "Zone {zone} incoming video colorspace",
+        "name": "Incoming video colorspace",
         "state": {
           "dolby_vision": "Dolby Vision",
           "hdr10": "HDR10",
@@ -125,13 +125,13 @@
         }
       },
       "incoming_video_horizontal_resolution": {
-        "name": "Zone {zone} incoming video horizontal resolution"
+        "name": "Incoming video horizontal resolution"
       },
       "incoming_video_refresh_rate": {
-        "name": "Zone {zone} incoming video refresh rate"
+        "name": "Incoming video refresh rate"
       },
       "incoming_video_vertical_resolution": {
-        "name": "Zone {zone} incoming video vertical resolution"
+        "name": "Incoming video vertical resolution"
       }
     }
   }

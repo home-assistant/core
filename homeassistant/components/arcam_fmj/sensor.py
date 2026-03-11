@@ -16,11 +16,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
 
 
@@ -140,21 +138,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Arcam FMJ sensors from a config entry."""
     coordinators = config_entry.runtime_data.coordinators
-    uuid = config_entry.unique_id or config_entry.entry_id
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, uuid)},
-        manufacturer="Arcam",
-        model="Arcam FMJ AVR",
-        name=config_entry.title,
-    )
 
     entities: list[ArcamFmjSensorEntity] = []
     for zone in (1, 2):
         coordinator = coordinators[zone]
         entities.extend(
             ArcamFmjSensorEntity(
-                device_info=device_info,
-                uuid=uuid,
                 coordinator=coordinator,
                 description=description,
             )
@@ -168,21 +157,20 @@ class ArcamFmjSensorEntity(CoordinatorEntity[ArcamFmjCoordinator], SensorEntity)
 
     entity_description: ArcamFmjSensorEntityDescription
     _attr_has_entity_name = True
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
-        device_info: DeviceInfo,
-        uuid: str,
         coordinator: ArcamFmjCoordinator,
         description: ArcamFmjSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{uuid}-{coordinator.state.zn}-{description.key}"
-        self._attr_device_info = device_info
-        self._attr_translation_placeholders = {"zone": str(coordinator.state.zn)}
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
+            f"-{coordinator.state.zn}-{description.key}"
+        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self) -> int | float | str | None:
