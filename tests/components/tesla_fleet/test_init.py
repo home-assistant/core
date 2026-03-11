@@ -11,6 +11,7 @@ from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
     InvalidToken,
+    LibraryError,
     LoginRequired,
     OAuthExpired,
     RateLimited,
@@ -93,11 +94,20 @@ async def test_oauth_refresh_expired(
     mock_products: AsyncMock,
 ) -> None:
     """Test init with expired Oauth token."""
-    mock_products.side_effect = OAuth2TokenRequestReauthError(
-        domain=DOMAIN,
-        request_info=Mock(),
-    )
-    await setup_platform(hass, normal_config_entry)
+
+    # Patch the token refresh to raise an error
+    with patch(
+        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestReauthError(
+            domain=DOMAIN,
+            request_info=Mock(),
+        ),
+    ) as mock_async_ensure_token_valid:
+        # Trigger an unmocked function call
+        mock_products.side_effect = InvalidRegion
+        await setup_platform(hass, normal_config_entry)
+
+        mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -107,11 +117,20 @@ async def test_oauth_refresh_error(
     mock_products: AsyncMock,
 ) -> None:
     """Test init with Oauth refresh failure."""
-    mock_products.side_effect = OAuth2TokenRequestTransientError(
-        domain=DOMAIN,
-        request_info=Mock(),
-    )
-    await setup_platform(hass, normal_config_entry)
+
+    # Patch the token refresh to raise an error
+    with patch(
+        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            domain=DOMAIN,
+            request_info=Mock(),
+        ),
+    ) as mock_async_ensure_token_valid:
+        # Trigger an unmocked function call
+        mock_products.side_effect = InvalidRegion
+        await setup_platform(hass, normal_config_entry)
+
+        mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -566,8 +585,23 @@ async def test_init_region_issue(
 
     mock_products.side_effect = InvalidRegion
     await setup_platform(hass, normal_config_entry)
-    mock_find_server.assert_not_called()
+    mock_find_server.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_region_issue_failed(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+    mock_find_server: AsyncMock,
+) -> None:
+    """Test init with unresolvable region issue."""
+
+    mock_products.side_effect = InvalidRegion
+    mock_find_server.side_effect = LibraryError
+    await setup_platform(hass, normal_config_entry)
+    mock_find_server.assert_called_once()
+    assert normal_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_signing(
