@@ -1,5 +1,7 @@
 """The tests for the emulated Hue component."""
 
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Generator
 from datetime import timedelta

@@ -1,5 +1,7 @@
 """Test The generic (IP Camera) config flow."""
 
+from __future__ import annotations
+
 from collections.abc import Generator
 import contextlib
 from copy import deepcopy
