@@ -510,8 +510,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._last_toggled_time = new_state.last_changed
 
         # If the user toggles the switch, assume they want control and clear the timers.
-        # Note: If a manual interaction occurs within the context window of an
-        # internal command, we treat it as an external override just to be safe.
+        # Note: If a manual interaction occurs within the 2s context window of a switch
+        # toggle initiated by us, we may not detect manual control. Users are advised to
+        # use the climate entity for reliable control, not the switch entity.
         if new_state.context.id != self._last_context_id:
             _LOGGER.debug("External switch change detected, clearing timers")
             self._last_context_id = None
@@ -552,7 +553,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 return
 
             if force and time is not None and self.max_cycle_duration:
-                # We were invoked due to `max_duty_duration`, so turn off
+                # We were invoked due to `max_cycle_duration`, so turn off
                 _LOGGER.debug(
                     "Turning off heater %s due to max cycle time of %s",
                     self.heater_entity_id,
@@ -584,7 +585,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self._check_callback = async_call_later(
                             self.hass,
                             now - self._last_toggled_time + self.min_cycle_duration,
-                            self._async_control_heating,
+                            self._async_timer_control_heating,
                         )
                 elif time is not None:
                     # This is a keep-alive call, so ensure it's on
@@ -606,7 +607,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self._check_callback = async_call_later(
                         self.hass,
                         now - self._last_toggled_time + self.cycle_cooldown,
-                        self._async_control_heating,
+                        self._async_timer_control_heating,
                     )
             elif time is not None:
                 # This is a keep-alive call, so ensure it's off
@@ -688,6 +689,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_control_heating(force=True)
 
         self.async_write_ha_state()
+
+    async def _async_timer_control_heating(self, _: datetime | None = None) -> None:
+        """Reset check timer and control heating."""
+        self._check_callback = None
+        await self._async_control_heating()
 
     @callback
     def _cancel_check_timer(self) -> None:

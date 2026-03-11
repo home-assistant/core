@@ -33,7 +33,7 @@
           "cycle_cooldown": "After switching off, the minimum amount of time that must elapse before it can be switched back on.",
           "heater": "Switch entity used to cool or heat depending on A/C mode.",
           "hot_tolerance": "Minimum amount of difference between the temperature read by the temperature sensor the target temperature that must change prior to being switched off. For example, if the target temperature is 25 and the tolerance is 0.5 the heater will stop when the sensor equals or goes above 25.5.",
-          "keep_alive": "Trigger the heater periodically to keep devices from losing state. When set, min cycle duration is ignored.",
+          "keep_alive": "Trigger the heater periodically to keep devices from losing state.",
           "max_cycle_duration": "Once switched on, the maximum amount of time that can elapse before it will be switched off.",
           "min_cycle_duration": "Once switched on, the minimum amount of time that must elapse before it may be switched off.",
           "target_sensor": "Temperature sensor that reflects the current temperature."
