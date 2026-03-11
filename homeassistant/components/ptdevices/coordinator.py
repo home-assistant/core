@@ -56,7 +56,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
         )
 
         self.interface = ptdevices_interface
-        self.previous_devices: set[str] = set()
 
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
