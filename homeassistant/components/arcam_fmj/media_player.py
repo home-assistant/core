@@ -21,11 +21,10 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EVENT_TURN_ON
+from .const import EVENT_TURN_ON
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,14 +96,7 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         self._attr_unique_id = f"{uuid}-{self._state.zn}"
         self._attr_entity_registry_enabled_default = self._state.zn == 1
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, uuid),
-            },
-            manufacturer="Arcam",
-            model="Arcam FMJ AVR",
-            name=device_name,
-        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def state(self) -> MediaPlayerState:
