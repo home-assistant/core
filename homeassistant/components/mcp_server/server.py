@@ -103,7 +103,7 @@ class _McpTools:
         self, llm_api: llm.APIInstance
     ) -> tuple[Mapping[str, str], Mapping[str, str]]:
         """Return cached alias mappings for an API instance."""
-        tool_names = tuple(tool.name for tool in llm_api.tools)
+        tool_names = tuple(dict.fromkeys(tool.name for tool in llm_api.tools))
         return self._get_tool_maps(tool_names)
 
     async def async_list_tools(self) -> list[types.Tool]:
