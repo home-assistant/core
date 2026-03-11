@@ -165,3 +165,29 @@ async def test_on_link_failed(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}
+
+
+async def test_zeroconf_missing_api_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf flow aborts if api_domain is missing from properties."""
+    from homeassistant.components.network.const import MDNS_TARGET_IP
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+    from ipaddress import ip_address
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address(MDNS_TARGET_IP),
+            ip_addresses=[ip_address(MDNS_TARGET_IP)],
+            port=80,
+            hostname="Freebox-Server.local.",
+            type="_fbx-api._tcp.local.",
+            name="Freebox Server._fbx-api._tcp.local.",
+            properties={"api_version": "8.0"},  # api_domain intentionnellement omis
+        ),
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "missing_api_domain"
