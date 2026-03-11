@@ -62,8 +62,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.GROUPING
-    | MediaPlayerEntityFeature.NEXT_TRACK
-    | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.SEEK
 )
 
@@ -174,7 +172,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self._wiim_data.controller.get_group_snapshot(self._device.udn)
 
     @callback
-    def _update_ha_state_from_sdk_cache(self) -> None:
+    def _update_ha_state_from_sdk_cache(
+        self,
+        *,
+        write_state: bool = True,
+        update_supported_features: bool = True,
+    ) -> None:
         """Update HA state from SDK's cache/HTTP poll attributes.
 
         This is the main method for updating this entity's HA attributes.
@@ -198,7 +201,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_source = None
             self._attr_sound_mode = None
             self._attr_supported_features = SUPPORT_WIIM_BASE
-            if self._added_to_hass:
+            if write_state and self._added_to_hass:
                 self.async_write_ha_state()
             return
 
@@ -258,8 +261,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_media_content_type = MediaType.MUSIC
                 self._attr_media_duration = media.duration
                 self._attr_media_position = media.position
-                if self._attr_state == MediaPlayerState.PLAYING:
-                    self._attr_media_position_updated_at = utcnow()
+                self._attr_media_position_updated_at = utcnow()
             else:
                 # Clear media info if not playing or no track info
                 self._attr_media_title = None
@@ -366,9 +368,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         else:
             self._attr_group_members = [self.entity_id] if self._added_to_hass else None
 
-        self._update_supported_features()
+        if update_supported_features:
+            self._async_update_supported_features(write_state=write_state)
 
-        if self._added_to_hass:
+        if write_state and self._added_to_hass:
             self.async_write_ha_state()
 
     async def _update_output_mode(self) -> None:
@@ -456,68 +459,77 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         LOGGER.debug("Device %s: Received SDK refresh event: %s", self.entity_id, state_variables)
         self._update_ha_state_from_sdk_cache()
 
-    def _update_support_features(self, features: MediaPlayerEntityFeature) -> None:
-        """Update entity supported features and write state if changed."""
-        if self._attr_supported_features != features:
-            self._attr_supported_features = features
-            if self._added_to_hass:
-                self.async_write_ha_state()
-
-    async def _sync_follower_features(self, wiim_data: WiimData) -> bool:
+    async def _sync_follower_features(
+        self, wiim_data: WiimData, *, write_state: bool = True
+    ) -> bool:
         """Synchronize features if this device is a follower."""
         group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
         if group_snapshot is None or group_snapshot.role != WiimGroupRole.FOLLOWER:
             return False
 
-        leader_entity_id = self._get_entity_id_for_udn(group_snapshot.leader_udn)
-        leader_state = self.hass.states.get(leader_entity_id) if leader_entity_id else None
-        if leader_state and leader_entity_id != self.entity_id:
-            leader_features = leader_state.attributes.get("supported_features")
-            if leader_features is not None:
-                self._update_support_features(leader_features)
-                LOGGER.debug(
-                    "Device %s: Follower features synchronized from leader %s",
-                    self.entity_id,
-                    leader_entity_id,
-                )
-                return True
+        if (
+            (leader_entity_id := self._get_entity_id_for_udn(group_snapshot.leader_udn))
+            and (leader_state := self.hass.states.get(leader_entity_id))
+            and (
+                leader_features := leader_state.attributes.get("supported_features")
+            )
+            is not None
+        ):
+            if self._attr_supported_features != leader_features:
+                self._attr_supported_features = leader_features
+                if write_state and self._added_to_hass:
+                    self.async_write_ha_state()
+            LOGGER.debug(
+                "Device %s: Follower features synchronized from leader %s",
+                self.entity_id,
+                leader_entity_id,
+            )
+            return True
 
         # fallback to base features
-        self._update_support_features(SUPPORT_WIIM_BASE)
+        if self._attr_supported_features != SUPPORT_WIIM_BASE:
+            self._attr_supported_features = SUPPORT_WIIM_BASE
+            if write_state and self._added_to_hass:
+                self.async_write_ha_state()
         LOGGER.debug("Device %s: Follower set to base features", self.entity_id)
         return True
 
-    async def _from_device_update_supported_features(self) -> None:
+    async def _from_device_update_supported_features(
+        self, *, write_state: bool = True
+    ) -> None:
         """Fetches media info from the device to dynamically update supported features.
 
         This method is asynchronous and makes a network call.
         """
-        if await self._sync_follower_features(self._wiim_data):
+        if await self._sync_follower_features(self._wiim_data, write_state=write_state):
             return
 
+        previous_features = self._attr_supported_features
         try:
             capabilities = await self._device.async_get_transport_capabilities()
-
-            current_features = SUPPORT_WIIM_BASE
-            if not self._device.supports_http_api:
-                current_features &= ~MediaPlayerEntityFeature.BROWSE_MEDIA
-
-            if not capabilities.can_next:
-                current_features &= ~MediaPlayerEntityFeature.NEXT_TRACK
-            if not capabilities.can_previous:
-                current_features &= ~MediaPlayerEntityFeature.PREVIOUS_TRACK
-
-            loop_mode_flags = (
-                MediaPlayerEntityFeature.REPEAT_SET
-                | MediaPlayerEntityFeature.SHUFFLE_SET
+        except WiimRequestException as err:
+            LOGGER.warning(
+                "Device %s: Failed to fetch transport capabilities for supported features: %s",
+                self.entity_id,
+                err,
             )
+        except RuntimeError as err:
+            LOGGER.error(
+                "Device %s: Unexpected error in _from_device_update_supported_features: %s",
+                self.entity_id,
+                err,
+            )
+        else:
+            current_features = SUPPORT_WIIM_BASE
 
-            if not capabilities.can_repeat:
-                current_features &= ~MediaPlayerEntityFeature.REPEAT_SET
-            if not capabilities.can_shuffle:
-                current_features &= ~MediaPlayerEntityFeature.SHUFFLE_SET
-            if capabilities.can_repeat and capabilities.can_shuffle:
-                current_features |= loop_mode_flags
+            if capabilities.can_next:
+                current_features |= MediaPlayerEntityFeature.NEXT_TRACK
+            if capabilities.can_previous:
+                current_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            if capabilities.can_repeat:
+                current_features |= MediaPlayerEntityFeature.REPEAT_SET
+            if capabilities.can_shuffle:
+                current_features |= MediaPlayerEntityFeature.SHUFFLE_SET
 
             if self._attr_supported_features != current_features:
                 self._attr_supported_features = current_features
@@ -526,27 +538,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.entity_id,
                     current_features,
                 )
-                if self._added_to_hass:
-                    self.async_write_ha_state()
-
-        except WiimRequestException as e:
-            LOGGER.warning(
-                "Device %s: Failed to fetch transport capabilities for supported features: %s",
-                self.entity_id,
-                e,
-            )
-            if self._added_to_hass:
-                self.async_write_ha_state()
-        except (AttributeError, RuntimeError) as err:
-            LOGGER.error(
-                "Device %s: Unexpected error in _from_device_update_supported_features: %s",
-                self.entity_id,
-                err,
-            )
-            if self._added_to_hass:
+        finally:
+            if (
+                write_state
+                and
+                self._added_to_hass
+                and self._attr_supported_features != previous_features
+            ):
                 self.async_write_ha_state()
 
-    def _update_supported_features(self) -> None:
+    @callback
+    def _async_update_supported_features(self, *, write_state: bool = True) -> None:
         """Update supported features based on current state."""
         if not self.hass:
             return
@@ -559,7 +561,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         async def _refresh_supported_features() -> None:
             try:
-                await self._from_device_update_supported_features()
+                await self._from_device_update_supported_features(
+                    write_state=write_state
+                )
             finally:
                 self._supported_features_update_in_flight = False
 
@@ -589,9 +593,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._device.udn,
         )
 
-        await self._from_device_update_supported_features()
-
-        self._update_ha_state_from_sdk_cache()
+        await self._from_device_update_supported_features(write_state=False)
+        self._update_ha_state_from_sdk_cache(
+            write_state=False, update_supported_features=False
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
@@ -845,6 +850,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if media_content_id is not None and media_source.is_media_source_id(
             media_content_id
         ):
+            if not self._device.supports_http_api:
+                raise BrowseError("Media sources are not supported on this device")
+
             return await media_source.async_browse_media(
                 self.hass,
                 media_content_id,
@@ -878,16 +886,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     thumbnail=None,
                 ),
             )
-            media_sources_item = await media_source.async_browse_media(
-                self.hass,
-                None,
-                content_filter=lambda item: item.media_content_type.startswith(
-                    "audio/"
-                ),
-            )
+            if self._device.supports_http_api:
+                media_sources_item = await media_source.async_browse_media(
+                    self.hass,
+                    None,
+                    content_filter=lambda item: item.media_content_type.startswith(
+                        "audio/"
+                    ),
+                )
 
-            if media_sources_item.children:
-                children.extend(media_sources_item.children)
+                if media_sources_item.children:
+                    children.extend(media_sources_item.children)
 
             return BrowseMedia(
                 media_class=MediaClass.DIRECTORY,
