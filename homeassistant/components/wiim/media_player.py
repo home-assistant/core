@@ -331,13 +331,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     async def _update_output_mode(self) -> None:
-        if self._device.supports_http_api:
-            self._attr_sound_mode = await self._device.get_audio_output_hw_mode()
-        else:
-            LOGGER.error(
-                "Device %s: HTTP API not available for initial output mode fetch",
-                self.entity_id,
-            )
+        self._attr_sound_mode = await self._device.get_audio_output_hw_mode()
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
