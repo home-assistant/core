@@ -171,13 +171,17 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self._wiim_data.controller.get_group_snapshot(self._device.udn)
 
     @property
-    def _metadata_device(self) -> WiimDevice | None:
+    def _metadata_device(self) -> WiimDevice:
         """Return the device whose metadata should back this entity."""
         if not (group_snapshot := self._get_group_snapshot()):
             return self._device
 
         if group_snapshot.role == WiimGroupRole.FOLLOWER:
-            return self._wiim_data.controller.get_device(group_snapshot.leader_udn)
+            leader_device = self._wiim_data.controller.get_device(
+                group_snapshot.leader_udn
+            )
+            assert leader_device is not None
+            return leader_device
 
         return self._device
 
@@ -194,7 +198,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
 
-    async def _async_get_command_target_device(self, action_name: str) -> WiimDevice:
+    @callback
+    def _get_command_target_device(self, action_name: str) -> WiimDevice:
         """Return the device that should receive a grouped playback command."""
         if not (
             (group_snapshot := self._get_group_snapshot())
@@ -202,17 +207,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         ):
             return self._device
 
-        if not (
-            target_device := self._wiim_data.controller.get_device(
-                group_snapshot.command_target_udn
-            )
-        ):
-            await self._async_handle_critical_error(
-                WiimException(f"Leader unavailable for {action_name}")
-            )
-            raise HomeAssistantError(
-                f"Cannot route {action_name}: leader device for {self.entity_id} was not found."
-            )
+        target_device = self._wiim_data.controller.get_device(
+            group_snapshot.command_target_udn
+        )
+        assert target_device is not None
 
         LOGGER.info(
             "Routing %s command from follower %s to leader %s",
@@ -272,66 +270,49 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_snapshot is not None and group_snapshot.role == WiimGroupRole.LEADER
         )
 
-        if metadata_device := self._metadata_device:
-            if (
-                group_snapshot is not None
-                and group_snapshot.role == WiimGroupRole.FOLLOWER
-            ):
-                LOGGER.debug(
-                    "Follower %s: Actively pulling metadata from leader %s",
-                    self.entity_id,
-                    metadata_device.udn,
-                )
+        metadata_device = self._metadata_device
+        if group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
+            LOGGER.debug(
+                "Follower %s: Actively pulling metadata from leader %s",
+                self.entity_id,
+                metadata_device.udn,
+            )
 
-            if metadata_device.playing_status is not None:
-                self._attr_state = SDK_TO_HA_STATE.get(
-                    metadata_device.playing_status, MediaPlayerState.IDLE
-                )
+        if metadata_device.playing_status is not None:
+            self._attr_state = SDK_TO_HA_STATE.get(
+                metadata_device.playing_status, MediaPlayerState.IDLE
+            )
 
-            if metadata_device.play_mode is not None:
-                try:
-                    self._attr_source = metadata_device.play_mode
-                except ValueError:
-                    LOGGER.warning(
-                        "Device %s: Unknown play_mode value from SDK: %s",
-                        self.unique_id,
-                        metadata_device.play_mode,
-                    )
-                    self._attr_source = InputMode.WIFI.display_name  # type: ignore[attr-defined]
+        if metadata_device.play_mode is not None:
+            try:
+                self._attr_source = metadata_device.play_mode
+            except ValueError:
+                LOGGER.warning(
+                    "Device %s: Unknown play_mode value from SDK: %s",
+                    self.unique_id,
+                    metadata_device.play_mode,
+                )
+                self._attr_source = InputMode.WIFI.display_name  # type: ignore[attr-defined]
 
-            loop_state = metadata_device.loop_state
-            self._attr_repeat = SDK_TO_HA_REPEAT[loop_state.repeat]
-            self._attr_shuffle = loop_state.shuffle
-            self._attr_sound_mode = metadata_device.output_mode
+        loop_state = metadata_device.loop_state
+        self._attr_repeat = SDK_TO_HA_REPEAT[loop_state.repeat]
+        self._attr_shuffle = loop_state.shuffle
+        self._attr_sound_mode = metadata_device.output_mode
 
-            if media := metadata_device.current_media:
-                self._attr_media_title = media.title
-                self._attr_media_artist = media.artist
-                self._attr_media_album_name = media.album
-                self._attr_media_image_url = media.image_url
-                self._attr_media_content_id = media.uri
-                self._attr_media_content_type = MediaType.MUSIC
-                self._attr_media_duration = media.duration
-                self._attr_media_position = media.position
-                self._attr_media_position_updated_at = (
-                    utcnow() if self._attr_state == MediaPlayerState.PLAYING else None
-                )
-            else:
-                self._clear_media_metadata()
-        elif group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
-            if group_snapshot.leader_udn:
-                LOGGER.debug(
-                    "Follower %s: Leader device %s not found. Clearing own media metadata",
-                    self.entity_id,
-                    group_snapshot.leader_udn,
-                )
-            else:
-                LOGGER.debug(
-                    "Follower %s: No leader UDN found in group info. Clearing own media metadata",
-                    self.entity_id,
-                )
+        if media := metadata_device.current_media:
+            self._attr_media_title = media.title
+            self._attr_media_artist = media.artist
+            self._attr_media_album_name = media.album
+            self._attr_media_image_url = media.image_url
+            self._attr_media_content_id = media.uri
+            self._attr_media_content_type = MediaType.MUSIC
+            self._attr_media_duration = media.duration
+            self._attr_media_position = media.position
+            self._attr_media_position_updated_at = (
+                utcnow() if self._attr_state == MediaPlayerState.PLAYING else None
+            )
+        else:
             self._clear_media_metadata()
-            self._attr_state = MediaPlayerState.IDLE
 
         if group_snapshot is not None:
             group_members = [
@@ -442,14 +423,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if group_snapshot is None or group_snapshot.role != WiimGroupRole.FOLLOWER:
             return False
 
+        leader_device = wiim_data.controller.get_device(group_snapshot.leader_udn)
+        assert leader_device is not None
+
         if (
-            (leader_device := wiim_data.controller.get_device(group_snapshot.leader_udn))
-            and (
-                leader_features := await self._async_get_supported_features_for_device(
-                    leader_device
-                )
+            leader_features := await self._async_get_supported_features_for_device(
+                leader_device
             )
-            is not None
         ):
             if self._attr_supported_features != leader_features:
                 self._attr_supported_features = leader_features
@@ -656,38 +636,34 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @media_player_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        await (await self._async_get_command_target_device("media_play")).async_play()
+        await self._get_command_target_device("media_play").async_play()
 
     @media_player_exception_wrap
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        target_device = await self._async_get_command_target_device("media_pause")
+        target_device = self._get_command_target_device("media_pause")
         await target_device.async_pause()
         await target_device.sync_device_duration_and_position()
 
     @media_player_exception_wrap
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await (await self._async_get_command_target_device("media_stop")).async_stop()
+        await self._get_command_target_device("media_stop").async_stop()
 
     @media_player_exception_wrap
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        await (await self._async_get_command_target_device("media_next_track")).async_next()
+        await self._get_command_target_device("media_next_track").async_next()
 
     @media_player_exception_wrap
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        await (
-            await self._async_get_command_target_device("media_previous_track")
-        ).async_previous()
+        await self._get_command_target_device("media_previous_track").async_previous()
 
     @media_player_exception_wrap
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
-        await (await self._async_get_command_target_device("media_seek")).async_seek(
-            int(position)
-        )
+        await self._get_command_target_device("media_seek").async_seek(int(position))
 
     @media_player_exception_wrap
     async def async_play_media(
