@@ -3,7 +3,12 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, call
 
-from gardena_bluetooth.const import AquaContourWatering
+from gardena_bluetooth.const import (
+    AquaContour,
+    AquaContourPosition,
+    AquaContourWatering,
+)
+from habluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,10 +18,11 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import AQUA_CONTOUR_SERVICE_INFO, setup_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -26,22 +32,59 @@ def mock_chars(mock_read_char_raw):
     return mock_read_char_raw
 
 
+@pytest.mark.parametrize(
+    ("service_info", "raw"),
+    [
+        pytest.param(
+            AQUA_CONTOUR_SERVICE_INFO,
+            {
+                AquaContourWatering.watering_active.uuid: AquaContourWatering.watering_active.encode(
+                    0
+                ),
+                AquaContour.operation_mode.uuid: AquaContour.operation_mode.encode(0),
+                AquaContourPosition.active_position.uuid: AquaContourPosition.active_position.encode(
+                    0
+                ),
+            },
+            id="aqua_contour",
+        ),
+    ],
+)
 async def test_setup(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_client: Mock,
-    mock_chars: dict[str, bytes],
-    scan_step: Callable[[], Awaitable[None]],
+    mock_read_char_raw: dict[str, bytes],
+    service_info: BluetoothServiceInfo,
+    raw: dict[str, bytes],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup creates expected entities."""
 
+    mock_read_char_raw.update(raw)
+
+    mock_entry = await setup_entry(
+        hass, platforms=[Platform.SELECT], service_info=service_info
+    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
+
+
+async def test_state_change(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_read_char_raw: dict[str, bytes],
+    scan_step: Callable[[], Awaitable[None]],
+) -> None:
+    """Test setup creates expected entities."""
     entity_id = "select.mock_title_watering"
+
+    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x00"
+
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
     )
     assert hass.states.get(entity_id) == snapshot
 
-    mock_chars[AquaContourWatering.watering_active.uuid] = b"\x01"
+    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x01"
     await scan_step()
     assert hass.states.get(entity_id) == snapshot
 
@@ -50,10 +93,11 @@ async def test_select(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
     mock_client: Mock,
-    mock_chars: dict[str, bytes],
+    mock_read_char_raw: dict[str, bytes],
 ) -> None:
     """Test switching makes correct calls."""
 
+    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x00"
     entity_id = "select.mock_title_watering"
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
