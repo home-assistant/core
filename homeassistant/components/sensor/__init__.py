@@ -483,11 +483,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         SensorEntity should read the sensor's native unit through this property instead
         of through native_unit_of_measurement.
         """
-        native_unit_of_measurement = self.native_unit_of_measurement
-        return AMBIGUOUS_UNITS.get(
-            native_unit_of_measurement,
-            native_unit_of_measurement,
-        )
+        if (native_unit_of_measurement := self.native_unit_of_measurement) is not None:
+            return AMBIGUOUS_UNITS.get(
+                native_unit_of_measurement,
+                native_unit_of_measurement,
+            )
+        return None
 
     @cached_property
     def suggested_unit_of_measurement(self) -> str | None:

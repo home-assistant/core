@@ -210,9 +210,11 @@ def _equivalent_units(
     """Return True if the units are equivalent."""
     if len(units) == 1:
         return True
-    all_equivalent_units = dict(EQUIVALENT_UNITS)
+
+    all_equivalent_units = EQUIVALENT_UNITS
     if custom_units_for_entity:
-        all_equivalent_units.update(custom_units_for_entity)
+        all_equivalent_units = {**EQUIVALENT_UNITS, **custom_units_for_entity}
+
     units = {
         all_equivalent_units[unit] if unit in all_equivalent_units else unit  # noqa: SIM401
         for unit in units
