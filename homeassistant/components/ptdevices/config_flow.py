@@ -103,6 +103,9 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_devices_found"
             except MalformedResponse:
                 errors["base"] = "malformed_response"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 # Connection Successful
                 await self.async_set_unique_id(unique_id)
