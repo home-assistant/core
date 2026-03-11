@@ -1,9 +1,4 @@
-"""Support for Victron Venus sensors.
-
-Light-weight platform file registering sensor entities. The actual entity
-implementation is in this file; import of `Hub` is type-only to avoid a
-runtime circular dependency with `hub.py`.
-"""
+"""Support for Victron Venus sensors."""
 
 import logging
 from typing import Any
@@ -13,9 +8,16 @@ from victron_mqtt import (
     FormulaMetric as VictronFormulaMetric,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricNature,
+    MetricType,
 )
 
-from homeassistant.components.sensor import RestoreSensor, SensorStateClass
+from homeassistant.components.sensor import (
+    RestoreSensor,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,6 +28,31 @@ from .hub import Hub, VictronGxConfigEntry
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
 
 _LOGGER = logging.getLogger(__name__)
+
+METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
+    MetricType.POWER: SensorDeviceClass.POWER,
+    MetricType.APPARENT_POWER: SensorDeviceClass.APPARENT_POWER,
+    MetricType.ENERGY: SensorDeviceClass.ENERGY,
+    MetricType.VOLTAGE: SensorDeviceClass.VOLTAGE,
+    MetricType.CURRENT: SensorDeviceClass.CURRENT,
+    MetricType.FREQUENCY: SensorDeviceClass.FREQUENCY,
+    MetricType.ELECTRIC_STORAGE_PERCENTAGE: SensorDeviceClass.BATTERY,
+    MetricType.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    MetricType.SPEED: SensorDeviceClass.SPEED,
+    MetricType.LIQUID_VOLUME: SensorDeviceClass.VOLUME_STORAGE,
+    MetricType.DURATION: SensorDeviceClass.DURATION,
+}
+
+METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {
+    MetricNature.CUMULATIVE: SensorStateClass.TOTAL,
+    MetricNature.INSTANTANEOUS: SensorStateClass.MEASUREMENT,
+}
+
+UNIT_MAPPING: dict[str, str] = {
+    "s": UnitOfTime.SECONDS,
+    "min": UnitOfTime.MINUTES,
+    "h": UnitOfTime.HOURS,
+}
 
 
 async def async_setup_entry(
@@ -60,8 +87,22 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
 
     _baseline: float | None = None
 
+    def __init__(
+        self,
+        device: VictronVenusDevice,
+        metric: VictronVenusMetric,
+        device_info: DeviceInfo,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(device, metric, device_info)
+        self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
+        self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(metric.metric_nature)
+        self._attr_native_unit_of_measurement = UNIT_MAPPING.get(
+            metric.unit_of_measurement, metric.unit_of_measurement
+        )
+
     @callback
-    def _on_update_task(self, value: Any) -> None:
+    def _on_update_cb(self, value: Any) -> None:
         if self._baseline is not None:
             value += self._baseline
         if self._attr_native_value == value:

@@ -49,19 +49,19 @@ def base_metric() -> VictronVenusMetric:
 async def test_sensor_update_task_triggers_state_update(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
-    """_on_update_task should schedule update on value change and not on same value."""
+    """_on_update_cb should schedule update on value change and not on same value."""
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
 
     with patch.object(sensor, "async_write_ha_state") as mock_sched:
         # Change value
-        sensor._on_update_task(56.78)
+        sensor._on_update_cb(56.78)
         assert sensor.native_value == 56.78
         mock_sched.assert_called_once()
 
     with patch.object(sensor, "async_write_ha_state") as mock_sched2:
         # Same value -> no schedule
-        sensor._on_update_task(56.78)
+        sensor._on_update_cb(56.78)
         mock_sched2.assert_not_called()
 
 
@@ -138,13 +138,13 @@ async def test_translation_fields(
 async def test_sensor_update_task_uses_baseline(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
-    """_on_update_task should add baseline before updating state."""
+    """_on_update_cb should add baseline before updating state."""
     device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
     sensor._baseline = 10.0
 
     with patch.object(sensor, "async_write_ha_state") as mock_sched:
-        sensor._on_update_task(2.5)
+        sensor._on_update_cb(2.5)
         assert sensor.native_value == 12.5
         mock_sched.assert_called_once()
 
