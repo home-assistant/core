@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_AZIMUTH,
@@ -33,30 +33,34 @@ from .const import (
 
 RE_API_KEY = re.compile(r"^[a-zA-Z0-9]{16}$")
 
-
-def _get_plane_schema(
-    declination: int = 25,
-    azimuth: int = 180,
-    modules_power: int | None = None,
-) -> vol.Schema:
-    """Get schema for plane configuration."""
-    schema: dict[Any, Any] = {
-        vol.Required(CONF_DECLINATION, default=declination): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=90)
+PLANE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DECLINATION): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=90, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+            vol.Coerce(int),
         ),
-        vol.Required(CONF_AZIMUTH, default=azimuth): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=360)
+        vol.Required(CONF_AZIMUTH): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=360, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_MODULES_POWER): vol.All(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+            vol.Coerce(int),
         ),
     }
-    if modules_power is not None:
-        schema[vol.Required(CONF_MODULES_POWER, default=modules_power)] = vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        )
-    else:
-        schema[vol.Required(CONF_MODULES_POWER)] = vol.All(
-            vol.Coerce(int), vol.Range(min=1)
-        )
-    return vol.Schema(schema)
+)
 
 
 class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -107,27 +111,21 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_NAME): str,
+                        vol.Required(CONF_LATITUDE): cv.latitude,
+                        vol.Required(CONF_LONGITUDE): cv.longitude,
+                    }
+                ).extend(PLANE_SCHEMA.schema),
                 {
-                    vol.Required(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                    vol.Required(
-                        CONF_LATITUDE, default=self.hass.config.latitude
-                    ): cv.latitude,
-                    vol.Required(
-                        CONF_LONGITUDE, default=self.hass.config.longitude
-                    ): cv.longitude,
-                    vol.Required(CONF_DECLINATION, default=25): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=90)
-                    ),
-                    vol.Required(CONF_AZIMUTH, default=180): vol.All(
-                        vol.Coerce(int), vol.Range(min=0, max=360)
-                    ),
-                    vol.Required(CONF_MODULES_POWER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
+                    CONF_NAME: self.hass.config.location_name,
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_DECLINATION: 25,
+                    CONF_AZIMUTH: 180,
+                },
             ),
         )
 
@@ -218,7 +216,10 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_get_plane_schema(),
+            data_schema=self.add_suggested_values_to_schema(
+                PLANE_SCHEMA,
+                {CONF_DECLINATION: 25, CONF_AZIMUTH: 180},
+            ),
         )
 
     async def async_step_reconfigure(
@@ -241,9 +242,12 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=_get_plane_schema(
-                declination=subentry.data[CONF_DECLINATION],
-                azimuth=subentry.data[CONF_AZIMUTH],
-                modules_power=subentry.data[CONF_MODULES_POWER],
+            data_schema=self.add_suggested_values_to_schema(
+                PLANE_SCHEMA,
+                {
+                    CONF_DECLINATION: subentry.data[CONF_DECLINATION],
+                    CONF_AZIMUTH: subentry.data[CONF_AZIMUTH],
+                    CONF_MODULES_POWER: subentry.data[CONF_MODULES_POWER],
+                },
             ),
         )
