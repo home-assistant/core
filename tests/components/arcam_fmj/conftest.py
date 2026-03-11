@@ -120,21 +120,3 @@ async def player_setup_fixture(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         yield MOCK_ENTITY_ID
-
-
-@pytest.fixture(name="coordinator_1")
-def coordinator_1_fixture(
-    hass: HomeAssistant, player_setup: str
-) -> ArcamFmjCoordinator:
-    """Get the coordinator for zone 1."""
-    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
-    return config_entry.runtime_data.coordinators[1]
-
-
-@pytest.fixture(name="coordinator_2")
-def coordinator_2_fixture(
-    hass: HomeAssistant, player_setup: str
-) -> ArcamFmjCoordinator:
-    """Get the coordinator for zone 2."""
-    config_entry = hass.config_entries.async_entries("arcam_fmj")[0]
-    return config_entry.runtime_data.coordinators[2]
