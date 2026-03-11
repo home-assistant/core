@@ -342,3 +342,53 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.assert_not_called()
     # But async_request_refresh should still be called
     coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_coordinator_performs_poll(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the coordinator uses perform_poll() for data refresh.
+
+    This verifies the double-polling fix: instead of the library polling
+    automatically AND Home Assistant polling on its schedule, we disable
+    the library's auto-polling and have HA explicitly call perform_poll()
+    when it wants fresh data.
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify perform_poll was called during initial setup/refresh
+    mock_fp.perform_poll.assert_called()
+
+
+async def test_fireplace_built_with_polling_disabled(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the fireplace is built with polling_enabled=False.
+
+    This is the other half of the double-polling fix: we tell the library
+    not to auto-poll, so Home Assistant can control polling via perform_poll().
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    # We need to capture the call to build_fireplace_from_common
+    with patch(
+        "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+        new_callable=AsyncMock,
+        return_value=mock_fp,
+    ) as mock_build:
+        mock_config_entry_current.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify build_fireplace_from_common was called with polling_enabled=False
+        mock_build.assert_called_once()
+        call_kwargs = mock_build.call_args.kwargs
+        assert call_kwargs.get("polling_enabled") is False
