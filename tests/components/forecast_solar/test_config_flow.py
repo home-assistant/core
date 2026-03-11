@@ -225,8 +225,7 @@ async def test_subentry_flow_add_plane(
         CONF_MODULES_POWER: 3000,
     }
 
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    assert len(entry.subentries) == 2
+    assert len(mock_config_entry.subentries) == 2
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
