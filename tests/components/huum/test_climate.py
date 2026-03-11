@@ -1,9 +1,7 @@
 """Tests for the Huum climate entity."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from freezegun.api import FrozenDateTimeFactory
 from huum.const import SaunaStatus
 from syrupy.assertion import SnapshotAssertion
 
@@ -24,7 +22,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.huum_sauna"
 
@@ -89,7 +87,6 @@ async def test_temperature_range(
     hass: HomeAssistant,
     mock_huum: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the temperature range."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -103,9 +100,8 @@ async def test_temperature_range(
     mock_huum.sauna_config.min_temp = 0
     mock_huum.sauna_config.max_temp = 0
 
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["min_temp"] == CONFIG_DEFAULT_MIN_TEMP
@@ -115,9 +111,8 @@ async def test_temperature_range(
     mock_huum.sauna_config.min_temp = 50
     mock_huum.sauna_config.max_temp = 80
 
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["min_temp"] == 50
