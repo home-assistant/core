@@ -13,19 +13,23 @@
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "OpenAI API base URL"
         },
         "data_description": {
-          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
+          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]",
+          "url": "Optional, only change if using a non-OpenAI LLM provider."
         },
         "description": "Reauthentication required. Please enter your updated API key."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "OpenAI API base URL"
         },
         "data_description": {
-          "api_key": "Your OpenAI API key."
+          "api_key": "Your OpenAI API key.",
+          "url": "Optional, only change if using a non-OpenAI LLM provider."
         },
         "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
       }

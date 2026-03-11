@@ -108,7 +108,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_URL,
             default=DEFAULT_BASE_URL,
-            description={"suffix": "Leave blank to use the default OpenAI API"},
+            description={
+                "suffix": "Optional, only change if using a non-OpenAI LLM provider."
+            },
         ): str,
     }
 )
