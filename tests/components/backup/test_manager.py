@@ -3859,7 +3859,7 @@ async def test_upload_progress_debounced(
     upload_events = [e for e in events if isinstance(e, UploadBackupEvent)]
 
     # The first event (100 bytes) fires immediately.
-    # The 500 and ∂1000 byte events are buffered during cooldown but the debouncer
+    # The 500 and 1000 byte events are buffered during cooldown but the debouncer
     # is cancelled when the upload completes.
     # A final 100% progress event is sent for each agent.
     remote_events = [e for e in upload_events if e.agent_id == "test.remote"]
