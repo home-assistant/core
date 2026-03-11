@@ -37,6 +37,7 @@ def mock_waterfurnace_client() -> Generator[Mock]:
     ):
         client = mock_client.return_value
         client.gwid = "TEST_GWID_12345"
+        client.account_id = "test_account_id"
 
         gateway_data = {
             "gwid": "TEST_GWID_12345",
@@ -82,6 +83,7 @@ def mock_waterfurnace_client_multi_device() -> Generator[Mock]:
         for gwid_data in (gateway_data_1, gateway_data_2):
             client = Mock(spec=WaterFurnace)
             client.gwid = gwid_data["gwid"]
+            client.account_id = "test_account_id"
             client.devices = [WFGateway(gateway_data_1), WFGateway(gateway_data_2)]
             client.read.return_value = device_data
             client.read_with_retry.return_value = device_data
@@ -101,7 +103,9 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
         },
-        unique_id="test_user",
+        unique_id="test_account_id",
+        version=1,
+        minor_version=2,
     )
 
 

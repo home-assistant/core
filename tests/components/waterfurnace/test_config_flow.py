@@ -36,7 +36,7 @@ async def test_user_flow_success(
         CONF_USERNAME: "test_user",
         CONF_PASSWORD: "test_password",
     }
-    assert result["result"].unique_id == "test_user"
+    assert result["result"].unique_id == "test_account_id"
 
     # Verify login was called (once during config flow, once during setup)
     assert mock_waterfurnace_client.login.called
@@ -160,7 +160,7 @@ async def test_import_flow_success(
         CONF_USERNAME: "test_user",
         CONF_PASSWORD: "test_password",
     }
-    assert result["result"].unique_id == "test_user"
+    assert result["result"].unique_id == "test_account_id"
 
 
 async def test_import_flow_already_configured(
