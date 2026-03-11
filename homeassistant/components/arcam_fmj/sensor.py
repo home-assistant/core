@@ -126,7 +126,11 @@ SENSORS: tuple[ArcamFmjSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         suggested_display_precision=0,
-        value_fn=lambda state: state.get_incoming_audio_sample_rate(),
+        value_fn=lambda state: (
+            None
+            if (sample_rate := state.get_incoming_audio_sample_rate()) == 0
+            else sample_rate
+        ),
     ),
 )
 
@@ -140,8 +144,7 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data.coordinators
 
     entities: list[ArcamFmjSensorEntity] = []
-    for zone in (1, 2):
-        coordinator = coordinators[zone]
+    for coordinator in coordinators.values():
         entities.extend(
             ArcamFmjSensorEntity(
                 coordinator=coordinator,

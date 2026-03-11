@@ -63,8 +63,12 @@ async def test_sensor_audio_none_values(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensors report unknown when audio format is None."""
-    for key in ("incoming_audio_format", "incoming_audio_config"):
+    """Test that sensors report unknown when audio format/sample rate is None or zero."""
+    for key in (
+        "incoming_audio_format",
+        "incoming_audio_config",
+        "incoming_audio_sample_rate",
+    ):
         entity_id = _get_entity_id(entity_registry, 1, key)
         state = hass.states.get(entity_id)
         assert state is not None, f"State missing for {key}"
