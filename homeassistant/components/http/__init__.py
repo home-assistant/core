@@ -669,7 +669,16 @@ class HomeAssistantHTTP:
         if self.unix_site is not None:
             await self.unix_site.stop()
             if self.unix_socket_path is not None:
-                self.unix_socket_path.unlink(missing_ok=True)
+                try:
+                    await self.hass.async_add_executor_job(
+                        self.unix_socket_path.unlink, True
+                    )
+                except OSError as err:
+                    _LOGGER.warning(
+                        "Could not remove unix socket %s: %s",
+                        self.unix_socket_path,
+                        err,
+                    )
         if self.site is not None:
             await self.site.stop()
         if self.runner is not None:
