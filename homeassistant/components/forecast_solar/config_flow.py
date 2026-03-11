@@ -125,6 +125,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_LONGITUDE: self.hass.config.longitude,
                     CONF_DECLINATION: 25,
                     CONF_AZIMUTH: 180,
+                    CONF_MODULES_POWER: 10000,
                 },
             ),
         )
@@ -218,7 +219,7 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 PLANE_SCHEMA,
-                {CONF_DECLINATION: 25, CONF_AZIMUTH: 180},
+                {CONF_DECLINATION: 25, CONF_AZIMUTH: 180, CONF_MODULES_POWER: 10000},
             ),
         )
 
