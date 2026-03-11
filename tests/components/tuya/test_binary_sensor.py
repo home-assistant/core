@@ -13,6 +13,7 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.json import json_dumps
 
 from . import MockDeviceListener, check_selective_state_update, initialize_entry
 
@@ -124,3 +125,33 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_zibqa9dutqyaxym2"],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_bitmap_water_full_alias(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+) -> None:
+    """Test BITMAP fault sensor when the tank full bit is labeled water_full."""
+    mock_device.status_range["fault"].values = json_dumps(
+        {"label": ["water_full", "defrost", "E1", "E2", "L2", "L3", "L4", "wet"]}
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == "off"
+    assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
+    assert hass.states.get("binary_sensor.dehumidifier_wet").state == "off"
+
+    await mock_listener.async_send_device_update(hass, mock_device, {"fault": 0x81})
+
+    assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == "on"
+    assert hass.states.get("binary_sensor.dehumidifier_defrost").state == "off"
+    assert hass.states.get("binary_sensor.dehumidifier_wet").state == "on"
