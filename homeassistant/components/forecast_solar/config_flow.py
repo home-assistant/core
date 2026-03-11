@@ -228,14 +228,9 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the user step to add a new plane."""
         entry = self._get_entry()
-        plane_count = sum(
-            1
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_PLANE
-        )
-        if plane_count >= MAX_PLANES:
+        if len(entry.subentries) >= MAX_PLANES:
             return self.async_abort(reason="max_planes")
-        if plane_count >= 1 and not entry.options.get(CONF_API_KEY):
+        if len(entry.subentries) >= 1 and not entry.options.get(CONF_API_KEY):
             return self.async_abort(reason="api_key_required")
 
         if user_input is not None:
