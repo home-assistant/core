@@ -1057,7 +1057,7 @@ async def test_state_attr_translated(
     hass.states.async_set(
         "switch.test",
         "on",
-        attributes={"some_attr": "some_value"},
+        attributes={"some_attr": "some_value", "numeric_attr": 42, "bool_attr": True},
     )
 
     config_entry = MockConfigEntry(domain="climate")
@@ -1080,6 +1080,20 @@ async def test_state_attr_translated(
         '{{ state_attr_translated("switch.test", "some_attr") }}',
     )
     assert result == "some_value"
+
+    # Non-string attributes should be returned as-is without type conversion
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "numeric_attr") }}',
+    )
+    assert result == 42
+    assert isinstance(result, int)
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "bool_attr") }}',
+    )
+    assert result is True
 
     result = render(
         hass,
