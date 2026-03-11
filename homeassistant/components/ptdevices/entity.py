@@ -64,7 +64,7 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
     @property
     def device(self) -> dict[str, Any]:
         """Return the device data."""
-        return (dict[str, Any])(self.coordinator.data.get(self._device_id, {}))
+        return self.coordinator.data.get(self._device_id, {})
 
     @property
     def available(self) -> bool:
