@@ -360,8 +360,8 @@ async def test_coordinator_performs_poll(
     await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
     await hass.async_block_till_done()
 
-    # Verify perform_poll was called during initial setup/refresh
-    mock_fp.perform_poll.assert_called_once()
+    # Verify perform_poll was awaited during initial setup/refresh
+    mock_fp.perform_poll.assert_awaited_once()
 
 
 async def test_fireplace_built_with_polling_disabled(
@@ -387,9 +387,9 @@ async def test_fireplace_built_with_polling_disabled(
         await hass.async_block_till_done()
 
         # Verify build_fireplace_from_common was called with polling_enabled=False
-        mock_build.assert_called_once()
+        mock_build.assert_awaited_once()
         call_kwargs = mock_build.call_args.kwargs
         assert call_kwargs.get("polling_enabled") is False
         # Coordinator drives exactly one poll; if the library were also auto-polling
         # this would be > 1, catching the double-poll regression.
-        mock_fp.perform_poll.assert_called_once()
+        mock_fp.perform_poll.assert_awaited_once()
