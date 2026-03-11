@@ -55,8 +55,10 @@ from .const import (
     ATTR_ANNOUNCE_TIMEOUT,
     ATTR_ANNOUNCE_VOLUME,
     CONF_BROWSE_LIMIT,
+    CONF_LMS_TIMEOUT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
+    DEFAULT_LMS_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
     SERVER_MANUFACTURER,
@@ -237,6 +239,14 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self._browse_data = BrowseData()
         self._synthetic_media_browser_thumbnail_items: LRU[str, str] = LRU(5000)
 
+    def _get_options_lms_timeout(self) -> float:
+        """Get the LMS timeout from the config entry options."""
+        return float(
+            self.coordinator.config_entry.options.get(
+                CONF_LMS_TIMEOUT, DEFAULT_LMS_TIMEOUT
+            )
+        )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -405,7 +415,10 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await safe_library_call(
-            self._player.async_set_power, False, translation_key="turn_off_failed"
+            self._player.async_set_power,
+            False,
+            self._get_options_lms_timeout(),
+            translation_key="turn_off_failed",
         )
         await self.coordinator.async_refresh()
 
@@ -415,6 +428,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_set_volume,
             volume_percent,
+            self._get_options_lms_timeout(),
             translation_key="set_volume_failed",
             translation_placeholders={"volume": volume_percent},
         )
@@ -425,6 +439,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_set_muting,
             mute,
+            self._get_options_lms_timeout(),
             translation_key="set_mute_failed",
         )
         await self.coordinator.async_refresh()
@@ -433,6 +448,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send stop command to media player."""
         await safe_library_call(
             self._player.async_stop,
+            self._get_options_lms_timeout(),
             translation_key="stop_failed",
         )
         await self.coordinator.async_refresh()
@@ -441,6 +457,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send pause/play toggle command to media player."""
         await safe_library_call(
             self._player.async_toggle_pause,
+            self._get_options_lms_timeout(),
             translation_key="play_pause_failed",
         )
         await self.coordinator.async_refresh()
@@ -449,6 +466,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send play command to media player."""
         await safe_library_call(
             self._player.async_play,
+            self._get_options_lms_timeout(),
             translation_key="play_failed",
         )
         await self.coordinator.async_refresh()
@@ -457,6 +475,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send pause command to media player."""
         await safe_library_call(
             self._player.async_pause,
+            self._get_options_lms_timeout(),
             translation_key="pause_failed",
         )
         await self.coordinator.async_refresh()
@@ -466,6 +485,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_index,
             "+1",
+            self._get_options_lms_timeout(),
             translation_key="next_track_failed",
         )
         await self.coordinator.async_refresh()
@@ -475,6 +495,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_index,
             "-1",
+            self._get_options_lms_timeout(),
             translation_key="previous_track_failed",
         )
         await self.coordinator.async_refresh()
@@ -484,6 +505,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_time,
             position,
+            self._get_options_lms_timeout(),
             translation_key="seek_failed",
             translation_placeholders={"position": position},
         )
@@ -494,6 +516,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_set_power,
             True,
+            self._get_options_lms_timeout(),
             translation_key="turn_on_failed",
         )
         await self.coordinator.async_refresh()
@@ -571,6 +594,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 self._player.async_load_url,
                 media_id,
                 cmd,
+                self._get_options_lms_timeout(),
                 translation_key="load_url_failed",
                 translation_placeholders={"media_id": media_id, "cmd": cmd},
             )
@@ -608,7 +632,12 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
         if index is not None:
-            await self._player.async_index(index)
+            await safe_library_call(
+                self._player.async_index,
+                index,
+                self._get_options_lms_timeout(),
+                translation_key="next_track_failed",
+            )
 
         await self.coordinator.async_refresh()
 
@@ -692,6 +721,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_set_repeat,
             repeat_mode,
+            self._get_options_lms_timeout(),
             translation_key="set_repeat_failed",
         )
         await self.coordinator.async_refresh()
@@ -702,6 +732,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         await safe_library_call(
             self._player.async_set_shuffle,
             shuffle_mode,
+            self._get_options_lms_timeout(),
             translation_key="set_shuffle_failed",
         )
         await self.coordinator.async_refresh()
@@ -710,6 +741,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Send the media player the command to clear the playlist."""
         await safe_library_call(
             self._player.async_clear_playlist,
+            self._get_options_lms_timeout(),
             translation_key="clear_playlist_failed",
         )
         await self.coordinator.async_refresh()
@@ -772,7 +804,12 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     },
                 )
             if other_player_id := other_player.unique_id:
-                await self._player.async_sync(other_player_id)
+                await safe_library_call(
+                    self._player.async_sync,
+                    other_player_id,
+                    self._get_options_lms_timeout(),
+                    translation_key="unjoin_failed",
+                )
             else:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -786,6 +823,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Unsync this Squeezebox player."""
         await safe_library_call(
             self._player.async_unsync,
+            self._get_options_lms_timeout(),
             translation_key="unjoin_failed",
         )
         await self.coordinator.async_refresh()

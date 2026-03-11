@@ -185,6 +185,9 @@
     "join_cannot_join_unknown_player": {
       "message": "Could not join unknown player {other_player_entity_id}."
     },
+    "join_failed": {
+      "message": "Failed to unsync the player."
+    },
     "load_playlist_failed": {
       "message": "Failed to load playlist with command {cmd}."
     },
@@ -245,10 +248,12 @@
       "init": {
         "data": {
           "browse_limit": "Browse limit",
+          "lms_timeout": "LMS timeout",
           "volume_step": "Volume step"
         },
         "data_description": {
           "browse_limit": "Maximum number of items when browsing or in a playlist.",
+          "lms_timeout": "Timeout in seconds for requests to the LMS. If you experience timeouts due to a slow LMS or network, increase this value.",
           "volume_step": "Amount to adjust the volume when turning volume up or down."
         },
         "title": "LMS Configuration"
