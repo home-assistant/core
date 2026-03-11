@@ -36,12 +36,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery:
     status: exempt
     comment: Cloud-based integration, devices cannot be discovered on local network.
@@ -70,7 +70,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Fan entities use default icons.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: Integration does not have cases where raising a repair issue is needed.
