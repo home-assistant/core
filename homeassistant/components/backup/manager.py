@@ -620,6 +620,14 @@ class BackupManager:
                 on_progress=on_upload_progress,
             )
             upload_progress_debouncer.async_cancel()
+            self.async_on_backup_event(
+                UploadBackupEvent(
+                    manager_state=self.state,
+                    agent_id=agent_id,
+                    uploaded_bytes=_backup.size,
+                    total_bytes=_backup.size,
+                )
+            )
             if streamer:
                 await streamer.wait()
 
