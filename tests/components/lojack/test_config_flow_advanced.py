@@ -57,7 +57,7 @@ async def test_config_flow_validate_input_no_user_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test config flow falls back to username when user_id is None."""
+    """Test config flow raises cannot_connect when user_id is None."""
     client = _make_client(user_id=None)
 
     result = await hass.config_entries.flow.async_init(
@@ -76,8 +76,8 @@ async def test_config_flow_validate_input_no_user_id(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_USERNAME.lower()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_setup_entry_client_close_error_on_setup_failure(

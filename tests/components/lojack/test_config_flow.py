@@ -47,10 +47,9 @@ async def test_full_user_flow_no_user_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test that flow falls back to username when user_id is unavailable."""
+    """Test that flow raises cannot_connect when user_id is unavailable."""
     client = AsyncMock()
     client.user_id = None
-    client.list_devices = AsyncMock(return_value=[])
     client.close = AsyncMock()
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
@@ -71,8 +70,8 @@ async def test_full_user_flow_no_user_id(
             },
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_USERNAME.lower()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_user_flow_invalid_auth(

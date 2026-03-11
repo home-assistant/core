@@ -23,15 +23,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> str | None:
+async def validate_input(data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
 
-    Returns the unique user ID from the API, or None if unavailable.
+    Returns the unique user ID from the API.
     """
     try:
         async with await LoJackClient.create(
             data[CONF_USERNAME], data[CONF_PASSWORD]
         ) as client:
+            if client.user_id is None:
+                raise CannotConnect("API did not return a user identifier")
             return client.user_id
     except AuthenticationError as err:
         raise InvalidAuth(f"Invalid username or password: {err}") from err
@@ -62,8 +64,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                unique_id = user_id or user_input[CONF_USERNAME].lower()
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"LoJack ({user_input[CONF_USERNAME]})",
