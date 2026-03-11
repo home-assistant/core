@@ -44,12 +44,12 @@ async def test_button(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_stop(
+async def test_button_press_standby(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing the stop button switches to real-time mode and sends stop action."""
+    """Test pressing the standby button switches to real-time mode and sends standby action."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
@@ -65,6 +65,7 @@ async def test_button_press_stop(
     )
 
     # Verify set_data was called twice with correct parameters
+    assert mock_indevolt.set_data.call_count == 2
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
@@ -74,12 +75,12 @@ async def test_button_press_stop(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_stop_already_in_realtime_mode(
+async def test_button_press_standby_already_in_realtime_mode(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing stop when already in real-time mode skips the mode switch."""
+    """Test pressing standby when already in real-time mode skips the mode switch."""
 
     # Force real-time control mode
     mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = REALTIME_ACTION_MODE
@@ -102,12 +103,12 @@ async def test_button_press_stop_already_in_realtime_mode(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_stop_timeout_error(
+async def test_button_press_standby_timeout_error(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing stop raises HomeAssistantError when the device times out."""
+    """Test pressing standby raises HomeAssistantError when the device times out."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
@@ -125,12 +126,12 @@ async def test_button_press_stop_timeout_error(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_stop_portable_mode_error(
+async def test_button_press_standby_portable_mode_error(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing stop raises HomeAssistantError when device is in outdoor/portable mode."""
+    """Test pressing standby raises HomeAssistantError when device is in outdoor/portable mode."""
 
     # Force outdoor/portable mode
     mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = PORTABLE_MODE

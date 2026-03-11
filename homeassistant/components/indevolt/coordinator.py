@@ -150,7 +150,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Switch mode, execute action, and refresh for real-time control."""
 
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)
-        success = await self.async_push_data(REALTIME_ACTION_KEY, action)
+
+        try:
+            success = await self.async_push_data(REALTIME_ACTION_KEY, action)
+
+        except (DeviceTimeoutError, DeviceConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_execute_realtime_action",
+            ) from err
 
         if not success:
             raise HomeAssistantError(
