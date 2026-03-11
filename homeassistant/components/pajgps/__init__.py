@@ -5,7 +5,6 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import PajGpsConfigEntry, PajGpsCoordinator
@@ -18,7 +17,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, entry: PajGpsConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
-    pajgps_coordinator = PajGpsCoordinator(hass, entry, async_get_clientsession(hass))
+    pajgps_coordinator = PajGpsCoordinator(hass, entry)
     await pajgps_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = pajgps_coordinator
