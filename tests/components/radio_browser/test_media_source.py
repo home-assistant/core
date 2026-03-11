@@ -139,7 +139,7 @@ async def test_search_stations_with_codec_filter(
         filter_by=FilterBy.NAME,
         filter_term="rock",
         hide_broken=True,
-        limit=100,
+        limit=500,
         order=Order.CLICK_COUNT,
         reverse=True,
     )
@@ -164,6 +164,46 @@ async def test_search_stations_with_codec_filter_case_insensitive(
     assert item is not None
     assert item.children is not None
     assert len(item.children) > 0
+
+
+async def test_search_stations_with_url_encoded_codec(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that a URL-encoded codec segment is decoded correctly (e.g. AAC%2B → AAC+)."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    class AacPlusStation:
+        """Mock station with AAC+ codec."""
+
+        country_code = "US"
+        latitude = None
+        longitude = None
+        uuid = "aac-plus-1"
+        name = "AAC+ Station"
+        codec = "AAC+"
+        favicon = "fake.png"
+
+    source.radios.stations = AsyncMock(return_value=[AacPlusStation()])
+
+    # "AAC%2B" must be URL-decoded to "AAC+" before the codec filter is applied
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/station/AAC%2B"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="station",
+        hide_broken=True,
+        limit=500,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    assert item is not None
+    assert item.children is not None
+    assert len(item.children) == 1
+    assert item.children[0].title == "AAC+ Station"
 
 
 async def test_search_stations_empty_query(

@@ -380,18 +380,20 @@ class RadioMediaSource(MediaSource):
             return []
 
         # Split optional codec suffix: "rock%20pop/AAC" → query="rock pop", codec="AAC"
-        encoded_query, _, codec = remainder.partition("/")
-        codec = codec.upper() if codec else ""
+        encoded_query, _, raw_codec = remainder.partition("/")
+        codec = unquote(raw_codec).upper() if raw_codec else ""
         query = unquote(encoded_query)
 
         if not query:
             return []
 
+        # When a codec filter is active, fetch more stations so post-filter
+        # results aren't truncated (the Radio Browser API has no codec filter).
         stations = await radios.stations(
             filter_by=FilterBy.NAME,
             filter_term=query,
             hide_broken=True,
-            limit=100,
+            limit=100 if not codec else 500,
             order=Order.CLICK_COUNT,
             reverse=True,
         )
