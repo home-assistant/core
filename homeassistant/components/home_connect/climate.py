@@ -67,7 +67,15 @@ def _get_entities_for_appliance(
     return (
         [HomeConnectAirConditioningEntity(appliance_coordinator)]
         if (programs := appliance_coordinator.data.programs)
-        and any(program.key in PROGRAMS_HVAC_MODES_MAP for program in programs)
+        and any(
+            program.key in PROGRAMS_HVAC_MODES_MAP
+            and (
+                program.constraints is None
+                or program.constraints.execution
+                in (Execution.SELECT_AND_START, Execution.START_ONLY)
+            )
+            for program in programs
+        )
         else []
     )
 
@@ -222,17 +230,20 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
-            and self._original_option_keys != set(option_constraints.allowed_values)
+            and (
+                normalized_allowed_values := {
+                    value
+                    for value in option_constraints.allowed_values
+                    if value is not None
+                }
+            )
+            and self._original_option_keys != normalized_allowed_values
         ):
-            self._original_option_keys = {
-                value
-                for value in option_constraints.allowed_values
-                if value is not None
-            }
+            self._original_option_keys = normalized_allowed_values
             self._attr_fan_modes = [
                 FAN_MODES_OPTIONS_INVERTED[option]
-                for option in self._original_option_keys
-                if option is not None and option in FAN_MODES_OPTIONS_INVERTED
+                for option in normalized_allowed_values
+                if option in FAN_MODES_OPTIONS_INVERTED
             ]
         match (
             self._attr_supported_features & ClimateEntityFeature.FAN_MODE,
