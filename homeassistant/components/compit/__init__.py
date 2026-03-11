@@ -12,8 +12,10 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.FAN,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 

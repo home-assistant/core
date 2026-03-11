@@ -111,6 +111,18 @@ def create_zeo_trait() -> Mock:
         RoborockZeoProtocol.COUNTDOWN: 0,
         RoborockZeoProtocol.WASHING_LEFT: 253,
         RoborockZeoProtocol.ERROR: ZeoError.none.name,
+        RoborockZeoProtocol.TIMES_AFTER_CLEAN: 5,
+        RoborockZeoProtocol.DETERGENT_EMPTY: 0,
+        RoborockZeoProtocol.SOFTENER_EMPTY: 0,
+        RoborockZeoProtocol.DETERGENT_TYPE: 2,
+        RoborockZeoProtocol.SOFTENER_TYPE: 2,
+        RoborockZeoProtocol.MODE: 0,
+        RoborockZeoProtocol.PROGRAM: 1,
+        RoborockZeoProtocol.TEMP: 1,
+        RoborockZeoProtocol.RINSE_TIMES: 1,
+        RoborockZeoProtocol.SPIN_LEVEL: 5,
+        RoborockZeoProtocol.DRYING_MODE: 3,
+        RoborockZeoProtocol.SOUND_SET: False,
     }
     return zeo_trait
 
@@ -288,7 +300,7 @@ def make_home_trait(
                 NamedRoomMapping(
                     segment_id=room_mapping[room.id],
                     iot_id=room.id,
-                    name=room.name,
+                    raw_name=room.name,
                 )
                 for room in rooms
             ],

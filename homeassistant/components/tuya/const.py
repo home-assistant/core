@@ -82,18 +82,6 @@ class WorkMode(StrEnum):
     WHITE = "white"
 
 
-class DPType(StrEnum):
-    """Data point types."""
-
-    BITMAP = "Bitmap"
-    BOOLEAN = "Boolean"
-    ENUM = "Enum"
-    INTEGER = "Integer"
-    JSON = "Json"
-    RAW = "Raw"
-    STRING = "String"
-
-
 class DeviceCategory(StrEnum):
     """Tuya device categories.
 

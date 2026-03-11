@@ -21,6 +21,7 @@ REBOOT_ENTITY_ID = "button.nanostation_5ac_ap_name_restart"
 async def test_reboot_button_press_success(
     hass: HomeAssistant,
     mock_airos_client: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -45,6 +46,7 @@ async def test_reboot_button_press_success(
 async def test_reboot_button_press_fail(
     hass: HomeAssistant,
     mock_airos_client: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that pressing the reboot button utilizes the correct calls."""
@@ -74,6 +76,7 @@ async def test_reboot_button_press_fail(
 async def test_reboot_button_press_exceptions(
     hass: HomeAssistant,
     mock_airos_client: AsyncMock,
+    mock_async_get_firmware_data: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:

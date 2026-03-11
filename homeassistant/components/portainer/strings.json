@@ -148,7 +148,8 @@
         "name": "Operating system version"
       },
       "stack_containers_count": {
-        "name": "Container count"
+        "name": "Containers",
+        "unit_of_measurement": "containers"
       },
       "stack_type": {
         "name": "Type",
