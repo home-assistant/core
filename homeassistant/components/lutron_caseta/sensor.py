@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -28,7 +29,7 @@ async def async_setup_entry(
     async_add_entities(
         (
             LutronCasetaBatterySensor(device, data)
-            for device in bridge.get_devices_by_domain("cover")
+            for device in bridge.get_devices_by_domain(COVER_DOMAIN)
         ),
         update_before_add=True,
     )
