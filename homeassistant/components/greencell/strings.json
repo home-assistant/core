@@ -7,7 +7,8 @@
       "mqtt_not_configured": "MQTT is not configured. Please configure MQTT first",
       "mqtt_not_connected": "MQTT is not connected. Ensure the MQTT broker is running and configured.",
       "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery.",
-      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
+      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting.",
+      "not_ready": "The integration is not ready. Please check logs and try again later."
     },
     "step": {
       "confirm": {
@@ -45,7 +46,16 @@
         "name": "Power"
       },
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "connected": "Connected",
+          "error_car": "Car error",
+          "error_evse": "EVSE error",
+          "finished": "Finished",
+          "idle": "Idle",
+          "waiting_for_car": "Waiting for car"
+        }
       },
       "voltage_l1": {
         "name": "Voltage phase L1"

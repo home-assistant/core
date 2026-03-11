@@ -413,4 +413,4 @@ async def test_mqtt_discovery_invalid_payload(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_discovery_info"
+    assert result["reason"] == "invalid_discovery_data"

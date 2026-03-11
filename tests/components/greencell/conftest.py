@@ -1,14 +1,10 @@
 """Shared test fixtures and constants for Greencell integration tests."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.components.mqtt import MqttData
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
@@ -48,40 +44,6 @@ TEST_STATUS_PAYLOAD_WAITING_FOR_CAR = b'{"state": "WAITING_FOR_CAR"}'
 TEST_STATUS_PAYLOAD_ERROR_CAR = b'{"state": "ERROR_CAR"}'
 TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
 TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
-
-
-@pytest.fixture
-def mock_mqtt_data():
-    """Mock MQTT data for async_fire_mqtt_message."""
-    mqtt_data = MagicMock(spec=MqttData)
-    mqtt_data.async_fire_internal_message = AsyncMock()
-
-    # Mock the client and its connected status
-    mqtt_data.client = MagicMock()
-    mqtt_data.client.connected = True
-
-    return mqtt_data
-
-
-@pytest.fixture
-async def setup_mqtt(hass: HomeAssistant, mock_mqtt_data):
-    """Set up MQTT integration for testing."""
-    # Tworzymy mockowy wpis dla MQTT, aby przejść przez mqtt.async_wait_for_mqtt_client
-    mqtt_entry = MockConfigEntry(
-        domain="mqtt",
-        data={"broker": "127.0.0.1"},
-        state=ConfigEntryState.LOADED,
-    )
-    mqtt_entry.add_to_hass(hass)
-
-    # Podpinamy dane MQTT do hass.data
-    hass.data["mqtt"] = mock_mqtt_data
-
-    yield
-
-    # Sprzątanie po teście
-    if "mqtt" in hass.data:
-        del hass.data["mqtt"]
 
 
 @pytest.fixture

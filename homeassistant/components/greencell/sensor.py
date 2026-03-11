@@ -1,14 +1,4 @@
-"""Home Assistant integration module for Greencell EVSE sensor entities over MQTT.
-
-Provides:
-- Sensor  classes:
-  * HabuSensor: abstract base for all sensors with common device identification and availability logic.
-  * Habu3PhaseSensor:  for per-phase sensors (current, voltage).
-  * HabuSingleSensor:  single-value sensors (power, status).
-- setup_sensors(): subscribes to MQTT topics for current, voltage, power, status, and device_state;
-  updates sensor state objects and schedules Home Assistant state updates.
-- async_setup_platform / async_setup_entry: legacy YAML and config-entry setup hooks.
-"""
+"""Home Assistant integration module for Greencell EVSE sensor entities over MQTT."""
 
 from abc import ABC
 from collections.abc import Callable
@@ -34,6 +24,8 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -63,7 +55,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=3,
-        value_fn=lambda data: data / 1000 if data is not None else 0.0,
+        value_fn=lambda data: data / 1000 if data is not None else None,
     ),
     GreencellSensorDescription(
         key="current_l2",
@@ -72,7 +64,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=3,
-        value_fn=lambda data: data / 1000 if data is not None else 0.0,
+        value_fn=lambda data: data / 1000 if data is not None else None,
     ),
     GreencellSensorDescription(
         key="current_l3",
@@ -81,7 +73,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         suggested_display_precision=3,
-        value_fn=lambda data: data / 1000 if data is not None else 0.0,
+        value_fn=lambda data: data / 1000 if data is not None else None,
     ),
     GreencellSensorDescription(
         key="voltage_l1",
@@ -90,7 +82,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value_fn=lambda data: data if data is not None else 0.0,
+        value_fn=lambda data: data if data is not None else None,
     ),
     GreencellSensorDescription(
         key="voltage_l2",
@@ -99,7 +91,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value_fn=lambda data: data if data is not None else 0.0,
+        value_fn=lambda data: data if data is not None else None,
     ),
     GreencellSensorDescription(
         key="voltage_l3",
@@ -108,7 +100,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         suggested_display_precision=2,
-        value_fn=lambda data: data if data is not None else 0.0,
+        value_fn=lambda data: data if data is not None else None,
     ),
     GreencellSensorDescription(
         key="power",
@@ -117,7 +109,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         suggested_display_precision=1,
-        value_fn=lambda data: data if data is not None else 0.0,
+        value_fn=lambda data: data if data is not None else None,
     ),
     GreencellSensorDescription(
         key="status",
@@ -132,7 +124,7 @@ SENSOR_DESCRIPTIONS = (
             "error_car",
             "error_evse",
         ],
-        value_fn=lambda data: str(data).lower() if isinstance(data, str) else "idle",
+        value_fn=lambda data: str(data).lower() if isinstance(data, str) else None,
     ),
 )
 
@@ -194,7 +186,7 @@ class HabuSensor(SensorEntity, ABC):
         return f"{self._serial_number}_{self._sensor_type}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
         if GreencellUtils.device_is_habu_den(self._serial_number):
             device_name = GREENCELL_HABU_DEN
@@ -252,7 +244,7 @@ class Habu3PhaseSensor(HabuSensor):
         """Return the state of the sensor."""
         raw_value = self._sensor_data.get_value(self._phase)
         if raw_value is None:
-            return 0.0
+            return None
         return self.entity_description.value_fn(raw_value)
 
     @property
@@ -291,7 +283,7 @@ class HabuSingleSensor(HabuSensor):
                 0.0
                 if self.entity_description.native_unit_of_measurement
                 == UnitOfPower.WATT
-                else "unknown"
+                else None
             )
         return self.entity_description.value_fn(self._value.data)
 
@@ -398,7 +390,7 @@ async def setup_sensors(
         if isinstance(msg.payload, (bytes, bytearray)):
             str_payload = msg.payload.decode("utf-8", errors="ignore")
         else:
-            # Jeśli to już jest string (str), używamy go bezpośrednio
+            # If it's already a string (str), use it directly
             str_payload = str(msg.payload)
 
         if "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload:
@@ -411,23 +403,26 @@ async def setup_sensors(
         """Handle the device state message. If device was unavailable, enable the entity."""
         access.on_msg(msg.payload)
 
-    entry.async_on_unload(
-        await async_subscribe(hass, mqtt_topic_current, current_message_received)
-    )
-    entry.async_on_unload(
-        await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)
-    )
-    entry.async_on_unload(
-        await async_subscribe(hass, mqtt_topic_power, power_message_received)
-    )
-    entry.async_on_unload(
-        await async_subscribe(hass, mqtt_topic_status, status_message_received)
-    )
-    entry.async_on_unload(
-        await async_subscribe(
-            hass, mqtt_topic_device_state, device_state_message_received
+    try:
+        entry.async_on_unload(
+            await async_subscribe(hass, mqtt_topic_current, current_message_received)
         )
-    )
+        entry.async_on_unload(
+            await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)
+        )
+        entry.async_on_unload(
+            await async_subscribe(hass, mqtt_topic_power, power_message_received)
+        )
+        entry.async_on_unload(
+            await async_subscribe(hass, mqtt_topic_status, status_message_received)
+        )
+        entry.async_on_unload(
+            await async_subscribe(
+                hass, mqtt_topic_device_state, device_state_message_received
+            )
+        )
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady(f"MQTT is unavailable: {err}") from err
 
     async_add_entities(
         current_sensors + voltage_sensors + [state_sensor, power_sensor],

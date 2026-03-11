@@ -1,32 +1,15 @@
-"""Home Assistant integration for Greencell EVSE devices.
-
-This module provides the setup and discovery logic for the Greencell integration:
-- Registers the core integration via async_setup and async_setup_entry.
-- Subscribes to the GREENCELL_DISC_TOPIC for device "hello"/reset announcements.
-- For any newly discovered device (ID not already configured), publishes a QUERY command
-  to prompt the device to send its state and configuration.
-
-Key functions:
-- async_setup(hass, config):
-    Called at Home Assistant startup; installs the discovery listener.
-- async_setup_entry(hass, entry):
-    Called for each config entry; waits for first device message, stores runtime_data,
-    forwards setups to SENSOR platform.
-- setup_discovery_listener(hass):
-    Defines and schedules subscription to GREENCELL_DISC_TOPIC for new devices.
-- wait_for_device_ready(hass, serial, timeout):
-    Subscribes to both DISC_TOPIC and device voltage topic, waits for first message.
-"""
+"""Home Assistant integration for Greencell EVSE devices."""
 
 import asyncio
 from collections.abc import Callable
+import json
 import logging
 
 from greencell_client.access import GreencellAccess, GreencellHaAccessLevel
 from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ReceiveMessage, async_subscribe
+from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -39,8 +22,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
-def wait_for_device_ready(
-    hass: HomeAssistant, serial: str, timeout: float
+async def wait_for_device_ready(
+    hass: HomeAssistant,
+    serial: str,
 ) -> tuple[Callable[[], None], asyncio.Event]:
     """Subscribe to GREENCELL_DISC_TOPIC and device voltage topic.
 
@@ -52,31 +36,40 @@ def wait_for_device_ready(
 
     @callback
     def _on_message(message: ReceiveMessage) -> None:
-        if not event.is_set():
-            event.set()
-            _LOGGER.debug("Received initial message for device %s", serial)
+        """Handle readiness message."""
+        if event.is_set():
+            return
 
-    async def _async_subscribe_all() -> None:
-        nonlocal unsub_disc, unsub_volt
         try:
-            unsub_disc = await async_subscribe(hass, GREENCELL_DISC_TOPIC, _on_message)
-        except HomeAssistantError:
-            _LOGGER.error("Cannot subscribe to discovery topic for readiness check")
-        try:
-            topic = f"/greencell/evse/{serial}/voltage"
-            unsub_volt = await async_subscribe(hass, topic, _on_message)
-        except HomeAssistantError:
-            _LOGGER.error(
-                "Cannot subscribe to voltage topic %s for readiness check", topic
-            )
+            data = json.loads(message.payload)
+            if "id" in data and data["id"] != serial:
+                return
+        except ValueError, TypeError:
+            _LOGGER.debug("Received invalid JSON on readiness topic, ignoring")
+            return
 
-    hass.async_create_task(_async_subscribe_all())
+        event.set()
+        _LOGGER.debug("Received initial valid message for device %s", serial)
 
-    def _unsubscribe_all() -> None:
+    try:
+        unsub_disc = await mqtt.async_subscribe(hass, GREENCELL_DISC_TOPIC, _on_message)
+        topic = f"/greencell/evse/{serial}/voltage"
+        unsub_volt = await mqtt.async_subscribe(hass, topic, _on_message)
+    except HomeAssistantError as err:
+        _LOGGER.error("Failed to subscribe for readiness check: %s", err)
         if unsub_disc:
             unsub_disc()
+        raise ConfigEntryNotReady(f"MQTT subscription failed: {err}") from err
+
+    def _unsubscribe_all() -> None:
+        """Safe cleanup of subscriptions."""
+        nonlocal unsub_disc, unsub_volt
+        if unsub_disc:
+            unsub_disc()
+            unsub_disc = None  # Prevent double unsubscription
         if unsub_volt:
             unsub_volt()
+            unsub_volt = None
 
     return _unsubscribe_all, event
 
@@ -87,19 +80,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreencellConfigEntry) ->
     if not await mqtt.async_wait_for_mqtt_client(hass):
         raise ConfigEntryNotReady("MQTT integration is not available")
 
-    serial = entry.data.get(CONF_SERIAL_NUMBER)
-    unsub_ready, ready_event = wait_for_device_ready(
-        hass, str(serial), DISCOVERY_TIMEOUT
-    )
-
+    serial: str = entry.data[CONF_SERIAL_NUMBER]
+    unsub, device_ready_event = await wait_for_device_ready(hass, serial)
     try:
-        await asyncio.wait_for(ready_event.wait(), timeout=DISCOVERY_TIMEOUT)
+        async with asyncio.timeout(DISCOVERY_TIMEOUT):
+            await device_ready_event.wait()
     except TimeoutError as err:
+        unsub()
         raise ConfigEntryNotReady(
             f"No initial data from device {serial} within {DISCOVERY_TIMEOUT}s"
         ) from err
     finally:
-        unsub_ready()
+        unsub()
 
     entry.runtime_data = GreencellRuntimeData(
         access=GreencellAccess(GreencellHaAccessLevel.EXECUTE),

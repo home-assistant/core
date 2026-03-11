@@ -10,6 +10,12 @@
       "current_l3": {
         "default": "mdi:flash"
       },
+      "power": {
+        "default": "mdi:battery-charging-high"
+      },
+      "status": {
+        "default": "mdi:ev-plug-type2"
+      },
       "voltage_l1": {
         "default": "mdi:meter-electric"
       },
@@ -18,12 +24,6 @@
       },
       "voltage_l3": {
         "default": "mdi:meter-electric"
-      },
-      "power": {
-        "default": "mdi:battery-charging-high"
-      },
-      "status": {
-        "default": "mdi:ev-plug-type2"
       }
     }
   }

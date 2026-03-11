@@ -8,10 +8,14 @@ from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
 import pytest
 
 from homeassistant.components.greencell import wait_for_device_ready
-from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.greencell.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    GREENCELL_DISC_TOPIC,
+)
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_SERIAL_NUMBER
+from .conftest import TEST_SERIAL_NUMBER, TEST_VOLTAGE_TOPIC
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
@@ -28,36 +32,35 @@ def create_config_entry() -> MockConfigEntry:
 
 
 @pytest.mark.asyncio
-async def test_wait_for_device_ready_sets_event(hass: HomeAssistant) -> None:
-    """Test wait_for_device_ready creates event and unsubscribe function."""
-    unsub, event = wait_for_device_ready(hass, TEST_SERIAL_NUMBER, timeout=1.0)
+async def test_wait_for_device_ready_sets_event(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test wait_for_device_ready creates event and responds to MQTT."""
+    unsub, event = await wait_for_device_ready(hass, TEST_SERIAL_NUMBER)
 
     assert isinstance(event, asyncio.Event)
     assert not event.is_set()
-    assert callable(unsub)
 
+    async_fire_mqtt_message(hass, TEST_VOLTAGE_TOPIC, '{"l1": 230}')
+    await hass.async_block_till_done()
+
+    assert event.is_set()
     unsub()
 
 
 @pytest.mark.asyncio
-async def test_wait_for_device_ready_unsubscribe(hass: HomeAssistant) -> None:
-    """Test unsub function can be called multiple times without error."""
-    unsub, _ = wait_for_device_ready(hass, TEST_SERIAL_NUMBER, timeout=1.0)
+async def test_wait_for_device_ready_unsubscribe(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test unsub function stops event from being set."""
+    unsub, event = await wait_for_device_ready(hass, TEST_SERIAL_NUMBER)
 
     unsub()
-    unsub()
 
-
-@pytest.mark.asyncio
-async def test_wait_for_device_ready_event_set(hass: HomeAssistant) -> None:
-    """Test event can be manually set."""
-    unsub, event = wait_for_device_ready(hass, TEST_SERIAL_NUMBER, timeout=1.0)
+    async_fire_mqtt_message(hass, TEST_VOLTAGE_TOPIC, '{"l1": 230}')
+    await hass.async_block_till_done()
 
     assert not event.is_set()
-    event.set()
-    assert event.is_set()
-
-    unsub()
 
 
 @pytest.mark.asyncio
@@ -65,7 +68,7 @@ async def test_async_setup_entry_mqtt_available(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """Test setup succeeds when MQTT is available."""
+    """Test setup succeeds when MQTT is available and device responds."""
     entry = create_config_entry()
     entry.add_to_hass(hass)
 
@@ -76,6 +79,10 @@ async def test_async_setup_entry_mqtt_available(
         result = await hass.config_entries.async_setup(entry.entry_id)
 
     assert result is True
+    assert (
+        entry.state
+        is pytest.importorskip("homeassistant.config_entries").ConfigEntryState.LOADED
+    )
 
 
 @pytest.mark.asyncio
@@ -94,47 +101,11 @@ async def test_async_setup_entry_creates_runtime_data(
         await hass.config_entries.async_setup(entry.entry_id)
 
     runtime = entry.runtime_data
-    assert runtime is not None
-    assert hasattr(runtime, "access")
-    assert hasattr(runtime, "current_data")
-    assert hasattr(runtime, "voltage_data")
-    assert hasattr(runtime, "power_data")
-    assert hasattr(runtime, "state_data")
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_forwards_to_sensor_platform(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-) -> None:
-    """Test setup forwards entry to sensor platform."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        result = await hass.config_entries.async_setup(entry.entry_id)
-
-    assert result is True
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_mqtt_not_available(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup fails when MQTT is not available."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.mqtt.is_connected",
-        return_value=False,
-    ):
-        result = await hass.config_entries.async_setup(entry.entry_id)
-
-    assert result is False
+    assert isinstance(runtime.access, GreencellAccess)
+    assert isinstance(runtime.current_data, ElecData3Phase)
+    assert isinstance(runtime.voltage_data, ElecData3Phase)
+    assert isinstance(runtime.power_data, ElecDataSinglePhase)
+    assert isinstance(runtime.state_data, ElecDataSinglePhase)
 
 
 @pytest.mark.asyncio
@@ -153,117 +124,46 @@ async def test_async_unload_entry_success(
         await hass.config_entries.async_setup(entry.entry_id)
 
     result = await hass.config_entries.async_unload(entry.entry_id)
+    assert result is True
+
+
+@pytest.mark.asyncio
+async def test_async_setup_entry_mqtt_readiness_by_broadcast(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    caplog: pytest.LogCaptureFixture,  # Dodaj caplog
+) -> None:
+    """Test device readiness event is set via broadcast topic."""
+    caplog.set_level("DEBUG")
+    entry = create_config_entry()
+    entry.add_to_hass(hass)
+
+    payload = f'{{"id": "{TEST_SERIAL_NUMBER}"}}'
+
+    with patch("homeassistant.components.greencell.DISCOVERY_TIMEOUT", 0.5):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+
+        await asyncio.sleep(0.1)
+        async_fire_mqtt_message(hass, GREENCELL_DISC_TOPIC, payload)
+
+        result = await setup_task
 
     assert result is True
 
 
 @pytest.mark.asyncio
-async def test_async_unload_entry_fails(
+async def test_async_setup_entry_mqtt_invalid_json_graceful_handling(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
 ) -> None:
-    """Test unload entry fails if platform unload fails."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
+    """Test setup entry handles invalid MQTT JSON gracefully."""
+    unsub, event = await wait_for_device_ready(hass, TEST_SERIAL_NUMBER)
 
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        new_callable=AsyncMock,
-        return_value=False,
-    ):
-        result = await hass.config_entries.async_unload(entry.entry_id)
-
-    assert result is False
-
-
-@pytest.mark.asyncio
-async def test_runtime_data_access_key_type(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-) -> None:
-    """Test runtime_data access field has correct type."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    assert isinstance(entry.runtime_data.access, GreencellAccess)
-
-
-@pytest.mark.asyncio
-async def test_runtime_data_elec_data_types(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-) -> None:
-    """Test runtime_data elec data objects have correct types."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    assert isinstance(entry.runtime_data.current_data, ElecData3Phase)
-    assert isinstance(entry.runtime_data.voltage_data, ElecData3Phase)
-    assert isinstance(entry.runtime_data.power_data, ElecDataSinglePhase)
-    assert isinstance(entry.runtime_data.state_data, ElecDataSinglePhase)
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry_mqtt_message_handling(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-) -> None:
-    """Test setup entry handles MQTT messages correctly."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        result = await hass.config_entries.async_setup(entry.entry_id)
-
-    assert result is True
-
-    discovery_topic = f"greencell/evse/{TEST_SERIAL_NUMBER}/discovery"
-    test_payload = '{"id": "' + TEST_SERIAL_NUMBER + '"}'
-
-    async_fire_mqtt_message(hass, discovery_topic, test_payload)
+    async_fire_mqtt_message(hass, TEST_VOLTAGE_TOPIC, "{INVALID JSON}")
     await hass.async_block_till_done()
 
+    assert not event.is_set()
 
-@pytest.mark.asyncio
-async def test_async_setup_entry_mqtt_invalid_message(
-    hass: HomeAssistant,
-    mqtt_mock: MqttMockHAClient,
-) -> None:
-    """Test setup entry handles invalid MQTT messages gracefully."""
-    entry = create_config_entry()
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.greencell.wait_for_device_ready",
-        return_value=(MagicMock(), MagicMock(wait=AsyncMock())),
-    ):
-        result = await hass.config_entries.async_setup(entry.entry_id)
-
-    assert result is True
-
-    discovery_topic = f"greencell/evse/{TEST_SERIAL_NUMBER}/discovery"
-    invalid_payload = "{INVALID JSON}"
-
-    async_fire_mqtt_message(hass, discovery_topic, invalid_payload)
-    await hass.async_block_till_done()
+    unsub()

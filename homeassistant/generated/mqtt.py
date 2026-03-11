@@ -17,7 +17,7 @@ MQTT = {
         "fully/deviceInfo/+",
     ],
     "greencell": [
-        "greencell/broadcast/device",
+        "/greencell/broadcast/device",
     ],
     "inels": [
         "inels/status/#",

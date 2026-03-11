@@ -13,6 +13,7 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import const
@@ -69,10 +70,10 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             payload = json.loads(discovery_info.payload)
             serial = payload.get("id")
         except json.JSONDecodeError, AttributeError:
-            return self.async_abort(reason="invalid_discovery_info")
+            return self.async_abort(reason="invalid_discovery_data")
 
         if not isinstance(serial, str) or not serial.strip():
-            return self.async_abort(reason="invalid_discovery_info")
+            return self.async_abort(reason="invalid_discovery_data")
 
         await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
@@ -118,11 +119,14 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Discovery step: subscribe, broadcast, and wait for responses."""
         self._discovery_event = asyncio.Event()
 
-        self._remove_listener = await mqtt.async_subscribe(
-            self.hass,
-            GREENCELL_DISC_TOPIC,
-            self._async_mqtt_message_received,
-        )
+        try:
+            self._remove_listener = await mqtt.async_subscribe(
+                self.hass,
+                GREENCELL_DISC_TOPIC,
+                self._async_mqtt_message_received,
+            )
+        except HomeAssistantError, ValueError:
+            return self.async_abort(reason="mqtt_subscription_failed")
 
         try:
             payload = json.dumps({"name": "BROADCAST"})
