@@ -14,6 +14,7 @@ DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
 DEFAULT_STT_NAME = "OpenAI STT"
 DEFAULT_TTS_NAME = "OpenAI TTS"
 DEFAULT_NAME = "OpenAI Conversation"
+DEFAULT_BASE_URL = "https://api.openai.com/v1"
 
 CONF_CHAT_MODEL = "chat_model"
 CONF_IMAGE_MODEL = "image_model"

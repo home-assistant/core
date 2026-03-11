@@ -17,7 +17,7 @@ from openai.types.responses import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -49,6 +49,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_BASE_URL,
     DEFAULT_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
@@ -279,6 +280,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
+        base_url=entry.data.get(CONF_URL, DEFAULT_BASE_URL),
         http_client=get_async_client(hass),
     )
 

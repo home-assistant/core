@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import json
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import openai
 import voluptuous as vol
@@ -27,6 +28,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_URL,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -67,6 +69,7 @@ from .const import (
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_BASE_URL,
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_STT_PROMPT,
@@ -102,6 +105,11 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(
+            CONF_URL,
+            default=DEFAULT_BASE_URL,
+            description={"suffix": "Leave blank to use the default OpenAI API"},
+        ): str,
     }
 )
 
@@ -111,8 +119,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    url = data.get(CONF_URL, DEFAULT_BASE_URL)
+
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("Invalid URL")
+
     client = openai.AsyncOpenAI(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
+        api_key=data[CONF_API_KEY],
+        base_url=url,
+        http_client=get_async_client(hass),
     )
     await client.models.list(timeout=10.0)
 
@@ -138,6 +154,8 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except openai.AuthenticationError:
                 errors["base"] = "invalid_auth"
+            except ValueError:
+                errors[CONF_URL] = "invalid_url"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -570,6 +588,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
+                base_url=self._get_entry().data.get(CONF_URL, DEFAULT_BASE_URL),
                 http_client=get_async_client(self.hass),
             )
             location_schema = vol.Schema(

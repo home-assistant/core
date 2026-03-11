@@ -45,7 +45,7 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -81,6 +81,7 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 "api_key": "bla",
+                "url": "https://api.openai.com/v1",
             },
         )
         await hass.async_block_till_done()
@@ -88,6 +89,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "api_key": "bla",
+        "url": "https://api.openai.com/v1",
     }
     assert result2["options"] == {}
     assert result2["subentries"] == [
@@ -125,7 +127,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "bla"},
+        data={CONF_API_KEY: "bla", CONF_URL: "https://api.openai.com/v1"},
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -142,11 +144,75 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_KEY: "bla",
+                CONF_URL: "https://api.openai.com/v1",
             },
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_custom_url(hass: HomeAssistant) -> None:
+    """Test that a custom URL is passed to the OpenAI client."""
+    custom_url = "https://custom-openai-compatible-api.example.com/v1"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.AsyncOpenAI",
+        ) as mock_client,
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_client.return_value.models.list = AsyncMock()
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "test_api_key",
+                CONF_URL: custom_url,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_URL] == custom_url
+
+    mock_client.assert_called_once()
+    assert mock_client.call_args.kwargs["base_url"] == custom_url
+
+
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        "not-a-valid-url",
+        "ftp://wrong-scheme.example.com",
+        "",
+        "http://",
+    ],
+)
+async def test_form_invalid_url(hass: HomeAssistant, invalid_url: str) -> None:
+    """Test that an invalid URL produces a field-level error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test_api_key",
+            CONF_URL: invalid_url,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_URL: "invalid_url"}
 
 
 async def test_creating_conversation_subentry(
@@ -1289,6 +1355,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_KEY: "new_api_key",
+                CONF_URL: "https://api.openai.com/v1",
             },
         )
         await hass.async_block_till_done()

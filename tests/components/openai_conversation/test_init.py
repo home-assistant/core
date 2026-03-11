@@ -35,7 +35,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -1055,7 +1055,7 @@ async def test_migration_from_v1_disabled(
     }
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "1234"},
+        data={CONF_API_KEY: "1234", CONF_URL: "https://api.openai.com/v1"},
         options=options,
         version=1,
         title="ChatGPT",
@@ -1064,7 +1064,7 @@ async def test_migration_from_v1_disabled(
     mock_config_entry.add_to_hass(hass)
     mock_config_entry_2 = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "1234"},
+        data={CONF_API_KEY: "1234", CONF_URL: "https://api.openai.com/v1"},
         options=options,
         version=1,
         title="ChatGPT 2",
@@ -1589,7 +1589,7 @@ async def test_migrate_entry_from_v2_3(
     conversation_subentry_id = "blabla"
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_API_KEY: "test-api-key"},
+        data={CONF_API_KEY: "test-api-key", CONF_URL: "https://api.openai.com/v1"},
         disabled_by=config_entry_disabled_by,
         version=2,
         minor_version=3,
