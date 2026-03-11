@@ -211,19 +211,19 @@ async def test_zone_services_with_ctl_id(
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
-        {"mode": "NotARealMode"},
+        {ATTR_MODE: "NotARealMode"},
         "mode_not_supported",
     ),
     (
-        {"mode": "Auto", "duration": {"hours": 1}},
+        {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
         "mode_cant_be_temporary",
     ),
     (
-        {"mode": "AutoWithEco", "period": {"days": 1}},
+        {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
         "mode_cant_have_period",
     ),
     (
-        {"mode": "DayOff", "duration": {"hours": 1}},
+        {ATTR_MODE: "DayOff", ATTR_DURATION: {"hours": 1}},
         "mode_cant_have_duration",
     ),
 ]
