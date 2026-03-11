@@ -170,13 +170,33 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_DAMPING_MORNING, DEFAULT_DAMPING
                         ),
-                    ): vol.Coerce(float),
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0,
+                                max=1,
+                                step=0.01,
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
+                        ),
+                        vol.Coerce(float),
+                    ),
                     vol.Optional(
                         CONF_DAMPING_EVENING,
                         default=self.config_entry.options.get(
                             CONF_DAMPING_EVENING, DEFAULT_DAMPING
                         ),
-                    ): vol.Coerce(float),
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=0,
+                                max=1,
+                                step=0.01,
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
+                        ),
+                        vol.Coerce(float),
+                    ),
                     vol.Optional(
                         CONF_INVERTER_SIZE,
                         description={
@@ -184,7 +204,16 @@ class ForecastSolarOptionFlowHandler(OptionsFlow):
                                 CONF_INVERTER_SIZE
                             )
                         },
-                    ): vol.Coerce(int),
+                    ): vol.All(
+                        selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                step=1,
+                                mode=selector.NumberSelectorMode.BOX,
+                            ),
+                        ),
+                        vol.Coerce(int),
+                    ),
                 }
             ),
             errors=errors,
