@@ -17,7 +17,6 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_sheets import async_setup_entry
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
     ADD_CREATED_COLUMN,
@@ -31,8 +30,6 @@ from homeassistant.components.google_sheets.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
     HomeAssistantError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -210,41 +207,59 @@ async def test_expired_token_refresh_failure(
 async def test_setup_oauth_reauth_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test a token refresh reauth error raises ConfigEntryAuthFailed."""
+    """Test a token refresh reauth error sets the config entry in setup error."""
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("client-id", "client-secret"),
+        DOMAIN,
+    )
+
     with (
-        patch(
-            "homeassistant.components.google_sheets.async_get_config_entry_implementation",
-            return_value=Mock(),
-        ),
+        patch.object(config_entry, "async_start_reauth") as mock_async_start_reauth,
         patch(
             "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
             side_effect=OAuth2TokenRequestReauthError(
                 domain=DOMAIN, request_info=Mock()
             ),
         ),
-        pytest.raises(ConfigEntryAuthFailed),
     ):
-        await async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_async_start_reauth.assert_called_once_with(hass)
 
 
 async def test_setup_oauth_transient_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test a token refresh transient error raises ConfigEntryNotReady."""
-    with (
-        patch(
-            "homeassistant.components.google_sheets.async_get_config_entry_implementation",
-            return_value=Mock(),
+    """Test a token refresh transient error sets the config entry to retry setup."""
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("client-id", "client-secret"),
+        DOMAIN,
+    )
+
+    with patch(
+        "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            domain=DOMAIN, request_info=Mock()
         ),
-        patch(
-            "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
-            side_effect=OAuth2TokenRequestTransientError(
-                domain=DOMAIN, request_info=Mock()
-            ),
-        ),
-        pytest.raises(ConfigEntryNotReady),
     ):
-        await async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
