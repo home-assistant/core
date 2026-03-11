@@ -1568,7 +1568,6 @@ class MqttEntity(
         # Set the entity name if needed
         self._set_entity_name(config)
 
-    @callback
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
 
