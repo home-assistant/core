@@ -39,13 +39,13 @@ MOCK_TURN_ON = {
 }
 
 
-async def update(player, force_refresh=False):
+async def update(player: ArcamFmj, force_refresh=False):
     """Force a update of player and return current state data."""
     await player.async_update_ha_state(force_refresh=force_refresh)
     return player.hass.states.get(player.entity_id)
 
 
-async def test_properties(player) -> None:
+async def test_properties(player: ArcamFmj) -> None:
     """Test standard properties."""
     assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
@@ -59,7 +59,9 @@ async def test_properties(player) -> None:
     assert not player.should_poll
 
 
-async def test_powered_off(hass: HomeAssistant, player, state_1: State) -> None:
+async def test_powered_off(
+    hass: HomeAssistant, player: ArcamFmj, state_1: State
+) -> None:
     """Test properties in powered off state."""
     state_1.get_source.return_value = None
     state_1.get_power.return_value = None
@@ -69,7 +71,7 @@ async def test_powered_off(hass: HomeAssistant, player, state_1: State) -> None:
     assert data.state == "off"
 
 
-async def test_powered_on(player, state_1: State) -> None:
+async def test_powered_on(player: ArcamFmj, state_1: State) -> None:
     """Test properties in powered on state."""
     state_1.get_source.return_value = SourceCodes.PVR
     state_1.get_power.return_value = True
@@ -79,13 +81,13 @@ async def test_powered_on(player, state_1: State) -> None:
     assert data.state == "on"
 
 
-async def test_supported_features(player) -> None:
+async def test_supported_features(player: ArcamFmj) -> None:
     """Test supported features."""
     data = await update(player)
     assert data.attributes["supported_features"] == 200588
 
 
-async def test_turn_on(player, state_1: State) -> None:
+async def test_turn_on(player: ArcamFmj, state_1: State) -> None:
     """Test turn on service."""
     state_1.get_power.return_value = None
     await player.async_turn_on()
@@ -96,21 +98,21 @@ async def test_turn_on(player, state_1: State) -> None:
     state_1.set_power.assert_called_with(True)
 
 
-async def test_turn_off(player, state_1: State) -> None:
+async def test_turn_off(player: ArcamFmj, state_1: State) -> None:
     """Test command to turn off."""
     await player.async_turn_off()
     state_1.set_power.assert_called_with(False)
 
 
 @pytest.mark.parametrize("mute", [True, False])
-async def test_mute_volume(player, state_1: State, mute: bool) -> None:
+async def test_mute_volume(player: ArcamFmj, state_1: State, mute: bool) -> None:
     """Test mute functionality."""
     await player.async_mute_volume(mute)
     state_1.set_mute.assert_called_with(mute)
     player.async_write_ha_state.assert_called_with()
 
 
-async def test_name(player) -> None:
+async def test_name(player: ArcamFmj) -> None:
     """Test name."""
     data = await update(player)
     assert data.attributes["friendly_name"] == "Zone 1"
@@ -170,7 +172,7 @@ async def test_select_source(
         state_1.set_source.assert_not_called()
 
 
-async def test_source_list(player, state_1: State) -> None:
+async def test_source_list(player: ArcamFmj, state_1: State) -> None:
     """Test source list."""
     state_1.get_source_list.return_value = [SourceCodes.BD]
     data = await update(player)
@@ -184,20 +186,20 @@ async def test_source_list(player, state_1: State) -> None:
         "DOLBY_PL",
     ],
 )
-async def test_select_sound_mode(player, state_1: State, mode: str) -> None:
+async def test_select_sound_mode(player: ArcamFmj, state_1: State, mode: str) -> None:
     """Test selection sound mode."""
     await player.async_select_sound_mode(mode)
     state_1.set_decode_mode.assert_called_with(mode)
 
 
-async def test_volume_up(player, state_1: State) -> None:
+async def test_volume_up(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
     await player.async_volume_up()
     state_1.inc_volume.assert_called_with()
     player.async_write_ha_state.assert_called_with()
 
 
-async def test_volume_down(player, state_1: State) -> None:
+async def test_volume_down(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
     await player.async_volume_down()
     state_1.dec_volume.assert_called_with()
@@ -212,7 +214,7 @@ async def test_volume_down(player, state_1: State) -> None:
         (None, None),
     ],
 )
-async def test_sound_mode(player, state_1: State, mode, mode_enum) -> None:
+async def test_sound_mode(player: ArcamFmj, state_1: State, mode, mode_enum) -> None:
     """Test selection sound mode."""
     state_1.get_decode_mode.return_value = mode_enum
     data = await update(player)
@@ -227,14 +229,16 @@ async def test_sound_mode(player, state_1: State, mode, mode_enum) -> None:
         (None, None),
     ],
 )
-async def test_sound_mode_list(player, state_1: State, modes, modes_enum) -> None:
+async def test_sound_mode_list(
+    player: ArcamFmj, state_1: State, modes, modes_enum
+) -> None:
     """Test sound mode list."""
     state_1.get_decode_modes.return_value = modes_enum
     data = await update(player)
     assert data.attributes.get(ATTR_SOUND_MODE_LIST) == modes
 
 
-async def test_is_volume_muted(player, state_1: State) -> None:
+async def test_is_volume_muted(player: ArcamFmj, state_1: State) -> None:
     """Test muted."""
     state_1.get_mute.return_value = True
     assert player.is_volume_muted is True
@@ -244,7 +248,7 @@ async def test_is_volume_muted(player, state_1: State) -> None:
     assert player.is_volume_muted is None
 
 
-async def test_volume_level(player, state_1: State) -> None:
+async def test_volume_level(player: ArcamFmj, state_1: State) -> None:
     """Test volume."""
     state_1.get_volume.return_value = 0
     assert isclose(player.volume_level, 0.0)
@@ -298,7 +302,7 @@ async def test_set_volume_level_lost(
     ],
 )
 async def test_media_content_type(
-    player, state_1: State, source, media_content_type
+    player: ArcamFmj, state_1: State, source, media_content_type
 ) -> None:
     """Test content type deduction."""
     state_1.get_source.return_value = source
@@ -315,7 +319,9 @@ async def test_media_content_type(
         (SourceCodes.PVR, "dab", "rds", None),
     ],
 )
-async def test_media_channel(player, state_1: State, source, dab, rds, channel) -> None:
+async def test_media_channel(
+    player: ArcamFmj, state_1: State, source, dab, rds, channel
+) -> None:
     """Test media channel."""
     state_1.get_dab_station.return_value = dab
     state_1.get_rds_information.return_value = rds
@@ -331,7 +337,9 @@ async def test_media_channel(player, state_1: State, source, dab, rds, channel) 
         (SourceCodes.DAB, None, None),
     ],
 )
-async def test_media_artist(player, state_1: State, source, dls, artist) -> None:
+async def test_media_artist(
+    player: ArcamFmj, state_1: State, source, dls, artist
+) -> None:
     """Test media artist."""
     state_1.get_dls_pdt.return_value = dls
     state_1.get_source.return_value = source
@@ -346,7 +354,9 @@ async def test_media_artist(player, state_1: State, source, dls, artist) -> None
         (None, None, None),
     ],
 )
-async def test_media_title(player, state_1: State, source, channel, title) -> None:
+async def test_media_title(
+    player: ArcamFmj, state_1: State, source, channel, title
+) -> None:
     """Test media title."""
 
     state_1.get_source.return_value = source
