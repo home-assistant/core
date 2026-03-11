@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
@@ -12,6 +11,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
+    SUBENTRY_TYPE_PLANE,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -56,9 +56,7 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_migration_from_v1(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
+async def test_migration_from_v1(hass: HomeAssistant) -> None:
     """Test config entry migration from version 1."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
@@ -82,12 +80,26 @@ async def test_migration_from_v1(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id) == snapshot
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.version == 3
+    assert entry.options == {
+        CONF_API_KEY: "abcdef12345",
+        "damping_morning": 0.5,
+        "damping_evening": 0.5,
+        CONF_INVERTER_SIZE: 2000,
+    }
+    assert len(entry.subentries) == 1
+    subentry = list(entry.subentries.values())[0]
+    assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
+    assert subentry.data == {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH: 190,
+        CONF_MODULES_POWER: 5100,
+    }
+    assert subentry.title == "30° / 190° / 5100W"
 
 
-async def test_migration_from_v2(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
+async def test_migration_from_v2(hass: HomeAssistant) -> None:
     """Test config entry migration from version 2."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
@@ -110,7 +122,21 @@ async def test_migration_from_v2(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id) == snapshot
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.version == 3
+    assert entry.options == {
+        CONF_API_KEY: "abcdef12345",
+        CONF_INVERTER_SIZE: 2000,
+    }
+    assert len(entry.subentries) == 1
+    subentry = list(entry.subentries.values())[0]
+    assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
+    assert subentry.data == {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH: 190,
+        CONF_MODULES_POWER: 5100,
+    }
+    assert subentry.title == "30° / 190° / 5100W"
 
 
 async def test_setup_entry_no_planes(

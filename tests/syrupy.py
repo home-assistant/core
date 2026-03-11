@@ -153,11 +153,6 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     def _serializable_config_entry(cls, data: ConfigEntry) -> SerializableData:
         """Prepare a Home Assistant config entry for serialization."""
         entry = ConfigEntrySnapshot(data.as_dict() | {"entry_id": ANY})
-        if entry.get("subentries"):
-            entry["subentries"] = [
-                dict(subentry) | {"subentry_id": ANY}
-                for subentry in entry["subentries"]
-            ]
         return cls._remove_created_and_modified_at(entry)
 
     @classmethod
