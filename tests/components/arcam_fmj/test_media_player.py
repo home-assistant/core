@@ -4,6 +4,7 @@ from math import isclose
 from unittest.mock import PropertyMock, patch
 
 from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
+from arcam.fmj.state import State
 import pytest
 
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
@@ -38,13 +39,13 @@ MOCK_TURN_ON = {
 }
 
 
-async def update(player, force_refresh=False):
+async def update(player: ArcamFmj, force_refresh=False):
     """Force a update of player and return current state data."""
     await player.async_update_ha_state(force_refresh=force_refresh)
     return player.hass.states.get(player.entity_id)
 
 
-async def test_properties(player, state) -> None:
+async def test_properties(player: ArcamFmj) -> None:
     """Test standard properties."""
     assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
@@ -58,64 +59,66 @@ async def test_properties(player, state) -> None:
     assert not player.should_poll
 
 
-async def test_powered_off(hass: HomeAssistant, player, state) -> None:
+async def test_powered_off(
+    hass: HomeAssistant, player: ArcamFmj, state_1: State
+) -> None:
     """Test properties in powered off state."""
-    state.get_source.return_value = None
-    state.get_power.return_value = None
+    state_1.get_source.return_value = None
+    state_1.get_power.return_value = None
 
     data = await update(player)
     assert "source" not in data.attributes
     assert data.state == "off"
 
 
-async def test_powered_on(player, state) -> None:
+async def test_powered_on(player: ArcamFmj, state_1: State) -> None:
     """Test properties in powered on state."""
-    state.get_source.return_value = SourceCodes.PVR
-    state.get_power.return_value = True
+    state_1.get_source.return_value = SourceCodes.PVR
+    state_1.get_power.return_value = True
 
     data = await update(player)
     assert data.attributes["source"] == "PVR"
     assert data.state == "on"
 
 
-async def test_supported_features(player, state) -> None:
+async def test_supported_features(player: ArcamFmj) -> None:
     """Test supported features."""
     data = await update(player)
     assert data.attributes["supported_features"] == 200588
 
 
-async def test_turn_on(player, state) -> None:
+async def test_turn_on(player: ArcamFmj, state_1: State) -> None:
     """Test turn on service."""
-    state.get_power.return_value = None
+    state_1.get_power.return_value = None
     await player.async_turn_on()
-    state.set_power.assert_not_called()
+    state_1.set_power.assert_not_called()
 
-    state.get_power.return_value = False
+    state_1.get_power.return_value = False
     await player.async_turn_on()
-    state.set_power.assert_called_with(True)
+    state_1.set_power.assert_called_with(True)
 
 
-async def test_turn_off(player, state) -> None:
+async def test_turn_off(player: ArcamFmj, state_1: State) -> None:
     """Test command to turn off."""
     await player.async_turn_off()
-    state.set_power.assert_called_with(False)
+    state_1.set_power.assert_called_with(False)
 
 
 @pytest.mark.parametrize("mute", [True, False])
-async def test_mute_volume(player, state, mute) -> None:
+async def test_mute_volume(player: ArcamFmj, state_1: State, mute: bool) -> None:
     """Test mute functionality."""
     await player.async_mute_volume(mute)
-    state.set_mute.assert_called_with(mute)
+    state_1.set_mute.assert_called_with(mute)
     player.async_write_ha_state.assert_called_with()
 
 
-async def test_name(player) -> None:
+async def test_name(player: ArcamFmj) -> None:
     """Test name."""
     data = await update(player)
     assert data.attributes["friendly_name"] == "Zone 1"
 
 
-async def test_update(hass: HomeAssistant, player_setup: str, state) -> None:
+async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) -> None:
     """Test update."""
     await hass.services.async_call(
         HA_DOMAIN,
@@ -123,14 +126,17 @@ async def test_update(hass: HomeAssistant, player_setup: str, state) -> None:
         service_data={ATTR_ENTITY_ID: player_setup},
         blocking=True,
     )
-    state.update.assert_called_with()
+    state_1.update.assert_called_with()
 
 
 async def test_update_lost(
-    hass: HomeAssistant, player_setup: str, state, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    player_setup: str,
+    state_1: State,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update, with connection loss is ignored."""
-    state.update.side_effect = ConnectionFailed()
+    state_1.update.side_effect = ConnectionFailed()
 
     await hass.services.async_call(
         HA_DOMAIN,
@@ -138,7 +144,7 @@ async def test_update_lost(
         service_data={ATTR_ENTITY_ID: player_setup},
         blocking=True,
     )
-    state.update.assert_called_with()
+    state_1.update.assert_called_with()
 
 
 @pytest.mark.parametrize(
@@ -146,7 +152,11 @@ async def test_update_lost(
     [("PVR", SourceCodes.PVR), ("BD", SourceCodes.BD), ("INVALID", None)],
 )
 async def test_select_source(
-    hass: HomeAssistant, player_setup, state, source, value
+    hass: HomeAssistant,
+    player_setup,
+    state_1: State,
+    source: str,
+    value: SourceCodes | None,
 ) -> None:
     """Test selection of source."""
     await hass.services.async_call(
@@ -157,14 +167,14 @@ async def test_select_source(
     )
 
     if value:
-        state.set_source.assert_called_with(value)
+        state_1.set_source.assert_called_with(value)
     else:
-        state.set_source.assert_not_called()
+        state_1.set_source.assert_not_called()
 
 
-async def test_source_list(player, state) -> None:
+async def test_source_list(player: ArcamFmj, state_1: State) -> None:
     """Test source list."""
-    state.get_source_list.return_value = [SourceCodes.BD]
+    state_1.get_source_list.return_value = [SourceCodes.BD]
     data = await update(player)
     assert data.attributes["source_list"] == ["BD"]
 
@@ -176,23 +186,23 @@ async def test_source_list(player, state) -> None:
         "DOLBY_PL",
     ],
 )
-async def test_select_sound_mode(player, state, mode) -> None:
+async def test_select_sound_mode(player: ArcamFmj, state_1: State, mode: str) -> None:
     """Test selection sound mode."""
     await player.async_select_sound_mode(mode)
-    state.set_decode_mode.assert_called_with(mode)
+    state_1.set_decode_mode.assert_called_with(mode)
 
 
-async def test_volume_up(player, state) -> None:
+async def test_volume_up(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
     await player.async_volume_up()
-    state.inc_volume.assert_called_with()
+    state_1.inc_volume.assert_called_with()
     player.async_write_ha_state.assert_called_with()
 
 
-async def test_volume_down(player, state) -> None:
+async def test_volume_down(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
     await player.async_volume_down()
-    state.dec_volume.assert_called_with()
+    state_1.dec_volume.assert_called_with()
     player.async_write_ha_state.assert_called_with()
 
 
@@ -204,9 +214,9 @@ async def test_volume_down(player, state) -> None:
         (None, None),
     ],
 )
-async def test_sound_mode(player, state, mode, mode_enum) -> None:
+async def test_sound_mode(player: ArcamFmj, state_1: State, mode, mode_enum) -> None:
     """Test selection sound mode."""
-    state.get_decode_mode.return_value = mode_enum
+    state_1.get_decode_mode.return_value = mode_enum
     data = await update(player)
     assert data.attributes.get(ATTR_SOUND_MODE) == mode
 
@@ -219,38 +229,40 @@ async def test_sound_mode(player, state, mode, mode_enum) -> None:
         (None, None),
     ],
 )
-async def test_sound_mode_list(player, state, modes, modes_enum) -> None:
+async def test_sound_mode_list(
+    player: ArcamFmj, state_1: State, modes, modes_enum
+) -> None:
     """Test sound mode list."""
-    state.get_decode_modes.return_value = modes_enum
+    state_1.get_decode_modes.return_value = modes_enum
     data = await update(player)
     assert data.attributes.get(ATTR_SOUND_MODE_LIST) == modes
 
 
-async def test_is_volume_muted(player, state) -> None:
+async def test_is_volume_muted(player: ArcamFmj, state_1: State) -> None:
     """Test muted."""
-    state.get_mute.return_value = True
+    state_1.get_mute.return_value = True
     assert player.is_volume_muted is True
-    state.get_mute.return_value = False
+    state_1.get_mute.return_value = False
     assert player.is_volume_muted is False
-    state.get_mute.return_value = None
+    state_1.get_mute.return_value = None
     assert player.is_volume_muted is None
 
 
-async def test_volume_level(player, state) -> None:
+async def test_volume_level(player: ArcamFmj, state_1: State) -> None:
     """Test volume."""
-    state.get_volume.return_value = 0
+    state_1.get_volume.return_value = 0
     assert isclose(player.volume_level, 0.0)
-    state.get_volume.return_value = 50
+    state_1.get_volume.return_value = 50
     assert isclose(player.volume_level, 50.0 / 99)
-    state.get_volume.return_value = 99
+    state_1.get_volume.return_value = 99
     assert isclose(player.volume_level, 1.0)
-    state.get_volume.return_value = None
+    state_1.get_volume.return_value = None
     assert player.volume_level is None
 
 
 @pytest.mark.parametrize(("volume", "call"), [(0.0, 0), (0.5, 50), (1.0, 99)])
 async def test_set_volume_level(
-    hass: HomeAssistant, player_setup: str, state, volume, call
+    hass: HomeAssistant, player_setup: str, state_1: State, volume, call
 ) -> None:
     """Test setting volume."""
 
@@ -261,15 +273,15 @@ async def test_set_volume_level(
         blocking=True,
     )
 
-    state.set_volume.assert_called_with(call)
+    state_1.set_volume.assert_called_with(call)
 
 
 async def test_set_volume_level_lost(
-    hass: HomeAssistant, player_setup: str, state
+    hass: HomeAssistant, player_setup: str, state_1: State
 ) -> None:
     """Test setting volume, with a lost connection."""
 
-    state.set_volume.side_effect = ConnectionFailed()
+    state_1.set_volume.side_effect = ConnectionFailed()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -289,9 +301,11 @@ async def test_set_volume_level_lost(
         (None, None),
     ],
 )
-async def test_media_content_type(player, state, source, media_content_type) -> None:
+async def test_media_content_type(
+    player: ArcamFmj, state_1: State, source, media_content_type
+) -> None:
     """Test content type deduction."""
-    state.get_source.return_value = source
+    state_1.get_source.return_value = source
     assert player.media_content_type == media_content_type
 
 
@@ -305,11 +319,13 @@ async def test_media_content_type(player, state, source, media_content_type) -> 
         (SourceCodes.PVR, "dab", "rds", None),
     ],
 )
-async def test_media_channel(player, state, source, dab, rds, channel) -> None:
+async def test_media_channel(
+    player: ArcamFmj, state_1: State, source, dab, rds, channel
+) -> None:
     """Test media channel."""
-    state.get_dab_station.return_value = dab
-    state.get_rds_information.return_value = rds
-    state.get_source.return_value = source
+    state_1.get_dab_station.return_value = dab
+    state_1.get_rds_information.return_value = rds
+    state_1.get_source.return_value = source
     assert player.media_channel == channel
 
 
@@ -321,10 +337,12 @@ async def test_media_channel(player, state, source, dab, rds, channel) -> None:
         (SourceCodes.DAB, None, None),
     ],
 )
-async def test_media_artist(player, state, source, dls, artist) -> None:
+async def test_media_artist(
+    player: ArcamFmj, state_1: State, source, dls, artist
+) -> None:
     """Test media artist."""
-    state.get_dls_pdt.return_value = dls
-    state.get_source.return_value = source
+    state_1.get_dls_pdt.return_value = dls
+    state_1.get_source.return_value = source
     assert player.media_artist == artist
 
 
@@ -336,10 +354,12 @@ async def test_media_artist(player, state, source, dls, artist) -> None:
         (None, None, None),
     ],
 )
-async def test_media_title(player, state, source, channel, title) -> None:
+async def test_media_title(
+    player: ArcamFmj, state_1: State, source, channel, title
+) -> None:
     """Test media title."""
 
-    state.get_source.return_value = source
+    state_1.get_source.return_value = source
     with patch.object(
         ArcamFmj, "media_channel", new_callable=PropertyMock
     ) as media_channel:

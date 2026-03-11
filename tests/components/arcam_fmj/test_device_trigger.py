@@ -1,5 +1,7 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
 
+from arcam.fmj.state import State
+
 from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -54,12 +56,12 @@ async def test_if_fires_on_turn_on_request(
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
     player_setup,
-    state,
+    state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(player_setup)
 
-    state.get_power.return_value = None
+    state_1.get_power.return_value = None
 
     assert await async_setup_component(
         hass,
@@ -104,12 +106,12 @@ async def test_if_fires_on_turn_on_request_legacy(
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
     player_setup,
-    state,
+    state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(player_setup)
 
-    state.get_power.return_value = None
+    state_1.get_power.return_value = None
 
     assert await async_setup_component(
         hass,
