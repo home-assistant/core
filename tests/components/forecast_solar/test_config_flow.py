@@ -201,7 +201,7 @@ async def test_subentry_flow_add_plane(
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_PLANE),
-        context={"source": "user"},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.FORM
