@@ -19,7 +19,10 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
 async def test_full_flow(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock, info_data: InfoData
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    info_data: InfoData,
 ) -> None:
     """Test full user flow."""
     mock_lunatone_info.set_data(info_data)
