@@ -24,7 +24,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
-    OAuth2Session,
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,6 +36,7 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .oauth import TeslaFleetOAuth2Session, async_retry_on_oauth_expired
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -56,6 +56,21 @@ PLATFORMS: Final = [
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def _async_get_products(
+    tesla: TeslaFleetApi,
+    oauth_session: TeslaFleetOAuth2Session,
+) -> list[dict]:
+    """Fetch products and retry once after a forced token refresh."""
+    try:
+        return (await async_retry_on_oauth_expired(tesla.products, oauth_session))[
+            "response"
+        ]
+    except ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
@@ -83,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     region_code = token["ou_code"].lower()
     region = region_code if is_valid_region(region_code) else None
 
-    oauth_session = OAuth2Session(hass, entry, implementation)
+    oauth_session = TeslaFleetOAuth2Session(hass, entry, implementation)
 
     async def _get_access_token() -> str:
         try:
@@ -106,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
         vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
     )
     try:
-        products = (await tesla.products())["response"]
+        products = await _async_get_products(tesla, oauth_session)
     except (InvalidToken, OAuthExpired, LoginRequired) as e:
         raise ConfigEntryAuthFailed from e
     except InvalidRegion:
@@ -114,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             LOGGER.warning("Region is invalid, trying to find the correct region")
             await tesla.find_server()
             try:
-                products = (await tesla.products())["response"]
+                products = await _async_get_products(tesla, oauth_session)
             except TeslaFleetError as e:
                 raise ConfigEntryNotReady from e
         except LibraryError as e:
@@ -141,7 +156,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             else:
                 api_vehicle = tesla.vehicles.createFleet(vin)
             coordinator = TeslaFleetVehicleDataCoordinator(
-                hass, entry, api_vehicle, product, Scope.VEHICLE_LOCATION in scopes
+                hass,
+                entry,
+                api_vehicle,
+                oauth_session,
+                product,
+                Scope.VEHICLE_LOCATION in scopes,
             )
 
             await coordinator.async_config_entry_first_refresh()
@@ -179,13 +199,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             api_energy = tesla.energySites.create(site_id)
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
-                hass, entry, api_energy
+                hass, entry, api_energy, oauth_session
             )
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-                hass, entry, api_energy
+                hass, entry, api_energy, oauth_session
             )
             info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
-                hass, entry, api_energy, product
+                hass, entry, api_energy, oauth_session, product
             )
 
             await live_coordinator.async_config_entry_first_refresh()

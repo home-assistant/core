@@ -32,6 +32,7 @@ from homeassistant.components.tesla_fleet.coordinator import (
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -93,7 +94,7 @@ async def test_oauth_refresh_expired(
 
     # Patch the token refresh to raise an error
     with patch(
-        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        "homeassistant.components.tesla_fleet.TeslaFleetOAuth2Session.async_ensure_token_valid",
         side_effect=ClientResponseError(
             RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=401
         ),
@@ -115,7 +116,7 @@ async def test_oauth_refresh_error(
 
     # Patch the token refresh to raise an error
     with patch(
-        "homeassistant.components.tesla_fleet.OAuth2Session.async_ensure_token_valid",
+        "homeassistant.components.tesla_fleet.TeslaFleetOAuth2Session.async_ensure_token_valid",
         side_effect=ClientResponseError(
             RequestInfo(AUTHORIZE_URL, "POST", {}, AUTHORIZE_URL), None, status=400
         ),
@@ -126,6 +127,25 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_retries_on_oauth_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_products: AsyncMock,
+) -> None:
+    """Test setup retries once after a recoverable OAuth expiry."""
+
+    mock_products.side_effect = [OAuthExpired(), mock_products.return_value]
+
+    with patch(
+        "homeassistant.components.tesla_fleet.TeslaFleetOAuth2Session.force_refresh_token",
+        new_callable=AsyncMock,
+    ) as mock_force_refresh:
+        await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    mock_force_refresh.assert_called_once()
+    assert normal_config_entry.state is ConfigEntryState.LOADED
 
 
 # Test devices
@@ -256,6 +276,34 @@ async def test_vehicle_refresh_ratelimited_no_after(
 
     # Called again because skip refresh doesn't change interval
     assert mock_vehicle_data.call_count == 3
+
+
+async def test_vehicle_refresh_retries_on_oauth_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator retries once after a recoverable OAuth expiry."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    mock_vehicle_data.reset_mock()
+    mock_vehicle_data.side_effect = [OAuthExpired(), mock_vehicle_data.return_value]
+
+    with patch(
+        "homeassistant.components.tesla_fleet.oauth."
+        "TeslaFleetOAuth2Session.force_refresh_token",
+        new_callable=AsyncMock,
+    ) as mock_force_refresh:
+        freezer.tick(VEHICLE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    mock_force_refresh.assert_called_once()
+    assert mock_vehicle_data.call_count == 2
+    assert normal_config_entry.runtime_data.vehicles[0].coordinator.last_update_success
 
 
 async def test_init_invalid_region(
