@@ -1,7 +1,5 @@
 """Support for tracking iBeacon devices."""
 
-from __future__ import annotations
-
 from ibeacon_ble import iBeaconAdvertisement
 
 from homeassistant.components.device_tracker import SourceType

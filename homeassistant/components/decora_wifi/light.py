@@ -1,7 +1,5 @@
 """Interfaces with the myLeviton API for Decora Smart WiFi products."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

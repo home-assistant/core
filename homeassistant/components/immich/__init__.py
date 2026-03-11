@@ -1,7 +1,5 @@
 """The Immich integration."""
 
-from __future__ import annotations
-
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
 from aioimmich.exceptions import ImmichUnauthorizedError

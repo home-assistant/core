@@ -1,7 +1,5 @@
 """The media_source integration."""
 
-from __future__ import annotations
-
 from typing import Protocol
 
 from homeassistant.components import websocket_api

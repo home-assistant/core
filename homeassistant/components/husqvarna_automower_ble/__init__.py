@@ -1,7 +1,5 @@
 """The Husqvarna Autoconnect Bluetooth integration."""
 
-from __future__ import annotations
-
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
 from bleak import BleakError

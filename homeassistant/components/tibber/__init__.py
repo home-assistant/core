@@ -1,7 +1,5 @@
 """Support for Tibber."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
 

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for AirOS."""
 
-from __future__ import annotations
-
 import logging
 
 from airos.airos6 import AirOS6, AirOS6Data

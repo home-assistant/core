@@ -1,7 +1,5 @@
 """The rova component."""
 
-from __future__ import annotations
-
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
 

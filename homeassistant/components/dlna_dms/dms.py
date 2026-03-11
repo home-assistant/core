@@ -1,7 +1,5 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass

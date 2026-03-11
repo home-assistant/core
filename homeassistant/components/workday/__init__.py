@@ -1,7 +1,5 @@
 """Sensor to indicate whether the current day is a workday."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import cast
 

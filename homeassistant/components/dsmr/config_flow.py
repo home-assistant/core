@@ -1,7 +1,5 @@
 """Config flow for DSMR integration."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 import os

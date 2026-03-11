@@ -1,7 +1,5 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 
-from __future__ import annotations
-
 import asyncio
 
 from haffmpeg.camera import CameraMjpeg

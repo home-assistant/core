@@ -1,7 +1,5 @@
 """Internal discovery service for  Escea Fireplace."""
 
-from __future__ import annotations
-
 from pescea import (
     AbstractDiscoveryService,
     Controller,

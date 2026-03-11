@@ -1,7 +1,5 @@
 """Helpers for managing a pairing with a HomeKit accessory or bridge."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta

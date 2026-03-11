@@ -1,7 +1,5 @@
 """Expose images as media sources."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from homeassistant.components.media_source import MediaSource, local_source

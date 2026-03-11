@@ -1,7 +1,5 @@
 """Client library for talking to Google APIs."""
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any, cast

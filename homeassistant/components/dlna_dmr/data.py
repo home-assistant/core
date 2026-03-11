@@ -1,7 +1,5 @@
 """Data used by this integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from typing import NamedTuple, cast

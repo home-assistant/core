@@ -1,7 +1,5 @@
 """The filesize config flow."""
 
-from __future__ import annotations
-
 import logging
 import pathlib
 from typing import Any

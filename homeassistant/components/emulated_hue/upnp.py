@@ -1,7 +1,5 @@
 """Support UPNP discovery method that mimics Hue hubs."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import logging

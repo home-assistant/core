@@ -1,7 +1,5 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from raspyrfm_client import RaspyRFMClient

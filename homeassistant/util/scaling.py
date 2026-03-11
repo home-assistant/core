@@ -1,7 +1,5 @@
 """Scaling util functions."""
 
-from __future__ import annotations
-
 
 def scale_ranged_value_to_int_range(
     source_low_high_range: tuple[float, float],

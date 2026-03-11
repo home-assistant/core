@@ -1,7 +1,5 @@
 """Config flow for the Backblaze B2 integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any

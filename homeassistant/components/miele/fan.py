@@ -1,7 +1,5 @@
 """Platform for Miele fan entity."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import math

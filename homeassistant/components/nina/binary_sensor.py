@@ -1,7 +1,5 @@
 """NINA sensor platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.binary_sensor import (

@@ -1,7 +1,5 @@
 """Coordinator for La Marzocco API."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from asyncio import Task
 from collections.abc import Callable, Coroutine

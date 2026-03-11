@@ -1,7 +1,5 @@
 """clicksend_tts platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging

@@ -1,7 +1,5 @@
 """Support for exposing regular REST commands as services."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging

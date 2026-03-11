@@ -1,7 +1,5 @@
 """The Tessie integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from tesla_fleet_api.tessie import EnergySite

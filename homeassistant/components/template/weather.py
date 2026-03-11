@@ -1,7 +1,5 @@
 """Template platform that aggregates meteorological data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging

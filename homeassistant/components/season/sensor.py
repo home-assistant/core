@@ -1,7 +1,5 @@
 """Support for Season sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 
 import ephem

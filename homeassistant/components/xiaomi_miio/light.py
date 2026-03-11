@@ -1,7 +1,5 @@
 """Support for Xiaomi Philips Lights."""
 
-from __future__ import annotations
-
 import asyncio
 import datetime
 from datetime import timedelta

@@ -1,7 +1,5 @@
 """Support for using number with ecobee thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging

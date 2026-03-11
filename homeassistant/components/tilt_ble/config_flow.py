@@ -1,7 +1,5 @@
 """Config flow for tilt_ble."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tilt_ble import TiltBluetoothDeviceData as DeviceData

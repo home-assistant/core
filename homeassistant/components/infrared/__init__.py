@@ -1,7 +1,5 @@
 """Provides functionality to interact with infrared devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import timedelta
 import logging

@@ -1,7 +1,5 @@
 """Deprecation helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict

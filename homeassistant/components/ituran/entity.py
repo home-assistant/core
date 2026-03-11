@@ -1,7 +1,5 @@
 """Base for all turan entities."""
 
-from __future__ import annotations
-
 from pyituran import Vehicle
 
 from homeassistant.helpers.device_registry import DeviceInfo

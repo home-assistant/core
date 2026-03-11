@@ -1,7 +1,5 @@
 """Switch representing the shutoff valve for the Flo by Moen integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioflo.location import SLEEP_MINUTE_OPTIONS, SYSTEM_MODE_HOME, SYSTEM_REVERT_MODES

@@ -1,7 +1,5 @@
 """Support for Hikvision cameras."""
 
-from __future__ import annotations
-
 from pyhik.hikvision import VideoChannel
 
 from homeassistant.components.camera import Camera, CameraEntityFeature

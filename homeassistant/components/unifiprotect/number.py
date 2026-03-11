@@ -1,7 +1,5 @@
 """Component providing number entities for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta

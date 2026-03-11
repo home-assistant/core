@@ -1,7 +1,5 @@
 """Support for Folder watcher event entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from watchdog.events import (

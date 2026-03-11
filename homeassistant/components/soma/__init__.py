@@ -1,7 +1,5 @@
 """Support for Soma Smartshades."""
 
-from __future__ import annotations
-
 from api.soma_api import SomaApi
 import voluptuous as vol
 

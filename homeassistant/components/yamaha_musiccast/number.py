@@ -1,7 +1,5 @@
 """Number entities for musiccast."""
 
-from __future__ import annotations
-
 from aiomusiccast.capabilities import NumberSetter
 
 from homeassistant.components.number import NumberEntity

@@ -1,7 +1,5 @@
 """Support for StarLine button."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

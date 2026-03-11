@@ -1,7 +1,5 @@
 """Utils for trafikverket_train."""
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 
 from homeassistant.const import WEEKDAYS

@@ -1,7 +1,5 @@
 """Support for UK Met Office weather service."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

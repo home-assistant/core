@@ -1,7 +1,5 @@
 """Select for Yale Alarm."""
 
-from __future__ import annotations
-
 from yalesmartalarmclient import YaleLock, YaleLockVolume
 
 from homeassistant.components.select import SelectEntity

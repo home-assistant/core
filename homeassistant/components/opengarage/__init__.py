@@ -1,7 +1,5 @@
 """The OpenGarage integration."""
 
-from __future__ import annotations
-
 import opengarage
 
 from homeassistant.config_entries import ConfigEntry

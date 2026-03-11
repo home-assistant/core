@@ -1,7 +1,5 @@
 """Support for scene platform for Hue scenes (V2 only)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2

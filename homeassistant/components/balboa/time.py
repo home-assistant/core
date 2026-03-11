@@ -1,7 +1,5 @@
 """Support for Balboa times."""
 
-from __future__ import annotations
-
 from datetime import time
 import itertools
 from typing import Any

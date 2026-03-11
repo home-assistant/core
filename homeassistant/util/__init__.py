@@ -1,7 +1,5 @@
 """Helper methods for various modules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps

@@ -15,8 +15,6 @@ This does not do any connectivity checks. So user could have all their border ro
 some of their thread accessories can't be pinged, but it's still a thread problem.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from python_otbr_api.tlv_parser import MeshcopTLVType

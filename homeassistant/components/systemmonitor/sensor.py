@@ -1,7 +1,5 @@
 """Support for monitoring the local system."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass

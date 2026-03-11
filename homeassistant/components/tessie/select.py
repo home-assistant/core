@@ -1,7 +1,5 @@
 """Select platform for Tessie integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode

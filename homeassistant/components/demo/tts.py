@@ -1,7 +1,5 @@
 """Support for the demo for text-to-speech service."""
 
-from __future__ import annotations
-
 import os
 from typing import Any
 

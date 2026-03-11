@@ -1,7 +1,5 @@
 """Data update coordinator for the Netgear LTE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from eternalegypt.eternalegypt import Error, Information, Modem

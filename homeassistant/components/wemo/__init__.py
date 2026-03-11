@@ -1,7 +1,5 @@
 """Support for WeMo device discovery."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime
 import logging

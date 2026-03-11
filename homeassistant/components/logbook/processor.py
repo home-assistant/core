@@ -1,7 +1,5 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
 from dataclasses import dataclass
 from datetime import datetime as dt

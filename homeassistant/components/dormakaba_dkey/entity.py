@@ -1,7 +1,5 @@
 """Dormakaba dKey integration base entity."""
 
-from __future__ import annotations
-
 import abc
 
 from py_dormakaba_dkey.commands import Notifications

@@ -1,7 +1,5 @@
 """Demo platform that has a couple of fake sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import cast
 

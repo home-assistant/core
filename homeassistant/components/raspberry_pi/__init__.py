@@ -1,7 +1,5 @@
 """The Raspberry Pi integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.hassio import get_os_info
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

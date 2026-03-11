@@ -1,7 +1,5 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import ipaddress
 import logging

@@ -1,7 +1,5 @@
 """Support for esphome domain data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from functools import cache
 from typing import Self

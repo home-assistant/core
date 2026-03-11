@@ -1,7 +1,5 @@
 """The Ubiquiti airOS integration."""
 
-from __future__ import annotations
-
 import logging
 
 from airos.airos6 import AirOS6

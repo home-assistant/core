@@ -1,7 +1,5 @@
 """Support for SimpliSafe binary sensors."""
 
-from __future__ import annotations
-
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3

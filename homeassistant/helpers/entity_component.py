@@ -1,7 +1,5 @@
 """Helpers for components that manage entities."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Iterable, Mapping
 from datetime import timedelta

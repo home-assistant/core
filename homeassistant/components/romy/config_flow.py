@@ -1,7 +1,5 @@
 """Config flow for ROMY integration."""
 
-from __future__ import annotations
-
 import romy
 import voluptuous as vol
 

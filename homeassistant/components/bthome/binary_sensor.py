@@ -1,7 +1,5 @@
 """Support for BTHome binary sensors."""
 
-from __future__ import annotations
-
 from bthome_ble import (
     BinarySensorDeviceClass as BTHomeBinarySensorDeviceClass,
     SensorUpdate,

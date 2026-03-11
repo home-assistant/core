@@ -1,7 +1,5 @@
 """Config flow for the Google Drive integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any, cast

@@ -1,7 +1,5 @@
 """Support for Tile device trackers."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.device_tracker import TrackerEntity

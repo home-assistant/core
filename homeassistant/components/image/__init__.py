@@ -1,7 +1,5 @@
 """The image integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from contextlib import suppress

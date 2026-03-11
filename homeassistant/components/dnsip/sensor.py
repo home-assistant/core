@@ -1,7 +1,5 @@
 """Get your own public IP address or that of any host."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address

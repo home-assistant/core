@@ -1,7 +1,5 @@
 """Support for Huawei LTE sensors."""
 
-from __future__ import annotations
-
 from bisect import bisect
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass

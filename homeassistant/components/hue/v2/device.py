@@ -1,7 +1,5 @@
 """Handles Hue resource of type `device` mapping to Home Assistant device."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aiohue.v2 import HueBridgeV2

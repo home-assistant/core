@@ -1,7 +1,5 @@
 """Support for events through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pysmartthings import Attribute, Capability, Component, DeviceEvent, SmartThings

@@ -1,7 +1,5 @@
 """Data update coordinator for the EHEIM Digital integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 

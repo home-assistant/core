@@ -1,7 +1,5 @@
 """The devolo_home_control integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from functools import partial

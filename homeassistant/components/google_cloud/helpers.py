@@ -1,7 +1,5 @@
 """Helper classes for Google Cloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 import operator

@@ -1,7 +1,5 @@
 """Base entity for the Ollama integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging

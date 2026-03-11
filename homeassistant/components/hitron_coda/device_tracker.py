@@ -1,7 +1,5 @@
 """Support for the Hitron CODA-4582U, provided by Rogers."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from http import HTTPStatus
 import logging

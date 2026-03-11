@@ -1,7 +1,5 @@
 """The Twitch component."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError

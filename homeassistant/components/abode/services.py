@@ -1,7 +1,5 @@
 """Support for the Abode Security System."""
 
-from __future__ import annotations
-
 from jaraco.abode.exceptions import Exception as AbodeException
 import voluptuous as vol
 

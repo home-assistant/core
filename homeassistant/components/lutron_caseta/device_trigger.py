@@ -1,7 +1,5 @@
 """Provides device triggers for lutron caseta."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 

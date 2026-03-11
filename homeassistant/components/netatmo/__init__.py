@@ -1,7 +1,5 @@
 """The Netatmo integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 import secrets

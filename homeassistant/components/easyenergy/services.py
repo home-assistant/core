@@ -1,7 +1,5 @@
 """Services for easyEnergy integration."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from enum import StrEnum
 from functools import partial

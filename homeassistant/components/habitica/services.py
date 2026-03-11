@@ -1,7 +1,5 @@
 """Actions for the Habitica integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from datetime import UTC, date, datetime, time
 import logging

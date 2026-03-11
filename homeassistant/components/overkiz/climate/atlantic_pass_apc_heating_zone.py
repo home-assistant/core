@@ -1,7 +1,5 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState

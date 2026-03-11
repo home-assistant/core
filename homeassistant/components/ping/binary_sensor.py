@@ -1,7 +1,5 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,

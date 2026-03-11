@@ -1,7 +1,5 @@
 """Support for Pioneer Network Receivers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 

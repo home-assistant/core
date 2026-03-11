@@ -1,7 +1,5 @@
 """Support for the iZone HVAC."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 from typing import Any, Concatenate

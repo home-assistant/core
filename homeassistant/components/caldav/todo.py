@@ -1,7 +1,5 @@
 """CalDAV todo platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import date, datetime, timedelta
 from functools import partial

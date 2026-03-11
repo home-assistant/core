@@ -1,7 +1,5 @@
 """Services for the Ness Alarm integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, ATTR_STATE

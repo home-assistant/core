@@ -1,7 +1,5 @@
 """Support for 1-Wire environment sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import timedelta

@@ -1,7 +1,5 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging

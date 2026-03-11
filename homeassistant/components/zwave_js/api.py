@@ -1,7 +1,5 @@
 """Websocket API for Z-Wave JS."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses

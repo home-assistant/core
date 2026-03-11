@@ -1,7 +1,5 @@
 """API for Google Drive bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 import json

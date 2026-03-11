@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the swiss_public_transport integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import TypedDict

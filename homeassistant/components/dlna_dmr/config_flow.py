@@ -1,7 +1,5 @@
 """Config flow for DLNA DMR."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from functools import partial
 from ipaddress import IPv6Address, ip_address

@@ -1,7 +1,5 @@
 """Expose image_upload as media sources."""
 
-from __future__ import annotations
-
 import pathlib
 
 from propcache.api import cached_property

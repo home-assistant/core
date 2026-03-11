@@ -1,7 +1,5 @@
 """Triggers."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections import defaultdict

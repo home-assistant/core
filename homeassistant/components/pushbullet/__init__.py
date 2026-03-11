@@ -1,7 +1,5 @@
 """The pushbullet component."""
 
-from __future__ import annotations
-
 import logging
 
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError

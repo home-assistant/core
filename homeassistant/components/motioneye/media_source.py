@@ -1,7 +1,5 @@
 """motionEye Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import PurePath
 from typing import cast

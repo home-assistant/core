@@ -4,8 +4,6 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
 from typing import Any

@@ -1,7 +1,5 @@
 """Support for VELUX KLF 200 gateway button."""
 
-from __future__ import annotations
-
 from pyvlx import PyVLX, PyVLXException
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity

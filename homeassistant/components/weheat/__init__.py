@@ -1,7 +1,5 @@
 """The Weheat integration."""
 
-from __future__ import annotations
-
 import asyncio
 from http import HTTPStatus
 

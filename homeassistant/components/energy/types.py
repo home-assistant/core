@@ -1,7 +1,5 @@
 """Types for the energy platform."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import Protocol, TypedDict
 

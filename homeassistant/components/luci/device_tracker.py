@@ -1,7 +1,5 @@
 """Support for OpenWRT (luci) routers."""
 
-from __future__ import annotations
-
 import logging
 
 from openwrt_luci_rpc import OpenWrtRpc

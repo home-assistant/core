@@ -1,7 +1,5 @@
 """Support for MelCloud device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from typing import Any

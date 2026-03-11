@@ -1,7 +1,5 @@
 """Assist satellite entity for VoIP integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from enum import IntFlag

@@ -1,7 +1,5 @@
 """Shelly helpers functions."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address

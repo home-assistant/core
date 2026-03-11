@@ -1,7 +1,5 @@
 """Support for loads connected with WMS WebControl pro."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 

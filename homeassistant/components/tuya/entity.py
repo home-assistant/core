@@ -1,7 +1,5 @@
 """Tuya Home Assistant Base Device Model."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper

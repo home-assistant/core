@@ -1,7 +1,5 @@
 """Huawei LTE buttons."""
 
-from __future__ import annotations
-
 import logging
 
 from huawei_lte_api.enums.device import ControlModeEnum

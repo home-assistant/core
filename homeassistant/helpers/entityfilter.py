@@ -1,7 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import fnmatch
 from functools import lru_cache, partial

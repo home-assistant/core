@@ -1,7 +1,5 @@
 """The Fujitsu HVAC (based on Ayla IOT) integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 
 from ayla_iot_unofficial import new_ayla_api

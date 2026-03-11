@@ -1,7 +1,5 @@
 """Support for Google Nest SDM Cameras."""
 
-from __future__ import annotations
-
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable

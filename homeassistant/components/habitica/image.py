@@ -1,7 +1,5 @@
 """Image platform for Habitica integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID

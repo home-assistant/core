@@ -1,7 +1,5 @@
 """Diagnostics support for IKEA Tradfri."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.config_entries import ConfigEntry

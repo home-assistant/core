@@ -1,7 +1,5 @@
 """Config flow for ruuvitag_ble."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from ruuvitag_ble import RuuvitagBluetoothDeviceData

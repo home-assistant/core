@@ -1,7 +1,5 @@
 """The Cookidoo integration."""
 
-from __future__ import annotations
-
 import logging
 
 from cookidoo_api import CookidooAuthException, CookidooRequestException

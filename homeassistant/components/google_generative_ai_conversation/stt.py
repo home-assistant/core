@@ -1,7 +1,5 @@
 """Speech to text support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 
 from google.genai.errors import APIError, ClientError

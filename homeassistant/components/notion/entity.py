@@ -1,7 +1,5 @@
 """Support for Notion."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from aionotion.bridge.models import Bridge

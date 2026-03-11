@@ -1,7 +1,5 @@
 """Generic entity for the WMS WebControl pro API integration."""
 
-from __future__ import annotations
-
 from wmspro.destination import Destination
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Config flow for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 import html
 import logging
 from typing import Any

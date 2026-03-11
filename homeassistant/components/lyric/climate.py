@@ -1,7 +1,5 @@
 """Support for Honeywell Lyric climate platform."""
 
-from __future__ import annotations
-
 import asyncio
 import enum
 import logging

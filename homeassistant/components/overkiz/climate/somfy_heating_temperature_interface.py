@@ -1,7 +1,5 @@
 """Support for Somfy Heating Temperature Interface."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState

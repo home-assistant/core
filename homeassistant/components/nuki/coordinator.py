@@ -1,7 +1,5 @@
 """Coordinator for the nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from datetime import timedelta

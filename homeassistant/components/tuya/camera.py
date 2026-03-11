@@ -1,7 +1,5 @@
 """Support for Tuya cameras."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager

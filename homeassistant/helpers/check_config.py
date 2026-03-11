@@ -1,7 +1,5 @@
 """Helper to check the configuration file."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 import logging
 import os

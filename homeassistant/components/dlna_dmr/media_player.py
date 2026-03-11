@@ -1,7 +1,5 @@
 """Support for DLNA DMR (Device Media Renderer)."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Sequence
 import contextlib

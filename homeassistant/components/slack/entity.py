@@ -1,7 +1,5 @@
 """The slack integration."""
 
-from __future__ import annotations
-
 from slack_sdk.web.async_client import AsyncWebClient
 
 from homeassistant.config_entries import ConfigEntry

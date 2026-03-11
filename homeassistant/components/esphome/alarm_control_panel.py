@@ -1,7 +1,5 @@
 """Support for ESPHome Alarm Control Panel."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from aioesphomeapi import (

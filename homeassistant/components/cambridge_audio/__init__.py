@@ -1,7 +1,5 @@
 """The Cambridge Audio integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 

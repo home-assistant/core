@@ -1,7 +1,5 @@
 """Support for OVO Energy."""
 
-from __future__ import annotations
-
 from ovoenergy import OVOEnergy
 from ovoenergy.models import OVODailyUsage
 

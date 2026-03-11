@@ -1,7 +1,5 @@
 """Constants for the Transmission Bittorrent Client component."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from transmission_rpc import Torrent

@@ -1,7 +1,5 @@
 """Config flow to configure the LaMetric integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import ip_address
 import logging

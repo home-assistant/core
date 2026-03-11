@@ -1,7 +1,5 @@
 """Switch platform for Nintendo Parental."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum

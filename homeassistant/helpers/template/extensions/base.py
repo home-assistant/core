@@ -1,7 +1,5 @@
 """Base extension class for Home Assistant template extensions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import wraps

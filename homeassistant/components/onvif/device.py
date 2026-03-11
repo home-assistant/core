@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt

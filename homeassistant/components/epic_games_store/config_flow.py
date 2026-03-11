@@ -1,7 +1,5 @@
 """Config flow for Epic Games Store integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

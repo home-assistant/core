@@ -1,7 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import CancelledError
 from collections.abc import Callable, Generator

@@ -1,7 +1,5 @@
 """The Frontier Silicon integration."""
 
-from __future__ import annotations
-
 import logging
 
 from afsapi import AFSAPI, ConnectionError as FSConnectionError

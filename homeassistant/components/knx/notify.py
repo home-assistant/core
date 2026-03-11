@@ -1,7 +1,5 @@
 """Support for KNX notify entities."""
 
-from __future__ import annotations
-
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 

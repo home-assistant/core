@@ -1,7 +1,5 @@
 """The Home Assistant alerts integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_COMPONENT_LOADED

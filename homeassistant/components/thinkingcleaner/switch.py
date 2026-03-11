@@ -1,7 +1,5 @@
 """Support for ThinkingCleaner switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
 from typing import Any

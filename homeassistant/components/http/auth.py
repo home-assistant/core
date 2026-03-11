@@ -1,7 +1,5 @@
 """Authentication for HTTP component."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from ipaddress import ip_address

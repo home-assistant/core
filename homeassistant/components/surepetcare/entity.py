@@ -1,7 +1,5 @@
 """Entity for Surepetcare."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 
 from surepy.entities import SurepyEntity

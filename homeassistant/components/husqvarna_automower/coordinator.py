@@ -1,7 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta

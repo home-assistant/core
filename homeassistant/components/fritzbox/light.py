@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from homeassistant.components.light import (

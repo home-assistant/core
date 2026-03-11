@@ -1,7 +1,5 @@
 """Utility functions for Habitica."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, fields
 import datetime
 from math import floor

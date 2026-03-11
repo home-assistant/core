@@ -1,7 +1,5 @@
 """Support for the Netatmo climate schedule selector."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.select import SelectEntity

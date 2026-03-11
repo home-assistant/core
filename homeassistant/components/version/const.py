@@ -1,7 +1,5 @@
 """Constants for the Version integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Any, Final

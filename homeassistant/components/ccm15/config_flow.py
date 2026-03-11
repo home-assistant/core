@@ -1,7 +1,5 @@
 """Config flow for Midea ccm15 AC Controller integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

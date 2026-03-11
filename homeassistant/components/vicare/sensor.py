@@ -1,7 +1,5 @@
 """Viessmann ViCare sensor device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass

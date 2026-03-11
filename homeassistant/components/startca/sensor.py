@@ -1,7 +1,5 @@
 """Support for Start.ca Bandwidth Monitor."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus

@@ -1,7 +1,5 @@
 """Support for Genius Hub binary_sensor devices."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

@@ -1,7 +1,5 @@
 """Support for ADS select entities."""
 
-from __future__ import annotations
-
 import pyads
 import voluptuous as vol
 

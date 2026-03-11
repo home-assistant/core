@@ -1,7 +1,5 @@
 """Update platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tesla_fleet_api.const import Scope

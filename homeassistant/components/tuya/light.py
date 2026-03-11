@@ -1,7 +1,5 @@
 """Support for the Tuya lights."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
 import json

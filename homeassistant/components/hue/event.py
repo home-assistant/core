@@ -1,7 +1,5 @@
 """Hue event entities from Button resources."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2

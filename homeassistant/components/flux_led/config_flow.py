@@ -1,7 +1,5 @@
 """Config flow for Flux LED/MagicLight."""
 
-from __future__ import annotations
-
 import contextlib
 from typing import Any, Self, cast
 

@@ -1,7 +1,5 @@
 """Configflow for the emoncms integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyemoncms import EmoncmsClient

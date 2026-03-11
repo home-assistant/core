@@ -1,7 +1,5 @@
 """Demo platform that has two fake alarm control panels."""
 
-from __future__ import annotations
-
 import datetime
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState

@@ -1,7 +1,5 @@
 """Coordinator for Vallox ventilation units."""
 
-from __future__ import annotations
-
 import logging
 
 from vallox_websocket_api import MetricData, Vallox, ValloxApiException

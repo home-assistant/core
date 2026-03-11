@@ -1,7 +1,5 @@
 """Calendar platform for a Epic Games Store."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import datetime
 from typing import Any

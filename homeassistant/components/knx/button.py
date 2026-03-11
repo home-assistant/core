@@ -1,7 +1,5 @@
 """Support for KNX button entities."""
 
-from __future__ import annotations
-
 from xknx.devices import RawValue as XknxRawValue
 
 from homeassistant import config_entries

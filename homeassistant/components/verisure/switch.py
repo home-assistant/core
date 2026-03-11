@@ -1,7 +1,5 @@
 """Support for Verisure Smartplugs."""
 
-from __future__ import annotations
-
 from time import monotonic
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Code to handle a Firmata board."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Literal

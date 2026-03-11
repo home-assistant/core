@@ -1,7 +1,5 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from typing import Any, cast
 

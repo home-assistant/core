@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud weather devices."""
 
-from __future__ import annotations
-
 from homematicip.base.enums import WeatherCondition
 from homematicip.device import WeatherSensor, WeatherSensorPlus, WeatherSensorPro
 

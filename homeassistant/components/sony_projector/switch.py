@@ -1,7 +1,5 @@
 """Support for Sony projectors via SDCP network control."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

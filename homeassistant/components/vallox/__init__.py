@@ -1,7 +1,5 @@
 """Support for Vallox ventilation units."""
 
-from __future__ import annotations
-
 import ipaddress
 import logging
 from typing import NamedTuple

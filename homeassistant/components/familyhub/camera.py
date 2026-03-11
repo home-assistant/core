@@ -1,7 +1,5 @@
 """Family Hub camera for Samsung Refrigerators."""
 
-from __future__ import annotations
-
 from pyfamilyhublocal import FamilyHubCam
 import voluptuous as vol
 

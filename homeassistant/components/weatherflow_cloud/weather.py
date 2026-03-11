@@ -1,7 +1,5 @@
 """Support for WeatherFlow Forecast weather service."""
 
-from __future__ import annotations
-
 from weatherflow4py.models.rest.unified import WeatherFlowDataREST
 
 from homeassistant.components.weather import (

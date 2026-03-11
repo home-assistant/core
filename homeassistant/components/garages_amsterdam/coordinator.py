@@ -1,7 +1,5 @@
 """Coordinator for the Garages Amsterdam integration."""
 
-from __future__ import annotations
-
 from odp_amsterdam import Garage, ODPAmsterdam, VehicleType
 
 from homeassistant.config_entries import ConfigEntry

@@ -1,7 +1,5 @@
 """Sensor component that handles additional Tomorrowio data for your location."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass

@@ -1,7 +1,5 @@
 """Data update coordinator for AirPatrol."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError

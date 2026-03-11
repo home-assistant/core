@@ -1,7 +1,5 @@
 """Support for rain sensors built into some Velux windows."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from pyvlx.exception import PyVLXException

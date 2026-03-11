@@ -1,7 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
 
-from __future__ import annotations
-
 import mill
 
 from homeassistant.components.sensor import (

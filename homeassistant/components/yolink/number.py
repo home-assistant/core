@@ -1,7 +1,5 @@
 """YoLink device number type config settings."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any

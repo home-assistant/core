@@ -1,7 +1,5 @@
 """Integration for Peblar EV chargers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from aiohttp import CookieJar

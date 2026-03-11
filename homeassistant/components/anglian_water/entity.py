@@ -1,7 +1,5 @@
 """Anglian Water entity."""
 
-from __future__ import annotations
-
 import logging
 
 from pyanglianwater.meter import SmartMeter

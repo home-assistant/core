@@ -1,7 +1,5 @@
 """Component to allow numeric input for platforms."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 import dataclasses

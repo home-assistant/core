@@ -1,7 +1,5 @@
 """Base classes for Crownstone devices."""
 
-from __future__ import annotations
-
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
 from homeassistant.helpers.device_registry import DeviceInfo

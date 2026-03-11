@@ -1,7 +1,5 @@
 """Media player platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 

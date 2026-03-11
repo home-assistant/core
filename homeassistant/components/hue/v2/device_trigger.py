@@ -1,7 +1,5 @@
 """Provides device automations for Philips Hue events."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from aiohue.v2.models.resource import ResourceTypes

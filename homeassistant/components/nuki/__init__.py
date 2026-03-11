@@ -1,7 +1,5 @@
 """The nuki component."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from http import HTTPStatus

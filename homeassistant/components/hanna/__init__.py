@@ -1,7 +1,5 @@
 """The Hanna Instruments integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from hanna_cloud import HannaCloudClient

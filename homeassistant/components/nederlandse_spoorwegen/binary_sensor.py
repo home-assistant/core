@@ -1,7 +1,5 @@
 """Support for Nederlandse Spoorwegen public transport."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime

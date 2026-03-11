@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Flexit Nordic (BACnet) integration.."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 from datetime import timedelta
 import logging

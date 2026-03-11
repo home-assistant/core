@@ -1,7 +1,5 @@
 """Support for tracking for iCloud devices."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import TrackerEntity

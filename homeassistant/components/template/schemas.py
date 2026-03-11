@@ -1,7 +1,5 @@
 """Shared schemas for config entry and YAML config items."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import (

@@ -1,7 +1,5 @@
 """Support for Tuya event entities."""
 
-from __future__ import annotations
-
 from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any

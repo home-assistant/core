@@ -1,7 +1,5 @@
 """Support for scripts."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass

@@ -1,7 +1,5 @@
 """The ElevenLabs text-to-speech integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

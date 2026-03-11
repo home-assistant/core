@@ -1,7 +1,5 @@
 """Config flow to configure the AsusWrt integration."""
 
-from __future__ import annotations
-
 import logging
 import os
 import socket

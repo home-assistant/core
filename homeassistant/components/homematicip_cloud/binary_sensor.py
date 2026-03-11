@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud binary sensor."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState

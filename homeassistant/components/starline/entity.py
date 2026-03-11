@@ -1,7 +1,5 @@
 """StarLine base entity."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.entity import Entity
 
 from .account import StarlineAccount, StarlineDevice

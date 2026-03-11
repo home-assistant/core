@@ -1,7 +1,5 @@
 """Config flow for govee ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from govee_ble import GoveeBluetoothDeviceData as DeviceData

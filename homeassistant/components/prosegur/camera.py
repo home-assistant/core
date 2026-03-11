@@ -1,7 +1,5 @@
 """Support for Prosegur cameras."""
 
-from __future__ import annotations
-
 import logging
 
 from pyprosegur.auth import Auth

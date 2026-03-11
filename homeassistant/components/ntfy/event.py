@@ -1,7 +1,5 @@
 """Event platform for ntfy integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING

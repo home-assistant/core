@@ -1,7 +1,5 @@
 """Support for Overkiz water heater devices."""
 
-from __future__ import annotations
-
 from pyoverkiz.enums.ui import UIWidget
 
 from homeassistant.const import Platform

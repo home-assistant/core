@@ -1,7 +1,5 @@
 """Support for command line notification services."""
 
-from __future__ import annotations
-
 import logging
 import subprocess
 from typing import Any

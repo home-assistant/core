@@ -1,7 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping

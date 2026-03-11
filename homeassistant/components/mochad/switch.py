@@ -1,7 +1,5 @@
 """Support for X10 switch over Mochad."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

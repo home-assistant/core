@@ -1,7 +1,5 @@
 """GitHub PR artifact download functionality for frontend development."""
 
-from __future__ import annotations
-
 import io
 import logging
 import pathlib

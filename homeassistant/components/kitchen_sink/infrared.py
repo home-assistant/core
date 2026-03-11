@@ -1,7 +1,5 @@
 """Demo platform that offers a fake infrared entity."""
 
-from __future__ import annotations
-
 import infrared_protocols
 
 from homeassistant.components import persistent_notification

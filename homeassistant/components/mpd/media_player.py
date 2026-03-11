@@ -1,7 +1,5 @@
 """Support to interact with a Music Player Daemon."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta

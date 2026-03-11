@@ -1,7 +1,5 @@
 """The jewish_calendar component."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 

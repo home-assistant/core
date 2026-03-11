@@ -1,7 +1,5 @@
 """Service calling related helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses

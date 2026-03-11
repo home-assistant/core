@@ -1,7 +1,5 @@
 """OAuth2 implementations for Toon."""
 
-from __future__ import annotations
-
 import base64
 from typing import Any, cast
 

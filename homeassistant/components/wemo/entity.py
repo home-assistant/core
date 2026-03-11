@@ -1,7 +1,5 @@
 """Classes shared among Wemo entities."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import contextlib
 import logging

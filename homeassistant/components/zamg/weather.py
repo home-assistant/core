@@ -1,7 +1,5 @@
 """Sensor for the zamg integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

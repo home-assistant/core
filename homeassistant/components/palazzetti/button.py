@@ -1,7 +1,5 @@
 """Support for Palazzetti buttons."""
 
-from __future__ import annotations
-
 from pypalazzetti.exceptions import CommunicationError
 
 from homeassistant.components.button import ButtonEntity

@@ -1,7 +1,5 @@
 """The SolarEdge integration."""
 
-from __future__ import annotations
-
 import socket
 
 from aiohttp import ClientError

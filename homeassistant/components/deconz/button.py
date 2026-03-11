@@ -1,7 +1,5 @@
 """Support for deCONZ buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from pydeconz.models.event import EventType

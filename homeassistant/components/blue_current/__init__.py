@@ -1,7 +1,5 @@
 """The Blue Current integration."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 from typing import Any

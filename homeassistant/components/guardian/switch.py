@@ -1,7 +1,5 @@
 """Switches for the Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Any

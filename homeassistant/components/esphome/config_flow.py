@@ -1,7 +1,5 @@
 """Config flow to configure esphome component."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Mapping
 import json

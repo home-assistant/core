@@ -1,7 +1,5 @@
 """UniFi Protect data migrations."""
 
-from __future__ import annotations
-
 from itertools import chain
 import logging
 from typing import TypedDict

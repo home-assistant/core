@@ -1,7 +1,5 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from gardena_bluetooth.const import DeviceConfiguration, Sensor, Valve

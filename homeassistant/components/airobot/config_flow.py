@@ -1,7 +1,5 @@
 """Config flow for the Airobot integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass

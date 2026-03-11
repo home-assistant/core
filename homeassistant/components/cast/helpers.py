@@ -1,7 +1,5 @@
 """Helpers to deal with Cast devices."""
 
-from __future__ import annotations
-
 import configparser
 from dataclasses import dataclass
 import logging

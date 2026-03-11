@@ -1,7 +1,5 @@
 """Support for Goal Zero Yeti Sensors."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from homeassistant.components.binary_sensor import (

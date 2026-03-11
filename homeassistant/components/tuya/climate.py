@@ -1,7 +1,5 @@
 """Support for Tuya Climate."""
 
-from __future__ import annotations
-
 import collections
 from dataclasses import dataclass
 from typing import Any, Self

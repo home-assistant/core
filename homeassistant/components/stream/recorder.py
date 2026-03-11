@@ -1,7 +1,5 @@
 """Provide functionality to record stream."""
 
-from __future__ import annotations
-
 from collections import deque
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging

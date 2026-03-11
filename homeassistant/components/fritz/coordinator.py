@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!Box classes."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field

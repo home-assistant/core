@@ -6,8 +6,6 @@ through SSDP. Reauthentication when issue with credentials are reported.
 Configuration of options through options flow.
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import operator
 import socket

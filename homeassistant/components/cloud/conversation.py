@@ -1,7 +1,5 @@
 """Conversation support for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 from typing import Literal
 
 from homeassistant.components import conversation

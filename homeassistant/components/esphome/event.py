@@ -1,7 +1,5 @@
 """Support for ESPHome event components."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from aioesphomeapi import EntityInfo, Event, EventInfo

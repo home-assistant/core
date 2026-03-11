@@ -1,7 +1,5 @@
 """Provide a way to connect entities belonging to one device."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from datetime import datetime

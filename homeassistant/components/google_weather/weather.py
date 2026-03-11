@@ -1,7 +1,5 @@
 """Weather entity."""
 
-from __future__ import annotations
-
 from google_weather_api import (
     DailyForecastResponse,
     HourlyForecastResponse,

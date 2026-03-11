@@ -4,8 +4,6 @@ Sensor.Community was previously called Luftdaten, hence the domain differs from
 the integration name.
 """
 
-from __future__ import annotations
-
 import logging
 
 from luftdaten import Luftdaten

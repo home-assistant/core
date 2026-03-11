@@ -1,7 +1,5 @@
 """Provide a way to connect devices to one physical location."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses

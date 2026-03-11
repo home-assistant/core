@@ -1,7 +1,5 @@
 """The bluetooth integration utilities."""
 
-from __future__ import annotations
-
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
     ADAPTER_MANUFACTURER,

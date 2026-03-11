@@ -1,7 +1,5 @@
 """Growatt Sensor definitions for the Inverter type."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     UnitOfElectricCurrent,

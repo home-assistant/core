@@ -1,7 +1,5 @@
 """The Powerfox integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from powerfox import (

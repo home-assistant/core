@@ -1,7 +1,5 @@
 """Litter-Robot entities for common data and methods."""
 
-from __future__ import annotations
-
 from typing import Generic, TypeVar
 
 from pylitterbot import Pet, Robot

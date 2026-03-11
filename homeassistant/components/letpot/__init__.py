@@ -1,7 +1,5 @@
 """The LetPot integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from letpot.client import LetPotClient

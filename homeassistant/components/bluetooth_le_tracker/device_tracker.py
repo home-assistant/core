@@ -1,7 +1,5 @@
 """Tracking for bluetooth low energy devices."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID

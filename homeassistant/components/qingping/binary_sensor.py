@@ -1,7 +1,5 @@
 """Support for Qingping binary sensors."""
 
-from __future__ import annotations
-
 from qingping_ble import (
     BinarySensorDeviceClass as QingpingBinarySensorDeviceClass,
     SensorUpdate,

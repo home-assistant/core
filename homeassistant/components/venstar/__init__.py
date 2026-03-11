@@ -1,7 +1,5 @@
 """The venstar component."""
 
-from __future__ import annotations
-
 from venstarcolortouch import VenstarColorTouch
 
 from homeassistant.config_entries import ConfigEntry

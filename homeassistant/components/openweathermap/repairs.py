@@ -1,7 +1,5 @@
 """Issues for OpenWeatherMap."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from homeassistant import data_entry_flow

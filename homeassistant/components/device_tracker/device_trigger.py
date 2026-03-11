@@ -1,7 +1,5 @@
 """Provides device automations for Device Tracker."""
 
-from __future__ import annotations
-
 from operator import attrgetter
 from typing import Final
 

@@ -1,7 +1,5 @@
 """Lutron fan platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pylutron import Output

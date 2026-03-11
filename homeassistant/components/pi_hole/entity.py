@@ -1,7 +1,5 @@
 """The pi_hole component."""
 
-from __future__ import annotations
-
 from hole import Hole
 
 from homeassistant.helpers.device_registry import DeviceInfo

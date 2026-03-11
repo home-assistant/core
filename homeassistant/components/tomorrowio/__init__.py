@@ -1,7 +1,5 @@
 """The Tomorrow.io integration."""
 
-from __future__ import annotations
-
 from pytomorrowio import TomorrowioV4
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN

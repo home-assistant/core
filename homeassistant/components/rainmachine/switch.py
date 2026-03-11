@@ -1,7 +1,5 @@
 """Component providing support for RainMachine programs and zones."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass

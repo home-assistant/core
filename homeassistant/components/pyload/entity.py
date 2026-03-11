@@ -1,7 +1,5 @@
 """Base entity for pyLoad."""
 
-from __future__ import annotations
-
 from homeassistant.components.button import EntityDescription
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

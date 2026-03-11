@@ -1,7 +1,5 @@
 """ISY Services and Commands."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME

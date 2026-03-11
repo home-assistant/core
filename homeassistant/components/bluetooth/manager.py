@@ -1,7 +1,5 @@
 """The bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from functools import partial
 import itertools

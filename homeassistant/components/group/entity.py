@@ -1,7 +1,5 @@
 """Provide entity classes for group entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Collection, Mapping
 import logging

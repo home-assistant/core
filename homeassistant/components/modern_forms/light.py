@@ -1,7 +1,5 @@
 """Support for Modern Forms Fan lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON

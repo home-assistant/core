@@ -1,7 +1,5 @@
 """Helper functions for BSB-Lan integration."""
 
-from __future__ import annotations
-
 from bsblan import BSBLAN, BSBLANError
 
 from homeassistant.exceptions import HomeAssistantError

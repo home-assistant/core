@@ -1,7 +1,5 @@
 """Class representing a Sonos household storage helper."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging

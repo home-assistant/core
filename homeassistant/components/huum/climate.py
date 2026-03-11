@@ -1,7 +1,5 @@
 """Support for Huum wifi-enabled sauna."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

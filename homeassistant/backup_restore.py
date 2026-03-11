@@ -1,7 +1,5 @@
 """Home Assistant module to handle restoring backups."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import json

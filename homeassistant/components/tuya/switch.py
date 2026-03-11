@@ -1,7 +1,5 @@
 """Support for Tuya switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper

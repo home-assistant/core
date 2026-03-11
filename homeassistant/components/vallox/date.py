@@ -1,7 +1,5 @@
 """Support for Vallox date platform."""
 
-from __future__ import annotations
-
 from datetime import date
 
 from vallox_websocket_api import Vallox

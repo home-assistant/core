@@ -1,7 +1,5 @@
 """Config flow for Bosch Smart Home Controller integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from os import makedirs

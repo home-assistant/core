@@ -1,7 +1,5 @@
 """Support for Unifi Led lights."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

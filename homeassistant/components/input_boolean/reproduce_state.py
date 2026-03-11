@@ -1,7 +1,5 @@
 """Reproduce an input boolean state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging

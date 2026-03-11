@@ -1,7 +1,5 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime

@@ -1,7 +1,5 @@
 """Support for Bluesound devices."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from datetime import datetime, timedelta
 import logging

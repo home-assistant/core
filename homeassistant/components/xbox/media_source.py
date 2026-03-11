@@ -1,7 +1,5 @@
 """Xbox Media Source Implementation."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

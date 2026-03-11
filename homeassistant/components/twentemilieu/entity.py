@@ -1,7 +1,5 @@
 """Base entity for the Twente Milieu integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_ID
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity

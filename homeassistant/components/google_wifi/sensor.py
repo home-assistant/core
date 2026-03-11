@@ -1,7 +1,5 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging

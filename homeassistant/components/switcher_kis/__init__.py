@@ -1,7 +1,5 @@
 """The Switcher integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aioswitcher.bridge import SwitcherBridge

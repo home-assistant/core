@@ -1,7 +1,5 @@
 """Support for binary_sensor entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from gardena_bluetooth.const import Sensor, Valve

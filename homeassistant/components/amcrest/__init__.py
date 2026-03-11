@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, suppress

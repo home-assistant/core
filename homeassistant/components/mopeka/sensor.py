@@ -1,7 +1,5 @@
 """Support for Mopeka sensors."""
 
-from __future__ import annotations
-
 from mopeka_iot_ble import SensorUpdate
 
 from homeassistant.components.bluetooth.passive_update_processor import (

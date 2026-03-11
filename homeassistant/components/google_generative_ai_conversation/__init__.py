@@ -1,7 +1,5 @@
 """The Google Generative AI Conversation integration."""
 
-from __future__ import annotations
-
 from functools import partial
 from pathlib import Path
 from types import MappingProxyType

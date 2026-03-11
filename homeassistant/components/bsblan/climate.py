@@ -1,7 +1,5 @@
 """BSBLAN platform to control a compatible Climate Device."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from bsblan import BSBLANError, get_hvac_action_category

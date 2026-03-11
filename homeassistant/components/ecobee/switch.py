@@ -1,7 +1,5 @@
 """Support for using switch with ecobee thermostats."""
 
-from __future__ import annotations
-
 from datetime import tzinfo
 import logging
 from typing import Any

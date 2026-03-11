@@ -1,7 +1,5 @@
 """Support for UpCloud."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import upcloud_api

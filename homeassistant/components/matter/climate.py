@@ -1,7 +1,5 @@
 """Matter climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any

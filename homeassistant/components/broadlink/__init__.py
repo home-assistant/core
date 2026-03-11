@@ -1,7 +1,5 @@
 """The Broadlink integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry

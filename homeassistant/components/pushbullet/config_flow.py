@@ -1,7 +1,5 @@
 """Config flow for pushbullet integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pushbullet import InvalidKeyError, PushBullet, PushbulletError

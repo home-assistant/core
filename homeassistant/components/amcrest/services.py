@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE

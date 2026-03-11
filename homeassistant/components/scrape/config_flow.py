@@ -1,7 +1,5 @@
 """Adds config flow for Scrape integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 import uuid

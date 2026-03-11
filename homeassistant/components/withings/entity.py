@@ -1,7 +1,5 @@
 """Base entity for Withings."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiowithings import Device

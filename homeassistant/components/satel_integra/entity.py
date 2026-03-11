@@ -1,7 +1,5 @@
 """Satel Integra base entity."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from satel_integra.satel_integra import AsyncSatel

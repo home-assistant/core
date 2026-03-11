@@ -1,7 +1,5 @@
 """Support for ESPHome climate devices."""
 
-from __future__ import annotations
-
 from functools import partial
 from math import isfinite
 from typing import Any, cast

@@ -1,7 +1,5 @@
 """Cover Entity for Genie Garage Door."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import aiohttp

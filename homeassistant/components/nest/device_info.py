@@ -1,7 +1,5 @@
 """Library for extracting device specific information common to entities."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 
 from google_nest_sdm.device import Device

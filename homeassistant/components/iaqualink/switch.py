@@ -1,7 +1,5 @@
 """Support for Aqualink pool feature switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from iaqualink.device import AqualinkSwitch

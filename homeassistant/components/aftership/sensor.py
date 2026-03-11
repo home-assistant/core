@@ -1,7 +1,5 @@
 """Support for non-delivered packages recorded in AfterShip."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 

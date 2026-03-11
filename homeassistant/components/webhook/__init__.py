@@ -1,7 +1,5 @@
 """Webhooks for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Iterable
 from http import HTTPStatus
 from ipaddress import ip_address

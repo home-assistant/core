@@ -1,7 +1,5 @@
 """Utilities to help with aiohttp."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import io
 from typing import Any

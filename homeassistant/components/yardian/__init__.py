@@ -1,7 +1,5 @@
 """The Yardian integration."""
 
-from __future__ import annotations
-
 from pyyardian import AsyncYardianClient
 
 from homeassistant.config_entries import ConfigEntry

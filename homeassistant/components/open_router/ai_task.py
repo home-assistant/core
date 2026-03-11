@@ -1,7 +1,5 @@
 """AI Task integration for OpenRouter."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
 

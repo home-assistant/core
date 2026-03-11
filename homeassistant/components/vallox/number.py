@@ -1,7 +1,5 @@
 """Support for Vallox ventilation unit numbers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from vallox_websocket_api import Vallox

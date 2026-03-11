@@ -1,7 +1,5 @@
 """Speech to text support for OpenAI."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 import io
 import logging

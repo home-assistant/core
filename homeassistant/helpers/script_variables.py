@@ -1,7 +1,5 @@
 """Script variables."""
 
-from __future__ import annotations
-
 from collections import ChainMap, UserDict
 from collections.abc import Mapping
 from dataclasses import dataclass, field

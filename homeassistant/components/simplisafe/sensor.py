@@ -1,7 +1,5 @@
 """Support for SimpliSafe freeze sensor."""
 
-from __future__ import annotations
-
 from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3

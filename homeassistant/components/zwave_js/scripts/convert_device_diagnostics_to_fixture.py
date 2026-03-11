@@ -1,7 +1,5 @@
 """Script to convert a device diagnostics file to a fixture."""
 
-from __future__ import annotations
-
 import argparse
 import json
 from pathlib import Path

@@ -1,7 +1,5 @@
 """Binary sensors for System Monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache

@@ -1,7 +1,5 @@
 """DateTime functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 

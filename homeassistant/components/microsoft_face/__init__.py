@@ -1,7 +1,5 @@
 """Support for Microsoft face recognition."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine
 import json

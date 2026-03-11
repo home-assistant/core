@@ -1,7 +1,5 @@
 """Support for control of ElkM1 lighting (X10, UPB, etc)."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from elkm1_lib.elements import Element

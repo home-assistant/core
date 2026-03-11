@@ -1,7 +1,5 @@
 """The dnsip component."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import _LOGGER, HomeAssistant

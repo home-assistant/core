@@ -1,7 +1,5 @@
 """Data for Hass.io."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from copy import deepcopy

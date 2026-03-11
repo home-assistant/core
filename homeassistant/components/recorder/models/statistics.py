@@ -1,7 +1,5 @@
 """Models for statistics in the Recorder."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from enum import IntEnum
 from typing import Literal, NotRequired, TypedDict

@@ -1,7 +1,5 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
 
-from __future__ import annotations
-
 import dataclasses
 from dataclasses import dataclass
 from typing import Any

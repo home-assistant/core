@@ -1,7 +1,5 @@
 """The Anthropic integration."""
 
-from __future__ import annotations
-
 import anthropic
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry

@@ -1,7 +1,5 @@
 """Component providing Switches for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial

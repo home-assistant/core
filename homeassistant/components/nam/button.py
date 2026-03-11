@@ -1,7 +1,5 @@
 """Support for the Nettigo Air Monitor service."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp.client_exceptions import ClientError

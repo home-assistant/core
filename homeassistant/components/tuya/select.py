@@ -1,7 +1,5 @@
 """Support for Tuya select."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import DPCodeEnumWrapper
 from tuya_sharing import CustomerDevice, Manager

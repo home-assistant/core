@@ -1,7 +1,5 @@
 """Helpers for dealing with entity targets."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable
 import dataclasses

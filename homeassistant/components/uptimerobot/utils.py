@@ -1,7 +1,5 @@
 """Utility functions for the UptimeRobot integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from pyuptimerobot import UptimeRobotMonitor

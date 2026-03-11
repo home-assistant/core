@@ -1,7 +1,5 @@
 """Support for MQTT fans."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 import math

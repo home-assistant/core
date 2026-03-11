@@ -1,7 +1,5 @@
 """Support for displaying persistent notifications."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from enum import StrEnum

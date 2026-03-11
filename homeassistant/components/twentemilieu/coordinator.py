@@ -1,7 +1,5 @@
 """Data update coordinator for Twente Milieu."""
 
-from __future__ import annotations
-
 from datetime import date
 
 from twentemilieu import TwenteMilieu, WasteType

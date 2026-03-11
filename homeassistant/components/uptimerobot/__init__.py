@@ -1,7 +1,5 @@
 """The UptimeRobot integration."""
 
-from __future__ import annotations
-
 from pyuptimerobot import UptimeRobot
 
 from homeassistant.const import CONF_API_KEY

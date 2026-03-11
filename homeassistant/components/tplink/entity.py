@@ -1,7 +1,5 @@
 """Common code for tplink."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, replace

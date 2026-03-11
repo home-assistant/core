@@ -1,7 +1,5 @@
 """A base class for Rabbit Air entities."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,7 +1,5 @@
 """The StarLine component."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

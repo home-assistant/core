@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Cookidoo integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import date, timedelta
 import logging

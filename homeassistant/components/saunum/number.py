@@ -1,7 +1,5 @@
 """Number platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING

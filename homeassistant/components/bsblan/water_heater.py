@@ -1,7 +1,5 @@
 """BSBLAN platform to control a compatible Water Heater Device."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from bsblan import BSBLANError, SetHotWaterParam

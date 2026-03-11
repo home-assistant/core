@@ -1,7 +1,5 @@
 """Base entity for the Switch as X integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.homeassistant import exposed_entities

@@ -1,7 +1,5 @@
 """Support for SwitchBot sensors."""
 
-from __future__ import annotations
-
 import switchbot
 from switchbot import HumidifierWaterLevel
 from switchbot.const.air_purifier import AirQualityLevel

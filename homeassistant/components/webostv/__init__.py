@@ -1,7 +1,5 @@
 """The LG webOS TV integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 
 from aiowebostv import WebOsClient, WebOsTvPairError

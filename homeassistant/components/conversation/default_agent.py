@@ -1,7 +1,5 @@
 """Standard conversation implementation for Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Iterable

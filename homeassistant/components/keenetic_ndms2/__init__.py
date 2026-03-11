@@ -1,7 +1,5 @@
 """The keenetic_ndms2 component."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform

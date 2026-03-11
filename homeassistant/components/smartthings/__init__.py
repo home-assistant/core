@@ -1,7 +1,5 @@
 """Support for SmartThings Cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy

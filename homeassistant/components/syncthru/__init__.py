@@ -1,7 +1,5 @@
 """The syncthru component."""
 
-from __future__ import annotations
-
 from pysyncthru import SyncThruAPINotSupported
 
 from homeassistant.const import Platform

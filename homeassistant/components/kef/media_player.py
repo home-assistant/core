@@ -1,7 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import partial
 import ipaddress

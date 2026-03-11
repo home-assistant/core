@@ -1,7 +1,5 @@
 """Support for LIFX."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from datetime import datetime, timedelta

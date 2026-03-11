@@ -1,7 +1,5 @@
 """Helpers to redact Google Assistant data when logging."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import partial
 from typing import Any

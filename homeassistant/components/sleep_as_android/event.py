@@ -1,7 +1,5 @@
 """Event platform for Sleep as Android integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
 

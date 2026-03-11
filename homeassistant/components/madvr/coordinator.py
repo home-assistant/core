@@ -1,7 +1,5 @@
 """Coordinator for handling data fetching and updates."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Queries for logbook."""
 
-from __future__ import annotations
-
 from typing import Final
 
 import sqlalchemy

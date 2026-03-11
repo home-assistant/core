@@ -1,7 +1,5 @@
 """Alexa message handlers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging

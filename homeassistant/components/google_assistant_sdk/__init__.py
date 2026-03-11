@@ -1,7 +1,5 @@
 """Support for Google Assistant SDK."""
 
-from __future__ import annotations
-
 import aiohttp
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials

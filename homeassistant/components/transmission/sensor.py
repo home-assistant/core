@@ -1,7 +1,5 @@
 """Support for monitoring the Transmission BitTorrent client API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass

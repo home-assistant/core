@@ -1,7 +1,5 @@
 """Offer reusable conditions."""
 
-from __future__ import annotations
-
 import abc
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable

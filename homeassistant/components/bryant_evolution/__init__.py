@@ -1,7 +1,5 @@
 """The Bryant Evolution integration."""
 
-from __future__ import annotations
-
 import logging
 
 from evolutionhttp import BryantEvolutionLocalClient

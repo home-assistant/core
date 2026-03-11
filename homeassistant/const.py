@@ -1,7 +1,5 @@
 """Constants used by Home Assistant components."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 

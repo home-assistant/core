@@ -1,7 +1,5 @@
 """IMAP sensor support."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,

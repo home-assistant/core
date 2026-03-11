@@ -1,7 +1,5 @@
 """The GitHub integration."""
 
-from __future__ import annotations
-
 from aiogithubapi import GitHubAPI
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform

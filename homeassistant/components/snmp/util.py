@@ -1,7 +1,5 @@
 """Support for displaying collected data over SNMP."""
 
-from __future__ import annotations
-
 import logging
 
 from pysnmp.hlapi.v3arch.asyncio import (

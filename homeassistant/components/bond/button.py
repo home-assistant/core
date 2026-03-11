@@ -1,7 +1,5 @@
 """Support for bond buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from bond_async import Action

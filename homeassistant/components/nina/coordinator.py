@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the nina integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import re

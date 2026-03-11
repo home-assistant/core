@@ -1,7 +1,5 @@
 """Support for ZHA button."""
 
-from __future__ import annotations
-
 import functools
 import logging
 
