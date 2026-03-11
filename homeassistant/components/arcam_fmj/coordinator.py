@@ -11,7 +11,10 @@ from arcam.fmj.state import State
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +52,23 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         self.client = client
         self.state = State(client, zone)
         self.last_update_success = False
+
+        name = config_entry.title
+        unique_id = config_entry.unique_id or config_entry.entry_id
+        unique_id_device = unique_id
+        if zone != 1:
+            unique_id_device += f"-{zone}"
+            name += f" Zone {zone}"
+
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id_device)},
+            manufacturer="Arcam",
+            model="Arcam FMJ AVR",
+            name=name,
+        )
+
+        if zone != 1:
+            self.device_info["via_device"] = (DOMAIN, unique_id)
 
     async def _async_update_data(self) -> None:
         """Fetch data for manual refresh."""

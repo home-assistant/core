@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_setup[switch.test_keypad_test_button-entry]
+# name: test_setup[binary_sensor.mock_reeflex_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
+    'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'switch.test_keypad_test_button',
+    'entity_id': 'binary_sensor.mock_reeflex_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,38 +20,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Test Button',
+    'object_id_base': 'Light',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.LIGHT: 'light'>,
     'original_icon': None,
-    'original_name': 'Test Button',
-    'platform': 'lutron',
+    'original_name': 'Light',
+    'platform': 'eheimdigital',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12345678901_led_uuid',
+    'translation_key': 'is_lighting',
+    'unique_id': '00:00:00:00:00:05_is_lighting',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.test_keypad_test_button-state]
+# name: test_setup[binary_sensor.mock_reeflex_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keypad Test Button',
-      'keypad': 'Test Keypad',
-      'led': 'Test LED',
-      'scene': 'Test Button',
+      'device_class': 'light',
+      'friendly_name': 'Mock reeflex Light',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_keypad_test_button',
+    'entity_id': 'binary_sensor.mock_reeflex_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_setup[switch.test_switch-entry]
+# name: test_setup[binary_sensor.mock_reeflex_uvc_lamp_connected-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,9 +60,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.test_switch',
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.mock_reeflex_uvc_lamp_connected',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,32 +70,32 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'UVC lamp connected',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'lutron',
+    'original_name': 'UVC lamp connected',
+    'platform': 'eheimdigital',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12345678901_switch_uuid',
+    'translation_key': 'is_uvc_connected',
+    'unique_id': '00:00:00:00:00:05_is_uvc_connected',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_setup[switch.test_switch-state]
+# name: test_setup[binary_sensor.mock_reeflex_uvc_lamp_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Switch',
-      'lutron_integration_id': 2,
+      'device_class': 'connectivity',
+      'friendly_name': 'Mock reeflex UVC lamp connected',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_switch',
+    'entity_id': 'binary_sensor.mock_reeflex_uvc_lamp_connected',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
