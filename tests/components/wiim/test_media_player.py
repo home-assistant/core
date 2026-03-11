@@ -11,6 +11,7 @@ from wiim.models import (
     WiimPreset,
     WiimQueueItem,
     WiimQueueSnapshot,
+    WiimRepeatMode,
     WiimTransportCapabilities,
 )
 from wiim.wiim_device import WiimDevice
@@ -922,6 +923,16 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
     """Test async_play_media for a media-source URL."""
     mock_device = AsyncMock()
     mock_device.supports_http_api = True
+    mock_device.available = True
+    mock_device.volume = 50
+    mock_device.is_muted = False
+    mock_device.supported_input_modes = ()
+    mock_device.supported_output_modes = ()
+    mock_device.playing_status = None
+    mock_device.play_mode = None
+    mock_device.loop_state = MagicMock(repeat=WiimRepeatMode.OFF, shuffle=False)
+    mock_device.output_mode = None
+    mock_device.current_media = None
 
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.runtime_data = mock_device
