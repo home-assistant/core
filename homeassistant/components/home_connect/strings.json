@@ -1324,7 +1324,7 @@
       "message": "Error obtaining data from the API: {error}"
     },
     "fetch_program_error": {
-      "message": "Error obtaining the selected or the active program: {error}"
+      "message": "Error obtaining the selected or active program: {error}"
     },
     "no_program_to_start": {
       "message": "No program to start"
@@ -2063,7 +2063,7 @@
       }
     },
     "start_selected_program": {
-      "description": "Starts the program that is already selected. You can add options that can be used when starting the program uniquely.",
+      "description": "Starts the program that is already selected. You can optionally provide additional options that are only supported when starting a program.",
       "fields": {
         "b_s_h_common_option_finish_in_relative": {
           "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::description%]",
