@@ -98,7 +98,7 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "invalid_access_token"
             except NoDevicesFound:
                 errors["base"] = "no_devices_found"
             except MalformedResponse:
