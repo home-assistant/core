@@ -37,32 +37,32 @@ class TestGetDeviceInfoModel:
 
         assert info["model"] == "PAJ ALLROUND Finder 4G"
 
-    def test_model_falls_back_to_unknown_when_device_models_is_empty_list(self):
-        """When device_models is an empty list there is no model entry — fall back to 'Unknown'."""
+    def test_model_falls_back_to_none_when_device_models_is_empty_list(self):
+        """When device_models is an empty list there is no model entry — fall back to None."""
         device = make_device(1, device_models=[])
         coord = self._make_coord_with_device(device)
 
         info = coord.get_device_info(1)
 
-        assert info["model"] == "Unknown"
+        assert info["model"] is None
 
-    def test_model_falls_back_to_unknown_when_device_models_is_none(self):
-        """When device_models is None fall back to 'Unknown'."""
+    def test_model_falls_back_to_none_when_device_models_is_none(self):
+        """When device_models is None fall back to None."""
         device = make_device(1, device_models=None)
         coord = self._make_coord_with_device(device)
 
         info = coord.get_device_info(1)
 
-        assert info["model"] == "Unknown"
+        assert info["model"] is None
 
-    def test_model_falls_back_to_unknown_when_model_key_is_none(self):
-        """When device_models[0]['model'] is None fall back to 'Unknown'."""
+    def test_model_falls_back_to_none_when_model_key_is_none(self):
+        """When device_models[0]['model'] is None fall back to None."""
         device = make_device(1, device_models=[{"model": None}])
         coord = self._make_coord_with_device(device)
 
         info = coord.get_device_info(1)
 
-        assert info["model"] == "Unknown"
+        assert info["model"] is None
 
     def test_model_uses_first_entry_when_multiple_models_present(self):
         """Only the first entry in device_models should be used."""

@@ -103,10 +103,10 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         """Return the HA DeviceInfo dict for the given device_id."""
         device = self.data.devices.get(device_id)
         if device and device.id == device_id:
-            model = "Unknown"
+            model = None
             device_models = getattr(device, "device_models", None)
             if device_models and isinstance(device_models[0], dict):
-                model = device_models[0].get("model") or "Unknown"
+                model = device_models[0].get("model") or None
 
             return DeviceInfo(
                 identifiers={(DOMAIN, f"{self._email}_{device_id}")},
