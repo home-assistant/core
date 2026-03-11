@@ -92,7 +92,6 @@ async def test_options_flow_invalid_api(
             CONF_INVERTER_SIZE: 2000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
@@ -107,7 +106,6 @@ async def test_options_flow_invalid_api(
             CONF_INVERTER_SIZE: 2000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -143,7 +141,6 @@ async def test_options_flow(
             CONF_INVERTER_SIZE: 2000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -178,7 +175,6 @@ async def test_options_flow_without_key(
             CONF_INVERTER_SIZE: 2000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -215,7 +211,6 @@ async def test_subentry_flow_add_plane(
             CONF_MODULES_POWER: 3000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "45° / 270° / 3000W"
@@ -257,7 +252,6 @@ async def test_subentry_flow_reconfigure_plane(
             CONF_MODULES_POWER: 6000,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -318,7 +312,6 @@ async def test_subentry_flow_max_planes(
                 CONF_MODULES_POWER: 1000 * (i + 1),
             },
         )
-        await hass.async_block_till_done()
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert len(mock_config_entry.subentries) == 4
