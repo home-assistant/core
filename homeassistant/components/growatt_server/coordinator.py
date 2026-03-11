@@ -172,6 +172,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 sph_detail = self.api.sph_detail(self.device_id)
                 sph_energy = self.api.sph_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
+                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                    ) from err
                 raise UpdateFailed(f"Error fetching SPH device data: {err}") from err
 
             combined = {**sph_detail, **sph_energy}
