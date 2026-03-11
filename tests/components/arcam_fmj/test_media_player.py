@@ -1,11 +1,12 @@
 """Tests for arcam fmj receivers."""
 
 from math import isclose
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import PropertyMock, patch
 
 from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
 from arcam.fmj.state import State
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.components.homeassistant import (
@@ -14,137 +15,144 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ARTIST,
+    ATTR_MEDIA_CHANNEL,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
-    DATA_COMPONENT,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     MediaType,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant, State as CoreState
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_UUID
+from .conftest import MOCK_ENTITY_ID
 
-from tests.common import MockConfigEntry
-
-MOCK_TURN_ON = {
-    "service": "switch.turn_on",
-    "data": {"entity_id": "switch.test"},
-}
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture(name="player")
-def player_fixture(
+@pytest.fixture(autouse=True)
+def platform_fixture():
+    """Only test single platform."""
+    with patch("homeassistant.components.arcam_fmj.PLATFORMS", [Platform.MEDIA_PLAYER]):
+        yield
+
+
+async def test_setup(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
-    client: Mock,
-    state_1: State,
+    entity_registry: er.EntityRegistry,
     player_setup: str,
-) -> ArcamFmj:
-    """Get standard player.
-
-    This fixture tests internals and should not be used going forward.
-    """
-    player: ArcamFmj = hass.data[DATA_COMPONENT].get_entity(MOCK_ENTITY_ID)
-    player.async_write_ha_state = Mock(wraps=player.async_write_ha_state)
-    return player
+) -> None:
+    """Test setup creates expected entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def update(player: ArcamFmj, force_refresh=False):
+async def update(hass: HomeAssistant, entity_id: str) -> CoreState:
     """Force a update of player and return current state data."""
-    await player.async_update_ha_state(force_refresh=force_refresh)
-    return player.hass.states.get(player.entity_id)
-
-
-async def test_properties(player: ArcamFmj) -> None:
-    """Test standard properties."""
-    assert player.unique_id == f"{MOCK_UUID}-1"
-    assert player.device_info == {
-        ATTR_NAME: f"Arcam FMJ ({MOCK_HOST})",
-        ATTR_IDENTIFIERS: {
-            ("arcam_fmj", MOCK_UUID),
-        },
-        ATTR_MODEL: "Arcam FMJ AVR",
-        ATTR_MANUFACTURER: "Arcam",
-    }
-    assert not player.should_poll
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        service_data={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    data = hass.states.get(entity_id)
+    assert data
+    return data
 
 
 async def test_powered_off(
-    hass: HomeAssistant, player: ArcamFmj, state_1: State
+    hass: HomeAssistant, player_setup: None, state_1: State
 ) -> None:
     """Test properties in powered off state."""
     state_1.get_source.return_value = None
     state_1.get_power.return_value = None
 
-    data = await update(player)
+    data = await update(hass, MOCK_ENTITY_ID)
     assert "source" not in data.attributes
     assert data.state == "off"
 
 
-async def test_powered_on(player: ArcamFmj, state_1: State) -> None:
+async def test_powered_on(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test properties in powered on state."""
     state_1.get_source.return_value = SourceCodes.PVR
     state_1.get_power.return_value = True
 
-    data = await update(player)
+    data = await update(hass, MOCK_ENTITY_ID)
     assert data.attributes["source"] == "PVR"
     assert data.state == "on"
 
 
-async def test_supported_features(player: ArcamFmj) -> None:
-    """Test supported features."""
-    data = await update(player)
-    assert data.attributes["supported_features"] == 200588
-
-
-async def test_turn_on(player: ArcamFmj, state_1: State) -> None:
+async def test_turn_on(hass: HomeAssistant, player_setup: None, state_1: State) -> None:
     """Test turn on service."""
     state_1.get_power.return_value = None
-    await player.async_turn_on()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+    )
     state_1.set_power.assert_not_called()
 
     state_1.get_power.return_value = False
-    await player.async_turn_on()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+    )
     state_1.set_power.assert_called_with(True)
 
 
-async def test_turn_off(player: ArcamFmj, state_1: State) -> None:
+async def test_turn_off(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test command to turn off."""
-    await player.async_turn_off()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+    )
     state_1.set_power.assert_called_with(False)
 
 
 @pytest.mark.parametrize("mute", [True, False])
-async def test_mute_volume(player: ArcamFmj, state_1: State, mute: bool) -> None:
+async def test_mute_volume(
+    hass: HomeAssistant, player_setup: None, state_1: State, mute: bool
+) -> None:
     """Test mute functionality."""
-    player.async_write_ha_state.reset_mock()
-    await player.async_mute_volume(mute)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: mute},
+        blocking=True,
+    )
     state_1.set_mute.assert_called_with(mute)
-    player.async_write_ha_state.assert_called_with()
 
 
-async def test_name(player: ArcamFmj) -> None:
-    """Test name."""
-    data = await update(player)
-    assert data.attributes["friendly_name"] == "Arcam FMJ (127.0.0.1) Zone 1"
-
-
-async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) -> None:
+async def test_update(hass: HomeAssistant, player_setup: None, state_1: State) -> None:
     """Test update."""
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: player_setup},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.update.assert_called_with()
@@ -152,7 +160,7 @@ async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) ->
 
 async def test_update_lost(
     hass: HomeAssistant,
-    player_setup: str,
+    player_setup: None,
     state_1: State,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -162,7 +170,7 @@ async def test_update_lost(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: player_setup},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.update.assert_called_with()
@@ -174,7 +182,7 @@ async def test_update_lost(
 )
 async def test_select_source(
     hass: HomeAssistant,
-    player_setup,
+    player_setup: None,
     state_1: State,
     source: str,
     value: SourceCodes | None,
@@ -183,7 +191,7 @@ async def test_select_source(
     await hass.services.async_call(
         "media_player",
         SERVICE_SELECT_SOURCE,
-        service_data={ATTR_ENTITY_ID: player_setup, ATTR_INPUT_SOURCE: source},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_INPUT_SOURCE: source},
         blocking=True,
     )
 
@@ -193,10 +201,12 @@ async def test_select_source(
         state_1.set_source.assert_not_called()
 
 
-async def test_source_list(player: ArcamFmj, state_1: State) -> None:
+async def test_source_list(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test source list."""
     state_1.get_source_list.return_value = [SourceCodes.BD]
-    data = await update(player)
+    data = await update(hass, MOCK_ENTITY_ID)
     assert data.attributes["source_list"] == ["BD"]
 
 
@@ -207,26 +217,43 @@ async def test_source_list(player: ArcamFmj, state_1: State) -> None:
         "DOLBY_PL",
     ],
 )
-async def test_select_sound_mode(player: ArcamFmj, state_1: State, mode: str) -> None:
+async def test_select_sound_mode(
+    hass: HomeAssistant, player_setup: None, state_1: State, mode: str
+) -> None:
     """Test selection sound mode."""
-    await player.async_select_sound_mode(mode)
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_SOUND_MODE: mode},
+        blocking=True,
+    )
     state_1.set_decode_mode.assert_called_with(mode)
 
 
-async def test_volume_up(player: ArcamFmj, state_1: State) -> None:
+async def test_volume_up(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test mute functionality."""
-    player.async_write_ha_state.reset_mock()
-    await player.async_volume_up()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+    )
     state_1.inc_volume.assert_called_with()
-    player.async_write_ha_state.assert_called_with()
 
 
-async def test_volume_down(player: ArcamFmj, state_1: State) -> None:
+async def test_volume_down(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test mute functionality."""
-    player.async_write_ha_state.reset_mock()
-    await player.async_volume_down()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
+        blocking=True,
+    )
     state_1.dec_volume.assert_called_with()
-    player.async_write_ha_state.assert_called_with()
 
 
 @pytest.mark.parametrize(
@@ -237,10 +264,12 @@ async def test_volume_down(player: ArcamFmj, state_1: State) -> None:
         (None, None),
     ],
 )
-async def test_sound_mode(player: ArcamFmj, state_1: State, mode, mode_enum) -> None:
+async def test_sound_mode(
+    hass: HomeAssistant, player_setup: None, state_1: State, mode, mode_enum
+) -> None:
     """Test selection sound mode."""
     state_1.get_decode_mode.return_value = mode_enum
-    data = await update(player)
+    data = await update(hass, MOCK_ENTITY_ID)
     assert data.attributes.get(ATTR_SOUND_MODE) == mode
 
 
@@ -253,46 +282,62 @@ async def test_sound_mode(player: ArcamFmj, state_1: State, mode, mode_enum) -> 
     ],
 )
 async def test_sound_mode_list(
-    player: ArcamFmj, state_1: State, modes, modes_enum
+    hass: HomeAssistant, player_setup: None, state_1: State, modes, modes_enum
 ) -> None:
     """Test sound mode list."""
     state_1.get_decode_modes.return_value = modes_enum
-    data = await update(player)
+    data = await update(hass, MOCK_ENTITY_ID)
     assert data.attributes.get(ATTR_SOUND_MODE_LIST) == modes
 
 
-async def test_is_volume_muted(player: ArcamFmj, state_1: State) -> None:
+async def test_is_volume_muted(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test muted."""
     state_1.get_mute.return_value = True
-    assert player.is_volume_muted is True
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
+
     state_1.get_mute.return_value = False
-    assert player.is_volume_muted is False
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is False
+
     state_1.get_mute.return_value = None
-    assert player.is_volume_muted is None
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is None
 
 
-async def test_volume_level(player: ArcamFmj, state_1: State) -> None:
+async def test_volume_level(
+    hass: HomeAssistant, player_setup: None, state_1: State
+) -> None:
     """Test volume."""
     state_1.get_volume.return_value = 0
-    assert isclose(player.volume_level, 0.0)
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 0.0)
+
     state_1.get_volume.return_value = 50
-    assert isclose(player.volume_level, 50.0 / 99)
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 50.0 / 99)
+
     state_1.get_volume.return_value = 99
-    assert isclose(player.volume_level, 1.0)
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert isclose(data.attributes[ATTR_MEDIA_VOLUME_LEVEL], 1.0)
+
     state_1.get_volume.return_value = None
-    assert player.volume_level is None
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert ATTR_MEDIA_VOLUME_LEVEL not in data.attributes
 
 
 @pytest.mark.parametrize(("volume", "call"), [(0.0, 0), (0.5, 50), (1.0, 99)])
 async def test_set_volume_level(
-    hass: HomeAssistant, player_setup: str, state_1: State, volume, call
+    hass: HomeAssistant, player_setup: None, state_1: State, volume, call
 ) -> None:
     """Test setting volume."""
 
     await hass.services.async_call(
         "media_player",
         SERVICE_VOLUME_SET,
-        service_data={ATTR_ENTITY_ID: player_setup, ATTR_MEDIA_VOLUME_LEVEL: volume},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: volume},
         blocking=True,
     )
 
@@ -300,7 +345,7 @@ async def test_set_volume_level(
 
 
 async def test_set_volume_level_lost(
-    hass: HomeAssistant, player_setup: str, state_1: State
+    hass: HomeAssistant, player_setup: None, state_1: State
 ) -> None:
     """Test setting volume, with a lost connection."""
 
@@ -310,7 +355,7 @@ async def test_set_volume_level_lost(
         await hass.services.async_call(
             "media_player",
             SERVICE_VOLUME_SET,
-            service_data={ATTR_ENTITY_ID: player_setup, ATTR_MEDIA_VOLUME_LEVEL: 0.0},
+            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.0},
             blocking=True,
         )
 
@@ -325,11 +370,12 @@ async def test_set_volume_level_lost(
     ],
 )
 async def test_media_content_type(
-    player: ArcamFmj, state_1: State, source, media_content_type
+    hass: HomeAssistant, player_setup: None, state_1: State, source, media_content_type
 ) -> None:
     """Test content type deduction."""
     state_1.get_source.return_value = source
-    assert player.media_content_type == media_content_type
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == media_content_type
 
 
 @pytest.mark.parametrize(
@@ -343,13 +389,14 @@ async def test_media_content_type(
     ],
 )
 async def test_media_channel(
-    player: ArcamFmj, state_1: State, source, dab, rds, channel
+    hass: HomeAssistant, player_setup: None, state_1: State, source, dab, rds, channel
 ) -> None:
     """Test media channel."""
     state_1.get_dab_station.return_value = dab
     state_1.get_rds_information.return_value = rds
     state_1.get_source.return_value = source
-    assert player.media_channel == channel
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_CHANNEL) == channel
 
 
 @pytest.mark.parametrize(
@@ -361,12 +408,13 @@ async def test_media_channel(
     ],
 )
 async def test_media_artist(
-    player: ArcamFmj, state_1: State, source, dls, artist
+    hass: HomeAssistant, player_setup: None, state_1: State, source, dls, artist
 ) -> None:
     """Test media artist."""
     state_1.get_dls_pdt.return_value = dls
     state_1.get_source.return_value = source
-    assert player.media_artist == artist
+    data = await update(hass, MOCK_ENTITY_ID)
+    assert data.attributes.get(ATTR_MEDIA_ARTIST) == artist
 
 
 @pytest.mark.parametrize(
@@ -378,7 +426,7 @@ async def test_media_artist(
     ],
 )
 async def test_media_title(
-    player: ArcamFmj, state_1: State, source, channel, title
+    hass: HomeAssistant, player_setup: None, state_1: State, source, channel, title
 ) -> None:
     """Test media title."""
 
@@ -387,7 +435,7 @@ async def test_media_title(
         ArcamFmj, "media_channel", new_callable=PropertyMock
     ) as media_channel:
         media_channel.return_value = channel
-        data = await update(player)
+        data = await update(hass, MOCK_ENTITY_ID)
         if title is None:
             assert "media_title" not in data.attributes
         else:
