@@ -111,14 +111,20 @@ class _McpTools:
         llm_api = await self._get_api_instance()
         _, alias_by_tool_name = self._get_tool_maps_for_api(llm_api)
 
-        return [
-            _format_tool(
-                alias_by_tool_name[tool.name],
-                tool,
-                llm_api.custom_serializer,
+        seen_aliases: set[str] = set()
+        tools: list[types.Tool] = []
+        for tool in llm_api.tools:
+            alias = alias_by_tool_name[tool.name]
+            if alias in seen_aliases:
+                _LOGGER.warning(
+                    "Skipping duplicate MCP tool name %s", alias
+                )
+                continue
+            seen_aliases.add(alias)
+            tools.append(
+                _format_tool(alias, tool, llm_api.custom_serializer)
             )
-            for tool in llm_api.tools
-        ]
+        return tools
 
     def resolve_tool_name(self, llm_api: llm.APIInstance, mcp_tool_name: str) -> str:
         """Resolve an MCP tool name to the current Home Assistant tool name."""
