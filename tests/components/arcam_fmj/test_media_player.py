@@ -1,7 +1,7 @@
 """Tests for arcam fmj receivers."""
 
 from math import isclose
-from unittest.mock import PropertyMock, patch
+from unittest.mock import Mock, PropertyMock, patch
 
 from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
 from arcam.fmj.state import State
@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    DATA_COMPONENT,
     SERVICE_SELECT_SOURCE,
     SERVICE_VOLUME_SET,
     MediaType,
@@ -31,12 +32,31 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import MOCK_HOST, MOCK_UUID
+from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_UUID
+
+from tests.common import MockConfigEntry
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
     "data": {"entity_id": "switch.test"},
 }
+
+
+@pytest.fixture(name="player")
+def player_fixture(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    client: Mock,
+    state_1: State,
+    player_setup: str,
+) -> ArcamFmj:
+    """Get standard player.
+
+    This fixture tests internals and should not be used going forward.
+    """
+    player: ArcamFmj = hass.data[DATA_COMPONENT].get_entity(MOCK_ENTITY_ID)
+    player.async_write_ha_state = Mock(wraps=player.async_write_ha_state)
+    return player
 
 
 async def update(player: ArcamFmj, force_refresh=False):
@@ -107,6 +127,7 @@ async def test_turn_off(player: ArcamFmj, state_1: State) -> None:
 @pytest.mark.parametrize("mute", [True, False])
 async def test_mute_volume(player: ArcamFmj, state_1: State, mute: bool) -> None:
     """Test mute functionality."""
+    player.async_write_ha_state.reset_mock()
     await player.async_mute_volume(mute)
     state_1.set_mute.assert_called_with(mute)
     player.async_write_ha_state.assert_called_with()
@@ -115,7 +136,7 @@ async def test_mute_volume(player: ArcamFmj, state_1: State, mute: bool) -> None
 async def test_name(player: ArcamFmj) -> None:
     """Test name."""
     data = await update(player)
-    assert data.attributes["friendly_name"] == "Zone 1"
+    assert data.attributes["friendly_name"] == "Arcam FMJ (127.0.0.1) Zone 1"
 
 
 async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) -> None:
@@ -194,6 +215,7 @@ async def test_select_sound_mode(player: ArcamFmj, state_1: State, mode: str) ->
 
 async def test_volume_up(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
+    player.async_write_ha_state.reset_mock()
     await player.async_volume_up()
     state_1.inc_volume.assert_called_with()
     player.async_write_ha_state.assert_called_with()
@@ -201,6 +223,7 @@ async def test_volume_up(player: ArcamFmj, state_1: State) -> None:
 
 async def test_volume_down(player: ArcamFmj, state_1: State) -> None:
     """Test mute functionality."""
+    player.async_write_ha_state.reset_mock()
     await player.async_volume_down()
     state_1.dec_volume.assert_called_with()
     player.async_write_ha_state.assert_called_with()
