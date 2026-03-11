@@ -70,6 +70,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
             return HVACMode.HEAT
         return HVACMode.OFF
 
+    # PLANNED: Remove the icon property — entities should not set custom icons
     @property
     def icon(self) -> str:
         """Return nice icon for heater."""

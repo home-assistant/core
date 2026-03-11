@@ -74,6 +74,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "huum@sauna.org",
             CONF_PASSWORD: "ukuuku",
         },
-        unique_id="123456",
+        unique_id="123456",  # PLANNED: Remove unique_id — config entries should not set this
         entry_id="AABBCC112233",
     )
