@@ -1,7 +1,5 @@
 """The test for sensor entity."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal

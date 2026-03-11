@@ -1,7 +1,5 @@
 """Tests for the Homevolt entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homevolt import DeviceMetadata

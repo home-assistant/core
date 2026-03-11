@@ -1,7 +1,5 @@
 """The tests for the Prometheus exporter."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus

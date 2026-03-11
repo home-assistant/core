@@ -1,7 +1,5 @@
 """Fixtures for Tessie."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from unittest.mock import patch
 

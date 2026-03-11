@@ -10,8 +10,6 @@ allow the recorder to startup successfully.
 It is used to test the schema migration logic.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import json
 import logging

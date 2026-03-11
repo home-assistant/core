@@ -1,7 +1,5 @@
 """Test Brottsplatskartan component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from homeassistant.components.brottsplatskartan.const import DOMAIN

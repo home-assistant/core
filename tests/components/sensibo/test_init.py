@@ -1,7 +1,5 @@
 """Test for Sensibo integration setup."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock

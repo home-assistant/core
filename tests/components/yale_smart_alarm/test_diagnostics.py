@@ -1,7 +1,5 @@
 """Test Yale Smart Living diagnostics."""
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 from syrupy.assertion import SnapshotAssertion

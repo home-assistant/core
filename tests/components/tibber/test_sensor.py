@@ -1,7 +1,5 @@
 """Tests for the Tibber Data API sensors and coordinator."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

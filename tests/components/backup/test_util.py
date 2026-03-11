@@ -1,7 +1,5 @@
 """Tests for the Backup integration's utility functions."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses

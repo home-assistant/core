@@ -1,7 +1,5 @@
 """The test for the Nord Pool sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any

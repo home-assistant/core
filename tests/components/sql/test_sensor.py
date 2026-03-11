@@ -1,7 +1,5 @@
 """The test for the sql sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from pathlib import Path
 import sqlite3

@@ -1,7 +1,5 @@
 """Test Command line component setup process."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 

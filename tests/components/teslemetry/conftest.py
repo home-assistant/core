@@ -1,7 +1,5 @@
 """Test fixtures for Teslemetry component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 from typing import Any

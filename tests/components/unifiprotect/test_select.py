@@ -1,7 +1,5 @@
 """Test the UniFi Protect select platform."""
 
-from __future__ import annotations
-
 from copy import copy
 from unittest.mock import AsyncMock, Mock
 

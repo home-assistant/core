@@ -1,7 +1,5 @@
 """Provide common test tools for hassio."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 import logging
 from types import MethodType

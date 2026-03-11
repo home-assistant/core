@@ -1,7 +1,5 @@
 """Tests for the Rehlko binary sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch

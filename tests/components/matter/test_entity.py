@@ -1,7 +1,5 @@
 """Test Matter entity behavior."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.core import HomeAssistant

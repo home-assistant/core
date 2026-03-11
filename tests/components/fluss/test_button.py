@@ -1,7 +1,5 @@
 """Tests for the Fluss Buttons."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from fluss_api import FlussApiClient, FlussApiClientError

@@ -10,8 +10,6 @@ allows the tests to pause the worker thread before finalizing the stream
 so that it can inspect the output.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 import logging

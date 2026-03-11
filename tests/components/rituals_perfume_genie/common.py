@@ -1,7 +1,5 @@
 """Common methods used across tests for Rituals Perfume Genie."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN

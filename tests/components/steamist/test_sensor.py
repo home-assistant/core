@@ -1,7 +1,5 @@
 """Tests for the steamist sensos."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, UnitOfTime

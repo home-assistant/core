@@ -1,7 +1,5 @@
 """Tests for the Homevolt config flow."""
 
-from __future__ import annotations
-
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock
 

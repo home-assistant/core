@@ -1,7 +1,5 @@
 """Tests for the Bluetooth integration ActiveBluetoothDataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import logging

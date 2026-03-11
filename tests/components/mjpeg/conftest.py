@@ -1,7 +1,5 @@
 """Fixtures for MJPEG IP Camera integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 

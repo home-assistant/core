@@ -1,7 +1,5 @@
 """Tests for the HomeKit component."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch

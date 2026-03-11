@@ -1,7 +1,5 @@
 """Test Home Assistant Hardware firmware update entity."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Sequence
 import dataclasses

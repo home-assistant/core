@@ -1,7 +1,5 @@
 """Tests for the OctoPrint integration."""
 
-from __future__ import annotations
-
 DEFAULT_JOB = {
     "job": {
         "averagePrintTime": None,

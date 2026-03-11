@@ -1,7 +1,5 @@
 """The tests for the Recorder component."""
 
-from __future__ import annotations
-
 import logging
 import threading
 

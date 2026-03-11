@@ -1,7 +1,5 @@
 """The test for the statistics sensor platform."""
 
-from __future__ import annotations
-
 from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta

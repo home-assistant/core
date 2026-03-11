@@ -1,7 +1,5 @@
 """Tests for the NRGkick device tracker platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

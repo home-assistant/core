@@ -1,7 +1,5 @@
 """Test the config manager."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise

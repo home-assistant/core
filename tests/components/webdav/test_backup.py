@@ -1,7 +1,5 @@
 """Test the backups for WebDAV."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator
 from io import StringIO
 from unittest.mock import Mock, patch

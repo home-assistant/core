@@ -1,7 +1,5 @@
 """The tests for the Command line switch platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import json

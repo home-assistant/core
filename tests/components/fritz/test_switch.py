@@ -1,7 +1,5 @@
 """Tests for Fritz!Tools switch platform."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 

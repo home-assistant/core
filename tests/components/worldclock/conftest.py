@@ -1,7 +1,5 @@
 """Fixtures for the Worldclock integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch

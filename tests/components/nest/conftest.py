@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil

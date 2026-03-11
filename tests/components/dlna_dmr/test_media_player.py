@@ -1,7 +1,5 @@
 """Tests for the DLNA DMR media_player module."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass

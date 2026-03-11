@@ -1,7 +1,5 @@
 """Test the Shark IQ vacuum entity."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta

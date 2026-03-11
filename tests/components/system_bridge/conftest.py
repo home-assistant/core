@@ -1,7 +1,5 @@
 """Fixtures for System Bridge integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch

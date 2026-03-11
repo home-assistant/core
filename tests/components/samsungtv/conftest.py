@@ -1,7 +1,5 @@
 """Fixtures for Samsung TV."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from typing import Any

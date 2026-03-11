@@ -1,7 +1,5 @@
 """Test ZHA Silicon Labs Multiprotocol support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING
 from unittest.mock import call, patch

@@ -3,8 +3,6 @@
 Not all evohome systems will have a DHW zone.
 """
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from evohomeasync2 import EvohomeClient

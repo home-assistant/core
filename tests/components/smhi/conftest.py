@@ -1,7 +1,5 @@
 """Provide common smhi fixtures."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 import json
 from typing import Any

@@ -1,7 +1,5 @@
 """Tests for the ONVIF integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
 

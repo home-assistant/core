@@ -1,7 +1,5 @@
 """Test repairs for unifiprotect."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.workday.const import CONF_REMOVE_HOLIDAYS, DOMAIN

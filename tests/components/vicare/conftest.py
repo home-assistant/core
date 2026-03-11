@@ -1,7 +1,5 @@
 """Fixtures for ViCare integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, Mock, patch

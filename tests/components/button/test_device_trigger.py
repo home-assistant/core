@@ -1,7 +1,5 @@
 """The tests for Button device triggers."""
 
-from __future__ import annotations
-
 import pytest
 from pytest_unordered import unordered
 

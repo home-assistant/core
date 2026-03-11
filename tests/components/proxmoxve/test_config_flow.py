@@ -1,7 +1,5 @@
 """Test the config flow for Proxmox VE."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from proxmoxer import AuthenticationError

@@ -1,7 +1,5 @@
 """Tests for pylint hass_enforce_type_hints plugin."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import re
 from types import ModuleType

@@ -1,7 +1,5 @@
 """Code to support homekit_controller tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta

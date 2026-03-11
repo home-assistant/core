@@ -1,7 +1,5 @@
 """Tests for the Backup integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace

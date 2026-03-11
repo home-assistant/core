@@ -1,7 +1,5 @@
 """Tests for greeneye_monitor component initialization."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest

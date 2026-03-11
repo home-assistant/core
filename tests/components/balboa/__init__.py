@@ -1,7 +1,5 @@
 """Test the Balboa Spa Client integration."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN

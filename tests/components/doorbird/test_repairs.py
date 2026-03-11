@@ -1,7 +1,5 @@
 """Test repairs for doorbird."""
 
-from __future__ import annotations
-
 from homeassistant.components.doorbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

@@ -1,7 +1,5 @@
 """Fixtures for DLNA DMS tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from typing import Final, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal

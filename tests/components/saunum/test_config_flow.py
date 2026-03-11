@@ -1,7 +1,5 @@
 """Test the Saunum config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pysaunum import SaunumConnectionError, SaunumException

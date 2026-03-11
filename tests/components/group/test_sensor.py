@@ -1,7 +1,5 @@
 """The tests for the Group Sensor platform."""
 
-from __future__ import annotations
-
 from math import prod
 import statistics
 from typing import Any

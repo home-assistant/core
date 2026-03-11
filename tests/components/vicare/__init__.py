@@ -1,7 +1,5 @@
 """Test for ViCare."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.components.vicare.const import CONF_HEATING_TYPE

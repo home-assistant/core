@@ -1,7 +1,5 @@
 """The tests for the native services of Evohome."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
