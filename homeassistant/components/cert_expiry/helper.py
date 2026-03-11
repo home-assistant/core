@@ -31,7 +31,7 @@ async def async_get_cert(
             asyncio.Protocol,
             host,
             port,
-            ssl=get_default_context(),
+            ssl=get_default_no_verify_context(),
             happy_eyeballs_delay=0.25,
             server_hostname=host,
         )
