@@ -349,7 +349,7 @@ async def test_alarm_update_exception_logs_warning(
 ) -> None:
     """Test household mismatch logs warning and prevents speaker setup."""
     soco.alarmClock.ListAlarms.side_effect = SoCoException(
-        "Alarm list UID does not match household"
+        "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
     )
     await async_setup_sonos()
     await hass.async_block_till_done()
