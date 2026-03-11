@@ -16,13 +16,13 @@ rules:
     comment: Integration does not register custom actions.
   docs-high-level-description:
     status: exempt
-    comment: Documentation will be added when submitted to Home Assistant core.
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
   docs-installation-instructions:
     status: exempt
-    comment: Documentation will be added when submitted to Home Assistant core.
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
   docs-removal-instructions:
     status: exempt
-    comment: Documentation will be added when submitted to Home Assistant core.
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -30,7 +30,7 @@ rules:
   test-before-configure: done
   test-before-setup:
     status: exempt
-    comment: BLE devices may not be in range at startup; integration registers BLE callback for deferred connection.
+    comment: BLE devices may not be in range at startup; the integration registers a Bluetooth callback for deferred connection.
   unique-config-entry: done
 
   # Silver
@@ -40,10 +40,10 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
-    comment: Documentation will be added when submitted to Home Assistant core.
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
   docs-installation-parameters:
     status: exempt
-    comment: Documentation will be added when submitted to Home Assistant core.
+    comment: Pairing uses discovery and does not require user-supplied setup parameters.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -60,27 +60,21 @@ rules:
     status: exempt
     comment: Single device per config entry, no network address to update.
   discovery: done
-  docs-data-update: done
-  docs-examples: done
-  docs-known-limitations: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: Single fixed BLE device per config entry.
-  entity-category:
-    status: exempt
-    comment: Event platform has no diagnostic entities; will be implemented when sensor/update platforms are added.
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: All entities are essential for the device's function (battery, button events, firmware update, rotation position).
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: Event-only platform has no user-facing exceptions.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow:
     status: exempt
