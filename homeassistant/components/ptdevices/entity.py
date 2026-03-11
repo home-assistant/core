@@ -28,7 +28,9 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
         self._device_id = device_id
         self.coordinator = coordinator
 
-        self._attr_unique_id = f"{device_id}_{sensor_key}"
+        self._user_id = coordinator.data[self._device_id]["user_id"]
+
+        self._attr_unique_id = f"{self._user_id}_{device_id}_{sensor_key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -38,27 +40,18 @@ class PTDevicesEntity(CoordinatorEntity[PTDevicesCoordinator]):
         if not device:
             # Device is missing; return minimal information
             return DeviceInfo(
-                identifiers={(DOMAIN, self._device_id)},
+                identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
                 configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
                 manufacturer="ParemTech inc.",
             )
 
         return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, f"{self._user_id}_{self._device_id}")},
             configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
             manufacturer="ParemTech inc.",
-            model=self.coordinator.data[self._device_id].get(
-                "device_type",
-                None,
-            ),
-            sw_version=self.coordinator.data[self._device_id].get(
-                "version",
-                None,
-            ),
-            name=self.coordinator.data[self._device_id].get(
-                "title",
-                None,
-            ),
+            model=device["device_type"],
+            sw_version=device["version"],
+            name=device["title"],
         )
 
     @property
