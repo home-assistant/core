@@ -21,7 +21,7 @@ from greencell_client.elec_data import ElecData3Phase
 from greencell_client.mqtt_parser import MqttParser
 from greencell_client.utils import GreencellUtils
 
-from homeassistant.components.mqtt import async_subscribe
+from homeassistant.components.mqtt import ReceiveMessage, async_subscribe
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -40,10 +40,12 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
-from .const import GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE, MANUFACTURER
+from .const import DOMAIN, GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE, MANUFACTURER
 from .models import GreencellConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,7 +176,6 @@ class HabuSensor(SensorEntity, ABC):
         self._serial_number = serial_number
         self._access = access
         self.entity_description = description
-        self._access.register_listener(self._on_state_update)
 
     def _device_name(self) -> str:
         """Return the device name based on its type."""
@@ -190,7 +191,7 @@ class HabuSensor(SensorEntity, ABC):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for the sensor based on type and serial number."""
-        return f"{self._device_name()}_{self._serial_number}_{self._sensor_type}_sensor"
+        return f"{self._serial_number}_{self._sensor_type}"
 
     @property
     def device_info(self):
@@ -200,7 +201,7 @@ class HabuSensor(SensorEntity, ABC):
         else:
             device_name = GREENCELL_OTHER_DEVICE
         return {
-            "identifiers": {(self._serial_number,)},
+            "identifiers": {(DOMAIN, self._serial_number)},
             "name": f"{device_name} {self._serial_number}",
             "manufacturer": MANUFACTURER,
             "model": device_name,
@@ -251,18 +252,13 @@ class Habu3PhaseSensor(HabuSensor):
         """Return the state of the sensor."""
         raw_value = self._sensor_data.get_value(self._phase)
         if raw_value is None:
-            return (
-                "0.000"
-                if self.entity_description.native_unit_of_measurement
-                == UnitOfElectricCurrent.AMPERE
-                else "0.00"
-            )
+            return 0.0
         return self.entity_description.value_fn(raw_value)
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID for the sensor based on type, phase, and serial number."""
-        return f"{self._sensor_type}_sensor_{self._phase}_{self._serial_number}"
+        return f"{self._serial_number}_{self._sensor_type}_{self._phase}"
 
 
 class HabuSingleSensor(HabuSensor):
@@ -292,17 +288,17 @@ class HabuSingleSensor(HabuSensor):
         """Return the state of the sensor."""
         if self._value is None:
             return (
-                "0.0"
+                0.0
                 if self.entity_description.native_unit_of_measurement
                 == UnitOfPower.WATT
-                else "UNKNOWN"
+                else "unknown"
             )
         return self.entity_description.value_fn(self._value.data)
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID for the sensor based on type and serial number."""
-        return f"{self._sensor_type}_sensor_{self._serial_number}"
+        return f"{self._serial_number}_{self._sensor_type}"
 
 
 # --- async_setup_platform function ---
@@ -382,26 +378,27 @@ async def setup_sensors(
     )
 
     @callback
-    def current_message_received(msg) -> None:
+    def current_message_received(msg: ReceiveMessage) -> None:
         """Handle the current message."""
         MqttParser.parse_3phase_msg(msg.payload, current_data_obj)
 
     @callback
-    def voltage_message_received(msg) -> None:
+    def voltage_message_received(msg: ReceiveMessage) -> None:
         """Handle the voltage message."""
         MqttParser.parse_3phase_msg(msg.payload, voltage_data_obj)
 
     @callback
-    def power_message_received(msg) -> None:
+    def power_message_received(msg: ReceiveMessage) -> None:
         """Handle the power message."""
         MqttParser.parse_single_phase_msg(msg.payload, "momentary", power_data_obj)
 
     @callback
-    def status_message_received(msg) -> None:
+    def status_message_received(msg: ReceiveMessage) -> None:
         """Handle the status message. If the device is unavailable, disable the entity."""
-        try:
+        if isinstance(msg.payload, (bytes, bytearray)):
             str_payload = msg.payload.decode("utf-8", errors="ignore")
-        except AttributeError, TypeError:
+        else:
+            # Jeśli to już jest string (str), używamy go bezpośrednio
             str_payload = str(msg.payload)
 
         if "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload:
@@ -410,15 +407,27 @@ async def setup_sensors(
             MqttParser.parse_single_phase_msg(msg.payload, "state", state_data_obj)
 
     @callback
-    def device_state_message_received(msg) -> None:
+    def device_state_message_received(msg: ReceiveMessage) -> None:
         """Handle the device state message. If device was unavailable, enable the entity."""
         access.on_msg(msg.payload)
 
-    await async_subscribe(hass, mqtt_topic_current, current_message_received)
-    await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)
-    await async_subscribe(hass, mqtt_topic_power, power_message_received)
-    await async_subscribe(hass, mqtt_topic_status, status_message_received)
-    await async_subscribe(hass, mqtt_topic_device_state, device_state_message_received)
+    entry.async_on_unload(
+        await async_subscribe(hass, mqtt_topic_current, current_message_received)
+    )
+    entry.async_on_unload(
+        await async_subscribe(hass, mqtt_topic_voltage, voltage_message_received)
+    )
+    entry.async_on_unload(
+        await async_subscribe(hass, mqtt_topic_power, power_message_received)
+    )
+    entry.async_on_unload(
+        await async_subscribe(hass, mqtt_topic_status, status_message_received)
+    )
+    entry.async_on_unload(
+        await async_subscribe(
+            hass, mqtt_topic_device_state, device_state_message_received
+        )
+    )
 
     async_add_entities(
         current_sensors + voltage_sensors + [state_sensor, power_sensor],

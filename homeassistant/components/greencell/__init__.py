@@ -21,13 +21,12 @@ Key functions:
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import Any
 
 from greencell_client.access import GreencellAccess, GreencellHaAccessLevel
 from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
 
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import async_subscribe
+from homeassistant.components.mqtt import ReceiveMessage, async_subscribe
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -52,7 +51,7 @@ def wait_for_device_ready(
     unsub_volt: Callable[[], None] | None = None
 
     @callback
-    def _on_message(message: Any) -> None:
+    def _on_message(message: ReceiveMessage) -> None:
         if not event.is_set():
             event.set()
             _LOGGER.debug("Received initial message for device %s", serial)

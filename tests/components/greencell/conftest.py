@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.components.mqtt import MqttData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
@@ -25,15 +26,12 @@ TEST_DEVICE_STATE_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/device_state"
 TEST_DISCOVERY_TOPIC = f"/greencell/evse/{TEST_SERIAL_NUMBER}/discovery"
 
 # MQTT message payloads - Current (in mA)
-TEST_CURRENT_PAYLOAD_IDLE = b'{"l1": 0, "l2": 0, "l3": 0}'
 TEST_CURRENT_PAYLOAD_3PHASE = b'{"l1": 2000, "l2": 2500, "l3": 3000}'
 TEST_CURRENT_PAYLOAD_SINGLE = b'{"l1": 16500, "l2": 0, "l3": 0}'
 
 # MQTT message payloads - Voltage (in V)
-TEST_VOLTAGE_PAYLOAD_RESET = b'{"l1": 0, "l2": 0, "l3": 0}'
 TEST_VOLTAGE_PAYLOAD_NORMAL = b'{"l1": 230.0, "l2": 229.7, "l3": 232.5}'
-TEST_VOLTAGE_PAYLOAD_LOW = b'{"l1": 210.0, "l2": 209.7, "l3": 212.5}'
-TEST_VOLTAGE_PAYLOAD_HIGH = b'{"l1": 245.0, "l2": 244.7, "l3": 247.5}'
+TEST_VOLTAGE_PAYLOAD_SINGLE = b'{"l1": 230.0, "l2": 0.0, "l3": 0.0}'
 
 # MQTT message payloads - Power (in W)
 TEST_POWER_PAYLOAD_IDLE = b'{"momentary": 0.0}'
@@ -46,15 +44,10 @@ TEST_STATUS_PAYLOAD_CONNECTED = b'{"state": "CONNECTED"}'
 TEST_STATUS_PAYLOAD_CHARGING = b'{"state": "CHARGING"}'
 TEST_STATUS_PAYLOAD_FINISHED = b'{"state": "FINISHED"}'
 TEST_STATUS_PAYLOAD_ERROR = b'{"state": "ERROR_EVSE"}'
+TEST_STATUS_PAYLOAD_WAITING_FOR_CAR = b'{"state": "WAITING_FOR_CAR"}'
+TEST_STATUS_PAYLOAD_ERROR_CAR = b'{"state": "ERROR_CAR"}'
 TEST_STATUS_PAYLOAD_UNAVAILABLE = b"UNAVAILABLE"
 TEST_STATUS_PAYLOAD_OFFLINE = b"OFFLINE"
-
-# MQTT message payloads - Device state
-TEST_DEVICE_STATE_ONLINE = b'{"connected": true}'
-TEST_DEVICE_STATE_OFFLINE = b'{"connected": false}'
-
-# MQTT message payloads - Discovery
-TEST_DISCOVERY_PAYLOAD = b'{"id": "EVGC021A2275XXXXXXXXXX"}'
 
 
 @pytest.fixture
@@ -73,12 +66,20 @@ def mock_mqtt_data():
 @pytest.fixture
 async def setup_mqtt(hass: HomeAssistant, mock_mqtt_data):
     """Set up MQTT integration for testing."""
-    # Mock the MQTT data in hass so async_fire_mqtt_message can find it
+    # Tworzymy mockowy wpis dla MQTT, aby przejść przez mqtt.async_wait_for_mqtt_client
+    mqtt_entry = MockConfigEntry(
+        domain="mqtt",
+        data={"broker": "127.0.0.1"},
+        state=ConfigEntryState.LOADED,
+    )
+    mqtt_entry.add_to_hass(hass)
+
+    # Podpinamy dane MQTT do hass.data
     hass.data["mqtt"] = mock_mqtt_data
 
     yield
 
-    # Cleanup
+    # Sprzątanie po teście
     if "mqtt" in hass.data:
         del hass.data["mqtt"]
 
