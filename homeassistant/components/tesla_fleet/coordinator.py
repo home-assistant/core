@@ -18,6 +18,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -43,6 +44,22 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_CONFIG,
     VehicleDataEndpoint.LOCATION_DATA,
 ]
+
+
+def _invalidate_access_token(
+    hass: HomeAssistant, config_entry: TeslaFleetConfigEntry
+) -> None:
+    """Invalidate the cached access token to force a refresh."""
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_TOKEN: {
+                **config_entry.data[CONF_TOKEN],
+                "expires_at": 0,
+            },
+        },
+    )
 
 
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
@@ -116,7 +133,10 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.name,
             )
             return self.data
-        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -188,7 +208,10 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
-        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -252,7 +275,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
-        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
@@ -317,7 +343,10 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             else:
                 LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
-        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+        except (InvalidToken, OAuthExpired) as e:
+            _invalidate_access_token(self.hass, self.config_entry)
+            raise UpdateFailed(e.message) from e
+        except LoginRequired as e:
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
