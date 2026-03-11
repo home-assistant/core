@@ -16,6 +16,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lunatone.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_lunatone_devices() -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
 
