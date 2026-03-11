@@ -64,9 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
     api_key = settings.get(CONF_API_KEY) or ""
-    headers = {"Authorization": f"Bearer {api_key}"} if api_key else None
     client = ollama.AsyncClient(
-        host=settings[CONF_URL], headers=headers, verify=get_default_context()
+        host=settings[CONF_URL],
+        headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
+        verify=get_default_context(),
     )
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):

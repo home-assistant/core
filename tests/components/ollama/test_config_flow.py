@@ -1,14 +1,15 @@
 """Test the Ollama config flow."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from httpx import ConnectError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import ollama
-from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.components.ollama.const import CONF_API_KEY, DOMAIN
+from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -50,6 +51,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         ollama.CONF_URL: "http://localhost:11434",
+        ollama.CONF_API_KEY: "",  # Default API key should be empty string
     }
     # No subentries created by default
     assert len(result2.get("subentries", [])) == 0
@@ -557,3 +559,50 @@ async def test_ai_task_subentry_not_loaded(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "entry_not_loaded"
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_headers"),
+    [
+        (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: "my-secret-token"},
+            {"Authorization": "Bearer my-secret-token"},
+        ),
+        (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: ""},
+            None,
+        ),
+        (
+            {CONF_URL: "http://localhost:11434"},
+            None,
+        ),
+    ],
+)
+async def test_user_step_async_client_headers(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+    expected_headers: dict[str, str] | None,
+) -> None:
+    """Test Authorization header passed to AsyncClient with/without api_key."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
+    ) as mock_async_client:
+        mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_async_client.assert_called_with(
+        host="http://localhost:11434",
+        headers=expected_headers,
+        verify=ANY,
+    )

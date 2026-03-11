@@ -99,7 +99,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         url = user_input[CONF_URL]
         api_key = user_input.get(CONF_API_KEY) or ""
 
-        self._async_abort_entries_match({CONF_URL: url, CONF_API_KEY: api_key})
+        self._async_abort_entries_match({CONF_URL: url})
 
         try:
             url = cv.url(url)
@@ -114,9 +114,10 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         try:
-            headers = {"Authorization": f"Bearer {api_key}"} if api_key else None
             client = ollama.AsyncClient(
-                host=url, headers=headers, verify=get_default_context()
+                host=url,
+                headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
+                verify=get_default_context(),
             )
 
             async with asyncio.timeout(DEFAULT_TIMEOUT):
