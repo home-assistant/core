@@ -169,6 +169,7 @@ class ArcamFmjSensorEntity(ArcamFmjEntity, SensorEntity):
             f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
             f"-{coordinator.state.zn}-{description.key}"
         )
+        self._attr_entity_registry_enabled_default = coordinator.state.zn == 1
 
     @property
     def native_value(self) -> int | float | str | None:
