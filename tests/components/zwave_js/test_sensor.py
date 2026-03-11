@@ -10,6 +10,7 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -775,6 +776,37 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.state == "100.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+
+
+async def test_opening_state_sensor(
+    hass: HomeAssistant,
+    client,
+    hoppe_ehandle_connectsense_state,
+) -> None:
+    """Test Opening state is exposed as an enum sensor."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ehandle_connectsense_opening_state")
+    assert state
+    assert state.state == "Closed"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["Closed", "Open"]
+    assert state.attributes[ATTR_VALUE] == 0
+
+    # Make sure we're not accidentally creating enum sensors for legacy
+    # Door/Window notification variables.
+    legacy_sensor_ids = [
+        "sensor.ehandle_connectsense_door_state",
+        "sensor.ehandle_connectsense_door_state_simple",
+    ]
+    for entity_id in legacy_sensor_ids:
+        assert hass.states.get(entity_id) is None
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
