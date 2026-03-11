@@ -744,7 +744,7 @@ async def test_unix_socket_started_with_supervisor(
 ) -> None:
     """Test unix socket is started when running under Supervisor."""
     socket_path = tmp_path / "core.sock"
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     mock_sock = Mock()
     with (
         patch.dict(
