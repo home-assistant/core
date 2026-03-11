@@ -69,6 +69,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
             self.token = config_entry.data["token"]
             self.api = growattServer.OpenApiV1(token=self.token)
+            self.api.server_url = self.url
         elif self.api_version == "classic":
             self.username = config_entry.data.get(CONF_USERNAME)
             self.password = config_entry.data[CONF_PASSWORD]
