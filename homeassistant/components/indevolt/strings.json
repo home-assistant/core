@@ -37,7 +37,7 @@
   "entity": {
     "button": {
       "stop": {
-        "name": "Pause Battery"
+        "name": "Enable standby mode"
       }
     },
     "number": {
