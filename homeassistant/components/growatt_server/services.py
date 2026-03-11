@@ -156,9 +156,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         # from the cache so existing settings are not overwritten with zeros.
         current = await coordinator.read_ac_charge_times()
 
-        charge_power: int = int(call.data["charge_power"])
-        charge_stop_soc: int = int(call.data["charge_stop_soc"])
-        mains_enabled: bool = call.data["mains_enabled"]
+        charge_power: int = int(call.data.get("charge_power", current["charge_power"]))
+        charge_stop_soc: int = int(
+            call.data.get("charge_stop_soc", current["charge_stop_soc"])
+        )
+        mains_enabled: bool = call.data.get("mains_enabled", current["mains_enabled"])
 
         if not 0 <= charge_power <= 100:
             raise ServiceValidationError(
@@ -195,8 +197,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         # Read current settings first — same read-merge-write pattern as charge.
         current = await coordinator.read_ac_discharge_times()
 
-        discharge_power: int = int(call.data["discharge_power"])
-        discharge_stop_soc: int = int(call.data["discharge_stop_soc"])
+        discharge_power: int = int(
+            call.data.get("discharge_power", current["discharge_power"])
+        )
+        discharge_stop_soc: int = int(
+            call.data.get("discharge_stop_soc", current["discharge_stop_soc"])
+        )
 
         if not 0 <= discharge_power <= 100:
             raise ServiceValidationError(

@@ -57,7 +57,7 @@ write_ac_charge_times:
         device:
           integration: growatt_server
     charge_power:
-      required: true
+      required: false
       example: 100
       selector:
         number:
@@ -65,7 +65,7 @@ write_ac_charge_times:
           max: 100
           mode: slider
     charge_stop_soc:
-      required: true
+      required: false
       example: 100
       selector:
         number:
@@ -73,7 +73,7 @@ write_ac_charge_times:
           max: 100
           mode: slider
     mains_enabled:
-      required: true
+      required: false
       example: true
       selector:
         boolean:
@@ -131,7 +131,7 @@ write_ac_discharge_times:
         device:
           integration: growatt_server
     discharge_power:
-      required: true
+      required: false
       example: 100
       selector:
         number:
@@ -139,7 +139,7 @@ write_ac_discharge_times:
           max: 100
           mode: slider
     discharge_stop_soc:
-      required: true
+      required: false
       example: 20
       selector:
         number:
