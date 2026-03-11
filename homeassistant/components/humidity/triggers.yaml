@@ -19,6 +19,7 @@
           selector:
             number:
               mode: box
+              unit_of_measurement: "%"
         entity:
           selector:
             entity:
