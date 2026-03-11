@@ -196,6 +196,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     # Check if container belongs to a stack via docker compose label
                     stack_name: str | None = (
                         container.labels.get("com.docker.compose.project")
+                        or container.labels.get("com.docker.stack.namespace")
                         if container.labels
                         else None
                     )

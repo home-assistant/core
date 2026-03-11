@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart container',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart container',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'restart_container',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_button_entities_snapshot[button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Restart container',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_restart_container',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_button_entities_snapshot[button.focused_einstein_restart_container-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
