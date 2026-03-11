@@ -28,7 +28,7 @@ HueBLE==2.1.0
 Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
-PSNAWP==3.0.1
+PSNAWP==3.0.3
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -1026,7 +1026,7 @@ gTTS==2.5.3
 
 # homeassistant.components.gardena_bluetooth
 # homeassistant.components.husqvarna_automower_ble
-gardena-bluetooth==1.6.0
+gardena-bluetooth==2.1.0
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.14
@@ -1663,7 +1663,7 @@ odp-amsterdam==6.1.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.6.0
+ohme==1.7.0
 
 # homeassistant.components.ollama
 ollama==0.5.1
@@ -1676,7 +1676,7 @@ ondilo==0.5.0
 
 # homeassistant.components.onedrive
 # homeassistant.components.onedrive_for_business
-onedrive-personal-sdk==0.1.5
+onedrive-personal-sdk==0.1.6
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2112,6 +2112,9 @@ pyforked-daapd==0.1.14
 # homeassistant.components.freedompro
 pyfreedompro==1.1.0
 
+# homeassistant.components.freshr
+pyfreshr==1.2.0
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.6.20
 
@@ -2242,7 +2245,7 @@ pylitterbot==2025.1.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.2.18
+pylutron==0.3.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2406,7 +2409,7 @@ pyrail==0.4.1
 pyrainbird==6.1.1
 
 # homeassistant.components.playstation_network
-pyrate-limiter==3.9.0
+pyrate-limiter==4.0.2
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2636,7 +2639,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.17.1
+python-roborock==4.20.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
