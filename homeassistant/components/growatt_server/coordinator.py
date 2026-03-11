@@ -149,16 +149,23 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             combined = {**sph_detail, **sph_energy}
 
-            # Parse "time" field from sph_energy into a timezone-aware datetime
+            # Parse last update timestamp from sph_energy "time" field
             time_str = sph_energy.get("time")
             if time_str:
-                parsed = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
-                combined["lastdataupdate"] = parsed.replace(
-                    tzinfo=dt_util.get_default_time_zone()
-                )
+                try:
+                    parsed = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                    combined["lastdataupdate"] = parsed.replace(
+                        tzinfo=dt_util.get_default_time_zone()
+                    )
+                except ValueError, TypeError:
+                    _LOGGER.debug(
+                        "Could not parse SPH time field for %s: %r",
+                        self.device_id,
+                        time_str,
+                    )
 
             self.data = combined
-            _LOGGER.debug("sph_info for device %s: %r", self.device_id, combined)
+            _LOGGER.debug("sph_info for device %s: %r", self.device_id, self.data)
         elif self.device_type == "mix":
             mix_info = self.api.mix_info(self.device_id)
             mix_totals = self.api.mix_totals(self.device_id, self.plant_id)
@@ -480,10 +487,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.data["wchargeSOCLowLimit"] = charge_stop_soc
             self.data["acChargeEnable"] = 1 if mains_enabled else 0
             for i, period in enumerate(periods, 1):
-                self.data[f"forcedChargeTimeStart{i}"] = period.get(
-                    "start_time", "00:00"
+                self.data[f"forcedChargeTimeStart{i}"] = period["start_time"].strftime(
+                    "%H:%M"
                 )
-                self.data[f"forcedChargeTimeStop{i}"] = period.get("end_time", "00:00")
+                self.data[f"forcedChargeTimeStop{i}"] = period["end_time"].strftime(
+                    "%H:%M"
+                )
                 self.data[f"forcedChargeStopSwitch{i}"] = (
                     1 if period.get("enabled", False) else 0
                 )
@@ -524,11 +533,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.data["disChargePowerCommand"] = discharge_power
             self.data["wdisChargeSOCLowLimit"] = discharge_stop_soc
             for i, period in enumerate(periods, 1):
-                self.data[f"forcedDischargeTimeStart{i}"] = period.get(
-                    "start_time", "00:00"
-                )
-                self.data[f"forcedDischargeTimeStop{i}"] = period.get(
-                    "end_time", "00:00"
+                self.data[f"forcedDischargeTimeStart{i}"] = period[
+                    "start_time"
+                ].strftime("%H:%M")
+                self.data[f"forcedDischargeTimeStop{i}"] = period["end_time"].strftime(
+                    "%H:%M"
                 )
                 self.data[f"forcedDischargeStopSwitch{i}"] = (
                     1 if period.get("enabled", False) else 0

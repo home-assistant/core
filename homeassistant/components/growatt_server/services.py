@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntryState
@@ -73,25 +73,15 @@ def _get_coordinator(
     return coordinators[serial_number]
 
 
-def _extract_period_overrides(
-    call_data: dict[str, Any], periods: list[dict]
-) -> list[dict]:
-    """Merge period overrides from a service call into the current period list."""
-    result = list(periods)
-    for i in range(1, 4):
-        override: dict[str, Any] = {}
-        start = call_data.get(f"period_{i}_start")
-        end = call_data.get(f"period_{i}_end")
-        enabled = call_data.get(f"period_{i}_enabled")
-        if start is not None:
-            override["start_time"] = start
-        if end is not None:
-            override["end_time"] = end
-        if enabled is not None:
-            override["enabled"] = enabled
-        if override and i <= len(result):
-            result[i - 1] = {**result[i - 1], **override}
-    return result
+def _parse_time_str(time_str: str, field_name: str) -> time:
+    """Parse a time string (HH:MM or HH:MM:SS) to a datetime.time object."""
+    try:
+        parts = time_str.split(":")
+        return datetime.strptime(f"{parts[0]}:{parts[1]}", "%H:%M").time()
+    except (ValueError, IndexError) as err:
+        raise ServiceValidationError(
+            f"{field_name} must be in HH:MM or HH:MM:SS format"
+        ) from err
 
 
 @callback
@@ -161,15 +151,41 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator: GrowattCoordinator = _get_coordinator(
             hass, call.data["device_id"], "sph"
         )
+        # Read current settings first — the SPH API requires all 3 periods in
+        # every write call. Any period not supplied by the caller is filled in
+        # from the cache so existing settings are not overwritten with zeros.
         current = await coordinator.read_ac_charge_times()
-        periods = _extract_period_overrides(
-            call.data, current.get("periods", [{}, {}, {}])
-        )
+
+        charge_power: int = int(call.data["charge_power"])
+        charge_stop_soc: int = int(call.data["charge_stop_soc"])
+        mains_enabled: bool = call.data["mains_enabled"]
+
+        if not 0 <= charge_power <= 100:
+            raise ServiceValidationError(
+                f"charge_power must be between 0 and 100, got {charge_power}"
+            )
+        if not 0 <= charge_stop_soc <= 100:
+            raise ServiceValidationError(
+                f"charge_stop_soc must be between 0 and 100, got {charge_stop_soc}"
+            )
+
+        periods = []
+        for i in range(1, 4):
+            cached = current["periods"][i - 1]
+            if f"period_{i}_start" in call.data:
+                start = _parse_time_str(
+                    call.data[f"period_{i}_start"], f"period_{i}_start"
+                )
+                end = _parse_time_str(call.data[f"period_{i}_end"], f"period_{i}_end")
+                enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
+            else:
+                start = _parse_time_str(cached["start_time"], f"period_{i}_start")
+                end = _parse_time_str(cached["end_time"], f"period_{i}_end")
+                enabled = cached["enabled"]
+            periods.append({"start_time": start, "end_time": end, "enabled": enabled})
+
         await coordinator.update_ac_charge_times(
-            int(call.data["charge_power"]),
-            int(call.data["charge_stop_soc"]),
-            call.data["mains_enabled"],
-            periods,
+            charge_power, charge_stop_soc, mains_enabled, periods
         )
 
     async def handle_write_ac_discharge_times(call: ServiceCall) -> None:
@@ -177,14 +193,38 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator: GrowattCoordinator = _get_coordinator(
             hass, call.data["device_id"], "sph"
         )
+        # Read current settings first — same read-merge-write pattern as charge.
         current = await coordinator.read_ac_discharge_times()
-        periods = _extract_period_overrides(
-            call.data, current.get("periods", [{}, {}, {}])
-        )
+
+        discharge_power: int = int(call.data["discharge_power"])
+        discharge_stop_soc: int = int(call.data["discharge_stop_soc"])
+
+        if not 0 <= discharge_power <= 100:
+            raise ServiceValidationError(
+                f"discharge_power must be between 0 and 100, got {discharge_power}"
+            )
+        if not 0 <= discharge_stop_soc <= 100:
+            raise ServiceValidationError(
+                f"discharge_stop_soc must be between 0 and 100, got {discharge_stop_soc}"
+            )
+
+        periods = []
+        for i in range(1, 4):
+            cached = current["periods"][i - 1]
+            if f"period_{i}_start" in call.data:
+                start = _parse_time_str(
+                    call.data[f"period_{i}_start"], f"period_{i}_start"
+                )
+                end = _parse_time_str(call.data[f"period_{i}_end"], f"period_{i}_end")
+                enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
+            else:
+                start = _parse_time_str(cached["start_time"], f"period_{i}_start")
+                end = _parse_time_str(cached["end_time"], f"period_{i}_end")
+                enabled = cached["enabled"]
+            periods.append({"start_time": start, "end_time": end, "enabled": enabled})
+
         await coordinator.update_ac_discharge_times(
-            int(call.data["discharge_power"]),
-            int(call.data["discharge_stop_soc"]),
-            periods,
+            discharge_power, discharge_stop_soc, periods
         )
 
     async def handle_read_ac_charge_times(call: ServiceCall) -> dict[str, Any]:

@@ -29,14 +29,14 @@
           "token": "API Token",
           "url": "Server region"
         },
-        "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
+        "description": "Token authentication is only supported for MIN/TLX/SPH devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
       },
       "user": {
-        "description": "Note: API Token authentication is currently only supported for MIN/TLX devices. For other device types, please use Username & Password authentication.",
+        "description": "Note: API Token authentication is currently only supported for MIN/TLX/SPH devices. For other device types, please use Username & Password authentication.",
         "menu_options": {
           "password_auth": "Username & Password",
-          "token_auth": "API Token (MIN/TLX only)"
+          "token_auth": "API Token (MIN/TLX/SPH only)"
         },
         "title": "Choose authentication method"
       }
