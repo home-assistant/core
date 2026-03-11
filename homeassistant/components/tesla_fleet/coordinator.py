@@ -50,12 +50,18 @@ def _invalidate_access_token(
     hass: HomeAssistant, config_entry: TeslaFleetConfigEntry
 ) -> None:
     """Invalidate the cached access token to force a refresh."""
+    if (
+        not (token_data := config_entry.data.get(CONF_TOKEN))
+        or token_data.get("expires_at") == 0
+    ):
+        return
+
     hass.config_entries.async_update_entry(
         config_entry,
         data={
             **config_entry.data,
             CONF_TOKEN: {
-                **config_entry.data[CONF_TOKEN],
+                **token_data,
                 "expires_at": 0,
             },
         },

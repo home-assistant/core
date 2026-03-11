@@ -27,9 +27,11 @@ from homeassistant.components.tesla_fleet.coordinator import (
     VEHICLE_INTERVAL,
     VEHICLE_INTERVAL_SECONDS,
     VEHICLE_WAIT,
+    _invalidate_access_token,
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
@@ -132,6 +134,56 @@ async def test_oauth_refresh_error(
 
         mock_async_ensure_token_valid.assert_called_once()
     assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_invalidate_access_token_updates_when_not_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalidating token updates entry when token is not expired."""
+
+    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
+        _invalidate_access_token(hass, normal_config_entry)
+
+    mock_update_entry.assert_called_once_with(
+        normal_config_entry,
+        data={
+            **normal_config_entry.data,
+            CONF_TOKEN: {
+                **normal_config_entry.data[CONF_TOKEN],
+                "expires_at": 0,
+            },
+        },
+    )
+
+
+async def test_invalidate_access_token_noop_when_already_expired(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalidating token does not update an already expired token."""
+
+    normal_config_entry.data[CONF_TOKEN]["expires_at"] = 0
+    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
+        _invalidate_access_token(hass, normal_config_entry)
+
+    mock_update_entry.assert_not_called()
+
+
+async def test_invalidate_access_token_noop_when_token_missing(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalidating token does not update when token data is missing."""
+
+    missing_token_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"auth_implementation": DOMAIN},
+    )
+
+    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
+        _invalidate_access_token(hass, missing_token_entry)
+
+    mock_update_entry.assert_not_called()
 
 
 # Test devices
