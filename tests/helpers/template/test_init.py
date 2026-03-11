@@ -1043,6 +1043,99 @@ async def test_state_translated(
     assert result == "unknown"
 
 
+async def test_state_attr_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test state_attr_translated method."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+    hass.states.async_set(
+        "switch.test",
+        "on",
+        attributes={"some_attr": "some_value"},
+    )
+
+    config_entry = MockConfigEntry(domain="climate")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate",
+        "test_platform",
+        "5678",
+        config_entry=config_entry,
+        translation_key="my_climate",
+    )
+    hass.states.async_set(
+        "climate.test_platform_5678",
+        "heat",
+        attributes={"fan_mode": "auto"},
+    )
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("switch.test", "some_attr") }}',
+    )
+    assert result == "some_value"
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.non_existent", "fan_mode") }}',
+    )
+    assert result is None
+
+    with pytest.raises(TemplateError):
+        render(hass, '{{ state_attr_translated("-invalid", "fan_mode") }}')
+
+    result = render(
+        hass,
+        '{{ state_attr_translated("climate.living_room", "non_existent") }}',
+    )
+    assert result is None
+
+    def mock_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        category: str,
+        _integrations: Iterable[str] | None = None,
+    ):
+        if category == "entity":
+            return {
+                "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
+            }
+        if category == "entity_component":
+            return {
+                "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+                "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
+            }
+        return {}
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        side_effect=mock_get_cached_translations,
+    ):
+        result = render(
+            hass,
+            '{{ state_attr_translated("climate.living_room", "fan_mode") }}',
+        )
+        assert result == "Automatic"
+
+        result = render(
+            hass,
+            '{{ state_attr_translated("climate.living_room", "hvac_action") }}',
+        )
+        assert result == "Heating"
+
+        result = render(
+            hass,
+            '{{ state_attr_translated("climate.test_platform_5678", "fan_mode") }}',
+        )
+        assert result == "Platform Automatic"
+
+
 def test_has_value(hass: HomeAssistant) -> None:
     """Test has_value method."""
     hass.states.async_set("test.value1", 1)
