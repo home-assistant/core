@@ -210,7 +210,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
-    matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
+    _matter_presets: list[clusters.Thermostat.Structs.PresetStruct]
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
@@ -221,6 +221,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Initialize the climate entity."""
         # Initialize preset handle mapping as instance attribute before calling super().__init__()
         # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
+        self._matter_presets = []
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         super().__init__(*args, **kwargs)
 
@@ -358,14 +359,15 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_preset_mode = None
             return
 
-        self.matter_presets = self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.Presets
+        self._matter_presets = (
+            self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
+            or []
         )
         # Build preset mapping and list
         self._preset_handle_by_name.clear()
         presets = []
-        if self.matter_presets:
-            for i, preset in enumerate(self.matter_presets, start=1):
+        if self._matter_presets:
+            for i, preset in enumerate(self._matter_presets, start=1):
                 # Map Matter PresetScenarioEnum to HA standard presets for translations
                 if preset.presetScenario in PRESET_SCENARIO_TO_HA_PRESET:
                     # Use the mapped preset name from the dictionary
