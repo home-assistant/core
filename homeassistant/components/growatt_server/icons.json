@@ -1,10 +1,22 @@
 {
   "services": {
+    "read_ac_charge_times": {
+      "service": "mdi:battery-clock-outline"
+    },
+    "read_ac_discharge_times": {
+      "service": "mdi:battery-clock-outline"
+    },
     "read_time_segments": {
       "service": "mdi:clock-outline"
     },
     "update_time_segment": {
       "service": "mdi:clock-edit"
+    },
+    "write_ac_charge_times": {
+      "service": "mdi:battery-clock"
+    },
+    "write_ac_discharge_times": {
+      "service": "mdi:battery-clock"
     }
   }
 }
