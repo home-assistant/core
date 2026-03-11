@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry, snapshot_platform
             WATER_TIMER_SERVICE_INFO,
             Battery.battery_level.uuid,
             [Battery.battery_level.encode(100), Battery.battery_level.encode(10)],
-            "sensor.timer_battery",
+            "sensor.mock_title_battery",
             id="standard_sensor",
         ),
         pytest.param(
@@ -45,7 +45,7 @@ from tests.common import MockConfigEntry, snapshot_platform
                 Valve.remaining_open_time.encode(10),
                 Valve.remaining_open_time.encode(0),
             ],
-            "sensor.timer_valve_closing",
+            "sensor.mock_title_valve_closing",
             id="valve_sensor",
         ),
     ],
@@ -134,11 +134,11 @@ async def test_connected_state(
     mock_read_char_raw[Sensor.battery_level.uuid] = Sensor.battery_level.encode(45)
 
     await setup_entry(hass, mock_entry, [Platform.SENSOR])
-    assert hass.states.get("sensor.timer_sensor_battery") == snapshot
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot
 
     mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
         True
     )
 
     await scan_step()
-    assert hass.states.get("sensor.timer_sensor_battery") == snapshot
+    assert hass.states.get("sensor.mock_title_sensor_battery") == snapshot

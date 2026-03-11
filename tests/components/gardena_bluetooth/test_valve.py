@@ -44,7 +44,7 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
 
-    entity_id = "valve.timer"
+    entity_id = "valve.mock_title"
     await setup_entry(hass, mock_entry, [Platform.VALVE])
     assert hass.states.get(entity_id) == snapshot
 
@@ -61,7 +61,7 @@ async def test_switching(
 ) -> None:
     """Test switching makes correct calls."""
 
-    entity_id = "valve.timer"
+    entity_id = "valve.mock_title"
     await setup_entry(hass, mock_entry, [Platform.VALVE])
     assert hass.states.get(entity_id)
 

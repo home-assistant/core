@@ -35,7 +35,7 @@ from tests.common import MockConfigEntry
                 Valve.manual_watering_time.encode(100),
                 Valve.manual_watering_time.encode(10),
             ],
-            "number.timer_manual_watering_time",
+            "number.mock_title_manual_watering_time",
         ),
         (
             Valve.remaining_open_time.uuid,
@@ -45,12 +45,12 @@ from tests.common import MockConfigEntry
                 CharacteristicNoAccess("Test for no access"),
                 GardenaBluetoothException("Test for errors on bluetooth"),
             ],
-            "number.timer_remaining_open_time",
+            "number.mock_title_remaining_open_time",
         ),
         (
             Valve.remaining_open_time.uuid,
             [Valve.remaining_open_time.encode(100)],
-            "number.timer_open_for",
+            "number.mock_title_open_for",
         ),
     ],
 )
@@ -83,13 +83,13 @@ async def test_setup(
             Valve.manual_watering_time,
             100,
             100,
-            "number.timer_manual_watering_time",
+            "number.mock_title_manual_watering_time",
         ),
         (
             Valve.remaining_open_time,
             100,
             100 * 60,
-            "number.timer_open_for",
+            "number.mock_title_open_for",
         ),
     ],
 )
@@ -138,16 +138,16 @@ async def test_bluetooth_error_unavailable(
     )
 
     await setup_entry(hass, mock_entry, [Platform.NUMBER])
-    assert hass.states.get("number.timer_remaining_open_time") == snapshot
-    assert hass.states.get("number.timer_manual_watering_time") == snapshot
+    assert hass.states.get("number.mock_title_remaining_open_time") == snapshot
+    assert hass.states.get("number.mock_title_manual_watering_time") == snapshot
 
     mock_read_char_raw[Valve.manual_watering_time.uuid] = GardenaBluetoothException(
         "Test for errors on bluetooth"
     )
 
     await scan_step()
-    assert hass.states.get("number.timer_remaining_open_time") == snapshot
-    assert hass.states.get("number.timer_manual_watering_time") == snapshot
+    assert hass.states.get("number.mock_title_remaining_open_time") == snapshot
+    assert hass.states.get("number.mock_title_manual_watering_time") == snapshot
 
 
 async def test_connected_state(
@@ -165,11 +165,11 @@ async def test_connected_state(
     mock_read_char_raw[Sensor.threshold.uuid] = Sensor.threshold.encode(45)
 
     await setup_entry(hass, mock_entry, [Platform.NUMBER])
-    assert hass.states.get("number.timer_sensor_threshold") == snapshot
+    assert hass.states.get("number.mock_title_sensor_threshold") == snapshot
 
     mock_read_char_raw[Sensor.connected_state.uuid] = Sensor.connected_state.encode(
         True
     )
 
     await scan_step()
-    assert hass.states.get("number.timer_sensor_threshold") == snapshot
+    assert hass.states.get("number.mock_title_sensor_threshold") == snapshot

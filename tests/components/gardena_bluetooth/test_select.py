@@ -35,7 +35,7 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
 
-    entity_id = "select.aqua_contour_watering"
+    entity_id = "select.mock_title_watering"
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
     )
@@ -54,7 +54,7 @@ async def test_select(
 ) -> None:
     """Test switching makes correct calls."""
 
-    entity_id = "select.aqua_contour_watering"
+    entity_id = "select.mock_title_watering"
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
     )

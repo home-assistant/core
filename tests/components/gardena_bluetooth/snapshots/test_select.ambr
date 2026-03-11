@@ -2,7 +2,7 @@
 # name: test_setup
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqua Contour Watering',
+      'friendly_name': 'Mock Title Watering',
       'options': list([
         'preview',
         'setup_mode',
@@ -15,7 +15,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aqua_contour_watering',
+    'entity_id': 'select.mock_title_watering',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -25,7 +25,7 @@
 # name: test_setup.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqua Contour Watering',
+      'friendly_name': 'Mock Title Watering',
       'options': list([
         'preview',
         'setup_mode',
@@ -38,7 +38,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.aqua_contour_watering',
+    'entity_id': 'select.mock_title_watering',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

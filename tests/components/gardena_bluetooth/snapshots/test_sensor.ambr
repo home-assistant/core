@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Timer Sensor battery',
+      'friendly_name': 'Mock Title Sensor battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_sensor_battery',
+    'entity_id': 'sensor.mock_title_sensor_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -19,19 +19,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Timer Sensor battery',
+      'friendly_name': 'Mock Title Sensor battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_sensor_battery',
+    'entity_id': 'sensor.mock_title_sensor_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_battery-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -46,7 +46,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -69,23 +69,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_battery-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Aqua Contour Battery',
+      'friendly_name': 'Mock Title Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_distance-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -98,7 +98,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_current_distance',
+    'entity_id': 'sensor.mock_title_current_distance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,21 +121,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_distance-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqua Contour Current distance',
+      'friendly_name': 'Mock Title Current distance',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_current_distance',
+    'entity_id': 'sensor.mock_title_current_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.333',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_flow-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_current_flow',
+    'entity_id': 'sensor.mock_title_current_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,27 +174,29 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_flow-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_flow_rate',
-      'friendly_name': 'Aqua Contour Current flow',
+      'friendly_name': 'Mock Title Current flow',
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_current_flow',
+    'entity_id': 'sensor.mock_title_current_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '222',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_sector-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_sector-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -202,7 +204,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_current_sector',
+    'entity_id': 'sensor.mock_title_current_sector',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -222,23 +224,25 @@
     'supported_features': 0,
     'translation_key': 'spray_current_sector',
     'unique_id': '00000000-0000-0000-0000-000000000003-98bd0114-0b0e-421a-84e5-ddbf75dc6de4:1',
-    'unit_of_measurement': None,
+    'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_current_sector-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_current_sector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqua Contour Current sector',
+      'friendly_name': 'Mock Title Current sector',
+      'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+      'unit_of_measurement': '°',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_current_sector',
+    'entity_id': 'sensor.mock_title_current_sector',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_error-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -262,7 +266,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_error',
+    'entity_id': 'sensor.mock_title_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -285,11 +289,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_error-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Aqua Contour Error',
+      'friendly_name': 'Mock Title Error',
       'options': list([
         'no_error',
         'no_water',
@@ -302,14 +306,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_error',
+    'entity_id': 'sensor.mock_title_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'flash_error',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_error_timestamp-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_error_timestamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -322,7 +326,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_error_timestamp',
+    'entity_id': 'sensor.mock_title_error_timestamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -345,21 +349,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_error_timestamp-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_error_timestamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Aqua Contour Error timestamp',
+      'friendly_name': 'Mock Title Error timestamp',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_error_timestamp',
+    'entity_id': 'sensor.mock_title_error_timestamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2000-01-01T08:00:00+00:00',
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_overall_flow-entry]
+# name: test_sensors[aqua_contour][sensor.mock_title_overall_flow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -372,7 +376,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.aqua_contour_overall_flow',
+    'entity_id': 'sensor.mock_title_overall_flow',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -398,22 +402,22 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors[aqua_contour][sensor.aqua_contour_overall_flow-state]
+# name: test_sensors[aqua_contour][sensor.mock_title_overall_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume',
-      'friendly_name': 'Aqua Contour Overall flow',
+      'friendly_name': 'Mock Title Overall flow',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aqua_contour_overall_flow',
+    'entity_id': 'sensor.mock_title_overall_flow',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '111',
   })
 # ---
-# name: test_sensors[timer][sensor.timer_battery-entry]
+# name: test_sensors[timer][sensor.mock_title_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -428,7 +432,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.timer_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -451,23 +455,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[timer][sensor.timer_battery-state]
+# name: test_sensors[timer][sensor.mock_title_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Timer Battery',
+      'friendly_name': 'Mock Title Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensors[timer][sensor.timer_valve_closing-entry]
+# name: test_sensors[timer][sensor.mock_title_valve_closing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -480,7 +484,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.timer_valve_closing',
+    'entity_id': 'sensor.mock_title_valve_closing',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -503,14 +507,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[timer][sensor.timer_valve_closing-state]
+# name: test_sensors[timer][sensor.mock_title_valve_closing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Timer Valve closing',
+      'friendly_name': 'Mock Title Valve closing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_valve_closing',
+    'entity_id': 'sensor.mock_title_valve_closing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -521,12 +525,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Timer Battery',
+      'friendly_name': 'Mock Title Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -537,12 +541,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Timer Battery',
+      'friendly_name': 'Mock Title Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_battery',
+    'entity_id': 'sensor.mock_title_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -553,10 +557,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Timer Valve closing',
+      'friendly_name': 'Mock Title Valve closing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_valve_closing',
+    'entity_id': 'sensor.mock_title_valve_closing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -567,10 +571,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Timer Valve closing',
+      'friendly_name': 'Mock Title Valve closing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_valve_closing',
+    'entity_id': 'sensor.mock_title_valve_closing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -581,10 +585,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Timer Valve closing',
+      'friendly_name': 'Mock Title Valve closing',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.timer_valve_closing',
+    'entity_id': 'sensor.mock_title_valve_closing',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

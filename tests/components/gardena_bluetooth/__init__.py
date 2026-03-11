@@ -85,7 +85,6 @@ def get_config_entry(service_info: BluetoothServiceInfo) -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_ADDRESS: service_info.address},
         unique_id=service_info.address,
-        title=service_info.name,
     )
 
 

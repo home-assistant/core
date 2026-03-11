@@ -32,7 +32,7 @@ async def test_setup(
 ) -> None:
     """Test setup creates expected entities."""
 
-    entity_id = "button.timer_factory_reset"
+    entity_id = "button.mock_title_factory_reset"
     await setup_entry(hass, mock_entry, [Platform.BUTTON])
     assert hass.states.get(entity_id) == snapshot
 
@@ -49,7 +49,7 @@ async def test_switching(
 ) -> None:
     """Test switching makes correct calls."""
 
-    entity_id = "button.timer_factory_reset"
+    entity_id = "button.mock_title_factory_reset"
     await setup_entry(hass, mock_entry, [Platform.BUTTON])
     assert hass.states.get(entity_id)
 

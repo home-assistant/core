@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
         (
             Valve.connected_state.uuid,
             [b"\x01", b"\x00"],
-            "binary_sensor.timer_valve_connection",
+            "binary_sensor.mock_title_valve_connection",
         ),
     ],
 )

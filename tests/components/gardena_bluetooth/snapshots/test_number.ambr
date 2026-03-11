@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -11,7 +11,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -22,7 +22,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Manual watering time',
+      'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -30,7 +30,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_manual_watering_time',
+    'entity_id': 'number.mock_title_manual_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -41,7 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -49,7 +49,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -60,7 +60,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Manual watering time',
+      'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -68,7 +68,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_manual_watering_time',
+    'entity_id': 'number.mock_title_manual_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -78,7 +78,7 @@
 # name: test_connected_state
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Timer Sensor threshold',
+      'friendly_name': 'Mock Title Sensor threshold',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -86,7 +86,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_sensor_threshold',
+    'entity_id': 'number.mock_title_sensor_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -96,7 +96,7 @@
 # name: test_connected_state.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Timer Sensor threshold',
+      'friendly_name': 'Mock Title Sensor threshold',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -104,18 +104,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_sensor_threshold',
+    'entity_id': 'number.mock_title_sensor_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.timer_remaining_open_time]
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -123,18 +123,18 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.timer_remaining_open_time].1
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -142,18 +142,18 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.timer_remaining_open_time].2
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -161,18 +161,18 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.timer_remaining_open_time].3
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw1-number.mock_title_remaining_open_time].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Remaining open time',
+      'friendly_name': 'Mock Title Remaining open time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -180,18 +180,18 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_remaining_open_time',
+    'entity_id': 'number.mock_title_remaining_open_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw2-number.timer_open_for]
+# name: test_setup[98bd0f13-0b0e-421a-84e5-ddbf75dc6de4-raw2-number.mock_title_open_for]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Open for',
+      'friendly_name': 'Mock Title Open for',
       'max': 1440,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -199,18 +199,18 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_open_for',
+    'entity_id': 'number.mock_title_open_for',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.timer_manual_watering_time]
+# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Manual watering time',
+      'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -218,18 +218,18 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_manual_watering_time',
+    'entity_id': 'number.mock_title_manual_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.timer_manual_watering_time].1
+# name: test_setup[98bd0f14-0b0e-421a-84e5-ddbf75dc6de4-raw0-number.mock_title_manual_watering_time].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Timer Manual watering time',
+      'friendly_name': 'Mock Title Manual watering time',
       'max': 86400,
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -237,7 +237,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.timer_manual_watering_time',
+    'entity_id': 'number.mock_title_manual_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
