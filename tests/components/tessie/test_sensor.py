@@ -4,7 +4,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.tessie.sensor import charge_state_to_option
+from homeassistant.components.tessie.helpers import charge_state_to_option
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
