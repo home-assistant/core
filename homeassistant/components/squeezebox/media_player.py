@@ -636,7 +636,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 self._player.async_index,
                 index,
                 self._get_options_lms_timeout(),
-                translation_key="next_track_failed",
+                translation_key="seek_failed",
+                translation_placeholders={"position": index},
             )
 
         await self.coordinator.async_refresh()
@@ -808,7 +809,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     self._player.async_sync,
                     other_player_id,
                     self._get_options_lms_timeout(),
-                    translation_key="unjoin_failed",
+                    translation_key="join_failed",
                 )
             else:
                 raise ServiceValidationError(

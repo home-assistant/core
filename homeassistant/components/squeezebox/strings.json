@@ -186,7 +186,7 @@
       "message": "Could not join unknown player {other_player_entity_id}."
     },
     "join_failed": {
-      "message": "Failed to unsync the player."
+      "message": "Failed to sync the player."
     },
     "load_playlist_failed": {
       "message": "Failed to load playlist with command {cmd}."
