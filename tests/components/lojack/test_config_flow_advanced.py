@@ -53,31 +53,6 @@ async def test_config_flow_validate_input_succeeds(
     assert result["result"].unique_id == "unique_user_id"
 
 
-async def test_config_flow_validate_input_no_user_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test config flow raises cannot_connect when user_id is None."""
-    client = _make_client(user_id=None)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.lojack.config_flow.LoJackClient.create",
-        return_value=client,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_setup_entry_client_close_error_on_setup_failure(
