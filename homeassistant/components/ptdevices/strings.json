@@ -24,11 +24,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "battery_status": {
-        "name": "Battery status"
-      }
-    },
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
