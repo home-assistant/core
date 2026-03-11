@@ -7,10 +7,11 @@ from openevsehttp.__main__ import OpenEVSE
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
@@ -19,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
+        session=async_get_clientsession(hass),
     )
 
     try:
@@ -29,7 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     coordinator = OpenEVSEDataUpdateCoordinator(hass, entry, charger)
     await coordinator.async_config_entry_first_refresh()
 
+    # Start websocket listener for push updates
+    coordinator.start_websocket()
+
     entry.runtime_data = coordinator
+
+    # Register websocket cleanup on unload
+    entry.async_on_unload(coordinator.async_stop_websocket)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

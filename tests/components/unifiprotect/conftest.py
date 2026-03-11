@@ -15,6 +15,7 @@ import pytest
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     NVR,
+    AiPort,
     Bootstrap,
     Camera,
     Chime,
@@ -282,6 +283,25 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     return doorbell
 
 
+@pytest.fixture(name="ptz_camera")
+def ptz_camera_fixture(camera: Camera):
+    """Mock UniFi Protect PTZ Camera device."""
+    ptz_cam = camera.model_copy()
+    ptz_cam.channels = [c.model_copy() for c in ptz_cam.channels]
+    ptz_cam.name = "PTZ Camera"
+    ptz_cam.feature_flags.is_ptz = True
+    ptz_cam.active_patrol_slot = None
+
+    # Disable pydantic validation on this instance so we can mock methods
+    object.__setattr__(ptz_cam, "get_ptz_presets", AsyncMock(return_value=[]))
+    object.__setattr__(ptz_cam, "get_ptz_patrols", AsyncMock(return_value=[]))
+    object.__setattr__(ptz_cam, "ptz_goto_preset_public", AsyncMock())
+    object.__setattr__(ptz_cam, "ptz_patrol_start_public", AsyncMock())
+    object.__setattr__(ptz_cam, "ptz_patrol_stop_public", AsyncMock())
+
+    return ptz_cam
+
+
 @pytest.fixture
 def unadopted_camera(camera: Camera):
     """Mock UniFi Protect Camera device (unadopted)."""
@@ -395,6 +415,19 @@ def chime():
     yield Chime.from_unifi_dict(**data)
 
     Chime.model_config["validate_assignment"] = True
+
+
+@pytest.fixture(name="aiport")
+def aiport_fixture():
+    """Mock UniFi Protect AI Port device."""
+
+    # disable pydantic validation so mocking can happen
+    AiPort.model_config["validate_assignment"] = False
+
+    data = load_json_object_fixture("sample_aiport.json", DOMAIN)
+    yield AiPort.from_unifi_dict(**data)
+
+    AiPort.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="fixed_now")

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
+from uiprotect.data import Camera, ModelType, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -47,8 +47,11 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if isinstance(device, Camera) and (
-            device.has_speaker or device.has_removable_speaker
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if (
+            device.model is ModelType.CAMERA
+            and isinstance(device, Camera)
+            and (device.has_speaker or device.has_removable_speaker)
         ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 

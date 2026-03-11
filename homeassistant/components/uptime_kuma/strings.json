@@ -8,6 +8,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_data": "Invalid data received, check the URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -61,6 +62,15 @@
   },
   "entity": {
     "sensor": {
+      "avg_response_time_1d": {
+        "name": "Response time Ø (1 day)"
+      },
+      "avg_response_time_30d": {
+        "name": "Response time Ø (30 days)"
+      },
+      "avg_response_time_365d": {
+        "name": "Response time Ø (365 days)"
+      },
       "cert_days_remaining": {
         "name": "Certificate expiry"
       },
@@ -82,12 +92,22 @@
           "up": "Up"
         }
       },
+      "tags": {
+        "name": "Tags",
+        "state_attributes": {
+          "tags": {
+            "name": "[%key:component::uptime_kuma::entity::sensor::tags::name%]"
+          }
+        },
+        "unit_of_measurement": "tags"
+      },
       "type": {
         "name": "Monitor type",
         "state": {
           "dns": "DNS",
           "docker": "Docker",
           "gamedig": "GameDig",
+          "globalping": "Globalping",
           "group": "Group",
           "grpc_keyword": "gRPC(s) - Keyword",
           "http": "HTTP(s)",
@@ -106,12 +126,24 @@
           "radius": "RADIUS",
           "real_browser": "HTTP(s) - Browser engine",
           "redis": "Redis",
+          "sip_options": "SIP OPTIONS Ping",
           "smtp": "SMTP",
           "snmp": "SNMP",
           "sqlserver": "Microsoft SQL Server",
           "steam": "Steam Game Server",
-          "tailscale_ping": "Tailscale Ping"
+          "system_service": "System service",
+          "tailscale_ping": "Tailscale Ping",
+          "websocket_upgrade": "WebSocket-Upgrade"
         }
+      },
+      "uptime_1d": {
+        "name": "Uptime (1 day)"
+      },
+      "uptime_30d": {
+        "name": "Uptime (30 days)"
+      },
+      "uptime_365d": {
+        "name": "Uptime (365 days)"
       },
       "url": {
         "name": "Monitored URL"
@@ -126,6 +158,9 @@
   "exceptions": {
     "auth_failed_exception": {
       "message": "Authentication with Uptime Kuma failed. Please check that your API key is correct and still valid"
+    },
+    "parsing_failed_exception": {
+      "message": "Invalid data received. Please verify that the Uptime Kuma URL is correct"
     },
     "request_failed_exception": {
       "message": "Connection to Uptime Kuma failed"

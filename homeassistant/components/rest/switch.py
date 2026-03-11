@@ -115,7 +115,7 @@ async def async_setup_platform(
             _LOGGER.error("Got non-ok response from resource: %s", req.status_code)
         else:
             async_add_entities([switch])
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         _LOGGER.error(
             "Missing resource or schema in configuration. "
             "Add http:// or https:// to your URL"
@@ -172,7 +172,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?", self._resource
                 )
-        except (TimeoutError, httpx.RequestError):
+        except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching on %s", self._resource)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -187,7 +187,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?", self._resource
                 )
-        except (TimeoutError, httpx.RequestError):
+        except TimeoutError, httpx.RequestError:
             _LOGGER.error("Error while switching off %s", self._resource)
 
     async def set_device_state(self, body: Any) -> httpx.Response:
@@ -212,7 +212,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         req = None
         try:
             req = await self.get_response(self.hass)
-        except (TimeoutError, httpx.TimeoutException):
+        except TimeoutError, httpx.TimeoutException:
             _LOGGER.exception("Timed out while fetching data")
         except httpx.RequestError:
             _LOGGER.exception("Error while fetching data")

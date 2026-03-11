@@ -554,7 +554,7 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         name=node.name or node.device_config.description or f"Node {node.node_id}",
         model=node.device_config.label,
         manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location if node.location else None,
+        suggested_area=node.location or None,
     )
 
 

@@ -48,3 +48,52 @@
     'state': '19:00:00',
   })
 # ---
+# name: test_time[time.home_assistant_test_bedtime_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': None,
+    'entity_id': 'time.home_assistant_test_bedtime_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bedtime end time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bedtime end time',
+    'platform': 'nintendo_parental_controls',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <NintendoParentalControlsTime.BEDTIME_END_TIME: 'bedtime_end_time'>,
+    'unique_id': 'testdevid_bedtime_end_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_time[time.home_assistant_test_bedtime_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home Assistant Test Bedtime end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.home_assistant_test_bedtime_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '07:00:00',
+  })
+# ---

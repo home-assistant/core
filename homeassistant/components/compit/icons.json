@@ -1,0 +1,284 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "airing": {
+        "default": "mdi:window-open-variant"
+      },
+      "co2_alert": {
+        "default": "mdi:alert"
+      },
+      "co2_level": {
+        "default": "mdi:molecule-co2"
+      },
+      "dust_alert": {
+        "default": "mdi:alert"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
+      },
+      "temperature_alert": {
+        "default": "mdi:alert"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "default": "mdi:fan",
+        "state": {
+          "off": "mdi:fan-off"
+        }
+      }
+    },
+    "number": {
+      "boiler_target_temperature": {
+        "default": "mdi:water-boiler"
+      },
+      "boiler_target_temperature_const": {
+        "default": "mdi:water-boiler"
+      },
+      "heating_target_temperature_const": {
+        "default": "mdi:radiator"
+      },
+      "mixer_target_temperature": {
+        "default": "mdi:valve"
+      },
+      "mixer_target_temperature_zone": {
+        "default": "mdi:valve"
+      },
+      "target_temperature_comfort": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_const": {
+        "default": "mdi:thermometer-lines"
+      },
+      "target_temperature_eco": {
+        "default": "mdi:leaf"
+      },
+      "target_temperature_eco_cooling": {
+        "default": "mdi:snowflake-thermometer"
+      },
+      "target_temperature_eco_winter": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_holiday": {
+        "default": "mdi:beach"
+      },
+      "target_temperature_out_of_home": {
+        "default": "mdi:thermometer-off"
+      }
+    },
+    "select": {
+      "aero_by_pass": {
+        "default": "mdi:valve",
+        "state": {
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
+        }
+      },
+      "buffer_mode": {
+        "default": "mdi:database",
+        "state": {
+          "disabled": "mdi:water-boiler-off",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "dhw_circulation": {
+        "default": "mdi:pump",
+        "state": {
+          "disabled": "mdi:pump-off",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "heating_source_of_correction": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "no_corrections": "mdi:cancel",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "language": {
+        "default": "mdi:translate"
+      },
+      "mixer_mode": {
+        "default": "mdi:valve",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "mixer_mode_zone": {
+        "default": "mdi:valve",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "nano_work_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "christmas": "mdi:pine-tree",
+          "manual_0": "mdi:home-floor-0",
+          "manual_1": "mdi:home-floor-1",
+          "manual_2": "mdi:home-floor-2",
+          "manual_3": "mdi:home-floor-3",
+          "out_of_home": "mdi:home-export-outline",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "operating_mode": {
+        "default": "mdi:cog",
+        "state": {
+          "disabled": "mdi:cog-off",
+          "eco": "mdi:leaf"
+        }
+      },
+      "solarcomp_operating_mode": {
+        "default": "mdi:heating-coil",
+        "state": {
+          "de_icing": "mdi:snowflake-melt",
+          "disabled": "mdi:cancel",
+          "holiday": "mdi:beach"
+        }
+      },
+      "work_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "cooling": "mdi:snowflake-thermometer",
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
+        }
+      }
+    },
+    "sensor": {
+      "alarm_code": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "no_alarm": "mdi:check-circle"
+        }
+      },
+      "battery_level": {
+        "default": "mdi:battery"
+      },
+      "boiler_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "calculated_heating_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "calculated_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "charging_power": {
+        "default": "mdi:flash"
+      },
+      "circuit_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "co2_percent": {
+        "default": "mdi:molecule-co2"
+      },
+      "collector_power": {
+        "default": "mdi:solar-power"
+      },
+      "collector_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "dhw_measured_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "energy_consumption": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_smart_grid_yesterday": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_today": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_total": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_yesterday": {
+        "default": "mdi:lightning-bolt"
+      },
+      "fuel_level": {
+        "default": "mdi:gauge"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "mixer_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "outdoor_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "pk1_function": {
+        "default": "mdi:cog",
+        "state": {
+          "cooling": "mdi:snowflake-thermometer",
+          "off": "mdi:cog-off",
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
+        }
+      },
+      "pm10_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "exceeded": "mdi:alert",
+          "no_sensor": "mdi:cancel",
+          "normal": "mdi:air-filter",
+          "warning": "mdi:alert-circle-outline"
+        }
+      },
+      "pm25_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "exceeded": "mdi:alert",
+          "no_sensor": "mdi:cancel",
+          "normal": "mdi:air-filter",
+          "warning": "mdi:alert-circle-outline"
+        }
+      },
+      "return_circuit_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature_t2": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature_t3": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature_t4": {
+        "default": "mdi:thermometer"
+      },
+      "target_heating_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ventilation_alarm": {
+        "default": "mdi:alert",
+        "state": {
+          "no_alarm": "mdi:check-circle"
+        }
+      }
+    }
+  }
+}
