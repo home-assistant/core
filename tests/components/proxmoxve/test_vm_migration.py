@@ -96,7 +96,6 @@ async def test_vm_migration_updates_entity(
 
     coordinator = mock_config_entry.runtime_data
     coordinator.async_set_updated_data(new_data)
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.vm_web_status")
     assert state is not None
@@ -186,7 +185,6 @@ async def test_container_migration_updates_entity(
 
     coordinator = mock_config_entry.runtime_data
     coordinator.async_set_updated_data(new_data)
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ct_nginx_status")
     assert state is not None
