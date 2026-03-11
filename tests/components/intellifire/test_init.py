@@ -390,3 +390,6 @@ async def test_fireplace_built_with_polling_disabled(
         mock_build.assert_called_once()
         call_kwargs = mock_build.call_args.kwargs
         assert call_kwargs.get("polling_enabled") is False
+        # Coordinator drives exactly one poll; if the library were also auto-polling
+        # this would be > 1, catching the double-poll regression.
+        mock_fp.perform_poll.assert_called_once()
