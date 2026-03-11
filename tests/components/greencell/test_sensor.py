@@ -33,8 +33,6 @@ from .conftest import (
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
-ENTITY_ID_STATUS = f"sensor.greencell_device_{TEST_SERIAL_NUMBER.lower()}_status"
-
 
 async def test_sensor_states_and_snapshots(
     hass: HomeAssistant,

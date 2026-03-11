@@ -159,10 +159,10 @@ class HabuSensor(SensorEntity, ABC):
     ) -> None:
         """Initialize the sensor entity.
 
-        :param sensor_name: Name of the sensor displayed in Home Assistant
-        :param unit: Unit of measurement (e.g. "A" or "V")
-        :param sensor_type: Sensor type (e.g. "current", "voltage" or another for single sensors)
+        :param sensor_type: Sensor type identifier (e.g. "current", "voltage", or another for single sensors)
         :param serial_number: Serial number of the device
+        :param access: GreencellAccess instance used to communicate with the device
+        :param description: Entity description defining sensor metadata and behavior
         """
         self._sensor_type = sensor_type
         self._serial_number = serial_number
@@ -228,12 +228,12 @@ class Habu3PhaseSensor(HabuSensor):
     ) -> None:
         """Initialize the 3-phase sensor.
 
-        :param sensor_data: Object storing 3-phase data
-        :param phase: Phase identifier ('l1', 'l2', 'l3')
-        :param sensor_name: Name of the sensor displayed in Home Assistant
-        :param unit: Unit of measurement
-        :param sensor_type: Sensor type (e.g. "current" or "voltage")
-        :param serial_number: Device serial number
+        :param sensor_data: Object storing 3-phase data.
+        :param phase: Phase identifier ('l1', 'l2', 'l3').
+        :param sensor_type: Sensor type (e.g. "current" or "voltage").
+        :param serial_number: Device serial number.
+        :param access: Greencell access client used for MQTT communication.
+        :param description: Entity description defining metadata and value conversion.
         """
         super().__init__(sensor_type, serial_number, access, description)
         self._sensor_data = sensor_data
@@ -278,14 +278,15 @@ class HabuSingleSensor(HabuSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self._value is None:
+        raw_value = self._value.data
+        if raw_value is None:
             return (
                 0.0
                 if self.entity_description.native_unit_of_measurement
                 == UnitOfPower.WATT
                 else None
             )
-        return self.entity_description.value_fn(self._value.data)
+        return self.entity_description.value_fn(raw_value)
 
     @property
     def unique_id(self) -> str:
