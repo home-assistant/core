@@ -48,11 +48,11 @@ async def async_setup_entry(
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
+
+    interface_uid = resolve_uid(hass, coordinator_info.data)
     entities.extend(
         [
-            LunatoneLight(
-                coordinator_devices, device_id, resolve_uid(hass, coordinator_info.data)
-            )
+            LunatoneLight(coordinator_devices, device_id, interface_uid)
             for device_id in coordinator_devices.data
         ]
     )
