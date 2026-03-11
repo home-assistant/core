@@ -240,9 +240,9 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         ):
             self._original_option_keys = normalized_allowed_values
             self._attr_fan_modes = [
-                FAN_MODES_OPTIONS_INVERTED[option]
-                for option in normalized_allowed_values
-                if option in FAN_MODES_OPTIONS_INVERTED
+                fan_mode
+                for fan_mode, api_value in FAN_MODES_OPTIONS.items()
+                if api_value in normalized_allowed_values
             ]
         match (
             self._attr_supported_features & ClimateEntityFeature.FAN_MODE,

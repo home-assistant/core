@@ -80,7 +80,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         return self.appliance.info.connected and self._attr_available
 
     async def async_set_option_with_key(
-        self, option_key: OptionKey, value: str | float | bool
+        self, option_key: OptionKey, value: Any
     ) -> None:
         """Set an option for the entity."""
         try:
@@ -118,7 +118,7 @@ class HomeConnectOptionEntity(HomeConnectEntity):
             return event.value
         return None
 
-    async def async_set_option(self, value: str | float | bool) -> None:
+    async def async_set_option(self, value: Any) -> None:
         """Set an option for the entity."""
         await super().async_set_option_with_key(self.bsh_key, value)
 
