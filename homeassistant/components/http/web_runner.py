@@ -113,5 +113,7 @@ class HomeAssistantUnixSite(web.BaseSite):
             backlog=self._backlog,
             start_serving=False,
         )
+        # Serve after we've correctly set up the socket file with the minimal
+        # permissions.
         self._path.chmod(0o600)
         await self._server.start_serving()
