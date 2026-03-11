@@ -13,7 +13,8 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.pajgps.coordinator import PajGpsData
 
-from .test_common import make_device, make_coordinator
+from .test_common import make_coordinator, make_device
+
 # ---------------------------------------------------------------------------
 # get_device_info — device model resolution
 # ---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ class TestGetDeviceInfoModel:
 
     def _make_coord_with_device(self, device):
         coord = make_coordinator()
-        coord.data = PajGpsData(devices=[device])
+        coord.data = PajGpsData(devices={device.id: device}, positions={})
         return coord
 
     def test_model_read_from_device_models_first_entry(self):

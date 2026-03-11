@@ -38,9 +38,7 @@ class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
     @property
     def available(self) -> bool:
         """Return False when the device has been removed from the account."""
-        return super().available and any(
-            d.id == self._device_id for d in self.coordinator.data.devices
-        )
+        return super().available and self._device_id in self.coordinator.data.devices
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -78,9 +76,7 @@ async def async_setup_entry(
     @callback
     def _async_add_new_devices() -> None:
         """Add entities for any device IDs not yet tracked."""
-        current_ids = {
-            device.id for device in coordinator.data.devices if device.id is not None
-        }
+        current_ids = set(coordinator.data.devices.keys())
         new_ids = current_ids - known_device_ids
         if new_ids:
             sorted_new_ids = sorted(new_ids)

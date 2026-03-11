@@ -34,8 +34,8 @@ type PajGpsConfigEntry = ConfigEntry[PajGpsCoordinator]
 class PajGpsData:
     """Snapshot of all PAJ GPS data for one coordinator tick."""
 
-    devices: list[Device] = dataclasses.field(default_factory=list)
-    positions: dict[int, TrackPoint] = dataclasses.field(default_factory=dict)
+    devices: dict[int, Device]
+    positions: dict[int, TrackPoint]
 
 
 class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
@@ -66,7 +66,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         )
 
         # Snapshot starts empty; entities must handle None gracefully until first refresh
-        self.data = PajGpsData()
+        self.data = PajGpsData(devices={}, positions={})
 
     @property
     def email(self) -> str:
@@ -84,12 +84,13 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
     async def _async_update_data(self) -> PajGpsData:
         """Fetch device list and positions every UPDATE_INTERVAL seconds."""
+        devices: dict[int, Device] = {}
         try:
             devices = await self.api.get_devices()
         except PajGpsApiError as exc:
             raise UpdateFailed(f"Failed to fetch device list: {exc}") from exc
 
-        device_ids = [d.id for d in devices if d.id is not None]
+        device_ids = list(devices.keys())
         positions: dict[int, TrackPoint] = {}
         if device_ids:
             try:
@@ -104,17 +105,17 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
 
     def get_device_info(self, device_id: int) -> DeviceInfo | None:
         """Return the HA DeviceInfo dict for the given device_id."""
-        for device in self.data.devices:
-            if device.id == device_id:
-                model = "Unknown"
-                device_models = getattr(device, "device_models", None)
-                if device_models and isinstance(device_models[0], dict):
-                    model = device_models[0].get("model") or "Unknown"
+        device = self.data.devices.get(device_id)
+        if device and device.id == device_id:
+            model = "Unknown"
+            device_models = getattr(device, "device_models", None)
+            if device_models and isinstance(device_models[0], dict):
+                model = device_models[0].get("model") or "Unknown"
 
-                return DeviceInfo(
-                    identifiers={(DOMAIN, f"{self._email}_{device_id}")},
-                    name=device.name or f"PAJ GPS {device_id}",
-                    manufacturer="PAJ GPS",
-                    model=model,
-                )
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"{self._email}_{device_id}")},
+                name=device.name or f"PAJ GPS {device_id}",
+                manufacturer="PAJ GPS",
+                model=model,
+            )
         return None

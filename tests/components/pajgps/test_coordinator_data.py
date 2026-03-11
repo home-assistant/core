@@ -15,18 +15,18 @@ class TestPajGpsData(unittest.TestCase):
 
     def test_default_snapshot_is_empty(self):
         """Test that a default PajGpsData instance has empty devices and positions."""
-        data = PajGpsData()
-        assert data.devices == []
+        data = PajGpsData(devices={}, positions={})
+        assert data.devices == {}
         assert data.positions == {}
 
     def test_replace_preserves_other_fields(self):
         """Test that replacing one field preserves the other fields unchanged."""
         device = make_device(1)
-        data = PajGpsData(devices=[device])
+        data = PajGpsData(devices={1: device}, positions={})
         tp = make_trackpoint(1)
         new_data = dataclasses.replace(data, positions={1: tp})
 
-        assert new_data.devices == [device]
+        assert new_data.devices == {1: device}
         assert new_data.positions == {1: tp}
         # Original is untouched (frozen)
         assert data.positions == {}
@@ -34,7 +34,7 @@ class TestPajGpsData(unittest.TestCase):
     def test_snapshot_is_immutable_via_replace(self):
         """Mutating via dataclasses.replace() creates a new object; original is unchanged."""
         device = make_device(1)
-        original = PajGpsData(devices=[device])
+        original = PajGpsData(devices={1: device}, positions={})
         updated = dataclasses.replace(original, positions={1: make_trackpoint(1)})
         # replace() returns a distinct object
         assert original is not updated

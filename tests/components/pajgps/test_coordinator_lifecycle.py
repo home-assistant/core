@@ -21,7 +21,7 @@ class TestCoordinatorInit:
         """Test that the initial data snapshot is an empty PajGpsData."""
         coord = make_coordinator()
         assert isinstance(coord.data, PajGpsData)
-        assert coord.data.devices == []
+        assert coord.data.devices == {}
         assert coord.data.positions == {}
 
 
@@ -34,24 +34,24 @@ class TestAsyncUpdateData:
         coord = make_coordinator()
         device = make_device(1)
         tp = make_trackpoint(1)
-        coord.api.get_devices = AsyncMock(return_value=[device])
+        coord.api.get_devices = AsyncMock(return_value={1: device})
         coord.api.get_all_last_positions = AsyncMock(return_value=[tp])
 
         result = await coord._async_update_data()
 
         assert isinstance(result, PajGpsData)
-        assert result.devices == [device]
+        assert result.devices == {1: device}
         assert result.positions == {1: tp}
 
     @pytest.mark.asyncio
     async def test_returns_empty_positions_when_no_devices(self):
         """Test that positions are empty when there are no devices."""
         coord = make_coordinator()
-        coord.api.get_devices = AsyncMock(return_value=[])
+        coord.api.get_devices = AsyncMock(return_value={})
 
         result = await coord._async_update_data()
 
-        assert result.devices == []
+        assert result.devices == {}
         assert result.positions == {}
 
     @pytest.mark.asyncio
@@ -68,14 +68,14 @@ class TestAsyncUpdateData:
         """Test that a positions fetch error logs a warning and returns empty positions."""
         coord = make_coordinator()
         device = make_device(1)
-        coord.api.get_devices = AsyncMock(return_value=[device])
+        coord.api.get_devices = AsyncMock(return_value={1: device})
         coord.api.get_all_last_positions = AsyncMock(
             side_effect=PajGpsApiError("timeout")
         )
 
         result = await coord._async_update_data()
 
-        assert result.devices == [device]
+        assert result.devices == {1: device}
         assert result.positions == {}
 
 
@@ -107,7 +107,7 @@ class TestGetDeviceInfo:
     def test_returns_dict_for_known_device(self):
         """Test that get_device_info returns a populated dict for a known device."""
         coord = make_coordinator()
-        coord.data = PajGpsData(devices=[make_device(1)])
+        coord.data = PajGpsData(devices={1: make_device(1)}, positions={})
         info = coord.get_device_info(1)
 
         assert info is not None
@@ -119,14 +119,14 @@ class TestGetDeviceInfo:
     def test_returns_none_for_unknown_device(self):
         """Test that get_device_info returns None for an unknown device ID."""
         coord = make_coordinator()
-        coord.data = PajGpsData(devices=[])
+        coord.data = PajGpsData(devices={}, positions={})
 
         assert coord.get_device_info(999) is None
 
     def test_identifiers_contain_email_and_device_id(self):
         """Test that identifiers include both the email and device ID."""
         coord = make_coordinator(email="owner@example.com")
-        coord.data = PajGpsData(devices=[make_device(42)])
+        coord.data = PajGpsData(devices={42: make_device(42)}, positions={})
 
         info = coord.get_device_info(42)
         identifiers = info["identifiers"]
