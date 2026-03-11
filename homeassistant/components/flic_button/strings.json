@@ -13,7 +13,7 @@
       "unknown": "An unexpected error occurred during pairing."
     },
     "progress": {
-      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds.\u2026"
+      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds\u2026"
     },
     "step": {
       "bluetooth_confirm": {
