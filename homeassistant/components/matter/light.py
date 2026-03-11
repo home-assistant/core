@@ -47,7 +47,7 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
-# Maximum ireds value per the Matter spec is 65279
+# Maximum Mireds value per the Matter spec is 65279
 # Conversion between Kelvin and Mireds is 1,000,000 / Kelvin, so this corresponds to a minimum color temperature of ~15.3K
 # Which is shown in UI as 15 Kelvin due to rounding.
 # But converting 15 Kelvin back to Mireds gives 66666 which is above the maximum,
