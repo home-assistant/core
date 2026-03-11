@@ -5,9 +5,8 @@ from __future__ import annotations
 from types import MappingProxyType
 
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 
 from .const import (
     CONF_AZIMUTH,
@@ -78,17 +77,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    if not any(
-        subentry.subentry_type == SUBENTRY_TYPE_PLANE
-        for subentry in entry.subentries.values()
-    ):
-        raise ConfigEntryError("No plane configured, cannot set up Forecast.Solar")
-
-    if len(entry.subentries) > 1 and not entry.options.get(CONF_API_KEY):
-        raise ConfigEntryError(
-            "An API key is required when more than one plane is configured"
-        )
-
     coordinator = ForecastSolarDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
