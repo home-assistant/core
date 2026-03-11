@@ -7,7 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
-from wiim.consts import AudioOutputHwMode, InputMode, PlayingStatus as SDKPlayingStatus
+from wiim.consts import AudioOutputHwMode, PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.models import WiimGroupRole, WiimRepeatMode
 from wiim.wiim_device import WiimDevice
@@ -284,15 +284,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
 
         if metadata_device.play_mode is not None:
-            try:
-                self._attr_source = metadata_device.play_mode
-            except ValueError:
-                LOGGER.warning(
-                    "Device %s: Unknown play_mode value from SDK: %s",
-                    self.unique_id,
-                    metadata_device.play_mode,
-                )
-                self._attr_source = InputMode.WIFI.display_name  # type: ignore[attr-defined]
+            self._attr_source = metadata_device.play_mode
 
         loop_state = metadata_device.loop_state
         self._attr_repeat = SDK_TO_HA_REPEAT[loop_state.repeat]
