@@ -2,15 +2,21 @@
 
 from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
-from aiohomeconnect.model import HomeAppliance, ProgramKey, SettingKey
+from aiohomeconnect.model import (
+    HomeAppliance,
+    Option,
+    OptionKey,
+    Program,
+    ProgramKey,
+    SettingKey,
+)
+from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.home_connect.const import DOMAIN
-from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -196,6 +202,154 @@ async def test_set_program_and_options_exceptions(
         await hass.services.async_call(**service_call)
 
 
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "additional_service_data",
+    [
+        {},
+        {
+            "b_s_h_common_option_start_in_relative": 1200,
+            "b_s_h_common_option_finish_in_relative": 1200,
+        },
+        {
+            "b_s_h_common_option_start_in_relative": 1200,
+        },
+        {
+            "b_s_h_common_option_finish_in_relative": 1200,
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "options_already_set",
+    [
+        None,
+        [
+            Option(
+                key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                value=True,
+            )
+        ],
+    ],
+)
+@pytest.mark.parametrize("obtain_from_active_program", [True, False])
+async def test_start_selected_program(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    additional_service_data: dict[str, Any],
+    options_already_set: list[Option] | None,
+    obtain_from_active_program: bool,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test starting the selected program with optional parameter overrides."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=options_already_set,
+        ),
+        side_effect=NoProgramActiveError("error.key")
+        if not obtain_from_active_program
+        else None,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=options_already_set,
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={
+            "device_id": device_entry.id,
+            **additional_service_data,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    client.get_active_program.assert_awaited_once_with(appliance.ha_id)
+    if not obtain_from_active_program:
+        client.get_selected_program.assert_awaited_once_with(appliance.ha_id)
+    assert client.start_program.call_count == 1
+    assert client.start_program.call_args == snapshot
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    ("mock_attr", "error_regex", "obtain_from_active_program"),
+    [
+        (
+            "get_active_program",
+            r"Error.*obtaining.*program.*",
+            True,
+        ),
+        (
+            "get_selected_program",
+            r"Error.*obtaining.*program.*",
+            False,
+        ),
+        ("start_program", r"Error.*starting.*program.*", True),
+    ],
+)
+async def test_start_selected_program_and_options_exceptions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    mock_attr: str,
+    error_regex: str,
+    obtain_from_active_program: bool,
+) -> None:
+    """Test error handling when starting the selected program."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        ),
+        side_effect=NoProgramActiveError("error.key")
+        if not obtain_from_active_program
+        else None,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        )
+    )
+    getattr(client, mock_attr).side_effect = HomeConnectError("error.key")
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    with pytest.raises(HomeAssistantError, match=error_regex):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+            },
+            blocking=True,
+        )
+
+
 async def test_services_appliance_not_found(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -268,34 +422,3 @@ async def test_services_exception(
         match=SERVICE_VALIDATION_ERROR_MAPPING[service_name],
     ):
         await hass.services.async_call(**service_call)
-
-
-async def test_not_possible_to_use_favorite_program(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-) -> None:
-    """Raise a MultipleInvalid when trying to use a favorite program."""
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "HA_ID")},
-    )
-
-    with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            "set_program_and_options",
-            {
-                "device_id": device_entry.id,
-                "affects_to": "selected_program",
-                "program": bsh_key_to_translation_key(
-                    ProgramKey.BSH_COMMON_FAVORITE_001.value
-                ),
-            },
-            blocking=True,
-        )
