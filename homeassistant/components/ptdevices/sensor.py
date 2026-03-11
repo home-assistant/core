@@ -42,10 +42,8 @@ class PTDevicesSensors(StrEnum):
     LEVEL_DEPTH = "inch_level"
     PROBE_TEMPERATURE = "probe_temperature"
     DEVICE_STATUS = "status"
-    DEVICE_LAST_REPORT = "reported"
     DEVICE_WIFI_STRENGTH = "wifi_signal"
     DEVICE_BATTERY_VOLTAGE = "battery_voltage"
-    TX_LAST_REPORT = "tx_reported"
     TX_SIGNAL_STRENGTH = "tx_signal"
 
 
