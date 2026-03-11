@@ -301,6 +301,7 @@ async def async_setup_entry(
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
         api = growattServer.OpenApiV1(token=token)
+        api.server_url = url
         devices, plant_id = await hass.async_add_executor_job(
             get_device_list_v1, api, config
         )
