@@ -22,6 +22,37 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: PajGpsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up PAJ GPS tracker entities from a config entry."""
+    coordinator: PajGpsCoordinator = config_entry.runtime_data
+
+    known_device_ids: set[int] = set()
+
+    @callback
+    def _async_add_new_devices() -> None:
+        """Add entities for any device IDs not yet tracked."""
+        current_ids = set(coordinator.data.devices.keys())
+        new_ids = current_ids - known_device_ids
+        if new_ids:
+            sorted_new_ids = sorted(new_ids)
+            async_add_entities(
+                PajGPSDeviceTracker(coordinator, device_id)
+                for device_id in sorted_new_ids
+            )
+            known_device_ids.update(sorted_new_ids)
+
+    _async_add_new_devices()
+
+    if not known_device_ids:
+        _LOGGER.warning("No PAJ GPS devices found to add as trackers")
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
+
+
 class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
     """Tracker entity that reads position from the coordinator snapshot."""
 
@@ -61,34 +92,3 @@ class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
     def source_type(self) -> SourceType:
         """Return the source type of the tracker."""
         return SourceType.GPS
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: PajGpsConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up PAJ GPS tracker entities from a config entry."""
-    coordinator: PajGpsCoordinator = config_entry.runtime_data
-
-    known_device_ids: set[int] = set()
-
-    @callback
-    def _async_add_new_devices() -> None:
-        """Add entities for any device IDs not yet tracked."""
-        current_ids = set(coordinator.data.devices.keys())
-        new_ids = current_ids - known_device_ids
-        if new_ids:
-            sorted_new_ids = sorted(new_ids)
-            async_add_entities(
-                PajGPSDeviceTracker(coordinator, device_id)
-                for device_id in sorted_new_ids
-            )
-            known_device_ids.update(sorted_new_ids)
-
-    _async_add_new_devices()
-
-    if not known_device_ids:
-        _LOGGER.warning("No PAJ GPS devices found to add as trackers")
-
-    config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
