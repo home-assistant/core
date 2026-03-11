@@ -56,30 +56,12 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            self.data = user_input
-            if not errors:
-                # Normalize email for duplicate protection and storage
-                normalized_email = self.data["email"].strip().lower()
-                self.data[CONF_EMAIL] = normalized_email
-                self._async_abort_entries_match({CONF_EMAIL: normalized_email})
-                error_key = await _validate_credentials(
-                    self.data[CONF_EMAIL], self.data[CONF_PASSWORD], self.hass
-                )
-                if error_key:
-                    errors["base"] = error_key
-            if not errors:
-                return self.async_create_entry(title=normalized_email, data=self.data)
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.add_suggested_values_to_schema(
-                    CONFIG_SCHEMA, user_input
-                ),
-                errors=errors,
-            )
-
-        return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
-        )
+        self.data = user_input
+        # Normalize email for duplicate protection and storage
+        normalized_email = self.data[CONF_EMAIL].strip().lower()
+        self.data[CONF_EMAIL] = normalized_email
+        self._async_abort_entries_match({CONF_EMAIL: normalized_email})
+        return self.async_create_entry(title=normalized_email, data=self.data)

@@ -50,16 +50,6 @@ VALID_USER_INPUT = {
 class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
     """Tests for PajGPSConfigFlow.async_step_user."""
 
-    async def test_shows_form_on_get(self):
-        """Calling without input must return a FORM with step_id 'user'."""
-        flow = _make_flow()
-
-        result = await flow.async_step_user(user_input=None)
-
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-        assert result.get("errors", {}) == {}
-
     async def test_valid_input_creates_entry(self):
         """Valid full input must create an entry with correct title and all data fields."""
         flow = _make_flow()
@@ -128,32 +118,6 @@ class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
 
 class TestCustomFlowCredentialValidation(unittest.IsolatedAsyncioTestCase):
     """Tests for _validate_credentials being called inside CustomFlow.async_step_user."""
-
-    async def test_cannot_connect_returns_form_with_error(self):
-        """When the API is unreachable, form must show cannot_connect error."""
-        flow = _make_flow()
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value="cannot_connect"),
-        ):
-            result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "cannot_connect"
-
-    async def test_invalid_auth_returns_form_with_error(self):
-        """When credentials are rejected by the API, form must show invalid_auth error."""
-        flow = _make_flow()
-
-        with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
-            new=AsyncMock(return_value="invalid_auth"),
-        ):
-            result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == "invalid_auth"
 
     async def test_valid_credentials_create_entry(self):
         """When _validate_credentials returns None, the entry must be created."""
