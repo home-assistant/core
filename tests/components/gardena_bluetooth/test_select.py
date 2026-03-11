@@ -7,6 +7,7 @@ from gardena_bluetooth.const import (
     AquaContour,
     AquaContourPosition,
     AquaContourWatering,
+    AquaContourWateringMode,
 )
 from habluetooth import BluetoothServiceInfo
 import pytest
@@ -77,16 +78,25 @@ async def test_state_change(
     """Test setup creates expected entities."""
     entity_id = "select.mock_title_watering"
 
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x00"
+    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = (
+        AquaContourWatering.watering_active.encode(AquaContourWateringMode.REST)
+    )
 
     await setup_entry(
         hass, platforms=[Platform.SELECT], service_info=AQUA_CONTOUR_SERVICE_INFO
     )
-    assert hass.states.get(entity_id) == snapshot
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "rest"
 
-    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = b"\x01"
+    mock_read_char_raw[AquaContourWatering.watering_active.uuid] = (
+        AquaContourWatering.watering_active.encode(AquaContourWateringMode.CONTOUR_1)
+    )
     await scan_step()
-    assert hass.states.get(entity_id) == snapshot
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "contour_1"
 
 
 async def test_select(
