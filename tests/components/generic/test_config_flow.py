@@ -9,7 +9,7 @@ import errno
 from http import HTTPStatus
 import os.path
 from pathlib import Path
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import httpx
 import pytest
@@ -73,7 +73,7 @@ async def test_form(
     fakeimgbytes_png: bytes,
     hass_client: ClientSessionGenerator,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     mock_setup_entry: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -172,7 +172,7 @@ async def test_form_only_stillimage(
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_reject_preview(
     hass: HomeAssistant,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     user_flow: ConfigFlowResult,
 ) -> None:
     """Test we go back to the config screen if the user rejects the preview."""
@@ -194,7 +194,7 @@ async def test_form_reject_preview(
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_form_still_preview_cam_off(
     hass: HomeAssistant,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     user_flow: ConfigFlowResult,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
@@ -379,7 +379,7 @@ async def test_form_still_template(
 async def test_form_rtsp_mode(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we complete ok if the user enters a stream url."""
@@ -414,7 +414,7 @@ async def test_form_only_stream(
     hass: HomeAssistant,
     fakeimgbytes_jpg: bytes,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we complete ok if the user wants stream only."""
     data = TESTDATA_ONLYSTREAM.copy()
@@ -505,7 +505,7 @@ async def test_form_image_http_exceptions(
     expected_message,
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we handle image http exceptions."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [side_effect]
@@ -522,7 +522,7 @@ async def test_form_image_http_exceptions(
 async def test_form_image_http_302(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     fakeimgbytes_png: bytes,
 ) -> None:
     """Test we handle image http 302 (temporary redirect)."""
@@ -547,7 +547,7 @@ async def test_form_image_http_302(
 async def test_form_stream_invalidimage(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
@@ -564,7 +564,7 @@ async def test_form_stream_invalidimage(
 async def test_form_stream_invalidimage2(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=None)
@@ -581,7 +581,7 @@ async def test_form_stream_invalidimage2(
 async def test_form_stream_invalidimage3(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
@@ -599,7 +599,7 @@ async def test_form_stream_invalidimage3(
 async def test_form_stream_timeout(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test we handle invalid auth."""
     mock_create_stream.return_value.start = AsyncMock()
@@ -728,7 +728,7 @@ async def test_form_oserror(hass: HomeAssistant, user_flow: ConfigFlowResult) ->
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_options_template_error(
     hass: HomeAssistant,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the options flow with a template error."""
@@ -815,7 +815,7 @@ async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> No
 async def test_options_only_stream(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
 ) -> None:
     """Test the options flow without a still_image_url."""
 
@@ -942,7 +942,7 @@ async def test_migrate_existing_ids(
 @pytest.mark.usefixtures("fakeimg_png")
 async def test_options_use_wallclock_as_timestamps(
     hass: HomeAssistant,
-    mock_create_stream: AsyncMock,
+    mock_create_stream: MagicMock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     fakeimgbytes_png: bytes,
