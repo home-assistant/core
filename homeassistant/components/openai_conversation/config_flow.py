@@ -132,7 +132,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         base_url=url,
         http_client=get_async_client(hass),
     )
-    await client.models.list(timeout=10.0)
+    models = client.models.list(timeout=10.0)
+    async for _ in models:
+        break  # We just want to check if we can retrieve the models, we don't care about the actual models
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
