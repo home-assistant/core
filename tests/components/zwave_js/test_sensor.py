@@ -10,6 +10,7 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
+    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -56,7 +57,6 @@ from .common import (
     CURRENT_SENSOR,
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
-    METER_ENERGY_SENSOR,
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
@@ -508,8 +508,19 @@ async def test_node_status_sensor_not_ready(
     assert "There is no value to refresh for this entity" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.smart_switch_6_electric_consumed_kwh",
+        "sensor.smart_switch_6_electric_consumed_a",
+    ],
+)
 async def test_reset_meter(
-    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+    hass: HomeAssistant,
+    client,
+    aeon_smart_switch_6,
+    integration,
+    entity_id: str,
 ) -> None:
     """Test reset_meter service."""
     client.async_send_command.return_value = {}
@@ -520,7 +531,7 @@ async def test_reset_meter(
         DOMAIN,
         SERVICE_RESET_METER,
         {
-            ATTR_ENTITY_ID: METER_ENERGY_SENSOR,
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
@@ -539,7 +550,7 @@ async def test_reset_meter(
         DOMAIN,
         SERVICE_RESET_METER,
         {
-            ATTR_ENTITY_ID: METER_ENERGY_SENSOR,
+            ATTR_ENTITY_ID: entity_id,
             ATTR_METER_TYPE: 1,
             ATTR_VALUE: 2,
         },
@@ -563,7 +574,7 @@ async def test_reset_meter(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESET_METER,
-            {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
@@ -573,20 +584,57 @@ async def test_reset_meter(
     )
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "device_class", "state_class", "unit_of_measurement"),
+    [
+        (
+            "sensor.smart_switch_6_electric_consumed_kwh",
+            SensorDeviceClass.ENERGY,
+            SensorStateClass.TOTAL_INCREASING,
+            UnitOfEnergy.KILO_WATT_HOUR,
+        ),
+        (
+            "sensor.smart_switch_6_electric_consumed_a",
+            SensorDeviceClass.CURRENT,
+            SensorStateClass.MEASUREMENT,
+            UnitOfElectricCurrent.AMPERE,
+        ),
+    ],
+)
 async def test_meter_attributes(
-    hass: HomeAssistant, client, aeon_smart_switch_6, integration
+    hass: HomeAssistant,
+    client,
+    aeon_smart_switch_6,
+    integration,
+    entity_id: str,
+    device_class: SensorDeviceClass,
+    state_class: SensorStateClass,
+    unit_of_measurement: str,
 ) -> None:
     """Test meter entity attributes."""
-    state = hass.states.get(METER_ENERGY_SENSOR)
+    state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_METER_TYPE] == MeterType.ELECTRIC.value
     assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_DEVICE_CLASS] == device_class
+    assert state.attributes[ATTR_STATE_CLASS] is state_class
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit_of_measurement
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "property_key_name"),
+    [
+        ("sensor.smart_switch_6_electric_consumed_kwh", "Electric_kWh_Consumed"),
+        ("sensor.smart_switch_6_electric_consumed_a", "Electric_A_Consumed"),
+    ],
+)
 async def test_invalid_meter_scale(
-    hass: HomeAssistant, client, aeon_smart_switch_6_state, integration
+    hass: HomeAssistant,
+    client,
+    aeon_smart_switch_6_state,
+    integration,
+    entity_id: str,
+    property_key_name: str,
 ) -> None:
     """Test a meter sensor with an invalid scale."""
     node_state = copy.deepcopy(aeon_smart_switch_6_state)
@@ -595,7 +643,7 @@ async def test_invalid_meter_scale(
         for value in node_state["values"]
         if value["commandClass"] == 50
         and value["property"] == "value"
-        and value["propertyKey"] == 65537
+        and value["propertyKeyName"] == property_key_name
     )
     value["metadata"]["ccSpecific"]["scale"] = -1
     value["metadata"]["unit"] = None
@@ -612,7 +660,7 @@ async def test_invalid_meter_scale(
     client.driver.controller.receive_event(event)
     await hass.async_block_till_done()
 
-    state = hass.states.get(METER_ENERGY_SENSOR)
+    state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_METER_TYPE] == MeterType.ELECTRIC.value
     assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
@@ -775,6 +823,155 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.state == "100.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+
+
+async def test_enum_sensor_options_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ring_keypad: Node,
+    integration,
+) -> None:
+    """Test enum sensor options update on metadata changes."""
+    initial_metadata_event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Charging status",
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Discharging",
+                        "1": "Charging",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+                "propertyName": "chargingStatus",
+                "nodeId": ring_keypad.node_id,
+            },
+        },
+    )
+    ring_keypad.receive_event(initial_metadata_event)
+
+    initial_value_event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "propertyName": "chargingStatus",
+                "newValue": 1,
+                "prevValue": 2,
+            },
+        },
+    )
+    ring_keypad.receive_event(initial_value_event)
+
+    entity_id = "sensor.keypad_v2_chargingstatus"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Charging"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == ["Discharging", "Charging"]
+
+    # Add the Maintaining state and ensure it is propagated
+    metadata_event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Charging status",
+                    "min": 0,
+                    "max": 255,
+                    "states": {
+                        "0": "Discharging",
+                        "1": "Charging",
+                        "2": "Maintaining",
+                    },
+                    "stateful": True,
+                    "secret": False,
+                },
+                "propertyName": "chargingStatus",
+                "nodeId": ring_keypad.node_id,
+            },
+        },
+    )
+    ring_keypad.receive_event(metadata_event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Discharging",
+        "Charging",
+        "Maintaining",
+    ]
+
+    value_event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": ring_keypad.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "chargingStatus",
+                "propertyName": "chargingStatus",
+                "newValue": 2,
+                "prevValue": 1,
+            },
+        },
+    )
+    ring_keypad.receive_event(value_event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Maintaining"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Discharging",
+        "Charging",
+        "Maintaining",
+    ]
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"
