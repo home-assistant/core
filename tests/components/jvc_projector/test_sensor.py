@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from jvcprojector import command as cmd
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -46,3 +48,19 @@ async def test_enable_hdr_sensor(
     # Verify entity is enabled
     state = hass.states.get(HDR_ENTITY_ID)
     assert state is not None
+
+
+async def test_unsupported_sensor_not_added(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unsupported sensor descriptions are skipped."""
+    mock_device.supports.side_effect = lambda command: command is not cmd.ColorDepth
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get("sensor.jvc_projector_color_depth") is None

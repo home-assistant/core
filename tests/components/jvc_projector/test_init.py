@@ -117,7 +117,7 @@ async def test_deprecated_sensor_issue_lifecycle(
     entity_id = sensor_entry.entity_id
 
     with patch(
-        "homeassistant.components.jvc_projector._get_automations_and_scripts_using_entity",
+        "homeassistant.components.jvc_projector.util.get_automations_and_scripts_using_entity",
         return_value=["- [Test Automation](/config/automation/edit/test_automation)"],
     ):
         await hass.config_entries.async_reload(mock_integration.entry_id)

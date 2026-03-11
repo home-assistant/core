@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from jvcprojector import command as cmd
 
 from homeassistant.components.jvc_projector.coordinator import INTERVAL_FAST
@@ -14,7 +15,6 @@ from homeassistant.components.select import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -51,6 +51,7 @@ async def test_enable_hdr_processing_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test enabling the HDR processing select (disabled by default)."""
     entry = entity_registry.async_get(HDR_PROCESSING_ENTITY_ID)
@@ -66,16 +67,20 @@ async def test_enable_hdr_processing_select(
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
+    state = hass.states.get(HDR_PROCESSING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "unknown"
 
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
-    )
+    freezer.tick(timedelta(seconds=INTERVAL_FAST.seconds + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
+    state = hass.states.get(HDR_PROCESSING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "static"
 
-    async_fire_time_changed(
-        hass, utcnow() + timedelta(seconds=INTERVAL_FAST.seconds + 1)
-    )
+    freezer.tick(timedelta(seconds=INTERVAL_FAST.seconds + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(HDR_PROCESSING_ENTITY_ID) is not None
+    state = hass.states.get(HDR_PROCESSING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "static"
