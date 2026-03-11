@@ -6,9 +6,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
-    CoverClosedTriggerBase,
     CoverDeviceClass,
-    CoverOpenedTriggerBase,
+    make_cover_closed_trigger,
+    make_cover_opened_trigger,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger
@@ -19,21 +19,15 @@ DEVICE_CLASSES_GARAGE_DOOR: dict[str, str] = {
 }
 
 
-class GarageDoorOpenedTrigger(CoverOpenedTriggerBase):
-    """Trigger for garage door opened state changes."""
-
-    _device_classes = DEVICE_CLASSES_GARAGE_DOOR
-
-
-class GarageDoorClosedTrigger(CoverClosedTriggerBase):
-    """Trigger for garage door closed state changes."""
-
-    _device_classes = DEVICE_CLASSES_GARAGE_DOOR
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "opened": GarageDoorOpenedTrigger,
-    "closed": GarageDoorClosedTrigger,
+    "opened": make_cover_opened_trigger(
+        device_classes=DEVICE_CLASSES_GARAGE_DOOR,
+        domains={BINARY_SENSOR_DOMAIN, COVER_DOMAIN},
+    ),
+    "closed": make_cover_closed_trigger(
+        device_classes=DEVICE_CLASSES_GARAGE_DOOR,
+        domains={BINARY_SENSOR_DOMAIN, COVER_DOMAIN},
+    ),
 }
 
 
