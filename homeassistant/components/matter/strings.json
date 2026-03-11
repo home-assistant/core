@@ -238,14 +238,14 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "power_on_level": {
+        "name": "Power-on level"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
       "speaker_setpoint": {
         "name": "Volume"
-      },
-      "startup_current_level": {
-        "name": "Start-up current level"
       },
       "temperature_offset": {
         "name": "Temperature offset"

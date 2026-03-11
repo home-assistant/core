@@ -190,9 +190,9 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="startup_current_level",
+            key="power_on_level",
             entity_category=EntityCategory.CONFIG,
-            translation_key="startup_current_level",
+            translation_key="power_on_level",
             native_max_value=255,
             native_min_value=0,
             mode=NumberMode.BOX,
