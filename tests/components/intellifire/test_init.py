@@ -371,8 +371,8 @@ async def test_fireplace_built_with_polling_disabled(
 ) -> None:
     """Test that the fireplace is built with polling_enabled=False.
 
-    This is the other half of the double-polling fix: we tell the library
-    not to auto-poll, so Home Assistant can control polling via perform_poll().
+    The library auto-polls by default; ensure it is constructed with polling
+    disabled so the coordinator controls all polling via perform_poll().
     """
     _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
 
