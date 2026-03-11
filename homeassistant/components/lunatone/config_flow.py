@@ -53,7 +53,9 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 if info_api.data is None:
                     errors["base"] = "missing_device_info"
                 else:
-                    await self.async_set_unique_id(resolve_uid(info_api.data))
+                    await self.async_set_unique_id(
+                        resolve_uid(self.hass, info_api.data)
+                    )
                     if self.source == SOURCE_RECONFIGURE:
                         self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(

@@ -44,14 +44,14 @@ async def async_setup_entry(
 
     entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
-            coordinator_info, coordinator_devices, dali_line_broadcast
+            hass, coordinator_info, coordinator_devices, dali_line_broadcast
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
     entities.extend(
         [
             LunatoneLight(
-                coordinator_devices, device_id, resolve_uid(coordinator_info.data)
+                coordinator_devices, device_id, resolve_uid(hass, coordinator_info.data)
             )
             for device_id in coordinator_devices.data
         ]
@@ -177,6 +177,7 @@ class LunatoneLineBroadcastLight(
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator_info: LunatoneInfoDataUpdateCoordinator,
         coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
         broadcast: DALIBroadcast,
@@ -187,7 +188,7 @@ class LunatoneLineBroadcastLight(
         self._broadcast = broadcast
 
         line = broadcast.line
-        interface_uid = resolve_uid(coordinator_info.data)
+        interface_uid = resolve_uid(hass, coordinator_info.data)
 
         self._attr_unique_id = f"{interface_uid}-line{line}"
 
