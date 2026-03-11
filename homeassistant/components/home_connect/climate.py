@@ -106,9 +106,6 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
             context_override=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         )
-        self._attr_supported_features |= (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        )
         self.update_fan_mode()
         self.set_hvac_modes_and_preset()
 
@@ -124,6 +121,8 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 in (Execution.SELECT_AND_START, Execution.START_ONLY)
             )
         ]
+        if SettingKey.BSH_COMMON_POWER_STATE in self.appliance.settings:
+            self._attr_hvac_modes.append(HVACMode.OFF)
 
         self._attr_preset_modes = (
             [
@@ -138,6 +137,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
             else []
         )
+        if SettingKey.BSH_COMMON_POWER_STATE in self.appliance.settings:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+        else:
+            self._attr_supported_features &= ~(
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
         if self._attr_preset_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         else:
@@ -178,8 +185,13 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         """Set the HVAC Mode and preset mode values."""
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
         program_key = cast(ProgramKey, event.value) if event else None
+        power_state = self.appliance.settings.get(SettingKey.BSH_COMMON_POWER_STATE)
         self._attr_hvac_mode = (
-            PROGRAMS_HVAC_MODES_MAP.get(program_key) if program_key else None
+            HVACMode.OFF
+            if power_state is not None and power_state.value != BSH_POWER_ON
+            else PROGRAMS_HVAC_MODES_MAP.get(program_key)
+            if program_key
+            else None
         )
         self._attr_preset_mode = (
             PROGRAMS_PRESET_MODES_MAP.get(program_key)
@@ -253,11 +265,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Switch the device off.
-
-        We don't set `hvac_mode` to `HVACMode.OFF` because the device can still change
-        the hvac_mode although the appliance is in standby mode.
-        """
+        """Switch the device off."""
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -293,7 +301,10 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self._set_program(HVAC_MODES_PROGRAMS_MAP[hvac_mode])
+        if hvac_mode == HVACMode.OFF:
+            await self.async_turn_off()
+        else:
+            await self._set_program(HVAC_MODES_PROGRAMS_MAP[hvac_mode])
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

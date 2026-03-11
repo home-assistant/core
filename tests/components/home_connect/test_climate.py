@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfPrograms,
+    ArrayOfSettings,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    GetSetting,
     HomeAppliance,
     OptionKey,
     ProgramDefinition,
@@ -425,7 +427,10 @@ async def test_hvac_modes_programs_mapping_and_functionality(
     entity = entity_registry.async_get("climate.air_conditioner")
     assert entity
     assert entity.capabilities
-    assert entity.capabilities[ATTR_HVAC_MODES] == expected_hvac_modes
+    assert entity.capabilities[ATTR_HVAC_MODES] == [*expected_hvac_modes, HVACMode.OFF]
+    assert entity.supported_features & (
+        ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+    )
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -461,6 +466,103 @@ async def test_set_hvac_mode_raises_home_assistant_error_on_api_errors(
             {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+async def test_hvac_mode_off_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test setting the HVAC mode to off."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+
+    client.set_setting.assert_called_once_with(
+        appliance.ha_id,
+        setting_key=SettingKey.BSH_COMMON_POWER_STATE,
+        value=BSH_POWER_STANDBY,
+    )
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+async def test_hvac_mode_off_exception(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test Home Connect exception while setting the HVAC mode to off."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.set_setting.side_effect = HomeConnectError("Test error")
+
+    with pytest.raises(HomeAssistantError, match=r"Error.*turn.*off.*"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.air_conditioner", ATTR_HVAC_MODE: HVACMode.OFF},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+async def test_state_when_appliance_is_in_standby(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test that when the appliance is in standby, the climate entity state is off."""
+    client.get_settings = AsyncMock(
+        return_value=ArrayOfSettings(
+            [
+                GetSetting(
+                    SettingKey.BSH_COMMON_POWER_STATE,
+                    SettingKey.BSH_COMMON_POWER_STATE.value,
+                    BSH_POWER_STANDBY,
+                )
+            ]
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state("climate.air_conditioner", HVACMode.OFF)
+
+
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
+async def test_not_supported_functionality_if_not_power_setting(
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test the off HVAC mode, and turn on/off is not supported when the setting is not present."""
+    client.get_settings = AsyncMock(return_value=ArrayOfSettings([]))
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity = entity_registry.async_get("climate.air_conditioner")
+    assert entity
+    assert entity.capabilities
+    assert entity.capabilities[ATTR_HVAC_MODES]
+    assert HVACMode.OFF not in entity.capabilities[ATTR_HVAC_MODES]
+    assert not entity.supported_features & (
+        ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+    )
 
 
 @pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
