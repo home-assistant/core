@@ -1,7 +1,7 @@
 """Provide oauth implementations for the Tesla Fleet integration."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar
+from typing import Any
 
 from tesla_fleet_api.exceptions import OAuthExpired
 
@@ -13,9 +13,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
-from .const import AUTHORIZE_URL, SCOPES, TOKEN_URL
-
-_T = TypeVar("_T")
+from .const import AUTHORIZE_URL, LOGGER, SCOPES, TOKEN_URL
 
 
 class TeslaUserImplementation(AuthImplementation):
@@ -52,7 +50,7 @@ class TeslaFleetOAuth2Session(OAuth2Session):
             )
 
 
-async def async_retry_on_oauth_expired(
+async def async_retry_on_oauth_expired[_T](
     api_call: Callable[[], Awaitable[_T]],
     oauth_session: TeslaFleetOAuth2Session,
 ) -> _T:
@@ -60,5 +58,6 @@ async def async_retry_on_oauth_expired(
     try:
         return await api_call()
     except OAuthExpired:
+        LOGGER.debug("OAuth token expired, forcing refresh and retrying")
         await oauth_session.force_refresh_token()
         return await api_call()
