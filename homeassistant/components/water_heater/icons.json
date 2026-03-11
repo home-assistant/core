@@ -37,5 +37,19 @@
     "turn_on": {
       "service": "mdi:water-boiler"
     }
+  },
+  "triggers": {
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "turned_off": {
+      "trigger": "mdi:water-boiler-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:water-boiler"
+    }
   }
 }
