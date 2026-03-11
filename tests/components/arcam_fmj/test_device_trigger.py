@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from .conftest import MOCK_ENTITY_ID
+
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
@@ -55,11 +57,11 @@ async def test_if_fires_on_turn_on_request(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    player_setup,
+    player_setup: None,
     state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get(player_setup)
+    entry = entity_registry.async_get(MOCK_ENTITY_ID)
 
     state_1.get_power.return_value = None
 
@@ -91,13 +93,13 @@ async def test_if_fires_on_turn_on_request(
     await hass.services.async_call(
         "media_player",
         "turn_on",
-        {"entity_id": player_setup},
+        {"entity_id": MOCK_ENTITY_ID},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
-    assert service_calls[1].data["some"] == player_setup
+    assert service_calls[1].data["some"] == MOCK_ENTITY_ID
     assert service_calls[1].data["id"] == 0
 
 
@@ -105,11 +107,11 @@ async def test_if_fires_on_turn_on_request_legacy(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    player_setup,
+    player_setup: None,
     state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    entry = entity_registry.async_get(player_setup)
+    entry = entity_registry.async_get(MOCK_ENTITY_ID)
 
     state_1.get_power.return_value = None
 
@@ -141,11 +143,11 @@ async def test_if_fires_on_turn_on_request_legacy(
     await hass.services.async_call(
         "media_player",
         "turn_on",
-        {"entity_id": player_setup},
+        {"entity_id": MOCK_ENTITY_ID},
         blocking=True,
     )
 
     await hass.async_block_till_done()
     assert len(service_calls) == 2
-    assert service_calls[1].data["some"] == player_setup
+    assert service_calls[1].data["some"] == MOCK_ENTITY_ID
     assert service_calls[1].data["id"] == 0

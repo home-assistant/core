@@ -48,7 +48,7 @@ def player_fixture(
     mock_config_entry: MockConfigEntry,
     client: Mock,
     state_1: State,
-    player_setup: str,
+    player_setup: None,
 ) -> ArcamFmj:
     """Get standard player.
 
@@ -139,12 +139,12 @@ async def test_name(player: ArcamFmj) -> None:
     assert data.attributes["friendly_name"] == "Arcam FMJ (127.0.0.1) Zone 1"
 
 
-async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) -> None:
+async def test_update(hass: HomeAssistant, player_setup: None, state_1: State) -> None:
     """Test update."""
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: player_setup},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.update.assert_called_with()
@@ -152,7 +152,7 @@ async def test_update(hass: HomeAssistant, player_setup: str, state_1: State) ->
 
 async def test_update_lost(
     hass: HomeAssistant,
-    player_setup: str,
+    player_setup: None,
     state_1: State,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -162,7 +162,7 @@ async def test_update_lost(
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: player_setup},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID},
         blocking=True,
     )
     state_1.update.assert_called_with()
@@ -174,7 +174,7 @@ async def test_update_lost(
 )
 async def test_select_source(
     hass: HomeAssistant,
-    player_setup,
+    player_setup: None,
     state_1: State,
     source: str,
     value: SourceCodes | None,
@@ -183,7 +183,7 @@ async def test_select_source(
     await hass.services.async_call(
         "media_player",
         SERVICE_SELECT_SOURCE,
-        service_data={ATTR_ENTITY_ID: player_setup, ATTR_INPUT_SOURCE: source},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_INPUT_SOURCE: source},
         blocking=True,
     )
 
@@ -285,14 +285,14 @@ async def test_volume_level(player: ArcamFmj, state_1: State) -> None:
 
 @pytest.mark.parametrize(("volume", "call"), [(0.0, 0), (0.5, 50), (1.0, 99)])
 async def test_set_volume_level(
-    hass: HomeAssistant, player_setup: str, state_1: State, volume, call
+    hass: HomeAssistant, player_setup: None, state_1: State, volume, call
 ) -> None:
     """Test setting volume."""
 
     await hass.services.async_call(
         "media_player",
         SERVICE_VOLUME_SET,
-        service_data={ATTR_ENTITY_ID: player_setup, ATTR_MEDIA_VOLUME_LEVEL: volume},
+        service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: volume},
         blocking=True,
     )
 
@@ -300,7 +300,7 @@ async def test_set_volume_level(
 
 
 async def test_set_volume_level_lost(
-    hass: HomeAssistant, player_setup: str, state_1: State
+    hass: HomeAssistant, player_setup: None, state_1: State
 ) -> None:
     """Test setting volume, with a lost connection."""
 
@@ -310,7 +310,7 @@ async def test_set_volume_level_lost(
         await hass.services.async_call(
             "media_player",
             SERVICE_VOLUME_SET,
-            service_data={ATTR_ENTITY_ID: player_setup, ATTR_MEDIA_VOLUME_LEVEL: 0.0},
+            service_data={ATTR_ENTITY_ID: MOCK_ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.0},
             blocking=True,
         )
 

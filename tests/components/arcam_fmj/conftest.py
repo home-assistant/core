@@ -90,7 +90,7 @@ async def player_setup_fixture(
     state_1: State,
     state_2: State,
     client: Mock,
-) -> AsyncGenerator[str]:
+) -> AsyncGenerator[None]:
     """Get standard player."""
 
     def state_mock(cli, zone):
@@ -127,4 +127,4 @@ async def player_setup_fixture(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        yield MOCK_ENTITY_ID
+        yield
