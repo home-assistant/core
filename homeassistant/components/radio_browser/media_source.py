@@ -387,7 +387,6 @@ class RadioMediaSource(MediaSource):
         if not query:
             return []
 
-
         stations = await radios.stations(
             filter_by=FilterBy.NAME,
             filter_term=query,
