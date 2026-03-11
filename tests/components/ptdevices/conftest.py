@@ -81,7 +81,6 @@ def mock_ptdevices_config_entry(
         title="Home",
         data={
             CONF_API_TOKEN: "test-api-token",
-            # CONF_DEVICE_ID: "test-device-id",
         },
         unique_id="test-device-id",
         source=SOURCE_USER,
