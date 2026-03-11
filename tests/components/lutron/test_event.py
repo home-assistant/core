@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from pylutron import Button
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform

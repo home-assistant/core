@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from pylutron import OccupancyGroup
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
