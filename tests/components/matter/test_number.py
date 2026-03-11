@@ -43,7 +43,7 @@ async def test_level_control_config_entities(
     assert state
     assert state.state == "255"
 
-    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    state = hass.states.get("number.mock_dimmable_light_power_on_level")
     assert state
     assert state.state == "255"
 
@@ -69,14 +69,14 @@ async def test_level_control_config_entities(
     set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 128)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    state = hass.states.get("number.mock_dimmable_light_power_on_level")
     assert state
     assert state.state == "128"
 
     set_node_attribute(matter_node, 1, 0x00000008, 0x4000, 255)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("number.mock_dimmable_light_level_on_mains_power_connect")
+    state = hass.states.get("number.mock_dimmable_light_power_on_level")
     assert state
     assert state.state == "255"
     # Set a concrete value (not null)
@@ -84,7 +84,7 @@ async def test_level_control_config_entities(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_dimmable_light_level_on_mains_power_connect",
+            "entity_id": "number.mock_dimmable_light_power_on_level",
             "value": 128,
         },
         blocking=True,
@@ -107,7 +107,7 @@ async def test_level_control_config_entities(
         "number",
         "set_value",
         {
-            "entity_id": "number.mock_dimmable_light_level_on_mains_power_connect",
+            "entity_id": "number.mock_dimmable_light_power_on_level",
             "value": 255,
         },
         blocking=True,
