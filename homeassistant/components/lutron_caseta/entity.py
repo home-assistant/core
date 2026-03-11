@@ -100,8 +100,6 @@ class LutronCasetaEntity(Entity):
         }
         if zone := self._device.get("zone"):
             attributes["zone_id"] = zone
-        if battery_status := self._device.get("battery_status"):
-            attributes["battery_status"] = battery_status
         return attributes
 
 

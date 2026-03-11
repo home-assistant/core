@@ -100,6 +100,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 

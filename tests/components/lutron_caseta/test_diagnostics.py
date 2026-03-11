@@ -97,7 +97,6 @@ async def test_diagnostics(
                     "area": "822",
                 },
                 "802": {
-                    "battery_status": "Good",
                     "device_id": "802",
                     "current_state": 100,
                     "fan_speed": None,
