@@ -1,5 +1,7 @@
 """An abstract class for entities."""
 
+from __future__ import annotations
+
 from abc import ABCMeta
 import asyncio
 from collections import deque
