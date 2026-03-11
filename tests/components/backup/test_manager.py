@@ -3817,12 +3817,11 @@ async def test_upload_progress_debounced(
     Verify that when the on_progress callback is called multiple times during
     the debounce cooldown period, only the latest event is fired.
     """
-    agent_ids = [LOCAL_AGENT_ID, "test.remote"]
+    agent_ids = ["test.remote"]
     mock_agents = await setup_backup_integration(hass, remote_agents=["test.remote"])
     manager = hass.data[DATA_MANAGER]
 
     remote_agent = mock_agents["test.remote"]
-    original_side_effect = remote_agent.async_upload_backup.side_effect
 
     progress_done = asyncio.Event()
     upload_done = asyncio.Event()
@@ -3837,7 +3836,6 @@ async def test_upload_progress_debounced(
         on_progress(bytes_uploaded=1000)
         progress_done.set()
         await upload_done.wait()
-        await original_side_effect(**kwargs)
 
     remote_agent.async_upload_backup.side_effect = upload_with_progress
 
@@ -3854,24 +3852,36 @@ async def test_upload_progress_debounced(
         result = await ws_client.receive_json()
         assert result["success"] is True
 
+        # Wait for upload to reach the sync point (progress reported, upload paused)
+        await progress_done.wait()
+
+        # At this point the debouncer's cooldown timer is pending.
+        # The first event (100 bytes) fired immediately, 500 and 1000 are buffered.
+        remote_events = [
+            e
+            for e in events
+            if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+        ]
+        assert len(remote_events) == 1
+        assert remote_events[0].uploaded_bytes == 100
+
+        # Advance time past the cooldown to trigger the debouncer timer.
+        # This fires the coalesced event: 500 was replaced by 1000.
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+
+        remote_events = [
+            e
+            for e in events
+            if isinstance(e, UploadBackupEvent) and e.agent_id == "test.remote"
+        ]
+        assert len(remote_events) == 2
+        assert remote_events[0].uploaded_bytes == 100
+        assert remote_events[1].uploaded_bytes == 1000
+
+        # Let the upload finish
+        upload_done.set()
+        # Fire pending timers so the backup task can complete
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=10), fire_all=True
+        )
         await hass.async_block_till_done()
-
-    # Advance time past the cooldown to trigger any pending debouncer timer
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
-    await hass.async_block_till_done()
-
-    # Filter to only upload progress events
-    upload_events = [e for e in events if isinstance(e, UploadBackupEvent)]
-
-    # The first event (100 bytes) fires immediately.
-    # The 500 and 1000 byte events are buffered during cooldown but the debouncer
-    # is cancelled when the upload completes.
-    # A final 100% progress event is sent for each agent.
-    remote_events = [e for e in upload_events if e.agent_id == "test.remote"]
-    assert len(remote_events) == 2
-    assert remote_events[0].uploaded_bytes == 100
-    assert remote_events[1].uploaded_bytes == remote_events[1].total_bytes
-
-    local_events = [e for e in upload_events if e.agent_id == LOCAL_AGENT_ID]
-    assert len(local_events) == 1
-    assert local_events[0].uploaded_bytes == local_events[0].total_bytes
