@@ -172,22 +172,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         periods = []
         for i in range(1, 4):
             cached = current["periods"][i - 1]
-            has_start = f"period_{i}_start" in call.data
-            has_end = f"period_{i}_end" in call.data
-            if has_start != has_end:
-                raise ServiceValidationError(
-                    f"period_{i}_start and period_{i}_end must both be provided or both omitted"
-                )
-            if has_start:
-                start = _parse_time_str(
-                    call.data[f"period_{i}_start"], f"period_{i}_start"
-                )
-                end = _parse_time_str(call.data[f"period_{i}_end"], f"period_{i}_end")
-                enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
-            else:
-                start = _parse_time_str(cached["start_time"], f"period_{i}_start")
-                end = _parse_time_str(cached["end_time"], f"period_{i}_end")
-                enabled = cached["enabled"]
+            start = _parse_time_str(
+                call.data.get(f"period_{i}_start", cached["start_time"]),
+                f"period_{i}_start",
+            )
+            end = _parse_time_str(
+                call.data.get(f"period_{i}_end", cached["end_time"]),
+                f"period_{i}_end",
+            )
+            enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})
 
         await coordinator.update_ac_charge_times(
@@ -217,22 +210,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         periods = []
         for i in range(1, 4):
             cached = current["periods"][i - 1]
-            has_start = f"period_{i}_start" in call.data
-            has_end = f"period_{i}_end" in call.data
-            if has_start != has_end:
-                raise ServiceValidationError(
-                    f"period_{i}_start and period_{i}_end must both be provided or both omitted"
-                )
-            if has_start:
-                start = _parse_time_str(
-                    call.data[f"period_{i}_start"], f"period_{i}_start"
-                )
-                end = _parse_time_str(call.data[f"period_{i}_end"], f"period_{i}_end")
-                enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
-            else:
-                start = _parse_time_str(cached["start_time"], f"period_{i}_start")
-                end = _parse_time_str(cached["end_time"], f"period_{i}_end")
-                enabled = cached["enabled"]
+            start = _parse_time_str(
+                call.data.get(f"period_{i}_start", cached["start_time"]),
+                f"period_{i}_start",
+            )
+            end = _parse_time_str(
+                call.data.get(f"period_{i}_end", cached["end_time"]),
+                f"period_{i}_end",
+            )
+            enabled: bool = call.data.get(f"period_{i}_enabled", cached["enabled"])
             periods.append({"start_time": start, "end_time": end, "enabled": enabled})
 
         await coordinator.update_ac_discharge_times(
