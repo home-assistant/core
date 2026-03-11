@@ -276,71 +276,65 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         elif group_snapshot is not None and group_snapshot.role == WiimGroupRole.FOLLOWER:
             # This device is a follower. It should actively pull metadata from its leader.
-            leader_udn = group_snapshot.leader_udn
-            if leader_udn:
-                leader_entity_id = self._get_entity_id_for_udn(leader_udn)
-                leader_state = (
-                    self.hass.states.get(leader_entity_id) if leader_entity_id else None
+            if (
+                (leader_udn := group_snapshot.leader_udn)
+                and (leader_entity_id := self._get_entity_id_for_udn(leader_udn))
+                and (leader_state := self.hass.states.get(leader_entity_id))
+            ):
+                LOGGER.debug(
+                    "Follower %s: Actively pulling metadata from leader %s",
+                    self.entity_id,
+                    leader_entity_id,
                 )
-
-                if leader_state and leader_entity_id != self.entity_id:
-                    LOGGER.debug(
-                        "Follower %s: Actively pulling metadata from leader %s",
-                        self.entity_id,
-                        leader_entity_id,
-                    )
-                    # Pull metadata from leader's state machine state
-                    self._attr_media_title = leader_state.attributes.get("media_title")
-                    self._attr_media_artist = leader_state.attributes.get(
-                        "media_artist"
-                    )
-                    self._attr_media_album_name = leader_state.attributes.get(
-                        "media_album_name"
-                    )
-                    # For image, use entity_picture from attributes, which might be a local proxy path
-                    self._attr_media_image_url = leader_state.attributes.get(
-                        "entity_picture"
-                    )
-                    self._attr_media_content_id = leader_state.attributes.get(
-                        "media_content_id"
-                    )
-                    self._attr_media_content_type = leader_state.attributes.get(
-                        "media_content_type"
-                    )
-                    self._attr_media_duration = leader_state.attributes.get(
-                        "media_duration"
-                    )
-                    self._attr_media_position = leader_state.attributes.get(
-                        "media_position"
-                    )
-                    self._attr_media_position_updated_at = leader_state.attributes.get(
-                        "media_position_updated_at"
-                    )
-                    self._attr_source = leader_state.attributes.get("source")
-                    self._attr_shuffle = leader_state.attributes.get("shuffle", False)
-                    self._attr_repeat = leader_state.attributes.get(
-                        "repeat", RepeatMode.OFF
-                    )
-                    self._attr_supported_features = leader_state.attributes.get(
-                        "supported_features", SUPPORT_WIIM_BASE
-                    )
-                else:
-                    LOGGER.debug(
-                        "Follower %s: Leader entity %s not found or is self. Clearing own media metadata",
-                        self.entity_id,
-                        leader_udn,
-                    )
-                    # If leader not found or is self (which means an inconsistent state), clear media info
-                    self._attr_media_title = None
-                    self._attr_media_artist = None
-                    self._attr_media_album_name = None
-                    self._attr_media_image_url = None
-                    self._attr_media_content_id = None
-                    self._attr_media_content_type = None
-                    self._attr_media_duration = None
-                    self._attr_media_position = None
-                    self._attr_media_position_updated_at = None
-                    self._attr_state = MediaPlayerState.IDLE
+                # Pull metadata from leader's state machine state
+                self._attr_media_title = leader_state.attributes.get("media_title")
+                self._attr_media_artist = leader_state.attributes.get("media_artist")
+                self._attr_media_album_name = leader_state.attributes.get(
+                    "media_album_name"
+                )
+                # For image, use entity_picture from attributes, which might be a local proxy path
+                self._attr_media_image_url = leader_state.attributes.get(
+                    "entity_picture"
+                )
+                self._attr_media_content_id = leader_state.attributes.get(
+                    "media_content_id"
+                )
+                self._attr_media_content_type = leader_state.attributes.get(
+                    "media_content_type"
+                )
+                self._attr_media_duration = leader_state.attributes.get(
+                    "media_duration"
+                )
+                self._attr_media_position = leader_state.attributes.get(
+                    "media_position"
+                )
+                self._attr_media_position_updated_at = leader_state.attributes.get(
+                    "media_position_updated_at"
+                )
+                self._attr_source = leader_state.attributes.get("source")
+                self._attr_shuffle = leader_state.attributes.get("shuffle", False)
+                self._attr_repeat = leader_state.attributes.get(
+                    "repeat", RepeatMode.OFF
+                )
+                self._attr_supported_features = leader_state.attributes.get(
+                    "supported_features", SUPPORT_WIIM_BASE
+                )
+            elif group_snapshot.leader_udn:
+                LOGGER.debug(
+                    "Follower %s: Leader entity %s not found. Clearing own media metadata",
+                    self.entity_id,
+                    group_snapshot.leader_udn,
+                )
+                self._attr_media_title = None
+                self._attr_media_artist = None
+                self._attr_media_album_name = None
+                self._attr_media_image_url = None
+                self._attr_media_content_id = None
+                self._attr_media_content_type = None
+                self._attr_media_duration = None
+                self._attr_media_position = None
+                self._attr_media_position_updated_at = None
+                self._attr_state = MediaPlayerState.IDLE
             else:
                 LOGGER.debug(
                     "Follower %s: No leader UDN found in group info. Clearing own media metadata",
@@ -673,8 +667,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 f"Internal error: {service_name} redirection called for non-follower {self.entity_id}."
             )
 
-        leader_entity_id = self._get_entity_id_for_udn(group_snapshot.command_target_udn)
-        if leader_entity_id is None or leader_entity_id == self.entity_id:
+        if not (
+            leader_entity_id := self._get_entity_id_for_udn(
+                group_snapshot.command_target_udn
+            )
+        ):
             raise HomeAssistantError(
                 f"Cannot redirect {service_name}: leader entity for {self.entity_id} was not found."
             )
