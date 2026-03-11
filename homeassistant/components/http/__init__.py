@@ -34,6 +34,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    HASSIO_USER_NAME,
     SERVER_PORT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
@@ -283,7 +284,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         async def start_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""
-            await server.async_start_unix_socket()
+            if any(
+                user
+                for user in await hass.auth.async_get_users()
+                if user.system_generated and user.name == HASSIO_USER_NAME
+            ):
+                await server.async_start_unix_socket()
+            else:
+                _LOGGER.error("Supervisor user not found; not starting Unix socket")
 
         async_when_setup_or_start(hass, "hassio", start_unix_socket)
 
