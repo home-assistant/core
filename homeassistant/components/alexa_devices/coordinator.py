@@ -8,7 +8,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice
+from aioamazondevices.structures import AmazonDevice, AmazonPushMessage
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +55,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             entry.data[CONF_LOGIN_DATA],
         )
         self.previous_devices: set[str] = set()
+        self.api.register_http2_push_callback(self._http2_push_cb)
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -86,6 +87,13 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
             self.previous_devices = current_devices
             return data
+
+    async def _http2_push_cb(self, chunk_type: str, payload: dict | None) -> None:
+        """Handle HTTP/2 push messages."""
+        if chunk_type == AmazonPushMessage.NotificationChange.value:
+            await self.api.update_notification_sensors()
+            current = self.api.get_current_devices()
+            self.async_set_updated_data(dict(current))
 
     async def _async_remove_device_stale(
         self,
