@@ -172,8 +172,6 @@ async def test_zeroconf_missing_api_domain(
 ) -> None:
     """Test zeroconf flow aborts if api_domain is missing from properties."""
     from homeassistant.components.network.const import MDNS_TARGET_IP
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
-    from ipaddress import ip_address
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
