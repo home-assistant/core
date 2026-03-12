@@ -187,5 +187,5 @@ async def test_zeroconf_missing_api_domain(
         ),
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_api_domain"
