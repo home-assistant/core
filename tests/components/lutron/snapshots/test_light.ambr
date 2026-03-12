@@ -45,7 +45,7 @@
       'brightness': None,
       'color_mode': None,
       'friendly_name': 'Test Light',
-      'lutron_integration_id': 'light_id',
+      'lutron_integration_id': 1,
       'supported_color_modes': list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),

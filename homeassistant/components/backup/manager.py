@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     start,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 from homeassistant.util.async_iterator import AsyncIteratorReader
@@ -77,6 +78,8 @@ from .util import (
     validate_password,
     validate_password_stream,
 )
+
+UPLOAD_PROGRESS_DEBOUNCE_SECONDS = 1
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -250,6 +253,15 @@ class BlockedEvent(ManagerStateEvent):
     """Backup manager blocked, Home Assistant is starting."""
 
     manager_state: BackupManagerState = BackupManagerState.BLOCKED
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class UploadBackupEvent(ManagerStateEvent):
+    """Backup agent upload progress event."""
+
+    agent_id: str
+    uploaded_bytes: int
+    total_bytes: int
 
 
 class BackupPlatformProtocol(Protocol):
@@ -579,9 +591,50 @@ class BackupManager:
                 _backup = replace(
                     backup, protected=should_encrypt, size=streamer.size()
                 )
-            await self.backup_agents[agent_id].async_upload_backup(
+            agent = self.backup_agents[agent_id]
+
+            latest_uploaded_bytes = 0
+
+            @callback
+            def _emit_upload_progress() -> None:
+                """Emit the latest upload progress event."""
+                self.async_on_backup_event(
+                    UploadBackupEvent(
+                        manager_state=self.state,
+                        agent_id=agent_id,
+                        uploaded_bytes=latest_uploaded_bytes,
+                        total_bytes=_backup.size,
+                    )
+                )
+
+            upload_progress_debouncer: Debouncer[None] = Debouncer(
+                self.hass,
+                LOGGER,
+                cooldown=UPLOAD_PROGRESS_DEBOUNCE_SECONDS,
+                immediate=True,
+                function=_emit_upload_progress,
+            )
+
+            @callback
+            def on_upload_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+                """Handle upload progress."""
+                nonlocal latest_uploaded_bytes
+                latest_uploaded_bytes = bytes_uploaded
+                upload_progress_debouncer.async_schedule_call()
+
+            await agent.async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,
+                on_progress=on_upload_progress,
+            )
+            upload_progress_debouncer.async_cancel()
+            self.async_on_backup_event(
+                UploadBackupEvent(
+                    manager_state=self.state,
+                    agent_id=agent_id,
+                    uploaded_bytes=_backup.size,
+                    total_bytes=_backup.size,
+                )
             )
             if streamer:
                 await streamer.wait()
@@ -1374,9 +1427,10 @@ class BackupManager:
         """Forward event to subscribers."""
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
-        self.last_event = event
-        if not isinstance(event, (BlockedEvent, IdleEvent)):
-            self.last_action_event = event
+        if not isinstance(event, UploadBackupEvent):
+            self.last_event = event
+            if not isinstance(event, (BlockedEvent, IdleEvent)):
+                self.last_action_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 

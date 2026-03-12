@@ -35,7 +35,7 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
+class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for DPCode position values mapping to 0-100 range."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -47,7 +47,7 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
         """Check if the position and direction should be reversed."""
         return False
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         if (value := device.status.get(self.dpcode)) is None:
             return None
 
@@ -87,7 +87,7 @@ class _InstructionBooleanWrapper(DPCodeBooleanWrapper):
     options = ["open", "close"]
     _ACTION_MAPPINGS = {"open": True, "close": False}
 
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:  # type: ignore[override]
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:
         return self._ACTION_MAPPINGS[value]
 
 
@@ -118,12 +118,12 @@ class _IsClosedInvertedWrapper(DPCodeBooleanWrapper):
     """Boolean wrapper for checking if cover is closed (inverted)."""
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return not value
 
 
-class _IsClosedEnumWrapper(DPCodeEnumWrapper):
+class _IsClosedEnumWrapper(DPCodeEnumWrapper[bool]):
     """Enum wrapper for checking if state is closed."""
 
     _MAPPINGS = {
@@ -133,8 +133,8 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper):
         "fully_open": False,
     }
 
-    def read_device_status(self, device: CustomerDevice) -> bool | None:  # type: ignore[override]
-        if (value := super().read_device_status(device)) is None:
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return self._MAPPINGS.get(value)
 
