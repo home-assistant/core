@@ -340,7 +340,7 @@ class HIVIDiscoveryScheduler:
                 self.current_interval = min(
                     self.current_interval * 1.1, self.max_interval
                 )
-            elif offline_ratio == 0:  # all offline
+            elif offline_ratio == 0:  # no devices offline (all online)
                 self.current_interval = max(
                     self.current_interval * 0.9, self.min_interval
                 )
