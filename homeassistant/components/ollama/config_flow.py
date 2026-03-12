@@ -95,7 +95,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
-        url = user_input[CONF_URL]
+        url = user_input[CONF_URL].strip()
         api_key = user_input.get(CONF_API_KEY)
         if api_key:
             api_key = api_key.strip()

@@ -671,3 +671,32 @@ async def test_user_step_invalid_auth_without_api_key(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result.get("errors") == {"base": "invalid_auth"}
+
+
+async def test_user_step_trim_url(hass: HomeAssistant) -> None:
+    """Test URL is trimmed before validation and persistence."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
+    ) as mock_async_client:
+        mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_URL: "  http://localhost:11434  ",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_URL: "http://localhost:11434"}
+    mock_async_client.assert_called_with(
+        host="http://localhost:11434",
+        headers=None,
+        verify=ANY,
+    )
