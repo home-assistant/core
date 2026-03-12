@@ -2,8 +2,8 @@
 
 Covers:
 - get_device_info reads model from device.device_models[0]["model"]
-- get_device_info falls back to "Unknown" when device_models is empty or None
-- get_device_info falls back to "Unknown" when the model entry is None
+- get_device_info falls back to None when device_models is empty or None
+- get_device_info falls back to None when the model entry is None
 - the helper used to build a hass/config_entry pair around a coordinator
 """
 
