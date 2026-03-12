@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "Please verify your credentials.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "Unexpected error, please try again."
     },
     "error": {
@@ -12,6 +13,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::waterfurnace::config::step::user::data_description::password%]",
+          "username": "[%key:component::waterfurnace::config::step::user::data_description::username%]"
+        },
+        "description": "Please re-enter your WaterFurnace Symphony account credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
