@@ -91,7 +91,7 @@ class FrozenOrThawed(type):
                 # All direct parents are dataclasses, rely on dataclass inheritance
                 return
             # Parent is not a dataclass, inject all parents' annotations
-            annotations: dict = {}
+            annotations: dict[str, Any] = {}
             for parent in cls.__mro__[::-1]:
                 if parent is object:
                     continue
