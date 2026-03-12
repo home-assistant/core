@@ -31,15 +31,16 @@ class DeviceDataRegistry:
                         ha_device_id,
                         removed_data,
                     )
+                    await self.async_save()
                 else:
                     _LOGGER.debug(
                         "Device %s does not exist in device_data, no cleanup needed",
                         ha_device_id,
                     )
-                # # 2. Immediately persist to storage
-                # await self.async_save()  # Need to add this method
 
-        self.hass.bus.async_listen("device_registry_updated", device_registry_updated)
+        self._unsub_device_registry = self.hass.bus.async_listen(
+            "device_registry_updated", device_registry_updated
+        )
 
     async def async_load(self):
         """Load persistent data"""
@@ -132,6 +133,19 @@ class DeviceDataRegistry:
                 return default
         return None
 
+    def get_ha_device_id_by_speaker_device_id(
+        self, speaker_device_id: str
+    ) -> Optional[str]:
+        """Return ha_device_id for a given speaker_device_id, or None if not found."""
+        for ha_device_id, data in self._device_data.items():
+            device_dict = data.get("device_dict") if data else None
+            if (
+                isinstance(device_dict, dict)
+                and device_dict.get("speaker_device_id") == speaker_device_id
+            ):
+                return ha_device_id
+        return None
+
     # def get_available_slave_device_dict_list(
     #     self, exclude_speaker_device_id: str = None
     # ) -> list[dict]:
@@ -190,20 +204,16 @@ class DeviceDataRegistry:
         """Clear all device data (called when integration is unloaded)"""
         _LOGGER.debug("Clearing all device data from registry")
 
-        # 1. Clear data in memory
+        # 1. Unsubscribe bus listener
+        if self._unsub_device_registry is not None:
+            self._unsub_device_registry()
+            self._unsub_device_registry = None
+
+        # 2. Clear data in memory
         self._device_data.clear()
 
-        # 2. Clear storage file
+        # 3. Clear storage file
         await self.async_save()
-
-        # # 3. Optional: Delete storage file
-        # try:
-        #     store_path = self._store.path
-        #     if os.path.exists(store_path):
-        #         os.remove(store_path)
-        #         _LOGGER.debug(f"Removed storage file: {store_path}")
-        # except Exception as e:
-        #     _LOGGER.error(f"Error removing storage file: {e}")
 
         # 4. Clear listeners
         self._listeners.clear()
