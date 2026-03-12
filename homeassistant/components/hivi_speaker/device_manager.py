@@ -344,12 +344,6 @@ class HIVIDeviceManager:
         for ha_device in ha_device_list:
             ha_device_id = ha_device.id
 
-            # device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
-            #     ha_device_id=ha_device_id, default=None
-            # )
-            # if device_dict is None:
-            #     continue
-
             # Get device identifiers
             target_unique_id = None
             for domain, unique_id in ha_device.identifiers:
@@ -360,11 +354,10 @@ class HIVIDeviceManager:
                 continue
 
             if target_unique_id in slave_device_uuid_set:
-                # device_obj = HIVIDevice(**device_dict)
-                # if device_obj.speaker_device_id in slave_device_uuid_set:
                 _LOGGER.debug(
-                    "device %s is recognized as a slave device, will delete its device and entities",
-                    device_obj.friendly_name,
+                    "device %s (%s) is recognized as a slave device, will delete its device and entities",
+                    ha_device.name,
+                    target_unique_id,
                 )
                 await self.async_remove_device_with_entities(ha_device_id)
 
@@ -958,7 +951,7 @@ class HIVIDeviceManager:
             finally:
                 self._handle_discovery_worker = None
 
-        await self.device_data_registry.async_clear_all_data()
+        await self.device_data_registry.async_shutdown()
 
     async def refresh_discovery(self):
         _LOGGER.debug("refresh_discovery")
