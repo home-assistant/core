@@ -12,7 +12,11 @@ from homeassistant.components.ollama.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -188,6 +192,50 @@ async def test_async_setup_entry_not_ready_on_non_auth_response_error(
         )
 
         with pytest.raises(ConfigEntryNotReady):
+            await ollama.async_setup_entry(hass, mock_config_entry)
+
+
+async def test_async_setup_entry_not_ready_on_rate_limit_response_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_setup_entry raises not ready on HTTP 429 response."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://localhost:11434",
+        },
+        version=3,
+        minor_version=3,
+    )
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Rate limited", status_code=429)
+        )
+
+        with pytest.raises(ConfigEntryNotReady):
+            await ollama.async_setup_entry(hass, mock_config_entry)
+
+
+async def test_async_setup_entry_error_on_non_auth_4xx_response_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_setup_entry raises entry error on non-auth 4xx response."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://localhost:11434",
+        },
+        version=3,
+        minor_version=3,
+    )
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Bad request", status_code=400)
+        )
+
+        with pytest.raises(ConfigEntryError):
             await ollama.async_setup_entry(hass, mock_config_entry)
 
 
