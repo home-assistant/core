@@ -37,6 +37,7 @@
     'file_upload',
     'frontend',
     'garage_door',
+    'gate',
     'geo_location',
     'group',
     'hardware',
@@ -97,6 +98,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---
@@ -138,6 +140,7 @@
     'file_upload',
     'frontend',
     'garage_door',
+    'gate',
     'geo_location',
     'hardware',
     'homeassistant',
@@ -197,6 +200,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---

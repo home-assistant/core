@@ -980,6 +980,17 @@ async def test_reader_writer_create(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1091,6 +1102,17 @@ async def test_reader_writer_create_addon_folder_error(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -1211,6 +1233,17 @@ async def test_reader_writer_create_report_progress(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1270,6 +1303,17 @@ async def test_reader_writer_create_job_done(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
@@ -1536,6 +1580,17 @@ async def test_reader_writer_create_per_agent_encryption(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
+        "state": "in_progress",
+    }
+
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
@@ -1713,10 +1768,51 @@ async def test_reader_writer_create_missing_reference_error(
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
-@pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 @pytest.mark.parametrize(
-    ("method", "download_call_count", "remove_call_count"),
-    [("download_backup", 1, 1), ("remove_backup", 1, 1)],
+    (
+        "exception",
+        "method",
+        "download_call_count",
+        "remove_call_count",
+        "expected_events_before_failed",
+    ),
+    [
+        (
+            SupervisorError("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "download_backup",
+            1,
+            1,
+            [
+                {
+                    "manager_state": "create_backup",
+                    "reason": None,
+                    "stage": "cleaning_up",
+                    "state": "in_progress",
+                }
+            ],
+        ),
+        (
+            SupervisorError("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+        (
+            Exception("Boom!"),
+            "remove_backup",
+            1,
+            1,
+            [],
+        ),
+    ],
 )
 async def test_reader_writer_create_download_remove_error(
     hass: HomeAssistant,
@@ -1726,6 +1822,7 @@ async def test_reader_writer_create_download_remove_error(
     method: str,
     download_call_count: int,
     remove_call_count: int,
+    expected_events_before_failed: list[dict[str, str]],
 ) -> None:
     """Test download and remove error when generating a backup."""
     client = await hass_ws_client(hass)
@@ -1788,7 +1885,13 @@ async def test_reader_writer_create_download_remove_error(
         "state": "in_progress",
     }
 
+    # Consume any upload progress events before the final state event
     response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    for expected_event in expected_events_before_failed:
+        assert response["event"] == expected_event
+        response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
         "reason": "upload_failed",
@@ -1949,6 +2052,17 @@ async def test_reader_writer_create_remote_backup(
         "manager_state": "create_backup",
         "reason": None,
         "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    # Consume any upload progress events before the final state event
+    response = await client.receive_json()
+    while "uploaded_bytes" in response["event"]:
+        response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "cleaning_up",
         "state": "in_progress",
     }
 
