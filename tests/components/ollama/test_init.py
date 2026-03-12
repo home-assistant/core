@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from httpx import ConnectError
 import pytest
@@ -56,6 +56,60 @@ async def test_init_error(
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+async def test_init_with_api_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test initialization with API key - Authorization header should be set."""
+    # Create entry with API key in data (version 3.0 after migration)
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+            ollama.CONF_API_KEY: "test-api-key-123",
+        },
+        version=3,
+        minor_version=0,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert any(
+            call.kwargs["headers"] == {"Authorization": "Bearer test-api-key-123"}
+            for call in mock_client.call_args_list
+        )
+
+
+async def test_init_without_api_key(
+    hass: HomeAssistant,
+) -> None:
+    """Test initialization without API key - Authorization header should not be set."""
+    # Create entry without API key in data (version 3.0 after migration)
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+        },
+        version=3,
+        minor_version=0,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert all(
+            call.kwargs["headers"] is None for call in mock_client.call_args_list
+        )
 
 
 async def test_migration_from_v1(
