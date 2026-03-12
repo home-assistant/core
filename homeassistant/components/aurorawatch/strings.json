@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "AuroraWatch UK",
+        "description": "Monitor aurora activity from AuroraWatch UK. This integration will add a sensor showing the current aurora alert status (green, yellow, amber, or red)."
+      }
+    },
+    "abort": {
+      "already_configured": "AuroraWatch UK is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "aurora_status": {
+        "name": "Aurora status"
+      },
+      "geomagnetic_activity": {
+        "name": "Geomagnetic activity"
+      }
+    }
+  }
+}
