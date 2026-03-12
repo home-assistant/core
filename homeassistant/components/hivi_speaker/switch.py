@@ -80,6 +80,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
             "identifiers": {(DOMAIN, master_speaker_device_id)},
         }
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_is_on = False
 
         self._unsub_status = None
         self._hub.add_switch(self)
