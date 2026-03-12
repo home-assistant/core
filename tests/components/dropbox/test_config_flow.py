@@ -162,7 +162,7 @@ async def test_reauth_flow(
 
     config_entry.add_to_hass(hass)
 
-    mock_dropbox_client.async_get_account_info.return_value = new_account_info
+    mock_dropbox_client.get_account_info.return_value = new_account_info
 
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM

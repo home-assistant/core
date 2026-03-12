@@ -4,12 +4,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from python_dropbox_api import DropboxAPIClient
+
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .api import DropboxClient
 from .auth import AsyncConfigFlowAuth
 from .const import DOMAIN
 
@@ -30,8 +31,8 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         auth = AsyncConfigFlowAuth(async_get_clientsession(self.hass), access_token)
 
-        client = DropboxClient(auth)
-        account_info = await client.async_get_account_info()
+        client = DropboxAPIClient(auth)
+        account_info = await client.get_account_info()
 
         await self.async_set_unique_id(account_info.account_id)
         if self.source == SOURCE_REAUTH:

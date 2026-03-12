@@ -35,7 +35,7 @@ async def test_setup_entry_auth_failed(
     mock_dropbox_client: AsyncMock,
 ) -> None:
     """Test setup failure when authentication fails."""
-    mock_dropbox_client.async_get_account_info.side_effect = DropboxAuthException(
+    mock_dropbox_client.get_account_info.side_effect = DropboxAuthException(
         "Invalid token"
     )
     config_entry.add_to_hass(hass)
@@ -57,7 +57,7 @@ async def test_setup_entry_not_ready(
     side_effect: Exception,
 ) -> None:
     """Test setup retry when the service is temporarily unavailable."""
-    mock_dropbox_client.async_get_account_info.side_effect = side_effect
+    mock_dropbox_client.get_account_info.side_effect = side_effect
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

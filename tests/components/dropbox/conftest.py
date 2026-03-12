@@ -77,26 +77,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_dropbox_client(account_info: SimpleNamespace) -> Generator[MagicMock]:
-    """Patch Dropbox client instances used by the integration."""
+    """Patch DropboxAPIClient instances used by the integration."""
 
     client = MagicMock()
-    client.async_get_account_info = AsyncMock(return_value=account_info)
-    client.async_list_backups = AsyncMock(return_value=[])
-    client.async_download_backup = AsyncMock()
-    client.async_upload_backup = AsyncMock()
-    client.async_delete_backup = AsyncMock()
+    client.get_account_info = AsyncMock(return_value=account_info)
+    client.list_folder = AsyncMock(return_value=[])
+    client.download_file = MagicMock()
+    client.upload_file = AsyncMock()
+    client.delete_file = AsyncMock()
 
     with (
         patch(
-            "homeassistant.components.dropbox.config_flow.DropboxClient",
+            "homeassistant.components.dropbox.config_flow.DropboxAPIClient",
             return_value=client,
         ),
         patch(
-            "homeassistant.components.dropbox.DropboxClient",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.dropbox.api.DropboxClient",
+            "homeassistant.components.dropbox.DropboxAPIClient",
             return_value=client,
         ),
     ):
