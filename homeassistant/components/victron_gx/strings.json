@@ -39,6 +39,9 @@
         "description": "Authentication is required to connect to {host}.",
         "title": "Authenticate Victron GX"
       },
+      "ssdp_confirm": {
+        "description": "Do you want to set up the Victron GX device {name}?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

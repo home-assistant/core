@@ -297,6 +297,14 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert_entry_title(result)
     assert result["data"] == {
@@ -312,8 +320,6 @@ async def test_ssdp_flow_cannot_connect(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
     """Test SSDP discovery flow when connection fails, falls back to user flow."""
-    mock_victron_hub.return_value.connect.side_effect = CannotConnectError
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
@@ -334,7 +340,16 @@ async def test_ssdp_flow_cannot_connect(
         data=discovery_info,
     )
 
-    # Should fall back to user form when connection fails
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = CannotConnectError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+
     assert result["type"] is FlowResultType.ABORT
 
 
@@ -379,10 +394,6 @@ async def test_ssdp_flow_auth_required(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
     """Test SSDP discovery flow when authentication is required."""
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Authentication required"
-    )
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
@@ -401,6 +412,18 @@ async def test_ssdp_flow_auth_required(
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
+        "Authentication required"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -435,10 +458,6 @@ async def test_ssdp_auth_invalid_credentials(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
     """Test SSDP auth flow with invalid credentials."""
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Authentication required"
-    )
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
@@ -457,6 +476,18 @@ async def test_ssdp_auth_invalid_credentials(
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
+        "Authentication required"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -507,10 +538,6 @@ async def test_ssdp_auth_cannot_connect(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
     """Test SSDP auth flow when connection fails."""
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Authentication required"
-    )
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
@@ -529,6 +556,18 @@ async def test_ssdp_auth_cannot_connect(
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
+        "Authentication required"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -553,11 +592,6 @@ async def test_ssdp_flow_unknown_error(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
     """Test SSDP discovery flow handles unknown errors in auth step."""
-    # First, trigger auth error to get to the auth step
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Authentication required"
-    )
-
     discovery_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
@@ -576,6 +610,19 @@ async def test_ssdp_flow_unknown_error(
         DOMAIN,
         context={"source": SOURCE_SSDP},
         data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "ssdp_confirm"
+
+    # Trigger auth error to get to the auth step
+    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
+        "Authentication required"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
     )
 
     # Should show auth form

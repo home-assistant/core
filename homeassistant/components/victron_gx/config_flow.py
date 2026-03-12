@@ -52,7 +52,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect.
 
-    Data has the keys from zeroconf values as well as user input.
+    Data has the keys from SSDP values as well as user input.
 
     Returns the installation id upon success.
     """
@@ -112,13 +112,15 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Successfully connected to Victron device: %s", installation_id
                 )
             except AuthenticationError:
-                _LOGGER.warning("Authentication failed during initial setup")
+                _LOGGER.debug(
+                    "Authentication failed during initial setup", exc_info=True
+                )
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
-                _LOGGER.warning("Cannot connect to Victron device")
+                _LOGGER.debug("Cannot connect to Victron device", exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("General error connecting to Victron device")
+                _LOGGER.exception("Unexpected error connecting to Victron device")
                 errors["base"] = "unknown"
             else:
                 data[CONF_INSTALLATION_ID] = installation_id
@@ -140,6 +142,65 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
+        )
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle SSDP discovery."""
+        self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
+        self.serial = discovery_info.upnp["serialNumber"]
+        self.installation_id = discovery_info.upnp["X_VrmPortalId"]
+        self.model_name = discovery_info.upnp["modelName"]
+        self.friendly_name = discovery_info.upnp["friendlyName"]
+
+        await self.async_set_unique_id(self.installation_id)
+        self._abort_if_unique_id_configured()
+
+        self.context["title_placeholders"] = {"name": self.friendly_name}
+        return await self.async_step_ssdp_confirm()
+
+    async def async_step_ssdp_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm SSDP discovered device."""
+        assert self.hostname is not None
+        assert self.installation_id is not None
+
+        if user_input is not None:
+            try:
+                ssdp_conf = {
+                    CONF_HOST: self.hostname,
+                    CONF_PORT: DEFAULT_PORT,
+                    CONF_SERIAL: self.serial,
+                    CONF_INSTALLATION_ID: self.installation_id,
+                }
+                await validate_input(ssdp_conf)
+            except AuthenticationError:
+                return await self.async_step_ssdp_auth()
+            except CannotConnectError:
+                return self.async_abort(reason="cannot_connect")
+
+            return self.async_create_entry(
+                title=ENTRY_TITLE_FORMAT.format(
+                    installation_id=self.installation_id,
+                    host=self.hostname,
+                    port=DEFAULT_PORT,
+                ),
+                data={
+                    CONF_HOST: self.hostname,
+                    CONF_PORT: DEFAULT_PORT,
+                    CONF_SERIAL: self.serial,
+                    CONF_INSTALLATION_ID: self.installation_id,
+                    CONF_MODEL: self.model_name,
+                },
+            )
+
+        self._set_confirm_only()
+        assert self.friendly_name is not None
+        return self.async_show_form(
+            step_id="ssdp_confirm",
+            description_placeholders={"name": self.friendly_name},
         )
 
     async def async_step_ssdp_auth(
@@ -165,20 +226,18 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
                 CONF_SSL: user_input.get(CONF_SSL),
             }
-            # Remove None values
-            data = {k: v for k, v in data.items() if v is not None}
 
             try:
                 await validate_input(data)
                 _LOGGER.debug("SSDP authentication successful")
             except AuthenticationError:
-                _LOGGER.warning("Authentication failed during SSDP setup")
+                _LOGGER.debug("Authentication failed during SSDP setup", exc_info=True)
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
-                _LOGGER.warning("Cannot connect during SSDP setup")
+                _LOGGER.debug("Cannot connect during SSDP setup", exc_info=True)
                 errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("General error during SSDP setup")
+                _LOGGER.exception("Unexpected error during SSDP setup")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -203,55 +262,4 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=auth_schema,
             errors=errors,
             description_placeholders={"host": self.hostname},
-        )
-
-    async def async_step_ssdp(
-        self, discovery_info: SsdpServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle UPnP  discovery."""
-        self.hostname = str(urlparse(discovery_info.ssdp_location).hostname)
-        self.serial = discovery_info.upnp["serialNumber"]
-        self.installation_id = discovery_info.upnp["X_VrmPortalId"]
-        self.model_name = discovery_info.upnp["modelName"]
-        self.friendly_name = discovery_info.upnp["friendlyName"]
-        _LOGGER.debug(
-            "SSDP: hostname=%s, serial=%s, installation_id=%s, model_name=%s, friendly_name=%s",
-            self.hostname,
-            self.serial,
-            self.installation_id,
-            self.model_name,
-            self.friendly_name,
-        )
-
-        await self.async_set_unique_id(self.installation_id)
-        self._abort_if_unique_id_configured()
-
-        try:
-            ssdp_conf = {
-                CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SERIAL: self.serial,
-                CONF_INSTALLATION_ID: self.installation_id,
-            }
-            sensed_installation_id = await validate_input(ssdp_conf)
-            assert sensed_installation_id == self.installation_id
-        except AuthenticationError:
-            return await self.async_step_ssdp_auth()
-        except CannotConnectError:
-            return self.async_abort(reason="cannot_connect")
-
-        assert self.installation_id is not None
-        return self.async_create_entry(
-            title=ENTRY_TITLE_FORMAT.format(
-                installation_id=self.installation_id,
-                host=self.hostname,
-                port=DEFAULT_PORT,
-            ),
-            data={
-                CONF_HOST: self.hostname,
-                CONF_PORT: DEFAULT_PORT,
-                CONF_SERIAL: self.serial,
-                CONF_INSTALLATION_ID: self.installation_id,
-                CONF_MODEL: self.model_name,
-            },
         )
