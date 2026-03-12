@@ -78,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
     except ollama.ResponseError as err:
         if err.status_code in (401, 403):
             raise ConfigEntryAuthFailed from err
+        if err.status_code >= 500 or err.status_code == 429:
+            raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err
     except (TimeoutError, httpx.ConnectError) as err:
         raise ConfigEntryNotReady(err) from err
