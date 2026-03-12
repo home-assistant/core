@@ -309,6 +309,8 @@ class CachedProperties(type):
         Wrap _attr_ for cached properties in property objects.
         """
 
+        cls_annotations: dict[str, Any] | None = None
+
         def deleter(name: str) -> Callable[[Any], None]:
             """Create a deleter for an _attr_ property."""
             private_attr_name = f"__attr_{name}"
@@ -370,14 +372,16 @@ class CachedProperties(type):
                 if isinstance(attr, (FunctionType, property)):
                     raise TypeError(f"Can't override {attr_name} in subclass")
                 setattr(cls, private_attr_name, attr)
+
+                # Check annotations as well.
+                nonlocal cls_annotations
+                if cls_annotations is None:
+                    cls_annotations = get_annotations(cls, format=Format.FORWARDREF)
                 if attr_name in cls_annotations:
                     cls_annotations[private_attr_name] = cls_annotations.pop(attr_name)
 
             # Create the _attr_ property
             setattr(cls, attr_name, make_property(property_name))
-
-        # Get initial class annotations
-        cls_annotations = get_annotations(cls, format=Format.FORWARDREF)
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
         seen_props: set[str] = set()  # Keep track of properties which have been handled
@@ -402,15 +406,16 @@ class CachedProperties(type):
                 wrap_attr(cls, property_name)
                 seen_props.add(property_name)
 
-        # Update class annotations with the new (_attr_ => __attr_) annotations
-        if "__annotations__" in cls.__dict__:
-            cls.__annotations__ = cls_annotations
-        else:
+        if cls_annotations:
+            # Update class annotations with the new (_attr_ => __attr_) annotations
+            if "__annotations__" in cls.__dict__:
+                cls.__annotations__ = cls_annotations
+            else:
 
-            def wrapped_annotate(format: Format) -> dict[str, Any]:
-                return cls_annotations
+                def wrapped_annotate(format: Format) -> dict[str, Any]:
+                    return cls_annotations
 
-            cls.__annotate__ = wrapped_annotate
+                cls.__annotate__ = wrapped_annotate
 
 
 class ABCCachedProperties(CachedProperties, ABCMeta):
