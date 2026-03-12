@@ -194,44 +194,40 @@ jobs:
         if: ${{ env.GITEE_TOKEN != '' }}
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
         run: |
           if [ -n "$(ls gitee_wheels/*.whl 2>/dev/null)" ]; then
             echo "Uploading wheels to Gitee repository..."
             
-            # 克隆 Gitee 仓库
-            git clone "https://${{ secrets.GITEE_USERNAME }}:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
+            # 检查仓库是否已存在本地副本，如果存在则删除
+            if [ -d "gitee_repo" ]; then
+              rm -rf gitee_repo
+            fi
+            
+            # 克隆 Gitee 仓库 - 使用令牌进行身份验证
+            git clone "https://oauth2:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
             cd gitee_repo
             
             # 配置 git
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
-            # 尝试获取默认分支名称
-            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
-            if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
-              # 如果无法获取，默认尝试 master
-              DEFAULT_BRANCH="master"
-            fi
-            echo "Default branch is: $DEFAULT_BRANCH"
+            # 获取最新的更改，使用 merge 而不是 rebase 以避免冲突
+            git pull origin master || echo "No existing content or error pulling"
             
             # 复制轮子文件到 Gitee 仓库
             cp ../gitee_wheels/*.whl ./
             
-            # 添加、提交并推送
-            git add *.whl
-            if ! git diff --cached --quiet; then
+            # 检查是否有任何更改
+            if ! git diff --exit-code --quiet; then
+              # 有更改，添加并提交
+              git add *.whl
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              # 对于空仓库，使用强制方式推送
-              if [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
-                git push -u origin master
-                echo "Successfully uploaded wheels to Gitee on master branch"
-              else
-                git push -u origin $DEFAULT_BRANCH
-                echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
-              fi
+              
+              # 推送到 master 分支
+              git push origin master
+              echo "Successfully uploaded wheels to Gitee on master branch"
             else
-              echo "No new wheels to upload"
+              echo "No changes to commit, files may already exist"
             fi
           else
             echo "No wheel files found to upload to Gitee"
@@ -356,44 +352,40 @@ jobs:
         if: ${{ env.GITEE_TOKEN != '' }}
         env:
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-          GITEE_USERNAME: ${{ secrets.GITEE_USERNAME }}
         run: |
           if [ -n "$(ls gitee_wheels/*.whl 2>/dev/null)" ]; then
             echo "Uploading wheels to Gitee repository..."
             
-            # 克隆 Gitee 仓库
-            git clone "https://${{ secrets.GITEE_USERNAME }}:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
+            # 检查仓库是否已存在本地副本，如果存在则删除
+            if [ -d "gitee_repo" ]; then
+              rm -rf gitee_repo
+            fi
+            
+            # 克隆 Gitee 仓库 - 使用令牌进行身份验证
+            git clone "https://oauth2:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
             cd gitee_repo
             
             # 配置 git
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
-            # 尝试获取默认分支名称
-            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
-            if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
-              # 如果无法获取，默认尝试 master
-              DEFAULT_BRANCH="master"
-            fi
-            echo "Default branch is: $DEFAULT_BRANCH"
+            # 获取最新的更改，使用 merge 而不是 rebase 以避免冲突
+            git pull origin master || echo "No existing content or error pulling"
             
             # 复制轮子文件到 Gitee 仓库
             cp ../gitee_wheels/*.whl ./
             
-            # 添加、提交并推送
-            git add *.whl
-            if ! git diff --cached --quiet; then
+            # 检查是否有任何更改
+            if ! git diff --exit-code --quiet; then
+              # 有更改，添加并提交
+              git add *.whl
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              # 对于空仓库，使用强制方式推送
-              if [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
-                git push -u origin master
-                echo "Successfully uploaded wheels to Gitee on master branch"
-              else
-                git push -u origin $DEFAULT_BRANCH
-                echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
-              fi
+              
+              # 推送到 master 分支
+              git push origin master
+              echo "Successfully uploaded wheels to Gitee on master branch"
             else
-              echo "No new wheels to upload"
+              echo "No changes to commit, files may already exist"
             fi
           else
             echo "No wheel files found to upload to Gitee"
