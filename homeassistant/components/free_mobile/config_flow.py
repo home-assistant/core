@@ -42,7 +42,7 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AssertionError:
                 if not (user_input[CONF_USERNAME] and user_input[CONF_ACCESS_TOKEN]):
-                    _LOGGER.exception("Failed to initialize FreeClient")
+                    _LOGGER.error("Failed to initialize FreeClient")
                     errors["base"] = "client_initialization_failed"
                 else:
                     # Re-raise if credentials were provided but assertion still failed
