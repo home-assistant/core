@@ -112,6 +112,36 @@ async def test_init_without_api_key(
         )
 
 
+async def test_init_with_api_key_in_options_overrides_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test options API key takes precedence over data for Authorization header."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+            ollama.CONF_API_KEY: "data-api-key",
+        },
+        options={
+            ollama.CONF_API_KEY: "options-api-key",
+        },
+        version=3,
+        minor_version=0,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert any(
+            call.kwargs["headers"] == {"Authorization": "Bearer options-api-key"}
+            for call in mock_client.call_args_list
+        )
+
+
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
