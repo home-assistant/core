@@ -469,7 +469,7 @@ def _async_check_legacy_entity_repair(
         translation_key="deprecated_legacy_door_state",
         translation_placeholders={
             "entity_id": entity_id,
-            "entity_name": entity_entry.original_name or entity_id,
+            "entity_name": entity_entry.name or entity_entry.original_name or entity_id,
             "opening_state_entity_id": opening_state_entity_id,
             "items": "\n".join(items),
         },
