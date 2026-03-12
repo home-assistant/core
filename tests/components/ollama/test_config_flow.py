@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import ANY, AsyncMock, patch
 
 from httpx import ConnectError
+from ollama import ResponseError
 import pytest
 
 from homeassistant import config_entries
@@ -609,3 +610,34 @@ async def test_user_step_async_client_headers(
         headers=expected_headers,
         verify=ANY,
     )
+
+
+async def test_user_step_unauthorized_api_key(hass: HomeAssistant) -> None:
+    """Test unauthorized_api_key error when ollama returns HTTP 401."""
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient"
+    ) as mock_async_client:
+        mock_client_instance = AsyncMock()
+        mock_async_client.return_value = mock_client_instance
+
+        # Simulate a 401 Unauthorized response
+        mock_client_instance.list.side_effect = ResponseError(
+            error="Unauthorized", status_code=401
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("errors") == {"base": "unauthorized_api_key"}
