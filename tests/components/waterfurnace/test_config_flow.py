@@ -260,6 +260,7 @@ async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
     mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
