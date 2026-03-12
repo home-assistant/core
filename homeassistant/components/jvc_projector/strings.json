@@ -74,9 +74,9 @@
       "hdr_processing": {
         "name": "HDR Processing",
         "state": {
-          "frame-by-frame": "Frame-by-Frame",
+          "frame_by_frame": "Frame-by-Frame",
           "hdr10p": "HDR10+",
-          "scene-by-scene": "Scene-by-Scene",
+          "scene_by_scene": "Scene-by-Scene",
           "static": "Static"
         }
       },
@@ -114,18 +114,18 @@
       "picture_mode": {
         "name": "Picture Mode",
         "state": {
-          "frame-adapt-hdr": "Frame Adapt HDR",
-          "frame-adapt-hdr2": "Frame Adapt HDR2",
-          "frame-adapt-hdr3": "Frame Adapt HDR3",
+          "frame_adapt_hdr": "Frame Adapt HDR",
+          "frame_adapt_hdr2": "Frame Adapt HDR2",
+          "frame_adapt_hdr3": "Frame Adapt HDR3",
           "hdr1": "HDR1",
           "hdr10": "HDR10",
-          "hdr10-ll": "HDR10 LL",
+          "hdr10_ll": "HDR10 LL",
           "hdr2": "HDR2",
-          "last-setting": "Last setting",
-          "pana-pq": "Pana PQ",
-          "user-4": "User 4",
-          "user-5": "User 5",
-          "user-6": "User 6"
+          "last_setting": "Last setting",
+          "pana_pq": "Pana PQ",
+          "user_4": "User 4",
+          "user_5": "User 5",
+          "user_6": "User 6"
         }
       }
     },

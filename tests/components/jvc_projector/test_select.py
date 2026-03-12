@@ -50,6 +50,7 @@ async def test_input_select(
 async def test_enable_hdr_processing_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
     mock_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
