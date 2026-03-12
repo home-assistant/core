@@ -1,5 +1,7 @@
 """Utility helpers for the jvc_projector integration."""
 
+from __future__ import annotations
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -22,6 +24,7 @@ def deprecate_entity(
     issue_id: str,
     issue_string: str,
     replacement_entity_unique_id: str,
+    replacement_entity_id: str,
     version: str = "2026.9.0",
 ) -> bool:
     """Create an issue for deprecated entities."""
@@ -47,7 +50,7 @@ def deprecate_entity(
                 entity_registry.async_get_entity_id(
                     Platform.SELECT, DOMAIN, replacement_entity_unique_id
                 )
-                or "select.unknown"
+                or replacement_entity_id
             ),
         }
         if items:

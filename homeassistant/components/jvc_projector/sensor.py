@@ -104,6 +104,7 @@ async def async_setup_entry(
             f"deprecated_sensor_{entry.entry_id}_{description.key}",
             "deprecated_sensor",
             f"{coordinator.unique_id}_{description.key}",
+            f"select.jvc_projector_{description.key}",
         ):
             continue
         entities.append(JvcProjectorSensorEntity(coordinator, description))
