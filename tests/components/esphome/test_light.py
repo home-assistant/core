@@ -1913,7 +1913,39 @@ async def test_only_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_mode=color_modes,
-                color_temperature=400.0,
+                cold_white=pytest.approx(0.0),
+                warm_white=pytest.approx(1.0),
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+    # Test setting brightness and color temp together does not
+    # result in brightness being applied twice (b² effect)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_my_light",
+            ATTR_BRIGHTNESS: 127,
+            ATTR_COLOR_TEMP_KELVIN: 3600,
+        },
+        blocking=True,
+    )
+    # 3600K -> 277.78 mireds, min=153, max=400
+    # ww_frac = (277.78 - 153) / (400 - 153) = 0.505
+    # cw_frac = 0.495
+    # max_frac = 0.505, cold_white = 0.495/0.505, warm_white = 1.0
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                brightness=pytest.approx(0.4980392156862745),
+                color_mode=color_modes,
+                cold_white=pytest.approx(0.9798, abs=1e-3),
+                warm_white=pytest.approx(1.0),
                 device_id=0,
             )
         ]
