@@ -4,6 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
 from .device import HIVIDevice
@@ -100,6 +101,13 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 dev_reg.async_remove_device(device.id)
     except Exception:  # noqa: BLE001
         _LOGGER.exception("Error cleaning up device registry on entry removal")
+
+    try:
+        store = Store(hass, 1, "hivi_speaker_device_data")
+        await store.async_save({"device_data": {}, "version": 1})
+        _LOGGER.debug("Persistent device data storage cleared")
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception("Error clearing persistent storage on entry removal")
 
 
 async def async_remove_config_entry_device(
