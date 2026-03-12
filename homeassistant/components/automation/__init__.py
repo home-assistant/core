@@ -161,6 +161,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "update",
     "vacuum",
+    "window",
 }
 
 
