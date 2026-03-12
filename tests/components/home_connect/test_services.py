@@ -353,18 +353,75 @@ async def test_start_selected_program_and_options_exceptions(
         )
 
 
+@pytest.mark.parametrize(
+    "get_active_program_side_effect",
+    [None, NoProgramActiveError("error.key")],
+)
+async def test_no_program_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test handling of no program active error."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "HA_ID")},
+    )
+
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=None,
+        ),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=None,
+        )
+    )
+
+    with pytest.raises(HomeAssistantError, match="No program to start"):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "service_call",
+    [
+        SERVICE_KV_CALL_PARAMS[0],
+        {
+            "domain": DOMAIN,
+            "service": "start_selected_program",
+            "service_data": {},
+            "blocking": True,
+        },
+    ],
+)
 async def test_services_appliance_not_found(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    service_call: dict[str, Any],
 ) -> None:
     """Raise a ServiceValidationError when device id does not match."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    service_call = SERVICE_KV_CALL_PARAMS[0]
+    service_call = service_call.copy()
 
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
