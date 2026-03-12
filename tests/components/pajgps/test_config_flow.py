@@ -5,7 +5,6 @@ Coverage:
     * GET (no input) → returns FORM with step_id "user"
     * Valid full input → CREATE_ENTRY with email as title and data fields
     * Duplicate email → AbortFlow raised
-    * Invalid credentials → FORM with errors["base"] set accordingly
 """
 
 from __future__ import annotations
