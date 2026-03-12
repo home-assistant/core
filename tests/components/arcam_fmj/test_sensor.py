@@ -1,27 +1,27 @@
 """Tests for Arcam FMJ sensor entities."""
 
-from unittest.mock import Mock
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 from arcam.fmj import IncomingVideoAspectRatio, IncomingVideoColorspace
 from arcam.fmj.state import IncomingAudioConfig, IncomingAudioFormat, State
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_UUID
 
-SENSOR_KEYS = [
-    "incoming_video_horizontal_resolution",
-    "incoming_video_vertical_resolution",
-    "incoming_video_refresh_rate",
-    "incoming_video_aspect_ratio",
-    "incoming_video_colorspace",
-    "incoming_audio_format",
-    "incoming_audio_config",
-    "incoming_audio_sample_rate",
-]
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def sensor_only() -> Generator[None]:
+    """Limit platform setup to sensor only."""
+    with patch("homeassistant.components.arcam_fmj.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 def _get_entity_id(entity_registry: er.EntityRegistry, zone: int, key: str) -> str:
@@ -32,47 +32,15 @@ def _get_entity_id(entity_registry: er.EntityRegistry, zone: int, key: str) -> s
     return entity_id
 
 
-@pytest.mark.usefixtures("player_setup")
-async def test_sensors_created(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "player_setup")
+async def test_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that sensor entities are created for both zones."""
-    for zone in (1, 2):
-        for key in SENSOR_KEYS:
-            entity_id = _get_entity_id(entity_registry, zone, key)
-            entry = entity_registry.async_get(entity_id)
-            assert entry is not None
-
-
-@pytest.mark.usefixtures("player_setup")
-async def test_sensor_video_none_values(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that sensors report unknown when video parameters are None."""
-    for key in SENSOR_KEYS[:5]:
-        entity_id = _get_entity_id(entity_registry, 1, key)
-        state = hass.states.get(entity_id)
-        assert state is not None, f"State missing for {key}"
-        assert state.state == STATE_UNKNOWN, f"Expected unknown for {key}"
-
-
-@pytest.mark.usefixtures("player_setup")
-async def test_sensor_audio_none_values(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that sensors report unknown when audio format/sample rate is None or zero."""
-    for key in (
-        "incoming_audio_format",
-        "incoming_audio_config",
-        "incoming_audio_sample_rate",
-    ):
-        entity_id = _get_entity_id(entity_registry, 1, key)
-        state = hass.states.get(entity_id)
-        assert state is not None, f"State missing for {key}"
-        assert state.state == STATE_UNKNOWN, f"Expected unknown for {key}"
+    """Test snapshot of the sensor platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("player_setup")
