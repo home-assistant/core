@@ -94,6 +94,10 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(client.login)
+
+                # Treat no gwid as a connection failure
+                if not client.gwid:
+                    errors["base"] = "cannot_connect"
             except WFCredentialError:
                 errors["base"] = "invalid_auth"
             except WFException:
