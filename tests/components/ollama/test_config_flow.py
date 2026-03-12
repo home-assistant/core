@@ -50,13 +50,8 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert (
-        result2["data"]
-        == {
-            ollama.CONF_URL: "http://localhost:11434",
-            ollama.CONF_API_KEY: "",  # API key should default to empty string if not provided
-        }
-    )
+    assert result2["data"] == {ollama.CONF_URL: "http://localhost:11434"}
+
     # No subentries created by default
     assert len(result2.get("subentries", [])) == 0
     assert len(mock_setup_entry.mock_calls) == 1
