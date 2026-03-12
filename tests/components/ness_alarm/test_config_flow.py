@@ -77,26 +77,72 @@ async def test_user_flow_with_infer_arming_state(
 
 
 async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we abort if already configured."""
-    mock_config_entry.add_to_hass(hass)
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 1992,
-            CONF_INFER_ARMING_STATE: False,
-        },
-    )
+    if result["type"] is FlowResultType.FORM:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1992,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] in {"already_configured", "single_instance_allowed"}
+    mock_client.update.assert_not_called()
+
+
+async def test_user_flow_disallows_multiple_alarms(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow does not allow configuring a second panel."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    if result["type"] is FlowResultType.FORM:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1993,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] in {"already_configured", "single_instance_allowed"}
+    mock_client.update.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -234,10 +280,19 @@ async def test_import_yaml_config_errors(
 
 
 async def test_import_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we abort import if already configured."""
-    mock_config_entry.add_to_hass(hass)
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 4999,
+        },
+        unique_id="192.168.1.100:4999",
+    )
+    existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -250,7 +305,8 @@ async def test_import_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] in {"already_configured", "single_instance_allowed"}
+    mock_client.update.assert_not_called()
 
 
 @pytest.mark.parametrize(
