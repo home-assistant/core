@@ -98,6 +98,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---
@@ -199,6 +200,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---
