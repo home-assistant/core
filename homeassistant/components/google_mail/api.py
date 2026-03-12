@@ -63,8 +63,9 @@ class AsyncConfigEntryAuth:
                         "OAuth session is not valid, reauth required"
                     ) from ex
                 raise ConfigEntryNotReady from ex
+            status = getattr(ex, "status", None)
             if isinstance(ex, RefreshError) or (
-                hasattr(ex, "status") and ex.status == 400
+                isinstance(status, int) and 400 <= status < 500
             ):
                 self.oauth_session.config_entry.async_start_reauth(
                     self.oauth_session.hass

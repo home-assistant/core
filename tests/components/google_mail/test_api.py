@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock
 
+from aiohttp.client_exceptions import ClientResponseError
 from google.auth.exceptions import RefreshError
 import pytest
 
@@ -100,6 +101,19 @@ async def test_check_and_refresh_token_legacy_refresh_error() -> None:
     """Test legacy refresh errors still trigger reauth at runtime."""
     auth, _, config_entry = _build_auth(ConfigEntryState.LOADED)
     auth.oauth_session.async_ensure_token_valid.side_effect = RefreshError
+
+    with pytest.raises(HomeAssistantError):
+        await auth.check_and_refresh_token()
+
+    config_entry.async_start_reauth.assert_called_once_with(auth.oauth_session.hass)
+
+
+async def test_check_and_refresh_token_legacy_client_response_4xx() -> None:
+    """Test legacy 4xx response errors still trigger reauth at runtime."""
+    auth, _, config_entry = _build_auth(ConfigEntryState.LOADED)
+    auth.oauth_session.async_ensure_token_valid.side_effect = ClientResponseError(
+        request_info=Mock(), history=(), status=401
+    )
 
     with pytest.raises(HomeAssistantError):
         await auth.check_and_refresh_token()
