@@ -75,8 +75,12 @@ def _get_coordinator(
 
 def _parse_time_str(time_str: str, field_name: str) -> time:
     """Parse a time string (HH:MM or HH:MM:SS) to a datetime.time object."""
+    parts = time_str.split(":")
+    if len(parts) not in (2, 3):
+        raise ServiceValidationError(
+            f"{field_name} must be in HH:MM or HH:MM:SS format"
+        )
     try:
-        parts = time_str.split(":")
         return datetime.strptime(f"{parts[0]}:{parts[1]}", "%H:%M").time()
     except (ValueError, IndexError) as err:
         raise ServiceValidationError(
@@ -113,25 +117,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
         batt_mode: int = valid_modes[batt_mode_str]
 
-        try:
-            start_parts = start_time_str.split(":")
-            start_time = datetime.strptime(
-                f"{start_parts[0]}:{start_parts[1]}", "%H:%M"
-            ).time()
-        except (ValueError, IndexError) as err:
-            raise ServiceValidationError(
-                "start_time must be in HH:MM or HH:MM:SS format"
-            ) from err
-
-        try:
-            end_parts = end_time_str.split(":")
-            end_time = datetime.strptime(
-                f"{end_parts[0]}:{end_parts[1]}", "%H:%M"
-            ).time()
-        except (ValueError, IndexError) as err:
-            raise ServiceValidationError(
-                "end_time must be in HH:MM or HH:MM:SS format"
-            ) from err
+        start_time = _parse_time_str(start_time_str, "start_time")
+        end_time = _parse_time_str(end_time_str, "end_time")
 
         coordinator: GrowattCoordinator = _get_coordinator(hass, device_id, "min")
         await coordinator.update_time_segment(
