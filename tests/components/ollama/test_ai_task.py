@@ -8,6 +8,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
+from homeassistant.components.ollama.const import (
+    CONF_KEEP_ALIVE,
+    DEFAULT_KEEP_ALIVE,
+    KEEP_ALIVE_FOREVER,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
@@ -357,3 +362,135 @@ async def test_generate_data_with_unsupported_file_format(
                 {"media_content_id": "media-source://media/context.txt"},
             ],
         )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_keep_alive_forever(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that keep_alive=-1 is passed as integer -1 (not '-1s') to Ollama.
+
+    The value -1 is a special sentinel meaning "keep loaded forever".
+    It must NOT be formatted as a duration string ('-1s' would mean -1 seconds).
+    """
+    entity_id = "ai_task.ollama_ai_task"
+
+    # Update the AI task subentry with keep_alive=-1 (the "forever" sentinel)
+    ai_task_subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_subentry,
+        data={**ai_task_subentry.data, CONF_KEEP_ALIVE: KEEP_ALIVE_FOREVER},
+    )
+    await hass.async_block_till_done()
+
+    async def mock_chat_response() -> object:
+        """Mock streaming response."""
+        yield {
+            "message": {"role": "assistant", "content": "response"},
+            "done": True,
+            "done_reason": "stop",
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=mock_chat_response(),
+    ) as mock_chat:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Keep-Alive Forever",
+            entity_id=entity_id,
+            instructions="Test",
+        )
+
+    assert result.data == "response"
+    assert mock_chat.call_count == 1
+    # -1 must be passed as the integer -1, not as the string "-1s"
+    assert mock_chat.call_args.kwargs["keep_alive"] == KEEP_ALIVE_FOREVER
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_keep_alive_duration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a positive keep_alive value is passed as '<N>s' duration string."""
+    entity_id = "ai_task.ollama_ai_task"
+
+    keep_alive_seconds = 300
+    ai_task_subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "ai_task_data"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        ai_task_subentry,
+        data={**ai_task_subentry.data, CONF_KEEP_ALIVE: keep_alive_seconds},
+    )
+    await hass.async_block_till_done()
+
+    async def mock_chat_response() -> object:
+        """Mock streaming response."""
+        yield {
+            "message": {"role": "assistant", "content": "response"},
+            "done": True,
+            "done_reason": "stop",
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=mock_chat_response(),
+    ) as mock_chat:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Keep-Alive Duration",
+            entity_id=entity_id,
+            instructions="Test",
+        )
+
+    assert result.data == "response"
+    assert mock_chat.call_count == 1
+    # Positive values should be passed as a seconds-duration string
+    assert mock_chat.call_args.kwargs["keep_alive"] == f"{keep_alive_seconds}s"
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_data_keep_alive_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the default keep_alive value (-1) is passed as integer -1."""
+    entity_id = "ai_task.ollama_ai_task"
+
+    async def mock_chat_response() -> object:
+        """Mock streaming response."""
+        yield {
+            "message": {"role": "assistant", "content": "response"},
+            "done": True,
+            "done_reason": "stop",
+        }
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=mock_chat_response(),
+    ) as mock_chat:
+        result = await ai_task.async_generate_data(
+            hass,
+            task_name="Test Keep-Alive Default",
+            entity_id=entity_id,
+            instructions="Test",
+        )
+
+    assert result.data == "response"
+    assert mock_chat.call_count == 1
+    # Default (no CONF_KEEP_ALIVE in subentry data) should fall back to -1 (forever)
+    assert mock_chat.call_args.kwargs["keep_alive"] == DEFAULT_KEEP_ALIVE
