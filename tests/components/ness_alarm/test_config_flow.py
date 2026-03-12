@@ -77,17 +77,68 @@ async def test_user_flow_with_infer_arming_state(
 
 
 async def test_user_flow_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we abort if already configured."""
-    mock_config_entry.add_to_hass(hass)
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+            CONF_INFER_ARMING_STATE: False,
+        },
+    )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
+    mock_client.update.assert_not_called()
+
+
+async def test_user_flow_allows_multiple_alarms(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow allows another panel when unique ID differs."""
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1993,
+            CONF_INFER_ARMING_STATE: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Ness Alarm 192.168.1.100:1993"
 
 
 @pytest.mark.parametrize(
@@ -225,10 +276,19 @@ async def test_import_yaml_config_errors(
 
 
 async def test_import_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we abort import if already configured."""
-    mock_config_entry.add_to_hass(hass)
+    existing_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 4999,
+        },
+        unique_id="192.168.1.100:4999",
+    )
+    existing_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -241,7 +301,8 @@ async def test_import_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
+    mock_client.update.assert_not_called()
 
 
 @pytest.mark.parametrize(

@@ -70,6 +70,28 @@ async def test_config_entry_setup(hass: HomeAssistant, mock_nessclient) -> None:
     assert mock_nessclient.update.call_count == 1
 
 
+async def test_coordinator_refresh_updates_client(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test coordinator refresh calls the client update method."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await entry.runtime_data.async_request_refresh()
+
+    # First setup refresh plus explicit request_refresh call.
+    assert mock_nessclient.update.call_count == 2
+
+
 async def test_config_entry_unload(hass: HomeAssistant, mock_nessclient) -> None:
     """Test config entry unload."""
     entry = MockConfigEntry(

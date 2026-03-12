@@ -88,6 +88,11 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return NessAlarmOptionsFlowHandler()
 
+    @staticmethod
+    def _get_panel_unique_id(host: str, port: int) -> str:
+        """Build a stable unique ID for a panel."""
+        return f"{host}:{port}"
+
     async def _test_connection(self, host: str, port: int) -> None:
         """Test connection to the alarm panel.
 
@@ -110,6 +115,9 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
+
+            await self.async_set_unique_id(self._get_panel_unique_id(host, port))
+            self._abort_if_unique_id_configured()
 
             # Test connection to the alarm panel
             try:
@@ -138,6 +146,9 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import YAML configuration."""
         host = import_data[CONF_HOST]
         port = import_data[CONF_PORT]
+
+        await self.async_set_unique_id(self._get_panel_unique_id(host, port))
+        self._abort_if_unique_id_configured()
 
         # Test connection to the alarm panel
         try:
