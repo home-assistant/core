@@ -94,7 +94,7 @@ async def test_entity_availability_old(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
-    # Make sure Rflink mock does not 'recover' to quickly from the
+    # Make sure Rflink mock does not 'recover' too quickly from the
     # disconnect or else the unavailability cannot be measured
     config = {
         "rflink": {
@@ -300,7 +300,7 @@ async def test_entity_availability(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """If Rflink device is disconnected, entities should become unavailable."""
-    # Make sure Rflink mock does not 'recover' to quickly from the
+    # Make sure Rflink mock does not 'recover' too quickly from the
     # disconnect or else the unavailability cannot be measured
     config = {
         "rflink": {
