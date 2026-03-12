@@ -50,6 +50,11 @@ slae_sh_device = USBDevice(
 )
 
 
+@pytest.fixture(autouse=True)
+def disable_usb_monitor() -> None:
+    """Re-enable usb integration that was disabled in global conftest."""
+
+
 async def test_aiousbwatcher_discovery(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
