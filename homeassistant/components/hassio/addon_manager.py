@@ -209,11 +209,6 @@ class AddonManager:
             self.addon_slug, AddonsOptions(config=config)
         )
 
-    def _check_addon_available(self, addon_info: AddonInfo) -> None:
-        """Check if the managed add-on is available."""
-        if not addon_info.available:
-            raise AddonError(f"{self.addon_name} app is not available")
-
     @api_error(
         "Failed to install the {addon_name} app", expected_error_type=SupervisorError
     )
