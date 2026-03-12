@@ -169,7 +169,7 @@ async def test_async_setup_entry_auth_failed_on_response_error(
             await ollama.async_setup_entry(hass, mock_config_entry)
 
 
-async def test_async_setup_entry_not_ready_on_non_auth_response_error(
+async def test_async_setup_entry_error_on_non_auth_response_error(
     hass: HomeAssistant,
 ) -> None:
     """Test async_setup_entry raises not ready on non-auth response error."""
