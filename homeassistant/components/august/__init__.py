@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import cast
 
+from aiohttp import ClientError
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig
@@ -55,7 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
-    except (AugustApiAIOHTTPError, OAuth2TokenRequestError, CannotConnect) as err:
+    except (
+        AugustApiAIOHTTPError,
+        OAuth2TokenRequestError,
+        ClientError,
+        CannotConnect,
+    ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

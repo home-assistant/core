@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 import pytest
 from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
@@ -345,6 +345,20 @@ async def test_oauth_token_request_transient_error_is_retryable(
             status=500,
             domain=DOMAIN,
         ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_oauth_client_error_is_retryable(hass: HomeAssistant) -> None:
+    """Test OAuth transport client errors mark entry for setup retry."""
+    entry = await mock_august_config_entry(hass)
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        side_effect=ClientError("connection error"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
