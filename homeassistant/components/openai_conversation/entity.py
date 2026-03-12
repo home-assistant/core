@@ -658,9 +658,10 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
             except openai.RateLimitError as err:
-                if model_args[
-                    "service_tier"
-                ] == "flex" and "Resource Unavailable" in str(err):
+                if (
+                    model_args["service_tier"] == "flex"
+                    and "resource unavailable" in err.message.lower()
+                ):
                     LOGGER.info(
                         "Flex tier is not available at the moment, continuing with default tier"
                     )
