@@ -59,34 +59,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.exception("Failed to call async_unload_platforms")
         unload_ok = False
 
-    # 3) Remove instances bound to this entry from entity_platform (prevent residue)
-    if "entity_platform" in hass.data:
-        platforms = hass.data["entity_platform"].get(DOMAIN, [])
-        if platforms:
-            filtered = [
-                p
-                for p in platforms
-                if not getattr(getattr(p, "config_entry", None), "entry_id", None)
-                == entry.entry_id
-            ]
-            hass.data["entity_platform"][DOMAIN] = filtered
-
-    # 4) Clean up devices in device registry belonging to this config entry
-    try:
-        dev_reg = dr.async_get(hass)
-        for device in list(dev_reg.devices.values()):
-            # Compatible with old and new attributes: prioritize config_entries (list), otherwise use single config_entry_id
-            config_entries = getattr(device, "config_entries", None)
-            if config_entries:
-                if entry.entry_id in config_entries:
-                    dev_reg.async_remove_device(device.id)
-            else:
-                if getattr(device, "config_entry_id", None) == entry.entry_id:
-                    dev_reg.async_remove_device(device.id)
-    except Exception:  # noqa: BLE001
-        _LOGGER.exception("Exception occurred while cleaning up device registry")
-
-    # 5) Clean up this extension's entry from hass.data
+    # 3) Clean up this extension's entry from hass.data
+    # Note: Do not remove devices from the device registry here. Unload (e.g. on
+    # reload) should not delete devices; removal is handled by
+    # async_remove_config_entry_device or when the config entry is removed.
     try:
         if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
             hass.data[DOMAIN].pop(entry.entry_id, None)
@@ -103,6 +79,27 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("Config entry %s unloaded successfully", entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Called when the config entry is actually removed (not just unloaded).
+
+    Clean up devices from the device registry and any persistent storage,
+    since follower speakers disappear from the network and cached data
+    should not survive a full removal.
+    """
+    _LOGGER.debug("Removing config entry %s – cleaning up devices", entry.entry_id)
+
+    try:
+        dev_reg = dr.async_get(hass)
+        for device in list(dev_reg.devices.values()):
+            config_entries = getattr(device, "config_entries", None)
+            if config_entries and entry.entry_id in config_entries:
+                dev_reg.async_remove_device(device.id)
+            elif getattr(device, "config_entry_id", None) == entry.entry_id:
+                dev_reg.async_remove_device(device.id)
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception("Error cleaning up device registry on entry removal")
 
 
 async def async_remove_config_entry_device(
