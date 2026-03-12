@@ -58,7 +58,7 @@ def config_entry() -> MockConfigEntry:
             "token": {
                 "access_token": "mock-access-token",
                 "refresh_token": "mock-refresh-token",
-                "expires_at": 1_725_000_000,
+                "expires_at": 9_999_999_999,
                 "scope": " ".join(OAUTH2_SCOPES),
             },
         },
@@ -77,23 +77,38 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_dropbox_client(account_info: SimpleNamespace) -> Generator[MagicMock]:
-    """Patch DropboxAPIClient instances used by the integration."""
+    """Patch DropboxAPIClient to exercise auth while mocking API calls."""
 
     client = MagicMock()
-    client.get_account_info = AsyncMock(return_value=account_info)
     client.list_folder = AsyncMock(return_value=[])
     client.download_file = MagicMock()
     client.upload_file = AsyncMock()
     client.delete_file = AsyncMock()
 
+    captured_auth = None
+
+    def capture_auth(auth):
+        nonlocal captured_auth
+        captured_auth = auth
+        return client
+
+    async def get_account_info_with_auth():
+        await captured_auth.async_get_access_token()
+        return client.get_account_info.return_value
+
+    client.get_account_info = AsyncMock(
+        side_effect=get_account_info_with_auth,
+        return_value=account_info,
+    )
+
     with (
         patch(
             "homeassistant.components.dropbox.config_flow.DropboxAPIClient",
-            return_value=client,
+            side_effect=capture_auth,
         ),
         patch(
             "homeassistant.components.dropbox.DropboxAPIClient",
-            return_value=client,
+            side_effect=capture_auth,
         ),
     ):
         yield client
