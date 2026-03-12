@@ -154,10 +154,10 @@ async def test_evict_faked_translations(
 
 
 @pytest.mark.timeout(60)
-def test_pipe_self_wakeup_env_var_enables_fresh_pytest_run(
+def test_pipe_self_wakeup_env_var_installs_on_conftest_import(
     tmp_path: pathlib.Path,
 ) -> None:
-    """Test the pipe self-wakeup workaround toggles in a fresh process.
+    """Test the pipe self-wakeup workaround toggles on conftest import in a fresh process.
 
     We spawn a fresh Python process because `HASS_TEST_USE_PIPE_SELF_WAKEUP`
     must be present before `tests.conftest` installs the event loop policy.
