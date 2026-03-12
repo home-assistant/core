@@ -121,6 +121,13 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 await client.list()
+
+        except ollama.ResponseError as err:
+            if api_key and err.status_code == 401:
+                errors["base"] = "unauthorized_api_key"
+            else:
+                _LOGGER.exception("Unexpected Ollama response error")
+                errors["base"] = "unknown"
         except TimeoutError, httpx.ConnectError:
             errors["base"] = "cannot_connect"
         except Exception:
