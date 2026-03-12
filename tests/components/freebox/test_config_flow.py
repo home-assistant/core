@@ -177,7 +177,7 @@ async def test_zeroconf_missing_api_domain(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
             ip_address=ip_address(MDNS_TARGET_IP),
             ip_addresses=[ip_address(MDNS_TARGET_IP)],
