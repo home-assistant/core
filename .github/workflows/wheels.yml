@@ -25,7 +25,7 @@ concurrency:
 jobs:
   init:
     name: Initialize wheels builder
-    if: github.repository_owner == 'yuanzhou029'
+    if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
@@ -101,7 +101,7 @@ jobs:
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
-    if: github.repository_owner == 'yuanzhou029'
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ${{ matrix.os }}
     strategy:
@@ -207,6 +207,14 @@ jobs:
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
+            # 检查默认分支名称
+            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | cut -d ":" -f 2 | xargs)
+            if [ -z "$DEFAULT_BRANCH" ]; then
+              # 如果无法获取，默认尝试 master
+              DEFAULT_BRANCH="master"
+            fi
+            echo "Default branch is: $DEFAULT_BRANCH"
+            
             # 复制轮子文件到 Gitee 仓库
             cp ../gitee_wheels/*.whl ./
             
@@ -214,8 +222,9 @@ jobs:
             git add *.whl
             if ! git diff --cached --quiet; then
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              git push origin main
-              echo "Successfully uploaded wheels to Gitee"
+              # 对于空仓库，首次推送需要设置上游分支
+              git push -u origin $DEFAULT_BRANCH
+              echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
             else
               echo "No new wheels to upload"
             fi
@@ -225,7 +234,7 @@ jobs:
 
   integrations:
     name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
-    if: github.repository_owner == 'yuanzhou029'
+    if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ${{ matrix.os }}
     strategy:
@@ -355,6 +364,14 @@ jobs:
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
+            # 检查默认分支名称
+            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | cut -d ":" -f 2 | xargs)
+            if [ -z "$DEFAULT_BRANCH" ]; then
+              # 如果无法获取，默认尝试 master
+              DEFAULT_BRANCH="master"
+            fi
+            echo "Default branch is: $DEFAULT_BRANCH"
+            
             # 复制轮子文件到 Gitee 仓库
             cp ../gitee_wheels/*.whl ./
             
@@ -362,8 +379,9 @@ jobs:
             git add *.whl
             if ! git diff --cached --quiet; then
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              git push origin main
-              echo "Successfully uploaded wheels to Gitee"
+              # 对于空仓库，首次推送需要设置上游分支
+              git push -u origin $DEFAULT_BRANCH
+              echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
             else
               echo "No new wheels to upload"
             fi
