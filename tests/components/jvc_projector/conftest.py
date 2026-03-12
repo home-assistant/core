@@ -65,7 +65,7 @@ CAPABILITIES = {
     },
     cmd.HdrProcessing.name: {
         "name": cmd.HdrProcessing.name,
-        "parameter": {"read": {"0": "static", "1": "static"}},
+        "parameter": {"read": {"0": "hdr", "1": "static"}},
     },
     cmd.LightTime.name: {
         "name": cmd.LightTime.name,
