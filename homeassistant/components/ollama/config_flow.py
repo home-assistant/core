@@ -100,8 +100,6 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         if api_key:
             api_key = api_key.strip()
 
-        self._async_abort_entries_match({CONF_URL: url})
-
         try:
             url = cv.url(url)
         except vol.Invalid:
@@ -113,6 +111,8 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 errors=errors,
             )
+
+        self._async_abort_entries_match({CONF_URL: url})
 
         try:
             client = ollama.AsyncClient(
