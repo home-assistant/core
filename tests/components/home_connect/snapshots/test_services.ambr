@@ -77,7 +77,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-None-additional_service_data0-Dishwasher]
+# name: test_start_selected_program[None-0-None-additional_service_data0-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -88,7 +88,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-None-additional_service_data1-Dishwasher]
+# name: test_start_selected_program[None-0-None-additional_service_data1-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -114,7 +114,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-None-additional_service_data2-Dishwasher]
+# name: test_start_selected_program[None-0-None-additional_service_data2-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -133,7 +133,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-None-additional_service_data3-Dishwasher]
+# name: test_start_selected_program[None-0-None-additional_service_data3-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -152,7 +152,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-options_already_set1-additional_service_data0-Dishwasher]
+# name: test_start_selected_program[None-0-options_already_set1-additional_service_data0-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -171,40 +171,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[False-options_already_set1-additional_service_data1-Dishwasher]
-  _Call(
-    tuple(
-      'SIEMENS-HCS02DWH1-6BE58C26DCC1',
-    ),
-    dict({
-      'options': list([
-        dict({
-          'display_value': None,
-          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
-          'name': None,
-          'unit': None,
-          'value': True,
-        }),
-        dict({
-          'display_value': None,
-          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
-          'name': None,
-          'unit': None,
-          'value': 1200,
-        }),
-        dict({
-          'display_value': None,
-          'key': <OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: 'BSH.Common.Option.FinishInRelative'>,
-          'name': None,
-          'unit': None,
-          'value': 1200,
-        }),
-      ]),
-      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
-    }),
-  )
-# ---
-# name: test_start_selected_program[False-options_already_set1-additional_service_data2-Dishwasher]
+# name: test_start_selected_program[None-0-options_already_set1-additional_service_data1-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -225,12 +192,45 @@
           'unit': None,
           'value': 1200,
         }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: 'BSH.Common.Option.FinishInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
       ]),
       'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
     }),
   )
 # ---
-# name: test_start_selected_program[False-options_already_set1-additional_service_data3-Dishwasher]
+# name: test_start_selected_program[None-0-options_already_set1-additional_service_data2-Dishwasher]
+  _Call(
+    tuple(
+      'SIEMENS-HCS02DWH1-6BE58C26DCC1',
+    ),
+    dict({
+      'options': list([
+        dict({
+          'display_value': None,
+          'key': <OptionKey.DISHCARE_DISHWASHER_HALF_LOAD: 'Dishcare.Dishwasher.Option.HalfLoad'>,
+          'name': None,
+          'unit': None,
+          'value': True,
+        }),
+        dict({
+          'display_value': None,
+          'key': <OptionKey.BSH_COMMON_START_IN_RELATIVE: 'BSH.Common.Option.StartInRelative'>,
+          'name': None,
+          'unit': None,
+          'value': 1200,
+        }),
+      ]),
+      'program_key': <ProgramKey.DISHCARE_DISHWASHER_ECO_50: 'Dishcare.Dishwasher.Program.Eco50'>,
+    }),
+  )
+# ---
+# name: test_start_selected_program[None-0-options_already_set1-additional_service_data3-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -256,7 +256,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-None-additional_service_data0-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-None-additional_service_data0-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -267,7 +267,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-None-additional_service_data1-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-None-additional_service_data1-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -293,7 +293,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-None-additional_service_data2-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-None-additional_service_data2-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -312,7 +312,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-None-additional_service_data3-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-None-additional_service_data3-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -331,7 +331,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-options_already_set1-additional_service_data0-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-options_already_set1-additional_service_data0-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -350,7 +350,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-options_already_set1-additional_service_data1-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-options_already_set1-additional_service_data1-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -383,7 +383,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-options_already_set1-additional_service_data2-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-options_already_set1-additional_service_data2-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
@@ -409,7 +409,7 @@
     }),
   )
 # ---
-# name: test_start_selected_program[True-options_already_set1-additional_service_data3-Dishwasher]
+# name: test_start_selected_program[get_active_program_side_effect1-1-options_already_set1-additional_service_data3-Dishwasher]
   _Call(
     tuple(
       'SIEMENS-HCS02DWH1-6BE58C26DCC1',
