@@ -65,7 +65,7 @@ class HIVIDeviceManager:
 
         self._unsub_discovery = None
         self._discovery_queue = asyncio.Queue()
-        self._handle_discovery_worker = hass.loop.create_task(
+        self._handle_discovery_worker = hass.async_create_task(
             self._handle_discovery_loop()
         )
 
@@ -163,7 +163,6 @@ class HIVIDeviceManager:
                     )
                     # Update existing device information
                     device_dict_new = device_obj.model_dump(mode="json")
-                    device_dict_new.pop("psk", None)
                     self.device_data_registry.set_device_dict_by_ha_device_id(
                         ha_device_id, device_dict_new
                     )
@@ -309,7 +308,6 @@ class HIVIDeviceManager:
                         device_obj.sync_group_status = SyncGroupStatus.STANDALONE
 
                 device_dict_new = device_obj.model_dump(mode="json")
-                device_dict_new.pop("psk", None)
                 self.device_data_registry.set_device_dict_by_ha_device_id(
                     ha_device_id,
                     device_dict_new,
