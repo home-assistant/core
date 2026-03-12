@@ -1016,6 +1016,18 @@
           "config_flow": false,
           "iot_class": "cloud_push",
           "name": "Cisco Webex Teams"
+        },
+        "meraki": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Meraki"
+        },
+        "meraki_dashboard": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Meraki Dashboard"
         }
       }
     },
@@ -4027,12 +4039,6 @@
           "name": "Melnor RainCloud"
         }
       }
-    },
-    "meraki": {
-      "name": "Meraki",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "message_bird": {
       "name": "MessageBird",

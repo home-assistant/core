@@ -18,10 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-CONF_VALIDATOR = "validator"
-CONF_SECRET = "secret"
-URL = "/api/meraki"
-ACCEPTED_VERSIONS = ["2.0", "2.1"]
+from .const import ACCEPTED_VERSIONS, CONF_SECRET, CONF_VALIDATOR, URL
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +36,9 @@ async def async_setup_scanner(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up an endpoint for the Meraki tracker."""
+    if discovery_info is not None:
+        config = discovery_info
+
     hass.http.register_view(MerakiView(config, async_see))
 
     return True

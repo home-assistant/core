@@ -419,6 +419,8 @@ FLOWS = {
         "media_extractor",
         "melcloud",
         "melnor",
+        "meraki",
+        "meraki_dashboard",
         "met",
         "met_eireann",
         "meteo_france",

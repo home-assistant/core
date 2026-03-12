@@ -6,16 +6,11 @@ import json
 from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import legacy
-from homeassistant.components.meraki.device_tracker import (
-    CONF_SECRET,
-    CONF_VALIDATOR,
-    URL,
-)
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.components.meraki.const import CONF_VALIDATOR, DOMAIN, URL
+from homeassistant.const import CONF_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 from tests.typing import ClientSessionGenerator
 
@@ -26,24 +21,19 @@ async def meraki_client(
     hass_client: ClientSessionGenerator,
 ) -> TestClient:
     """Meraki mock client."""
-    assert await async_setup_component(
-        hass,
-        device_tracker.DOMAIN,
-        {
-            device_tracker.DOMAIN: {
-                CONF_PLATFORM: "meraki",
-                CONF_VALIDATOR: "validator",
-                CONF_SECRET: "secret",
-            }
-        },
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_VALIDATOR: "validator", CONF_SECRET: "secret"},
     )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     return await hass_client()
 
 
 async def test_invalid_or_missing_data(
-    mock_device_tracker_conf: list[legacy.Device], meraki_client
+    meraki_client,
 ) -> None:
     """Test validator with invalid or missing data."""
     req = await meraki_client.get(URL)
@@ -90,7 +80,7 @@ async def test_invalid_or_missing_data(
 
 
 async def test_data_will_be_saved(
-    mock_device_tracker_conf: list[legacy.Device], hass: HomeAssistant, meraki_client
+    hass: HomeAssistant, meraki_client
 ) -> None:
     """Test with valid data."""
     data = {

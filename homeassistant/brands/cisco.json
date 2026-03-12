@@ -1,5 +1,11 @@
 {
   "domain": "cisco",
   "name": "Cisco",
-  "integrations": ["cisco_ios", "cisco_mobility_express", "cisco_webex_teams"]
+  "integrations": [
+    "cisco_ios",
+    "cisco_mobility_express",
+    "cisco_webex_teams",
+    "meraki",
+    "meraki_dashboard"
+  ]
 }
