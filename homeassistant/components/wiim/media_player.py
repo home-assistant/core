@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
@@ -79,10 +79,12 @@ HA_TO_SDK_REPEAT = {
 
 
 def media_player_exception_wrap[
-    _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity", **_P, _R
- ](
+    _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity",
+    **_P,
+    _R,
+](
     func: Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]],
-) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Awaitable[_R]]:
+) -> Callable[Concatenate[_WiimMediaPlayerEntityT, _P], Coroutine[Any, Any, _R]]:
     """Wrap media player commands to handle SDK exceptions consistently."""
 
     @wraps(func)
@@ -288,8 +290,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_content_id = media.uri
             self._attr_media_content_type = MediaType.MUSIC
             self._attr_media_duration = media.duration
-            self._attr_media_position = media.position
-            self._attr_media_position_updated_at = utcnow()
+            if self._attr_media_position != media.position:
+                self._attr_media_position = media.position
+                self._attr_media_position_updated_at = utcnow()
         else:
             self._clear_media_metadata()
 
@@ -384,7 +387,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self, _service: UpnpService, state_variables: list[UpnpStateVariable]
     ) -> None:
         """Handle SDK events that only require a state refresh."""
-        LOGGER.debug("Device %s: Received SDK refresh event: %s", self.entity_id, state_variables)
+        LOGGER.debug(
+            "Device %s: Received SDK refresh event: %s", self.entity_id, state_variables
+        )
         self._update_ha_state_from_sdk_cache()
 
     async def _sync_follower_features(
@@ -397,10 +402,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         leader_device = wiim_data.controller.get_device(group_snapshot.leader_udn)
 
-        if (
-            leader_features := await self._async_get_supported_features_for_device(
-                leader_device
-            )
+        if leader_features := await self._async_get_supported_features_for_device(
+            leader_device
         ):
             if self._attr_supported_features != leader_features:
                 self._attr_supported_features = leader_features
@@ -487,7 +490,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
     @callback
-    def _async_schedule_update_supported_features(self, *, write_state: bool = True) -> None:
+    def _async_schedule_update_supported_features(
+        self, *, write_state: bool = True
+    ) -> None:
         """Update supported features based on current state."""
         if not self.hass:
             return
@@ -513,9 +518,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await super().async_added_to_hass()
         self._device.general_event_callback = self._handle_sdk_general_device_update
         self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
-        self._device.rendering_control_event_callback = (
-            self._handle_sdk_refresh_event
-        )
+        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
         self._device.play_queue_event_callback = self._handle_sdk_refresh_event
         LOGGER.debug(
             "Entity %s registered callbacks with WiimDevice %s",
@@ -689,9 +692,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @media_player_exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
+        if isinstance(self._attr_repeat, str):
+            repeat_enum = RepeatMode(self._attr_repeat)
+        else:
+            repeat_enum = self._attr_repeat
         await self._device.async_set_loop_mode(
             self._device.build_loop_mode(
-                HA_TO_SDK_REPEAT[self._attr_repeat],
+                HA_TO_SDK_REPEAT[repeat_enum],
                 shuffle,
             )
         )
