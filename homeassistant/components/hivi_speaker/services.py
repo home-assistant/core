@@ -1,3 +1,7 @@
+"""Services for the HiVi Speaker integration."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -48,9 +52,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             if "device_manager" not in domain_data:
                 continue
             device_manager = domain_data["device_manager"]
-            ha_device_id = (
-                device_manager.device_data_registry
-                .get_ha_device_id_by_speaker_device_id(speaker_device_id)
+            ha_device_id = device_manager.device_data_registry.get_ha_device_id_by_speaker_device_id(
+                speaker_device_id
             )
             if ha_device_id is None:
                 _LOGGER.warning(
