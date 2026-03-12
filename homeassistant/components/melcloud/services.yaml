@@ -21,3 +21,27 @@ set_vane_vertical:
       example: "auto"
       selector:
         text:
+
+set_holiday_mode:
+  target:
+    entity:
+      integration: melcloud
+      domain: water_heater
+  fields:
+    device_id:
+      required: true
+      example: 127008339
+      selector:
+        number:
+          min: 1
+          mode: box
+    start_date:
+      required: false
+      example: "2026-03-10"
+      selector:
+        date:
+    end_date:
+      required: false
+      example: "2026-03-20"
+      selector:
+        date:
