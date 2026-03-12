@@ -1,5 +1,6 @@
 """Provides triggers for texts."""
 
+from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
@@ -14,7 +15,7 @@ from .const import DOMAIN
 class TextChangedTrigger(EntityTriggerBase):
     """Trigger for text entity when its content changes."""
 
-    _domains = {DOMAIN}
+    _domains = {DOMAIN, INPUT_TEXT_DOMAIN}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
