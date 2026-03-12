@@ -341,8 +341,8 @@ class WebRTCProvider(CameraWebRTCProvider):
     @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        ws_client = self._sessions.pop(session_id)
-        self._hass.async_create_task(ws_client.close())
+        if ws_client := self._sessions.pop(session_id, None):
+            self._hass.async_create_task(ws_client.close())
 
     async def async_get_image(
         self,
@@ -359,7 +359,6 @@ class WebRTCProvider(CameraWebRTCProvider):
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
         if not (stream_source := await camera.stream_source()):
-            await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
 
         if camera.platform.platform_name == "generic":
@@ -368,7 +367,6 @@ class WebRTCProvider(CameraWebRTCProvider):
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
-            await self.teardown()
             raise HomeAssistantError("Stream source is not supported by go2rtc")
 
         camera_prefs = await get_dynamic_camera_stream_settings(

@@ -167,7 +167,8 @@ async def _test_setup_and_signaling(
         assert session in provider._sessions
 
     with patch.object(provider, "teardown", wraps=provider.teardown) as teardown:
-        # Set stream source to None and provider should be skipped
+        # Set stream source to None — error should be sent but existing
+        # sessions for other cameras must not be torn down
         rest_client.streams.list.return_value = {}
         receive_message_callback.reset_mock()
         camera.set_stream_source(None)
@@ -177,14 +178,16 @@ async def _test_setup_and_signaling(
         receive_message_callback.assert_called_once_with(
             WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
         )
-        teardown.assert_called_once()
-        # We use one ws_client mock for all sessions
-        assert ws_client.close.call_count == len(sessions)
+        teardown.assert_not_called()
+        # Existing sessions should still be intact
+        for session in sessions:
+            assert session in provider._sessions
+        ws_client.close.assert_not_called()
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
-        assert teardown.call_count == 2
+        teardown.assert_called_once()
 
 
 @pytest.mark.usefixtures(
@@ -432,9 +435,8 @@ async def test_close_session(
     camera = init_test_integration
     session_id = "session_id"
 
-    # Session doesn't exist
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    # Session doesn't exist — should be a no-op
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
     # Store session
@@ -452,10 +454,9 @@ async def test_close_session(
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_called_once()
 
-    # Close again should raise an error
+    # Close again should be a no-op
     ws_client.reset_mock()
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
 
