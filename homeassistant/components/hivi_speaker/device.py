@@ -78,7 +78,6 @@ class HIVIDevice(BaseModel):
     # Home Assistant integration
     entity_id: Optional[str] = None
     config_entry_id: Optional[str] = None
-    # switch_entities: dict = field(default_factory=dict)
 
     # other info
     wifi_channel: str = "0"
