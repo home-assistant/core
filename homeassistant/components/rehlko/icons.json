@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "loadshed_parameter": {
+        "default": "mdi:transmission-tower-off"
+      }
+    },
     "sensor": {
       "device_ip_address": {
         "default": "mdi:ip-network"

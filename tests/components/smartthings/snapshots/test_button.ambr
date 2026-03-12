@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_all_entities[da_ac_air_01011][button.air_filter_reset_hepa_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.air_filter_reset_hepa_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Reset HEPA filter',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reset HEPA filter',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reset_hepa_filter',
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_custom.hepaFilter_resetHepaFilter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][button.air_filter_reset_hepa_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air filter Reset HEPA filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.air_filter_reset_hepa_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[da_ks_hood_01001][button.range_hood_reset_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -342,7 +391,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][button.refrigerator_reset_water_filter-entry]
+# name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -355,7 +404,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.refrigerator_1_reset_water_filter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,13 +427,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][button.refrigerator_reset_water_filter-state]
+# name: test_all_entities[da_ref_normal_01001][button.refrigerator_1_reset_water_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Reset water filter',
+      'friendly_name': 'Refrigerator 1 Reset water filter',
     }),
     'context': <ANY>,
-    'entity_id': 'button.refrigerator_reset_water_filter',
+    'entity_id': 'button.refrigerator_1_reset_water_filter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

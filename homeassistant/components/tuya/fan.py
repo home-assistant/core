@@ -59,7 +59,7 @@ class _DirectionEnumWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status and return the direction string."""
-        if (value := super().read_device_status(device)) and value in {
+        if (value := self._read_dpcode_value(device)) and value in {
             DIRECTION_FORWARD,
             DIRECTION_REVERSE,
         }:
@@ -80,12 +80,12 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
+class _FanSpeedEnumWrapper(DPCodeEnumWrapper[int]):
     """Wrapper for fan speed DP code (from an enum)."""
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return ordered_list_item_to_percentage(self.options, value)
 
@@ -94,7 +94,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         return percentage_to_ordered_list_item(self.options, value)
 
 
-class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
+class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for fan speed DP code (from an integer)."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -104,7 +104,7 @@ class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(self._remap_helper.remap_value_to(value))
 
@@ -154,7 +154,7 @@ async def async_setup_entry(
                         oscillate_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, _OSCILLATE_DPCODES, prefer_function=True
                         ),
-                        speed_wrapper=_get_speed_wrapper(device),  # type: ignore[arg-type]
+                        speed_wrapper=_get_speed_wrapper(device),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, _SWITCH_DPCODES, prefer_function=True
                         ),
