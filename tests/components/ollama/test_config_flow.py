@@ -51,7 +51,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         ollama.CONF_URL: "http://localhost:11434",
-        ollama.CONF_API_KEY: "",  # Default API key should be empty string
+        ollama.CONF_API_KEY: None,  # Default API key should be None
     }
     # No subentries created by default
     assert len(result2.get("subentries", [])) == 0
@@ -573,6 +573,10 @@ async def test_ai_task_subentry_not_loaded(
             None,
         ),
         (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: None},
+            None,
+        ),
+        (
             {CONF_URL: "http://localhost:11434"},
             None,
         ),
@@ -590,7 +594,7 @@ async def test_user_step_async_client_headers(
         mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
 
