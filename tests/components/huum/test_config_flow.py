@@ -28,7 +28,6 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    # PLANNED: Rename result2 -> result (reuse the variable) throughout this file
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -60,17 +59,15 @@ async def test_signup_flow_already_set_up(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = (
-        await hass.config_entries.flow.async_configure(  # PLANNED: Rename to result
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
     )
     await hass.async_block_till_done()
-    assert result2["type"] is FlowResultType.ABORT  # PLANNED: result2 -> result
+    assert result2["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(
@@ -99,26 +96,22 @@ async def test_huum_errors(
         "homeassistant.components.huum.config_flow.Huum.status",
         side_effect=raises,
     ):
-        result2 = (
-            await hass.config_entries.flow.async_configure(  # PLANNED: Rename to result
-                result["flow_id"],
-                {
-                    CONF_USERNAME: TEST_USERNAME,
-                    CONF_PASSWORD: TEST_PASSWORD,
-                },
-            )
-        )
-
-    assert result2["type"] is FlowResultType.FORM  # PLANNED: result2 -> result
-    assert result2["errors"] == {"base": error_base}  # PLANNED: result2 -> result
-
-    result2 = (
-        await hass.config_entries.flow.async_configure(  # PLANNED: Rename to result
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_USERNAME: TEST_USERNAME,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
         )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": error_base}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
     )
-    assert result2["type"] is FlowResultType.CREATE_ENTRY  # PLANNED: result2 -> result
+    assert result2["type"] is FlowResultType.CREATE_ENTRY

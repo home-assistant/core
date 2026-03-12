@@ -54,8 +54,6 @@ class HuumDataUpdateCoordinator(DataUpdateCoordinator[HuumStatusResponse]):
         try:
             return await self.huum.status()
         except (Forbidden, NotAuthenticated) as err:
-            # PLANNED: Remove this _LOGGER.error call — the message is already
-            # passed to UpdateFailed, so logging it separately is redundant
             _LOGGER.error("Could not log in to Huum with given credentials")
             raise UpdateFailed(
                 "Could not log in to Huum with given credentials"

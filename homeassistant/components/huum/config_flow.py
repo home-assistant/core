@@ -36,9 +36,6 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            # PLANNED: Move _async_abort_entries_match here, before the try block,
-            # so duplicate entries are rejected before credentials are validated
-            # self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
             try:
                 huum = Huum(
                     user_input[CONF_USERNAME],
@@ -47,8 +44,6 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 await huum.status()
             except Forbidden, NotAuthenticated:
-                # PLANNED: Remove this comment and the _LOGGER.error call below —
-                # the error message is redundant with the errors dict entry
                 # Most likely Forbidden as that is what is returned from `.status()` with bad creds
                 _LOGGER.error("Could not log in to Huum with given credentials")
                 errors["base"] = "invalid_auth"
@@ -56,8 +51,6 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
-                # PLANNED: Remove this _async_abort_entries_match call — it should
-                # be moved before the try block (see PLANNED above)
                 self._async_abort_entries_match(
                     {CONF_USERNAME: user_input[CONF_USERNAME]}
                 )

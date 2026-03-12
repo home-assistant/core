@@ -22,8 +22,6 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-# PLANNED: Replace snapshot_platform import with async_fire_time_changed:
-# from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.common import MockConfigEntry, snapshot_platform
 
 ENTITY_ID = "climate.huum_sauna"
@@ -85,15 +83,10 @@ async def test_set_temperature(
     mock_huum.turn_on.assert_called_once_with(60)
 
 
-# PLANNED: Add freezer: FrozenDateTimeFactory parameter and use
-# freezer.tick(timedelta(seconds=30)) + async_fire_time_changed(hass)
-# instead of mock_config_entry.runtime_data.async_refresh()
-# Also add imports: from datetime import timedelta; from freezegun.api import FrozenDateTimeFactory
 async def test_temperature_range(
     hass: HomeAssistant,
     mock_huum: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    # PLANNED: Add freezer parameter: freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the temperature range."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -107,10 +100,6 @@ async def test_temperature_range(
     mock_huum.sauna_config.min_temp = 0
     mock_huum.sauna_config.max_temp = 0
 
-    # PLANNED: Replace async_refresh with freezer-based time advancement:
-    # freezer.tick(timedelta(seconds=30))
-    # async_fire_time_changed(hass)
-    # await hass.async_block_till_done(wait_background_tasks=True)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -122,10 +111,6 @@ async def test_temperature_range(
     mock_huum.sauna_config.min_temp = 50
     mock_huum.sauna_config.max_temp = 80
 
-    # PLANNED: Replace async_refresh with freezer-based time advancement:
-    # freezer.tick(timedelta(seconds=30))
-    # async_fire_time_changed(hass)
-    # await hass.async_block_till_done(wait_background_tasks=True)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
