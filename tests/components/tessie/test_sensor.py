@@ -17,6 +17,7 @@ from .common import assert_entities, setup_platform
     ("value", "expected"),
     [
         ("Charging", "charging"),
+        ("charging", "charging"),
         (True, "charging"),
         (False, "stopped"),
         ("Unexpected", None),

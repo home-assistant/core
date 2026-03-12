@@ -30,8 +30,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TessieConfigEntry
+from .const import TessieChargeStates
 from .entity import TessieEnergyEntity, TessieEntity
-from .helpers import handle_command, is_charging_or_starting
+from .helpers import charge_state_to_option, handle_command
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -71,7 +72,10 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         unique_id="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
-        value_func=is_charging_or_starting,
+        value_func=lambda state: (
+            charge_state_to_option(state)
+            in {TessieChargeStates["Starting"], TessieChargeStates["Charging"]}
+        ),
     ),
 )
 
