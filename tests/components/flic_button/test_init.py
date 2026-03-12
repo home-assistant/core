@@ -1,6 +1,6 @@
 """Test the Flic Button integration init."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from bleak import BleakError
 
@@ -28,51 +28,10 @@ from . import (
     TWIST_ADDRESS,
     TWIST_SERIAL,
     create_flic2_service_info,
+    create_mock_coordinator,
 )
 
 from tests.common import MockConfigEntry
-
-
-def _create_mock_coordinator(
-    address: str = FLIC2_ADDRESS,
-    serial_number: str = FLIC2_SERIAL,
-    connected: bool = True,
-    is_duo: bool = False,
-    is_twist: bool = False,
-) -> MagicMock:
-    """Create a mock coordinator with proper string attributes."""
-    mock_coordinator = MagicMock()
-    mock_coordinator.async_connect = AsyncMock()
-    mock_coordinator.async_disconnect = AsyncMock()
-    mock_coordinator.connected = connected
-    mock_coordinator.serial_number = serial_number
-    mock_coordinator.is_duo = is_duo
-    mock_coordinator.is_twist = is_twist
-    mock_coordinator.model_name = "Flic 2"
-    mock_coordinator.device_type = DeviceType.FLIC2
-    mock_coordinator.last_update_success = True
-
-    # Create client with real string address
-    mock_client = MagicMock()
-    mock_client.address = address
-    mock_client.is_connected = connected
-    mock_coordinator.client = mock_client
-
-    # Mock capabilities
-    mock_capabilities = MagicMock()
-    mock_capabilities.button_count = 2 if is_duo else 1
-    mock_capabilities.has_rotation = is_duo or is_twist
-    mock_capabilities.has_selector = is_twist
-    mock_coordinator.capabilities = mock_capabilities
-
-    # Battery data
-    battery_voltage = TEST_BATTERY_LEVEL * 3.6 / 1024.0
-    mock_coordinator.data = {"battery_voltage": battery_voltage}
-
-    # Firmware version
-    mock_coordinator.firmware_version = None
-
-    return mock_coordinator
 
 
 async def test_setup_entry_success(
@@ -83,7 +42,7 @@ async def test_setup_entry_success(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
 
     with (
         patch(
@@ -119,7 +78,7 @@ async def test_setup_entry_device_not_available(
     """Test setup entry when device is not available (BLE device not found)."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
 
     with (
         patch(
@@ -156,7 +115,7 @@ async def test_setup_entry_initial_connection_fails(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
     mock_coordinator.async_connect = AsyncMock(
         side_effect=BleakError("Connection failed")
     )
@@ -196,7 +155,7 @@ async def test_unload_entry(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
 
     with (
         patch(
@@ -251,13 +210,12 @@ async def test_setup_entry_with_twist_device(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = _create_mock_coordinator(
+    mock_coordinator = create_mock_coordinator(
         address=TWIST_ADDRESS,
         serial_number=TWIST_SERIAL,
+        device_type=DeviceType.TWIST,
         is_twist=True,
     )
-    mock_coordinator.model_name = "Flic Twist"
-    mock_coordinator.device_type = DeviceType.TWIST
 
     with (
         patch(
@@ -302,7 +260,7 @@ async def test_setup_entry_with_invalid_device_type(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
 
     with (
         patch(
@@ -348,7 +306,7 @@ async def test_setup_entry_without_device_type(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = _create_mock_coordinator()
+    mock_coordinator = create_mock_coordinator()
 
     with (
         patch(

@@ -66,6 +66,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._reconnect_lock = asyncio.Lock()
         self._battery_level = battery_level
         self._firmware_version: int | None = None
+        self._device_id: str | None = None
 
         # Set up client callbacks
         self.client.on_button_event = self._handle_button_event
@@ -129,14 +130,18 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @property
     def device_id(self) -> str | None:
-        """Get device ID from registry."""
+        """Get device ID from registry (cached after first lookup)."""
+        if self._device_id is not None:
+            return self._device_id
         if not self.config_entry:
             return None
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
             identifiers={(DOMAIN, self.client.address)}
         )
-        return device.id if device else None
+        if device:
+            self._device_id = device.id
+        return self._device_id
 
     async def async_connect(self) -> None:
         """Connect to button and authenticate."""
@@ -256,6 +261,19 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     @callback
+    def _fire_bus_event(self, event_type: str, event_data: dict[str, Any]) -> None:
+        """Fire a Home Assistant bus event for automations."""
+        self.hass.bus.async_fire(
+            FLIC_BUTTON_EVENT,
+            {
+                "device_id": self.device_id,
+                "address": self.client.address,
+                "event_type": event_type,
+                **event_data,
+            },
+        )
+
+    @callback
     def _handle_button_event(self, event_type: str, event_data: dict[str, Any]) -> None:
         """Handle button event from client."""
         _LOGGER.debug(
@@ -273,16 +291,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             event_data,
         )
 
-        # Fire Home Assistant event for automations
-        self.hass.bus.async_fire(
-            FLIC_BUTTON_EVENT,
-            {
-                "device_id": self.device_id,
-                "address": self.client.address,
-                "event_type": event_type,
-                **event_data,
-            },
-        )
+        self._fire_bus_event(event_type, event_data)
 
     @callback
     def _handle_rotate_event(self, event_type: str, event_data: dict[str, Any]) -> None:
@@ -307,16 +316,7 @@ class FlicCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             event_data,
         )
 
-        # Fire Home Assistant event for automations
-        self.hass.bus.async_fire(
-            FLIC_BUTTON_EVENT,
-            {
-                "device_id": self.device_id,
-                "address": self.client.address,
-                "event_type": event_type,
-                **event_data,
-            },
-        )
+        self._fire_bus_event(event_type, event_data)
 
     @callback
     def async_register_device_name_listener(self) -> CALLBACK_TYPE | None:
