@@ -335,7 +335,7 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 
 
 @dataclass(frozen=True, slots=True)
-class ValueSource:
+class DomainSpec:
     """Describes how to match and extract a value from an entity.
 
     Used by triggers and conditions.
@@ -347,17 +347,17 @@ class ValueSource:
 
 
 @dataclass(frozen=True, slots=True)
-class NumericalValueSource(ValueSource):
-    """ValueSource with an optional value converter for numerical triggers."""
+class NumericalDomainSpec(DomainSpec):
+    """DomainSpec with an optional value converter for numerical triggers."""
 
     value_converter: Callable[[Any], float] | None = None
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 
-class EntityTriggerBase[ValueSourceT: ValueSource = ValueSource](Trigger):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
     """Trigger for entity state changes."""
 
-    _value_sources: Mapping[str, ValueSourceT]
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -407,10 +407,10 @@ class EntityTriggerBase[ValueSourceT: ValueSource = ValueSource](Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities matching any of the value sources."""
+        """Filter entities matching any of the domain specs."""
         result: set[str] = set()
         for entity_id in entities:
-            if not (vs := self._value_sources.get(split_entity_id(entity_id)[0])):
+            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
                 continue
             if (
                 vs.device_class is not ANY_DEVICE_CLASS
@@ -628,19 +628,19 @@ def _get_numerical_value(
     return entity_or_float
 
 
-class EntityNumericalStateBase(EntityTriggerBase[NumericalValueSource]):
+class EntityNumericalStateBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_tracked_value(self, state: State) -> Any:
         """Get the tracked numerical value from a state."""
-        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
+        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
         if vs.value_source is None:
             return state.state
         return state.attributes.get(vs.value_source)
 
     def _get_converter(self, state: State) -> Callable[[Any], float]:
         """Get the value converter for an entity."""
-        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
+        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
         if vs.value_converter is not None:
             return vs.value_converter
         return float
@@ -832,7 +832,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -846,7 +846,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _from_states = from_states
         _to_states = to_states
 
@@ -861,34 +861,34 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _from_state = from_state
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_changed_trigger(
-    value_sources: Mapping[str, NumericalValueSource],
+    domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
         """Trigger for numerical state value changes."""
 
-        _value_sources = value_sources
+        _domain_specs = domain_specs
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    value_sources: Mapping[str, NumericalValueSource],
+    domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
         """Trigger for numerical state value crossing a threshold."""
 
-        _value_sources = value_sources
+        _domain_specs = domain_specs
 
     return CustomTrigger
 
@@ -901,7 +901,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _attribute = attribute
         _attribute_to_state = to_state
 

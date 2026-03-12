@@ -2,7 +2,7 @@
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.helpers.trigger import EntityTriggerBase, Trigger, ValueSource
+from homeassistant.helpers.trigger import DomainSpec, EntityTriggerBase, Trigger
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 
@@ -15,7 +15,7 @@ class CoverTriggerBase(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the state matches the target cover state."""
-        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
+        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
         if vs.value_source is not None:
             return (
                 state.attributes.get(vs.value_source)
@@ -27,7 +27,7 @@ class CoverTriggerBase(EntityTriggerBase):
         """Check if the transition is valid for a cover state change."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
-        vs = self._value_sources[split_entity_id(from_state.entity_id)[0]]
+        vs = self._domain_specs[split_entity_id(from_state.entity_id)[0]]
         if vs.value_source is not None:
             if (from_is_closed := from_state.attributes.get(vs.value_source)) is None:
                 return False
@@ -45,8 +45,8 @@ def make_cover_opened_trigger(
 
         _binary_sensor_target_state = STATE_ON
         _cover_is_closed_target_value = False
-        _value_sources = {
-            domain: ValueSource(
+        _domain_specs = {
+            domain: DomainSpec(
                 device_class=dc,
                 value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
             )
@@ -66,8 +66,8 @@ def make_cover_closed_trigger(
 
         _binary_sensor_target_state = STATE_OFF
         _cover_is_closed_target_value = True
-        _value_sources = {
-            domain: ValueSource(
+        _domain_specs = {
+            domain: DomainSpec(
                 device_class=dc,
                 value_source=ATTR_IS_CLOSED if domain == DOMAIN else None,
             )

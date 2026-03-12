@@ -19,21 +19,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    NumericalValueSource,
+    NumericalDomainSpec,
     Trigger,
 )
 
-HUMIDITY_MATCH_SPECS: dict[str, NumericalValueSource] = {
-    CLIMATE_DOMAIN: NumericalValueSource(
+HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
+    CLIMATE_DOMAIN: NumericalDomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: NumericalValueSource(
+    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
-    SENSOR_DOMAIN: NumericalValueSource(
+    SENSOR_DOMAIN: NumericalDomainSpec(
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    WEATHER_DOMAIN: NumericalValueSource(
+    WEATHER_DOMAIN: NumericalDomainSpec(
         value_source=ATTR_WEATHER_HUMIDITY,
     ),
 }
@@ -42,7 +42,7 @@ HUMIDITY_MATCH_SPECS: dict[str, NumericalValueSource] = {
 class HumidityChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     """Trigger for humidity value changes across multiple domains."""
 
-    _value_sources = HUMIDITY_MATCH_SPECS
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
 
 
 class HumidityCrossedThresholdTrigger(
@@ -50,7 +50,7 @@ class HumidityCrossedThresholdTrigger(
 ):
     """Trigger for humidity value crossing a threshold across multiple domains."""
 
-    _value_sources = HUMIDITY_MATCH_SPECS
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    NumericalValueSource,
+    NumericalDomainSpec,
     Trigger,
     make_entity_target_state_trigger,
 )
@@ -21,8 +21,8 @@ def _convert_uint8_to_percentage(value: Any) -> float:
     return (float(value) / 255.0) * 100.0
 
 
-BRIGHTNESS_MATCH_SPECS = {
-    DOMAIN: NumericalValueSource(
+BRIGHTNESS_DOMAIN_SPECS = {
+    DOMAIN: NumericalDomainSpec(
         value_source=ATTR_BRIGHTNESS,
         value_converter=_convert_uint8_to_percentage,
     ),
@@ -32,7 +32,7 @@ BRIGHTNESS_MATCH_SPECS = {
 class BrightnessChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     """Trigger for brightness changed."""
 
-    _value_sources = BRIGHTNESS_MATCH_SPECS
+    _domain_specs = BRIGHTNESS_DOMAIN_SPECS
 
 
 class BrightnessCrossedThresholdTrigger(
@@ -40,7 +40,7 @@ class BrightnessCrossedThresholdTrigger(
 ):
     """Trigger for brightness crossed threshold."""
 
-    _value_sources = BRIGHTNESS_MATCH_SPECS
+    _domain_specs = BRIGHTNESS_DOMAIN_SPECS
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

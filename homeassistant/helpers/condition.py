@@ -95,7 +95,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .trigger import ValueSource
+from .trigger import DomainSpec
 from .typing import ANY_DEVICE_CLASS, ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
@@ -334,10 +334,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[ValueSourceT: ValueSource = ValueSource](Condition):
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
     """Base class for entity conditions."""
 
-    _value_sources: Mapping[str, ValueSourceT]
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -361,7 +361,7 @@ class EntityConditionBase[ValueSourceT: ValueSource = ValueSource](Condition):
         """Filter entities matching any of the value sources."""
         result: set[str] = set()
         for entity_id in entities:
-            if not (vs := self._value_sources.get(split_entity_id(entity_id)[0])):
+            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
                 continue
             if (
                 vs.device_class is not ANY_DEVICE_CLASS
@@ -437,7 +437,7 @@ def make_entity_state_condition(
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _states = states_set
 
     return CustomCondition
@@ -467,7 +467,7 @@ def make_entity_state_attribute_condition(
     class CustomCondition(EntityStateAttributeConditionBase):
         """Condition for entity attribute."""
 
-        _value_sources = {domain: ValueSource()}
+        _domain_specs = {domain: DomainSpec()}
         _attribute = attribute
         _attribute_states = attribute_states_set
 

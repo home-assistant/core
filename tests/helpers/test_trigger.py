@@ -41,13 +41,13 @@ from homeassistant.helpers.trigger import (
     CONF_THRESHOLD_TYPE,
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
+    DomainSpec,
     EntityTriggerBase,
-    NumericalValueSource,
+    NumericalDomainSpec,
     PluggableAction,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
-    ValueSource,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -1249,7 +1249,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalValueSource(value_source="test_attribute")}
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1277,7 +1277,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_changed_trigger(
-                {"test": NumericalValueSource(value_source="test_attribute")}
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1559,7 +1559,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": NumericalValueSource(value_source="test_attribute")}
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1582,7 +1582,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
 class _SimpleTrigger(EntityTriggerBase):
     """Minimal concrete trigger for testing entity_filter."""
 
-    _value_sources: Mapping[str, ValueSource] = {}
+    _domain_specs: Mapping[str, DomainSpec] = {}
 
     def is_valid_state(self, state):
         """Accept any state."""
@@ -1590,17 +1590,17 @@ class _SimpleTrigger(EntityTriggerBase):
 
 
 def _make_trigger(
-    hass: HomeAssistant, value_sources: dict[str, ValueSource]
+    hass: HomeAssistant, domain_specs: dict[str, DomainSpec]
 ) -> _SimpleTrigger:
     """Create a _SimpleTrigger with the given value sources."""
-    _SimpleTrigger._value_sources = value_sources
+    _SimpleTrigger._domain_specs = domain_specs
     config = TriggerConfig(key="test.test_trigger", target={CONF_ENTITY_ID: []})
     return _SimpleTrigger(hass, config)
 
 
 async def test_entity_filter_by_domain_only(hass: HomeAssistant) -> None:
     """Test entity_filter includes entities matching domain, excludes others."""
-    trig = _make_trigger(hass, {"sensor": ValueSource(), "switch": ValueSource()})
+    trig = _make_trigger(hass, {"sensor": DomainSpec(), "switch": DomainSpec()})
 
     entities = {
         "sensor.temp",
@@ -1615,7 +1615,7 @@ async def test_entity_filter_by_domain_only(hass: HomeAssistant) -> None:
 
 async def test_entity_filter_by_device_class(hass: HomeAssistant) -> None:
     """Test entity_filter filters by device_class when specified."""
-    trig = _make_trigger(hass, {"sensor": ValueSource(device_class="humidity")})
+    trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
 
     # Set states with device_class attributes
     hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
@@ -1633,7 +1633,7 @@ async def test_entity_filter_device_class_unknown_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test entity_filter excludes entities not in state machine or registry."""
-    trig = _make_trigger(hass, {"sensor": ValueSource(device_class="humidity")})
+    trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
 
     # Entity not in state machine and not in entity registry -> UNDEFINED
     entities = {"sensor.nonexistent"}
@@ -1648,9 +1648,9 @@ async def test_entity_filter_multiple_domains_with_device_class(
     trig = _make_trigger(
         hass,
         {
-            "climate": ValueSource(value_source="current_humidity"),
-            "sensor": ValueSource(device_class="humidity"),
-            "weather": ValueSource(value_source="humidity"),
+            "climate": DomainSpec(value_source="current_humidity"),
+            "sensor": DomainSpec(device_class="humidity"),
+            "weather": DomainSpec(value_source="humidity"),
         },
     )
 
@@ -1678,8 +1678,8 @@ async def test_entity_filter_multiple_domains_with_device_class(
 async def test_entity_filter_no_device_class_means_match_all_in_domain(
     hass: HomeAssistant,
 ) -> None:
-    """Test that ValueSource without device_class matches all entities in the domain."""
-    trig = _make_trigger(hass, {"cover": ValueSource()})
+    """Test that DomainSpec without device_class matches all entities in the domain."""
+    trig = _make_trigger(hass, {"cover": DomainSpec()})
 
     hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
     hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
@@ -1690,14 +1690,14 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
     assert result == entities
 
 
-async def test_numerical_value_source_converter(hass: HomeAssistant) -> None:
-    """Test NumericalValueSource stores converter correctly."""
+async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
+    """Test NumericalDomainSpec stores converter correctly."""
     converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
-    nvs = NumericalValueSource(value_source="brightness", value_converter=converter)
+    nvs = NumericalDomainSpec(value_source="brightness", value_converter=converter)
     assert nvs.value_source == "brightness"
     assert nvs.value_converter is converter
     assert nvs.device_class is ANY_DEVICE_CLASS
 
-    # Plain ValueSource has no converter
-    vs = ValueSource(value_source="brightness")
-    assert not isinstance(vs, NumericalValueSource)
+    # Plain DomainSpec has no converter
+    vs = DomainSpec(value_source="brightness")
+    assert not isinstance(vs, NumericalDomainSpec)

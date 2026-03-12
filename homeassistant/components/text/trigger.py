@@ -4,9 +4,9 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
+    DomainSpec,
     EntityTriggerBase,
     Trigger,
-    ValueSource,
 )
 
 from .const import DOMAIN
@@ -15,7 +15,7 @@ from .const import DOMAIN
 class TextChangedTrigger(EntityTriggerBase):
     """Trigger for text entity when its content changes."""
 
-    _value_sources = {DOMAIN: ValueSource()}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
