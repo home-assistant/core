@@ -14,6 +14,8 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -37,13 +39,25 @@ class AsyncConfigEntryAuth:
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""
+        setup_in_progress = (
+            self.oauth_session.config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+        )
+
         try:
             await self.oauth_session.async_ensure_token_valid()
+        except OAuth2TokenRequestReauthError as ex:
+            if setup_in_progress:
+                raise ConfigEntryAuthFailed(
+                    "OAuth session is not valid, reauth required"
+                ) from ex
+            self.oauth_session.config_entry.async_start_reauth(self.oauth_session.hass)
+            raise HomeAssistantError(ex) from ex
+        except OAuth2TokenRequestError as ex:
+            if setup_in_progress:
+                raise ConfigEntryNotReady from ex
+            raise HomeAssistantError(ex) from ex
         except (RefreshError, ClientResponseError, ClientError) as ex:
-            if (
-                self.oauth_session.config_entry.state
-                is ConfigEntryState.SETUP_IN_PROGRESS
-            ):
+            if setup_in_progress:
                 if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
                     raise ConfigEntryAuthFailed(
                         "OAuth session is not valid, reauth required"
