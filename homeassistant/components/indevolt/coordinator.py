@@ -48,13 +48,8 @@ class DeviceConnectionError(HomeAssistantError):
 class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for fetching and pushing data to indevolt devices."""
 
-    api: IndevoltAPI
-    friendly_name: str
     config_entry: IndevoltConfigEntry
     firmware_version: str | None
-    serial_number: str
-    device_model: str
-    generation: int
 
     def __init__(self, hass: HomeAssistant, entry: IndevoltConfigEntry) -> None:
         """Initialize the indevolt coordinator."""
@@ -73,10 +68,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
         )
 
-        self.friendly_name = entry.title
-        self.serial_number = entry.data[CONF_SERIAL_NUMBER]
-        self.device_model = entry.data[CONF_MODEL]
-        self.generation = entry.data[CONF_GENERATION]
+        self.friendly_name: str = entry.title
+        self.serial_number: str = entry.data[CONF_SERIAL_NUMBER]
+        self.device_model: str = entry.data[CONF_MODEL]
+        self.generation: int = entry.data[CONF_GENERATION]
 
     async def _async_setup(self) -> None:
         """Fetch device info once on boot."""
