@@ -448,7 +448,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 options.pop(CONF_REASONING_SUMMARY)
 
         service_tiers = self._get_service_tiers(model)
-        if service_tiers.count("flex") or service_tiers.count("priority"):
+        if "flex" in service_tiers or "priority" in service_tiers:
             step_schema[
                 vol.Optional(
                     CONF_SERVICE_TIER,
