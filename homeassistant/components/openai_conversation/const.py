@@ -122,7 +122,7 @@ RECOMMENDED_TTS_OPTIONS = {
     CONF_CHAT_MODEL: "gpt-4o-mini-tts",
 }
 
-UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS = [
+UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS: list[str] = [
     "gpt-5.3",
     "gpt-5.2-chat",
     "gpt-5.1-chat",
@@ -140,7 +140,7 @@ UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS = [
     "o3-mini",
     "codex-mini",
 ]
-UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS = [
+UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS: list[str] = [
     "gpt-5-nano",
     "gpt-5.3-chat",
     "gpt-5.2-chat",

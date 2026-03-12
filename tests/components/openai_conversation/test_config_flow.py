@@ -327,19 +327,19 @@ async def test_subentry_reasoning_effort_list(
         ("gpt-5-nano", ["auto", "flex", "default"]),
         ("o3", ["auto", "flex", "default", "priority"]),
         ("o4-mini", ["auto", "flex", "default", "priority"]),
-        ("gpt-5.3-codex", ["auto", "flex", "default"]),
-        ("gpt-5.2-codex", ["auto", "flex", "default"]),
-        ("gpt-5.1-codex-max", ["auto", "flex", "default"]),
-        ("gpt-5-codex", ["auto", "flex", "default"]),
-        ("gpt-4.1", ["auto", "flex", "default"]),
-        ("gpt-4.1-mini", ["auto", "flex", "default"]),
-        ("gpt-4.1-nano", ["auto", "flex", "default"]),
-        ("gpt-4o", ["auto", "flex", "default"]),
-        ("gpt-4o-2024-05-13", ["auto", "flex", "default"]),
-        ("gpt-4o-mini", ["auto", "flex", "default"]),
+        ("gpt-5.3-codex", ["auto", "default", "priority"]),
+        ("gpt-5.2-codex", ["auto", "default", "priority"]),
+        ("gpt-5.1-codex-max", ["auto", "default", "priority"]),
+        ("gpt-5-codex", ["auto", "default", "priority"]),
+        ("gpt-4.1", ["auto", "default", "priority"]),
+        ("gpt-4.1-mini", ["auto", "default", "priority"]),
+        ("gpt-4.1-nano", ["auto", "default", "priority"]),
+        ("gpt-4o", ["auto", "default", "priority"]),
+        ("gpt-4o-2024-05-13", ["auto", "default", "priority"]),
+        ("gpt-4o-mini", ["auto", "default", "priority"]),
         ("gpt-5-chat-latest", []),
         ("gpt-5.2-pro", []),
-        ("o4-mini", []),
+        ("o3-mini", []),
     ],
 )
 async def test_subentry_service_tier_list(
@@ -381,8 +381,8 @@ async def test_subentry_service_tier_list(
     assert (
         subentry_flow["data_schema"].schema[CONF_SERVICE_TIER].config["options"]
         if subentry_flow["data_schema"].schema.get(CONF_SERVICE_TIER)
-        else service_tier_options == []
-    )
+        else []
+    ) == service_tier_options
 
 
 @pytest.mark.parametrize(
