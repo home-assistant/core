@@ -60,7 +60,7 @@ async def test_service_charge(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, (RealtimeAction.CHARGE, 1200, 60)),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.CHARGE.value, 1200, 60]),
         ]
     )
 
@@ -93,7 +93,7 @@ async def test_service_discharge(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, (RealtimeAction.DISCHARGE, 1200, 40)),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.DISCHARGE.value, 1200, 40]),
         ]
     )
 

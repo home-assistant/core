@@ -190,7 +190,9 @@ async def _execute_realtime_action(
     """Execute async_execute_realtime_action on all coordinators concurrently."""
     results: list[None | BaseException] = await asyncio.gather(
         *(
-            coordinator.async_execute_realtime_action((action_code, power, target_soc))
+            coordinator.async_execute_realtime_action(
+                [action_code.value, power, target_soc]
+            )
             for coordinator in coordinators
         ),
         return_exceptions=True,
