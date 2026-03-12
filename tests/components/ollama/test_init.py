@@ -12,7 +12,7 @@ from homeassistant.components.ollama.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -187,7 +187,7 @@ async def test_async_setup_entry_not_ready_on_non_auth_response_error(
             side_effect=ResponseError(error="Server error", status_code=500)
         )
 
-        with pytest.raises(ConfigEntryNotReady):
+        with pytest.raises(ConfigEntryError):
             await ollama.async_setup_entry(hass, mock_config_entry)
 
 
