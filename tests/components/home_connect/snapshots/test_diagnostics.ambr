@@ -68,8 +68,8 @@
       'ha_id': '8765432109876543210',
       'name': 'Air conditioner',
       'programs': list([
-        'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Auto',
+        'HeatingVentilationAirConditioning.AirConditioner.Program.ActiveClean',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Cool',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Dry',
         'HeatingVentilationAirConditioning.AirConditioner.Program.Fan',
