@@ -7,7 +7,6 @@
     "documentation": "https://www.home-assistant.io/integrations/hivi_speaker/",
     "integration_type": "hub",
     "iot_class": "local_polling",
-    "issue_tracker": "https://github.com/home-assistant/core/issues",
-    "requirements": ["hivico>=0.1.0"],
+    "requirements": ["hivico==0.1.0"],
     "version": "0.1.0"
 }
