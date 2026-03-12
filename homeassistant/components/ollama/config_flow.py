@@ -97,6 +97,8 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         url = user_input[CONF_URL]
         api_key = user_input.get(CONF_API_KEY)
+        if api_key:
+            api_key = api_key.strip()
 
         self._async_abort_entries_match({CONF_URL: url})
 
