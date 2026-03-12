@@ -1651,6 +1651,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nasweb",
     "neato",
     "nederlandse_spoorwegen",
+    "ness_alarm",
     "nest",
     "netatmo",
     "netdata",

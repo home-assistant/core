@@ -20,7 +20,11 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: todo
+    comment: |
+      Alarm actions (arm/disarm/trigger) currently call client methods directly
+      without integration-level exception handling.
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo

@@ -49,14 +49,13 @@ async def async_setup_entry(
 class NessAlarmPanel(AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
-    _attr_has_entity_name = True
     _attr_code_format = CodeFormat.NUMBER
     _attr_should_poll = False
-    _attr_name = None
 
     def __init__(self, client: Client, entry_id: str, show_home_mode: bool) -> None:
         """Initialize the alarm panel."""
         self._client = client
+        self._attr_name = "Alarm Panel"
         self._attr_unique_id = f"{entry_id}_alarm_panel"
         self._attr_device_info = DeviceInfo(
             name="Alarm Panel",
