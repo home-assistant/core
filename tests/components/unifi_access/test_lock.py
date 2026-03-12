@@ -8,7 +8,7 @@ import pytest
 from unifi_access_api import ApiError
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_UNLOCK
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -57,6 +57,21 @@ async def test_unlock_door_api_error(
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: "lock.front_door"},
+            blocking=True,
+        )
+
+
+async def test_lock_not_supported(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test locking a door raises HomeAssistantError."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
             {ATTR_ENTITY_ID: "lock.front_door"},
             blocking=True,
         )

@@ -49,6 +49,13 @@ class UnifiAccessLockEntity(UnifiAccessEntity, LockEntity):
         """Return true if the door is locked."""
         return self._door.door_lock_relay_status == DoorLockRelayStatus.LOCK
 
+    async def async_lock(self, **kwargs: Any) -> None:
+        """Lock the door (not supported by UniFi Access)."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="lock_not_supported",
+        )
+
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""
         try:
