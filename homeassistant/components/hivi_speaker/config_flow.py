@@ -1,9 +1,13 @@
+"""Config flow for HiVi Speaker integration."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import callback
 
 from .const import DOMAIN
@@ -12,10 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HIVISpeakerConfigFlow(ConfigFlow, domain=DOMAIN):
-    """HIVI speaker configuration flow"""
+    """HIVI speaker configuration flow."""
 
     async def async_step_user(self, user_input=None):
-        """User step - configure integration"""
+        """User step - configure integration."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
         return self.async_create_entry(title="HiVi Speaker", data={})
@@ -23,18 +27,20 @@ class HIVISpeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        """Get options flow"""
+        """Get options flow."""
         return HIVISpeakerOptionsFlow(config_entry)
 
 
 class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
-    """Options flow - using confirmation switch"""
+    """Options flow - using confirmation switch."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self) -> None:
+        """Initialize the options flow."""
+        super().__init__()
         self.open_num = 0
 
     async def async_step_init(self, user_input=None):
-        """Initial step"""
+        """Show initial step of the options flow."""
         _LOGGER.debug("Entering initial step of options flow")
         self.open_num = 0
         if user_input is not None:
@@ -61,7 +67,7 @@ class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_success(self, user_input=None):
-        """Success page"""
+        """Success page."""
         _LOGGER.debug("Displaying success page")
         if self.open_num == 0:
             self.open_num += 1
