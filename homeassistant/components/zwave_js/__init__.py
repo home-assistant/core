@@ -41,6 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -134,6 +135,8 @@ from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
 DRIVER_READY_TIMEOUT = 60
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
