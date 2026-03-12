@@ -3,13 +3,11 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "discovery_timeout": "No device responded to the discovery request.",
       "invalid_discovery_data": "The received discovery data is invalid.",
       "mqtt_not_configured": "MQTT is not configured. Please configure MQTT first.",
       "mqtt_not_connected": "MQTT is not connected. Ensure the MQTT broker is running and configured.",
       "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery.",
-      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting.",
-      "not_ready": "The integration is not ready. Please check logs and try again later."
+      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
     },
     "step": {
       "confirm": {

@@ -1,6 +1,5 @@
 """Home Assistant integration module for Greencell EVSE sensor entities over MQTT."""
 
-from abc import ABC
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -150,7 +149,7 @@ async def async_setup_entry(
     await setup_sensors(hass, serial_number, async_add_entities, entry)
 
 
-class HabuSensor(SensorEntity, ABC):
+class HabuSensor(SensorEntity):
     """Abstract base class for Habu sensors integration."""
 
     entity_description: GreencellSensorDescription
