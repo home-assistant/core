@@ -19,7 +19,7 @@ from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
 )
-from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .entity import HomeConnectEntity
 
 
 def should_add_option_entity(
@@ -48,7 +48,7 @@ def _create_option_entities(
     known_entity_unique_ids: dict[str, str],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -78,7 +78,7 @@ def _handle_paired_or_connected_appliance(
     ],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ]
     | None,
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
@@ -161,7 +161,7 @@ def setup_home_connect_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ]
     | None = None,
 ) -> None:

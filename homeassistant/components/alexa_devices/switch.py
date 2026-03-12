@@ -101,7 +101,10 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
             assert method is not None
 
         await method(self.device, state)
-        await self.coordinator.async_request_refresh()
+        self.coordinator.data[self.device.serial_number].sensors[
+            self.entity_description.key
+        ].value = state
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
