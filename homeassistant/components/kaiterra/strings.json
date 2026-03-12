@@ -9,15 +9,6 @@
         "data_description": {
           "api_key": "The API key used to access your Kaiterra account"
         }
-      },
-      "reauth_confirm": {
-        "title": "Update Kaiterra API key",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "The updated API key used to access your Kaiterra account"
-        }
       }
     },
     "error": {
@@ -26,8 +17,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_configured": "This Kaiterra account is already configured",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "This Kaiterra account is already configured"
     }
   },
   "config_subentries": {
@@ -56,7 +46,7 @@
           "data_description": {
             "device_id": "The device ID from your Kaiterra account",
             "type": "The Kaiterra device family",
-            "name": "Optional name to use for this device in Home Assistant"
+            "name": "The name to use for this device in Home Assistant"
           }
         }
       }

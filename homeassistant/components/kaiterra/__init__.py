@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
@@ -146,7 +146,7 @@ async def _async_validate_entry_devices(
                 subentry.data[CONF_DEVICE_ID],
             )
         except KaiterraApiAuthError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryError(err) from err
         except KaiterraDeviceNotFoundError:
             saw_missing_device = True
             continue

@@ -73,7 +73,7 @@ DEVICE_SCHEMA = vol.Schema(
                 translation_key="device_type",
             )
         ),
-        vol.Optional(CONF_NAME): str,
+        vol.Required(CONF_NAME): str,
     }
 )
 
@@ -121,11 +121,6 @@ async def _async_validate_device(
     ).async_validate_device(device_type, device_id)
 
 
-def _subentry_unique_id(device_id: str) -> str:
-    """Return a stable subentry unique ID."""
-    return device_id
-
-
 def _subentry_title(device: Mapping[str, Any]) -> str:
     """Return the title for a device subentry."""
     return device.get(CONF_NAME) or device[CONF_DEVICE_ID]
@@ -143,7 +138,7 @@ def _subentry_data(device: Mapping[str, Any]) -> ConfigSubentryData:
     return {
         "subentry_type": SUBENTRY_TYPE_DEVICE,
         "title": _subentry_title(device),
-        "unique_id": _subentry_unique_id(device[CONF_DEVICE_ID]),
+        "unique_id": device[CONF_DEVICE_ID],
         "data": MappingProxyType(data),
     }
 
@@ -193,43 +188,6 @@ def _async_sync_import_subentries(
                 data=subentry_data["data"],
             ),
         )
-
-
-async def _async_validate_subentries(
-    hass,
-    api_key: str,
-    aqi_standard: str,
-    subentries: list[ConfigSubentry],
-) -> None:
-    """Validate auth against the first readable configured device."""
-    if not subentries:
-        return
-
-    validator = KaiterraApiClient(
-        async_get_clientsession(hass),
-        api_key,
-        aqi_standard,
-    )
-    saw_missing_device = False
-
-    for subentry in subentries:
-        try:
-            await validator.async_validate_device(
-                subentry.data[CONF_TYPE],
-                subentry.data[CONF_DEVICE_ID],
-            )
-        except KaiterraApiAuthError:
-            raise
-        except KaiterraDeviceNotFoundError:
-            saw_missing_device = True
-            continue
-        except KaiterraApiError:
-            raise
-        else:
-            return
-
-    if saw_missing_device:
-        return
 
 
 class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -317,43 +275,6 @@ class KaiterraConfigFlow(ConfigFlow, domain=DOMAIN):
             subentries=subentries,
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle the start of a reauthentication flow."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauthentication with a new API key."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            try:
-                await _async_validate_subentries(
-                    self.hass,
-                    user_input[CONF_API_KEY],
-                    reauth_entry.options.get(CONF_AQI_STANDARD, DEFAULT_AQI_STANDARD),
-                    list(reauth_entry.subentries.values()),
-                )
-            except KaiterraApiAuthError:
-                errors["base"] = "invalid_auth"
-            except KaiterraApiError:
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=USER_DATA_SCHEMA,
-            errors=errors,
-        )
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -381,7 +302,7 @@ class KaiterraDeviceSubentryFlowHandler(ConfigSubentryFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            unique_id = _subentry_unique_id(user_input[CONF_DEVICE_ID])
+            unique_id = user_input[CONF_DEVICE_ID]
             if any(
                 subentry.unique_id == unique_id
                 for subentry in self._get_entry().subentries.values()

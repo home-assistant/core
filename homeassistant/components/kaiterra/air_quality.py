@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,11 +21,11 @@ from .const import (
 
 
 async def async_setup_entry(
-    hass,
+    hass: HomeAssistant,
     entry: KaiterraConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Kaiterra air quality entities from a config entry."""
+    """Set up the Kaiterra air quality sensor."""
     api = entry.runtime_data
     for subentry in entry.subentries.values():
         if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
@@ -39,30 +40,30 @@ async def async_setup_entry(
 
 
 class KaiterraAirQuality(AirQualityEntity):
-    """Representation of a Kaiterra air quality sensor."""
+    """Implementation of a Kaiterra air quality sensor."""
 
     _attr_should_poll = False
 
-    def __init__(self, api, name: str, device_id: str) -> None:
-        """Initialize the air quality entity."""
+    def __init__(self, api, name, device_id):
+        """Initialize the sensor."""
         self._api = api
         self._name = f"{name} Air Quality"
         self._device_id = device_id
 
-    def _data(self, key: str):
+    def _data(self, key):
         return self._device.get(key, {}).get("value")
 
     @property
-    def _device(self) -> dict[str, Any]:
+    def _device(self):
         return self._api.data.get(self._device_id, {})
 
     @property
-    def available(self) -> bool:
+    def available(self):
         """Return the availability of the sensor."""
         return bool(self._api.data.get(self._device_id))
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Return the name of the sensor."""
         return self._name
 
@@ -78,7 +79,7 @@ class KaiterraAirQuality(AirQualityEntity):
 
     @property
     def air_quality_index_pollutant(self):
-        """Return the dominant AQI pollutant."""
+        """Return the Air Quality Index level."""
         return self._data("aqi_pollutant")
 
     @property
@@ -93,17 +94,17 @@ class KaiterraAirQuality(AirQualityEntity):
 
     @property
     def carbon_dioxide(self):
-        """Return the CO2 level."""
+        """Return the CO2 (carbon dioxide) level."""
         return self._data("rco2")
 
     @property
     def volatile_organic_compounds(self):
-        """Return the TVOC level."""
+        """Return the VOC (Volatile Organic Compounds) level."""
         return self._data("rtvoc")
 
     @property
-    def unique_id(self) -> str:
-        """Return the sensor unique ID."""
+    def unique_id(self):
+        """Return the sensor's unique id."""
         return f"{self._device_id}_air_quality"
 
     @property
@@ -119,8 +120,8 @@ class KaiterraAirQuality(AirQualityEntity):
             if value is not None
         }
 
-    async def async_added_to_hass(self) -> None:
-        """Register update callback."""
+    async def async_added_to_hass(self):
+        """Register callback."""
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, DISPATCHER_KAITERRA, self.async_write_ha_state

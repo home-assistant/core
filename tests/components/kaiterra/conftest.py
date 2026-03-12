@@ -33,7 +33,6 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 API_KEY = "test-api-key"
-NEW_API_KEY = "new-api-key"
 DEVICE_ID = "device-123"
 DEVICE_NAME = "Office"
 DEVICE_TYPE = "sensedge"

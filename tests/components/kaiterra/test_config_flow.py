@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
-
-from homeassistant.components.kaiterra.api_data import KaiterraDeviceNotFoundError
 from homeassistant.components.kaiterra.const import (
     CONF_AQI_STANDARD,
     CONF_PREFERRED_UNITS,
@@ -13,7 +10,7 @@ from homeassistant.components.kaiterra.const import (
     DOMAIN,
     SUBENTRY_TYPE_DEVICE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_DEVICE_ID,
@@ -33,7 +30,6 @@ from .conftest import (
     DEVICE_NAME_2,
     DEVICE_TYPE,
     DEVICE_TYPE_2,
-    NEW_API_KEY,
     add_device_subentry,
 )
 
@@ -169,6 +165,7 @@ async def test_device_subentry_flow_missing_device(
         user_input={
             CONF_DEVICE_ID: DEVICE_ID,
             CONF_TYPE: DEVICE_TYPE,
+            CONF_NAME: DEVICE_NAME,
         },
     )
 
@@ -215,6 +212,30 @@ async def test_import_flow_creates_parent_entry_and_device_subentries(
     assert len(result["subentries"]) == 2
     assert result["subentries"][0]["title"] == DEVICE_NAME
     assert result["subentries"][1]["title"] == "Bedroom"
+
+
+async def test_import_flow_allows_devices_without_name(
+    hass: HomeAssistant,
+    mock_validate_device,
+    mock_latest_sensor_readings,
+) -> None:
+    """Test YAML import still allows devices without an explicit name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_API_KEY: API_KEY,
+            "devices": [
+                {
+                    CONF_DEVICE_ID: DEVICE_ID,
+                    CONF_TYPE: DEVICE_TYPE,
+                }
+            ],
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["subentries"][0]["title"] == DEVICE_ID
 
 
 async def test_import_flow_updates_existing_entry(
@@ -330,82 +351,6 @@ async def test_import_flow_updates_existing_import_entry_when_api_key_changes(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert mock_config_entry.data[CONF_API_KEY] == API_KEY
     assert next(iter(mock_config_entry.subentries.values())).title == DEVICE_NAME
-
-
-async def test_reauth_flow_validates_more_than_the_first_subentry(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_latest_sensor_readings,
-) -> None:
-    """Test reauth succeeds when any configured device validates."""
-    add_device_subentry(hass, mock_config_entry)
-    add_device_subentry(
-        hass,
-        mock_config_entry,
-        device_id=DEVICE_ID_2,
-        device_type=DEVICE_TYPE_2,
-        name=DEVICE_NAME_2,
-    )
-    await setup_integration(hass, mock_config_entry)
-
-    async def _validate_device(device_type: str, device_id: str) -> None:
-        if device_id == DEVICE_ID:
-            raise KaiterraDeviceNotFoundError("Device not found")
-
-    with patch(
-        "homeassistant.components.kaiterra.api_data.KaiterraApiClient.async_validate_device",
-        new=AsyncMock(side_effect=_validate_device),
-    ) as mock_validate_device:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-            data=mock_config_entry.data,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_API_KEY: NEW_API_KEY},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
-    validated_device_ids = {
-        call.args[1] for call in mock_validate_device.await_args_list
-    }
-    assert {DEVICE_ID, DEVICE_ID_2} <= validated_device_ids
-
-
-async def test_reauth_flow_updates_api_key(
-    hass: HomeAssistant,
-    mock_config_entry,
-    mock_validate_device,
-    mock_latest_sensor_readings,
-) -> None:
-    """Test reauth updates the API key on the parent entry."""
-    add_device_subentry(hass, mock_config_entry)
-    await setup_integration(hass, mock_config_entry)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
-        data=mock_config_entry.data,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_API_KEY: NEW_API_KEY},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_API_KEY] == NEW_API_KEY
 
 
 async def test_options_flow_updates_parent_options(
