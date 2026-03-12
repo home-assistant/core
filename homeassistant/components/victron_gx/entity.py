@@ -1,4 +1,4 @@
-"""Common code for Victron Venus integration."""
+"""Common code for victron_gx integration."""
 
 from abc import abstractmethod
 from typing import Any
@@ -17,7 +17,7 @@ ENTITIES_DISABLE_BY_DEFAULT = ["system_heartbeat"]
 
 
 class VictronBaseEntity(Entity):
-    """Implementation of a Victron Venus base entity."""
+    """Implementation of a Victron GX base entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True

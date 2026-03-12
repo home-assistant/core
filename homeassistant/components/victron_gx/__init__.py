@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
-    """Set up victronvenus from a config entry."""
+    """Set up victron_gx from a config entry."""
     _LOGGER.debug("async_setup_entry called for entry: %s", entry.entry_id)
 
     hub = Hub(hass, entry)

@@ -1,4 +1,4 @@
-"""Support for Victron Venus sensors."""
+"""Support for Victron GX sensors."""
 
 import logging
 from typing import Any
@@ -60,7 +60,7 @@ async def async_setup_entry(
     config_entry: VictronGxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Victron Venus sensors from a config entry."""
+    """Set up Victron GX sensors from a config entry."""
     hub: Hub = config_entry.runtime_data
 
     def on_new_metric(
@@ -83,7 +83,7 @@ async def async_setup_entry(
 
 
 class VictronSensor(VictronBaseEntity, RestoreSensor):
-    """Implementation of a Victron Venus sensor."""
+    """Implementation of a Victron GX sensor."""
 
     _baseline: float | None = None
 
