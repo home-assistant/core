@@ -55,6 +55,7 @@ async def test_form(hass: HomeAssistant) -> None:
     # No subentries created by default
     assert len(result2.get("subentries", [])) == 0
     assert len(mock_setup_entry.mock_calls) == 1
+    assert CONF_API_KEY not in result2["data"]
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
