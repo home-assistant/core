@@ -132,7 +132,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     if unsub:
         entry.async_on_unload(unsub)
 
+    # Reload entry when options change (e.g. push_twist_mode)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: FlicButtonConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -> bool:
