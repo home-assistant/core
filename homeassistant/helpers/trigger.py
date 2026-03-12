@@ -875,27 +875,27 @@ def make_entity_origin_state_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    match_specs: Mapping[str, ValueSource],
+    value_sources: Mapping[str, ValueSource],
 ) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
-    """Create a trigger for numerical state attribute change."""
+    """Create a trigger for numerical state value change."""
 
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
-        """Trigger for numerical state attribute changes."""
+        """Trigger for numerical state value changes."""
 
-        _value_sources = match_specs
+        _value_sources = value_sources
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    match_specs: Mapping[str, ValueSource],
+    value_sources: Mapping[str, ValueSource],
 ) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
-    """Create a trigger for numerical state attribute crossing a threshold."""
+    """Create a trigger for numerical state value crossing a threshold."""
 
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
-        """Trigger for numerical state attribute changes."""
+        """Trigger for numerical state value crossing a threshold."""
 
-        _value_sources = match_specs
+        _value_sources = value_sources
 
     return CustomTrigger
 
