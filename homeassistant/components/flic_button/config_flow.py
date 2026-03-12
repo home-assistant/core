@@ -26,7 +26,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
-    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -392,18 +391,9 @@ class FlicButtonOptionsFlowHandler(OptionsFlow):
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                SelectOptionDict(
-                                    value=PushTwistMode.DEFAULT,
-                                    label="default",
-                                ),
-                                SelectOptionDict(
-                                    value=PushTwistMode.CONTINUOUS,
-                                    label="continuous",
-                                ),
-                                SelectOptionDict(
-                                    value=PushTwistMode.SELECTOR,
-                                    label="selector",
-                                ),
+                                PushTwistMode.DEFAULT.value,
+                                PushTwistMode.CONTINUOUS.value,
+                                PushTwistMode.SELECTOR.value,
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key=CONF_PUSH_TWIST_MODE,

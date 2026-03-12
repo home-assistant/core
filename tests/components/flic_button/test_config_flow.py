@@ -7,6 +7,7 @@ from pyflic_ble import FlicAuthenticationError, FlicPairingError
 
 from homeassistant.components.flic_button.config_flow import FlicButtonConfigFlow
 from homeassistant.components.flic_button.const import (
+    CONF_BATTERY_LEVEL,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -149,7 +150,7 @@ async def test_pairing_success_flic2(hass: HomeAssistant) -> None:
         CONF_PAIRING_ID: TEST_PAIRING_ID,
         CONF_PAIRING_KEY: TEST_PAIRING_KEY.hex(),
         CONF_SERIAL_NUMBER: FLIC2_SERIAL,
-        "battery_level": TEST_BATTERY_LEVEL,
+        CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
         CONF_DEVICE_TYPE: DeviceType.FLIC2.value,
         CONF_SIG_BITS: TEST_SIG_BITS,
     }
@@ -429,7 +430,7 @@ async def test_options_flow_twist_device(hass: HomeAssistant) -> None:
             CONF_PAIRING_ID: TEST_PAIRING_ID,
             CONF_PAIRING_KEY: TEST_PAIRING_KEY.hex(),
             CONF_SERIAL_NUMBER: TWIST_SERIAL,
-            "battery_level": TEST_BATTERY_LEVEL,
+            CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
             CONF_DEVICE_TYPE: DeviceType.TWIST.value,
             CONF_SIG_BITS: TEST_SIG_BITS,
         },
@@ -461,7 +462,7 @@ async def test_options_flow_non_twist_device_aborts(hass: HomeAssistant) -> None
             CONF_PAIRING_ID: TEST_PAIRING_ID,
             CONF_PAIRING_KEY: TEST_PAIRING_KEY.hex(),
             CONF_SERIAL_NUMBER: FLIC2_SERIAL,
-            "battery_level": TEST_BATTERY_LEVEL,
+            CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
             CONF_DEVICE_TYPE: DeviceType.FLIC2.value,
             CONF_SIG_BITS: TEST_SIG_BITS,
         },
