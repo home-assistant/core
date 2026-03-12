@@ -1669,8 +1669,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sql/ @gjohansson-ST @dougiteixeira
 /homeassistant/components/squeezebox/ @rajlaud @pssc @peteS-UK
 /tests/components/squeezebox/ @rajlaud @pssc @peteS-UK
-/homeassistant/components/srp_energy/ @briglx
-/tests/components/srp_energy/ @briglx
+/homeassistant/components/srp_energy/ @briglx @ammmze
+/tests/components/srp_energy/ @briglx @ammmze
 /homeassistant/components/starline/ @anonym-tsk
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
