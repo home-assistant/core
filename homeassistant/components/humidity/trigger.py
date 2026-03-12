@@ -19,21 +19,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
+    NumericalValueSource,
     Trigger,
-    ValueSource,
 )
 
-HUMIDITY_MATCH_SPECS: dict[str, ValueSource] = {
-    CLIMATE_DOMAIN: ValueSource(
+HUMIDITY_MATCH_SPECS: dict[str, NumericalValueSource] = {
+    CLIMATE_DOMAIN: NumericalValueSource(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: ValueSource(
+    HUMIDIFIER_DOMAIN: NumericalValueSource(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
-    SENSOR_DOMAIN: ValueSource(
+    SENSOR_DOMAIN: NumericalValueSource(
         device_class=SensorDeviceClass.HUMIDITY,
     ),
-    WEATHER_DOMAIN: ValueSource(
+    WEATHER_DOMAIN: NumericalValueSource(
         value_source=ATTR_WEATHER_HUMIDITY,
     ),
 }
