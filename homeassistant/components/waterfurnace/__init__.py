@@ -6,7 +6,7 @@ import asyncio
 import logging
 
 import voluptuous as vol
-from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError
+from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -37,14 +37,28 @@ CONFIG_SCHEMA = vol.Schema(
 type WaterFurnaceConfigEntry = ConfigEntry[dict[str, WaterFurnaceCoordinator]]
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: WaterFurnaceConfigEntry
+) -> bool:
     """Migrate old entry."""
 
-    if entry.version == 1 and entry.minor_version == 1:
-        # Migrate from gwid-based unique_id to username-based unique_id
-        username = entry.data[CONF_USERNAME]
-        hass.config_entries.async_update_entry(entry, unique_id=username)
-        _LOGGER.info("Migrated config entry unique_id to username")
+    if entry.version == 1 and entry.minor_version < 2:
+        # Migrate from gwid-based unique_id to account_id-based unique_id
+        client = WaterFurnace(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+        try:
+            await hass.async_add_executor_job(client.login)
+        except WFCredentialError, WFException:
+            _LOGGER.error("Failed to login during migration to account_id")
+            return False
+
+        if client.account_id is None:
+            _LOGGER.error("Account ID is invalid during migration")
+            return False
+
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(client.account_id), minor_version=2
+        )
+        _LOGGER.info("Migrated config entry unique_id to account_id")
 
     return True
 
