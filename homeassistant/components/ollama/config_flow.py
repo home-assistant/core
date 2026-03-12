@@ -123,7 +123,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await client.list()
 
         except ollama.ResponseError as err:
-            if err.status_code == 401:
+            if err.status_code in (401, 403):
                 errors["base"] = "invalid_auth"
             else:
                 _LOGGER.exception("Unexpected Ollama response error")
@@ -143,7 +143,11 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        return self.async_create_entry(title=url, data=user_input)
+        entry_data: dict[str, str] = {CONF_URL: url}
+        if api_key:
+            entry_data[CONF_API_KEY] = api_key
+
+        return self.async_create_entry(title=url, data=entry_data)
 
     @classmethod
     @callback
