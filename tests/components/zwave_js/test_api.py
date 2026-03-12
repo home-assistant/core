@@ -94,13 +94,11 @@ from homeassistant.components.zwave_js.const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -5395,36 +5393,6 @@ async def test_invoke_cc_api(
     msg = await ws_client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "NotFoundError", "message": ""}
-
-
-@pytest.mark.parametrize(
-    ("config", "installer_mode"), [({}, False), ({CONF_INSTALLER_MODE: True}, True)]
-)
-async def test_get_integration_settings(
-    config: dict[str, Any],
-    installer_mode: bool,
-    hass: HomeAssistant,
-    client: MagicMock,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test that the get_integration_settings WS API call works."""
-    ws_client = await hass_ws_client(hass)
-
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-    await hass.async_block_till_done()
-
-    await ws_client.send_json_auto_id(
-        {
-            TYPE: "zwave_js/get_integration_settings",
-        }
-    )
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == {
-        CONF_INSTALLER_MODE: installer_mode,
-    }
 
 
 async def test_backup_nvm(
