@@ -150,6 +150,10 @@ jobs:
           # 安装构建依赖，包括 twine
           python -m pip install --upgrade pip build setuptools wheel twine
           
+          # 检查已安装工具的版本
+          echo "Installed Python packaging tool versions:"
+          pip freeze | grep -E "twine|setuptools|wheel|build"
+          
           echo "Building wheels for core dependencies..."
           
           # 创建临时目录用于构建，以及最终存放轮子的 dist 目录
@@ -181,10 +185,24 @@ jobs:
           echo "Core wheel building completed."
           ls -la dist/ || echo "No wheels built" # 检查 dist 目录内容
 
+      - name: Inspect built wheel metadata
+        run: |
+          FIRST_WHL=$(find dist/ -maxdepth 1 -name "*.whl" | head -n 1)
+          if [ -n "$FIRST_WHL" ]; then
+            echo "--- Inspecting metadata for: $FIRST_WHL ---"
+            # Extract the dist-info directory name from the wheel file
+            DIST_INFO_DIR=$(basename "$FIRST_WHL" .whl).dist-info
+            # Unzip and print the METADATA file content
+            unzip -p "$FIRST_WHL" "$DIST_INFO_DIR/METADATA" || echo "Could not extract METADATA from $FIRST_WHL"
+            echo "--- End of metadata inspection ---"
+          else
+            echo "No .whl files found in dist/ to inspect metadata."
+          fi
+
       - name: Upload Core wheels to GitHub Packages
         env:
           TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GH_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
           if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
@@ -251,6 +269,10 @@ jobs:
           # 安装构建依赖，包括 twine
           python -m pip install --upgrade pip build setuptools wheel twine
           
+          # 检查已安装工具的版本
+          echo "Installed Python packaging tool versions:"
+          pip freeze | grep -E "twine|setuptools|wheel|build"
+          
           echo "Building wheels for integration dependencies..."
           
           # 创建临时目录用于构建，以及最终存放轮子的 dist 目录
@@ -276,7 +298,7 @@ jobs:
               # 检查是否是包声明行
               if [[ "$line" =~ ^[a-zA-Z] ]]; then
                 echo "Building wheel for: $line"
-                # 直接将轮子输出到 ../dist 目录 (因为我们会 cd wheel_tmp)
+                # 在 wheel_tmp 中构建，将轮子输出到根目录的 dist 目录
                 pip wheel --wheel-dir ./dist --no-deps "$line" || echo "Failed to build $line, skipping..."
               fi
             done < "$REQ_FILE"
@@ -286,29 +308,35 @@ jobs:
             PACKAGES_TO_BUILD="pybluez ffmpeg-python pytz requests-oauthlib"
             for package in $PACKAGES_TO_BUILD; do
               echo "Building wheel for $package"
-              # 直接将轮子输出到 ../dist 目录 (因为我们会 cd wheel_tmp)
+              # 在 wheel_tmp 中构建，将轮子输出到根目录的 dist 目录
               pip wheel --wheel-dir ./dist --no-deps "$package" || echo "Failed to build $package, skipping..."
             done
           fi
           
-          # 注意：这里 pip wheel --wheel-dir ./dist 会在当前目录 (wheel_tmp) 下创建 dist。
-          # 需要将这些轮子移动到根目录的 dist 文件夹。
-          if [ -d "dist" ]; then
-              mv dist/*.whl ../dist/ || true
-          fi
-          
-          cd .. # 返回到工作目录根目录
-          
-          # 清理临时构建目录
-          rm -rf wheel_tmp
+          # 注意：这里 pip wheel --wheel-dir ./dist 会在当前目录 (构建 job 的根目录) 下创建 dist。
+          # 保持这样即可。
           
           echo "Integration wheel building completed."
           ls -la dist/ || echo "No wheels built" # 检查 dist 目录内容
 
+      - name: Inspect built wheel metadata
+        run: |
+          FIRST_WHL=$(find dist/ -maxdepth 1 -name "*.whl" | head -n 1)
+          if [ -n "$FIRST_WHL" ]; then
+            echo "--- Inspecting metadata for: $FIRST_WHL ---"
+            # Extract the dist-info directory name from the wheel file
+            DIST_INFO_DIR=$(basename "$FIRST_WHL" .whl).dist-info
+            # Unzip and print the METADATA file content
+            unzip -p "$FIRST_WHL" "$DIST_INFO_DIR/METADATA" || echo "Could not extract METADATA from $FIRST_WHL"
+            echo "--- End of metadata inspection ---"
+          else
+            echo "No .whl files found in dist/ to inspect metadata."
+          fi
+
       - name: Upload Integration wheels to GitHub Packages
         env:
           TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GH_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
           TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
           if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
