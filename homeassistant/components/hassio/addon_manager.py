@@ -169,7 +169,7 @@ class AddonManager:
             )
 
         addon_info = await self._supervisor_client.addons.addon_info(self.addon_slug)
-        return self.async_convert_installed_app_info(addon_info)
+        return self._async_convert_installed_addon_info(addon_info)
 
     @callback
     def async_get_addon_state(self, addon_info: InstalledAddonComplete) -> AddonState:
@@ -186,17 +186,17 @@ class AddonManager:
         return addon_state
 
     @callback
-    def async_convert_installed_app_info(
-        self, app_info: InstalledAddonComplete
+    def _async_convert_installed_addon_info(
+        self, addon_info: InstalledAddonComplete
     ) -> AddonInfo:
         """Convert InstalledAddonComplete model to AddonInfo model."""
         return AddonInfo(
-            available=app_info.available,
-            hostname=app_info.hostname,
-            options=app_info.options,
-            state=self.async_get_addon_state(app_info),
-            update_available=app_info.update_available,
-            version=app_info.version,
+            available=addon_info.available,
+            hostname=addon_info.hostname,
+            options=addon_info.options,
+            state=self.async_get_addon_state(addon_info),
+            update_available=addon_info.update_available,
+            version=addon_info.version,
         )
 
     @api_error(
@@ -233,11 +233,16 @@ class AddonManager:
     async def async_update_addon(self) -> None:
         """Update the managed add-on if needed."""
         try:
-            app_info = await self._supervisor_client.addons.addon_info(self.addon_slug)
+            # Not using async_get_addon_info here because it would make an unnecessary
+            # call to /store/addon/{slug}/info. This will raise if the addon is not
+            # installed so one call to /addon/{slug}/info is all that is needed
+            addon_info = await self._supervisor_client.addons.addon_info(
+                self.addon_slug
+            )
         except SupervisorNotFoundError:
             raise AddonError(f"{self.addon_name} app is not installed") from None
 
-        if not app_info.update_available:
+        if not addon_info.update_available:
             return
 
         try:
@@ -248,7 +253,7 @@ class AddonManager:
             ) from None
 
         await self.async_create_backup(
-            app_info=self.async_convert_installed_app_info(app_info)
+            addon_info=self._async_convert_installed_addon_info(addon_info)
         )
         await self._supervisor_client.store.update_addon(
             self.addon_slug, StoreAddonUpdate(backup=False)
@@ -279,14 +284,14 @@ class AddonManager:
         "Failed to create a backup of the {addon_name} app",
         expected_error_type=SupervisorError,
     )
-    async def async_create_backup(self, *, app_info: AddonInfo | None = None) -> None:
+    async def async_create_backup(self, *, addon_info: AddonInfo | None = None) -> None:
         """Create a partial backup of the managed add-on."""
-        if app_info:
-            app_version = app_info.version
+        if addon_info:
+            addon_version = addon_info.version
         else:
-            app_version = (await self.async_get_addon_info()).version
+            addon_version = (await self.async_get_addon_info()).version
 
-        name = f"addon_{self.addon_slug}_{app_version}"
+        name = f"addon_{self.addon_slug}_{addon_version}"
 
         self._logger.debug("Creating backup: %s", name)
         await self._supervisor_client.backups.partial_backup(
