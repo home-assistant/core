@@ -62,6 +62,11 @@ ALWAYS_ACTIVE_MODULES = ["universal"]
 
 CONF_EXPERT_MODE = "expert_mode"
 
+# Addresses of the three firmware version registers (major / minor / patch).
+# Read by the coordinator and surfaced as DeviceInfo.sw_version instead of
+# individual sensor entities.
+SW_VERSION_ADDRESSES = {8192, 8193, 8194}
+
 # Sensor addresses that always receive EntityCategory.DIAGNOSTIC
 DIAGNOSTIC_ADDRESSES = {
     9496,   # Modbus heat consumption Max

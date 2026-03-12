@@ -11,6 +11,7 @@ from dataclasses import dataclass
 @dataclass
 class RegisterDef:
     """Definition of a single Modbus register."""
+
     address: int
     count: int
     name: str
@@ -138,7 +139,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -150,7 +151,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -186,7 +187,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -198,7 +199,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -210,7 +211,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -270,7 +271,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -282,7 +283,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -378,7 +379,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8229,
             count=1,
-            name="External\u00a03",
+            name="External 3",
             param="KSM.i_extern3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -438,7 +439,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8236,
             count=1,
-            name="burner output external",
+            name="Burner output external",
             param="AK.externe_brennerleistung",
             data_type="s16",
             unit="%",
@@ -450,7 +451,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8237,
             count=1,
-            name="Boiler temp. Setpoint extern.",
+            name="Boiler temperature setpoint external",
             param="AK.externe_kessel_solltemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -474,7 +475,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8250,
             count=1,
-            name="Outside temp. act. value (value)",
+            name="Outside temperature (value)",
             param="SYSTEM.i_aussen_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -486,7 +487,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8251,
             count=1,
-            name="Outside temp. act. value (status)",
+            name="Outside temperature (status)",
             param="SYSTEM.i_aussen_temperatur.status",
             data_type="s16",
             unit="",
@@ -498,7 +499,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -510,7 +511,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9045,
             count=1,
-            name="Multi-function output 2 (127)",
+            name="Multi-function output 2",
             param="KSM.o_multifunktionsausgang_2",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -522,7 +523,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -534,7 +535,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9047,
             count=1,
-            name="Multi-function output 4 (126)",
+            name="Multi-function output 4",
             param="KSM.o_multifunktionsausgang_4",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -558,7 +559,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9496,
             count=1,
-            name="Modbus heat consumption Max",
+            name="Modbus heat consumption maximum",
             param="KSM.modbus_waermeabnahme_max",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -606,7 +607,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9878,
             count=2,
-            name="Heat quant. tot.",
+            name="Heat quantity total",
             param="KSM.waermemenge_gesamt",
             data_type="u32",
             unit="kWh",
@@ -812,7 +813,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -824,7 +825,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -860,7 +861,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -872,7 +873,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -884,7 +885,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -968,7 +969,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -980,7 +981,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -1124,7 +1125,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8229,
             count=1,
-            name="External\u00a03",
+            name="External 3",
             param="KSM.i_extern3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1148,7 +1149,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8236,
             count=1,
-            name="burner output external",
+            name="Burner output external",
             param="AK.externe_brennerleistung",
             data_type="s16",
             unit="%",
@@ -1160,7 +1161,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8237,
             count=1,
-            name="Boiler temp. Setpoint extern.",
+            name="Boiler temperature setpoint external",
             param="AK.externe_kessel_solltemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -1208,7 +1209,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8250,
             count=1,
-            name="Outside temp. act. value (value)",
+            name="Outside temperature (value)",
             param="SYSTEM.i_aussen_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -1220,7 +1221,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8251,
             count=1,
-            name="Outside temp. act. value (status)",
+            name="Outside temperature (status)",
             param="SYSTEM.i_aussen_temperatur.status",
             data_type="s16",
             unit="",
@@ -1232,7 +1233,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1244,7 +1245,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9045,
             count=1,
-            name="Multi-function output 2 (127)",
+            name="Multi-function output 2",
             param="KSM.o_multifunktionsausgang_2",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1256,7 +1257,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1268,7 +1269,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9047,
             count=1,
-            name="Multi-function output 4 (126)",
+            name="Multi-function output 4",
             param="KSM.o_multifunktionsausgang_4",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1292,7 +1293,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9496,
             count=1,
-            name="Modbus heat consumption Max",
+            name="Modbus heat consumption maximum",
             param="KSM.modbus_waermeabnahme_max",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1328,7 +1329,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9878,
             count=2,
-            name="Heat quant. tot.",
+            name="Heat quantity total",
             param="KSM.waermemenge_gesamt",
             data_type="u32",
             unit="kWh",
@@ -1522,7 +1523,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -1534,7 +1535,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -1570,7 +1571,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -1582,7 +1583,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -1594,7 +1595,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -1678,7 +1679,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -1690,7 +1691,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -1822,7 +1823,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8229,
             count=1,
-            name="External\u00a03",
+            name="External 3",
             param="KSM.i_extern3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1858,7 +1859,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8236,
             count=1,
-            name="burner output external",
+            name="Burner output external",
             param="AK.externe_brennerleistung",
             data_type="s16",
             unit="%",
@@ -1870,7 +1871,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8237,
             count=1,
-            name="Boiler temp. Setpoint extern.",
+            name="Boiler temperature setpoint external",
             param="AK.externe_kessel_solltemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -1918,7 +1919,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8250,
             count=1,
-            name="Outside temp. act. value (value)",
+            name="Outside temperature (value)",
             param="SYSTEM.i_aussen_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -1930,7 +1931,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8251,
             count=1,
-            name="Outside temp. act. value (status)",
+            name="Outside temperature (status)",
             param="SYSTEM.i_aussen_temperatur.status",
             data_type="s16",
             unit="",
@@ -1942,7 +1943,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1954,7 +1955,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9045,
             count=1,
-            name="Multi-function output 2 (127)",
+            name="Multi-function output 2",
             param="KSM.o_multifunktionsausgang_2",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1966,7 +1967,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -1978,7 +1979,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9047,
             count=1,
-            name="Multi-function output 4 (126)",
+            name="Multi-function output 4",
             param="KSM.o_multifunktionsausgang_4",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2002,7 +2003,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9496,
             count=1,
-            name="Modbus heat consumption Max",
+            name="Modbus heat consumption maximum",
             param="KSM.modbus_waermeabnahme_max",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2038,7 +2039,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9878,
             count=2,
-            name="Heat quant. tot.",
+            name="Heat quantity total",
             param="KSM.waermemenge_gesamt",
             data_type="u32",
             unit="kWh",
@@ -2244,7 +2245,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -2256,7 +2257,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -2292,7 +2293,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -2304,7 +2305,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -2316,7 +2317,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -2412,7 +2413,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -2424,7 +2425,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -2520,7 +2521,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8229,
             count=1,
-            name="External\u00a03",
+            name="External 3",
             param="KSM.i_extern3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2556,7 +2557,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8236,
             count=1,
-            name="burner output external",
+            name="Burner output external",
             param="AK.externe_brennerleistung",
             data_type="s16",
             unit="%",
@@ -2568,7 +2569,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8237,
             count=1,
-            name="Boiler temp. Setpoint extern.",
+            name="Boiler temperature setpoint external",
             param="AK.externe_kessel_solltemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -2676,7 +2677,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2688,7 +2689,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9045,
             count=1,
-            name="Multi-function output 2 (127)",
+            name="Multi-function output 2",
             param="KSM.o_multifunktionsausgang_2",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2700,7 +2701,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2712,7 +2713,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9047,
             count=1,
-            name="Multi-function output 4 (126)",
+            name="Multi-function output 4",
             param="KSM.o_multifunktionsausgang_4",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2736,7 +2737,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9496,
             count=1,
-            name="Modbus heat consumption Max",
+            name="Modbus heat consumption maximum",
             param="KSM.modbus_waermeabnahme_max",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -2784,7 +2785,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9878,
             count=2,
-            name="Heat quant. tot.",
+            name="Heat quantity total",
             param="KSM.waermemenge_gesamt",
             data_type="u32",
             unit="kWh",
@@ -2880,7 +2881,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24586,
             count=1,
-            name="Automatic ignition Function",
+            name="Automatic ignition function",
             param="CF2.automatische_Zuendung_SH",
             data_type="s16",
             unit="cf2_automatische_zuendung_t",
@@ -3014,7 +3015,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3026,7 +3027,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -3062,7 +3063,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -3074,7 +3075,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3086,7 +3087,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -3146,7 +3147,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3158,7 +3159,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -3266,7 +3267,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -3278,7 +3279,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -3338,7 +3339,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24586,
             count=1,
-            name="Automatic ignition Function",
+            name="Automatic ignition function",
             param="CF2.automatische_Zuendung_SH",
             data_type="s16",
             unit="cf2_automatische_zuendung_t",
@@ -3376,7 +3377,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3388,7 +3389,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -3424,7 +3425,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -3436,7 +3437,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3448,7 +3449,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -3592,7 +3593,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -3604,7 +3605,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -3690,7 +3691,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8197,
             count=1,
-            name="Boiler temp., actual (value)",
+            name="Boiler temperature, actual (value)",
             param="KSM.i_kesseltemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3702,7 +3703,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8198,
             count=1,
-            name="Boiler temp., actual (status)",
+            name="Boiler temperature, actual (status)",
             param="KSM.i_kesseltemp_ist.status",
             data_type="s16",
             unit="",
@@ -3738,7 +3739,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8201,
             count=1,
-            name="Boiler pump %",
+            name="Boiler pump speed",
             param="KSM.kesselpumpe_steuerstufe",
             data_type="u16",
             unit="%",
@@ -3750,7 +3751,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8202,
             count=1,
-            name="Return flow temp., actual (value)",
+            name="Return flow temperature, actual (value)",
             param="KSM.i_ruecklauftemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3762,7 +3763,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8203,
             count=1,
-            name="Return flow temp., actual (status)",
+            name="Return flow temperature, actual (status)",
             param="KSM.i_ruecklauftemp_ist.status",
             data_type="s16",
             unit="",
@@ -3822,7 +3823,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8215,
             count=1,
-            name="Flame temp., actual (value)",
+            name="Flame temperature, actual (value)",
             param="KSM.i_flammtemp_ist.value",
             data_type="s16",
             unit="\u00b0C",
@@ -3834,7 +3835,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8216,
             count=1,
-            name="Flame temp., actual (status)",
+            name="Flame temperature, actual (status)",
             param="KSM.i_flammtemp_ist.status",
             data_type="s16",
             unit="",
@@ -3942,7 +3943,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9044,
             count=1,
-            name="Multi-function output 1 (125)",
+            name="Multi-function output 1",
             param="KSM.o_multifunktionsausgang_1",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -3954,7 +3955,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9046,
             count=1,
-            name="Multi-function output 3 (124)",
+            name="Multi-function output 3",
             param="KSM.o_multifunktionsausgang_3",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -4014,7 +4015,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24586,
             count=1,
-            name="Automatic ignition Function",
+            name="Automatic ignition function",
             param="CF2.automatische_Zuendung_SH",
             data_type="s16",
             unit="cf2_automatische_zuendung_t",
@@ -4052,7 +4053,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8260,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4064,7 +4065,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8261,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4076,7 +4077,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8262,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4088,7 +4089,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8263,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4100,7 +4101,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8264,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4112,7 +4113,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8265,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4124,7 +4125,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8266,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4136,7 +4137,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8267,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4148,7 +4149,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8268,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4160,7 +4161,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8269,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4172,7 +4173,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8270,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4184,7 +4185,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8271,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4196,7 +4197,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8272,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4208,7 +4209,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8273,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4220,7 +4221,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8274,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4232,7 +4233,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8275,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4244,7 +4245,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8276,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4256,7 +4257,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8277,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4268,7 +4269,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8278,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4280,7 +4281,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8279,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4292,7 +4293,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8280,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4304,7 +4305,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8281,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4316,7 +4317,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8282,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4328,7 +4329,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8283,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4340,7 +4341,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8284,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4352,7 +4353,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8285,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4364,7 +4365,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8286,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4376,7 +4377,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8287,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4388,7 +4389,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8288,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4400,7 +4401,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8289,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4412,7 +4413,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8290,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4424,7 +4425,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8291,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4436,7 +4437,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8292,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4448,7 +4449,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8293,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4460,7 +4461,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8294,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4472,7 +4473,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8295,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4484,7 +4485,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8296,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4496,7 +4497,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8297,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4508,7 +4509,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8298,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4520,7 +4521,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8299,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4532,7 +4533,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8300,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4544,7 +4545,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8301,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4556,7 +4557,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8302,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4568,7 +4569,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8303,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4580,7 +4581,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8304,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4592,7 +4593,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8305,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4604,7 +4605,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8306,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4616,7 +4617,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8307,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4628,7 +4629,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8308,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4640,7 +4641,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8309,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4652,7 +4653,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8310,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4664,7 +4665,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8311,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4676,7 +4677,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8312,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4688,7 +4689,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8313,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4700,7 +4701,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8314,
             count=1,
-            name="Forward flow temp., act. (value)",
+            name="Forward flow temperature, actual (value)",
             param="HK.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -4712,7 +4713,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8315,
             count=1,
-            name="Forward flow temp., act. (status)",
+            name="Forward flow temperature, actual (status)",
             param="HK.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -4724,7 +4725,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8328,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4736,7 +4737,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8329,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4748,7 +4749,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8330,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4760,7 +4761,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8331,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4772,7 +4773,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8332,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4784,7 +4785,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8333,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4796,7 +4797,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8334,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4808,7 +4809,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8335,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4820,7 +4821,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8336,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4832,7 +4833,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8337,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4844,7 +4845,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8338,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4856,7 +4857,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8339,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4868,7 +4869,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8340,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4880,7 +4881,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8341,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4892,7 +4893,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8342,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4904,7 +4905,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8343,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4916,7 +4917,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8344,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4928,7 +4929,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8345,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4940,7 +4941,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8346,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4952,7 +4953,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8347,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4964,7 +4965,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8348,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4976,7 +4977,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8349,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -4988,7 +4989,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8350,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5000,7 +5001,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8351,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5012,7 +5013,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8352,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5024,7 +5025,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8353,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5036,7 +5037,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8354,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5048,7 +5049,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8355,
             count=1,
-            name="Forward flow temp. Setpoint",
+            name="Forward flow temperature setpoint",
             param="HK.vorlauf_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -5060,7 +5061,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8365,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5072,7 +5073,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8366,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5084,7 +5085,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8367,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5096,7 +5097,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8368,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5108,7 +5109,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8369,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5120,7 +5121,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8370,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5132,7 +5133,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8371,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5144,7 +5145,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8372,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5156,7 +5157,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8373,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5168,7 +5169,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8374,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5180,7 +5181,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8375,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5192,7 +5193,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8376,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5204,7 +5205,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8377,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5216,7 +5217,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8378,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5228,7 +5229,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8379,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5240,7 +5241,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8380,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5252,7 +5253,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8381,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5264,7 +5265,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8382,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5276,7 +5277,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8383,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5288,7 +5289,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8384,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5300,7 +5301,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8385,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5312,7 +5313,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8386,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5324,7 +5325,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8387,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5336,7 +5337,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8388,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5348,7 +5349,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8389,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5360,7 +5361,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8390,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5372,7 +5373,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8391,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5384,7 +5385,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8392,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5396,7 +5397,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8393,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5408,7 +5409,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8394,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5420,7 +5421,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8395,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5432,7 +5433,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8396,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5444,7 +5445,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8397,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5456,7 +5457,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8398,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5468,7 +5469,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8399,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5480,7 +5481,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8400,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5492,7 +5493,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8401,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5504,7 +5505,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8402,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5516,7 +5517,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8403,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5528,7 +5529,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8404,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5540,7 +5541,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8405,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5552,7 +5553,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8406,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5564,7 +5565,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8407,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5576,7 +5577,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8408,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5588,7 +5589,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8409,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5600,7 +5601,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8410,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5612,7 +5613,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8411,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5624,7 +5625,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8412,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5636,7 +5637,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8413,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5648,7 +5649,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8414,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5660,7 +5661,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8415,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5672,7 +5673,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8416,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5684,7 +5685,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8417,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5696,7 +5697,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8418,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -5708,7 +5709,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8419,
             count=1,
-            name="Room temp., actual (value)",
+            name="Room temperature, actual (value)",
             param="HK.i_raum_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -5720,7 +5721,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8420,
             count=1,
-            name="Room temp., actual (status)",
+            name="Room temperature, actual (status)",
             param="HK.i_raum_temperatur.status",
             data_type="s16",
             unit="",
@@ -6740,7 +6741,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8538,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6752,7 +6753,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8539,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6764,7 +6765,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8540,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6776,7 +6777,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8541,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6788,7 +6789,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8542,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6800,7 +6801,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8543,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6812,7 +6813,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8544,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6824,7 +6825,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8545,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6836,7 +6837,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8546,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6848,7 +6849,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8547,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6860,7 +6861,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8548,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6872,7 +6873,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8549,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6884,7 +6885,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8550,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6896,7 +6897,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8551,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6908,7 +6909,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8552,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6920,7 +6921,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8553,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6932,7 +6933,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8554,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6944,7 +6945,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8555,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6956,7 +6957,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8556,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6968,7 +6969,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8557,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6980,7 +6981,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8558,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -6992,7 +6993,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8559,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7004,7 +7005,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8560,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7016,7 +7017,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8561,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7028,7 +7029,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8562,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7040,7 +7041,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8563,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7052,7 +7053,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8564,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -7064,7 +7065,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=8565,
             count=1,
-            name="Room temp., setpoint",
+            name="Room temperature setpoint",
             param="HK.raum_temperatur_soll",
             data_type="s16",
             unit="\u00b0C",
@@ -8756,7 +8757,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24894,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8768,7 +8769,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24895,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8780,7 +8781,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24896,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8792,7 +8793,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24897,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8804,7 +8805,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24898,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8816,7 +8817,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24899,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8828,7 +8829,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24900,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8840,7 +8841,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24901,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8852,7 +8853,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24902,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8864,7 +8865,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24903,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8876,7 +8877,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24904,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8888,7 +8889,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24905,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8900,7 +8901,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24906,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8912,7 +8913,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24907,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8924,7 +8925,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24908,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8936,7 +8937,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24909,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8948,7 +8949,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24910,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8960,7 +8961,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24911,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8972,7 +8973,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24912,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8984,7 +8985,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24913,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -8996,7 +8997,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24914,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9008,7 +9009,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24915,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9020,7 +9021,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24916,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9032,7 +9033,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24917,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9044,7 +9045,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24918,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9056,7 +9057,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24919,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9068,7 +9069,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24920,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -9080,7 +9081,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24921,
             count=1,
-            name="Modbus Forward flow temp. Setpoint",
+            name="Modbus forward flow temperature setpoint",
             param="HK.modbus_temperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -11614,7 +11615,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24777,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11626,7 +11627,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24778,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11638,7 +11639,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24779,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11650,7 +11651,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24780,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11662,7 +11663,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24781,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11674,7 +11675,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24782,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11686,7 +11687,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24783,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11698,7 +11699,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24784,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11710,7 +11711,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24785,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11722,7 +11723,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24786,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11734,7 +11735,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24787,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11746,7 +11747,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24788,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11758,7 +11759,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24789,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11770,7 +11771,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24790,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11782,7 +11783,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24791,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11794,7 +11795,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24792,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11806,7 +11807,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24793,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11818,7 +11819,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24794,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11830,7 +11831,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24795,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11842,7 +11843,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24796,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11854,7 +11855,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24797,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11866,7 +11867,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24798,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11878,7 +11879,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24799,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11890,7 +11891,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24800,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11902,7 +11903,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24801,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11914,7 +11915,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24802,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11926,7 +11927,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24803,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11938,7 +11939,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24804,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11950,7 +11951,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24805,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="PUF.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -11962,7 +11963,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24806,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="PUF.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -11974,7 +11975,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24811,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -11986,7 +11987,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24812,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -11998,7 +11999,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24813,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12010,7 +12011,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24814,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12022,7 +12023,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24815,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12034,7 +12035,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24816,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12046,7 +12047,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24817,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12058,7 +12059,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24818,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12070,7 +12071,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24819,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12082,7 +12083,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24820,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12094,7 +12095,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24821,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12106,7 +12107,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24822,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12118,7 +12119,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24823,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12130,7 +12131,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24824,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -12142,7 +12143,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24825,
             count=1,
-            name="DHW temp. min.",
+            name="DHW temperature minimum",
             param="PUF.brauchwassertemp_min",
             data_type="s16",
             unit="\u00b0C",
@@ -13668,7 +13669,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24711,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13680,7 +13681,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24712,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13692,7 +13693,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24713,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13704,7 +13705,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24714,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13716,7 +13717,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24715,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13728,7 +13729,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24716,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13740,7 +13741,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24717,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13752,7 +13753,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24718,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13764,7 +13765,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24719,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13776,7 +13777,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24720,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13788,7 +13789,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24721,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13800,7 +13801,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24722,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13812,7 +13813,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24723,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13824,7 +13825,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24724,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13836,7 +13837,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24725,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13848,7 +13849,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24726,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13860,7 +13861,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24727,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13872,7 +13873,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24728,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13884,7 +13885,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24729,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13896,7 +13897,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24730,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13908,7 +13909,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24731,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13920,7 +13921,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24732,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13932,7 +13933,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24733,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13944,7 +13945,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24734,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13956,7 +13957,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24735,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13968,7 +13969,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24736,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -13980,7 +13981,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24737,
             count=1,
-            name="Temp. min/max (min)",
+            name="Temperature limit (minimum)",
             param="BOI.temperatur_grenzen.min",
             data_type="s16",
             unit="\u00b0C",
@@ -13992,7 +13993,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=24738,
             count=1,
-            name="Temp. min/max (max)",
+            name="Temperature limit (maximum)",
             param="BOI.temperatur_grenzen.max",
             data_type="s16",
             unit="\u00b0C",
@@ -15738,7 +15739,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9064,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15750,7 +15751,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9065,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15762,7 +15763,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9066,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15774,7 +15775,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9067,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15786,7 +15787,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9068,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15798,7 +15799,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9069,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15810,7 +15811,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9070,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15822,7 +15823,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9071,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15834,7 +15835,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9072,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15846,7 +15847,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9073,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15858,7 +15859,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9074,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15870,7 +15871,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9075,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15882,7 +15883,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9076,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -15894,7 +15895,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9077,
             count=1,
-            name="Stat. R.",
+            name="Status reason",
             param="SOL.status_ursache",
             data_type="s16",
             unit="solar_status_ursache_t",
@@ -17922,7 +17923,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9305,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -17934,7 +17935,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9306,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -17946,7 +17947,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9307,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -17958,7 +17959,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9308,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -17970,7 +17971,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9309,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -17982,7 +17983,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9310,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -17994,7 +17995,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9311,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18006,7 +18007,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9312,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18018,7 +18019,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9313,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18030,7 +18031,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9314,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18042,7 +18043,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9315,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18054,7 +18055,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9316,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18066,7 +18067,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9317,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18078,7 +18079,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9318,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18090,7 +18091,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9319,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18102,7 +18103,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9320,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18114,7 +18115,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9321,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18126,7 +18127,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9322,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18138,7 +18139,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9323,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18150,7 +18151,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9324,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18162,7 +18163,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9325,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18174,7 +18175,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9326,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18186,7 +18187,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9327,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18198,7 +18199,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9328,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18210,7 +18211,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9329,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18222,7 +18223,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9330,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18234,7 +18235,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9331,
             count=1,
-            name="Collector forward flow temp. (value)",
+            name="Collector forward flow temperature (value)",
             param="SOL.i_vorlauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18246,7 +18247,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9332,
             count=1,
-            name="Collector forward flow temp. (status)",
+            name="Collector forward flow temperature (status)",
             param="SOL.i_vorlauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18258,7 +18259,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9335,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18270,7 +18271,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9336,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18282,7 +18283,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9337,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18294,7 +18295,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9338,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18306,7 +18307,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9339,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18318,7 +18319,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9340,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18330,7 +18331,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9341,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18342,7 +18343,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9342,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18354,7 +18355,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9343,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18366,7 +18367,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9344,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18378,7 +18379,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9345,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18390,7 +18391,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9346,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18402,7 +18403,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9347,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18414,7 +18415,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9348,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18426,7 +18427,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9349,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18438,7 +18439,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9350,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18450,7 +18451,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9351,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18462,7 +18463,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9352,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18474,7 +18475,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9353,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18486,7 +18487,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9354,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18498,7 +18499,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9355,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18510,7 +18511,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9356,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18522,7 +18523,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9357,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18534,7 +18535,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9358,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18546,7 +18547,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9359,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18558,7 +18559,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9360,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -18570,7 +18571,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9361,
             count=1,
-            name="Collector return flow temp. (value)",
+            name="Collector return flow temperature (value)",
             param="SOL.i_kollektor_ruecklauf_temperatur.value",
             data_type="s16",
             unit="\u00b0C",
@@ -18582,7 +18583,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9362,
             count=1,
-            name="Collector return flow temp. (status)",
+            name="Collector return flow temperature (status)",
             param="SOL.i_kollektor_ruecklauf_temperatur.status",
             data_type="s16",
             unit="",
@@ -19266,7 +19267,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9882,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19278,7 +19279,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9883,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19290,7 +19291,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9884,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19302,7 +19303,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9885,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19314,7 +19315,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9886,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19326,7 +19327,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9887,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19338,7 +19339,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9888,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19350,7 +19351,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9889,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19362,7 +19363,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9890,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19374,7 +19375,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9891,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19386,7 +19387,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9892,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19398,7 +19399,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9893,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19410,7 +19411,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9894,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19422,7 +19423,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9895,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19434,7 +19435,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9896,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19446,7 +19447,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9897,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19458,7 +19459,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9898,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19470,7 +19471,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9899,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19482,7 +19483,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9900,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19494,7 +19495,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9901,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19506,7 +19507,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9902,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19518,7 +19519,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9903,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19530,7 +19531,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9904,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19542,7 +19543,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9905,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19554,7 +19555,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9906,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19566,7 +19567,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9907,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19578,7 +19579,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9908,
             count=1,
-            name="Forw. flow temp. sec. (value)",
+            name="Forward flow temperature, secondary (value)",
             param="SOL.i_vorlauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19590,7 +19591,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9909,
             count=1,
-            name="Forw. flow temp. sec. (status)",
+            name="Forward flow temperature, secondary (status)",
             param="SOL.i_vorlauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19602,7 +19603,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9912,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19614,7 +19615,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9913,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19626,7 +19627,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9914,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19638,7 +19639,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9915,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19650,7 +19651,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9916,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19662,7 +19663,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9917,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19674,7 +19675,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9918,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19686,7 +19687,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9919,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19698,7 +19699,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9920,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19710,7 +19711,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9921,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19722,7 +19723,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9922,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19734,7 +19735,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9923,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19746,7 +19747,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9924,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19758,7 +19759,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9925,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19770,7 +19771,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9926,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19782,7 +19783,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9927,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19794,7 +19795,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9928,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19806,7 +19807,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9929,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19818,7 +19819,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9930,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19830,7 +19831,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9931,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19842,7 +19843,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9932,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19854,7 +19855,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9933,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19866,7 +19867,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9934,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19878,7 +19879,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9935,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19890,7 +19891,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9936,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19902,7 +19903,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9937,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19914,7 +19915,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9938,
             count=1,
-            name="Ret. flow temp. sec. (value)",
+            name="Return flow temperature, secondary (value)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19926,7 +19927,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9939,
             count=1,
-            name="Ret. flow temp. sec. (status)",
+            name="Return flow temperature, secondary (status)",
             param="SOL.i_ruecklauf_temperatur_sekundaer.status",
             data_type="s16",
             unit="",
@@ -19938,7 +19939,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9942,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19950,7 +19951,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9943,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -19962,7 +19963,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9944,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19974,7 +19975,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9945,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -19986,7 +19987,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9946,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -19998,7 +19999,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9947,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20010,7 +20011,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9948,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20022,7 +20023,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9949,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20034,7 +20035,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9950,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20046,7 +20047,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9951,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20058,7 +20059,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9952,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20070,7 +20071,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9953,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20082,7 +20083,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9954,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20094,7 +20095,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9955,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20106,7 +20107,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9956,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20118,7 +20119,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9957,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20130,7 +20131,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9958,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20142,7 +20143,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9959,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20154,7 +20155,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9960,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20166,7 +20167,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9961,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20178,7 +20179,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9962,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20190,7 +20191,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9963,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20202,7 +20203,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9964,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20214,7 +20215,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9965,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20226,7 +20227,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9966,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20238,7 +20239,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9967,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20250,7 +20251,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9968,
             count=1,
-            name="Ret. flow temp. prim. (value)",
+            name="Return flow temperature, primary (value)",
             param="SOL.i_ruecklauf_temperatur_primaer.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20262,7 +20263,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9969,
             count=1,
-            name="Ret. flow temp. prim. (status)",
+            name="Return flow temperature, primary (status)",
             param="SOL.i_ruecklauf_temperatur_primaer.status",
             data_type="s16",
             unit="",
@@ -20276,7 +20277,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9394,
             count=1,
-            name="Average buffer temp.",
+            name="Average buffer temperature",
             param="KFS.mittlere_puffertemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -20300,7 +20301,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9396,
             count=1,
-            name="NetwForwFl (value)",
+            name="Network forward flow (value)",
             param="KFS.netz_vorlauf.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20312,7 +20313,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9397,
             count=1,
-            name="NetwForwFl (status)",
+            name="Network forward flow (status)",
             param="KFS.netz_vorlauf.status",
             data_type="s16",
             unit="",
@@ -20324,7 +20325,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9398,
             count=1,
-            name="NetwRetFl (value)",
+            name="Network return flow (value)",
             param="KFS.netz_ruecklauf.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20336,7 +20337,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9399,
             count=1,
-            name="NetwRetFl (status)",
+            name="Network return flow (status)",
             param="KFS.netz_ruecklauf.status",
             data_type="s16",
             unit="",
@@ -20348,7 +20349,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9400,
             count=1,
-            name="Requ. peak load boiler",
+            name="Peak load boiler request",
             param="KFS.o_anforderung_spitzenlastkessel",
             data_type="s16",
             unit="system_ein_aus_t",
@@ -20708,7 +20709,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9512,
             count=1,
-            name="Averaged outside temp. (value)",
+            name="Averaged outside temperature (value)",
             param="KFS.i_aussen_temperatur_mittelwert.value",
             data_type="s16",
             unit="\u00b0C",
@@ -20720,7 +20721,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9513,
             count=1,
-            name="Averaged outside temp. (status)",
+            name="Averaged outside temperature (status)",
             param="KFS.i_aussen_temperatur_mittelwert.status",
             data_type="s16",
             unit="",
@@ -20744,7 +20745,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9515,
             count=1,
-            name="Average charging temp.",
+            name="Average charging temperature",
             param="KFS.mittlere_durchladetemperatur",
             data_type="s16",
             unit="\u00b0C",
@@ -22546,7 +22547,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9733,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22558,7 +22559,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9735,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22570,7 +22571,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9737,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22582,7 +22583,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9739,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22594,7 +22595,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9741,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22606,7 +22607,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9743,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22618,7 +22619,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9745,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22630,7 +22631,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9747,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22642,7 +22643,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9749,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22654,7 +22655,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9751,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22666,7 +22667,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9753,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22678,7 +22679,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9755,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22690,7 +22691,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9757,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22702,7 +22703,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9759,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22714,7 +22715,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9761,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22726,7 +22727,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9763,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22738,7 +22739,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9765,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22750,7 +22751,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9767,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22762,7 +22763,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9769,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22774,7 +22775,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9771,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22786,7 +22787,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9773,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22798,7 +22799,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9775,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22810,7 +22811,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9777,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22822,7 +22823,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9779,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22834,7 +22835,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9781,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22846,7 +22847,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9783,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22858,7 +22859,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9785,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22870,7 +22871,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9787,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22882,7 +22883,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9789,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22894,7 +22895,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9791,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22906,7 +22907,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9793,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22918,7 +22919,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9795,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22930,7 +22931,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9797,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22942,7 +22943,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9799,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22954,7 +22955,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9801,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -22966,7 +22967,7 @@ REGISTERS: dict[str, list[RegisterDef]] = {
         RegisterDef(
             address=9803,
             count=2,
-            name="Volume act.",
+            name="Volume actual",
             param="MBUS.vol_akt",
             data_type="s32",
             unit="l/h",
@@ -23659,6 +23660,7 @@ VALUE_TABLES: dict[str, dict[int, str]] = {
 @dataclass
 class SelectRegisterDef:
     """Writable program/mode register (Holding Register, func 03 read / 06 write)."""
+
     address: int
     name: str
     param: str
@@ -23670,109 +23672,781 @@ class SelectRegisterDef:
 
 SELECT_REGISTERS: dict[str, list[SelectRegisterDef]] = {
     "heating_circuits": [
-        SelectRegisterDef(address=24589, name="Select program", param="HK.programm", index="HC 1.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24590, name="Select program", param="HK.programm", index="HC 1.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24591, name="Select program", param="HK.programm", index="HC 2.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24592, name="Select program", param="HK.programm", index="HC 2.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24593, name="Select program", param="HK.programm", index="HC 3.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24594, name="Select program", param="HK.programm", index="HC 3.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24595, name="Select program", param="HK.programm", index="HC 4.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24596, name="Select program", param="HK.programm", index="HC 4.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24597, name="Select program", param="HK.programm", index="HC 5.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24598, name="Select program", param="HK.programm", index="HC 5.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24599, name="Select program", param="HK.programm", index="HC 6.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24600, name="Select program", param="HK.programm", index="HC 6.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24601, name="Select program", param="HK.programm", index="HC 7.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24602, name="Select program", param="HK.programm", index="HC 7.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24603, name="Select program", param="HK.programm", index="HC 8.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24604, name="Select program", param="HK.programm", index="HC 8.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24605, name="Select program", param="HK.programm", index="HC 9.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24606, name="Select program", param="HK.programm", index="HC 9.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24607, name="Select program", param="HK.programm", index="HC 10.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24608, name="Select program", param="HK.programm", index="HC 10.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24609, name="Select program", param="HK.programm", index="HC 11.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24610, name="Select program", param="HK.programm", index="HC 11.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24611, name="Select program", param="HK.programm", index="HC 12.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24612, name="Select program", param="HK.programm", index="HC 12.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24613, name="Select program", param="HK.programm", index="HC 13.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24614, name="Select program", param="HK.programm", index="HC 13.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24615, name="Select program", param="HK.programm", index="HC 14.1", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
-        SelectRegisterDef(address=24616, name="Select program", param="HK.programm", index="HC 14.2", value_table="hk_programm_t", data_type="u16", module="heating_circuits"),
+        SelectRegisterDef(
+            address=24589,
+            name="Select program",
+            param="HK.programm",
+            index="HC 1.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24590,
+            name="Select program",
+            param="HK.programm",
+            index="HC 1.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24591,
+            name="Select program",
+            param="HK.programm",
+            index="HC 2.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24592,
+            name="Select program",
+            param="HK.programm",
+            index="HC 2.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24593,
+            name="Select program",
+            param="HK.programm",
+            index="HC 3.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24594,
+            name="Select program",
+            param="HK.programm",
+            index="HC 3.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24595,
+            name="Select program",
+            param="HK.programm",
+            index="HC 4.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24596,
+            name="Select program",
+            param="HK.programm",
+            index="HC 4.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24597,
+            name="Select program",
+            param="HK.programm",
+            index="HC 5.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24598,
+            name="Select program",
+            param="HK.programm",
+            index="HC 5.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24599,
+            name="Select program",
+            param="HK.programm",
+            index="HC 6.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24600,
+            name="Select program",
+            param="HK.programm",
+            index="HC 6.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24601,
+            name="Select program",
+            param="HK.programm",
+            index="HC 7.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24602,
+            name="Select program",
+            param="HK.programm",
+            index="HC 7.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24603,
+            name="Select program",
+            param="HK.programm",
+            index="HC 8.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24604,
+            name="Select program",
+            param="HK.programm",
+            index="HC 8.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24605,
+            name="Select program",
+            param="HK.programm",
+            index="HC 9.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24606,
+            name="Select program",
+            param="HK.programm",
+            index="HC 9.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24607,
+            name="Select program",
+            param="HK.programm",
+            index="HC 10.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24608,
+            name="Select program",
+            param="HK.programm",
+            index="HC 10.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24609,
+            name="Select program",
+            param="HK.programm",
+            index="HC 11.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24610,
+            name="Select program",
+            param="HK.programm",
+            index="HC 11.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24611,
+            name="Select program",
+            param="HK.programm",
+            index="HC 12.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24612,
+            name="Select program",
+            param="HK.programm",
+            index="HC 12.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24613,
+            name="Select program",
+            param="HK.programm",
+            index="HC 13.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24614,
+            name="Select program",
+            param="HK.programm",
+            index="HC 13.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24615,
+            name="Select program",
+            param="HK.programm",
+            index="HC 14.1",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
+        SelectRegisterDef(
+            address=24616,
+            name="Select program",
+            param="HK.programm",
+            index="HC 14.2",
+            value_table="hk_programm_t",
+            data_type="u16",
+            module="heating_circuits",
+        ),
     ],
     "buffer_tank": [
-        SelectRegisterDef(address=24760, name="Select program", param="PUF.programm", index="BUF 0", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24761, name="Select program", param="PUF.programm", index="BUF 1", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24762, name="Select program", param="PUF.programm", index="BUF 2", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24763, name="Select program", param="PUF.programm", index="BUF 3", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24764, name="Select program", param="PUF.programm", index="BUF 4", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24765, name="Select program", param="PUF.programm", index="BUF 5", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24766, name="Select program", param="PUF.programm", index="BUF 6", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24767, name="Select program", param="PUF.programm", index="BUF 7", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24768, name="Select program", param="PUF.programm", index="BUF 8", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24769, name="Select program", param="PUF.programm", index="BUF 9", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24770, name="Select program", param="PUF.programm", index="BUF 10", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24771, name="Select program", param="PUF.programm", index="BUF 11", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24772, name="Select program", param="PUF.programm", index="BUF 12", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24773, name="Select program", param="PUF.programm", index="BUF 13", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
-        SelectRegisterDef(address=24774, name="Select program", param="PUF.programm", index="BUF 14", value_table="puffer_programm_t", data_type="u16", module="buffer_tank"),
+        SelectRegisterDef(
+            address=24760,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 0",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24761,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 1",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24762,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 2",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24763,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 3",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24764,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 4",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24765,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 5",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24766,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 6",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24767,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 7",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24768,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 8",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24769,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 9",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24770,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 10",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24771,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 11",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24772,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 12",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24773,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 13",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
+        SelectRegisterDef(
+            address=24774,
+            name="Select program",
+            param="PUF.programm",
+            index="BUF 14",
+            value_table="puffer_programm_t",
+            data_type="u16",
+            module="buffer_tank",
+        ),
     ],
     "dhwc": [
-        SelectRegisterDef(address=24693, name="Select program", param="BOI.programm", index="DHWC 1", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24694, name="Select program", param="BOI.programm", index="DHWC 2", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24695, name="Select program", param="BOI.programm", index="DHWC 3", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24696, name="Select program", param="BOI.programm", index="DHWC 4", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24697, name="Select program", param="BOI.programm", index="DHWC 5", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24698, name="Select program", param="BOI.programm", index="DHWC 6", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24699, name="Select program", param="BOI.programm", index="DHWC 7", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24700, name="Select program", param="BOI.programm", index="DHWC 8", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24701, name="Select program", param="BOI.programm", index="DHWC 9", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24702, name="Select program", param="BOI.programm", index="DHWC 10", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24703, name="Select program", param="BOI.programm", index="DHWC 11", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24704, name="Select program", param="BOI.programm", index="DHWC 12", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24705, name="Select program", param="BOI.programm", index="DHWC 13", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
-        SelectRegisterDef(address=24706, name="Select program", param="BOI.programm", index="DHWC 14", value_table="boiler_programm_t", data_type="u16", module="dhwc"),
+        SelectRegisterDef(
+            address=24693,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 1",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24694,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 2",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24695,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 3",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24696,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 4",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24697,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 5",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24698,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 6",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24699,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 7",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24700,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 8",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24701,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 9",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24702,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 10",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24703,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 11",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24704,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 12",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24705,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 13",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
+        SelectRegisterDef(
+            address=24706,
+            name="Select program",
+            param="BOI.programm",
+            index="DHWC 14",
+            value_table="boiler_programm_t",
+            data_type="u16",
+            module="dhwc",
+        ),
     ],
     "circulation": [
-        SelectRegisterDef(address=24828, name="Select program", param="ZIRK.programm", index="Circ 0", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24829, name="Select program", param="ZIRK.programm", index="Circ 1", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24830, name="Select program", param="ZIRK.programm", index="Circ 2", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24831, name="Select program", param="ZIRK.programm", index="Circ 3", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24832, name="Select program", param="ZIRK.programm", index="Circ 4", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24833, name="Select program", param="ZIRK.programm", index="Circ 5", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24834, name="Select program", param="ZIRK.programm", index="Circ 6", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24835, name="Select program", param="ZIRK.programm", index="Circ 7", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24836, name="Select program", param="ZIRK.programm", index="Circ 8", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24837, name="Select program", param="ZIRK.programm", index="Circ 9", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24838, name="Select program", param="ZIRK.programm", index="Circ 10", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24839, name="Select program", param="ZIRK.programm", index="Circ 11", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24840, name="Select program", param="ZIRK.programm", index="Circ 12", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24841, name="Select program", param="ZIRK.programm", index="Circ 13", value_table="zirk_programm_t", data_type="u16", module="circulation"),
-        SelectRegisterDef(address=24842, name="Select program", param="ZIRK.programm", index="Circ 14", value_table="zirk_programm_t", data_type="u16", module="circulation"),
+        SelectRegisterDef(
+            address=24828,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 0",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24829,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 1",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24830,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 2",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24831,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 3",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24832,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 4",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24833,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 5",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24834,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 6",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24835,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 7",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24836,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 8",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24837,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 9",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24838,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 10",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24839,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 11",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24840,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 12",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24841,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 13",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
+        SelectRegisterDef(
+            address=24842,
+            name="Select program",
+            param="ZIRK.programm",
+            index="Circ 14",
+            value_table="zirk_programm_t",
+            data_type="u16",
+            module="circulation",
+        ),
     ],
     "easyfire": [
-        SelectRegisterDef(address=24583, name="External specification", param="KSM.ak_externe_vorgabe", index="", value_table="ak_externe_vorgabe_t", data_type="u16", module="easyfire"),
-        SelectRegisterDef(address=24584, name="Boiler program", param="KSM.ak_kesselprogramm", index="", value_table="ak_kesselprogramm_t", data_type="u16", module="easyfire"),
+        SelectRegisterDef(
+            address=24583,
+            name="External specification",
+            param="KSM.ak_externe_vorgabe",
+            index="",
+            value_table="ak_externe_vorgabe_t",
+            data_type="u16",
+            module="easyfire",
+        ),
+        SelectRegisterDef(
+            address=24584,
+            name="Boiler program",
+            param="KSM.ak_kesselprogramm",
+            index="",
+            value_table="ak_kesselprogramm_t",
+            data_type="u16",
+            module="easyfire",
+        ),
     ],
     "multifire": [
-        SelectRegisterDef(address=24583, name="External specification", param="KSM.ak_externe_vorgabe", index="", value_table="ak_externe_vorgabe_t", data_type="u16", module="multifire"),
-        SelectRegisterDef(address=24584, name="Boiler program", param="KSM.ak_kesselprogramm", index="", value_table="ak_kesselprogramm_t", data_type="u16", module="multifire"),
+        SelectRegisterDef(
+            address=24583,
+            name="External specification",
+            param="KSM.ak_externe_vorgabe",
+            index="",
+            value_table="ak_externe_vorgabe_t",
+            data_type="u16",
+            module="multifire",
+        ),
+        SelectRegisterDef(
+            address=24584,
+            name="Boiler program",
+            param="KSM.ak_kesselprogramm",
+            index="",
+            value_table="ak_kesselprogramm_t",
+            data_type="u16",
+            module="multifire",
+        ),
     ],
     "pelletfire_plus": [
-        SelectRegisterDef(address=24583, name="External specification", param="KSM.ak_externe_vorgabe", index="", value_table="ak_externe_vorgabe_t", data_type="u16", module="pelletfire_plus"),
-        SelectRegisterDef(address=24584, name="Boiler program", param="KSM.ak_kesselprogramm", index="", value_table="ak_kesselprogramm_t", data_type="u16", module="pelletfire_plus"),
+        SelectRegisterDef(
+            address=24583,
+            name="External specification",
+            param="KSM.ak_externe_vorgabe",
+            index="",
+            value_table="ak_externe_vorgabe_t",
+            data_type="u16",
+            module="pelletfire_plus",
+        ),
+        SelectRegisterDef(
+            address=24584,
+            name="Boiler program",
+            param="KSM.ak_kesselprogramm",
+            index="",
+            value_table="ak_kesselprogramm_t",
+            data_type="u16",
+            module="pelletfire_plus",
+        ),
     ],
     "combifire": [
-        SelectRegisterDef(address=24583, name="External specification", param="KSM.ak_externe_vorgabe", index="", value_table="ak_externe_vorgabe_t", data_type="u16", module="combifire"),
-        SelectRegisterDef(address=24584, name="Boiler program", param="KSM.ak_kesselprogramm", index="", value_table="ak_kesselprogramm_t", data_type="u16", module="combifire"),
-        SelectRegisterDef(address=24586, name="Automatic ignition Function", param="KSM.cf2_automatische_zuendung", index="", value_table="cf2_automatische_zuendung_t", data_type="u16", module="combifire"),
+        SelectRegisterDef(
+            address=24583,
+            name="External specification",
+            param="KSM.ak_externe_vorgabe",
+            index="",
+            value_table="ak_externe_vorgabe_t",
+            data_type="u16",
+            module="combifire",
+        ),
+        SelectRegisterDef(
+            address=24584,
+            name="Boiler program",
+            param="KSM.ak_kesselprogramm",
+            index="",
+            value_table="ak_kesselprogramm_t",
+            data_type="u16",
+            module="combifire",
+        ),
+        SelectRegisterDef(
+            address=24586,
+            name="Automatic ignition function",
+            param="KSM.cf2_automatische_zuendung",
+            index="",
+            value_table="cf2_automatische_zuendung_t",
+            data_type="u16",
+            module="combifire",
+        ),
     ],
     "cf2": [
-        SelectRegisterDef(address=24586, name="Automatic ignition Function", param="KSM.cf2_automatische_zuendung", index="", value_table="cf2_automatische_zuendung_t", data_type="u16", module="cf2"),
+        SelectRegisterDef(
+            address=24586,
+            name="Automatic ignition function",
+            param="KSM.cf2_automatische_zuendung",
+            index="",
+            value_table="cf2_automatische_zuendung_t",
+            data_type="u16",
+            module="cf2",
+        ),
     ],
     "cf1_5": [
-        SelectRegisterDef(address=24586, name="Automatic ignition Function", param="KSM.cf2_automatische_zuendung", index="", value_table="cf2_automatische_zuendung_t", data_type="u16", module="cf1_5"),
+        SelectRegisterDef(
+            address=24586,
+            name="Automatic ignition function",
+            param="KSM.cf2_automatische_zuendung",
+            index="",
+            value_table="cf2_automatische_zuendung_t",
+            data_type="u16",
+            module="cf1_5",
+        ),
     ],
     "boiler_master_slave": [
-        SelectRegisterDef(address=24930, name="Active profile", param="KFS.profil", index="", value_table="kfs_profile_t", data_type="u16", module="boiler_master_slave"),
+        SelectRegisterDef(
+            address=24930,
+            name="Active profile",
+            param="KFS.profil",
+            index="",
+            value_table="kfs_profile_t",
+            data_type="u16",
+            module="boiler_master_slave",
+        ),
     ],
 }
