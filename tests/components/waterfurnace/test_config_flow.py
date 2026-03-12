@@ -84,7 +84,7 @@ async def test_user_flow_exceptions(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_user_flow_no_gwid(
+async def test_user_flow_no_devices(
     hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test user flow with no devices."""
@@ -208,7 +208,7 @@ async def test_import_flow_exceptions(
     assert result["reason"] == reason
 
 
-async def test_import_flow_no_gwid(
+async def test_import_flow_no_devices(
     hass: HomeAssistant, mock_waterfurnace_client: Mock
 ) -> None:
     """Test import flow with no devices."""
