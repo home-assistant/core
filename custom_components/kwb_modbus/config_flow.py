@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from pymodbus.client import AsyncModbusTcpClient
@@ -21,15 +22,20 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     ADDON_MODULES,
+    CONF_ACTIVE_INSTANCES,
     CONF_ADDON_MODULES,
     CONF_DISCOVERED_SENSORS,
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
+    CONF_SLAVE_ID,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SLAVE_ID,
     DOMAIN,
     HEATING_DEVICES,
+    SENSOR_STATUS_OK,
 )
+from .register_map import REGISTERS, SELECT_REGISTERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +50,56 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# Step 2: Select KWB device (EasyFire 2, EasyFire 3) (required)
-# Step 3: Select accessory like boiler (optional)
+
+def _natural_sort_key(s: str) -> tuple:
+    """Return a sort key for natural (human-friendly) ordering of strings like 'HC 1.1'."""
+    return tuple(int(p) if p.isdigit() else p for p in re.findall(r"\d+|\D+", s))
+
+
+def _sorted_instances(module_key: str) -> list[str]:
+    """Return naturally sorted unique instance labels available in SELECT_REGISTERS."""
+    indices = {r.index for r in SELECT_REGISTERS.get(module_key, []) if r.index}
+    return sorted(indices, key=_natural_sort_key)
+
+
+async def _discover_active_instances(
+    host: str, port: int, slave_id: int, module_key: str
+) -> list[str]:
+    """Connect to Modbus and discover which instances of a module have active sensors.
+
+    For each possible instance, reads the status register (address + 1) of the
+    first sensor register for that instance. Returns indices where status == OK.
+    """
+    # Collect one representative (index → status_address) pair per instance
+    index_status: dict[str, int] = {}
+    for r in REGISTERS.get(module_key, []):
+        if r.index and not r.is_status and r.index not in index_status:
+            index_status[r.index] = r.address + 1
+
+    if not index_status:
+        return []
+
+    client = AsyncModbusTcpClient(host=host, port=port, timeout=5)
+    active: set[str] = set()
+    try:
+        if not await client.connect():
+            return []
+        for index, status_addr in index_status.items():
+            try:
+                result = await client.read_input_registers(
+                    address=status_addr, count=1, device_id=slave_id
+                )
+                if not result.isError() and result.registers[0] == SENSOR_STATUS_OK:
+                    active.add(index)
+            except ModbusException:
+                pass
+    except ModbusException:
+        pass
+    finally:
+        if client.connected:
+            client.close()
+
+    return sorted(active, key=_natural_sort_key)
 
 
 async def validate_connection(
@@ -57,14 +111,12 @@ async def validate_connection(
     )
 
     try:
-        # Test connection
         connection_result = await client.connect()
         if not connection_result:
             raise CannotConnect(  # noqa: TRY301
                 f"Unable to connect to {data[CONF_HOST]}:{data[CONF_PORT]}"
             )
 
-        # Test basic Modbus communication
         result = await client.read_input_registers(address=8204, count=1)
         if result.isError():
             raise CannotConnect("Failed to read any holding registers")  # noqa: TRY301
@@ -77,7 +129,6 @@ async def validate_connection(
         if client.connected:
             client.close()
 
-    # Return info for config entry
     return {"title": f"KWB Modbus {data[CONF_HOST]}"}
 
 
@@ -89,8 +140,16 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize Config flow."""
-        self._host_data: dict[str, Any] | {}  # pyright: ignore[reportInvalidTypeForm]
         self._connection_data: dict[str, Any] = {}
+        self._modules_data: dict[str, Any] = {}
+        # Queue of module keys that need instance selection
+        self._pending_indexed_modules: list[str] = []
+        # Module currently being configured
+        self._current_indexed_module: str = ""
+        # Accumulated instance selections: module_key → list of instance labels
+        self._active_instances: dict[str, list[str]] = {}
+        # Discovered (pre-selected) instances per module from Modbus scan
+        self._discovered_indices: dict[str, list[str]] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -127,15 +186,17 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._connection_data[CONF_HEATING_DEVICE] = user_input[CONF_HEATING_DEVICE]
             return await self.async_step_modules()
 
-        schema = vol.Schema({
-            vol.Required(CONF_HEATING_DEVICE): SelectSelector(
-                SelectSelectorConfig(
-                    options=list(HEATING_DEVICES.keys()),
-                    translation_key="heating_device",
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
-            ),
-        })
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HEATING_DEVICE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(HEATING_DEVICES.keys()),
+                        translation_key="heating_device",
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
         return self.async_show_form(step_id="device", data_schema=schema)
 
     async def async_step_modules(
@@ -143,31 +204,101 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the add-on modules selection step."""
         if user_input is not None:
-            heating_device = self._connection_data[CONF_HEATING_DEVICE]
-            host = self._connection_data["host"]
-            title = f"KWB {HEATING_DEVICES[heating_device]} ({host})"
-            return self.async_create_entry(
-                title=title,
-                data={
-                    **self._connection_data,
-                    CONF_ADDON_MODULES: user_input.get(CONF_ADDON_MODULES, []),
-                    CONF_EXPERT_MODE: user_input.get(CONF_EXPERT_MODE, False),
-                    CONF_DISCOVERED_SENSORS: {},
-                },
+            self._modules_data = {
+                CONF_ADDON_MODULES: user_input.get(CONF_ADDON_MODULES, []),
+                CONF_EXPERT_MODE: user_input.get(CONF_EXPERT_MODE, False),
+            }
+
+            # Build queue of modules that have indexed SELECT_REGISTERS entries
+            self._pending_indexed_modules = [
+                m
+                for m in self._modules_data[CONF_ADDON_MODULES]
+                if _sorted_instances(m)
+            ]
+            self._active_instances = {}
+
+            # Discover active instances via Modbus for each pending module
+            host = self._connection_data[CONF_HOST]
+            port = self._connection_data[CONF_PORT]
+            slave_id = self._connection_data.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
+            self._discovered_indices = {}
+            for module_key in self._pending_indexed_modules:
+                self._discovered_indices[module_key] = (
+                    await _discover_active_instances(host, port, slave_id, module_key)
+                )
+
+            return await self.async_step_module_instances()
+
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_ADDON_MODULES, default=[]): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(ADDON_MODULES.keys()),
+                        translation_key="addon_modules",
+                        mode=SelectSelectorMode.LIST,
+                        multiple=True,
+                    )
+                ),
+                vol.Optional(CONF_EXPERT_MODE, default=False): bool,
+            }
+        )
+        return self.async_show_form(step_id="modules", data_schema=schema)
+
+    async def async_step_module_instances(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle instance selection for an indexed add-on module.
+
+        This step is reused for each indexed module in sequence.
+        Instances discovered via Modbus are pre-selected; the user can adjust.
+        """
+        if user_input is not None:
+            self._active_instances[self._current_indexed_module] = user_input.get(
+                "instances", []
             )
 
-        schema = vol.Schema({
-            vol.Optional(CONF_ADDON_MODULES, default=[]): SelectSelector(
-                SelectSelectorConfig(
-                    options=list(ADDON_MODULES.keys()),
-                    translation_key="addon_modules",
-                    mode=SelectSelectorMode.LIST,
-                    multiple=True,
-                )
-            ),
-            vol.Optional(CONF_EXPERT_MODE, default=False): bool,
-        })
-        return self.async_show_form(step_id="modules", data_schema=schema)
+        if not self._pending_indexed_modules:
+            return self._create_entry()
+
+        self._current_indexed_module = self._pending_indexed_modules.pop(0)
+        all_instances = _sorted_instances(self._current_indexed_module)
+        discovered = self._discovered_indices.get(self._current_indexed_module, [])
+        module_label = ADDON_MODULES.get(
+            self._current_indexed_module, self._current_indexed_module
+        )
+
+        schema = vol.Schema(
+            {
+                vol.Optional("instances", default=discovered): SelectSelector(
+                    SelectSelectorConfig(
+                        options=all_instances,
+                        multiple=True,
+                        mode=SelectSelectorMode.LIST,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="module_instances",
+            data_schema=schema,
+            description_placeholders={"module_name": module_label},
+        )
+
+    def _create_entry(self) -> ConfigFlowResult:
+        """Create the config entry once all steps are complete."""
+        heating_device = self._connection_data[CONF_HEATING_DEVICE]
+        host = self._connection_data[CONF_HOST]
+        title = f"KWB {HEATING_DEVICES[heating_device]} ({host})"
+        return self.async_create_entry(
+            title=title,
+            data={
+                **self._connection_data,
+                CONF_ADDON_MODULES: self._modules_data[CONF_ADDON_MODULES],
+                CONF_EXPERT_MODE: self._modules_data[CONF_EXPERT_MODE],
+                CONF_ACTIVE_INSTANCES: self._active_instances,
+                CONF_DISCOVERED_SENSORS: {},
+            },
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -178,7 +309,6 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            # Test new connection settings
             try:
                 await validate_connection(self.hass, user_input)
             except CannotConnect:

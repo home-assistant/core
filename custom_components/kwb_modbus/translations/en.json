@@ -30,6 +30,13 @@
           "expert_mode": "Enable expert controls (Boiler program, External specification, Ignition settings)"
         }
       },
+      "module_instances": {
+        "title": "Detected {module_name} Instances",
+        "description": "The following instances were automatically detected via Modbus. Please verify and add or remove instances as needed.",
+        "data": {
+          "instances": "Active Instances"
+        }
+      },
       "reconfigure": {
         "title": "Reconfigure connection",
         "description": "Update the connection settings for this entry.",

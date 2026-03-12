@@ -30,6 +30,13 @@
           "expert_mode": "Expertenmodus aktivieren (Kesselprogramm, Externe Vorgabe, Zündungseinstellungen)"
         }
       },
+      "module_instances": {
+        "title": "Erkannte {module_name}-Instanzen",
+        "description": "Die folgenden Instanzen wurden automatisch via Modbus erkannt. Bitte überprüfen und bei Bedarf ergänzen oder entfernen.",
+        "data": {
+          "instances": "Aktive Instanzen"
+        }
+      },
       "reconfigure": {
         "title": "Verbindung aktualisieren",
         "description": "Passe die Verbindungseinstellungen für diesen Eintrag an.",
