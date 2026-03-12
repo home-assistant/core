@@ -152,7 +152,9 @@ jobs:
           
           # 检查已安装工具的版本
           echo "Installed Python packaging tool versions:"
-          pip freeze | grep -E "twine|setuptools|wheel|build"
+          python -c "import setuptools; print(f'setuptools: {setuptools.__version__}')"
+          python -c "import wheel; print(f'wheel: {wheel.__version__}')"
+          python -c "import twine; print(f'twine: {twine.__version__}')"
           
           echo "Building wheels for core dependencies..."
           
@@ -190,10 +192,23 @@ jobs:
           FIRST_WHL=$(find dist/ -maxdepth 1 -name "*.whl" | head -n 1)
           if [ -n "$FIRST_WHL" ]; then
             echo "--- Inspecting metadata for: $FIRST_WHL ---"
-            # Extract the dist-info directory name from the wheel file
-            DIST_INFO_DIR=$(basename "$FIRST_WHL" .whl).dist-info
-            # Unzip and print the METADATA file content
-            unzip -p "$FIRST_WHL" "$DIST_INFO_DIR/METADATA" || echo "Could not extract METADATA from $FIRST_WHL"
+            
+            echo "Listing contents of the wheel file:"
+            unzip -l "$FIRST_WHL"
+            echo "--- End of wheel contents listing ---"
+
+            # Find the actual .dist-info/METADATA path within the wheel
+            # Using awk to extract the filename from the unzip -l output (last field)
+            METADATA_PATH=$(unzip -l "$FIRST_WHL" | awk '/\.dist-info\/METADATA$/ {print $NF}' | head -n 1)
+            
+            if [ -n "$METADATA_PATH" ]; then
+              echo "--- Found METADATA at path: $METADATA_PATH ---"
+              echo "--- Content of METADATA file: ---"
+              unzip -p "$FIRST_WHL" "$METADATA_PATH"
+              echo "--- End of METADATA content ---"
+            else
+              echo "Error: METADATA file path not found within $FIRST_WHL."
+            fi
             echo "--- End of metadata inspection ---"
           else
             echo "No .whl files found in dist/ to inspect metadata."
@@ -271,7 +286,9 @@ jobs:
           
           # 检查已安装工具的版本
           echo "Installed Python packaging tool versions:"
-          pip freeze | grep -E "twine|setuptools|wheel|build"
+          python -c "import setuptools; print(f'setuptools: {setuptools.__version__}')"
+          python -c "import wheel; print(f'wheel: {wheel.__version__}')"
+          python -c "import twine; print(f'twine: {twine.__version__}')"
           
           echo "Building wheels for integration dependencies..."
           
@@ -304,7 +321,6 @@ jobs:
             done < "$REQ_FILE"
           else
             echo "Requirements file $REQ_FILE not found, building common integration packages"
-            # 构建一些常见的集成依赖包
             PACKAGES_TO_BUILD="pybluez ffmpeg-python pytz requests-oauthlib"
             for package in $PACKAGES_TO_BUILD; do
               echo "Building wheel for $package"
@@ -312,9 +328,6 @@ jobs:
               pip wheel --wheel-dir ./dist --no-deps "$package" || echo "Failed to build $package, skipping..."
             done
           fi
-          
-          # 注意：这里 pip wheel --wheel-dir ./dist 会在当前目录 (构建 job 的根目录) 下创建 dist。
-          # 保持这样即可。
           
           echo "Integration wheel building completed."
           ls -la dist/ || echo "No wheels built" # 检查 dist 目录内容
@@ -324,10 +337,23 @@ jobs:
           FIRST_WHL=$(find dist/ -maxdepth 1 -name "*.whl" | head -n 1)
           if [ -n "$FIRST_WHL" ]; then
             echo "--- Inspecting metadata for: $FIRST_WHL ---"
-            # Extract the dist-info directory name from the wheel file
-            DIST_INFO_DIR=$(basename "$FIRST_WHL" .whl).dist-info
-            # Unzip and print the METADATA file content
-            unzip -p "$FIRST_WHL" "$DIST_INFO_DIR/METADATA" || echo "Could not extract METADATA from $FIRST_WHL"
+            
+            echo "Listing contents of the wheel file:"
+            unzip -l "$FIRST_WHL"
+            echo "--- End of wheel contents listing ---"
+
+            # Find the actual .dist-info/METADATA path within the wheel
+            # Using awk to extract the filename from the unzip -l output (last field)
+            METADATA_PATH=$(unzip -l "$FIRST_WHL" | awk '/\.dist-info\/METADATA$/ {print $NF}' | head -n 1)
+            
+            if [ -n "$METADATA_PATH" ]; then
+              echo "--- Found METADATA at path: $METADATA_PATH ---"
+              echo "--- Content of METADATA file: ---"
+              unzip -p "$FIRST_WHL" "$METADATA_PATH"
+              echo "--- End of METADATA content ---"
+            else
+              echo "Error: METADATA file path not found within $FIRST_WHL."
+            fi
             echo "--- End of metadata inspection ---"
           else
             echo "No .whl files found in dist/ to inspect metadata."
