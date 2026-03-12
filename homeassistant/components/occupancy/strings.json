@@ -15,7 +15,7 @@
   "title": "Occupancy",
   "triggers": {
     "cleared": {
-      "description": "Triggers after one or more occupancy sensors clear.",
+      "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
       "fields": {
         "behavior": {
           "description": "[%key:component::occupancy::common::trigger_behavior_description%]",
@@ -25,7 +25,7 @@
       "name": "Occupancy cleared"
     },
     "detected": {
-      "description": "Triggers after one or more occupancy sensors detect occupancy.",
+      "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
       "fields": {
         "behavior": {
           "description": "[%key:component::occupancy::common::trigger_behavior_description%]",
