@@ -71,20 +71,27 @@ async def test_options_flow_skip_refresh(
     """Test options flow: user unchecks confirm_refresh -> entry updated, no service call."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(
-        mock_config_entry.entry_id,
-        data=None,
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    with patch.object(
+        hass.services,
+        "async_call",
+        new_callable=AsyncMock,
+        return_value=None,
+    ) as mock_async_call:
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id,
+            data=None,
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"confirm_refresh": False},
-    )
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"confirm_refresh": False},
+        )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {}
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {}
+        mock_async_call.assert_not_called()
 
 
 async def test_options_flow_confirm_refresh_then_success(
@@ -100,7 +107,7 @@ async def test_options_flow_confirm_refresh_then_success(
         "async_call",
         new_callable=AsyncMock,
         return_value=None,
-    ):
+    ) as mock_async_call:
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id,
             data=None,
@@ -116,6 +123,10 @@ async def test_options_flow_confirm_refresh_then_success(
         # Flow shows success step (form with message)
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "success"
+
+        mock_async_call.assert_called_once_with(
+            DOMAIN, "refresh_discovery", {}, blocking=False
+        )
 
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
