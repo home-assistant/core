@@ -7,16 +7,17 @@ from typing import Final
 from wiim.controller import WiimController
 
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "wiim"
 LOGGER = logging.getLogger(__package__)
+DATA_WIIM: HassKey["WiimData"] = HassKey(DOMAIN)
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.MEDIA_PLAYER,
 ]
 
 CONF_UDN = "udn"
-CONF_UPNP_LOCATION = "upnp_location"
 UPNP_PORT = 49152
 
 ZEROCONF_TYPE_LINKPLAY: Final = "_linkplay._tcp.local."
