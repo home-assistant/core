@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pyvlx import OpeningDevice
 from pyvlx.const import Velocity
+from pyvlx.opening_device import OpeningDevice
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
