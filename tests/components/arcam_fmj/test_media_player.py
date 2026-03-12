@@ -64,12 +64,7 @@ async def test_setup(
 
 async def update(hass: HomeAssistant, client: Mock, entity_id: str) -> CoreState:
     """Force a update of player and return current state data."""
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
+    client.notify_data_updated()
     await hass.async_block_till_done()
     data = hass.states.get(entity_id)
     assert data
