@@ -925,14 +925,14 @@ async def test_legacy_door_state_repair_issue(
 
     # Pre-register the legacy entity as enabled (simulating existing user entity).
     unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
-    entity_id = "binary_sensor.ehandle_connectsense_window_door_is_open"
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
         unique_id,
         suggested_object_id="ehandle_connectsense_window_door_is_open",
         original_name="Window/door is open",
     )
+    entity_id = entity_entry.entity_id
 
     # Load the integration without any automation referencing the entity.
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
@@ -998,7 +998,7 @@ async def test_legacy_door_state_no_repair_issue_when_disabled(
 
     # Pre-register the legacy entity as disabled.
     unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
         unique_id,
@@ -1006,9 +1006,7 @@ async def test_legacy_door_state_no_repair_issue_when_disabled(
         original_name="Window/door is open",
         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
-
-    # Set up automation referencing the legacy entity.
-    entity_id = "binary_sensor.ehandle_connectsense_window_door_is_open"
+    entity_id = entity_entry.entity_id
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -1051,14 +1049,14 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
     # Pre-register the Hoppe tilt entity as enabled (simulating existing user entity).
     home_id = client.driver.controller.home_id
     unique_id = f"{home_id}.20-48-0-Tilt"
-    entity_id = "binary_sensor.ehandle_connectsense_window_door_is_tilted"
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         BINARY_SENSOR_DOMAIN,
         DOMAIN,
         unique_id,
         suggested_object_id="ehandle_connectsense_window_door_is_tilted",
         original_name="Window/door is tilted",
     )
+    entity_id = entity_entry.entity_id
 
     # Set up automation referencing the custom tilt entity.
     assert await async_setup_component(

@@ -435,7 +435,7 @@ def _async_check_legacy_entity_repair(
         return
 
     items = [
-        f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
+        f"- [{item.original_name or item.name or eid}](/config/{integration}/edit/{item.unique_id or eid.split('.', 1)[-1]})"
         for integration, entities in (
             ("automation", entity_automations),
             ("script", entity_scripts),
@@ -444,17 +444,20 @@ def _async_check_legacy_entity_repair(
         if (item := ent_reg.async_get(eid))
     ]
 
-    # Try to find the replacement Opening state sensor entity_id.
+    # Find the replacement Opening state sensor entity_id. If not available yet
+    # (e.g. first startup when platforms set up concurrently), skip issue creation.
+    # Since is_persistent=False, the check will run again on next restart.
     opening_state_value = get_opening_state_notification_value(entity.info.node)
-    opening_state_entity_id = ""
-    if opening_state_value is not None:
-        opening_state_unique_id = (
-            f"{driver.controller.home_id}.{opening_state_value.value_id}"
-        )
-        opening_state_entity_id = (
-            ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, opening_state_unique_id)
-            or ""
-        )
+    if opening_state_value is None:
+        return
+    opening_state_unique_id = (
+        f"{driver.controller.home_id}.{opening_state_value.value_id}"
+    )
+    opening_state_entity_id = ent_reg.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
+    )
+    if opening_state_entity_id is None:
+        return
 
     async_create_issue(
         hass,
