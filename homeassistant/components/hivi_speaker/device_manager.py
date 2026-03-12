@@ -1,7 +1,6 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from enum import Enum
-from typing import Dict, List, Optional, Callable
+from typing import Dict, List, Optional
 import asyncio
 from datetime import datetime
 from .device import SyncGroupStatus, ConnectionStatus, HIVIDevice, SlaveDeviceInfo
@@ -19,12 +18,6 @@ from .const import (
     SIGNAL_DEVICE_DISCOVERED,
     DEVICE_OFFLINE_THRESHOLD,
 )
-import socket
-import time
-import aiohttp
-import xml.etree.ElementTree as ET
-import async_timeout
-from typing import Set
 from .discovery_scheduler import HIVIDiscoveryScheduler
 from .group_coordinator import HIVIGroupCoordinator
 from hivico import HivicoClient
@@ -109,12 +102,6 @@ class HIVIDeviceManager:
     async def _handle_discovered_devices(self, discovered_devices: List[Dict]):
         """Handle discovered devices"""
         _LOGGER.debug("discovered devices: %s", discovered_devices)
-        # # Discovered: {UDN: device_info}
-        # for udn, info in discovered.items():
-        #     # Merge/update internal table of device_manager, create entities or update IPs, etc.
-        #     self._devices[udn] = info
-        #     # For example: create or update corresponding entities
-        #     await self._ensure_device_registered(udn, info)
 
         """
         1. Incremental saving. Discovered devices are incrementally saved to self.device_manager.registry.devices.
@@ -126,23 +113,12 @@ class HIVIDeviceManager:
 
         # Incremental saving
         await self._save_discovered_devices(discovered_devices)
-        # _LOGGER.debug("_save_discovered_devices completed saving")
         # Device status information update
         await self._update_all_device_statuses()
-        # # _LOGGER.debug("_update_all_device_statuses completed updating")
-        # # Register devices to HA and delete non-existent devices
-        # await self._register_and_unregister_device()
-        # # Media player
         await self._add_media_player()
-        # # Add or remove switches
         await self._add_or_remove_switches()
-        # # _LOGGER.debug("_add_or_remove_switches completed adding or removing switches")
-        # # # Update media player and switch status
         await self._update_device_entity_states()
-        # _LOGGER.debug("_update_device_entity_states completed updating entity states")
-        # # Handle offline devices
         await self._device_offline_process()
-        # _LOGGER.debug("_device_offline_process completed offline processing")
 
     async def _save_discovered_devices(self, discovered_devices: list[dict]):
         """Incrementally save discovered devices"""
@@ -185,7 +161,7 @@ class HIVIDeviceManager:
                         "manufacturer", device_obj.manufacturer
                     )
                     # Update existing device information
-                    device_dict_new = device_obj.model_dump()
+                    device_dict_new = device_obj.model_dump(mode="json")
                     # Save to device data registry
                     self.device_data_registry.set_device_dict_by_ha_device_id(
                         ha_device_id, device_dict_new
@@ -205,7 +181,7 @@ class HIVIDeviceManager:
                 if ha_device_id:
                     device_obj.ha_device_id = ha_device_id
                     # Save to device data registry
-                    device_dict = device_obj.model_dump()
+                    device_dict = device_obj.model_dump(mode="json")
                     self.device_data_registry.set_device_dict_by_ha_device_id(
                         ha_device_id, device_dict
                     )
@@ -330,7 +306,7 @@ class HIVIDeviceManager:
                     else:
                         device_obj.sync_group_status = SyncGroupStatus.STANDALONE
 
-                device_dict_new = device_obj.model_dump()
+                device_dict_new = device_obj.model_dump(mode="json")
                 # Save to device data registry
                 self.device_data_registry.set_device_dict_by_ha_device_id(
                     ha_device_id,
@@ -393,21 +369,16 @@ class HIVIDeviceManager:
             dev_reg.async_remove_device(ha_device_id)
             _LOGGER.debug("deleted device: %s", ha_device_id)
 
-            # # Manually trigger update events
-            # hass.bus.async_fire("entity_registry_updated", {})
-            # hass.bus.async_fire("device_registry_updated", {})
-
         except Exception as err:
             _LOGGER.error("error when deleting device: %s", err, exc_info=True)
 
     async def _fetch_device_status(self, device_obj: HIVIDevice):
         """Get device status through HTTP interface"""
         ip_addr = device_obj.ip_addr
-        # device_status = await get_device_status(ip_addr)
         async with HivicoClient(timeout=5, debug=True) as client:
             device_status = await client.get_device_status(ip_addr)
             if device_status:
-                _LOGGER.debug(f"device status: {device_status}")
+                _LOGGER.debug("device status: %s", device_status)
         return device_status
 
     async def _fetch_slave_device(self, device_obj: HIVIDevice):
@@ -427,7 +398,6 @@ class HIVIDeviceManager:
             existing_entiy_entry_list = await self._get_entities_for_device(
                 ha_device.id
             )
-            # _LOGGER.debug("Device %s existing entities: %s", ha_device.id, existing_entiy_entry_list)
 
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
                 ha_device.id, default=None
@@ -473,7 +443,6 @@ class HIVIDeviceManager:
                 else:
                     if state_obj.state == "unavailable":
                         _LOGGER.debug("entity %s is unavailable", entity_id)
-                        # need_to_add_media_player_flg = False
                         media_player = (
                             self.hivi_media_player_entity_hub.get_media_player(
                                 entity_entry.unique_id
@@ -525,7 +494,6 @@ class HIVIDeviceManager:
             existing_entiy_entry_list = await self._get_entities_for_device(
                 ha_device.id
             )
-            # _LOGGER.debug("Device %s existing entities: %s", ha_device.id, existing_entiy_entry_list)
 
             device_dict = self.device_data_registry.get_device_dict_by_ha_device_id(
                 ha_device.id, default=None
@@ -540,7 +508,6 @@ class HIVIDeviceManager:
             device_obj = HIVIDevice(**device_dict)
             slave_speaker_device_id_to_entity_entry_dict = dict()
             should_remove_entity_id_set = set()
-            # slave_speaker_device_id_set = set()
             for entity_entry in existing_entiy_entry_list:
                 _LOGGER.debug(
                     "check %s 's entity: %s",
@@ -555,7 +522,6 @@ class HIVIDeviceManager:
                     slave_speaker_device_id = entity_entry.unique_id.split("_slave_")[
                         -1
                     ]
-                    # slave_speaker_device_id_set.add(slave_speaker_device_id)
                     slave_speaker_device_id_to_entity_entry_dict[
                         slave_speaker_device_id
                     ] = entity_entry
@@ -591,7 +557,7 @@ class HIVIDeviceManager:
 
             keys = slave_speaker_device_id_to_entity_entry_dict.keys()
             _LOGGER.debug(
-                f"slave_speaker_device_id_to_entity_entry_dict.keys() = {keys}"
+                "slave_speaker_device_id_to_entity_entry_dict.keys() = %s", keys
             )
 
             # Delete switches that no longer exist for corresponding devices
@@ -613,7 +579,6 @@ class HIVIDeviceManager:
             switches = []
             # Add based on other device existence
             for slave_candidate_dict in available_slave_dict_list:
-                # _LOGGER.debug(f"slave_candidate_dict = {slave_candidate_dict}")
                 slave_candidate_obj = HIVIDevice(**slave_candidate_dict)
                 _LOGGER.debug(
                     "prepare to create %s 's slave device %s 's switch",
@@ -684,8 +649,6 @@ class HIVIDeviceManager:
                             switch_entity = switch_hub.get_switch(
                                 unique_id=entity_entry.unique_id
                             )
-                            # if switch_entity:
-                            #     switch_entity.update_slave_device(slave_candidate_obj)
                 else:
                     # This device does not yet have a switch
                     need_to_add_switch_flg = True
@@ -706,15 +669,11 @@ class HIVIDeviceManager:
                         slave_candidate_obj.friendly_name,
                     )
                     switches.append(switch)
-                    # device_obj.switch_entities[switch.unique_id] = switch
             # Add based on slave device situation
             slave_device_list = device_obj.slave_device_list
             for slave_device in slave_device_list:
                 slave_uuid = slave_device.uuid
                 unique_id = f"{device_obj.speaker_device_id}_slave_{slave_uuid}"
-                # if unique_id in slave_speaker_device_id_to_entity_entry_dict:
-                #     # This device already has a switch
-                #     continue
                 need_to_add_switch_flg = False
                 existing_entiy_entry_list = await self._get_entities_for_device(
                     ha_device.id
@@ -848,7 +807,7 @@ class HIVIDeviceManager:
                             switch.on_off_switch(False)
                     else:
                         _LOGGER.debug(
-                            f"can not find switch entity entity_entry.unique_id = {entity_entry.unique_id}"
+                            "can not find switch entity entity_entry.unique_id = %s", entity_entry.unique_id
                         )
 
     async def _device_offline_process(self):
@@ -890,7 +849,7 @@ class HIVIDeviceManager:
                 )
                 # Update device status为离线
                 device_obj.connection_status = ConnectionStatus.OFFLINE
-                device_dict_new = device_obj.model_dump()
+                device_dict_new = device_obj.model_dump(mode="json")
                 # Save to device data registry
                 self.device_data_registry.set_device_dict_by_ha_device_id(
                     ha_device.id,
@@ -913,10 +872,6 @@ class HIVIDeviceManager:
                                 entity_id
                             ).attributes.copy(),
                         )
-                        # entity_registry = er.async_get(self.hass)
-                        # entity_registry.async_update_entity(
-                        #     entity_id, disabled_by=er.RegistryEntryDisabler.USER
-                        # )
 
     async def async_manual_discovery(self):
         """Manually trigger device discovery"""
@@ -928,13 +883,6 @@ class HIVIDeviceManager:
     async def async_cleanup(self):
         """Clean up resources"""
         _LOGGER.debug("cleanup device manager resources")
-        # self._discovery_running = False
-        # if self.discovery_task:
-        #     self.discovery_task.cancel()
-        #     try:
-        #         await self.discovery_task
-        #     except asyncio.CancelledError:
-        #         pass
         await self.discovery_scheduler.async_stop()
         await self.group_coordinator.async_stop()
         # Unsubscribe when unloading
@@ -975,9 +923,6 @@ class HIVIDeviceManager:
             sw_version=device_obj.private_protocol_version,
             configuration_url=f"http://www.hivi.com",
         )
-
-        # Save device entry ID
-        # device_obj.ha_device_id = device_entry.id
 
         _LOGGER.debug(
             "register device to ha complete: %s (ID: %s)",
@@ -1030,7 +975,6 @@ class HIVIDeviceManager:
             # Home Assistant integration
             entity_id="",
             config_entry_id="",
-            # switch_entities: dict = field(default_factory=dict)
             # Other info
             wifi_channel="0",
             ssid="",
