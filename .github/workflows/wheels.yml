@@ -207,9 +207,9 @@ jobs:
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
-            # 检查默认分支名称
-            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | cut -d ":" -f 2 | xargs)
-            if [ -z "$DEFAULT_BRANCH" ]; then
+            # 尝试获取默认分支名称
+            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
+            if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
               # 如果无法获取，默认尝试 master
               DEFAULT_BRANCH="master"
             fi
@@ -222,9 +222,14 @@ jobs:
             git add *.whl
             if ! git diff --cached --quiet; then
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              # 对于空仓库，首次推送需要设置上游分支
-              git push -u origin $DEFAULT_BRANCH
-              echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
+              # 对于空仓库，使用强制方式推送
+              if [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
+                git push -u origin master
+                echo "Successfully uploaded wheels to Gitee on master branch"
+              else
+                git push -u origin $DEFAULT_BRANCH
+                echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
+              fi
             else
               echo "No new wheels to upload"
             fi
@@ -364,9 +369,9 @@ jobs:
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             
-            # 检查默认分支名称
-            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | cut -d ":" -f 2 | xargs)
-            if [ -z "$DEFAULT_BRANCH" ]; then
+            # 尝试获取默认分支名称
+            DEFAULT_BRANCH=$(git remote show origin | grep "HEAD branch" | sed 's/.*: //')
+            if [ -z "$DEFAULT_BRANCH" ] || [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
               # 如果无法获取，默认尝试 master
               DEFAULT_BRANCH="master"
             fi
@@ -379,9 +384,14 @@ jobs:
             git add *.whl
             if ! git diff --cached --quiet; then
               git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              # 对于空仓库，首次推送需要设置上游分支
-              git push -u origin $DEFAULT_BRANCH
-              echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
+              # 对于空仓库，使用强制方式推送
+              if [ "$DEFAULT_BRANCH" = "(unknown)" ]; then
+                git push -u origin master
+                echo "Successfully uploaded wheels to Gitee on master branch"
+              else
+                git push -u origin $DEFAULT_BRANCH
+                echo "Successfully uploaded wheels to Gitee on branch $DEFAULT_BRANCH"
+              fi
             else
               echo "No new wheels to upload"
             fi
