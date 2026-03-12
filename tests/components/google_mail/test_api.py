@@ -61,8 +61,8 @@ async def test_check_and_refresh_token_setup_reauth_error() -> None:
 async def test_check_and_refresh_token_setup_transient_error() -> None:
     """Test transient errors during setup map to ConfigEntryNotReady."""
     auth, oauth_session, config_entry = _build_auth(ConfigEntryState.SETUP_IN_PROGRESS)
-    oauth_session.async_ensure_token_valid.side_effect = OAuth2TokenRequestTransientError(
-        domain=DOMAIN, request_info=Mock()
+    oauth_session.async_ensure_token_valid.side_effect = (
+        OAuth2TokenRequestTransientError(domain=DOMAIN, request_info=Mock())
     )
 
     with pytest.raises(ConfigEntryNotReady):
@@ -87,8 +87,8 @@ async def test_check_and_refresh_token_runtime_reauth_error() -> None:
 async def test_check_and_refresh_token_runtime_transient_error() -> None:
     """Test runtime transient errors raise HomeAssistantError without reauth."""
     auth, oauth_session, config_entry = _build_auth(ConfigEntryState.LOADED)
-    oauth_session.async_ensure_token_valid.side_effect = OAuth2TokenRequestTransientError(
-        domain=DOMAIN, request_info=Mock()
+    oauth_session.async_ensure_token_valid.side_effect = (
+        OAuth2TokenRequestTransientError(domain=DOMAIN, request_info=Mock())
     )
 
     with pytest.raises(HomeAssistantError):
