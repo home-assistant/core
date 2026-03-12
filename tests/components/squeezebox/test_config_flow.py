@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.squeezebox.const import (
     CONF_BROWSE_LIMIT,
     CONF_HTTPS,
+    CONF_LMS_TIMEOUT,
     CONF_VOLUME_STEP,
     DOMAIN,
 )
@@ -19,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import BROWSE_LIMIT, HOST, PORT, SERVER_UUIDS, VOLUME_STEP
+from .conftest import BROWSE_LIMIT, HOST, LMS_TIMEOUT, PORT, SERVER_UUIDS, VOLUME_STEP
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +50,11 @@ async def test_options_form(hass: HomeAssistant) -> None:
         },
         unique_id=SERVER_UUIDS[0],
         domain=DOMAIN,
-        options={CONF_BROWSE_LIMIT: 1000, CONF_VOLUME_STEP: 5},
+        options={
+            CONF_BROWSE_LIMIT: 1000,
+            CONF_VOLUME_STEP: 5,
+            CONF_LMS_TIMEOUT: LMS_TIMEOUT,
+        },
     )
 
     entry.add_to_hass(hass)
@@ -64,7 +69,11 @@ async def test_options_form(hass: HomeAssistant) -> None:
     # simulate manual input of options
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_BROWSE_LIMIT: BROWSE_LIMIT, CONF_VOLUME_STEP: VOLUME_STEP},
+        user_input={
+            CONF_BROWSE_LIMIT: BROWSE_LIMIT,
+            CONF_VOLUME_STEP: VOLUME_STEP,
+            CONF_LMS_TIMEOUT: LMS_TIMEOUT,
+        },
     )
 
     # put some meaningful asserts here
@@ -73,6 +82,7 @@ async def test_options_form(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_BROWSE_LIMIT: BROWSE_LIMIT,
         CONF_VOLUME_STEP: VOLUME_STEP,
+        CONF_LMS_TIMEOUT: LMS_TIMEOUT,
     }
 
 

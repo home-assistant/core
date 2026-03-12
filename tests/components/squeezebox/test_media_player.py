@@ -35,6 +35,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.squeezebox.const import (
     ATTR_ANNOUNCE_TIMEOUT,
     ATTR_ANNOUNCE_VOLUME,
+    DEFAULT_LMS_TIMEOUT,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLAYER_UPDATE_INTERVAL,
@@ -172,7 +173,9 @@ async def test_squeezebox_turn_on_off(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_power.assert_called_once_with(state)
+    configured_player.async_set_power.assert_called_once_with(
+        state, DEFAULT_LMS_TIMEOUT
+    )
 
 
 async def test_squeezebox_state(
@@ -218,7 +221,7 @@ async def test_squeezebox_volume_up(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume + VOLUME_STEP)
+        str(configured_player.volume + VOLUME_STEP), DEFAULT_LMS_TIMEOUT
     )
 
 
@@ -234,7 +237,7 @@ async def test_squeezebox_volume_down(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with(
-        str(configured_player.volume - VOLUME_STEP)
+        str(configured_player.volume - VOLUME_STEP), DEFAULT_LMS_TIMEOUT
     )
 
 
@@ -248,7 +251,9 @@ async def test_squeezebox_volume_set(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 0.5},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("50")
+    configured_player.async_set_volume.assert_called_once_with(
+        "50", DEFAULT_LMS_TIMEOUT
+    )
 
 
 async def test_squeezebox_volume_property(
@@ -285,7 +290,9 @@ async def test_squeezebox_mute(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
-    configured_player.async_set_muting.assert_called_once_with(True)
+    configured_player.async_set_muting.assert_called_once_with(
+        True, DEFAULT_LMS_TIMEOUT
+    )
 
 
 async def test_squeezebox_unmute(
@@ -298,7 +305,9 @@ async def test_squeezebox_unmute(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: False},
         blocking=True,
     )
-    configured_player.async_set_muting.assert_called_once_with(False)
+    configured_player.async_set_muting.assert_called_once_with(
+        False, DEFAULT_LMS_TIMEOUT
+    )
 
 
 async def test_squeezebox_mute_property(
@@ -338,7 +347,9 @@ async def test_squeezebox_repeat_mode(
         },
         blocking=True,
     )
-    configured_player.async_set_repeat.assert_called_once_with("playlist")
+    configured_player.async_set_repeat.assert_called_once_with(
+        "playlist", DEFAULT_LMS_TIMEOUT
+    )
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -349,7 +360,7 @@ async def test_squeezebox_repeat_mode(
         },
         blocking=True,
     )
-    configured_player.async_set_repeat.assert_called_with("song")
+    configured_player.async_set_repeat.assert_called_with("song", DEFAULT_LMS_TIMEOUT)
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -360,7 +371,7 @@ async def test_squeezebox_repeat_mode(
         },
         blocking=True,
     )
-    configured_player.async_set_repeat.assert_called_with("none")
+    configured_player.async_set_repeat.assert_called_with("none", DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_repeat_mode_property(
@@ -408,7 +419,9 @@ async def test_squeezebox_shuffle(
         },
         blocking=True,
     )
-    configured_player.async_set_shuffle.assert_called_once_with("song")
+    configured_player.async_set_shuffle.assert_called_once_with(
+        "song", DEFAULT_LMS_TIMEOUT
+    )
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -419,7 +432,7 @@ async def test_squeezebox_shuffle(
         },
         blocking=True,
     )
-    configured_player.async_set_shuffle.assert_called_with("none")
+    configured_player.async_set_shuffle.assert_called_with("none", DEFAULT_LMS_TIMEOUT)
     assert (
         hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_SHUFFLE]
         is False
@@ -460,7 +473,7 @@ async def test_squeezebox_play(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_play.assert_called_once()
+    configured_player.async_play.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_play_media_with_announce(
@@ -479,7 +492,7 @@ async def test_squeezebox_play_media_with_announce(
         blocking=True,
     )
     configured_player.async_load_url.assert_called_once_with(
-        FAKE_VALID_ITEM_ID, "announce"
+        FAKE_VALID_ITEM_ID, "announce", DEFAULT_LMS_TIMEOUT
     )
 
 
@@ -505,7 +518,7 @@ async def test_squeezebox_play_media_with_announce_volume(
     )
     configured_player.set_announce_volume.assert_called_once_with(20)
     configured_player.async_load_url.assert_called_once_with(
-        FAKE_VALID_ITEM_ID, "announce"
+        FAKE_VALID_ITEM_ID, "announce", DEFAULT_LMS_TIMEOUT
     )
 
 
@@ -571,7 +584,7 @@ async def test_squeezebox_play_media_with_announce_timeout(
     )
     configured_player.set_announce_timeout.assert_called_once_with(100)
     configured_player.async_load_url.assert_called_once_with(
-        FAKE_VALID_ITEM_ID, "announce"
+        FAKE_VALID_ITEM_ID, "announce", DEFAULT_LMS_TIMEOUT
     )
 
 
@@ -585,7 +598,7 @@ async def test_squeezebox_play_pause(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_toggle_pause.assert_called_once()
+    configured_player.async_toggle_pause.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_pause(
@@ -598,7 +611,7 @@ async def test_squeezebox_pause(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_pause.assert_called_once()
+    configured_player.async_pause.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_seek(
@@ -624,7 +637,7 @@ async def test_squeezebox_seek(
         },
         blocking=True,
     )
-    configured_player.async_time.assert_called_once_with(100)
+    configured_player.async_time.assert_called_once_with(100, DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_stop(
@@ -637,7 +650,7 @@ async def test_squeezebox_stop(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_stop.assert_called_once()
+    configured_player.async_stop.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_load_playlist(
@@ -685,7 +698,7 @@ async def test_squeezebox_load_playlist(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_clear_playlist.assert_called_once()
+    configured_player.async_clear_playlist.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_enqueue(
@@ -704,7 +717,9 @@ async def test_squeezebox_enqueue(
         },
         blocking=True,
     )
-    configured_player.async_load_url.assert_called_once_with(FAKE_VALID_ITEM_ID, "add")
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "add", DEFAULT_LMS_TIMEOUT
+    )
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -717,7 +732,9 @@ async def test_squeezebox_enqueue(
         },
         blocking=True,
     )
-    configured_player.async_load_url.assert_called_with(FAKE_VALID_ITEM_ID, "insert")
+    configured_player.async_load_url.assert_called_with(
+        FAKE_VALID_ITEM_ID, "insert", DEFAULT_LMS_TIMEOUT
+    )
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -730,7 +747,9 @@ async def test_squeezebox_enqueue(
         },
         blocking=True,
     )
-    configured_player.async_load_url.assert_called_with(FAKE_VALID_ITEM_ID, "play_now")
+    configured_player.async_load_url.assert_called_with(
+        FAKE_VALID_ITEM_ID, "play_now", DEFAULT_LMS_TIMEOUT
+    )
 
 
 async def test_squeezebox_skip_tracks(
@@ -753,7 +772,7 @@ async def test_squeezebox_skip_tracks(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_index.assert_called_once_with("+1")
+    configured_player.async_index.assert_called_once_with("+1", DEFAULT_LMS_TIMEOUT)
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -761,7 +780,7 @@ async def test_squeezebox_skip_tracks(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_index.assert_called_with("-1")
+    configured_player.async_index.assert_called_with("-1", DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_call_query(
@@ -852,7 +871,7 @@ async def test_squeezebox_join(hass: HomeAssistant, configured_players: list) ->
         blocking=True,
     )
     configured_players[0].async_sync.assert_called_once_with(
-        configured_players[1].player_id
+        configured_players[1].player_id, DEFAULT_LMS_TIMEOUT
     )
 
     # try to join an invalid player
@@ -878,7 +897,7 @@ async def test_squeezebox_unjoin(
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_unsync.assert_called_once()
+    configured_player.async_unsync.assert_called_once_with(DEFAULT_LMS_TIMEOUT)
 
 
 async def test_squeezebox_media_content_properties(
