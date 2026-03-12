@@ -36,7 +36,7 @@ class CoverTriggerBase(EntityTriggerBase):
 
 
 def make_cover_opened_trigger(
-    *, device_classes: dict[str, str], domains: set[str] | None = None
+    *, device_classes: dict[str, str]
 ) -> type[CoverTriggerBase]:
     """Create a trigger cover_opened."""
 
@@ -57,7 +57,7 @@ def make_cover_opened_trigger(
 
 
 def make_cover_closed_trigger(
-    *, device_classes: dict[str, str], domains: set[str] | None = None
+    *, device_classes: dict[str, str]
 ) -> type[CoverTriggerBase]:
     """Create a trigger cover_closed."""
 
