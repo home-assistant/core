@@ -1,11 +1,14 @@
 import logging
 from typing import Any, Dict, Optional
 
+from homeassistant.core import callback
 from homeassistant.helpers.storage import Store
 
 from .device import ConnectionStatus, SyncGroupStatus
 
 _LOGGER = logging.getLogger(__name__)
+
+SAVE_DELAY = 5  # seconds – batches rapid writes from a single discovery cycle
 
 
 class DeviceDataRegistry:
@@ -50,8 +53,18 @@ class DeviceDataRegistry:
             self._device_data = {}
 
     async def async_save(self):
-        """Save device data"""
+        """Save device data immediately."""
         await self._store.async_save({"device_data": self._device_data, "version": 1})
+
+    @callback
+    def _schedule_save(self) -> None:
+        """Schedule a delayed save to batch rapid writes."""
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    @callback
+    def _data_to_save(self) -> dict:
+        """Return the data dict for Store to persist."""
+        return {"device_data": self._device_data, "version": 1}
 
     def get_device_data(self, ha_device_id: str, key: str = None, default=None):
         """Get device data"""
@@ -66,15 +79,12 @@ class DeviceDataRegistry:
             self._device_data[ha_device_id] = {}
 
         self._device_data[ha_device_id][key] = value
+        self._schedule_save()
 
-        # Trigger event
         self._trigger_event(
             "device_data_updated",
             {"ha_device_id": ha_device_id, "key": key, "value": value},
         )
-
-        # # Asynchronously save to storage
-        # self.hass.async_create_task(self.async_save())
 
     async def async_remove_device_data(self, ha_device_id: str):
         """Remove device data (called when device is deleted)"""
@@ -102,9 +112,7 @@ class DeviceDataRegistry:
             self._device_data[ha_device_id] = {}
 
         self._device_data[ha_device_id]["device_dict"] = value
-
-        # # Asynchronously save to storage
-        # self.hass.async_create_task(self.async_save())
+        self._schedule_save()
 
     def get_device_dict_by_ha_device_id(
         self, ha_device_id: str, default=None
@@ -143,19 +151,6 @@ class DeviceDataRegistry:
                 return ha_device_id
         return None
 
-    # def get_available_slave_device_dict_list(
-    #     self, exclude_speaker_device_id: str = None
-    # ) -> list[dict]:
-    #     """Get available slave speakers (excluding self)"""
-    #     return [
-    #         device_dict
-    #         for device_dict in self._device_data.values()
-    #         if device_dict.get("device_dict")
-    #         and device_dict.get("device_dict").get("can_be_slave")
-    #         and device_dict.get("device_dict").get("speaker_device_id")
-    #         != exclude_speaker_device_id
-    #     ]
-
     def get_available_slave_device_dict_list(
         self, exclude_speaker_device_id: str = None
     ) -> list[dict]:
@@ -164,37 +159,27 @@ class DeviceDataRegistry:
         available_devices = []
 
         for device_data in self._device_data.values():
-            # Debug info: currently processing device
-            # Can set breakpoint here when debugging
             device_dict = device_data.get("device_dict", {})
             device_id = device_dict.get("speaker_device_id", "unknown")
 
-            # Condition 1: Check if device_dict exists
             has_device_dict = device_data.get("device_dict") is not None
 
-            # Condition 2: Check if can be slave device
             can_be_slave = False
             if has_device_dict:
-                # can_be_slave = device_data.get("can_be_slave", False)
                 sync_group_status = device_dict.get("sync_group_status")
                 connection_status = device_dict.get("connection_status")
                 can_be_slave = (
-                    sync_group_status == SyncGroupStatus.STANDALONE
-                    and connection_status == ConnectionStatus.ONLINE
+                    sync_group_status == SyncGroupStatus.STANDALONE.value
+                    and connection_status == ConnectionStatus.ONLINE.value
                 )
-            # Condition 3: Check if needs to be excluded
+
             should_exclude = False
             if exclude_speaker_device_id and has_device_dict:
                 should_exclude = device_id == exclude_speaker_device_id
 
-            # Debug info: can check all condition values here
-            conditions_met = has_device_dict and can_be_slave and not should_exclude
-
-            if conditions_met:
-                # Debug info: can check details of added device
+            if has_device_dict and can_be_slave and not should_exclude:
                 available_devices.append(device_dict)
 
-        # Debug info: can check final result
         return available_devices
 
     async def async_shutdown(self):
@@ -207,6 +192,9 @@ class DeviceDataRegistry:
         if self._unsub_device_registry is not None:
             self._unsub_device_registry()
             self._unsub_device_registry = None
+
+        # Persist any pending delayed writes before clearing memory
+        await self.async_save()
 
         self._device_data.clear()
         self._listeners.clear()
