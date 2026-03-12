@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
@@ -23,7 +23,7 @@ from . import TEST_OPTIONS
 from tests.common import MockConfigEntry
 
 V1_TEST_USER_DATA = {
-    ollama.CONF_URL: "http://localhost:11434",
+    CONF_URL: "http://localhost:11434",
     ollama.CONF_MODEL: "test_model:latest",
 }
 
@@ -68,11 +68,10 @@ async def test_init_with_api_key(
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
-            ollama.CONF_API_KEY: "test-api-key-123",
+            CONF_URL: "http://localhost:11434",
+            CONF_API_KEY: "test-api-key-123",
         },
         version=3,
-        minor_version=0,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -96,7 +95,7 @@ async def test_init_without_api_key(
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
+            CONF_URL: "http://localhost:11434",
         },
         version=3,
         minor_version=0,
@@ -121,11 +120,11 @@ async def test_init_with_api_key_in_options_overrides_data(
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
-            ollama.CONF_API_KEY: "data-api-key",
+            CONF_URL: "http://localhost:11434",
+            CONF_API_KEY: "data-api-key",
         },
         options={
-            ollama.CONF_API_KEY: "options-api-key",
+            CONF_API_KEY: "options-api-key",
         },
         version=3,
         minor_version=0,
@@ -153,8 +152,8 @@ async def test_async_setup_entry_auth_failed_on_response_error(
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
-            ollama.CONF_API_KEY: "test-api-key",
+            CONF_URL: "http://localhost:11434",
+            CONF_API_KEY: "test-api-key",
         },
         version=3,
         minor_version=0,
@@ -176,7 +175,7 @@ async def test_async_setup_entry_not_ready_on_non_auth_response_error(
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
+            CONF_URL: "http://localhost:11434",
         },
         version=3,
         minor_version=0,
@@ -235,7 +234,7 @@ async def test_migration_from_v1(
     assert mock_config_entry.version == 3
     assert mock_config_entry.minor_version == 3
     # After migration, parent entry should only have URL
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
 
     assert len(mock_config_entry.subentries) == 2
@@ -881,7 +880,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
+            CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model:latest",  # Model still in main data
         },
         version=2,
@@ -901,7 +900,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     assert mock_config_entry.minor_version == 3
 
     # Check that model was moved from main data to subentry
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert len(mock_config_entry.subentries) == 2
 
     subentry = next(iter(mock_config_entry.subentries.values()))
