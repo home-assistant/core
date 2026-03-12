@@ -174,17 +174,6 @@ class HabuSensor(SensorEntity):
         self._access = access
         self.entity_description = description
 
-    def _device_name(self) -> str:
-        """Return the device name based on its type."""
-        if GreencellUtils.device_is_habu_den(self._serial_number):
-            return GREENCELL_HABU_DEN
-        return GREENCELL_OTHER_DEVICE
-
-    def _on_state_update(self) -> None:
-        """Handle state update logic."""
-        if self.hass:
-            self.async_schedule_update_ha_state()
-
     @property
     def unique_id(self) -> str:
         """Return a unique ID for the sensor based on type and serial number."""
@@ -285,12 +274,7 @@ class HabuSingleSensor(HabuSensor):
         """Return the state of the sensor."""
         raw_value = self._value.data
         if raw_value is None:
-            return (
-                0.0
-                if self.entity_description.native_unit_of_measurement
-                == UnitOfPower.WATT
-                else None
-            )
+            return None
         return self.entity_description.value_fn(raw_value)
 
     @property

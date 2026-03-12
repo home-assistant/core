@@ -13,6 +13,7 @@ from homeassistant.components.greencell.const import (
     DOMAIN,
     GREENCELL_DISC_TOPIC,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_SERIAL_NUMBER, TEST_VOLTAGE_TOPIC
@@ -79,10 +80,7 @@ async def test_async_setup_entry_mqtt_available(
         result = await hass.config_entries.async_setup(entry.entry_id)
 
     assert result is True
-    assert (
-        entry.state
-        is pytest.importorskip("homeassistant.config_entries").ConfigEntryState.LOADED
-    )
+    assert entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.asyncio

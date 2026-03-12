@@ -18,6 +18,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import const
 from .const import (
+    CONF_SERIAL_NUMBER,
     DOMAIN,
     GREENCELL_BROADCAST_TOPIC,
     GREENCELL_DISC_TOPIC,
@@ -96,7 +97,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=f"{self._get_device_name(serial)} {serial}",
-                data={"serial_number": serial},
+                data={CONF_SERIAL_NUMBER: serial},
             )
 
         return self.async_show_form(
@@ -162,13 +163,17 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Let the user select one of the discovered devices."""
         if user_input is not None:
-            serial = user_input["serial_number"]
+            serial = user_input[CONF_SERIAL_NUMBER]
             return await self._async_create_entry(serial)
 
         return self.async_show_form(
             step_id="select",
             data_schema=vol.Schema(
-                {vol.Required("serial_number"): vol.In(list(self._discovered.keys()))}
+                {
+                    vol.Required(CONF_SERIAL_NUMBER): vol.In(
+                        list(self._discovered.keys())
+                    )
+                }
             ),
             description_placeholders={"count": str(len(self._discovered))},
         )
@@ -185,5 +190,5 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=title,
-            data={"serial_number": serial},
+            data={CONF_SERIAL_NUMBER: serial},
         )
