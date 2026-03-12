@@ -463,6 +463,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             options.pop(CONF_SERVICE_TIER, None)
+        if options.get(CONF_SERVICE_TIER) not in service_tiers:
+            options.pop(CONF_SERVICE_TIER, None)
 
         if self._subentry_type == "conversation" and not model.startswith(
             tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
