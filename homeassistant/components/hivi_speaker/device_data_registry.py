@@ -91,6 +91,18 @@ class DeviceDataRegistry:
             {"ha_device_id": ha_device_id, "key": key, "value": value},
         )
 
+    def get_connection_status_counts(self) -> tuple[int, int]:
+        """Return (online_count, offline_count) across all tracked devices."""
+        online = 0
+        offline = 0
+        for data in self._device_data.values():
+            status = data.get("device_dict", {}).get("connection_status")
+            if status == ConnectionStatus.ONLINE.value:
+                online += 1
+            elif status == ConnectionStatus.OFFLINE.value:
+                offline += 1
+        return online, offline
+
     async def async_remove_device_data(self, ha_device_id: str):
         """Remove device data (called when device is deleted)."""
         if ha_device_id in self._device_data:
