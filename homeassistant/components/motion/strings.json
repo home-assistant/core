@@ -15,7 +15,7 @@
   "title": "Motion",
   "triggers": {
     "cleared": {
-      "description": "Triggers after one or more motion sensors clear.",
+      "description": "Triggers after one or more motion sensors stop detecting motion.",
       "fields": {
         "behavior": {
           "description": "[%key:component::motion::common::trigger_behavior_description%]",
@@ -25,7 +25,7 @@
       "name": "Motion cleared"
     },
     "detected": {
-      "description": "Triggers after one or more motion sensors detect motion.",
+      "description": "Triggers after one or more motion sensors start detecting motion.",
       "fields": {
         "behavior": {
           "description": "[%key:component::motion::common::trigger_behavior_description%]",
