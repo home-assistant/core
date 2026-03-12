@@ -54,7 +54,7 @@ async def test_entity(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity", "expected"),
+    ("camera_type", "camera_id", "camera_entity", "expected_state"),
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall", "streaming"),
         ("NOC", "12:34:56:10:b9:0e", "camera.front", "streaming"),
@@ -68,7 +68,7 @@ async def test_setup_component_with_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
-    expected: str,
+    expected_state: str,
 ) -> None:
     """Test setup with webhook."""
     with selected_platforms([Platform.CAMERA]):
@@ -80,7 +80,7 @@ async def test_setup_component_with_webhook(
     await hass.async_block_till_done()
 
     # Test on/off camera events
-    assert hass.states.get(camera_entity).state == expected
+    assert hass.states.get(camera_entity).state == expected_state
     response = {
         "event_type": "off",
         "device_id": camera_id,
@@ -443,7 +443,7 @@ async def test_service_set_camera_light_invalid_type(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity", "expected"),
+    ("camera_type", "camera_id", "camera_entity", "expected_state"),
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall", "streaming"),
         ("NOC", "12:34:56:10:b9:0e", "camera.front", "streaming"),
@@ -456,7 +456,7 @@ async def test_camera_reconnect_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
-    expected: str,
+    expected_state: str,
 ) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -515,7 +515,7 @@ async def test_camera_reconnect_webhook(
         assert fake_post_hits >= calls
 
         # Real camera disconnect
-        assert hass.states.get(camera_entity).state == expected
+        assert hass.states.get(camera_entity).state == expected_state
         response = {
             "event_type": "disconnection",
             "device_id": camera_id,
