@@ -2,8 +2,11 @@
 
 from collections.abc import Callable, Generator
 from http import HTTPStatus
+import os
 import pathlib
 import socket
+import subprocess
+import sys
 
 from _pytest.compat import get_real_func
 from aiohttp import web
@@ -148,3 +151,51 @@ async def test_evict_faked_translations(
     # The mock integration should be removed from the cache, the real domain should still be there
     assert fake_domain not in cache.loaded["en"]
     assert real_domain in cache.loaded["en"]
+
+
+@pytest.mark.timeout(60)
+def test_pipe_self_wakeup_env_var_enables_fresh_pytest_run(
+    tmp_path: pathlib.Path,
+) -> None:
+    """Test the pipe self-wakeup workaround toggles in a fresh process.
+
+    We spawn a fresh Python process because `HASS_TEST_USE_PIPE_SELF_WAKEUP`
+    must be present before `tests.conftest` installs the event loop policy.
+    This verifies that the custom pipe-based wakeup path is actually installed
+    when enabled and not installed when disabled. It does not try to assert
+    whether the sandbox blocks the default socketpair-based wakeup on the
+    current platform.
+    """
+    cwd = pathlib.Path(__file__).resolve().parents[1]
+    command = [
+        sys.executable,
+        "-c",
+        (
+            "import asyncio; "
+            "import tests.conftest; "
+            "loop = asyncio.new_event_loop(); "
+            "raise SystemExit("
+            "0 if getattr(loop, '_pipe_self_wakeup_installed', False) else 1)"
+        ),
+    ]
+
+    for env_value, expected_returncode in (("0", 1), ("1", 0)):
+        env = {
+            **os.environ,
+            "HASS_TEST_USE_PIPE_SELF_WAKEUP": env_value,
+            "TMPDIR": str(tmp_path),
+            "TEMP": str(tmp_path),
+            "TMP": str(tmp_path),
+        }
+        result = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            cwd=cwd,
+            env=env,
+            text=True,
+            timeout=20,
+        )
+        assert result.returncode == expected_returncode, (
+            f"env={env_value}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
