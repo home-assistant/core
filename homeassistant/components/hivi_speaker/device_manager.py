@@ -339,45 +339,35 @@ class HIVIDeviceManager:
                 )
                 await self.async_remove_device_with_entities(ha_device_id)
 
+    async def async_remove_entities_for_device(self, ha_device_id):
+        """Remove all entities belonging to a device without removing the device itself."""
+        try:
+            ent_reg = er.async_get(self.hass)
+            device_entities = ent_reg.entities.get_entries_for_device_id(ha_device_id)
+            if not device_entities:
+                _LOGGER.debug("Device %s has no entities to remove", ha_device_id)
+                return
+            entity_ids = [e.entity_id for e in device_entities]
+            for entity_id in entity_ids:
+                ent_reg.async_remove(entity_id)
+            _LOGGER.debug("Removed entities for device %s: %s", ha_device_id, entity_ids)
+        except Exception:
+            _LOGGER.exception("Error removing entities for device %s", ha_device_id)
+
     async def async_remove_device_with_entities(self, ha_device_id):
         """Safely delete device and all its entities."""
-        hass = self.hass
-
         try:
-            # Get registries
-            ent_reg = er.async_get(hass)
-            dev_reg = dr.async_get(hass)
-
-            # Get entities to be deleted
-            device_entities = ent_reg.entities.get_entries_for_device_id(ha_device_id)
-
-            if not device_entities:
-                _LOGGER.debug(
-                    "device %s has no entity, it will be deleted directly", ha_device_id
-                )
-                dev_reg.async_remove_device(ha_device_id)
-                return
-
-            # First delete all entities
-            entity_ids = []
-            for entity_entry in device_entities:
-                entity_id = entity_entry.entity_id
-                ent_reg.async_remove(entity_id)
-                entity_ids.append(entity_id)
-
-            _LOGGER.debug("deleted entities: %s", entity_ids)
-
-            # Then delete the device
+            await self.async_remove_entities_for_device(ha_device_id)
+            dev_reg = dr.async_get(self.hass)
             dev_reg.async_remove_device(ha_device_id)
-            _LOGGER.debug("deleted device: %s", ha_device_id)
-
+            _LOGGER.debug("Deleted device: %s", ha_device_id)
         except Exception:
             _LOGGER.exception("Error when deleting device")
 
     async def _fetch_device_status(self, device_obj: HIVIDevice):  # noqa: PLR6301
         """Get device status through HTTP interface."""
         ip_addr = device_obj.ip_addr
-        async with HivicoClient(timeout=5, debug=True) as client:
+        async with HivicoClient(timeout=5, debug=False) as client:
             device_status = await client.get_device_status(ip_addr)
             if device_status:
                 if isinstance(device_status, dict) and "psk" in device_status:
@@ -390,7 +380,7 @@ class HIVIDeviceManager:
     async def _fetch_slave_device(self, device_obj: HIVIDevice):  # noqa: PLR6301
         """Get device status through HTTP interface."""
         ip_addr = device_obj.ip_addr
-        async with HivicoClient(timeout=5, debug=True) as client:
+        async with HivicoClient(timeout=5, debug=False) as client:
             return await client.get_slave_devices(ip_addr)
 
     async def _add_or_remove_switches(self):  # noqa: PLR0914, C901
