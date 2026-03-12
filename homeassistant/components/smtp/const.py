@@ -20,3 +20,10 @@ DEFAULT_DEBUG: Final = False
 DEFAULT_ENCRYPTION: Final = "starttls"
 
 ENCRYPTION_OPTIONS: Final = ["tls", "starttls", "none"]
+
+# Service constants
+SERVICE_SEND_MESSAGE: Final = "send_message"
+ATTR_MESSAGE: Final = "message"
+ATTR_SUBJECT: Final = "subject"
+ATTR_TO: Final = "to"
+ATTR_FROM_NAME: Final = "from_name"
