@@ -267,6 +267,8 @@ class HIVIDiscoveryScheduler:
                     dlna_info = await parse_ssdp_response(response_text, addr)
                     location = dlna_info.get("location", "")
                     device_info = await parse_local_url(location)
+                    if not device_info:
+                        return
                     device_key = device_info.get("UDN")
 
                     if not device_key:
