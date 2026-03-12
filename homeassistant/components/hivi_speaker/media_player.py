@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import os
-import tempfile
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
@@ -10,7 +9,6 @@ from urllib.parse import urljoin, urlparse
 from xml.sax.saxutils import escape
 
 import aiohttp
-import requests
 import xmltodict
 from didl_lite import didl_lite
 from mutagen import File
@@ -547,7 +545,11 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
         else:
             current_path = os.path.join(base_path, subpath)
 
-        entries = await asyncio.to_thread(os.scandir, current_path)
+        def _scan_dir(path):
+            with os.scandir(path) as it:
+                return list(it)
+
+        entries = await asyncio.to_thread(_scan_dir, current_path)
 
         children = []
         for entry in entries:
@@ -1213,27 +1215,6 @@ def parse_media_source_id(media_id: str) -> tuple[str, str]:
     identifier = "/".join(parts[3:])
     return domain, identifier
 
-
-def get_mp3_metadata_partial(url):
-    """Download only file header to extract metadata (save bandwidth)"""
-    try:
-        headers = {
-            "Range": "bytes=0-32768"
-        }  # Only download first 32KB (usually enough to contain ID3 tags)
-        response = requests.get(url, headers=headers, timeout=5, stream=True)
-        response.raise_for_status()
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp_file:
-            tmp_file.write(response.content)
-            tmp_path = tmp_file.name
-
-        metadata = get_mp3_metadata(tmp_path)
-        os.unlink(tmp_path)
-        return metadata
-
-    except Exception as e:
-        _LOGGER.debug("Stream reading failed: %s", e)
-        return None
 
 
 def decode_id3_text(text):
