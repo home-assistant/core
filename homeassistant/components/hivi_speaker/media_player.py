@@ -2,10 +2,9 @@ import asyncio
 import logging
 import os
 import time
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-from urllib.parse import urljoin, urlparse
+from defusedxml import ElementTree as ET
+from typing import Dict, Optional
+from urllib.parse import urlparse
 from xml.sax.saxutils import escape
 
 import aiohttp
@@ -165,7 +164,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
     ) -> Optional[Dict]:
         """Send SOAP request (optimize connection stability)"""
         if not self._session or not url:
-            _LOGGER.debug(f"SOAP request failed: no session or URL, url={url}")
+            _LOGGER.debug("SOAP request failed: no session or URL, url=%s", url)
             return None
 
         # Retry mechanism
@@ -194,7 +193,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 }
 
                 _LOGGER.debug(
-                    f"Sending SOAP request to {url} (attempt {attempt + 1}/{max_retries})"
+                    "Sending SOAP request to %s (attempt %d/%d)", url, attempt + 1, max_retries
                 )
 
                 timeout = aiohttp.ClientTimeout(total=8, connect=3, sock_read=5)
@@ -206,7 +205,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                     timeout=timeout,
                 ) as response:
                     response_text = await response.text()
-                    _LOGGER.debug(f"SOAP response status: {response.status}")
+                    _LOGGER.debug("SOAP response status: %s", response.status)
 
                     if response.status == 200:
                         self._connection_ok = True
@@ -231,12 +230,12 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
                         except Exception as parse_error:
                             _LOGGER.debug(
-                                f"Failed to parse SOAP response: {parse_error}"
+                                "Failed to parse SOAP response: %s", parse_error
                             )
                             return {"raw_response": response_text}
                     else:
                         _LOGGER.warning(
-                            f"SOAP request failed: HTTP {response.status}"
+                            "SOAP request failed: HTTP %s", response.status
                         )
                         if attempt < max_retries - 1:
                             await asyncio.sleep(0.5 * (attempt + 1))
@@ -245,7 +244,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 _LOGGER.debug(
-                    f"SOAP request network error (attempt {attempt + 1}): {e}"
+                    "SOAP request network error (attempt %d): %s", attempt + 1, e
                 )
                 if attempt < max_retries - 1:
                     await asyncio.sleep(1.0 * (attempt + 1))
@@ -256,13 +255,13 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 if self._connection_fail_count >= self._max_connection_fails:
                     self._connection_ok = False
                     _LOGGER.warning(
-                        f"Too many device connection failures, marked as unavailable"
+                        "Too many device connection failures, marked as unavailable"
                     )
 
                 return None
 
             except Exception as e:
-                _LOGGER.error(f"SOAP request error: {e}")
+                _LOGGER.error("SOAP request error: %s", e)
                 if attempt < max_retries - 1:
                     await asyncio.sleep(0.5 * (attempt + 1))
                     continue
@@ -310,7 +309,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
             if result:
                 transport_state = result.get("CurrentTransportState", "")
-                _LOGGER.debug(f"Transport status: {transport_state}")
+                _LOGGER.debug("Transport status: %s", transport_state)
 
                 if transport_state == "PLAYING":
                     self._attr_state = STATE_PLAYING
@@ -340,7 +339,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                     if result and "CurrentVolume" in result:
                         volume = int(result["CurrentVolume"])
                         self._attr_volume_level = volume / 100.0
-                        _LOGGER.debug(f"Volume: {volume}%")
+                        _LOGGER.debug("Volume: %s%%", volume)
 
                 # Get mute info (reduce frequency)
                 if current_time - self._last_mute_update >= self._mute_update_interval:
@@ -361,77 +360,73 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                             "true",
                             "1",
                         ]
-                        _LOGGER.debug(f"Mute status: {self._attr_is_volume_muted}")
+                        _LOGGER.debug("Mute status: %s", self._attr_is_volume_muted)
 
         except Exception as e:
-            _LOGGER.debug(f"Error updating device status: {e}")
+            _LOGGER.debug("Error updating device status: %s", e)
 
     async def _discover_services(self):
         """Discover DLNA services (optimize error handling)"""
         try:
-            if not self._device.ip_addr:
+            if not self._device.ip_addr or not self._session:
                 return
 
             description_url = f"http://{self._device.ip_addr}:49152/description.xml"
-            _LOGGER.debug(f"Discover services: {description_url}")
+            _LOGGER.debug("Discover services: %s", description_url)
 
-            # Use temporary session to discover services
             timeout = aiohttp.ClientTimeout(total=5)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(description_url) as response:
-                    if response.status == 200:
-                        xml_data = await response.text()
-                        self._base_url = f"http://{self._device.ip_addr}:49152"
+            async with self._session.get(
+                description_url, timeout=timeout
+            ) as response:
+                if response.status == 200:
+                    xml_data = await response.text()
+                    self._base_url = f"http://{self._device.ip_addr}:49152"
 
-                        # Parse XML
-                        root = ET.fromstring(xml_data)
+                    root = ET.fromstring(xml_data)
+                    ns = {"d": "urn:schemas-upnp-org:device-1-0"}
 
-                        # Register namespace
-                        ns = {"": "urn:schemas-upnp-org:device-1-0"}
+                    for service in root.findall(".//d:service", ns):
+                        service_type = service.find("d:serviceType", ns)
+                        if (
+                            service_type is not None
+                            and "AVTransport" in service_type.text
+                        ):
+                            control_url = service.find("d:controlURL", ns)
+                            if control_url is not None:
+                                control_path = control_url.text
+                                if control_path.startswith("/"):
+                                    self._avtransport_url = f"http://{self._device.ip_addr}:49152{control_path}"
+                                else:
+                                    self._avtransport_url = f"http://{self._device.ip_addr}:49152/{control_path}"
+                                _LOGGER.debug(
+                                    "Discover AVTransport URL: %s",
+                                    self._avtransport_url,
+                                )
 
-                        # Find AVTransport service
-                        for service in root.findall(".//service", ns):
-                            service_type = service.find("serviceType", ns)
-                            if (
-                                service_type is not None
-                                and "AVTransport" in service_type.text
-                            ):
-                                control_url = service.find("controlURL", ns)
-                                if control_url is not None:
-                                    # Ensure URL is complete
-                                    control_path = control_url.text
-                                    if control_path.startswith("/"):
-                                        self._avtransport_url = f"http://{self._device.ip_addr}:49152{control_path}"
-                                    else:
-                                        self._avtransport_url = f"http://{self._device.ip_addr}:49152/{control_path}"
-                                    _LOGGER.debug(
-                                        f"Discover AVTransport URL: {self._avtransport_url}"
-                                    )
-
-                            if (
-                                service_type is not None
-                                and "RenderingControl" in service_type.text
-                            ):
-                                control_url = service.find("controlURL", ns)
-                                if control_url is not None:
-                                    control_path = control_url.text
-                                    if control_path.startswith("/"):
-                                        self._rendering_control_url = f"http://{self._device.ip_addr}:49152{control_path}"
-                                    else:
-                                        self._rendering_control_url = f"http://{self._device.ip_addr}:49152/{control_path}"
-                                    _LOGGER.debug(
-                                        f"Discover RenderingControl URL: {self._rendering_control_url}"
-                                    )
+                        if (
+                            service_type is not None
+                            and "RenderingControl" in service_type.text
+                        ):
+                            control_url = service.find("d:controlURL", ns)
+                            if control_url is not None:
+                                control_path = control_url.text
+                                if control_path.startswith("/"):
+                                    self._rendering_control_url = f"http://{self._device.ip_addr}:49152{control_path}"
+                                else:
+                                    self._rendering_control_url = f"http://{self._device.ip_addr}:49152/{control_path}"
+                                _LOGGER.debug(
+                                    "Discover RenderingControl URL: %s",
+                                    self._rendering_control_url,
+                                )
 
         except Exception as e:
-            _LOGGER.debug(f"Error discovering services: {e}")
+            _LOGGER.debug("Error discovering services: %s", e)
 
     async def async_browse_media(
         self,
         media_content_type: str | None = None,
         media_content_id: str | None = None,
     ):
-        # _LOGGER.debug(f"$$$4 media_content_id = {media_content_id}")
         """Return browsable media directory structure"""
 
         # Parse media_content_id
@@ -445,8 +440,6 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             clean_path = "/".join(path_parts) if path_parts else media_content_id
         else:
             clean_path = ""
-
-        # _LOGGER.debug(f"$$$4 clean_path = {clean_path}")
 
         if media_content_id is None:
             # Root directory: Add entries for different media sources
@@ -490,19 +483,10 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 ].partition("/")
                 if domain == DLNA_DMS_DOMAIN:
                     return await self._browse_dlna_dms(identifier)
-                # elif domain == DOMAIN:
-                #     media_content_id = identifier
-                # else:
-                #     return await media_source.async_browse_media(
-                #         self.hass, media_content_id
-                #     )
-                # Determine browsing path based on media_content_id
                 elif identifier.endswith("local"):
-                    # _LOGGER.debug("1111")
                     # Load root directory of local files
                     return await self._browse_local_media(root=True)
                 elif identifier.startswith("local/"):
-                    # _LOGGER.debug(f"2222 clean_path = {clean_path}")
                     # Load subdirectory of local files (e.g., "local/Music")
                     subpath = identifier.split("local/")[1]
                     return await self._browse_local_media(subpath=subpath)
@@ -523,11 +507,23 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
     async def _browse_local_media(self, root=False, subpath=None):
         """Browse local file system"""
-        base_path = "/media"  # Local media root directory
-        if root:
+        base_path = "/media"
+        if root or subpath is None:
             current_path = base_path
         else:
-            current_path = os.path.join(base_path, subpath)
+            normalized = os.path.normpath(subpath).lstrip(os.sep)
+            current_path = os.path.realpath(
+                os.path.join(base_path, normalized)
+            )
+            if not (
+                current_path == base_path
+                or current_path.startswith(base_path + os.sep)
+            ):
+                _LOGGER.warning(
+                    "Blocked attempt to browse outside media directory: %s",
+                    subpath,
+                )
+                current_path = base_path
 
         def _scan_dir(path):
             with os.scandir(path) as it:
@@ -537,10 +533,9 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
         children = []
         for entry in entries:
-            # _LOGGER.debug(f"entry = {entry}")
             if entry.is_dir():
                 rel_path = os.path.relpath(entry.path, base_path)
-                _LOGGER.debug(f"subpath = {rel_path}")
+                _LOGGER.debug("subpath = %s", rel_path)
                 # Subdirectory
                 children.append(
                     BrowseMediaSource(
@@ -556,53 +551,6 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             elif entry.is_file() and entry.name.endswith(
                 (".mp3", ".flac", ".wav", ".m3u8")
             ):
-                # _LOGGER.debug(f"subpath = {subpath}")
-                # _LOGGER.debug(f"entry.name = {entry.name}")
-
-                # # Audio file - generate HTTP link
-                # # media_id = (
-                # #     f"media-source://{DOMAIN}/local/{subpath}/{entry.name}"
-                # #     if subpath
-                # #     else f"media-source://{DOMAIN}/local/{entry.name}"
-                # # )
-                # media_id = (
-                #     f"media-source://media_source/local/{subpath}/{entry.name}"
-                #     if subpath
-                #     else f"media-source://media_source/local/{entry.name}"
-                # )
-
-                # # _LOGGER.debug(f"media_id 1 = {media_id}")
-
-                # # Parse HTTP link
-                # try:
-                #     if media_source.is_media_source_id(media_id):
-                #         sourced_media = await media_source.async_resolve_media(
-                #             self.hass, media_id, self.entity_id
-                #         )
-                #         # _LOGGER.debug(f"sourced_media = {sourced_media}")
-                #         media_type = sourced_media.mime_type
-                #         media_id = sourced_media.url
-                #         _LOGGER.debug("sourced_media is %s", sourced_media)
-                #         if sourced_metadata := getattr(
-                #             sourced_media, "didl_metadata", None
-                #         ):
-                #             # didl_metadata = didl_lite.to_xml_string(
-                #             #     sourced_metadata
-                #             # ).decode("utf-8")
-                #             title = sourced_metadata.title
-
-                #     # If media ID is a relative URL, we serve it from HA.
-                #     media_id = async_process_play_media_url(self.hass, media_id)
-                #     # _LOGGER.debug(f"media_id = {media_id}")
-
-                #     http_url = media_id
-
-                # except Exception as e:
-                #     _LOGGER.error(f"resolved error, e = {str(e)}")
-                #     http_url = None  # If parsing fails, return None or default path
-
-                # _LOGGER.debug(f"http_url = {http_url}")
-
                 if subpath is None:
                     identifier = f"local_file/{entry.name}"
                 else:
@@ -618,8 +566,6 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                         title=entry.name,
                         can_play=True,
                         can_expand=False,
-                        # file_path=os.path.join(current_path, entry.name),
-                        # http_url=http_url,  # Add HTTP access URL
                     )
                 )
 
@@ -745,8 +691,16 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
             return result
         except Exception as e:
-            _LOGGER.error("Failed to browse DLNA DMS content: %s", str(e))
-            # raise BrowseError("Cannot browse DLNA media server content") from e
+            _LOGGER.error("Failed to browse DLNA DMS content: %s", e)
+            return BrowseMedia(
+                media_content_id="dlna",
+                media_content_type="directory",
+                media_class="directory",
+                title="DLNA devices (unavailable)",
+                can_play=False,
+                can_expand=False,
+                children=[],
+            )
 
     async def _get_dlna_media_url(self, media_id: str) -> str | None:
         """Parse DLNA DMS media file URL (2025.9+ final revision)"""
@@ -806,7 +760,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             # Handle local media
             http_url, meta = await self._handle_local_media(media_id)
 
-        _LOGGER.debug(f"http_url = {http_url}")
+        _LOGGER.debug("http_url = %s", http_url)
         return http_url, meta
 
     async def _handle_dlna_media(self, media_id):
@@ -816,7 +770,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 sourced_media = await media_source.async_resolve_media(
                     self.hass, media_id, self.entity_id
                 )
-                _LOGGER.debug(f"sourced_media = {sourced_media}")
+                _LOGGER.debug("sourced_media = %s", sourced_media)
 
                 # Extract metadata if available
                 meta = self._extract_dlna_metadata(sourced_media)
@@ -830,7 +784,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 return media_url, meta
 
         except Exception as e:
-            _LOGGER.error(f"resolved error, e = {str(e)}")
+            _LOGGER.error("resolved error: %s", e)
             return None, None
 
     def _extract_dlna_metadata(self, sourced_media):
@@ -868,7 +822,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             return None, None
 
         filename = identifier.split("local_file/")[1]
-        _LOGGER.debug(f"async_play_media identifier = {identifier}")
+        _LOGGER.debug("async_play_media identifier = %s", identifier)
 
         # Get metadata from MP3 file
         meta = await self.hass.async_add_executor_job(
@@ -877,14 +831,14 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
         # Resolve media URL
         media_id_2 = f"media-source://media_source/local/{filename}"
-        _LOGGER.debug(f"async_play_media media_id_2 = {media_id_2}")
+        _LOGGER.debug("async_play_media media_id_2 = %s", media_id_2)
 
         try:
             if media_source.is_media_source_id(media_id_2):
                 sourced_media = await media_source.async_resolve_media(
                     self.hass, media_id_2, self.entity_id
                 )
-                _LOGGER.debug(f"sourced_media = {sourced_media}")
+                _LOGGER.debug("sourced_media = %s", sourced_media)
                 media_id_2 = sourced_media.url
 
             # Process media URL
@@ -892,7 +846,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             return media_id_2, meta
 
         except Exception as e:
-            _LOGGER.error(f"resolved error, e = {str(e)}")
+            _LOGGER.error("resolved error: %s", e)
             return None, None
 
     async def async_play_media(self, media_type: str, media_id: str, **kwargs):
@@ -1048,7 +1002,6 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
         _LOGGER.warning("Play command failed (Play returned empty).")
 
-    # Other methods remain unchanged...
     async def async_media_play(self):
         """Play"""
         _LOGGER.debug("Execute play command")
@@ -1071,7 +1024,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 _LOGGER.debug("Send play command")
 
         except Exception as e:
-            _LOGGER.error(f"Error when sending play command: {e}")
+            _LOGGER.error("Error when sending play command: %s", e)
 
     async def async_media_pause(self):
         """Pause"""
@@ -1092,7 +1045,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 _LOGGER.debug("Send pause command")
 
         except Exception as e:
-            _LOGGER.error(f"Error when sending pause command: {e}")
+            _LOGGER.error("Error when sending pause command: %s", e)
 
     async def async_media_stop(self):
         """Stop"""
@@ -1113,7 +1066,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 _LOGGER.debug("Send stop command")
 
         except Exception as e:
-            _LOGGER.error(f"Error when sending stop command: {e}")
+            _LOGGER.error("Error when sending stop command: %s", e)
 
     async def async_set_volume_level(self, volume: float):
         """Set volume"""
@@ -1133,10 +1086,10 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             if result is not None:
                 self._attr_volume_level = volume
                 self.async_write_ha_state()
-                _LOGGER.debug(f"Set volume: {volume_int}%")
+                _LOGGER.debug("Set volume: %s%%", volume_int)
 
         except Exception as e:
-            _LOGGER.error(f"Error when setting volume: {e}")
+            _LOGGER.error("Error when setting volume: %s", e)
 
     async def async_mute_volume(self, mute: bool):
         """Mute"""
@@ -1155,10 +1108,10 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
             if result is not None:
                 self._attr_is_volume_muted = mute
                 self.async_write_ha_state()
-                _LOGGER.debug(f"Set mute: {mute}")
+                _LOGGER.debug("Set mute: %s", mute)
 
         except Exception as e:
-            _LOGGER.error(f"Error when setting mute: {e}")
+            _LOGGER.error("Error when setting mute: %s", e)
 
     @property
     def extra_state_attributes(self):
