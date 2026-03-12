@@ -99,10 +99,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     try:
         store = Store(hass, 1, "hivi_speaker_device_data")
-        await store.async_save({"device_data": {}, "version": 1})
-        _LOGGER.debug("Persistent device data storage cleared")
+        await store.async_remove()
+        _LOGGER.debug("Persistent device data storage removed")
     except Exception:
-        _LOGGER.exception("Error clearing persistent storage on entry removal")
+        _LOGGER.exception("Error removing persistent storage on entry removal")
 
 
 async def async_remove_config_entry_device(
