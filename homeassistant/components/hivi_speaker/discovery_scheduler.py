@@ -5,9 +5,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import datetime, timedelta
+from ipaddress import ip_address
 import logging
 import socket
 import time
+from urllib.parse import urlparse
 
 import aiohttp
 from defusedxml import ElementTree as ET
@@ -315,21 +317,8 @@ class HIVIDiscoveryScheduler:
         offline_count = 0
 
         try:
-            online_count = len(
-                [
-                    d
-                    for d in self.device_manager.device_data_registry._device_data.values()  # noqa: SLF001
-                    if d.get("device_dict", {}).get("connection_status")
-                    == ConnectionStatus.ONLINE.value
-                ]
-            )
-            offline_count = len(
-                [
-                    d
-                    for d in self.device_manager.device_data_registry._device_data.values()  # noqa: SLF001
-                    if d.get("device_dict", {}).get("connection_status")
-                    == ConnectionStatus.OFFLINE.value
-                ]
+            online_count, offline_count = (
+                self.device_manager.device_data_registry.get_connection_status_counts()
             )
         except Exception:
             _LOGGER.exception(
@@ -413,9 +402,25 @@ def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
     return discovered_raw
 
 
+def _is_safe_location_url(url: str) -> bool:
+    """Validate that a LOCATION URL is http(s) and points to a private/local IP."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    try:
+        host = parsed.hostname or ""
+        addr = ip_address(host)
+        return addr.is_private or addr.is_link_local
+    except ValueError:
+        return False
+
+
 async def parse_local_url(session: aiohttp.ClientSession, url: str):
     """Fetch and parse a UPnP device description XML."""
     try:
+        if not _is_safe_location_url(url):
+            _LOGGER.debug("Rejecting non-local SSDP LOCATION URL: %s", url)
+            return None
         timeout = aiohttp.ClientTimeout(total=5)
         async with session.get(url, timeout=timeout) as response:
             response.raise_for_status()
@@ -447,11 +452,15 @@ async def parse_ssdp_response(response_text, addr):
     device_info = {"ip": addr[0], "port": addr[1], "raw_response": response_text}
 
     lines = response_text.split("\r\n")
-    for line in lines:
+
+    if lines and lines[0].upper().startswith("HTTP/"):
+        device_info["connection_status"] = lines[0]
+
+    for line in lines[1:]:
         if ":" in line:
             try:
                 key, value = line.split(":", 1)
-                key = key.strip().lower()  # Header keys are case-insensitive
+                key = key.strip().lower()
                 value = value.strip()
                 if key in {
                     "server",
@@ -463,8 +472,6 @@ async def parse_ssdp_response(response_text, addr):
                     "date",
                 }:
                     device_info[key] = value
-                elif key.startswith("http/"):  # Status line
-                    device_info["connection_status"] = value
             except Exception:  # noqa: BLE001
                 continue
     return device_info
