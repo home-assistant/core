@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:window-closed"
+    },
+    "opened": {
+      "trigger": "mdi:window-open"
+    }
+  }
+}
