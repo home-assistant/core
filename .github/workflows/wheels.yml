@@ -184,7 +184,7 @@ jobs:
       - name: Upload Core wheels to GitHub Packages
         env:
           TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.GH_TOKEN }}
           TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
           if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
@@ -308,7 +308,7 @@ jobs:
       - name: Upload Integration wheels to GitHub Packages
         env:
           TWINE_USERNAME: ${{ github.actor }}
-          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TWINE_PASSWORD: ${{ secrets.GH_TOKEN }}
           TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
           if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
