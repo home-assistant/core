@@ -71,7 +71,9 @@ async def validate_input(data: dict[str, Any]) -> str:
         )
 
         await hub.connect()
-        assert hub.installation_id is not None
+        if hub.installation_id is None:
+            raise CannotConnectError("Victron hub did not provide an installation_id")
+
         return hub.installation_id
     finally:
         if hub is not None:

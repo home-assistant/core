@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from victron_mqtt import MetricKind
 
 from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import CONF_INSTALLATION_ID, DOMAIN
@@ -115,7 +116,7 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    config_entry.runtime_data.new_metric_callbacks[object()] = MagicMock()
+    config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = MagicMock()
     hub_disconnect = config_entry.runtime_data._hub.disconnect
 
     with patch(
@@ -236,7 +237,7 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     config_entry.add_to_hass(hass)
 
     async def _mock_forward(*_args, **_kwargs) -> None:
-        config_entry.runtime_data.new_metric_callbacks[object()] = MagicMock()
+        config_entry.runtime_data.new_metric_callbacks[MetricKind.SENSOR] = MagicMock()
 
     with (
         patch(

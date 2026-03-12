@@ -128,9 +128,13 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
 
         last_state = await self.async_get_last_state()
         if last_state is not None and last_state.state is not None:
-            assert isinstance(self._attr_native_value, (int, float)), (
-                "sensor with stored baseline value must be numeric"
-            )
+            if not isinstance(self._attr_native_value, (int, float)):
+                _LOGGER.warning(
+                    "Cannot restore baseline for %s: current value is not numeric",
+                    self.entity_id,
+                )
+                await super().async_added_to_hass()
+                return
             try:
                 self._baseline = float(last_state.state)
                 self._attr_native_value += self._baseline

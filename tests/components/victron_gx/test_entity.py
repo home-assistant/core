@@ -223,3 +223,41 @@ async def test_sensor_async_added_ignores_invalid_restored_value(
     assert sensor.native_value == 4.0
     assert sensor._baseline is None
     mock_super_added.assert_awaited_once()
+
+
+async def test_sensor_async_added_skips_baseline_for_non_numeric_value(
+    hass: HomeAssistant, mock_device
+) -> None:
+    """Non-numeric current value should skip baseline restoration."""
+    metric = MagicMock(spec=VictronFormulaMetric)
+    metric.metric_kind = MetricKind.SENSOR
+    metric.unique_id = "metric_non_numeric"
+    metric.short_id = "metric.restore"
+    metric.generic_short_id = "energy"
+    metric.key_values = {}
+    metric.precision = 2
+    metric.unit_of_measurement = "kWh"
+    metric.metric_type = MetricType.ENERGY
+    metric.metric_nature = MetricNature.CUMULATIVE
+    metric.value = "not-a-number"
+
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
+    sensor = VictronSensor(mock_device, metric, device_info)
+
+    last_state = MagicMock()
+    last_state.state = "2.0"
+
+    with (
+        patch(
+            "homeassistant.components.victron_gx.sensor.VictronBaseEntity.async_added_to_hass",
+            new=AsyncMock(),
+        ) as mock_super_added,
+        patch.object(
+            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+        ),
+    ):
+        await sensor.async_added_to_hass()
+
+    assert sensor.native_value == "not-a-number"
+    assert sensor._baseline is None
+    mock_super_added.assert_awaited_once()
