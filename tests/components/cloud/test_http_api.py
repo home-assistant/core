@@ -1907,6 +1907,10 @@ async def test_download_support_package(
 
     cloud.remote.snitun_server = "us-west-1"
     cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.remote.latency_by_location = {
+        "Earth": {"avg": 13.37},
+        "Moon": {"avg": None},
+    }
     cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
 
     await cloud.client.async_system_message({"region": "xx-earth-616"})
