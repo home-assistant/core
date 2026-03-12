@@ -59,7 +59,7 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self._register = register
         self._entry = entry
-        self._attr_unique_id = f"kwb_{register.address}"
+        self._attr_unique_id = f"{entry.entry_id}_{register.address}"
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_name = f"{register.index} {register.name}".strip() if register.index else register.name
         if register.address in DIAGNOSTIC_ADDRESSES:

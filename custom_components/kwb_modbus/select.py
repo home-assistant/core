@@ -11,7 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import KwbModbusConfigEntry
 from .const import (
-    CONF_DISCOVERED_SENSORS,
+    CONF_ACTIVE_INSTANCES,
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
     DOMAIN,
@@ -30,20 +30,20 @@ async def async_setup_entry(
     """Set up KWB Modbus select entities."""
     coordinator: KWBDataUpdateCoordinator = entry.runtime_data
     expert_mode: bool = entry.data.get(CONF_EXPERT_MODE, False)
-    discovered: dict[str, bool] = entry.data.get(CONF_DISCOVERED_SENSORS, {})
 
-    # Build set of indices that were confirmed active during discovery.
-    # If any sensor with a given index (e.g. "HC 1.1") was discovered as enabled,
-    # the corresponding select entities for that index should be enabled too.
+    # Collect all explicitly selected instance labels (e.g. "HC 1.1", "BUF 0")
+    # from the user's setup configuration.
+    active_instances: dict[str, list[str]] = entry.data.get(CONF_ACTIVE_INSTANCES, {})
     active_indices: set[str] = {
-        r.index
-        for r in coordinator.get_all_registers()
-        if r.index and discovered.get(f"kwb_{r.address}", True)
+        instance
+        for instances in active_instances.values()
+        for instance in instances
     }
 
     entities = [
-        KWBSelectEntity(coordinator, register, entry, expert_mode, active_indices)
+        KWBSelectEntity(coordinator, register, entry, expert_mode)
         for register in coordinator.get_all_select_registers()
+        if not register.index or register.index in active_indices
     ]
     async_add_entities(entities)
 
@@ -59,13 +59,12 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         register: SelectRegisterDef,
         entry: KwbModbusConfigEntry,
         expert_mode: bool,
-        active_indices: set[str],
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator)
         self._register = register
         self._entry = entry
-        self._attr_unique_id = f"kwb_select_{register.address}"
+        self._attr_unique_id = f"{entry.entry_id}_select_{register.address}"
 
         self._attr_name = (
             f"{register.index} {register.name}".strip()
@@ -82,11 +81,9 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = expert_mode
         elif register.index:
-            # Indexed selects (HC, BUF, …): only enable when expert mode is on
-            # AND the circuit was confirmed active during discovery.
-            self._attr_entity_registry_enabled_default = (
-                expert_mode and register.index in active_indices
-            )
+            # Indexed selects only reach here if explicitly selected during setup.
+            # Still gate them behind expert mode.
+            self._attr_entity_registry_enabled_default = expert_mode
         else:
             self._attr_entity_registry_enabled_default = True
 
