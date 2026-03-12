@@ -317,7 +317,9 @@ async def test_oauth_token_request_reauth_error(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         side_effect=OAuth2TokenRequestReauthError(
-            request_info=None, status=401, domain=DOMAIN
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=401,
+            domain=DOMAIN,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -337,7 +339,9 @@ async def test_oauth_token_request_error_is_retryable(hass: HomeAssistant) -> No
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         side_effect=OAuth2TokenRequestError(
-            request_info=None, status=500, domain=DOMAIN
+            request_info=Mock(real_url="https://auth.august.com/access_token"),
+            status=500,
+            domain=DOMAIN,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
