@@ -134,7 +134,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             payload = json.dumps({"name": "BROADCAST"})
             await mqtt.async_publish(
-                self.hass, GREENCELL_BROADCAST_TOPIC, payload, qos=0, retain=True
+                self.hass, GREENCELL_BROADCAST_TOPIC, payload, qos=0, retain=False
             )
 
             try:

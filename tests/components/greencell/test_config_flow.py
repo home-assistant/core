@@ -266,7 +266,7 @@ async def test_broadcast_message_published(
         GREENCELL_BROADCAST_TOPIC,
         '{"name": "BROADCAST"}',
         0,
-        True,
+        False,
     )
 
 
@@ -295,11 +295,11 @@ async def test_select_step_shows_all_discovered_devices(
 def _mqtt_service_info(payload: str) -> MqttServiceInfo:
     """Create a MqttServiceInfo for testing."""
     return MqttServiceInfo(
-        topic="greencell/broadcast/device",
+        topic=GREENCELL_DISC_TOPIC,
         payload=payload,
         qos=0,
         retain=False,
-        subscribed_topic="greencell/broadcast/device",
+        subscribed_topic=GREENCELL_BROADCAST_TOPIC,
         timestamp=time.time(),
     )
 

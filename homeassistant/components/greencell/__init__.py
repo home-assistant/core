@@ -42,7 +42,14 @@ async def wait_for_device_ready(
 
         try:
             data = json.loads(message.payload)
-            if "id" in data and data["id"] != serial:
+            if message.topic == GREENCELL_DISC_TOPIC:
+                # On the discovery topic, require a matching id to avoid
+                # marking unrelated devices as ready.
+                if data.get("id") != serial:
+                    return
+            elif "id" in data and data["id"] != serial:
+                # For per-device topics, still reject explicit mismatched ids,
+                # but allow messages without an id.
                 return
         except ValueError, TypeError:
             _LOGGER.debug("Received invalid JSON on readiness topic, ignoring")

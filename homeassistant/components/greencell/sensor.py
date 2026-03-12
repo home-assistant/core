@@ -32,7 +32,13 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 
-from .const import DOMAIN, GREENCELL_HABU_DEN, GREENCELL_OTHER_DEVICE, MANUFACTURER
+from .const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    GREENCELL_HABU_DEN,
+    GREENCELL_OTHER_DEVICE,
+    MANUFACTURER,
+)
 from .models import GreencellConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -137,7 +143,7 @@ async def async_setup_entry(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Greencell EVSE sensors from a config entry."""
-    serial_number = entry.data.get("serial_number") if entry and entry.data else None
+    serial_number = entry.data.get(CONF_SERIAL_NUMBER) if entry and entry.data else None
     if not serial_number:
         _LOGGER.error("Serial number not provided in ConfigEntry")
         return

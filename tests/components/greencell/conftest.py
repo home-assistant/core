@@ -4,7 +4,12 @@ import time
 
 import pytest
 
-from homeassistant.components.greencell.const import CONF_SERIAL_NUMBER, DOMAIN
+from homeassistant.components.greencell.const import (
+    CONF_SERIAL_NUMBER,
+    DOMAIN,
+    GREENCELL_BROADCAST_TOPIC,
+    GREENCELL_DISC_TOPIC,
+)
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
@@ -74,11 +79,11 @@ def mqtt_service_info():
 
     def _make(payload: str) -> MqttServiceInfo:
         return MqttServiceInfo(
-            topic="greencell/broadcast/device",
+            topic=GREENCELL_DISC_TOPIC,
             payload=payload,
             qos=0,
             retain=False,
-            subscribed_topic="greencell/broadcast/device",
+            subscribed_topic=GREENCELL_BROADCAST_TOPIC,
             timestamp=time.time(),
         )
 
