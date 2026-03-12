@@ -96,8 +96,8 @@ async def validate_input(data: dict[str, Any]) -> str:
                 _LOGGER.debug("Ignoring disconnect error during config validation")
 
 
-class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for victronvenus."""
+class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle the config flow for Victron GX devices."""
 
     VERSION = 1
 

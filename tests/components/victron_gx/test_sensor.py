@@ -198,6 +198,32 @@ async def test_sensor_update_task_uses_baseline(
         mock_sched.assert_called_once()
 
 
+async def test_sensor_update_task_skips_non_numeric_with_baseline(
+    hass: HomeAssistant, mock_device, base_metric
+) -> None:
+    """_on_update_cb should ignore non-numeric updates when baseline is set."""
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
+    sensor = VictronSensor(mock_device, base_metric, device_info)
+    sensor._baseline = 10.0
+    previous_value = sensor.native_value
+
+    with (
+        patch(
+            "homeassistant.components.victron_gx.sensor._LOGGER.warning"
+        ) as mock_warning,
+        patch.object(sensor, "async_write_ha_state") as mock_sched,
+    ):
+        sensor._on_update_cb("not-a-number")
+
+    assert sensor.native_value == previous_value
+    mock_sched.assert_not_called()
+    mock_warning.assert_called_once_with(
+        "Received non-numeric value '%s' for %s, cannot apply baseline",
+        "not-a-number",
+        sensor.entity_id,
+    )
+
+
 async def test_sensor_async_added_restores_formula_metric_baseline(
     hass: HomeAssistant, mock_device
 ) -> None:

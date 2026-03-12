@@ -105,6 +105,13 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
     @callback
     def _on_update_cb(self, value: Any) -> None:
         if self._baseline is not None:
+            if not isinstance(value, (int, float)):
+                _LOGGER.warning(
+                    "Received non-numeric value '%s' for %s, cannot apply baseline",
+                    value,
+                    self.entity_id,
+                )
+                return
             value += self._baseline
         if self._attr_native_value == value:
             return
