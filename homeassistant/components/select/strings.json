@@ -76,5 +76,11 @@
       "name": "Previous"
     }
   },
-  "title": "Select"
+  "title": "Select",
+  "triggers": {
+    "selection_changed": {
+      "description": "Triggers after one or more selections change.",
+      "name": "Selection changed"
+    }
+  }
 }

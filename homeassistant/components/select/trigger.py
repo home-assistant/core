@@ -1,0 +1,32 @@
+"""Provides triggers for selects."""
+
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.trigger import (
+    ENTITY_STATE_TRIGGER_SCHEMA,
+    EntityTriggerBase,
+    Trigger,
+)
+
+from .const import DOMAIN
+
+
+class SelectionChangedTrigger(EntityTriggerBase):
+    """Trigger for select entity when its selection changes."""
+
+    _domains = {DOMAIN}
+    _schema = ENTITY_STATE_TRIGGER_SCHEMA
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state is not invalid."""
+        return state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    "selection_changed": SelectionChangedTrigger,
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the triggers for selects."""
+    return TRIGGERS

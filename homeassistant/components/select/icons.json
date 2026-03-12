@@ -20,5 +20,10 @@
     "select_previous": {
       "service": "mdi:format-list-bulleted"
     }
+  },
+  "triggers": {
+    "selection_changed": {
+      "trigger": "mdi:format-list-bulleted"
+    }
   }
 }

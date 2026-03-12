@@ -1,0 +1,4 @@
+selection_changed:
+  target:
+    entity:
+      domain: select

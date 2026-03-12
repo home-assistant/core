@@ -155,6 +155,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "remote",
     "scene",
     "schedule",
+    "select",
     "siren",
     "switch",
     "text",
