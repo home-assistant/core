@@ -16,9 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
-from .const import TessieState
+from .const import TessieChargeStates, TessieState
 from .entity import TessieEnergyEntity, TessieEntity
-from .helpers import is_charging
+from .helpers import charge_state_to_option
 from .models import TessieEnergyData, TessieVehicleData
 
 PARALLEL_UPDATES = 0
@@ -45,7 +45,9 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     TessieBinarySensorEntityDescription(
         key="charge_state_charging_state",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        is_on=is_charging,
+        is_on=lambda value: (
+            charge_state_to_option(value) == TessieChargeStates["Charging"]
+        ),
         entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
