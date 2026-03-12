@@ -1,7 +1,5 @@
 from enum import Enum
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Set
-import asyncio
+from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
 
@@ -90,8 +88,8 @@ class HIVIDevice(BaseModel):
     psk: Optional[str] = None
     uuid: Optional[str] = None
 
-    def __post_init__(self):
-        """Post-initialization processing"""
+    def model_post_init(self, __context) -> None:
+        """Auto-generate unique_id from mac_address if not provided."""
         if not self.unique_id:
             self.unique_id = f"hivi_{self.mac_address.replace(':', '')}"
 
