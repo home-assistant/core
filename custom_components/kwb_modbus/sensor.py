@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import KwbModbusConfigEntry
 from .const import (
+    CONF_ACTIVE_INSTANCES,
     CONF_DISCOVERED_SENSORS,
     CONF_HEATING_DEVICE,
     DIAGNOSTIC_ADDRESSES,
@@ -36,9 +37,19 @@ async def async_setup_entry(
     coordinator: KWBDataUpdateCoordinator = entry.runtime_data
     discovered: dict[str, bool] = entry.data.get(CONF_DISCOVERED_SENSORS, {})
 
+    # Only create sensor entities for instances the user explicitly configured.
+    # Non-indexed sensors (index=None) are always included.
+    active_instances: dict[str, list[str]] = entry.data.get(CONF_ACTIVE_INSTANCES, {})
+    active_indices: set[str] = {
+        instance
+        for instances in active_instances.values()
+        for instance in instances
+    }
+
     entities = [
         KWBSensor(coordinator, r, entry, discovered.get(f"kwb_{r.address}", True))
         for r in coordinator.get_all_registers()
+        if not r.index or r.index in active_indices
     ]
     async_add_entities(entities)
 
