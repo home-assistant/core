@@ -34,6 +34,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
@@ -414,66 +415,76 @@ def _async_check_legacy_entity_repair(
     driver: Driver,
     entity: ZWaveLegacyDoorStateBinarySensor,
 ) -> None:
-    """Create a repair issue if a deprecated legacy door state entity is used."""
-    ent_reg = er.async_get(hass)
-    if entity.unique_id is None:
-        return
-    entity_id = ent_reg.async_get_entity_id(
-        BINARY_SENSOR_DOMAIN, DOMAIN, entity.unique_id
-    )
-    if entity_id is None:
-        return
+    """Schedule a repair issue check once HA has fully started."""
 
-    entity_entry = ent_reg.async_get(entity_id)
-    if entity_entry is None or entity_entry.disabled:
-        return
-
-    entity_automations = automations_with_entity(hass, entity_id)
-    entity_scripts = scripts_with_entity(hass, entity_id)
-
-    if not entity_automations and not entity_scripts:
-        return
-
-    items = [
-        f"- [{item.original_name or item.name or eid}](/config/{integration}/edit/{item.unique_id or eid.split('.', 1)[-1]})"
-        for integration, entities in (
-            ("automation", entity_automations),
-            ("script", entity_scripts),
+    @callback
+    def _async_do_check(hass: HomeAssistant) -> None:
+        """Create a repair issue if a deprecated legacy door state entity is used."""
+        ent_reg = er.async_get(hass)
+        if entity.unique_id is None:
+            return
+        entity_id = ent_reg.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, entity.unique_id
         )
-        for eid in entities
-        if (item := ent_reg.async_get(eid))
-    ]
+        if entity_id is None:
+            return
 
-    # Find the replacement Opening state sensor entity_id. If not available yet
-    # (e.g. first startup when platforms set up concurrently), skip issue creation.
-    # Since is_persistent=False, the check will run again on next restart.
-    opening_state_value = get_opening_state_notification_value(entity.info.node)
-    if opening_state_value is None:
-        return
-    opening_state_unique_id = (
-        f"{driver.controller.home_id}.{opening_state_value.value_id}"
-    )
-    opening_state_entity_id = ent_reg.async_get_entity_id(
-        SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
-    )
-    if opening_state_entity_id is None:
-        return
+        entity_entry = ent_reg.async_get(entity_id)
+        if entity_entry is None or entity_entry.disabled:
+            return
 
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_legacy_door_state.{entity_id}",
-        is_fixable=False,
-        is_persistent=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_legacy_door_state",
-        translation_placeholders={
-            "entity_id": entity_id,
-            "entity_name": entity_entry.name or entity_entry.original_name or entity_id,
-            "opening_state_entity_id": opening_state_entity_id,
-            "items": "\n".join(items),
-        },
-    )
+        entity_automations = automations_with_entity(hass, entity_id)
+        entity_scripts = scripts_with_entity(hass, entity_id)
+
+        if not entity_automations and not entity_scripts:
+            return
+
+        items = [
+            (
+                f"- [{item.name or item.original_name or eid}]"
+                f"(/config/{domain}/edit/{item.unique_id})"
+                if item.unique_id
+                else f"- {item.name or item.original_name or eid}"
+            )
+            for domain, entity_ids in (
+                ("automation", entity_automations),
+                ("script", entity_scripts),
+            )
+            for eid in entity_ids
+            if (item := ent_reg.async_get(eid))
+        ]
+
+        opening_state_value = get_opening_state_notification_value(entity.info.node)
+        if opening_state_value is None:
+            return
+        opening_state_unique_id = (
+            f"{driver.controller.home_id}.{opening_state_value.value_id}"
+        )
+        opening_state_entity_id = ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
+        )
+        if opening_state_entity_id is None:
+            return
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_legacy_door_state.{entity_id}",
+            is_fixable=False,
+            is_persistent=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_legacy_door_state",
+            translation_placeholders={
+                "entity_id": entity_id,
+                "entity_name": entity_entry.name
+                or entity_entry.original_name
+                or entity_id,
+                "opening_state_entity_id": opening_state_entity_id,
+                "items": "\n".join(items),
+            },
+        )
+
+    async_at_started(hass, _async_do_check)
 
 
 async def async_setup_entry(

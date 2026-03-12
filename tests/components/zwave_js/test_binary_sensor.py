@@ -3,10 +3,11 @@
 import copy
 from datetime import timedelta
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from zwave_js_server.event import Event
-from zwave_js_server.model.node import Node
+from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components import automation
 from homeassistant.components.binary_sensor import (
@@ -915,8 +916,8 @@ async def test_legacy_door_state_repair_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    client,
-    hoppe_ehandle_connectsense_state,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
     """Test repair issue is created only when legacy door state entity is in automation."""
     node = Node(client, hoppe_ehandle_connectsense_state)
@@ -988,8 +989,8 @@ async def test_legacy_door_state_no_repair_issue_when_disabled(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    client,
-    hoppe_ehandle_connectsense_state,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
     """Test no repair issue when legacy door state entity is disabled."""
     node = Node(client, hoppe_ehandle_connectsense_state)
@@ -1039,8 +1040,8 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    client,
-    hoppe_ehandle_connectsense_state,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
 ) -> None:
     """Test no repair issue for Hoppe eHandle custom tilt sensor (Binary Sensor CC)."""
     node = Node(client, hoppe_ehandle_connectsense_state)
