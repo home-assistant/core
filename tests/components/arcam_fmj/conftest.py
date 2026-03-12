@@ -94,7 +94,6 @@ async def player_setup_fixture(
     state_1: State,
     state_2: State,
     client: Mock,
-    entity_registry_enabled_by_default: None,
 ) -> AsyncGenerator[None]:
     """Get standard player."""
 
@@ -106,7 +105,15 @@ async def player_setup_fixture(
         raise ValueError(f"Unknown player zone: {zone}")
 
     async def _mock_run_client(hass: HomeAssistant, runtime_data, interval):
-        for coordinator in runtime_data.coordinators.values():
+        coordinators = runtime_data.coordinators
+
+        def _notify_data_updated() -> None:
+            for coordinator in coordinators.values():
+                coordinator.async_notify_data_updated()
+
+        client.notify_data_updated = _notify_data_updated
+
+        for coordinator in coordinators.values():
             coordinator.async_notify_connected()
 
     await async_setup_component(hass, "homeassistant", {})
