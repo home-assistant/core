@@ -124,7 +124,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         except ollama.ResponseError as err:
             if api_key and err.status_code == 401:
-                errors["base"] = "unauthorized_api_key"
+                errors["base"] = "invalid_auth"
             else:
                 _LOGGER.exception("Unexpected Ollama response error")
                 errors["base"] = "unknown"
