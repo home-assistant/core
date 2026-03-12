@@ -289,6 +289,12 @@
       "energy_consumption_cooling_today": {
         "name": "Cooling electricity consumption today"
       },
+      "energy_consumption_dhw_this_year": {
+        "name": "DHW energy consumption this year"
+      },
+      "energy_consumption_heating_this_year": {
+        "name": "Heating energy consumption this year"
+      },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"
       },

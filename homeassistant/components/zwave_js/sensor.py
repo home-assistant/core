@@ -965,13 +965,22 @@ class ZWaveListSensor(ZwaveSensor):
         )
 
         # Entity class attributes
-        # Notification sensors have the following name mapping (variables are property
-        # keys, name is property)
+        # Notification sensors use the notification event label as the name
+        # (property_key_name/metadata.label, falling back to property_name)
         # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/notifications.json
-        self._attr_name = self.generate_name(
-            alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.property_key_name],
-        )
+        if info.platform_hint == "notification":
+            self._attr_name = self.generate_name(
+                alternate_value_name=(
+                    info.primary_value.property_key_name
+                    or info.primary_value.metadata.label
+                    or info.primary_value.property_name
+                )
+            )
+        else:
+            self._attr_name = self.generate_name(
+                alternate_value_name=info.primary_value.property_name,
+                additional_info=[info.primary_value.property_key_name],
+            )
         if self.info.primary_value.metadata.states:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())

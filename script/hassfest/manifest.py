@@ -77,6 +77,7 @@ NO_IOT_CLASS = [
     "file_upload",
     "frontend",
     "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -122,6 +123,7 @@ NO_IOT_CLASS = [
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
