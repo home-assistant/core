@@ -183,7 +183,7 @@ async def test_zeroconf_missing_api_domain(
             hostname="Freebox-Server.local.",
             type="_fbx-api._tcp.local.",
             name="Freebox Server._fbx-api._tcp.local.",
-            properties={"api_version": "8.0"},  # api_domain intentionnellement omis
+            properties={"api_version": "8.0"},  # api_domain intentionally omitted
         ),
     )
 
