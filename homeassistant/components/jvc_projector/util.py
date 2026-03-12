@@ -75,18 +75,27 @@ def get_automations_and_scripts_using_entity(
     entity_id: str,
 ) -> list[str]:
     """Get automations and scripts using an entity."""
+    # These helpers return referencing automation/script entity IDs.
     automations = automations_with_entity(hass, entity_id)
     scripts = scripts_with_entity(hass, entity_id)
     if not automations and not scripts:
         return []
 
     entity_registry = er.async_get(hass)
-    return [
-        f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
-        for integration, entities in (
-            ("automation", automations),
-            ("script", scripts),
-        )
-        for used_entity_id in entities
-        if (item := entity_registry.async_get(used_entity_id))
-    ]
+    items: list[str] = []
+
+    for integration, entities in (
+        ("automation", automations),
+        ("script", scripts),
+    ):
+        for used_entity_id in entities:
+            # Prefer entity-registry metadata so we can render edit links.
+            if item := entity_registry.async_get(used_entity_id):
+                items.append(
+                    f"- [{item.original_name}](/config/{integration}/edit/{item.unique_id})"
+                )
+            else:
+                # Keep unresolved references as plain text so they still count as usage.
+                items.append(f"- `{used_entity_id}`")
+
+    return items
