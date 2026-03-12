@@ -72,6 +72,7 @@ async def test_init_with_api_key(
             CONF_API_KEY: "test-api-key-123",
         },
         version=3,
+        minor_version=3,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -98,7 +99,7 @@ async def test_init_without_api_key(
             CONF_URL: "http://localhost:11434",
         },
         version=3,
-        minor_version=0,
+        minor_version=3,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -127,7 +128,7 @@ async def test_init_with_api_key_in_options_overrides_data(
             CONF_API_KEY: "options-api-key",
         },
         version=3,
-        minor_version=0,
+        minor_version=3,
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -156,7 +157,7 @@ async def test_async_setup_entry_auth_failed_on_response_error(
             CONF_API_KEY: "test-api-key",
         },
         version=3,
-        minor_version=0,
+        minor_version=3,
     )
 
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
@@ -178,7 +179,7 @@ async def test_async_setup_entry_not_ready_on_non_auth_response_error(
             CONF_URL: "http://localhost:11434",
         },
         version=3,
-        minor_version=0,
+        minor_version=3,
     )
 
     with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
