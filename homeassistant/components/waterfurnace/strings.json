@@ -4,13 +4,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "Please verify your credentials.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "No devices found on your account",
+      "no_devices": "No devices found on your account.",
       "unknown": "Unexpected error, please try again."
     },
     "error": {
       "cannot_connect": "Failed to connect to WaterFurnace service",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "No devices found on your account",
+      "no_devices": "No devices found on your account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
