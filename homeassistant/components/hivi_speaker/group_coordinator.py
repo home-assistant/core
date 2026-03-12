@@ -70,11 +70,12 @@ class HIVIGroupCoordinator:
         @callback
         def _handle_sync_group_operation(operation_data: dict, callback_func: Callable):
             """Handle discovery signal."""
-            safe_log = {
-                k: "***" if k in {"psk", "ssid", "auth", "encry"} else v
-                for k, v in operation_data.items()
-            }
-            _LOGGER.debug("Received sync group operation request: %s", safe_log)
+            _LOGGER.debug(
+                "Received sync group operation request: type=%s, master=%s, slave=%s",
+                operation_data.get("type"),
+                operation_data.get("master"),
+                operation_data.get("slave"),
+            )
             self.hass.async_create_task(
                 self.async_set_slave_speaker(operation_data, callback_func)
             )
