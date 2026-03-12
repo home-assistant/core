@@ -5,7 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "The provided API key is not authorized to access the Ollama server. Please check your API key and try again.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
