@@ -15,6 +15,10 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 - Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses.
 
+## Testing
+
+When writing or modifying tests, ensure all parameters passed to test functions have type annotations. This includes existing tests within the same file.
+
 ## Good practices
 
 Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
