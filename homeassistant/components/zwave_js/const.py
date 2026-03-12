@@ -207,3 +207,7 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
 }
+
+# notification
+NOTIFICATION_ACCESS_CONTROL_PROPERTY = "Access Control"
+OPENING_STATE_PROPERTY_KEY = "Opening state"
