@@ -244,6 +244,7 @@ DEFAULT_INTEGRATIONS = {
     "door",
     "garage_door",
     "humidity",
+    "occupancy",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
