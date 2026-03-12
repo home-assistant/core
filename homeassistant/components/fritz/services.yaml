@@ -23,9 +23,9 @@ dial:
       required: true
       selector:
         device:
-          integration: fritz
           entity:
-            device_class: connectivity
+            integration: fritz
+            domain: update
     number:
       required: true
       selector:
