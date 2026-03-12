@@ -84,7 +84,6 @@ from .const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
@@ -476,7 +475,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
-    websocket_api.async_register_command(hass, websocket_get_integration_settings)
     websocket_api.async_register_command(hass, websocket_backup_nvm)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
@@ -2963,28 +2961,6 @@ async def websocket_invoke_cc_api(
             msg[ID],
             result,
         )
-
-
-@callback
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/get_integration_settings",
-    }
-)
-def websocket_get_integration_settings(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Get Z-Wave JS integration wide configuration."""
-    connection.send_result(
-        msg[ID],
-        {
-            # list explicitly to avoid leaking other keys and to set default
-            CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
-        },
-    )
 
 
 @websocket_api.require_admin
