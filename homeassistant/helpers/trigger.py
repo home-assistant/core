@@ -354,10 +354,10 @@ class NumericalValueSource(ValueSource):
     """Optional converter for numerical values (e.g. uint8 → percentage)."""
 
 
-class EntityTriggerBase(Trigger):
+class EntityTriggerBase[ValueSourceT: ValueSource = ValueSource](Trigger):
     """Trigger for entity state changes."""
 
-    _value_sources: Mapping[str, ValueSource]
+    _value_sources: Mapping[str, ValueSourceT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -628,7 +628,7 @@ def _get_numerical_value(
     return entity_or_float
 
 
-class EntityNumericalStateBase(EntityTriggerBase):
+class EntityNumericalStateBase(EntityTriggerBase[NumericalValueSource]):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_tracked_value(self, state: State) -> Any:
@@ -641,7 +641,7 @@ class EntityNumericalStateBase(EntityTriggerBase):
     def _get_converter(self, state: State) -> Callable[[Any], float]:
         """Get the value converter for an entity."""
         vs = self._value_sources[split_entity_id(state.entity_id)[0]]
-        if isinstance(vs, NumericalValueSource) and vs.value_converter is not None:
+        if vs.value_converter is not None:
             return vs.value_converter
         return float
 
@@ -868,7 +868,7 @@ def make_entity_origin_state_trigger(
 
 
 def make_entity_numerical_state_changed_trigger(
-    value_sources: Mapping[str, ValueSource],
+    value_sources: Mapping[str, NumericalValueSource],
 ) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
@@ -881,7 +881,7 @@ def make_entity_numerical_state_changed_trigger(
 
 
 def make_entity_numerical_state_crossed_threshold_trigger(
-    value_sources: Mapping[str, ValueSource],
+    value_sources: Mapping[str, NumericalValueSource],
 ) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 

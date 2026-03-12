@@ -334,10 +334,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase(Condition):
+class EntityConditionBase[ValueSourceT: ValueSource = ValueSource](Condition):
     """Base class for entity conditions."""
 
-    _value_sources: Mapping[str, ValueSource]
+    _value_sources: Mapping[str, ValueSourceT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override

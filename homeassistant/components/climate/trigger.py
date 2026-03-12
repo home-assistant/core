@@ -8,6 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
     EntityTargetStateTriggerBase,
+    NumericalValueSource,
     Trigger,
     TriggerConfig,
     ValueSource,
@@ -54,16 +55,16 @@ TRIGGERS: dict[str, type[Trigger]] = {
         DOMAIN, ATTR_HVAC_ACTION, HVACAction.DRYING
     ),
     "target_humidity_changed": make_entity_numerical_state_changed_trigger(
-        {DOMAIN: ValueSource(value_source=ATTR_HUMIDITY)}
+        {DOMAIN: NumericalValueSource(value_source=ATTR_HUMIDITY)}
     ),
     "target_humidity_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        {DOMAIN: ValueSource(value_source=ATTR_HUMIDITY)}
+        {DOMAIN: NumericalValueSource(value_source=ATTR_HUMIDITY)}
     ),
     "target_temperature_changed": make_entity_numerical_state_changed_trigger(
-        {DOMAIN: ValueSource(value_source=ATTR_TEMPERATURE)}
+        {DOMAIN: NumericalValueSource(value_source=ATTR_TEMPERATURE)}
     ),
     "target_temperature_crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        {DOMAIN: ValueSource(value_source=ATTR_TEMPERATURE)}
+        {DOMAIN: NumericalValueSource(value_source=ATTR_TEMPERATURE)}
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_entity_transition_trigger(
