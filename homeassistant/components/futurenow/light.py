@@ -77,12 +77,10 @@ class FutureNowLight(LightEntity):
 
     def __init__(self, device):
         """Initialize the light."""
-        self._name = device["name"]
+        self._attr_name = device["name"]
         self._dimmable = device["dimmable"]
         self._channel = device["channel"]
-        self._brightness = None
         self._last_brightness = 255
-        self._state = None
 
         if device["driver"] == CONF_DRIVER_FNIP6X10AD:
             self._light = pyfnip.FNIP6x2adOutput(
@@ -92,21 +90,6 @@ class FutureNowLight(LightEntity):
             self._light = pyfnip.FNIP8x10aOutput(
                 device["host"], device["port"], self._channel
             )
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
 
     @property
     def color_mode(self) -> ColorMode:
@@ -131,11 +114,11 @@ class FutureNowLight(LightEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._light.turn_off()
-        if self._brightness:
-            self._last_brightness = self._brightness
+        if self._attr_brightness:
+            self._last_brightness = self._attr_brightness
 
     def update(self) -> None:
         """Fetch new state data for this light."""
         state = int(self._light.is_on())
-        self._state = bool(state)
-        self._brightness = to_hass_level(state)
+        self._attr_is_on = bool(state)
+        self._attr_brightness = to_hass_level(state)

@@ -104,7 +104,6 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         )
 
         config = coordinator.device.config
-        self._status = coordinator.device.status
 
         self._attr_min_temp = config[key]["min"]
         self._attr_max_temp = config[key]["max"]
@@ -141,6 +140,11 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             self._attr_hvac_modes = [HVACMode.OFF] + [
                 THERMOSTAT_TO_HA_MODE[mode] for mode in modes
             ]
+
+    @property
+    def _status(self) -> dict[str, Any]:
+        """Return the full device status."""
+        return self.coordinator.device.status
 
     @property
     def current_humidity(self) -> float | None:

@@ -271,7 +271,7 @@ class RegistryEntry:
         try:
             dict_repr = self._as_display_dict
             json_repr: bytes | None = json_bytes(dict_repr) if dict_repr else None
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -333,7 +333,7 @@ class RegistryEntry:
         try:
             dict_repr = self.as_partial_dict
             return json_bytes(dict_repr)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             _LOGGER.error(
                 "Unable to serialize entry %s to JSON. Bad data found at %s",
                 self.entity_id,
@@ -414,7 +414,7 @@ class RegistryEntry:
 
 
 @callback
-def _async_get_full_entity_name(
+def _async_get_full_entity_name_generic(
     hass: HomeAssistant,
     *,
     device_id: str | None,
@@ -427,6 +427,7 @@ def _async_get_full_entity_name(
     """Get full name for an entity.
 
     This includes the device name if appropriate.
+    Used for both full entity name and entity ID.
     """
     use_device = False
     if name is None:
@@ -454,6 +455,26 @@ def _async_get_full_entity_name(
         return fallback
 
     return name
+
+
+@callback
+def async_get_full_entity_name(
+    hass: HomeAssistant,
+    entry: RegistryEntry,
+    original_name: str | None | UndefinedType = UNDEFINED,
+) -> str:
+    """Get full entity name for an entry."""
+    original_name = (
+        original_name if original_name is not UNDEFINED else entry.original_name
+    )
+    return _async_get_full_entity_name_generic(
+        hass,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        original_name=original_name,
+    )
 
 
 @attr.s(frozen=True, slots=True)
@@ -1014,7 +1035,7 @@ class EntityRegistry(BaseRegistry):
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
-        object_id = _async_get_full_entity_name(
+        object_id = _async_get_full_entity_name_generic(
             self.hass,
             device_id=device_id,
             fallback=f"{platform}_{unique_id}",
@@ -1053,25 +1074,6 @@ class EntityRegistry(BaseRegistry):
             reserved_entity_ids=reserved_entity_ids,
             suggested_object_id=entry.suggested_object_id,
             unique_id=entry.unique_id,
-        )
-
-    @callback
-    def async_generate_full_name(
-        self,
-        entry: RegistryEntry,
-        original_name: str | None | UndefinedType = UNDEFINED,
-    ) -> str:
-        """Generate a friendly name for an entry."""
-        original_name = (
-            original_name if original_name is not UNDEFINED else entry.original_name
-        )
-        return _async_get_full_entity_name(
-            self.hass,
-            device_id=entry.device_id,
-            fallback="",
-            has_entity_name=entry.has_entity_name,
-            name=entry.name,
-            original_name=original_name,
         )
 
     @callback
@@ -1676,7 +1678,7 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the entity registry."""
         _async_setup_cleanup(self.hass, self)
         _async_setup_entity_restore(self.hass, self)
@@ -1775,7 +1777,7 @@ class EntityRegistry(BaseRegistry):
                         report_non_string_unique_id=False,
                         unique_id=entity["unique_id"],
                     )
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     continue
                 key = (
                     split_entity_id(entity["entity_id"])[0],
@@ -1943,10 +1945,10 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
     return EntityRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

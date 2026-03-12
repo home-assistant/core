@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Generator
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
+from ipaddress import ip_address
 import logging
 import re
 from typing import Any, Self
@@ -48,6 +49,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
@@ -67,6 +69,17 @@ from .common import (
     mock_integration,
     mock_platform,
 )
+
+
+def _get_flow_context(
+    manager: config_entries.ConfigEntries, flow_id: str
+) -> config_entries.ConfigFlowContext:
+    """Get the flow context from async_progress."""
+    return next(
+        flow["context"]
+        for flow in manager.flow.async_progress()
+        if flow["flow_id"] == flow_id
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -9755,3 +9768,166 @@ async def test_canceled_exceptions_are_propagated(
         await task
 
     abort.set()
+
+
+async def test_discovery_flow_dismiss_protected_on_configure(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test that discovery flows are marked dismiss protected when user configures."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_zeroconf(self, discovery_info):
+            """Test zeroconf step."""
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            if user_input is None:
+                return self.async_show_form(step_id="confirm")
+            return self.async_create_entry(title="test", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("192.168.1.1"),
+                ip_addresses=[ip_address("192.168.1.1")],
+                hostname="test.local.",
+                name="test._tcp.local.",
+                port=80,
+                properties={},
+                type="_tcp.local.",
+            ),
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        # Before user interaction, dismiss_protected should not be set
+        context = _get_flow_context(manager, result["flow_id"])
+        assert "dismiss_protected" not in context
+
+        # User configures the flow
+        result = await manager.flow.async_configure(result["flow_id"])
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        # After user interaction, dismiss_protected should be set
+        context = _get_flow_context(manager, result["flow_id"])
+        assert context["dismiss_protected"] is True
+
+        # Finish the flow
+        result = await manager.flow.async_configure(
+            result["flow_id"], user_input={"fake": "data"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_not_dismiss_protected_on_configure(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test that user flows are not marked dismiss protected when configured."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=AsyncMock(return_value=True)),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+            return self.async_show_form(step_id="confirm")
+
+        async def async_step_confirm(self, user_input=None):
+            """Test confirm step."""
+            if user_input is None:
+                return self.async_show_form(step_id="confirm")
+            return self.async_create_entry(title="test", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        # User configures the flow
+        result = await manager.flow.async_configure(
+            result["flow_id"], user_input={"fake": "data"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        # User flows should not be marked as dismiss protected
+        context = _get_flow_context(manager, result["flow_id"])
+        assert "dismiss_protected" not in context
+
+
+async def test_orphaned_ignored_entries(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test orphaned ignored entries scanner creates a repair issue for missing (custom) integration."""
+    await hass.config_entries.async_initialize()
+    entry = MockConfigEntry(
+        domain="ghost_orphan_domain", source=config_entries.SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    # Not sure if this is the best way. Let's wait a review
+    async def _raise(hass_param: HomeAssistant, domain: str) -> None:
+        raise loader.IntegrationNotFound(domain)
+
+    with patch(
+        "homeassistant.loader.async_get_integration", new=AsyncMock(side_effect=_raise)
+    ):
+        await hass.config_entries._async_scan_orphan_ignored_entries(None)
+
+    # If all went according to plan, an issue has been created.
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
+    )
+
+    assert issue is not None, "Expected repair issue for orphaned ignored entry"
+    assert issue.is_fixable
+    assert issue.is_persistent
+    assert issue.translation_key == "orphaned_ignored_config_entry"
+    assert issue.data == {
+        "domain": "ghost_orphan_domain",
+        "entry_id": entry.entry_id,
+    }
+
+
+async def test_orphaned_ignored_entries_existing_integration(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Just to be very thorough: test no repair issue is created for ignored entry with existing (custom) integration."""
+    await hass.config_entries.async_initialize()
+
+    # This time we mock we have an actual existing integration
+    mock_integration(hass, MockModule(domain="existing_domain"))
+
+    entry = MockConfigEntry(
+        domain="existing_domain", source=config_entries.SOURCE_IGNORE
+    )
+    entry.add_to_hass(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()

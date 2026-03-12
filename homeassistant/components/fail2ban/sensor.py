@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 import os
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -76,7 +77,7 @@ class BanSensor(SensorEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fail2ban sensor."""
         return self.ban_dict
 
@@ -129,5 +130,5 @@ class BanLogParser:
             with open(self.log_file, encoding="utf-8") as file_data:
                 self.data = self.ip_regex[jail].findall(file_data.read())
 
-        except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
+        except IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError:
             _LOGGER.warning("File not present: %s", os.path.basename(self.log_file))

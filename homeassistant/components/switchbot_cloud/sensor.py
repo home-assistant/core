@@ -227,6 +227,8 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Lock Vision": (BATTERY_DESCRIPTION,),
+    "Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
@@ -253,6 +255,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         BATTERY_DESCRIPTION,
     ),
     "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
+    "AI Art Frame": (BATTERY_DESCRIPTION,),
 }
 
 

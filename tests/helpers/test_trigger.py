@@ -10,10 +10,10 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.components import automation
-from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
-from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
-from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
-from homeassistant.components.text import DOMAIN as DOMAIN_TEXT
+from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
+from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
+from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
+from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -692,12 +692,6 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
         """,
     ],
 )
-# Patch out binary sensor triggers, because loading sun triggers also loads
-# binary sensor triggers and those are irrelevant for this test
-@patch(
-    "homeassistant.components.binary_sensor.trigger.async_get_triggers",
-    new=AsyncMock(return_value={}),
-)
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -719,8 +713,8 @@ async def test_async_get_all_descriptions(
 
     ws_client = await hass_ws_client(hass)
 
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
-    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
+    assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml(fname, secrets=None):
@@ -750,7 +744,7 @@ async def test_async_get_all_descriptions(
     # system_health has no triggers
     assert proxy_load_triggers_files.mock_calls[0][1][0] == unordered(
         [
-            await async_get_integration(hass, DOMAIN_SUN),
+            await async_get_integration(hass, SUN_DOMAIN),
         ]
     )
 
@@ -780,7 +774,7 @@ async def test_async_get_all_descriptions(
     assert await trigger.async_get_all_descriptions(hass) is descriptions
 
     # Load the tag integration and check a new cache object is created
-    assert await async_setup_component(hass, DOMAIN_TAG, {})
+    assert await async_setup_component(hass, TAG_DOMAIN, {})
     await hass.async_block_till_done()
 
     with (
@@ -811,7 +805,7 @@ async def test_async_get_all_descriptions(
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
 
     # Load the text integration and check a new cache object is created
-    assert await async_setup_component(hass, DOMAIN_TEXT, {})
+    assert await async_setup_component(hass, TEXT_DOMAIN, {})
     await hass.async_block_till_done()
 
     with (
@@ -926,7 +920,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     expected_message: str,
 ) -> None:
     """Test async_get_all_descriptions."""
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml_dict(fname, secrets=None):
@@ -941,7 +935,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: None}
+    assert descriptions == {SUN_DOMAIN: None}
 
     assert expected_message in caplog.text
 
@@ -956,7 +950,7 @@ async def test_async_get_all_descriptions_with_bad_description(
           fields: not_a_dict
     """
 
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml(fname, secrets=None):
@@ -972,7 +966,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: None}
+    assert descriptions == {SUN_DOMAIN: None}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
@@ -1249,7 +1243,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1277,7 +1271,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1559,7 +1553,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_crossed_threshold_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
