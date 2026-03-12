@@ -2,18 +2,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Set, List, Tuple
-import xml.etree.ElementTree as ET
+from typing import Dict, Optional, List, Tuple
+from defusedxml import ElementTree as ET
 import socket
 import aiohttp
 import time
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from .const import DOMAIN, SIGNAL_DEVICE_DISCOVERED
-from .device import SyncGroupStatus, ConnectionStatus, HIVIDevice
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from .device import ConnectionStatus
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +40,6 @@ class HIVIDiscoveryScheduler:
         self._discovery_task: Optional[asyncio.Task] = None
         self._discovery_running = False
         self._next_discovery: Optional[datetime] = None
-        self._scheduled_calls: Set[str] = set()  # Called device IDs
 
         # Operation delay tracking
         self._operation_delays: Dict[
@@ -193,7 +191,6 @@ class HIVIDiscoveryScheduler:
 
     async def _perform_discovery(self):
         """Perform device discovery"""
-        # _LOGGER.debug("Starting device discovery cycle")
 
         # Record start time
         start_time = datetime.now()
@@ -261,12 +258,14 @@ class HIVIDiscoveryScheduler:
             8
         )  # Limit concurrency to avoid initiating too many network requests at once
 
+        session = async_get_clientsession(self.hass)
+
         async def _parse_one(response_text: str, addr: Tuple[str, int]):
             async with sem:
                 try:
                     dlna_info = await parse_ssdp_response(response_text, addr)
                     location = dlna_info.get("location", "")
-                    device_info = await parse_local_url(location)
+                    device_info = await parse_local_url(session, location)
                     if not device_info:
                         return
                     device_key = device_info.get("UDN")
@@ -296,21 +295,6 @@ class HIVIDiscoveryScheduler:
 
         return discovered_devices
 
-    # Compare discovered and existing devices to find currently online, offline, and newly discovered ones
-    async def compare_dict(self, Dict1: Dict[str, HIVIDevice], Dict2: Dict[str, Dict]):
-        online_items = {}
-        offline_items = {}
-        newdevices_items = {}
-        for key, value in Dict1.items():
-            if key in Dict2:
-                online_items[key] = value
-            else:
-                offline_items[key] = value
-        for key, value in Dict2.items():
-            if key not in Dict1:
-                newdevices_items[key] = value
-        return online_items, offline_items, newdevices_items
-
     async def _adjust_interval(self):
         """Dynamically adjust discovery interval"""
 
@@ -322,22 +306,21 @@ class HIVIDiscoveryScheduler:
                 [
                     d
                     for d in self.device_manager.device_data_registry._device_data.values()
-                    if d.get("device_dict").get("connection_status")
-                    == ConnectionStatus.ONLINE
+                    if d.get("device_dict", {}).get("connection_status")
+                    == ConnectionStatus.ONLINE.value
                 ]
             )
             offline_count = len(
                 [
                     d
                     for d in self.device_manager.device_data_registry._device_data.values()
-                    if d.get("device_dict").get("connection_status")
-                    == ConnectionStatus.OFFLINE
+                    if d.get("device_dict", {}).get("connection_status")
+                    == ConnectionStatus.OFFLINE.value
                 ]
             )
-            # offline_count = len(self._offline_devices)
         except Exception as e:
             _LOGGER.exception(
-                f"error in calculating online/offline device count during discovery interval adjustment {e}"
+                "error in calculating online/offline device count during discovery interval adjustment: %s", e
             )
 
         _LOGGER.debug("Current online device count: %d", online_count)
@@ -421,30 +404,30 @@ def _scan_speaker_sync() -> List[Tuple[str, Tuple[str, int]]]:
     return discovered_raw
 
 
-async def parse_local_url(url):
+async def parse_local_url(session: aiohttp.ClientSession, url: str):
+    """Fetch and parse a UPnP device description XML."""
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=5) as response:
-                response.raise_for_status()
-                xml_content = await response.text()
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            xml_content = await response.text()
 
-                root = ET.fromstring(xml_content)
+            root = ET.fromstring(xml_content)
 
-                ns = {
-                    "device": "urn:schemas-upnp-org:device-1-0",
-                    "dlna": "urn:schemas-dlna-org:device-1-0",
+            ns = {
+                "device": "urn:schemas-upnp-org:device-1-0",
+                "dlna": "urn:schemas-dlna-org:device-1-0",
+            }
+
+            device = root.find(".//device:device", ns)
+            if device is not None:
+                return {
+                    "manufacturer": device.findtext("device:manufacturer", "", ns),
+                    "friendly_name": device.findtext("device:friendlyName", "", ns),
+                    "model_name": device.findtext("device:modelName", "", ns),
+                    "UDN": device.findtext("device:UDN", "", ns),
                 }
-
-                device = root.find(".//device:device", ns)
-                if device is not None:
-                    result = {
-                        "manufacturer": device.findtext("device:manufacturer", "", ns),
-                        "friendly_name": device.findtext("device:friendlyName", "", ns),
-                        "model_name": device.findtext("device:modelName", "", ns),
-                        "UDN": device.findtext("device:UDN", "", ns),
-                    }
-                    return result
-                return None
+            return None
     except Exception as e:
         _LOGGER.debug("Error parsing DLNA description: %s", e)
         return None
@@ -460,7 +443,6 @@ async def parse_ssdp_response(response_text, addr):
                 key, value = line.split(":", 1)
                 key = key.strip().lower()  # Header keys are case-insensitive
                 value = value.strip()
-                # _LOGGER.debug("Parsed SSDP header: %s: %s", key, value)
                 if key in [
                     "server",
                     "location",
@@ -473,7 +455,6 @@ async def parse_ssdp_response(response_text, addr):
                     device_info[key] = value
                 elif key.startswith("http/"):  # Status line
                     device_info["connection_status"] = value
-            except:
-                # skip this line
+            except Exception:
                 continue
     return device_info
