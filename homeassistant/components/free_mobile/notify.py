@@ -112,7 +112,7 @@ async def async_get_service(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    return FreeSMSNotificationService(config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
+    return None
 
 
 async def async_setup_entry(
