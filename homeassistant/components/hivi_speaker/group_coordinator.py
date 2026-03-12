@@ -70,7 +70,11 @@ class HIVIGroupCoordinator:
         @callback
         def _handle_sync_group_operation(operation_data: dict, callback_func: Callable):
             """Handle discovery signal."""
-            _LOGGER.debug("Received sync group operation request: %s", operation_data)
+            safe_log = {
+                k: "***" if k in {"psk", "ssid", "auth", "encry"} else v
+                for k, v in operation_data.items()
+            }
+            _LOGGER.debug("Received sync group operation request: %s", safe_log)
             self.hass.async_create_task(
                 self.async_set_slave_speaker(operation_data, callback_func)
             )
@@ -680,7 +684,7 @@ class HIVIGroupCoordinator:
                     master_ip = params["master_ip"]
                     uuid = params["uuid"]
                     ssid_hex = binascii.hexlify(ssid.encode()).decode()
-                    async with HivicoClient(timeout=5, debug=True) as client:
+                    async with HivicoClient(timeout=5, debug=False) as client:
                         await client.connect_slave_to_master(
                             slave_ip=slave_ip,
                             ssid=ssid_hex,
@@ -707,7 +711,7 @@ class HIVIGroupCoordinator:
                         return False
                     master_ip = params["master_ip"]
                     slave_ip_ra0 = params["slave_ip_ra0"]
-                    async with HivicoClient(timeout=5, debug=True) as client:
+                    async with HivicoClient(timeout=5, debug=False) as client:
                         await client.remove_slave_from_group(master_ip, slave_ip_ra0)
                     return True  # noqa: TRY300
                 except Exception as e:  # noqa: BLE001
@@ -892,7 +896,7 @@ class HIVIGroupCoordinator:
             if op_type == "set_slave":
                 try:
                     slave_device_result = None
-                    async with HivicoClient(timeout=5, debug=True) as client:
+                    async with HivicoClient(timeout=5, debug=False) as client:
                         slave_device_result = await client.get_slave_devices(master_ip)
                     if slave_device_result is None:
                         _LOGGER.error("Slave device result is None")
@@ -914,7 +918,7 @@ class HIVIGroupCoordinator:
             elif op_type == "remove_slave":
                 try:
                     slave_device_result = None
-                    async with HivicoClient(timeout=5, debug=True) as client:
+                    async with HivicoClient(timeout=5, debug=False) as client:
                         slave_device_result = await client.get_slave_devices(master_ip)
                     if slave_device_result is None:
                         _LOGGER.error("Slave device result is None")
