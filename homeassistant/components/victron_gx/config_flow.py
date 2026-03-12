@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
@@ -39,12 +40,24 @@ ENTRY_TITLE_FORMAT = "Victron OS {installation_id} ({host}:{port})"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): selector.TextSelector(),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Required(CONF_SSL, default=False): bool,
-        vol.Optional(CONF_ROOT_TOPIC_PREFIX): str,
+        vol.Optional(CONF_USERNAME): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Required(CONF_SSL, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_ROOT_TOPIC_PREFIX): selector.TextSelector(),
+    }
+)
+
+STEP_SSDP_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME, default=""): selector.TextSelector(),
+        vol.Optional(CONF_PASSWORD, default=""): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+        vol.Optional(CONF_SSL, default=False): selector.BooleanSelector(),
     }
 )
 
@@ -61,7 +74,7 @@ async def validate_input(data: dict[str, Any]) -> str:
     try:
         hub = VictronVenusHub(
             host=data[CONF_HOST],
-            port=data[CONF_PORT],
+            port=int(data[CONF_PORT]),
             username=data.get(CONF_USERNAME) or None,
             password=data.get(CONF_PASSWORD) or None,
             use_ssl=data.get(CONF_SSL, False),
@@ -133,7 +146,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = ENTRY_TITLE_FORMAT.format(
                     installation_id=installation_id,
                     host=data[CONF_HOST],
-                    port=data.get(CONF_PORT, DEFAULT_PORT),
+                    port=data[CONF_PORT],
                 )
                 return self.async_create_entry(title=title, data=data)
 
@@ -159,7 +172,9 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.installation_id)
         self._abort_if_unique_id_configured()
 
-        self.context["title_placeholders"] = {"name": self.friendly_name}
+        self.context["title_placeholders"] = {
+            "name": self.friendly_name or self.hostname
+        }
         return await self.async_step_ssdp_confirm()
 
     async def async_step_ssdp_confirm(
@@ -251,17 +266,11 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=data,
                 )
 
-        auth_schema = vol.Schema(
-            {
-                vol.Optional(CONF_USERNAME, default=""): str,
-                vol.Optional(CONF_PASSWORD, default=""): str,
-                vol.Optional(CONF_SSL, default=False): bool,
-            }
-        )
-
         return self.async_show_form(
             step_id="ssdp_auth",
-            data_schema=auth_schema,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_SSDP_AUTH_DATA_SCHEMA, user_input
+            ),
             errors=errors,
             description_placeholders={"host": self.hostname},
         )

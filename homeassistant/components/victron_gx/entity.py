@@ -1,4 +1,4 @@
-"""Common code for victron_gx integration."""
+"""Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
 from typing import Any

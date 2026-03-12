@@ -14,7 +14,11 @@ from victron_mqtt import (
     MetricType,
 )
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorExtraStoredData,
+    SensorStateClass,
+)
 from homeassistant.components.victron_gx.sensor import VictronSensor
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -168,8 +172,7 @@ async def test_sensor_async_added_restores_formula_metric_baseline(
     device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, metric, device_info)
 
-    last_state = MagicMock()
-    last_state.state = "2.0"
+    last_sensor_data = SensorExtraStoredData(2.0, "kWh")
 
     with (
         patch(
@@ -177,7 +180,9 @@ async def test_sensor_async_added_restores_formula_metric_baseline(
             new=AsyncMock(),
         ) as mock_super_added,
         patch.object(
-            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+            sensor,
+            "async_get_last_sensor_data",
+            new=AsyncMock(return_value=last_sensor_data),
         ),
     ):
         await sensor.async_added_to_hass()
@@ -206,8 +211,7 @@ async def test_sensor_async_added_ignores_invalid_restored_value(
     device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, metric, device_info)
 
-    last_state = MagicMock()
-    last_state.state = "not-a-number"
+    last_sensor_data = SensorExtraStoredData("not-a-number", "kWh")
 
     with (
         patch(
@@ -215,7 +219,9 @@ async def test_sensor_async_added_ignores_invalid_restored_value(
             new=AsyncMock(),
         ) as mock_super_added,
         patch.object(
-            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+            sensor,
+            "async_get_last_sensor_data",
+            new=AsyncMock(return_value=last_sensor_data),
         ),
     ):
         await sensor.async_added_to_hass()
@@ -244,8 +250,7 @@ async def test_sensor_async_added_skips_baseline_for_non_numeric_value(
     device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, metric, device_info)
 
-    last_state = MagicMock()
-    last_state.state = "2.0"
+    last_sensor_data = SensorExtraStoredData(2.0, "kWh")
 
     with (
         patch(
@@ -253,7 +258,9 @@ async def test_sensor_async_added_skips_baseline_for_non_numeric_value(
             new=AsyncMock(),
         ) as mock_super_added,
         patch.object(
-            sensor, "async_get_last_state", new=AsyncMock(return_value=last_state)
+            sensor,
+            "async_get_last_sensor_data",
+            new=AsyncMock(return_value=last_sensor_data),
         ),
     ):
         await sensor.async_added_to_hass()

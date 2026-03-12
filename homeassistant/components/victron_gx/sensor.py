@@ -23,7 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import VictronBaseEntity
-from .hub import Hub, VictronGxConfigEntry
+from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
 
@@ -61,7 +61,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Victron GX sensors from a config entry."""
-    hub: Hub = config_entry.runtime_data
+    hub = config_entry.runtime_data
 
     def on_new_metric(
         device: VictronVenusDevice,
@@ -97,8 +97,9 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
         super().__init__(device, metric, device_info)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(metric.metric_nature)
-        self._attr_native_unit_of_measurement = UNIT_MAPPING.get(
-            metric.unit_of_measurement, metric.unit_of_measurement
+        unit = metric.unit_of_measurement
+        self._attr_native_unit_of_measurement = (
+            UNIT_MAPPING.get(unit, unit) if unit is not None else None
         )
 
     @callback
@@ -113,7 +114,7 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Restore persistent state for FormulaMetric energy sensors."""
 
-        # Only restore for:
+        # Only restore if both are true:
         # 1. Total increasing sensors (like cumulative energy)
         # 2. FormulaMetrics (calculated values)
         should_restore = self.state_class in [
@@ -126,26 +127,27 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
             await super().async_added_to_hass()
             return
 
-        last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state is not None:
-            if not isinstance(self._attr_native_value, (int, float)):
-                _LOGGER.warning(
-                    "Cannot restore baseline for %s: current value is not numeric",
-                    self.entity_id,
-                )
-                await super().async_added_to_hass()
-                return
-            try:
-                self._baseline = float(last_state.state)
+        if not isinstance(self._attr_native_value, (int, float)):
+            _LOGGER.warning(
+                "Cannot restore baseline for %s: current value is not numeric",
+                self.entity_id,
+            )
+            await super().async_added_to_hass()
+            return
+
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            restored_native_value = last_sensor_data.native_value
+            if isinstance(restored_native_value, (int, float)):
+                self._baseline = float(restored_native_value)
                 self._attr_native_value += self._baseline
                 _LOGGER.debug(
                     "Restored baseline of %.3f for %s", self._baseline, self.entity_id
                 )
-            except ValueError:
+            else:
                 _LOGGER.warning(
                     "Could not restore state for %s: invalid value '%s'",
                     self.entity_id,
-                    last_state.state,
+                    restored_native_value,
                 )
         # Call parent to register update callbacks
         await super().async_added_to_hass()

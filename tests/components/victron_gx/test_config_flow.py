@@ -661,3 +661,19 @@ async def test_validate_input_ignores_disconnect_error(
     )
 
     assert installation_id == MOCK_INSTALLATION_ID
+
+
+async def test_validate_input_missing_installation_id(
+    hass: HomeAssistant, mock_victron_hub: MagicMock
+) -> None:
+    """Test validate_input raises when hub returns no installation id."""
+    mock_victron_hub.return_value.installation_id = None
+
+    with pytest.raises(CannotConnectError):
+        await validate_input(
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_SSL: False,
+            }
+        )
