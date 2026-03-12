@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.ness_alarm import async_migrate_entry
 from homeassistant.components.ness_alarm.const import (
     ATTR_OUTPUT_ID,
     CONF_SHOW_HOME_MODE,
@@ -730,3 +731,21 @@ async def test_aux_service_no_config_entry(
         await hass.services.async_call(
             DOMAIN, SERVICE_AUX, blocking=True, service_data={ATTR_OUTPUT_ID: 1}
         )
+
+
+async def test_migrate_entry_clears_legacy_unique_id(hass: HomeAssistant) -> None:
+    """Test migration clears legacy unique_id for single-entry integration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1992,
+        },
+        unique_id="192.168.1.100:1992",
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, entry)
+    assert entry.version == 2
+    assert entry.unique_id is None

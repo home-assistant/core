@@ -109,12 +109,12 @@ async def test_user_flow_already_configured(
     mock_client.update.assert_not_called()
 
 
-async def test_user_flow_allows_multiple_alarms(
+async def test_user_flow_disallows_multiple_alarms(
     hass: HomeAssistant,
     mock_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test user flow allows another panel when unique ID differs."""
+    """Test user flow does not allow configuring a second panel."""
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -128,17 +128,20 @@ async def test_user_flow_allows_multiple_alarms(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 1993,
-            CONF_INFER_ARMING_STATE: False,
-        },
-    )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Ness Alarm 192.168.1.100:1993"
+    if result["type"] is FlowResultType.FORM:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_PORT: 1993,
+                CONF_INFER_ARMING_STATE: False,
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] in {"already_configured", "single_instance_allowed"}
+    mock_client.update.assert_not_called()
 
 
 @pytest.mark.parametrize(

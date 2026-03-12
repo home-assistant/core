@@ -193,14 +193,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: NessAlarmConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        await entry.runtime_data.client.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version > 2:
+        _LOGGER.error("Unsupported config entry version: %s", entry.version)
+        return False
+
+    if entry.version == 1:
+        # This integration supports only one config entry, so unique IDs are not
+        # required and can cause duplicate-id repair issues on legacy setups.
+        hass.config_entries.async_update_entry(entry, version=2, unique_id=None)
+
+    return True
