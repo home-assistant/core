@@ -1,7 +1,7 @@
 """Tests for the Ollama integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from httpx import ConnectError
 import pytest
@@ -997,3 +997,83 @@ async def test_migrate_entry_from_v3_2(
     assert mock_config_entry.disabled_by == config_entry_disabled_by_after_migration
     assert conversation_device.disabled_by == device_disabled_by_after_migration
     assert conversation_entity.disabled_by == entity_disabled_by_after_migration
+
+
+async def test_setup_entry_with_bearer_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a bearer token in entry data is passed as Authorization header."""
+    entry = MockConfigEntry(
+        domain=ollama.DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+            ollama.CONF_BEARER_TOKEN: "test-token-123",
+        },
+        version=3,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": TEST_OPTIONS,
+                "subentry_type": "conversation",
+                "title": "Ollama Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.ollama.AsyncClient",
+    ) as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.list = MagicMock(return_value={"models": []})
+        mock_client_cls.return_value = mock_client
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    # Verify the AsyncClient was constructed with the Authorization header
+    mock_client_cls.assert_called_once()
+    call_kwargs = mock_client_cls.call_args.kwargs
+    assert (
+        call_kwargs.get("headers", {}).get("Authorization") == "Bearer test-token-123"
+    )
+
+
+async def test_setup_entry_without_bearer_token(
+    hass: HomeAssistant,
+) -> None:
+    """Test that setup works normally when no bearer token is configured."""
+    entry = MockConfigEntry(
+        domain=ollama.DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+        },
+        version=3,
+        minor_version=3,
+        subentries_data=[
+            {
+                "data": TEST_OPTIONS,
+                "subentry_type": "conversation",
+                "title": "Ollama Conversation",
+                "unique_id": None,
+            }
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ollama.ollama.AsyncClient",
+    ) as mock_client_cls:
+        mock_client = MagicMock()
+        mock_client.list = MagicMock(return_value={"models": []})
+        mock_client_cls.return_value = mock_client
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+    # Verify the AsyncClient was constructed WITHOUT an Authorization header
+    mock_client_cls.assert_called_once()
+    call_kwargs = mock_client_cls.call_args.kwargs
+    headers = call_kwargs.get("headers", {})
+    assert "Authorization" not in headers
