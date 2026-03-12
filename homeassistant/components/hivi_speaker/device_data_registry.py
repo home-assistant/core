@@ -122,16 +122,13 @@ class DeviceDataRegistry:
     ) -> Optional[Dict[str, Any]]:
         for ha_device_id in self._device_data.keys():
             data = self.get_device_data(ha_device_id)
-            if data:
-                device_dict = data.get("device_dict")
-                if device_dict and isinstance(device_dict, dict):
-                    if device_dict.get("speaker_device_id") == speaker_device_id:
-                        return device_dict
-                else:
-                    continue
-            else:
-                return default
-        return None
+            if not data:
+                continue
+            device_dict = data.get("device_dict")
+            if device_dict and isinstance(device_dict, dict):
+                if device_dict.get("speaker_device_id") == speaker_device_id:
+                    return device_dict
+        return default
 
     def get_ha_device_id_by_speaker_device_id(
         self, speaker_device_id: str
@@ -200,22 +197,33 @@ class DeviceDataRegistry:
         # Debug info: can check final result
         return available_devices
 
-    async def async_clear_all_data(self):
-        """Clear all device data (called when integration is unloaded)"""
-        _LOGGER.debug("Clearing all device data from registry")
+    async def async_shutdown(self):
+        """Release runtime resources without deleting persistent storage.
 
-        # 1. Unsubscribe bus listener
+        Called during unload/reload so cached device data survives a restart.
+        """
+        _LOGGER.debug("Shutting down device data registry (keeping storage)")
+
         if self._unsub_device_registry is not None:
             self._unsub_device_registry()
             self._unsub_device_registry = None
 
-        # 2. Clear data in memory
         self._device_data.clear()
-
-        # 3. Clear storage file
-        await self.async_save()
-
-        # 4. Clear listeners
         self._listeners.clear()
 
+    async def async_clear_all_data(self):
+        """Clear all device data AND delete persistent storage.
+
+        Called only when the config entry is fully removed.
+        """
+        _LOGGER.debug("Clearing all device data from registry (including storage)")
+
+        if self._unsub_device_registry is not None:
+            self._unsub_device_registry()
+            self._unsub_device_registry = None
+
+        self._device_data.clear()
+        self._listeners.clear()
+
+        await self.async_save()
         _LOGGER.debug("All device data has been cleared")
