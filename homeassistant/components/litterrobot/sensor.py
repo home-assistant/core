@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Pet, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -44,8 +44,10 @@ class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEnti
     value_fn: Callable[[_WhiskerEntityT], float | datetime | str | None]
 
 
-ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
-    LitterRobot: [  # type: ignore[type-abstract]  # only used for isinstance check
+ROBOT_SENSOR_MAP: dict[
+    type[Robot] | tuple[type[Robot], ...], list[RobotSensorEntityDescription]
+] = {
+    LitterRobot: [
         RobotSensorEntityDescription[LitterRobot](
             key="waste_drawer_level",
             translation_key="waste_drawer",
@@ -145,7 +147,9 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 )
             ),
         ),
-        RobotSensorEntityDescription[LitterRobot4](
+    ],
+    (LitterRobot4, LitterRobot5): [
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="litter_level",
             translation_key="litter_level",
             native_unit_of_measurement=PERCENTAGE,
@@ -153,7 +157,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.litter_level,
         ),
-        RobotSensorEntityDescription[LitterRobot4](
+        RobotSensorEntityDescription[LitterRobot4 | LitterRobot5](
             key="pet_weight",
             translation_key="pet_weight",
             native_unit_of_measurement=UnitOfMass.POUNDS,
@@ -169,8 +173,8 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             state_class=SensorStateClass.TOTAL,
             last_reset_fn=dt_util.start_of_local_day,
             value_fn=(
-                lambda robot: (
-                    robot.get_food_dispensed_since(dt_util.start_of_local_day())
+                lambda robot: robot.get_food_dispensed_since(
+                    dt_util.start_of_local_day()
                 )
             ),
         ),

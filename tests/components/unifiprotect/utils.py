@@ -177,7 +177,7 @@ def add_device(
         return
 
     device._api = bootstrap.api
-    if isinstance(device, Camera):
+    if isinstance(device, Camera) and device.model is ModelType.CAMERA:
         for channel in device.channels:
             channel._api = bootstrap.api
 
@@ -244,6 +244,8 @@ async def adopt_devices(
 
         devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
         devices[ufp_device.id] = ufp_device
+        # Add to id_lookup so get_device_from_id works
+        add_device_ref(ufp.api.bootstrap, ufp_device)
 
         mock_msg = Mock()
         mock_msg.changed_data = {}

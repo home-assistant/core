@@ -161,7 +161,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[USBDevice]:
 
         try:
             addon_info = await multipan_manager.async_get_addon_info()
-        except (AddonError, KeyError):
+        except AddonError, KeyError:
             addon_info = None
 
         if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:

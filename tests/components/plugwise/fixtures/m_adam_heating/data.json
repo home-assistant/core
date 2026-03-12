@@ -65,7 +65,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "f871b8c4d63549319221e294e4f88074",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Badkamer",
     "sensors": {

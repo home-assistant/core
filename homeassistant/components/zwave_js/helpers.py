@@ -16,6 +16,10 @@ from zwave_js_server.const import (
     ConfigurationValueType,
     LogLevel,
 )
+from zwave_js_server.const.command_class.notification import (
+    CC_SPECIFIC_NOTIFICATION_TYPE,
+    NotificationType,
+)
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.log_config import LogConfig
@@ -53,6 +57,8 @@ from .const import (
     DOMAIN,
     LIB_LOGGER,
     LOGGER,
+    NOTIFICATION_ACCESS_CONTROL_PROPERTY,
+    OPENING_STATE_PROPERTY_KEY,
 )
 from .models import ZwaveJSConfigEntry
 
@@ -126,6 +132,37 @@ def get_value_of_zwave_value(value: ZwaveValue | None) -> Any | None:
     return value.value if value else None
 
 
+def _get_notification_type(value: ZwaveValue) -> int | None:
+    """Return the notification type for a value, if available."""
+    return value.metadata.cc_specific.get(CC_SPECIFIC_NOTIFICATION_TYPE)
+
+
+def is_opening_state_notification_value(value: ZwaveValue) -> bool:
+    """Return if the value is the Access Control Opening state notification."""
+    if (
+        value.command_class != CommandClass.NOTIFICATION
+        or _get_notification_type(value) != NotificationType.ACCESS_CONTROL
+    ):
+        return False
+
+    return (
+        value.property_ == NOTIFICATION_ACCESS_CONTROL_PROPERTY
+        and value.property_key == OPENING_STATE_PROPERTY_KEY
+    )
+
+
+def get_opening_state_notification_value(node: ZwaveNode) -> ZwaveValue | None:
+    """Return the Access Control Opening state value for a node."""
+    value_id = get_value_id_str(
+        node,
+        CommandClass.NOTIFICATION,
+        NOTIFICATION_ACCESS_CONTROL_PROPERTY,
+        None,
+        OPENING_STATE_PROPERTY_KEY,
+    )
+    return node.values.get(value_id)
+
+
 async def async_enable_statistics(driver: Driver) -> None:
     """Enable statistics on the driver."""
     await driver.async_enable_statistics("Home Assistant", HA_VERSION)
@@ -182,6 +219,13 @@ async def async_disable_server_logging_if_needed(
         entry.runtime_data.old_server_log_level = None
     driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
+
+
+def format_home_id_for_display(home_id: int | None) -> str:
+    """Format home ID as hexadecimal string for display."""
+    if home_id is None:
+        return "Unknown"
+    return f"0x{home_id:08x}"
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
@@ -547,7 +591,7 @@ def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
         name=node.name or node.device_config.description or f"Node {node.node_id}",
         model=node.device_config.label,
         manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location if node.location else None,
+        suggested_area=node.location or None,
     )
 
 
@@ -555,9 +599,9 @@ def get_network_identifier_for_notification(
     hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, controller: Controller
 ) -> str:
     """Return the network identifier string for persistent notifications."""
-    home_id = str(controller.home_id)
+    home_id = format_home_id_for_display(controller.home_id)
     if len(hass.config_entries.async_entries(DOMAIN)) > 1:
-        if str(home_id) != config_entry.title:
+        if home_id != config_entry.title:
             return f"`{config_entry.title}`, with the home ID `{home_id}`,"
         return f"with the home ID `{home_id}`"
     return ""

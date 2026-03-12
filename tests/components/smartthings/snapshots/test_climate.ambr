@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -92,6 +93,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -182,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -279,6 +282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -476,6 +481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -601,6 +607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -708,6 +715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -785,6 +793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -853,6 +862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -921,6 +931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -988,6 +999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1058,6 +1070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1131,6 +1144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1195,6 +1209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1259,6 +1274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1334,6 +1350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1383,7 +1400,7 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.asd-entry]
+# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1405,7 +1422,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.asd',
+    'entity_id': 'climate.virtual_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1413,6 +1430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1427,7 +1445,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.asd-state]
+# name: test_all_entities[virtual_thermostat][climate.virtual_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 4734.6,
@@ -1435,7 +1453,7 @@
       'fan_modes': list([
         'on',
       ]),
-      'friendly_name': 'asd',
+      'friendly_name': 'virtual thermostat',
       'hvac_action': <HVACAction.COOLING: 'cooling'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
@@ -1448,7 +1466,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.asd',
+    'entity_id': 'climate.virtual_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

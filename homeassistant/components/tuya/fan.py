@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -23,9 +31,7 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
-from .type_information import IntegerTypeInformation
-from .util import RemapHelper, get_dpcode
+from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
 _MODE_DPCODES = (DPCode.FAN_MODE, DPCode.MODE)
@@ -53,7 +59,7 @@ class _DirectionEnumWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status and return the direction string."""
-        if (value := super().read_device_status(device)) and value in {
+        if (value := self._read_dpcode_value(device)) and value in {
             DIRECTION_FORWARD,
             DIRECTION_REVERSE,
         }:
@@ -74,12 +80,12 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
+class _FanSpeedEnumWrapper(DPCodeEnumWrapper[int]):
     """Wrapper for fan speed DP code (from an enum)."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return ordered_list_item_to_percentage(self.options, value)
 
@@ -88,7 +94,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         return percentage_to_ordered_list_item(self.options, value)
 
 
-class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
+class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """Wrapper for fan speed DP code (from an integer)."""
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -98,7 +104,7 @@ class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(self._remap_helper.remap_value_to(value))
 
@@ -173,11 +179,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        direction_wrapper: _DirectionEnumWrapper | None,
-        mode_wrapper: DPCodeEnumWrapper | None,
-        oscillate_wrapper: DPCodeBooleanWrapper | None,
-        speed_wrapper: _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
+        direction_wrapper: DeviceWrapper[str] | None,
+        mode_wrapper: DeviceWrapper[str] | None,
+        oscillate_wrapper: DeviceWrapper[bool] | None,
+        speed_wrapper: DeviceWrapper[int] | None,
+        switch_wrapper: DeviceWrapper[bool] | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
@@ -193,7 +199,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            if speed_wrapper.options is not None:
+            # if speed is from an enum, set speed count from options
+            # else keep entity default 100
+            if hasattr(speed_wrapper, "options"):
                 self._attr_speed_count = len(speed_wrapper.options)
 
         if oscillate_wrapper:

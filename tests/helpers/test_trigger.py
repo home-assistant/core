@@ -10,10 +10,10 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.components import automation
-from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
-from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
-from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
-from homeassistant.components.text import DOMAIN as DOMAIN_TEXT
+from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
+from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
+from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
+from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -40,7 +40,6 @@ from homeassistant.helpers.trigger import (
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
-    ThresholdType,
     Trigger,
     TriggerActionRunner,
     _async_get_trigger_platform,
@@ -548,6 +547,7 @@ async def test_platform_multiple_triggers(
     action_method = getattr(action_helper, action_method)
 
     await async_initialize_triggers(hass, config_1, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {
@@ -562,6 +562,7 @@ async def test_platform_multiple_triggers(
     action_helper.action_calls.clear()
 
     await async_initialize_triggers(hass, config_2, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {
@@ -691,12 +692,6 @@ async def test_platform_backwards_compatibility_for_new_style_configs(
         """,
     ],
 )
-# Patch out binary sensor triggers, because loading sun triggers also loads
-# binary sensor triggers and those are irrelevant for this test
-@patch(
-    "homeassistant.components.binary_sensor.trigger.async_get_triggers",
-    new=AsyncMock(return_value={}),
-)
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -718,8 +713,8 @@ async def test_async_get_all_descriptions(
 
     ws_client = await hass_ws_client(hass)
 
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
-    assert await async_setup_component(hass, DOMAIN_SYSTEM_HEALTH, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
+    assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml(fname, secrets=None):
@@ -749,7 +744,7 @@ async def test_async_get_all_descriptions(
     # system_health has no triggers
     assert proxy_load_triggers_files.mock_calls[0][1][0] == unordered(
         [
-            await async_get_integration(hass, DOMAIN_SUN),
+            await async_get_integration(hass, SUN_DOMAIN),
         ]
     )
 
@@ -779,7 +774,7 @@ async def test_async_get_all_descriptions(
     assert await trigger.async_get_all_descriptions(hass) is descriptions
 
     # Load the tag integration and check a new cache object is created
-    assert await async_setup_component(hass, DOMAIN_TAG, {})
+    assert await async_setup_component(hass, TAG_DOMAIN, {})
     await hass.async_block_till_done()
 
     with (
@@ -810,7 +805,7 @@ async def test_async_get_all_descriptions(
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
 
     # Load the text integration and check a new cache object is created
-    assert await async_setup_component(hass, DOMAIN_TEXT, {})
+    assert await async_setup_component(hass, TEXT_DOMAIN, {})
     await hass.async_block_till_done()
 
     with (
@@ -925,7 +920,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     expected_message: str,
 ) -> None:
     """Test async_get_all_descriptions."""
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml_dict(fname, secrets=None):
@@ -940,7 +935,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: None}
+    assert descriptions == {SUN_DOMAIN: None}
 
     assert expected_message in caplog.text
 
@@ -955,7 +950,7 @@ async def test_async_get_all_descriptions_with_bad_description(
           fields: not_a_dict
     """
 
-    assert await async_setup_component(hass, DOMAIN_SUN, {})
+    assert await async_setup_component(hass, SUN_DOMAIN, {})
     await hass.async_block_till_done()
 
     def _load_yaml(fname, secrets=None):
@@ -971,7 +966,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {DOMAIN_SUN: None}
+    assert descriptions == {SUN_DOMAIN: None}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
@@ -1205,19 +1200,19 @@ async def test_subscribe_triggers_no_triggers(
         ),
         # Test verbose choose selector options
         (
-            {CONF_ABOVE: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            {CONF_ABOVE: {"active_choice": "entity", "entity": "sensor.test"}},
             does_not_raise(),
         ),
         (
-            {CONF_ABOVE: {"chosen_selector": "number", "number": 10}},
+            {CONF_ABOVE: {"active_choice": "number", "number": 10}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            {CONF_BELOW: {"active_choice": "entity", "entity": "sensor.test"}},
             does_not_raise(),
         ),
         (
-            {CONF_BELOW: {"chosen_selector": "number", "number": 90}},
+            {CONF_BELOW: {"active_choice": "number", "number": 90}},
             does_not_raise(),
         ),
         # Test invalid configurations
@@ -1233,7 +1228,7 @@ async def test_subscribe_triggers_no_triggers(
         ),
         (
             # Invalid choose selector option
-            {CONF_BELOW: {"chosen_selector": "cat", "cat": 90}},
+            {CONF_BELOW: {"active_choice": "cat", "cat": 90}},
             pytest.raises(vol.Invalid),
         ),
     ],
@@ -1248,7 +1243,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1276,7 +1271,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "attribute_changed": make_entity_numerical_state_attribute_changed_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 
@@ -1385,25 +1380,26 @@ async def test_numerical_state_attribute_changed_error_handling(
     ("trigger_options", "expected_result"),
     [
         # Valid configurations
+        # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: 10},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: "sensor.test"},
+            {CONF_THRESHOLD_TYPE: "above", CONF_LOWER_LIMIT: "sensor.test"},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: 90},
             does_not_raise(),
         ),
         (
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: "sensor.test"},
+            {CONF_THRESHOLD_TYPE: "below", CONF_UPPER_LIMIT: "sensor.test"},
             does_not_raise(),
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: 90,
             },
@@ -1411,39 +1407,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: "sensor.test",
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: 90,
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
-                CONF_LOWER_LIMIT: "sensor.test",
-                CONF_UPPER_LIMIT: "sensor.test",
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
-                CONF_LOWER_LIMIT: 10,
-                CONF_UPPER_LIMIT: 90,
-            },
-            does_not_raise(),
-        ),
-        (
-            {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: 10,
                 CONF_UPPER_LIMIT: "sensor.test",
             },
@@ -1451,7 +1415,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_LOWER_LIMIT: "sensor.test",
                 CONF_UPPER_LIMIT: 90,
             },
@@ -1459,7 +1423,39 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_THRESHOLD_TYPE: "between",
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: "outside",
                 CONF_LOWER_LIMIT: "sensor.test",
                 CONF_UPPER_LIMIT: "sensor.test",
             },
@@ -1479,58 +1475,58 @@ async def test_numerical_state_attribute_changed_error_handling(
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE},
+            {CONF_THRESHOLD_TYPE: "above"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide lower limit for ABOVE
-            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "above", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW},
+            {CONF_THRESHOLD_TYPE: "below"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper limit for BELOW
-            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "below", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN},
+            {CONF_THRESHOLD_TYPE: "between"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "between", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for BETWEEN
-            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "between", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE},
+            {CONF_THRESHOLD_TYPE: "outside"},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_LOWER_LIMIT: 10},
+            {CONF_THRESHOLD_TYPE: "outside", CONF_LOWER_LIMIT: 10},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must provide upper and lower limits for OUTSIDE
-            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_UPPER_LIMIT: 90},
+            {CONF_THRESHOLD_TYPE: "outside", CONF_UPPER_LIMIT: 90},
             pytest.raises(vol.Invalid),
         ),
         (
             # Must be valid entity id
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_ABOVE: "cat",
                 CONF_BELOW: "dog",
             },
@@ -1539,7 +1535,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         (
             # Above must be smaller than below
             {
-                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_THRESHOLD_TYPE: "between",
                 CONF_ABOVE: 90,
                 CONF_BELOW: 10,
             },
@@ -1557,7 +1553,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_crossed_threshold_trigger(
-                "test", "test_attribute"
+                {"test"}, {"test": "test_attribute"}
             ),
         }
 

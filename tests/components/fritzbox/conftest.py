@@ -12,5 +12,5 @@ def fritz_fixture() -> Mock:
         patch("homeassistant.components.fritzbox.coordinator.Fritzhome") as fritz,
         patch("homeassistant.components.fritzbox.config_flow.Fritzhome"),
     ):
-        fritz.return_value.get_prefixed_host.return_value = "http://1.2.3.4"
+        fritz.return_value.base_url = "http://1.2.3.4"
         yield fritz

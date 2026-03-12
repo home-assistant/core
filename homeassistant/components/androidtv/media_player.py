@@ -36,7 +36,7 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
-from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT, SERVICE_LEARN_SENDEVENT
+from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,7 +271,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = (
-                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f"Output from service 'learn_sendevent' from"
                 f" {self.entity_id}: '{output}'"
             )
             persistent_notification.async_create(

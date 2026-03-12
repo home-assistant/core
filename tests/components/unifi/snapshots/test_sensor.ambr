@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -149,6 +151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -253,6 +257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC Power Budget',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -309,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC Power Consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -365,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -416,6 +423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU utilization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory utilization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -520,6 +529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outlet 2 Outlet Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -589,6 +599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -652,6 +663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -703,6 +715,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clients',
     'options': dict({
     }),
     'original_device_class': None,
@@ -754,6 +767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloudflare WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -810,6 +824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloudflare WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -866,6 +881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -922,6 +938,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Google WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -978,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microsoft WAN2 latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1034,6 +1052,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Microsoft WAN latency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1090,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1146,6 +1166,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1205,6 +1226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1264,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1320,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1379,6 +1403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1438,6 +1463,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 3 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1497,6 +1523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 3 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1556,6 +1583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 PoE Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1612,6 +1640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1671,6 +1700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 4 TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1743,6 +1773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1806,6 +1837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1857,6 +1889,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1908,6 +1941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1964,6 +1998,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2020,6 +2055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2074,6 +2110,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2125,6 +2162,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2181,6 +2219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TX',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2235,6 +2274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

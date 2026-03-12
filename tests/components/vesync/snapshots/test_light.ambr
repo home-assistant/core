@@ -147,6 +147,80 @@
   list([
   ])
 # ---
+# name: test_light_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_light_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+  ])
+# ---
+# name: test_light_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_light_state[CS158-AF Air Fryer Standby][entities]
+  list([
+  ])
+# ---
 # name: test_light_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -206,6 +280,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': None,
@@ -297,6 +372,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': None,
@@ -557,9 +633,7 @@
       'area_id': None,
       'capabilities': dict({
         'max_color_temp_kelvin': 6500,
-        'max_mireds': 370,
         'min_color_temp_kelvin': 2700,
-        'min_mireds': 153,
         'supported_color_modes': list([
           <ColorMode.COLOR_TEMP: 'color_temp'>,
         ]),
@@ -579,6 +653,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': None,
@@ -599,7 +674,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 262,
       'color_temp_kelvin': 3816,
       'friendly_name': 'Temperature Light',
       'hs_color': tuple(
@@ -607,9 +681,7 @@
         38.308,
       ),
       'max_color_temp_kelvin': 6500,
-      'max_mireds': 370,
       'min_color_temp_kelvin': 2700,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         201,

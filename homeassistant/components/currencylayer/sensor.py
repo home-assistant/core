@@ -65,33 +65,18 @@ class CurrencylayerSensor(SensorEntity):
     _attr_attribution = "Data provided by currencylayer.com"
     _attr_icon = "mdi:currency"
 
-    def __init__(self, rest, base, quote):
+    def __init__(self, rest: CurrencylayerData, base: str, quote: str) -> None:
         """Initialize the sensor."""
         self.rest = rest
-        self._quote = quote
-        self._base = base
-        self._state = None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._quote
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._base
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
+        self._attr_name = base
+        self._attr_native_unit_of_measurement = quote
+        self._key = f"{base}{quote}"
 
     def update(self) -> None:
         """Update current date."""
         self.rest.update()
         if (value := self.rest.data) is not None:
-            self._state = round(value[f"{self._base}{self._quote}"], 4)
+            self._attr_native_value = round(value[self._key], 4)
 
 
 class CurrencylayerData:

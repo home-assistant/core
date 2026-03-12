@@ -16,6 +16,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+XML_MIME_TYPES = (
+    "application/rss+xml",
+    "application/xhtml+xml",
+    "application/xml",
+    "text/xml",
+)
+
 
 class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
     """Scrape Coordinator."""
@@ -52,6 +59,33 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
         await self._rest.async_update()
         if (data := self._rest.data) is None:
             raise UpdateFailed("REST data is not available")
-        soup = await self.hass.async_add_executor_job(BeautifulSoup, data, "lxml")
+
+        # Detect if content is XML and use appropriate parser
+        # Check Content-Type header first (most reliable), then fall back to content detection
+        parser = "lxml"
+        headers = self._rest.headers
+        content_type = headers.get("Content-Type", "") if headers else ""
+        if content_type.startswith(XML_MIME_TYPES):
+            parser = "lxml-xml"
+        elif isinstance(data, str):
+            data_stripped = data.lstrip()
+            if data_stripped.startswith("<?xml"):
+                # Check if this is HTML5 with XML declaration (XHTML5)
+                # by looking for HTML markers after the XML declaration
+                xml_end = data_stripped.find("?>")
+                if xml_end != -1:
+                    after_xml = data_stripped[xml_end + 2 :].lstrip()
+                    after_xml_lower = after_xml.lower()
+                    is_html = after_xml_lower.startswith(("<!doctype html", "<html"))
+                    if is_html:
+                        # Strip XML declaration from HTML to avoid XMLParsedAsHTMLWarning
+                        data = after_xml
+                    else:
+                        parser = "lxml-xml"
+                else:
+                    # Malformed XML declaration, treat as XML
+                    parser = "lxml-xml"
+
+        soup = await self.hass.async_add_executor_job(BeautifulSoup, data, parser)
         _LOGGER.debug("Raw beautiful soup: %s", soup)
         return soup

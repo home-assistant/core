@@ -11,7 +11,16 @@ from enum import StrEnum
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Final, Protocol, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    override,
+)
 
 import voluptuous as vol
 
@@ -20,13 +29,17 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_DEVICE_ID,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
     CONF_TARGET,
     CONF_VARIABLES,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -41,6 +54,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     is_callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import (
@@ -59,6 +73,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .entity import get_device_class
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .target import (
@@ -66,7 +81,7 @@ from .target import (
     async_track_target_selector_state_change_event,
 )
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,14 +150,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -318,10 +334,20 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
+def get_device_class_or_undefined(
+    hass: HomeAssistant, entity_id: str
+) -> str | None | UndefinedType:
+    """Get the device class of an entity or UNDEFINED if not found."""
+    try:
+        return get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        return UNDEFINED
+
+
 class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
-    _domain: str
+    _domains: set[str]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -371,11 +397,11 @@ class EntityTriggerBase(Trigger):
         )
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
+        """Filter entities of these domains."""
         return {
             entity_id
             for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
+            if split_entity_id(entity_id)[0] in self._domains
         }
 
     @override
@@ -537,7 +563,7 @@ def _validate_range[_T: dict[str, Any]](
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
         vol.Optional("entity"): cv.entity_id,
         vol.Optional("number"): vol.Coerce(float),
     }
@@ -548,7 +574,7 @@ def _validate_number_or_entity(value: dict | float | str) -> float | str:
     """Validate number or entity selector result."""
     if isinstance(value, dict):
         _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
     return value
 
 
@@ -579,16 +605,30 @@ def _get_numerical_value(
             return None
         try:
             return float(state.state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Entity state is not a valid number
             return None
     return entity_or_float
 
 
-class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state attribute changes."""
+class EntityNumericalStateBase(EntityTriggerBase):
+    """Base class for numerical state and state attribute triggers."""
 
-    _attribute: str
+    _attributes: dict[str, str | None]
+    _converter: Callable[[Any], float] = float
+
+    def _get_tracked_value(self, state: State) -> Any:
+        """Get the tracked numerical value from a state."""
+        domain = split_entity_id(state.entity_id)[0]
+        source = self._attributes[domain]
+        if source is None:
+            return state.state
+        return state.attributes.get(source)
+
+
+class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
+    """Trigger for numerical state and state attribute changes."""
+
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
     _above: None | float | str
@@ -605,20 +645,18 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
-        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
-            self._attribute
-        )
+        return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)  # type: ignore[no-any-return]
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        # Handle missing or None attribute case first to avoid expensive exceptions
-        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+        """Check if the new state or state attribute matches the expected one."""
+        # Handle missing or None value case first to avoid expensive exceptions
+        if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
-            # Attribute is not a valid number, don't trigger
+            current_value = self._converter(_attribute_value)
+        except TypeError, ValueError:
+            # Value is not a valid number, don't trigger
             return False
 
         if self._above is not None:
@@ -683,7 +721,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 ),
                 vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
                 vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): ThresholdType,
+                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
             _validate_limits_for_threshold_type,
@@ -692,14 +730,15 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 )
 
 
-class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state attribute changes.
+class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
+    EntityNumericalStateBase
+):
+    """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
 
-    _attribute: str
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
     _lower_limit: float | str | None = None
@@ -736,14 +775,14 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
                 # Entity not found or invalid number, don't trigger
                 return False
 
-        # Handle missing or None attribute case first to avoid expensive exceptions
-        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+        # Handle missing or None value case first to avoid expensive exceptions
+        if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
-            # Attribute is not a valid number, don't trigger
+            current_value = self._converter(_attribute_value)
+        except TypeError, ValueError:
+            # Value is not a valid number, don't trigger
             return False
 
         # Note: We do not need to check for lower_limit/upper_limit being None here
@@ -773,7 +812,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -787,7 +826,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_states = from_states
         _to_states = to_states
 
@@ -802,36 +841,36 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain = domain
+        _domains = {domain}
         _from_state = from_state
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_attribute_changed_trigger(
-    domain: str, attribute: str
+    domains: set[str], attributes: dict[str, str | None]
 ) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
     """Create a trigger for numerical state attribute change."""
 
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
-        _attribute = attribute
+        _domains = domains
+        _attributes = attributes
 
     return CustomTrigger
 
 
 def make_entity_numerical_state_attribute_crossed_threshold_trigger(
-    domain: str, attribute: str
+    domains: set[str], attributes: dict[str, str | None]
 ) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state attribute change."""
 
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
         """Trigger for numerical state attribute changes."""
 
-        _domain = domain
-        _attribute = attribute
+        _domains = domains
+        _attributes = attributes
 
     return CustomTrigger
 
@@ -844,7 +883,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domains = {domain}
         _attribute = attribute
         _attribute_to_state = to_state
 
@@ -1436,3 +1475,73 @@ async def async_get_all_descriptions(
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
+
+
+@callback
+def async_extract_devices(trigger_conf: dict) -> list[str]:
+    """Extract devices from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] == "device":
+        return [trigger_conf[CONF_DEVICE_ID]]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
+        return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
+
+    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+        return target_devices
+
+    return []
+
+
+@callback
+def async_extract_entities(trigger_conf: dict) -> list[str]:
+    """Extract entities from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
+        return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "calendar":
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "zone":
+        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "geo_location":
+        return [trigger_conf[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] == "sun":
+        return ["sun.sun"]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
+        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
+
+    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+        return target_entities
+
+    return []
+
+
+@callback
+def async_extract_targets(
+    config: dict,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets

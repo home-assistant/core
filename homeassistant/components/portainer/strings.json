@@ -61,12 +61,37 @@
         "name": "Status"
       }
     },
+    "button": {
+      "images_prune": {
+        "name": "Prune unused images"
+      },
+      "restart_container": {
+        "name": "Restart container"
+      }
+    },
     "sensor": {
       "api_version": {
         "name": "API version"
       },
       "architecture": {
         "name": "Architecture"
+      },
+      "container_disk_usage_reclaimable": {
+        "name": "Container disk usage reclaimable"
+      },
+      "container_disk_usage_total_size": {
+        "name": "Container disk usage total size"
+      },
+      "container_state": {
+        "name": "State",
+        "state": {
+          "created": "Created",
+          "dead": "Dead",
+          "exited": "Exited",
+          "paused": "Paused",
+          "restarting": "Restarting",
+          "running": "Running"
+        }
       },
       "containers_count": {
         "name": "Container count"
@@ -92,6 +117,12 @@
       "image": {
         "name": "Image"
       },
+      "image_disk_usage_reclaimable": {
+        "name": "Image disk usage reclaimable"
+      },
+      "image_disk_usage_total_size": {
+        "name": "Image disk usage total size"
+      },
       "images_count": {
         "name": "Image count"
       },
@@ -115,11 +146,29 @@
       },
       "operating_system_version": {
         "name": "Operating system version"
+      },
+      "stack_containers_count": {
+        "name": "Containers",
+        "unit_of_measurement": "containers"
+      },
+      "stack_type": {
+        "name": "Type",
+        "state": {
+          "compose": "Compose",
+          "kubernetes": "Kubernetes",
+          "swarm": "Swarm"
+        }
+      },
+      "volume_disk_usage_total_size": {
+        "name": "Volume disk usage total size"
       }
     },
     "switch": {
       "container": {
         "name": "Container"
+      },
+      "stack": {
+        "name": "Stack"
       }
     }
   },
@@ -127,11 +176,43 @@
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance: {error}"
     },
+    "cannot_connect_no_details": {
+      "message": "An error occurred while trying to connect to the Portainer instance."
+    },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate: {error}"
     },
+    "invalid_auth_no_details": {
+      "message": "An error occurred while trying to authenticate."
+    },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
+    },
+    "timeout_connect_no_details": {
+      "message": "A timeout occurred while trying to connect to the Portainer instance."
+    }
+  },
+  "services": {
+    "prune_images": {
+      "description": "Prunes unused images on a Portainer endpoint.",
+      "fields": {
+        "dangling": {
+          "description": "If true, only prune dangling images.",
+          "name": "Dangling"
+        },
+        "device_id": {
+          "description": "The endpoint to prune images on.",
+          "name": "Endpoint"
+        },
+        "until": {
+          "description": "Prune images unused for at least this time duration in the past. If not provided, all unused images will be pruned.",
+          "name": "Until"
+        }
+      },
+      "name": "Prune unused images"
     }
   }
 }

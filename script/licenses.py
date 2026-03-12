@@ -187,7 +187,6 @@ EXCEPTIONS = {
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
-    "enocean",  # https://github.com/kipe/enocean/pull/142
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
     "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
@@ -203,7 +202,6 @@ EXCEPTIONS = {
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
     "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
-    "pyparsing",  # MIT
 }
 
 # fmt: off

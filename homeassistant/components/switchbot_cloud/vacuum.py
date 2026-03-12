@@ -167,8 +167,7 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
             parameters={
                 "action": VacuumCleanMode.SWEEP.value,
                 "param": {
-                    "fanLevel": int(fan_level if fan_level else VACUUM_FAN_SPEED_QUIET)
-                    + 1,
+                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET) + 1,
                     "times": 1,
                 },
             },
@@ -222,7 +221,7 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumV2):
             parameters={
                 "action": VacuumCleanMode.SWEEP.value,
                 "param": {
-                    "fanLevel": int(fan_level if fan_level else VACUUM_FAN_SPEED_QUIET),
+                    "fanLevel": int(fan_level or VACUUM_FAN_SPEED_QUIET),
                     "waterLevel": 1,
                     "times": 1,
                 },
@@ -245,6 +244,9 @@ def _async_make_entity(
         return SwitchBotCloudVacuumV2(api, device, coordinator)
     if device.device_type == "Robot Vacuum Cleaner K10+ Pro Combo":
         return SwitchBotCloudVacuumK10PlusProCombo(api, device, coordinator)
-    if device.device_type in VacuumCleanerV3Commands.get_supported_devices():
+    if (
+        device.device_type in VacuumCleanerV3Commands.get_supported_devices()
+        or device.device_type == "Robot Vacuum Cleaner S20"
+    ):
         return SwitchBotCloudVacuumV3(api, device, coordinator)
     return SwitchBotCloudVacuum(api, device, coordinator)
