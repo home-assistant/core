@@ -99,7 +99,6 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
