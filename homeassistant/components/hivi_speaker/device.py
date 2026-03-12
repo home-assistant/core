@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class SyncGroupStatus(Enum):
@@ -60,12 +60,12 @@ class HIVIDevice(BaseModel):
 
     # Status information
     connection_status: ConnectionStatus = ConnectionStatus.ONLINE
-    last_seen: datetime
+    last_seen: datetime = Field(default_factory=datetime.now)
 
     # Master-slave relationship
     master_speaker_device_id: Optional[str] = None  # Master speaker ID
     slave_device_num: int = 0
-    slave_device_list: list[SlaveDeviceInfo]
+    slave_device_list: list[SlaveDeviceInfo] = Field(default_factory=list)
 
     # DLNA information
     dlna_udn: Optional[str] = None
