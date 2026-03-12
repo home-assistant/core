@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiosharp_cocoro_air import (
     Device,
@@ -16,7 +16,6 @@ from aiosharp_cocoro_air import (
     SharpConnectionError,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
@@ -25,8 +24,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, OPERATION_MODES, SCAN_INTERVAL
 
-STARTUP_RETRIES = 3
-STARTUP_RETRY_DELAY = 10
+if TYPE_CHECKING:
+    from . import SharpCocoroAirConfigEntry
+
+COMMAND_REFRESH_DELAY = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +35,11 @@ _LOGGER = logging.getLogger(__name__)
 class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Coordinator that polls Sharp cloud API for device data."""
 
-    config_entry: ConfigEntry
+    config_entry: SharpCocoroAirConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SharpCocoroAirConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -53,38 +56,20 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
 
     async def _async_setup(self) -> None:
-        """Perform initial login sequence.
-
-        Retries on transient connection errors during HA startup when
-        DNS/network may not be ready yet.
-        """
-        last_err: Exception | None = None
-        for attempt in range(1, STARTUP_RETRIES + 1):
-            try:
-                await self.api.authenticate()
-            except SharpAuthError as err:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed",
-                ) from err
-            except (SharpConnectionError, SharpApiError) as err:
-                last_err = err
-                if attempt < STARTUP_RETRIES:
-                    _LOGGER.warning(
-                        "Cloud init attempt %d/%d failed: %s, retrying in %ds",
-                        attempt,
-                        STARTUP_RETRIES,
-                        err,
-                        STARTUP_RETRY_DELAY,
-                    )
-                    await asyncio.sleep(STARTUP_RETRY_DELAY)
-            else:
-                return
-        raise UpdateFailed(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-            translation_placeholders={"error": str(last_err)},
-        ) from last_err
+        """Authenticate with the Sharp cloud."""
+        try:
+            await self.api.authenticate()
+        except SharpAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
+        except (SharpConnectionError, SharpApiError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch device data from Sharp cloud API."""
@@ -134,12 +119,12 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
-    def _optimistic_update(self, device_id: str, **props) -> None:
+    def _optimistic_update(self, device_id: str, **props: Any) -> None:
         """Apply optimistic state update and notify entities immediately.
 
-        The cloud API has a delay before reflecting state changes,
-        so we update coordinator.data with the expected values using
-        dataclasses.replace() on frozen Device/DeviceProperties instances.
+        The cloud API takes ~3s to reflect state changes, so we update
+        coordinator.data with the expected values and schedule a delayed
+        refresh to verify the actual state.
         """
         if not self.data:
             return
@@ -149,6 +134,20 @@ class SharpCocoroAirCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             new_props = dataclasses.replace(old.properties, **props)
             data[device_id] = dataclasses.replace(old, properties=new_props)
             self.async_set_updated_data(data)
+        self._schedule_refresh()
+
+    def _schedule_refresh(self) -> None:
+        """Schedule a delayed coordinator refresh to verify cloud state."""
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._delayed_refresh(),
+            "sharp_cocoro_air_refresh",
+        )
+
+    async def _delayed_refresh(self) -> None:
+        """Wait for the cloud to reflect the state change, then refresh."""
+        await asyncio.sleep(COMMAND_REFRESH_DELAY)
+        await self.async_request_refresh()
 
     async def async_power_on(self, device: Device) -> None:
         """Turn device on."""

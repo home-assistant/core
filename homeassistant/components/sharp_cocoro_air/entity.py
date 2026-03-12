@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiosharp_cocoro_air import Device, DeviceProperties
+from aiosharp_cocoro_air import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -20,31 +20,19 @@ class SharpCocoroAirEntity(CoordinatorEntity[SharpCocoroAirCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device_id = device_id
-
-    @property
-    def device_data(self) -> Device | None:
-        """Return the Device dataclass from coordinator data."""
-        return self.coordinator.data.get(self._device_id)
-
-    @property
-    def device_properties(self) -> DeviceProperties:
-        """Return the device properties dataclass."""
-        dev = self.device_data
-        if dev is None:
-            return DeviceProperties()
-        return dev.properties
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info to group entities under one device."""
-        dev = self.device_data
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            name=dev.name if dev else "Sharp Air Purifier",
+        dev = coordinator.data[device_id]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=dev.name,
             manufacturer="Sharp",
-            model=dev.model if dev else None,
-            sw_version=self.device_properties.firmware,
+            model=dev.model,
+            sw_version=dev.properties.firmware,
         )
+
+    @property
+    def device_data(self) -> Device:
+        """Return the Device dataclass from coordinator data."""
+        return self.coordinator.data[self._device_id]
 
     @property
     def available(self) -> bool:

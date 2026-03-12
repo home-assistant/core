@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiosharp_cocoro_air"],
   "quality_scale": "bronze",
-  "requirements": ["aiosharp-cocoro-air==0.1.1"]
+  "requirements": ["aiosharp-cocoro-air==0.2.0"]
 }

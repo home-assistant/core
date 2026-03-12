@@ -1,6 +1,6 @@
 """Test Sharp COCORO Air integration setup and teardown."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiosharp_cocoro_air import SharpApiError, SharpAuthError, SharpConnectionError
 import pytest
@@ -9,7 +9,6 @@ from homeassistant.components.sharp_cocoro_air.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import DEVICE_1
@@ -48,10 +47,7 @@ async def test_setup_entry_failure(
 ) -> None:
     """Test setup failure with auth and connection errors."""
     mock_sharp_api.authenticate.side_effect = exception
-    with patch(
-        "homeassistant.components.sharp_cocoro_air.coordinator.asyncio.sleep",
-    ):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
 
@@ -207,27 +203,3 @@ async def test_control_command_connection_error(
     mock_sharp_api.power_on.side_effect = SharpApiError("network error")
     with pytest.raises(HomeAssistantError):
         await coordinator.async_power_on(DEVICE_1)
-
-
-async def test_stale_device_removal(
-    hass: HomeAssistant,
-    mock_sharp_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test stale devices are removed when no longer returned by the API."""
-    await setup_integration(hass, mock_config_entry)
-
-    device_registry = dr.async_get(hass)
-
-    # Verify both devices exist
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "dev1")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "dev2")})
-
-    # Simulate device 2 being removed from API
-    mock_sharp_api.get_devices.return_value = [DEVICE_1]
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Device 1 should still exist, device 2 should be removed
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "dev1")})
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "dev2")})

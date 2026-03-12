@@ -56,7 +56,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG_INPUT,
-        unique_id="test@example.com",
+        unique_id="test-user-id-001",
         entry_id="01JTEST00000000000000000",
     )
 
@@ -97,6 +97,7 @@ def mock_sharp_config_flow() -> Generator[AsyncMock]:
     ) as mock_cls:
         client = AsyncMock()
         client.authenticate = AsyncMock()
+        client.user_id = "test-user-id-001"
         mock_cls.return_value.__aenter__ = AsyncMock(return_value=client)
         mock_cls.return_value.__aexit__ = AsyncMock(return_value=False)
         yield client

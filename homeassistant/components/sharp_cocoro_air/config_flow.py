@@ -27,12 +27,8 @@ DATA_SCHEMA = vol.Schema(
 class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sharp COCORO Air."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
-
     async def async_step_user(
-        self,
-        user_input: dict[str, Any] | None = None,
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step -- email/password entry."""
         errors: dict[str, str] = {}
@@ -53,7 +49,7 @@ class SharpCocoroAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during Sharp login")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+                await self.async_set_unique_id(client.user_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"Sharp COCORO Air ({user_input[CONF_EMAIL]})",

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_fan_entities[fan.bedroom_purifier_air_purifier-entry]
+# name: test_fan_entities[fan.bedroom_purifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -23,7 +23,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.bedroom_purifier_air_purifier',
+    'entity_id': 'fan.bedroom_purifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,12 +31,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Air purifier',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Air purifier',
+    'original_name': None,
     'platform': 'sharp_cocoro_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46,10 +46,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_entities[fan.bedroom_purifier_air_purifier-state]
+# name: test_fan_entities[fan.bedroom_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Purifier Air purifier',
+      'friendly_name': 'Bedroom Purifier',
       'preset_mode': None,
       'preset_modes': list([
         'auto',
@@ -64,14 +64,14 @@
       'supported_features': <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.bedroom_purifier_air_purifier',
+    'entity_id': 'fan.bedroom_purifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_fan_entities[fan.living_room_purifier_air_purifier-entry]
+# name: test_fan_entities[fan.living_room_purifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -95,7 +95,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.living_room_purifier_air_purifier',
+    'entity_id': 'fan.living_room_purifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -103,12 +103,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Air purifier',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Air purifier',
+    'original_name': None,
     'platform': 'sharp_cocoro_air',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -118,10 +118,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fan_entities[fan.living_room_purifier_air_purifier-state]
+# name: test_fan_entities[fan.living_room_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Purifier Air purifier',
+      'friendly_name': 'Living Room Purifier',
       'preset_mode': 'auto',
       'preset_modes': list([
         'auto',
@@ -136,7 +136,7 @@
       'supported_features': <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.living_room_purifier_air_purifier',
+    'entity_id': 'fan.living_room_purifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
