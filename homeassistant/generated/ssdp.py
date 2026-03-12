@@ -391,7 +391,7 @@ SSDP = {
             "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
         },
     ],
-    "victron_gx_mqtt": [
+    "victron_gx": [
         {
             "X_MqttOnLan": "1",
             "manufacturer": "Victron Energy",

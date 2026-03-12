@@ -1,11 +1,11 @@
-"""Test the victron_gx_mqtt init."""
+"""Test the victron_gx init."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.victron_gx_mqtt.config_flow import DEFAULT_PORT
-from homeassistant.components.victron_gx_mqtt.const import CONF_INSTALLATION_ID, DOMAIN
+from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
+from homeassistant.components.victron_gx.const import CONF_INSTALLATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -20,9 +20,7 @@ MOCK_HOST = "192.168.1.100"
 @pytest.fixture
 def mock_victron_hub_library():
     """Mock the victron_mqtt library."""
-    with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
-    ) as mock_lib:
+    with patch("homeassistant.components.victron_gx.hub.VictronVenusHub") as mock_lib:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
         hub_instance.disconnect = AsyncMock()
@@ -250,7 +248,7 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
             return_value=True,
         ) as mock_unload,
         patch(
-            "homeassistant.components.victron_gx_mqtt.Hub.start",
+            "homeassistant.components.victron_gx.Hub.start",
             side_effect=start_exception,
         ),
     ):

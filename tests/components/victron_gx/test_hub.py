@@ -12,14 +12,14 @@ from victron_mqtt import (
 )
 from victron_mqtt.testing import create_mocked_hub, finalize_injection, inject_message
 
-from homeassistant.components.victron_gx_mqtt.const import (
+from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.components.victron_gx_mqtt.hub import Hub
+from homeassistant.components.victron_gx.hub import Hub
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -64,7 +64,7 @@ def mock_config_entry(basic_config):
 def mock_victron_hub():
     """Create a mock VictronVenusHub."""
     with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
+        "homeassistant.components.victron_gx.hub.VictronVenusHub"
     ) as mock_hub_class:
         mock_hub = MagicMock(spec=VictronVenusHub)
         mock_hub.connect = AsyncMock()
@@ -84,7 +84,7 @@ async def init_integration(hass: HomeAssistant, mock_config_entry):
     victron_hub = await create_mocked_hub()
 
     with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub"
+        "homeassistant.components.victron_gx.hub.VictronVenusHub"
     ) as mock_hub_class:
         mock_hub_class.return_value = victron_hub
 
@@ -111,7 +111,7 @@ async def test_hub_start_connection_error(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub.connect",
+        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
         side_effect=CannotConnectError("Connection failed"),
     ):
         # Attempt to set up the config entry - should fail and mark as SETUP_RETRY
@@ -129,7 +129,7 @@ async def test_hub_start_authentication_error(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub.connect",
+        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
         side_effect=AuthenticationError("Authentication failed"),
     ):
         # Attempt to set up the config entry - should fail with auth error

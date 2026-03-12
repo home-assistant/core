@@ -15,7 +15,7 @@ from victron_mqtt import (
 )
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.victron_gx_mqtt.sensor import VictronSensor
+from homeassistant.components.victron_gx.sensor import VictronSensor
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -50,7 +50,7 @@ async def test_sensor_update_task_triggers_state_update(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
     """_on_update_cb should schedule update on value change and not on same value."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
 
     with patch.object(sensor, "async_write_ha_state") as mock_sched:
@@ -67,7 +67,7 @@ async def test_sensor_update_task_triggers_state_update(
 
 async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) -> None:
     """Verify device_class, state_class, and unit mappings across all cases."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
 
     # Device class mapping for all MetricType values we support
     device_class_cases = [
@@ -128,7 +128,7 @@ async def test_translation_fields(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
     """Translation key is normalized and placeholders passed through."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
 
     assert sensor.translation_key == "phase_voltage"
@@ -139,7 +139,7 @@ async def test_sensor_update_task_uses_baseline(
     hass: HomeAssistant, mock_device, base_metric
 ) -> None:
     """_on_update_cb should add baseline before updating state."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, base_metric, device_info)
     sensor._baseline = 10.0
 
@@ -165,7 +165,7 @@ async def test_sensor_async_added_restores_formula_metric_baseline(
     metric.metric_nature = MetricNature.CUMULATIVE
     metric.value = 1.5
 
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, metric, device_info)
 
     last_state = MagicMock()
@@ -173,7 +173,7 @@ async def test_sensor_async_added_restores_formula_metric_baseline(
 
     with (
         patch(
-            "homeassistant.components.victron_gx_mqtt.sensor.VictronBaseEntity.async_added_to_hass",
+            "homeassistant.components.victron_gx.sensor.VictronBaseEntity.async_added_to_hass",
             new=AsyncMock(),
         ) as mock_super_added,
         patch.object(
@@ -203,7 +203,7 @@ async def test_sensor_async_added_ignores_invalid_restored_value(
     metric.metric_nature = MetricNature.CUMULATIVE
     metric.value = 4.0
 
-    device_info: DeviceInfo = {"identifiers": {("victron_gx_mqtt", "dev_1")}}
+    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
     sensor = VictronSensor(mock_device, metric, device_info)
 
     last_state = MagicMock()
@@ -211,7 +211,7 @@ async def test_sensor_async_added_ignores_invalid_restored_value(
 
     with (
         patch(
-            "homeassistant.components.victron_gx_mqtt.sensor.VictronBaseEntity.async_added_to_hass",
+            "homeassistant.components.victron_gx.sensor.VictronBaseEntity.async_added_to_hass",
             new=AsyncMock(),
         ) as mock_super_added,
         patch.object(

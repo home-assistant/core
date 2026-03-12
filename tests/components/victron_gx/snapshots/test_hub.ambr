@@ -32,7 +32,7 @@
       'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
       'original_icon': None,
       'original_name': 'DC bus current',
-      'platform': 'victron_gx_mqtt',
+      'platform': 'victron_gx',
       'previous_unique_id': None,
       'suggested_object_id': None,
       'supported_features': 0,

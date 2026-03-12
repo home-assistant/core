@@ -1,4 +1,4 @@
-"""The victron_gx_mqtt integration."""
+"""The victron_gx integration."""
 
 from __future__ import annotations
 

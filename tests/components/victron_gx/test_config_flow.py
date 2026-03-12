@@ -5,11 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from victron_mqtt import AuthenticationError, CannotConnectError
 
-from homeassistant.components.victron_gx_mqtt.config_flow import (
-    DEFAULT_PORT,
-    validate_input,
-)
-from homeassistant.components.victron_gx_mqtt.const import (
+from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT, validate_input
+from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
@@ -53,7 +50,7 @@ def assert_entry_title(
 def mock_victron_hub():
     """Mock the Victron Hub."""
     with patch(
-        "homeassistant.components.victron_gx_mqtt.config_flow.VictronVenusHub"
+        "homeassistant.components.victron_gx.config_flow.VictronVenusHub"
     ) as mock_hub:
         hub_instance = MagicMock()
         hub_instance.connect = AsyncMock()
