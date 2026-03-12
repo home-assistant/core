@@ -123,6 +123,7 @@ NO_IOT_CLASS = [
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
