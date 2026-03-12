@@ -52,7 +52,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error connecting to WaterFurnace")
                 errors["base"] = "unknown"
 
-            if not client.devices:
+            if not errors and not client.devices:
                 errors["base"] = "no_devices"
 
             if not errors:
