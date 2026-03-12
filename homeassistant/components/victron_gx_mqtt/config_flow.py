@@ -119,10 +119,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Successfully connected to Victron device: %s", installation_id
                 )
             except AuthenticationError:
-                _LOGGER.exception("Authentication failed during initial setup")
+                _LOGGER.warning("Authentication failed during initial setup")
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
-                _LOGGER.exception("Cannot connect to Victron device")
+                _LOGGER.warning("Cannot connect to Victron device")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("General error connecting to Victron device")
@@ -173,7 +173,7 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 **reauth_entry.data,
                 CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                CONF_SSL: user_input.get(CONF_SSL) or None,
+                CONF_SSL: user_input.get(CONF_SSL),
             }
             data = {k: v for k, v in data.items() if v is not None}
 
@@ -181,10 +181,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(data)
                 _LOGGER.info("Reauthentication successful")
             except AuthenticationError:
-                _LOGGER.exception("Authentication failed during reauthentication")
+                _LOGGER.warning("Authentication failed during reauthentication")
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
-                _LOGGER.exception("Cannot connect during reauthentication")
+                _LOGGER.warning("Cannot connect during reauthentication")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("General error during reauthentication")
@@ -247,10 +247,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(data)
                 _LOGGER.debug("SSDP authentication successful")
             except AuthenticationError:
-                _LOGGER.exception("Authentication failed during SSDP setup")
+                _LOGGER.warning("Authentication failed during SSDP setup")
                 errors["base"] = "invalid_auth"
             except CannotConnectError:
-                _LOGGER.exception("Cannot connect during SSDP setup")
+                _LOGGER.warning("Cannot connect during SSDP setup")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("General error during SSDP setup")

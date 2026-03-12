@@ -46,7 +46,6 @@
           "port": "[%key:common::config_flow::data::port%]",
           "root_topic_prefix": "Optional root topic prefix",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "update_frequency": "Update frequency",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
@@ -55,7 +54,6 @@
           "port": "The MQTT port on the host. Normally it is 1883.",
           "root_topic_prefix": "Root topic prefix if used via MQTT gateway.",
           "ssl": "Indicates whether to use SSL to connect to the Victron device. Normally it is disabled.",
-          "update_frequency": "Update frequency in seconds. Default is 30 seconds. Set to 0 to update always.",
           "username": "Username for the MQTT server, default is empty. Not needed by Victron devices. This is only needed if you route your MQTT messages through a non-Victron server and it does require a username."
         }
       }

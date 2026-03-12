@@ -3,8 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from victron_mqtt import CannotConnectError
-from victron_mqtt.hub import AuthenticationError
+from victron_mqtt import AuthenticationError, CannotConnectError
 
 from homeassistant.components.victron_gx_mqtt.config_flow import (
     DEFAULT_PORT,

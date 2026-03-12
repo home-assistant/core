@@ -43,7 +43,7 @@ def basic_config():
         CONF_USERNAME: "test_user",
         CONF_PASSWORD: "test_pass",
         CONF_SSL: False,
-        CONF_INSTALLATION_ID: "12345",
+        CONF_INSTALLATION_ID: "123",
         CONF_MODEL: "Venus GX",
         CONF_SERIAL: "HQ12345678",
         CONF_ROOT_TOPIC_PREFIX: "N/",
@@ -70,7 +70,7 @@ def mock_victron_hub():
         mock_hub.connect = AsyncMock()
         mock_hub.disconnect = AsyncMock()
         mock_hub.publish = MagicMock()
-        mock_hub.installation_id = "12345"
+        mock_hub.installation_id = "123"
         mock_hub_class.return_value = mock_hub
         yield mock_hub
 

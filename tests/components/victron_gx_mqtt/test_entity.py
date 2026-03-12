@@ -106,7 +106,7 @@ async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) ->
 
     base_metric.metric_nature = MetricNature.CUMULATIVE
     sensor = VictronSensor(mock_device, base_metric, device_info)
-    assert sensor.state_class == SensorStateClass.TOTAL
+    assert sensor.state_class == SensorStateClass.TOTAL_INCREASING
 
     base_metric.metric_nature = MagicMock()
     sensor = VictronSensor(mock_device, base_metric, device_info)

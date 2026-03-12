@@ -1,4 +1,4 @@
-"""Constants for the victron_mqtt integration."""
+"""Constants for the victron_gx_mqtt integration."""
 
 DOMAIN = "victron_gx_mqtt"
 

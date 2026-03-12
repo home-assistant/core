@@ -44,7 +44,7 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
 }
 
 METRIC_NATURE_TO_STATE_CLASS: dict[MetricNature, SensorStateClass] = {
-    MetricNature.CUMULATIVE: SensorStateClass.TOTAL,
+    MetricNature.CUMULATIVE: SensorStateClass.TOTAL_INCREASING,
     MetricNature.INSTANTANEOUS: SensorStateClass.MEASUREMENT,
 }
 
