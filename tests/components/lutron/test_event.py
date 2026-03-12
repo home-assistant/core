@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from pylutron import Button
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -10,6 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.EVENT]):
+        yield
 
 
 async def test_event_setup(
@@ -22,9 +30,8 @@ async def test_event_setup(
     """Test event setup."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.EVENT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
