@@ -3,9 +3,17 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from typing import Any
 
-from pysaunum import MAX_TEMPERATURE, MIN_TEMPERATURE, SaunumException
+from pysaunum import (
+    DEFAULT_DURATION,
+    DEFAULT_FAN_DURATION,
+    DEFAULT_TEMPERATURE,
+    MAX_TEMPERATURE,
+    MIN_TEMPERATURE,
+    SaunumException,
+)
 
 from homeassistant.components.climate import (
     FAN_HIGH,
@@ -148,7 +156,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         sauna_type = self.coordinator.data.sauna_type
-        if sauna_type is not None and sauna_type in self._preset_name_map:
+        if sauna_type in self._preset_name_map:
             return self._preset_name_map[sauna_type]
         return self._preset_name_map[0]
 
@@ -241,9 +249,9 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     async def async_start_session(
         self,
-        duration: int = 120,
-        target_temperature: int = 80,
-        fan_duration: int = 10,
+        duration: timedelta = timedelta(minutes=DEFAULT_DURATION),
+        target_temperature: int = DEFAULT_TEMPERATURE,
+        fan_duration: timedelta = timedelta(minutes=DEFAULT_FAN_DURATION),
     ) -> None:
         """Start a sauna session with custom parameters."""
         if self.coordinator.data.door_open:
@@ -254,17 +262,20 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
         try:
             # Set all parameters before starting the session
-            await self.coordinator.client.async_set_sauna_duration(duration)
+            await self.coordinator.client.async_set_sauna_duration(
+                int(duration.total_seconds() // 60)
+            )
             await self.coordinator.client.async_set_target_temperature(
                 target_temperature
             )
-            await self.coordinator.client.async_set_fan_duration(fan_duration)
+            await self.coordinator.client.async_set_fan_duration(
+                int(fan_duration.total_seconds() // 60)
+            )
             await self.coordinator.client.async_start_session()
         except SaunumException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="start_session_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await self.coordinator.async_request_refresh()

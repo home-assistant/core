@@ -1,14 +1,17 @@
 """Tests for the Mastodon services."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
-from mastodon.Mastodon import MastodonAPIError, MediaAttachment
+from mastodon.Mastodon import MastodonAPIError, MastodonNotFoundError, MediaAttachment
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.const import (
     ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
+    ATTR_DURATION,
+    ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
@@ -17,7 +20,12 @@ from homeassistant.components.mastodon.const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
-from homeassistant.components.mastodon.services import SERVICE_GET_ACCOUNT, SERVICE_POST
+from homeassistant.components.mastodon.services import (
+    SERVICE_GET_ACCOUNT,
+    SERVICE_MUTE_ACCOUNT,
+    SERVICE_POST,
+    SERVICE_UNMUTE_ACCOUNT,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -77,6 +85,265 @@ async def test_get_account_failure(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    (
+        "service_data",
+        "expected_notifications",
+        "expected_duration",
+    ),
+    [
+        (
+            {ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social"},
+            True,
+            None,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_HIDE_NOTIFICATIONS: False,
+            },
+            False,
+            None,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: timedelta(hours=2),
+            },
+            True,
+            7200,
+        ),
+        (
+            {
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: timedelta(hours=12),
+                ATTR_HIDE_NOTIFICATIONS: False,
+            },
+            False,
+            43200,
+        ),
+    ],
+)
+async def test_mute_account_success(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    service_data: dict[str, str | int | bool],
+    expected_notifications: bool,
+    expected_duration: int | None,
+) -> None:
+    """Test the mute_account service mutes the target account with all options."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_MUTE_ACCOUNT,
+        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id} | service_data,
+        blocking=True,
+        return_response=False,
+    )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct=service_data[ATTR_ACCOUNT_NAME]
+    )
+    account = mock_mastodon_client.account_lookup.return_value
+    assert mock_mastodon_client.account_mute.call_count == 1
+    call_args, call_kwargs = mock_mastodon_client.account_mute.call_args
+
+    if call_kwargs:
+        actual_id = call_kwargs["id"]
+        actual_notifications = call_kwargs["notifications"]
+        actual_duration = call_kwargs.get("duration")
+    else:
+        _, positional_args, _ = call_args
+        actual_id, actual_notifications, actual_duration = positional_args
+
+    assert actual_id == account.id
+    assert actual_notifications == expected_notifications
+    assert actual_duration == expected_duration
+
+
+async def test_mute_account_duration_too_long(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test mute_account rejects overly long durations."""
+    await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch("homeassistant.components.mastodon.services.MAX_DURATION_SECONDS", 5),
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+                ATTR_DURATION: timedelta(seconds=10),
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    assert err.value.translation_key == "mute_duration_too_long"
+    mock_mastodon_client.account_mute.assert_not_called()
+
+
+async def test_mute_account_failure_not_found(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test mute_account raises validation when account does not exist."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.account_lookup.side_effect = MastodonNotFoundError(
+        "account not found"
+    )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+    mock_mastodon_client.account_mute.assert_not_called()
+
+
+async def test_mute_account_failure_api_error(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test mute_account wraps API errors with translated message."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.account_mute.side_effect = MastodonAPIError("mute failed")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match='Unable to mute account "@trwnh@mastodon.social"',
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_MUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+    account = mock_mastodon_client.account_lookup.return_value
+    mock_mastodon_client.account_mute.assert_called_once_with(
+        id=account.id, notifications=True, duration=None
+    )
+
+
+async def test_unmute_account_success(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the unmute_account service unmutes the target account."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UNMUTE_ACCOUNT,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+        },
+        blocking=True,
+        return_response=False,
+    )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+    account = mock_mastodon_client.account_lookup.return_value
+    mock_mastodon_client.account_unmute.assert_called_once_with(id=account.id)
+
+
+async def test_unmute_account_failure_not_found(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unmute_account raises validation when account does not exist."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.account_lookup.side_effect = MastodonNotFoundError(
+        "account not found"
+    )
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNMUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+    mock_mastodon_client.account_unmute.assert_not_called()
+
+
+async def test_unmute_account_failure_api_error(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unmute_account wraps API errors with translated message."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_mastodon_client.account_unmute.side_effect = MastodonAPIError("unmute failed")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match='Unable to unmute account "@trwnh@mastodon.social"',
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNMUTE_ACCOUNT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
+            },
+            blocking=True,
+            return_response=False,
+        )
+
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+    account = mock_mastodon_client.account_lookup.return_value
+    mock_mastodon_client.account_unmute.assert_called_once_with(id=account.id)
 
 
 @pytest.mark.parametrize(

@@ -9,10 +9,15 @@ from typing import TYPE_CHECKING, Any
 
 import growattServer
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -22,6 +27,8 @@ from .const import (
     BATT_MODE_LOAD_FIRST,
     DEFAULT_URL,
     DOMAIN,
+    LOGIN_INVALID_AUTH_CODE,
+    V1_API_ERROR_NO_PRIVILEGE,
 )
 from .models import GrowattRuntimeData
 
@@ -54,6 +61,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.device_type = device_type
         self.plant_id = plant_id
         self.previous_values: dict[str, Any] = {}
+        self._pre_reset_values: dict[str, float] = {}
 
         if self.api_version == "v1":
             self.username = None
@@ -61,6 +69,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
             self.token = config_entry.data["token"]
             self.api = growattServer.OpenApiV1(token=self.token)
+            self.api.server_url = self.url
         elif self.api_version == "classic":
             self.username = config_entry.data.get(CONF_USERNAME)
             self.password = config_entry.data[CONF_PASSWORD]
@@ -86,7 +95,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # login only required for classic API
         if self.api_version == "classic":
-            self.api.login(self.username, self.password)
+            login_response = self.api.login(self.username, self.password)
+            if not login_response.get("success"):
+                msg = login_response.get("msg", "Unknown error")
+                if msg == LOGIN_INVALID_AUTH_CODE:
+                    raise ConfigEntryAuthFailed(
+                        "Username, password, or URL may be incorrect"
+                    )
+                raise UpdateFailed(f"Growatt login failed: {msg}")
 
         if self.device_type == "total":
             if self.api_version == "v1":
@@ -98,7 +114,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # todayEnergy -> today_energy
                 # totalEnergy -> total_energy
                 # invTodayPpv -> current_power
-                total_info = self.api.plant_energy_overview(self.plant_id)
+                try:
+                    total_info = self.api.plant_energy_overview(self.plant_id)
+                except growattServer.GrowattV1ApiError as err:
+                    if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                        raise ConfigEntryAuthFailed(
+                            f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                        ) from err
+                    raise UpdateFailed(
+                        f"Error fetching plant energy overview: {err}"
+                    ) from err
                 total_info["todayEnergy"] = total_info["today_energy"]
                 total_info["totalEnergy"] = total_info["total_energy"]
                 total_info["invTodayPpv"] = total_info["current_power"]
@@ -120,6 +145,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
             except growattServer.GrowattV1ApiError as err:
+                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                    ) from err
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
 
             min_info = {**min_details, **min_settings, **min_energy}
@@ -251,6 +280,40 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return_value = previous_value
 
+        # Suppress midnight bounce for TOTAL_INCREASING "today" sensors.
+        # The Growatt API sometimes delivers stale yesterday values after a midnight
+        # reset (0 → stale → 0), causing TOTAL_INCREASING double-counting.
+        if (
+            entity_description.state_class is SensorStateClass.TOTAL_INCREASING
+            and not entity_description.never_resets
+            and return_value is not None
+            and previous_value is not None
+        ):
+            current_val = float(return_value)
+            prev_val = float(previous_value)
+            if prev_val > 0 and current_val == 0:
+                # Value dropped to 0 from a positive level — track it.
+                self._pre_reset_values[variable] = prev_val
+            elif variable in self._pre_reset_values:
+                pre_reset = self._pre_reset_values[variable]
+                if current_val == pre_reset:
+                    # Value equals yesterday's final value — the API is
+                    # serving a stale cached response (bounce)
+                    _LOGGER.debug(
+                        "Suppressing midnight bounce for %s: stale value %s matches "
+                        "pre-reset value, keeping %s",
+                        variable,
+                        current_val,
+                        previous_value,
+                    )
+                    return_value = previous_value
+                elif current_val > 0:
+                    # Genuine new-day production — clear tracking
+                    del self._pre_reset_values[variable]
+
+        # Note: previous_values stores the *output* value (after suppression),
+        # not the raw API value. This is intentional — after a suppressed bounce,
+        # previous_value will be 0, which is what downstream comparisons need.
         self.previous_values[variable] = return_value
 
         return return_value
