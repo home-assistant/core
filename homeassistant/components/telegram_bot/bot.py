@@ -726,24 +726,30 @@ class TelegramNotificationService:
     async def send_file(
         self,
         file_type: str,
+        cache: dict[str, Any],
         context: Context | None = None,
         **kwargs: Any,
     ) -> dict[str, JsonValueType]:
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
-        file_content = await load_data(
-            self.hass,
-            url=kwargs.get(ATTR_URL),
-            filepath=kwargs.get(ATTR_FILE),
-            username=kwargs.get(ATTR_USERNAME, ""),
-            password=kwargs.get(ATTR_PASSWORD, ""),
-            authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
-        )
+
+        file_content: io.BytesIO | None = cache.get(ATTR_FILE)
+        if file_content is None:
+            file_content = await load_data(
+                self.hass,
+                url=kwargs.get(ATTR_URL),
+                filepath=kwargs.get(ATTR_FILE),
+                username=kwargs.get(ATTR_USERNAME, ""),
+                password=kwargs.get(ATTR_PASSWORD, ""),
+                authentication=kwargs.get(ATTR_AUTHENTICATION),
+                verify_ssl=(
+                    get_default_context()
+                    if kwargs.get(ATTR_VERIFY_SSL, False)
+                    else get_default_no_verify_context()
+                ),
+            )
+            cache[ATTR_FILE] = file_content
+        file_content.seek(0)
 
         if file_type == SERVICE_SEND_PHOTO:
             return await self._send_msg_formatted(
@@ -840,6 +846,7 @@ class TelegramNotificationService:
 
     async def send_sticker(
         self,
+        cache: dict[str, Any],
         context: Context | None = None,
         **kwargs: Any,
     ) -> dict[str, JsonValueType]:
@@ -860,7 +867,7 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-        return await self.send_file(SERVICE_SEND_STICKER, context, **kwargs)
+        return await self.send_file(SERVICE_SEND_STICKER, cache, context, **kwargs)
 
     async def send_location(
         self,
