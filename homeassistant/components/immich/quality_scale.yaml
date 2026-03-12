@@ -1,17 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: done
-    comment: No integration specific actions
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: done
-    comment: No integration specific actions
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -24,9 +20,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
-    comment: No integration specific actions
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -46,13 +40,13 @@ rules:
   discovery:
     status: exempt
     comment: Service can't be discovered
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Only one device entry per config entry

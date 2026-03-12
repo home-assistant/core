@@ -92,6 +92,7 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -471,7 +472,12 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(
+                CONF_CHAT_MODEL,
+                RECOMMENDED_CHAT_MODEL
+                if subentry.subentry_type != "stt"
+                else RECOMMENDED_STT_MODEL,
+            ),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -481,6 +487,7 @@ class OpenAIBaseLLMEntity(Entity):
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
         force_image: bool = False,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -632,7 +639,7 @@ class OpenAIBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
 

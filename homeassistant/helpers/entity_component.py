@@ -24,7 +24,11 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
@@ -301,27 +305,31 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(
-        self, *, skip_reset: bool = False
-    ) -> ConfigType | None:
+    async def async_prepare_reload(self, *, skip_reset: bool = False) -> ConfigType:
         """Prepare reloading this entity component.
 
-        This method must be run in the event loop.
+        This method is intended to be called from service handlers implementing reload.
+        Will raise ServiceValidationError if the config is not valid.
         """
         try:
             conf = await conf_util.async_hass_config_yaml(self.hass)
         except HomeAssistantError as err:
-            self.logger.error(err)
-            return None
+            raise ServiceValidationError(
+                f"Failed to load configuration: {err}"
+            ) from err
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        processed_conf = await conf_util.async_process_component_and_handle_errors(
-            self.hass, conf, integration
-        )
-
-        if processed_conf is None:
-            return None
+        try:
+            processed_conf = await conf_util.async_process_component_and_handle_errors(
+                self.hass, conf, integration, raise_on_failure=True
+            )
+        except ConfigValidationError as err:
+            raise ServiceValidationError(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
         if not skip_reset:
             await self._async_reset()

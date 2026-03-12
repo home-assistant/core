@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pythonkuma"],
   "quality_scale": "platinum",
-  "requirements": ["pythonkuma==0.4.1"]
+  "requirements": ["pythonkuma==0.5.0"]
 }

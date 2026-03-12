@@ -190,6 +190,9 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "appliance_type", ["aircons", "washers", "dryers", "ovens", "refrigerators"]
+)
 @pytest.mark.usefixtures("mock_auth_api")
 async def test_no_appliances_flow(
     hass: HomeAssistant,
@@ -197,6 +200,7 @@ async def test_no_appliances_flow(
     brand: tuple[str, Brand],
     mock_appliances_manager_api: MagicMock,
     mock_whirlpool_setup_entry: MagicMock,
+    appliance_type: str,
 ) -> None:
     """Test we get an error with no appliances."""
     result = await hass.config_entries.flow.async_init(
@@ -206,11 +210,14 @@ async def test_no_appliances_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    original_aircons = mock_appliances_manager_api.return_value.aircons
+    original_appliances = getattr(
+        mock_appliances_manager_api.return_value, appliance_type
+    )
     mock_appliances_manager_api.return_value.aircons = []
     mock_appliances_manager_api.return_value.washers = []
     mock_appliances_manager_api.return_value.dryers = []
     mock_appliances_manager_api.return_value.ovens = []
+    mock_appliances_manager_api.return_value.refrigerators = []
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )
@@ -219,7 +226,9 @@ async def test_no_appliances_flow(
     assert result["errors"] == {"base": "no_appliances"}
 
     # Test that it succeeds if appliances are found
-    mock_appliances_manager_api.return_value.aircons = original_aircons
+    setattr(
+        mock_appliances_manager_api.return_value, appliance_type, original_appliances
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], CONFIG_INPUT | {CONF_REGION: region[0], CONF_BRAND: brand[0]}
     )

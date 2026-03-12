@@ -5,11 +5,12 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from proxmoxer import AuthenticationError
+from proxmoxer.core import ResourceException
 import pytest
+import requests
 from requests.exceptions import ConnectTimeout, SSLError
 
 from homeassistant.components.proxmoxve import CONF_HOST, CONF_REALM
-from homeassistant.components.proxmoxve.common import ResourceException
 from homeassistant.components.proxmoxve.const import CONF_NODES, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME, CONF_VERIFY_SSL
@@ -71,6 +72,14 @@ async def test_form(
         (
             ConnectTimeout("Connection timed out"),
             "connect_timeout",
+        ),
+        (
+            ResourceException("404", "status_message", "content"),
+            "no_nodes_found",
+        ),
+        (
+            requests.exceptions.ConnectionError("Connection error"),
+            "cannot_connect",
         ),
     ],
 )
@@ -203,6 +212,10 @@ async def test_import_flow(
             ResourceException("404", "status_message", "content"),
             "no_nodes_found",
         ),
+        (
+            requests.exceptions.ConnectionError("Connection error"),
+            "cannot_connect",
+        ),
     ],
 )
 async def test_import_flow_exceptions(
@@ -309,6 +322,10 @@ async def test_full_flow_reconfigure_match_entries(
             ResourceException("404", "status_message", "content"),
             "no_nodes_found",
         ),
+        (
+            requests.exceptions.ConnectionError("Connection error"),
+            "cannot_connect",
+        ),
     ],
 )
 async def test_full_flow_reconfigure_exceptions(
@@ -396,6 +413,10 @@ async def test_full_flow_reauth(
         (
             ResourceException("404", "status_message", "content"),
             "no_nodes_found",
+        ),
+        (
+            requests.exceptions.ConnectionError("Connection error"),
+            "cannot_connect",
         ),
     ],
 )

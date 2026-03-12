@@ -1,0 +1,128 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key from MTA Bus Time. Required for bus tracking, optional for subway only."
+        },
+        "description": "Enter your MTA Bus Time API key to enable bus tracking. Leave blank if you only want to track subways."
+      }
+    }
+  },
+  "config_subentries": {
+    "bus": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "entry_type": "Bus stop",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "invalid_route": "Invalid bus route. Please check the route name and try again."
+      },
+      "initiate_flow": {
+        "user": "Add bus stop"
+      },
+      "step": {
+        "stop": {
+          "data": {
+            "stop_id": "Stop"
+          },
+          "data_description": {
+            "stop_id": "Select the stop you want to track"
+          },
+          "description": "Choose a stop on the {route} route.",
+          "title": "Select stop"
+        },
+        "user": {
+          "data": {
+            "route": "Route"
+          },
+          "data_description": {
+            "route": "The bus route identifier"
+          },
+          "description": "Enter the bus route you want to track (for example, M15, B46, Q10).",
+          "title": "Enter bus route"
+        }
+      }
+    },
+    "subway": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "no_stops": "No stops found for this line. The line may not be currently running."
+      },
+      "entry_type": "Subway stop",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      },
+      "initiate_flow": {
+        "user": "Add subway stop"
+      },
+      "step": {
+        "stop": {
+          "data": {
+            "stop_id": "Stop and direction"
+          },
+          "data_description": {
+            "stop_id": "Select the stop and direction you want to track"
+          },
+          "description": "Choose a stop on the {line} line. The direction is included with each stop.",
+          "title": "Select stop and direction"
+        },
+        "user": {
+          "data": {
+            "line": "Line"
+          },
+          "data_description": {
+            "line": "The subway line to track"
+          },
+          "description": "Choose the subway line you want to track.",
+          "title": "Select subway line"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_arrival": {
+        "name": "Next arrival"
+      },
+      "next_arrival_destination": {
+        "name": "Next arrival destination"
+      },
+      "next_arrival_route": {
+        "name": "Next arrival route"
+      },
+      "second_arrival": {
+        "name": "Second arrival"
+      },
+      "second_arrival_destination": {
+        "name": "Second arrival destination"
+      },
+      "second_arrival_route": {
+        "name": "Second arrival route"
+      },
+      "third_arrival": {
+        "name": "Third arrival"
+      },
+      "third_arrival_destination": {
+        "name": "Third arrival destination"
+      },
+      "third_arrival_route": {
+        "name": "Third arrival route"
+      }
+    }
+  }
+}

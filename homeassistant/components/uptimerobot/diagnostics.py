@@ -41,6 +41,6 @@ async def async_get_config_entry_diagnostics(
                 "interval": monitor.interval,
                 "status": monitor.status,
             }
-            for monitor in coordinator.data
+            for monitor in coordinator.data.values()
         ],
     }

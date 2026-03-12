@@ -93,17 +93,6 @@
         'thumbnail': None,
         'title': 'Top Tracks',
       }),
-      dict({
-        'can_expand': True,
-        'can_play': False,
-        'can_search': False,
-        'children_media_class': <MediaClass.ALBUM: 'album'>,
-        'media_class': <MediaClass.DIRECTORY: 'directory'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/new_releases',
-        'media_content_type': 'spotify://new_releases',
-        'thumbnail': None,
-        'title': 'New Releases',
-      }),
     ]),
     'children_media_class': <MediaClass.DIRECTORY: 'directory'>,
     'media_class': <MediaClass.DIRECTORY: 'directory'>,
@@ -204,7 +193,7 @@
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://01J5TX5A0FF6G5V0QJX6HBC94T',
         'media_content_type': 'spotify://library',
-        'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+        'thumbnail': '/api/brands/integration/spotify/logo.png',
         'title': 'spotify_1',
       }),
       dict({
@@ -215,7 +204,7 @@
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3',
         'media_content_type': 'spotify://library',
-        'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+        'thumbnail': '/api/brands/integration/spotify/logo.png',
         'title': 'spotify_2',
       }),
     ]),
@@ -224,7 +213,7 @@
     'media_content_id': 'spotify://',
     'media_content_type': 'spotify',
     'not_shown': 0,
-    'thumbnail': 'https://brands.home-assistant.io/_/spotify/logo.png',
+    'thumbnail': '/api/brands/integration/spotify/logo.png',
     'title': 'Spotify',
   })
 # ---
@@ -606,44 +595,6 @@
     'not_shown': 0,
     'thumbnail': None,
     'title': 'Top Tracks',
-  })
-# ---
-# name: test_browsing[new_releases-new_releases]
-  dict({
-    'can_expand': True,
-    'can_play': False,
-    'can_search': False,
-    'children': list([
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'can_search': False,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.ALBUM: 'album'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:5SGtrmYbIo0Dsg4kJ4qjM6',
-        'media_content_type': 'spotify://album',
-        'thumbnail': 'https://i.scdn.co/image/ab67616d00001e0209ba52a5116e0c3e8461f58b',
-        'title': 'Moon Music',
-      }),
-      dict({
-        'can_expand': True,
-        'can_play': True,
-        'can_search': False,
-        'children_media_class': <MediaClass.TRACK: 'track'>,
-        'media_class': <MediaClass.ALBUM: 'album'>,
-        'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:713lZ7AF55fEFSQgcttj9y',
-        'media_content_type': 'spotify://album',
-        'thumbnail': 'https://i.scdn.co/image/ab67616d00001e02ab9953b1d18f8233f6b26027',
-        'title': 'drift',
-      }),
-    ]),
-    'children_media_class': <MediaClass.ALBUM: 'album'>,
-    'media_class': <MediaClass.DIRECTORY: 'directory'>,
-    'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/new_releases',
-    'media_content_type': 'spotify://new_releases',
-    'not_shown': 0,
-    'thumbnail': None,
-    'title': 'New Releases',
   })
 # ---
 # name: test_browsing[playlist-spotify:playlist:3cEYpjA9oz9GiPac4AsH4n]

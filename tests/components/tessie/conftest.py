@@ -9,13 +9,14 @@ import pytest
 
 from .common import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     PRODUCTS,
     SCOPES,
     SITE_INFO,
     TEST_STATE_OF_ALL_VEHICLES,
+    TEST_VEHICLE_BATTERY,
     TEST_VEHICLE_STATE_ONLINE,
-    TEST_VEHICLE_STATUS_AWAKE,
 )
 
 # Tessie
@@ -32,13 +33,19 @@ def mock_get_state():
 
 
 @pytest.fixture(autouse=True)
-def mock_get_status():
-    """Mock get_status function."""
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_status",
-        return_value=TEST_VEHICLE_STATUS_AWAKE,
-    ) as mock_get_status:
-        yield mock_get_status
+def mock_get_battery():
+    """Mock get_battery function."""
+    with (
+        patch(
+            "homeassistant.components.tessie.get_battery",
+            return_value=TEST_VEHICLE_BATTERY,
+        ) as mock_get_battery,
+        patch(
+            "homeassistant.components.tessie.coordinator.get_battery",
+            new=mock_get_battery,
+        ),
+    ):
+        yield mock_get_battery
 
 
 @pytest.fixture(autouse=True)
@@ -99,3 +106,13 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Tesla Fleet API EnergySite energy_history method."""
+    with patch(
+        "tesla_fleet_api.tessie.EnergySite.energy_history",
+        side_effect=lambda *a, **kw: deepcopy(ENERGY_HISTORY),
+    ) as mock_energy_history:
+        yield mock_energy_history

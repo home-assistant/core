@@ -2,9 +2,10 @@
 
 from dataclasses import dataclass
 
-from pysmarlaapi.federwiege.classes import Property
+from pysmarlaapi.federwiege.services.classes import Property
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -15,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FederwiegeConfigEntry
 from .entity import SmarlaBaseEntity, SmarlaEntityDescription
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,6 +36,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         property="oscillation",
         multiple=True,
         value_pos=0,
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -43,6 +47,7 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         property="oscillation",
         multiple=True,
         value_pos=1,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -58,6 +63,16 @@ SENSORS: list[SmarlaSensorEntityDescription] = [
         translation_key="swing_count",
         service="analyser",
         property="swing_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SmarlaSensorEntityDescription(
+        key="total_swing_time",
+        translation_key="total_swing_time",
+        service="info",
+        property="total_swing_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 ]

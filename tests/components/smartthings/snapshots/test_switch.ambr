@@ -48,6 +48,104 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ac_air_000001][switch.air_purifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.air_purifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][switch.air_purifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air purifier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][switch.air_filter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.air_filter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a5662f73-57d5-ba89-bf44-8b0008b8b2f3_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_01011][switch.air_filter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air filter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.air_filter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -244,6 +342,55 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ks_hood_01001][switch.range_hood_do_not_disturb-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.range_hood_do_not_disturb',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Do not disturb',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Do not disturb',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'do_not_disturb',
+    'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_custom.doNotDisturbMode_doNotDisturb_doNotDisturb',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][switch.range_hood_do_not_disturb-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Range hood Do not disturb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.range_hood_do_not_disturb',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ks_walloven_0107x][switch.four_sabbath_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -339,7 +486,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-entry]
@@ -388,7 +535,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-entry]
@@ -489,7 +636,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -502,7 +649,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.refrigerator_1_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -525,20 +672,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Cubed ice',
+      'friendly_name': 'Refrigerator 1 Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_cubed_ice',
+    'entity_id': 'switch.refrigerator_1_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -551,7 +698,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.refrigerator_1_power_cool',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -574,20 +721,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power cool',
+      'friendly_name': 'Refrigerator 1 Power cool',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_cool',
+    'entity_id': 'switch.refrigerator_1_power_cool',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-entry]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -600,7 +747,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.refrigerator_1_power_freeze',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -623,13 +770,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-state]
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power freeze',
+      'friendly_name': 'Refrigerator 1 Power freeze',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_power_freeze',
+    'entity_id': 'switch.refrigerator_1_power_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -930,7 +1077,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum-entry]
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_do_not_disturb-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -942,8 +1089,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.robot_vacuum_do_not_disturb',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -951,35 +1098,84 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Do not disturb',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Do not disturb',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_switch_switch_switch',
+    'translation_key': 'do_not_disturb',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_custom.doNotDisturbMode_doNotDisturb_doNotDisturb',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum-state]
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
+      'friendly_name': 'Robot Vacuum Do not disturb',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_id': 'switch.robot_vacuum_do_not_disturb',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-entry]
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_sound_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.robot_vacuum_sound_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound detection',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_detection',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_soundDetection_soundDetectionState_soundDetectionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_sound_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Sound detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.robot_vacuum_sound_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -992,7 +1188,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_id': 'switch.robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1015,13 +1211,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-state]
+# name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum',
+      'friendly_name': 'Robot vacuum 1',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.robot_vacuum',
+    'entity_id': 'switch.robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1175,7 +1371,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_sanitize-entry]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1188,7 +1384,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.dishwasher_1_sanitize',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1211,20 +1407,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_sanitize-state]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Sanitize',
+      'friendly_name': 'Dishwasher 1 Sanitize',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_sanitize',
+    'entity_id': 'switch.dishwasher_1_sanitize',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_speed_booster-entry]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1237,7 +1433,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.dishwasher_1_speed_booster',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1260,13 +1456,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_speed_booster-state]
+# name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Speed booster',
+      'friendly_name': 'Dishwasher 1 Speed booster',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.dishwasher_speed_booster',
+    'entity_id': 'switch.dishwasher_1_speed_booster',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

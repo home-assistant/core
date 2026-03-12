@@ -6,7 +6,7 @@ from asyncio import TaskGroup
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from xknx import XKNX
 from xknx.devices import DateDevice, DateTimeDevice, ExposeSensor, TimeDevice
@@ -43,6 +43,9 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from .schema import ExposeSchema
 
+if TYPE_CHECKING:
+    from .storage.time_server import KNXTimeServerStoreModel
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -59,7 +62,7 @@ def create_knx_exposure(
     ):
         exposure = KnxExposeTime(
             xknx=xknx,
-            config=config,
+            options=_yaml_config_to_expose_time_options(config),
         )
     else:
         exposure = KnxExposeEntity(
@@ -85,7 +88,7 @@ def create_combined_knx_exposure(
         if value_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES:
             time_exposure = KnxExposeTime(
                 xknx=xknx,
-                config=config,
+                options=_yaml_config_to_expose_time_options(config),
             )
             time_exposure.async_register()
             exposures.append(time_exposure)
@@ -298,26 +301,82 @@ class KnxExposeEntity:
             )
 
 
+@dataclass
+class KnxExposeTimeOptions:
+    """Options for KNX Expose time."""
+
+    device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
+    group_address: GroupAddress | InternalGroupAddress
+    name: str
+
+
+def _yaml_config_to_expose_time_options(config: ConfigType) -> KnxExposeTimeOptions:
+    """Convert single yaml expose time config to KnxExposeTimeOptions."""
+    ga = parse_device_group_address(config[KNX_ADDRESS])
+    expose_type: str = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
+    xknx_device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
+    match expose_type.lower():
+        case ExposeSchema.CONF_DATE:
+            xknx_device_cls = DateDevice
+        case ExposeSchema.CONF_DATETIME:
+            xknx_device_cls = DateTimeDevice
+        case ExposeSchema.CONF_TIME:
+            xknx_device_cls = TimeDevice
+    return KnxExposeTimeOptions(
+        name=expose_type.capitalize(),
+        group_address=ga,
+        device_cls=xknx_device_cls,
+    )
+
+
+@callback
+def create_time_server_exposures(
+    xknx: XKNX,
+    config: KNXTimeServerStoreModel,
+) -> list[KnxExposeTime]:
+    """Create exposures from UI config store time server config."""
+    exposures: list[KnxExposeTime] = []
+    device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
+    for expose_type, data in config.items():
+        if not data or (ga := data.get("write")) is None:  # type: ignore[attr-defined]
+            continue
+        match expose_type:
+            case "time":
+                device_cls = TimeDevice
+            case "date":
+                device_cls = DateDevice
+            case "datetime":
+                device_cls = DateTimeDevice
+            case _:
+                continue
+        exposures.append(
+            KnxExposeTime(
+                xknx=xknx,
+                options=KnxExposeTimeOptions(
+                    name=f"timeserver_{expose_type}",
+                    group_address=parse_device_group_address(ga),
+                    device_cls=device_cls,
+                ),
+            )
+        )
+    for exposure in exposures:
+        exposure.async_register()
+    return exposures
+
+
 class KnxExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    __slots__ = ("device", "xknx")
+
+    def __init__(self, xknx: XKNX, options: KnxExposeTimeOptions) -> None:
         """Initialize of Expose class."""
         self.xknx = xknx
-        expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
-        xknx_device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
-        match expose_type:
-            case ExposeSchema.CONF_DATE:
-                xknx_device_cls = DateDevice
-            case ExposeSchema.CONF_DATETIME:
-                xknx_device_cls = DateTimeDevice
-            case ExposeSchema.CONF_TIME:
-                xknx_device_cls = TimeDevice
-        self.device = xknx_device_cls(
+        self.device = options.device_cls(
             self.xknx,
-            name=expose_type.capitalize(),
+            name=options.name,
             localtime=dt_util.get_default_time_zone(),
-            group_address=config[KNX_ADDRESS],
+            group_address=options.group_address,
         )
 
     @property
