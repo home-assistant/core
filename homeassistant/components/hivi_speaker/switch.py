@@ -157,6 +157,12 @@ class HIVISlaveControlSwitch(SwitchEntity):
         slave_device_ip_addr = None
 
         master_device = self.get_master_device()
+        if master_device is None:
+            _LOGGER.error(
+                "Master device %s not found, cannot get slave IP",
+                self._master_speaker_device_id,
+            )
+            return None
         slave_device_list = master_device.slave_device_list
         if slave_device_list is None:
             _LOGGER.error(
@@ -212,19 +218,15 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 "Switch %s state set to: %s", self._attr_name, "ON" if is_on else "OFF"
             )
 
-    @property
-    def master_device(self) -> HIVIDevice:
-        """Get master device object"""
-        return self._master
-
-    @property
-    def slave_device(self) -> HIVIDevice:
-        """Get slave device object"""
-        return self._slave
-
     async def async_turn_on(self, **kwargs):
         """Turn on the switch - set master-slave relationship"""
         master_device = self.get_master_device()
+        if master_device is None:
+            _LOGGER.error(
+                "Master device %s not found, cannot turn on",
+                self._master_speaker_device_id,
+            )
+            return
         _LOGGER.debug(
             "Setting device %s as slave of device %s",
             self._slave_device_friendly_name,
@@ -284,6 +286,14 @@ class HIVISlaveControlSwitch(SwitchEntity):
             return
 
         master_device = self.get_master_device()
+        if master_device is None:
+            _LOGGER.error(
+                "Master device %s not found, cannot prepare operation",
+                self._master_speaker_device_id,
+            )
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            return
 
         # Prepare operation data
         slave_ip = slave_device_ip_addr
@@ -322,6 +332,12 @@ class HIVISlaveControlSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off the switch - remove master-slave relationship"""
         master_device = self.get_master_device()
+        if master_device is None:
+            _LOGGER.error(
+                "Master device %s not found, cannot turn off",
+                self._master_speaker_device_id,
+            )
+            return
         self._attr_is_on = False
 
         _LOGGER.debug(
@@ -405,9 +421,9 @@ class HIVISlaveControlSwitch(SwitchEntity):
         """Extra state attributes"""
         master_device = self.get_master_device()
         return {
-            "master_device": master_device.speaker_device_id,
+            "master_device": master_device.speaker_device_id if master_device else None,
             "slave_device": self._slave_speaker_device_id,
-            "master_name": master_device.friendly_name,
+            "master_name": master_device.friendly_name if master_device else None,
             "slave_name": self._slave_device_friendly_name,
         }
 
