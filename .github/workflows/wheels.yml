@@ -1,6 +1,6 @@
+# yaml-lint disable-line rule:truthy
 name: Build wheels
 
-# yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
   schedule:
@@ -16,7 +16,9 @@ on:
       - "requirements.txt"
       - "script/gen_requirements_all.py"
 
-permissions: {}
+permissions:
+  contents: read # 允许 checkout 代码
+  packages: write # 允许写入 GitHub Packages
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -136,7 +138,7 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
-      - name: Build wheels for Gitee
+      - name: Build Core wheels
         env:
           GRPC_PYTHON_BUILD_SYSTEM_OPENSSL: "true"
           GRPC_PYTHON_BUILD_WITH_CYTHON: "true"
@@ -145,96 +147,56 @@ jobs:
           ENABLE_HEADLESS: "1"
           REQUIRE_SQLALCHEMY_CEXT: "1"
         run: |
-          # 安装构建依赖
-          python -m pip install --upgrade pip build setuptools wheel
+          # 安装构建依赖，包括 twine
+          python -m pip install --upgrade pip build setuptools wheel twine
           
-          # 从 requirements.txt 生成 wheel 包
           echo "Building wheels for core dependencies..."
           
-          # 创建一个临时目录用于构建
-          mkdir -p wheel_build
-          cd wheel_build
+          # 创建临时目录用于构建，以及最终存放轮子的 dist 目录
+          mkdir -p wheel_tmp
+          mkdir -p dist
           
-          # 仅为 requirements.txt 中的部分包构建轮子（避免构建整个项目）
-          # 这里我们构建一些关键的、通常需要编译的包
+          cd wheel_tmp
+          
           PACKAGES_TO_BUILD="ciso8601 cryptography Pillow orjson PyTurboJPEG zeroconf"
           
           for package in $PACKAGES_TO_BUILD; do
-            # 获取 requirements.txt 中的包版本
             PACKAGE_LINE=$(grep "^$package==" ../requirements.txt | head -n 1)
             if [ -n "$PACKAGE_LINE" ]; then
               echo "Building wheel for $PACKAGE_LINE"
-              pip wheel --wheel-dir ./wheels --no-deps "$PACKAGE_LINE" || echo "Failed to build $package, skipping..."
+              # 直接将轮子输出到 ../dist 目录
+              pip wheel --wheel-dir ../dist --no-deps "$PACKAGE_LINE" || echo "Failed to build $package, skipping..."
             else
-              # 如果没有精确版本，尝试构建最新版本
               echo "Building wheel for $package (latest version)"
-              pip wheel --wheel-dir ./wheels --no-deps "$package" || echo "Failed to build $package, skipping..."
+              # 直接将轮子输出到 ../dist 目录
+              pip wheel --wheel-dir ../dist --no-deps "$package" || echo "Failed to build $package, skipping..."
             fi
           done
           
-          cd ..
-          echo "Wheel building completed."
-          ls -la wheel_build/wheels/ || echo "No wheels built"
-
-      - name: Find and prepare wheels for Gitee upload
-        run: |
-          # 查找构建的轮子文件
-          echo "Finding wheel files..."
-          find . -name "*.whl" -type f
+          cd .. # 返回到工作目录根目录
           
-          # 创建目录存放轮子文件
-          mkdir -p gitee_wheels
-          find . -name "*.whl" -type f -exec cp {} gitee_wheels/ \;
+          # 清理临时构建目录
+          rm -rf wheel_tmp
           
-          # 显示找到的文件
-          echo "Found $(ls gitee_wheels/*.whl 2>/dev/null | wc -l) wheel files for Gitee upload"
-          ls -la gitee_wheels/ || echo "No wheel files found"
+          echo "Core wheel building completed."
+          ls -la dist/ || echo "No wheels built" # 检查 dist 目录内容
 
-      - name: Upload wheels to Gitee
-        if: ${{ env.GITEE_TOKEN != '' }}
+      - name: Upload Core wheels to GitHub Packages
         env:
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          TWINE_USERNAME: ${{ github.actor }}
+          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
-          if [ -n "$(ls gitee_wheels/*.whl 2>/dev/null)" ]; then
-            echo "Uploading wheels to Gitee repository..."
-            
-            # 检查仓库是否已存在本地副本，如果存在则删除
-            if [ -d "gitee_repo" ]; then
-              rm -rf gitee_repo
-            fi
-            
-            # 克隆 Gitee 仓库 - 使用令牌进行身份验证
-            git clone "https://oauth2:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
-            cd gitee_repo
-            
-            # 配置 git
-            git config user.name "GitHub Actions"
-            git config user.email "actions@github.com"
-            
-            # 获取最新的更改，使用 merge 而不是 rebase 以避免冲突
-            git pull origin master || echo "No existing content or error pulling"
-            
-            # 复制轮子文件到 Gitee 仓库
-            cp ../gitee_wheels/*.whl ./
-            
-            # 检查是否有任何更改
-            if ! git diff --exit-code --quiet; then
-              # 有更改，添加并提交
-              git add *.whl
-              git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              
-              # 推送到 master 分支
-              git push origin master
-              echo "Successfully uploaded wheels to Gitee on master branch"
-            else
-              echo "No changes to commit, files may already exist"
-            fi
+          if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
+            echo "Uploading core wheels for ${{ matrix.arch }} to GitHub Packages..."
+            python -m twine upload --repository-url $TWINE_REPOSITORY_URL dist/*.whl
+            echo "Successfully uploaded core wheels to GitHub Packages."
           else
-            echo "No wheel files found to upload to Gitee"
+            echo "No core wheel files found in dist/ to upload to GitHub Packages."
           fi
 
   integrations:
-    name: Build wheels ${{ matrix.abi }} for ${{ matrix.arch }}
+    name: Build Integration wheels ${{ matrix.abi }} for ${{ matrix.arch }}
     if: github.repository_owner == 'yuanzhou029'
     needs: init
     runs-on: ${{ matrix.os }}
@@ -277,7 +239,7 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
-      - name: Build wheels for Gitee
+      - name: Build Integration wheels
         env:
           GRPC_PYTHON_BUILD_SYSTEM_OPENSSL: "true"
           GRPC_PYTHON_BUILD_WITH_CYTHON: "true"
@@ -286,22 +248,21 @@ jobs:
           ENABLE_HEADLESS: "1"
           REQUIRE_SQLALCHEMY_CEXT: "1"
         run: |
-          # 安装构建依赖
-          python -m pip install --upgrade pip build setuptools wheel
+          # 安装构建依赖，包括 twine
+          python -m pip install --upgrade pip build setuptools wheel twine
           
-          # 从 requirements_all_wheels 文件生成 wheel 包
           echo "Building wheels for integration dependencies..."
           
-          # 创建一个临时目录用于构建
-          mkdir -p wheel_build
-          cd wheel_build
+          # 创建临时目录用于构建，以及最终存放轮子的 dist 目录
+          mkdir -p wheel_tmp
+          mkdir -p dist
           
           # 根据 requirements_all_wheels 文件构建轮子包
           # 首先确定当前架构对应的文件
           if [ "${{ matrix.arch }}" = "amd64" ]; then
-            REQ_FILE="../requirements_all_wheels_amd64.txt"
+            REQ_FILE="requirements_all_wheels_amd64.txt"
           else
-            REQ_FILE="../requirements_all_wheels_aarch64.txt"
+            REQ_FILE="requirements_all_wheels_aarch64.txt"
           fi
           
           if [ -f "$REQ_FILE" ]; then
@@ -314,9 +275,9 @@ jobs:
               
               # 检查是否是包声明行
               if [[ "$line" =~ ^[a-zA-Z] ]]; then
-                # 尝试构建这个包的轮子
                 echo "Building wheel for: $line"
-                pip wheel --wheel-dir ./wheels --no-deps "$line" || echo "Failed to build $line, skipping..."
+                # 直接将轮子输出到 ../dist 目录 (因为我们会 cd wheel_tmp)
+                pip wheel --wheel-dir ./dist --no-deps "$line" || echo "Failed to build $line, skipping..."
               fi
             done < "$REQ_FILE"
           else
@@ -324,69 +285,36 @@ jobs:
             # 构建一些常见的集成依赖包
             PACKAGES_TO_BUILD="pybluez ffmpeg-python pytz requests-oauthlib"
             for package in $PACKAGES_TO_BUILD; do
-              # 尝试构建包
               echo "Building wheel for $package"
-              pip wheel --wheel-dir ./wheels --no-deps "$package" || echo "Failed to build $package, skipping..."
+              # 直接将轮子输出到 ../dist 目录 (因为我们会 cd wheel_tmp)
+              pip wheel --wheel-dir ./dist --no-deps "$package" || echo "Failed to build $package, skipping..."
             done
           fi
           
-          cd ..
-          echo "Wheel building for integrations completed."
-          ls -la wheel_build/wheels/ || echo "No wheels built"
-
-      - name: Find and prepare wheels for Gitee upload
-        run: |
-          # 查找构建的轮子文件
-          echo "Finding wheel files..."
-          find . -name "*.whl" -type f
+          # 注意：这里 pip wheel --wheel-dir ./dist 会在当前目录 (wheel_tmp) 下创建 dist。
+          # 需要将这些轮子移动到根目录的 dist 文件夹。
+          if [ -d "dist" ]; then
+              mv dist/*.whl ../dist/ || true
+          fi
           
-          # 创建目录存放轮子文件
-          mkdir -p gitee_wheels
-          find . -name "*.whl" -type f -exec cp {} gitee_wheels/ \;
+          cd .. # 返回到工作目录根目录
           
-          # 显示找到的文件
-          echo "Found $(ls gitee_wheels/*.whl 2>/dev/null | wc -l) wheel files for Gitee upload"
-          ls -la gitee_wheels/ || echo "No wheel files found"
+          # 清理临时构建目录
+          rm -rf wheel_tmp
+          
+          echo "Integration wheel building completed."
+          ls -la dist/ || echo "No wheels built" # 检查 dist 目录内容
 
-      - name: Upload wheels to Gitee
-        if: ${{ env.GITEE_TOKEN != '' }}
+      - name: Upload Integration wheels to GitHub Packages
         env:
-          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          TWINE_USERNAME: ${{ github.actor }}
+          TWINE_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          TWINE_REPOSITORY_URL: https://pypi.pkg.github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/
         run: |
-          if [ -n "$(ls gitee_wheels/*.whl 2>/dev/null)" ]; then
-            echo "Uploading wheels to Gitee repository..."
-            
-            # 检查仓库是否已存在本地副本，如果存在则删除
-            if [ -d "gitee_repo" ]; then
-              rm -rf gitee_repo
-            fi
-            
-            # 克隆 Gitee 仓库 - 使用令牌进行身份验证
-            git clone "https://oauth2:${GITEE_TOKEN}@gitee.com/xahwkj/ha-mirror.git" gitee_repo
-            cd gitee_repo
-            
-            # 配置 git
-            git config user.name "GitHub Actions"
-            git config user.email "actions@github.com"
-            
-            # 获取最新的更改，使用 merge 而不是 rebase 以避免冲突
-            git pull origin master || echo "No existing content or error pulling"
-            
-            # 复制轮子文件到 Gitee 仓库
-            cp ../gitee_wheels/*.whl ./
-            
-            # 检查是否有任何更改
-            if ! git diff --exit-code --quiet; then
-              # 有更改，添加并提交
-              git add *.whl
-              git commit -m "Add compiled wheels for ${{ matrix.arch }} [ci skip]"
-              
-              # 推送到 master 分支
-              git push origin master
-              echo "Successfully uploaded wheels to Gitee on master branch"
-            else
-              echo "No changes to commit, files may already exist"
-            fi
+          if [ -n "$(ls dist/*.whl 2>/dev/null)" ]; then
+            echo "Uploading integration wheels for ${{ matrix.arch }} to GitHub Packages..."
+            python -m twine upload --repository-url $TWINE_REPOSITORY_URL dist/*.whl
+            echo "Successfully uploaded integration wheels to GitHub Packages."
           else
-            echo "No wheel files found to upload to Gitee"
+            echo "No integration wheel files found in dist/ to upload to GitHub Packages."
           fi
