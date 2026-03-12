@@ -27,3 +27,12 @@ class UndefinedType(Enum):
 
 
 UNDEFINED = UndefinedType._singleton  # noqa: SLF001
+
+
+class AnyDeviceClassType(Enum):
+    """Singleton type for matching any device class."""
+
+    _singleton = 0
+
+
+ANY_DEVICE_CLASS = AnyDeviceClassType._singleton  # noqa: SLF001

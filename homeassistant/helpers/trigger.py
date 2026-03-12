@@ -81,7 +81,7 @@ from .target import (
     async_track_target_selector_state_change_event,
 )
 from .template import Template
-from .typing import ConfigType, TemplateVarsType
+from .typing import ANY_DEVICE_CLASS, AnyDeviceClassType, ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -341,7 +341,7 @@ class ValueSource:
     Used by triggers and conditions.
     """
 
-    device_class: str | None = None
+    device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
     value_source: str | None = None
     """Attribute name to extract the value from, or None for state.state."""
 
@@ -406,23 +406,18 @@ class EntityTriggerBase(Trigger):
             == 1
         )
 
-    def get_value_source_for_entity(self, entity_id: str) -> ValueSource | None:
-        """Find the matching value source for an entity."""
-        return self._value_sources.get(split_entity_id(entity_id)[0])
-
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the value sources."""
         result: set[str] = set()
         for entity_id in entities:
-            vs = self._value_sources.get(split_entity_id(entity_id)[0])
-            if vs is None:
+            if not (vs := self._value_sources.get(split_entity_id(entity_id)[0])):
                 continue
-            if vs.device_class is not None:
-                if (
-                    get_device_class_or_undefined(self._hass, entity_id)
-                    != vs.device_class
-                ):
-                    continue
+            if (
+                vs.device_class is not ANY_DEVICE_CLASS
+                and get_device_class_or_undefined(self._hass, entity_id)
+                != vs.device_class
+            ):
+                continue
             result.add(entity_id)
         return result
 
@@ -638,16 +633,14 @@ class EntityNumericalStateBase(EntityTriggerBase):
 
     def _get_tracked_value(self, state: State) -> Any:
         """Get the tracked numerical value from a state."""
-        vs = self.get_value_source_for_entity(state.entity_id)
-        if vs is None:
-            return None
+        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
         if vs.value_source is None:
             return state.state
         return state.attributes.get(vs.value_source)
 
     def _get_converter(self, state: State) -> Callable[[Any], float]:
         """Get the value converter for an entity."""
-        vs = self.get_value_source_for_entity(state.entity_id)
+        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
         if isinstance(vs, NumericalValueSource) and vs.value_converter is not None:
             return vs.value_converter
         return float

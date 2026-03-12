@@ -1,7 +1,7 @@
 """Provides triggers for covers."""
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.trigger import EntityTriggerBase, Trigger, ValueSource
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
@@ -15,8 +15,8 @@ class CoverTriggerBase(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the state matches the target cover state."""
-        vs = self.get_value_source_for_entity(state.entity_id)
-        if vs is not None and vs.value_source is not None:
+        vs = self._value_sources[split_entity_id(state.entity_id)[0]]
+        if vs.value_source is not None:
             return (
                 state.attributes.get(vs.value_source)
                 == self._cover_is_closed_target_value
@@ -27,8 +27,8 @@ class CoverTriggerBase(EntityTriggerBase):
         """Check if the transition is valid for a cover state change."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
-        vs = self.get_value_source_for_entity(from_state.entity_id)
-        if vs is not None and vs.value_source is not None:
+        vs = self._value_sources[split_entity_id(from_state.entity_id)[0]]
+        if vs.value_source is not None:
             if (from_is_closed := from_state.attributes.get(vs.value_source)) is None:
                 return False
             return from_is_closed != to_state.attributes.get(vs.value_source)  # type: ignore[no-any-return]

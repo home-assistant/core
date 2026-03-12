@@ -80,6 +80,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .entity import get_device_class_or_undefined
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .target import TargetSelection, async_extract_referenced_entity_ids
@@ -95,7 +96,7 @@ from .trace import (
     trace_stack_top,
 )
 from .trigger import ValueSource
-from .typing import ConfigType, TemplateVarsType
+from .typing import ANY_DEVICE_CLASS, ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -356,25 +357,18 @@ class EntityConditionBase(Condition):
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
 
-    def get_value_source_for_entity(self, entity_id: str) -> ValueSource | None:
-        """Find the matching value source for an entity."""
-        return self._value_sources.get(split_entity_id(entity_id)[0])
-
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the value sources."""
-        from .entity import get_device_class_or_undefined  # noqa: PLC0415
-
         result: set[str] = set()
         for entity_id in entities:
-            vs = self._value_sources.get(split_entity_id(entity_id)[0])
-            if vs is None:
+            if not (vs := self._value_sources.get(split_entity_id(entity_id)[0])):
                 continue
-            if vs.device_class is not None:
-                if (
-                    get_device_class_or_undefined(self._hass, entity_id)
-                    != vs.device_class
-                ):
-                    continue
+            if (
+                vs.device_class is not ANY_DEVICE_CLASS
+                and get_device_class_or_undefined(self._hass, entity_id)
+                != vs.device_class
+            ):
+                continue
             result.add(entity_id)
         return result
 

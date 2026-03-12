@@ -54,7 +54,7 @@ from homeassistant.helpers.trigger import (
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ANY_DEVICE_CLASS, ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
@@ -1690,24 +1690,13 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
     assert result == entities
 
 
-async def test_get_value_source_for_entity(hass: HomeAssistant) -> None:
-    """Test get_value_source_for_entity returns correct ValueSource."""
-    vs_sensor = ValueSource(device_class="humidity")
-    vs_climate = ValueSource(value_source="current_humidity")
-    trig = _make_trigger(hass, {"sensor": vs_sensor, "climate": vs_climate})
-
-    assert trig.get_value_source_for_entity("sensor.temp") is vs_sensor
-    assert trig.get_value_source_for_entity("climate.hvac") is vs_climate
-    assert trig.get_value_source_for_entity("light.bedroom") is None
-
-
 async def test_numerical_value_source_converter(hass: HomeAssistant) -> None:
     """Test NumericalValueSource stores converter correctly."""
     converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
     nvs = NumericalValueSource(value_source="brightness", value_converter=converter)
     assert nvs.value_source == "brightness"
     assert nvs.value_converter is converter
-    assert nvs.device_class is None
+    assert nvs.device_class is ANY_DEVICE_CLASS
 
     # Plain ValueSource has no converter
     vs = ValueSource(value_source="brightness")
