@@ -101,7 +101,7 @@ async def test_setup_component_with_webhook(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity).state == "streaming"
+    assert hass.states.get(camera_entity).state == expected_state
 
     # Test turn_on/turn_off services
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -536,7 +536,7 @@ async def test_camera_reconnect_webhook(
         }
         await simulate_webhook(hass, webhook_id, response)
 
-        assert hass.states.get(camera_entity).state == "streaming"
+        assert hass.states.get(camera_entity).state == expected_state
 
 
 @pytest.mark.parametrize(

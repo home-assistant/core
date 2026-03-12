@@ -175,11 +175,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._monitoring = False
             elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
                 _LOGGER.debug(
-                    "Camera %s has received %s event, turning on and enabling streaming",
+                    "Camera %s has received %s event, turning on and enabling streaming if applicable",
                     data["camera_id"],
                     event_type,
                 )
-                self._attr_is_streaming = True
+                if self.device_type != "NDB":
+                    self._attr_is_streaming = True
                 self._monitoring = True
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
