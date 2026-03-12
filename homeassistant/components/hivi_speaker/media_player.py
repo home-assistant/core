@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.components import media_source
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.dlna_dms.const import DOMAIN as DLNA_DMS_DOMAIN
 from .device import HIVIDevice
 from .device_manager import HIVIDeviceManager
@@ -51,16 +52,6 @@ async def async_setup_entry(
         "device_manager"
     ]
     device_manager.set_add_entities_callback("media_player", async_add_entities)
-
-    # Initially add buttons for existing devices
-    entities = []
-    for device in device_manager.device_data_registry._device_data.values():
-        if device.is_available_for_media:
-            entity = HIVIMediaPlayerEntity(device, device_manager, hass)
-            entities.append(entity)
-
-    if entities:
-        async_add_entities(entities, update_before_add=True)
 
 
 class HIVIMediaPlayerEntityHub:
@@ -147,14 +138,11 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
 
     async def async_added_to_hass(self):
         """Called when entity is added to Home Assistant"""
-        # Create session but don't connect immediately
-        self._session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10))
+        self._session = async_get_clientsession(self.hass)
 
     async def async_will_remove_from_hass(self):
         """Called when removed from Home Assistant"""
-        if self._session:
-            await self._session.close()
-            self._session = None
+        self._session = None
 
     @property
     def state(self) -> MediaPlayerState:
@@ -187,7 +175,7 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                 # HIVI speaker specific SOAP format
                 args_xml = ""
                 for key, value in kwargs.items():
-                    args_xml += f"<{key}>{value}</{key}>"
+                    args_xml += f"<{key}>{escape(str(value))}</{key}>"
 
                 # Use correct namespace
                 soap_envelope = f'''<?xml version="1.0" encoding="utf-8"?>
@@ -209,55 +197,51 @@ class HIVIMediaPlayerEntity(MediaPlayerEntity):
                     f"Sending SOAP request to {url} (attempt {attempt + 1}/{max_retries})"
                 )
 
-                # Use shorter timeout to avoid long blocking
                 timeout = aiohttp.ClientTimeout(total=8, connect=3, sock_read=5)
 
-                # Create new temporary session for each request to avoid connection pool issues
-                async with aiohttp.ClientSession(timeout=timeout) as temp_session:
-                    async with temp_session.post(
-                        url, data=soap_envelope.encode("utf-8"), headers=headers
-                    ) as response:
-                        response_text = await response.text()
-                        _LOGGER.debug(f"SOAP response status: {response.status}")
+                async with self._session.post(
+                    url,
+                    data=soap_envelope.encode("utf-8"),
+                    headers=headers,
+                    timeout=timeout,
+                ) as response:
+                    response_text = await response.text()
+                    _LOGGER.debug(f"SOAP response status: {response.status}")
 
-                        if response.status == 200:
-                            # Connection successful, reset failure count
-                            self._connection_ok = True
-                            self._connection_fail_count = 0
+                    if response.status == 200:
+                        self._connection_ok = True
+                        self._connection_fail_count = 0
 
-                            try:
-                                # Try to parse XML response
-                                response_dict = xmltodict.parse(response_text)
+                        try:
+                            response_dict = xmltodict.parse(response_text)
 
-                                # Find response section
-                                envelope = response_dict.get("s:Envelope", {})
-                                if not envelope:
-                                    envelope = response_dict.get("Envelope", {})
+                            envelope = response_dict.get("s:Envelope", {})
+                            if not envelope:
+                                envelope = response_dict.get("Envelope", {})
 
-                                body = envelope.get("s:Body", {})
-                                if not body:
-                                    body = envelope.get("Body", {})
+                            body = envelope.get("s:Body", {})
+                            if not body:
+                                body = envelope.get("Body", {})
 
-                                # Find response
-                                for key, value in body.items():
-                                    if "Response" in key or action in key:
-                                        return value
+                            for key, value in body.items():
+                                if "Response" in key or action in key:
+                                    return value
 
-                                return body
+                            return body
 
-                            except Exception as parse_error:
-                                _LOGGER.debug(
-                                    f"Failed to parse SOAP response: {parse_error}"
-                                )
-                                return {"raw_response": response_text}
-                        else:
-                            _LOGGER.warning(
-                                f"SOAP request failed: HTTP {response.status}"
+                        except Exception as parse_error:
+                            _LOGGER.debug(
+                                f"Failed to parse SOAP response: {parse_error}"
                             )
-                            if attempt < max_retries - 1:
-                                await asyncio.sleep(0.5 * (attempt + 1))
-                                continue
-                            return None
+                            return {"raw_response": response_text}
+                    else:
+                        _LOGGER.warning(
+                            f"SOAP request failed: HTTP {response.status}"
+                        )
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(0.5 * (attempt + 1))
+                            continue
+                        return None
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 _LOGGER.debug(
