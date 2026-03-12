@@ -20,7 +20,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Testing
 
-When writing or modifying tests, ensure all test function parameters have type annotations. This includes existing tests within the same file.
+When writing or modifying tests, ensure all test function parameters have type annotations.
 Prefer concrete types (for example, `HomeAssistant`, `MockConfigEntry`, etc.) over `Any`.
 
 ## Good practices
