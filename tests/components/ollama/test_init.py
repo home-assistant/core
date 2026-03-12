@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from httpx import ConnectError
+from ollama import ResponseError
 import pytest
 
 from homeassistant.components import ollama
@@ -11,6 +12,7 @@ from homeassistant.components.ollama.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -140,6 +142,53 @@ async def test_init_with_api_key_in_options_overrides_data(
             call.kwargs["headers"] == {"Authorization": "Bearer options-api-key"}
             for call in mock_client.call_args_list
         )
+
+
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_async_setup_entry_auth_failed_on_response_error(
+    hass: HomeAssistant,
+    status_code: int,
+) -> None:
+    """Test async_setup_entry raises auth failed on 401/403 response."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+            ollama.CONF_API_KEY: "test-api-key",
+        },
+        version=3,
+        minor_version=0,
+    )
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Unauthorized", status_code=status_code)
+        )
+
+        with pytest.raises(ConfigEntryAuthFailed):
+            await ollama.async_setup_entry(hass, mock_config_entry)
+
+
+async def test_async_setup_entry_not_ready_on_non_auth_response_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_setup_entry raises not ready on non-auth response error."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            ollama.CONF_URL: "http://localhost:11434",
+        },
+        version=3,
+        minor_version=0,
+    )
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Server error", status_code=500)
+        )
+
+        with pytest.raises(ConfigEntryNotReady):
+            await ollama.async_setup_entry(hass, mock_config_entry)
 
 
 async def test_migration_from_v1(

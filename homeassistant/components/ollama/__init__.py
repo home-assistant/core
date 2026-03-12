@@ -12,7 +12,7 @@ import ollama
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -71,6 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
     try:
         async with asyncio.timeout(DEFAULT_TIMEOUT):
             await client.list()
+    except ollama.ResponseError as err:
+        if err.status_code in (401, 403):
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady(err) from err
     except (TimeoutError, httpx.ConnectError) as err:
         raise ConfigEntryNotReady(err) from err
 
