@@ -575,12 +575,12 @@ class DownloadSupportPackageView(HomeAssistantView):
             )
 
         # Add stored latency response if available
-        if latency := cloud.remote.latency_by_location:
+        if locations := cloud.remote.latency_by_location:
             markdown += "## Latency by location\n\n"
             markdown += "Location | Latency (ms)\n"
             markdown += "--- | ---\n"
-            for location, latency_ms in latency.items():
-                markdown += f"{location} | {latency_ms['avg'] or 'N/A'}\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
             markdown += "\n"
 
         # Add installed packages section
