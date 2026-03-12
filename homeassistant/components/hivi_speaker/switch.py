@@ -98,7 +98,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         )
         if master_device_dict is None:
             _LOGGER.warning(
-                f"Cannot find master device {self._master_speaker_device_id}"
+                "Cannot find master device %s", self._master_speaker_device_id
             )
             return None
 
@@ -119,19 +119,27 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 slave_device_friendly_name = slave_device.friendly_name
             else:
                 _LOGGER.error(
-                    f"Cannot find information for slave device {self._slave_speaker_device_id}"
+                    "Cannot find information for slave device %s", self._slave_speaker_device_id
                 )
 
         elif create_type == "from_slave_device":
-            slave_device_list = master_device.slave_device_list
-            for device_info in slave_device_list:
-                if device_info.uuid == self._slave_speaker_device_id:
-                    slave_device_friendly_name = device_info.friendly_name
-                    break
-            else:
-                _LOGGER.error(
-                    f"Cannot find information for slave device {self._slave_speaker_device_id} in the slave device list of master device {master_device.friendly_name}"
+            if master_device is None:
+                _LOGGER.warning(
+                    "Master device %s not found, cannot resolve slave friendly name",
+                    self._master_speaker_device_id,
                 )
+            else:
+                slave_device_list = master_device.slave_device_list
+                for device_info in slave_device_list:
+                    if device_info.uuid == self._slave_speaker_device_id:
+                        slave_device_friendly_name = device_info.friendly_name
+                        break
+                else:
+                    _LOGGER.error(
+                        "Cannot find information for slave device %s in the slave device list of master device %s",
+                        self._slave_speaker_device_id,
+                        master_device.friendly_name,
+                    )
 
         return slave_device_friendly_name
 
@@ -147,7 +155,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
             slave_device_ip_addr = slave_device.ip_addr
         else:
             _LOGGER.error(
-                f"Cannot find information for slave device {self._slave_speaker_device_id}"
+                "Cannot find information for slave device %s", self._slave_speaker_device_id
             )
 
         return slave_device_ip_addr
@@ -166,7 +174,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         slave_device_list = master_device.slave_device_list
         if slave_device_list is None:
             _LOGGER.error(
-                f"Slave device list of master device {master_device.friendly_name} is empty"
+                "Slave device list of master device %s is empty", master_device.friendly_name
             )
             return None
         for device_info in slave_device_list:
@@ -175,7 +183,8 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 break
         else:
             _LOGGER.error(
-                f"Cannot find information for slave device {self._slave_speaker_device_id} in the slave device list of master device {master_device.friendly_name}"
+                "Cannot find information for slave device %s in the slave device list of master device %s",
+                self._slave_speaker_device_id, master_device.friendly_name
             )
 
         return slave_device_ip_addr
@@ -364,9 +373,6 @@ class HIVISlaveControlSwitch(SwitchEntity):
                 "executing",
                 "verifying",
             ]:
-                # _LOGGER.debug(
-                #     "no need to refresh yet, status: %s", result.get("status")
-                # )
                 pass
             elif result.get("status") in [
                 "execution_failed",
