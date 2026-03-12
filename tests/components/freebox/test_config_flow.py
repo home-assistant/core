@@ -171,14 +171,14 @@ async def test_zeroconf_missing_api_domain(
     hass: HomeAssistant,
 ) -> None:
     """Test zeroconf flow aborts if api_domain is missing from properties."""
-    from homeassistant.components.network.const import MDNS_TARGET_IP
+    import ipaddress
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address=ip_address(MDNS_TARGET_IP),
-            ip_addresses=[ip_address(MDNS_TARGET_IP)],
+            ip_address=ipaddress.ip_address("192.168.1.254"),
+            ip_addresses=[ipaddress.ip_address("192.168.1.254")],
             port=80,
             hostname="Freebox-Server.local.",
             type="_fbx-api._tcp.local.",
