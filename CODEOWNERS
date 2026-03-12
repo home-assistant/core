@@ -1069,6 +1069,8 @@ build.json @home-assistant/supervisor
 /tests/components/moon/ @fabaff @frenck
 /homeassistant/components/mopeka/ @bdraco
 /tests/components/mopeka/ @bdraco
+/homeassistant/components/motion/ @home-assistant/core
+/tests/components/motion/ @home-assistant/core
 /homeassistant/components/motion_blinds/ @starkillerOG
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motionblinds_ble/ @LennP @jerrybboy
