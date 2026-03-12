@@ -20,15 +20,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
+from .coordinator import SonarrConfigEntry, SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
@@ -40,7 +38,7 @@ class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     value_fn: Callable[[SonarrDataT], StateType]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SonarrSensorEntityDescription(
     SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[SonarrDataT]
 ):
@@ -143,15 +141,12 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SonarrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
-    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
     async_add_entities(
-        SonarrSensor(coordinators[coordinator_type], description)
+        SonarrSensor(getattr(entry.runtime_data, coordinator_type), description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 
@@ -162,6 +157,7 @@ class SonarrSensor(SonarrEntity[SonarrDataT], SensorEntity):
     coordinator: SonarrDataUpdateCoordinator[SonarrDataT]
     entity_description: SonarrSensorEntityDescription[SonarrDataT]
 
+    # Note: Sensor extra_state_attributes are deprecated and will be removed in 2026.9
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the entity."""

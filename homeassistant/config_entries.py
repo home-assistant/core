@@ -69,7 +69,13 @@ from .helpers.event import (
 )
 from .helpers.frame import ReportBehavior, report_usage
 from .helpers.json import json_bytes, json_bytes_sorted, json_fragment
-from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .helpers.typing import (
+    UNDEFINED,
+    ConfigType,
+    DiscoveryInfoType,
+    NoEventData,
+    UndefinedType,
+)
 from .loader import async_suggest_report_issue
 from .setup import (
     SetupPhases,
@@ -792,6 +798,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
             self.async_start_reauth(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
@@ -809,13 +816,14 @@ class ConfigEntry[_DataT = Any]:
             )
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
                 wait_time,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -2236,6 +2244,53 @@ class ConfigEntries:
 
         self._entries = entries
         self.async_update_issues()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+        )
+
+    async def _async_scan_orphan_ignored_entries(
+        self, event: Event[NoEventData]
+    ) -> None:
+        """Scan for ignored entries that can be removed.
+
+        Orphaned ignored entries are entries that are in ignored state
+        for integrations that are no longer available.
+        """
+        remove_candidates = [
+            entry
+            for entry in self.async_entries(
+                include_ignore=True,
+                include_disabled=False,
+            )
+            if entry.source == SOURCE_IGNORE
+        ]
+
+        if not remove_candidates:
+            return
+
+        for entry in remove_candidates:
+            try:
+                await loader.async_get_integration(self.hass, entry.domain)
+            except loader.IntegrationNotFound:
+                _LOGGER.info(
+                    "Integration for ignored config entry %s not found. Creating repair issue",
+                    entry,
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="orphaned_ignored_config_entry",
+                    translation_placeholders={"domain": entry.domain},
+                    data={
+                        "domain": entry.domain,
+                        "entry_id": entry.entry_id,
+                    },
+                )
 
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.

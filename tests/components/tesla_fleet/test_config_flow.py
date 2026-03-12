@@ -11,6 +11,7 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -62,7 +63,7 @@ async def access_token(hass: HomeAssistant) -> str:
 async def create_credential(hass: HomeAssistant) -> None:
     """Create a user credential."""
     # Create user application credential
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

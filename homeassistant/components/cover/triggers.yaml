@@ -1,0 +1,81 @@
+.trigger_common_fields: &trigger_common_fields
+  behavior:
+    required: true
+    default: any
+    selector:
+      select:
+        translation_key: trigger_behavior
+        options:
+          - first
+          - last
+          - any
+
+awning_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: awning
+
+awning_opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: awning
+
+blind_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: blind
+
+blind_opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: blind
+
+curtain_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: curtain
+
+curtain_opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: curtain
+
+shade_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shade
+
+shade_opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shade
+
+shutter_closed:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shutter
+
+shutter_opened:
+  fields: *trigger_common_fields
+  target:
+    entity:
+      - domain: cover
+        device_class: shutter

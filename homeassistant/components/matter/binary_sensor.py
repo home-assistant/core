@@ -179,6 +179,16 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
+            key="LockActuatorEnabledSensor",
+            translation_key="actuator",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.DoorLock.Attributes.ActuatorEnabled,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
             key="SmokeCoAlarmDeviceMutedSensor",
             device_to_ha=lambda x: (
                 x == clusters.SmokeCoAlarm.Enums.MuteStateEnum.kMuted
@@ -250,6 +260,18 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmCOStateSensor",
+            device_class=BinarySensorDeviceClass.CO,
+            device_to_ha=lambda x: (
+                x != clusters.SmokeCoAlarm.Enums.AlarmStateEnum.kNormal
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.COState,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import Any
 
 from miio import (
     AirQualityMonitor,
@@ -116,7 +117,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._humidity
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data = {}
 

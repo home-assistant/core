@@ -1,7 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You have to use the same account that was used to configure the integration."
     },
     "error": {
       "network_error": "The Mastodon instance was not found.",
@@ -9,6 +13,28 @@
       "unknown": "Unknown error occurred when connecting to the Mastodon instance."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]"
+        },
+        "description": "Please reauthenticate {account_name} with Mastodon."
+      },
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data::client_secret%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::mastodon::config::step::user::data_description::access_token%]",
+          "client_id": "[%key:component::mastodon::config::step::user::data_description::client_id%]",
+          "client_secret": "[%key:component::mastodon::config::step::user::data_description::client_secret%]"
+        },
+        "description": "Reconfigure {account_name} with Mastodon."
+      },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
@@ -69,20 +95,32 @@
     }
   },
   "exceptions": {
+    "account_not_found": {
+      "message": "Mastodon account \"{account_name}\" not found."
+    },
+    "auth_failed": {
+      "message": "Authentication failed, please reauthenticate with Mastodon."
+    },
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+    "mute_duration_too_long": {
+      "message": "Mute duration is too long."
     },
     "not_whitelisted_directory": {
       "message": "{media} is not a whitelisted directory."
     },
+    "unable_to_get_account": {
+      "message": "Unable to get account \"{account_name}\"."
+    },
+    "unable_to_mute_account": {
+      "message": "Unable to mute account \"{account_name}\""
+    },
     "unable_to_send_message": {
       "message": "Unable to send message."
+    },
+    "unable_to_unmute_account": {
+      "message": "Unable to unmute account \"{account_name}\""
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
@@ -99,6 +137,42 @@
     }
   },
   "services": {
+    "get_account": {
+      "description": "Gets information about a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to use to search.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Get account"
+    },
+    "mute_account": {
+      "description": "Mutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to mute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to mute this account on.",
+          "name": "Mastodon instance"
+        },
+        "duration": {
+          "description": "The duration to mute the account for (default: indefinitely).",
+          "name": "Duration"
+        },
+        "hide_notifications": {
+          "description": "Hide notifications from this account while muted.",
+          "name": "Hide notifications"
+        }
+      },
+      "name": "Mute account"
+    },
     "post": {
       "description": "Posts a status on your Mastodon account.",
       "fields": {
@@ -140,6 +214,20 @@
         }
       },
       "name": "Post"
+    },
+    "unmute_account": {
+      "description": "Unmutes a Mastodon account.",
+      "fields": {
+        "account_name": {
+          "description": "The Mastodon account username to unmute (e.g. @user@instance).",
+          "name": "Account name"
+        },
+        "config_entry_id": {
+          "description": "Select the Mastodon instance to unmute this account on.",
+          "name": "Mastodon instance"
+        }
+      },
+      "name": "Unmute account"
     }
   }
 }

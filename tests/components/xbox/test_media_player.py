@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
+from pythonxbox.api.provider.catalog.models import CatalogResponse
 from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleStatus,
     VolumeDirection,
@@ -67,14 +68,36 @@ def mock_token() -> Generator[MagicMock]:
         yield token
 
 
-@pytest.mark.usefixtures("xbox_live_client")
+@pytest.mark.parametrize(
+    ("fixture_status", "fixture_catalog"),
+    [
+        ("smartglass_console_status.json", "catalog_product_lookup.json"),
+        ("smartglass_console_status_idle.json", "catalog_product_lookup.json"),
+        ("smartglass_console_status_livetv.json", "catalog_product_lookup_livetv.json"),
+    ],
+    ids=["app", "idle", "livetvapp"],
+)
 async def test_media_players(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    xbox_live_client: AsyncMock,
+    fixture_status: str,
+    fixture_catalog: str | None,
 ) -> None:
     """Test setup of the Xbox media player platform."""
+
+    xbox_live_client.smartglass.get_console_status.return_value = (
+        SmartglassConsoleStatus(
+            **await async_load_json_object_fixture(hass, fixture_status, DOMAIN)  # pyright: ignore[reportArgumentType]
+        )
+    )
+    xbox_live_client.catalog.get_product_from_alternate_id.return_value = (
+        CatalogResponse(
+            **await async_load_json_object_fixture(hass, fixture_catalog, DOMAIN)  # pyright: ignore[reportArgumentType]
+        )
+    )
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -237,11 +260,11 @@ async def test_media_player_actions(
     ],
 )
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        TimeoutException(""),
-        RequestError("", request=Mock()),
-        HTTPStatusError("", request=Mock(), response=Mock()),
+        (TimeoutException(""), "timeout_exception"),
+        (RequestError("", request=Mock()), "request_exception"),
+        (HTTPStatusError("", request=Mock(), response=Mock()), "request_exception"),
     ],
 )
 async def test_media_player_action_exceptions(
@@ -252,6 +275,7 @@ async def test_media_player_action_exceptions(
     service_args: dict[str, Any],
     call_method: str,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test media player action exceptions."""
 
@@ -271,13 +295,14 @@ async def test_media_player_action_exceptions(
 
     getattr(xbox_live_client.smartglass, call_method).side_effect = exception
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             service,
             target={ATTR_ENTITY_ID: "media_player.xone", **service_args},
             blocking=True,
         )
+    assert e.value.translation_key == translation_key
 
 
 async def test_media_player_turn_on_failed(
@@ -299,10 +324,11 @@ async def test_media_player_turn_on_failed(
         ),
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as e:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_TURN_ON,
             target={ATTR_ENTITY_ID: "media_player.xone"},
             blocking=True,
         )
+    assert e.value.translation_key == "turn_on_failed"

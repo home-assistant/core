@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from typing import Final
+from typing import Any, Final, cast
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
@@ -48,6 +48,7 @@ from .services import async_setup_services
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CALENDAR,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,
@@ -105,7 +106,7 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
             translation_domain=DOMAIN,
             translation_key="not_ready_connection_error",
         ) from err
-    return oauth_session.token[CONF_ACCESS_TOKEN]
+    return cast(str, oauth_session.token[CONF_ACCESS_TOKEN])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -208,9 +209,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     manual=True,
                 )
 
-            remove_listener = stream.async_add_listener(
-                create_handle_vehicle_stream(vin, coordinator),
-                {"vin": vin},
+            entry.async_on_unload(
+                stream.async_add_listener(
+                    create_handle_vehicle_stream(vin, coordinator),
+                    {"vin": vin},
+                )
             )
             stream_vehicle = stream.get_vehicle(vin)
             poll = vehicle_metadata[vin].get("polling", False)
@@ -224,9 +227,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
-                    firmware=firmware,
+                    firmware=firmware or "",
                     device=device,
-                    remove_listener=remove_listener,
                 )
             )
 
@@ -351,6 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     if stream:
+        entry.async_on_unload(stream.close)
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True
@@ -395,10 +398,12 @@ async def async_migrate_entry(
     return True
 
 
-def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
+def create_handle_vehicle_stream(
+    vin: str, coordinator: TeslemetryVehicleDataCoordinator
+) -> Callable[[dict[str, Any]], None]:
     """Create a handle vehicle stream function."""
 
-    def handle_vehicle_stream(data: dict) -> None:
+    def handle_vehicle_stream(data: dict[str, Any]) -> None:
         """Handle vehicle data from the stream."""
         if "vehicle_data" in data:
             LOGGER.debug("Streaming received vehicle data from %s", vin)
@@ -447,7 +452,7 @@ def async_setup_energy_device(
 
 async def async_setup_stream(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, vehicle: TeslemetryVehicleData
-):
+) -> None:
     """Set up the stream for a vehicle."""
 
     await vehicle.stream_vehicle.get_config()

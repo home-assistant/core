@@ -51,9 +51,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bo
     try:
         user_info = await immich.users.async_get_my_user()
     except ImmichUnauthorizedError as err:
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+        ) from err
     except CONNECT_ERRORS as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     coordinator = ImmichDataUpdateCoordinator(hass, entry, immich, user_info.is_admin)
     await coordinator.async_config_entry_first_refresh()

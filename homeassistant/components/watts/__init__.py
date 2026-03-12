@@ -9,7 +9,6 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from visionpluspython.auth import WattsVisionAuth
 from visionpluspython.client import WattsVisionClient
-from visionpluspython.models import ThermostatDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_DEVICE_TYPES
 from .coordinator import (
     WattsVisionDeviceCoordinator,
     WattsVisionDeviceData,
@@ -27,7 +26,7 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
 
 
 @dataclass
@@ -63,7 +62,7 @@ def _handle_new_devices(
 
     for device_id in new_device_ids:
         device = hub_coordinator.data[device_id]
-        if not isinstance(device, ThermostatDevice):
+        if not isinstance(device, SUPPORTED_DEVICE_TYPES):
             continue
 
         device_coordinator = WattsVisionDeviceCoordinator(
@@ -96,7 +95,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
         )
     except config_entry_oauth2_flow.ImplementationUnavailableError as err:
         raise ConfigEntryNotReady(
-            "OAuth2 implementation temporarily unavailable"
+            translation_domain=DOMAIN,
+            translation_key="oauth_implementation_unavailable",
         ) from err
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
@@ -105,10 +105,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
         await oauth_session.async_ensure_token_valid()
     except ClientResponseError as err:
         if HTTPStatus.BAD_REQUEST <= err.status < HTTPStatus.INTERNAL_SERVER_ERROR:
-            raise ConfigEntryAuthFailed("OAuth session not valid") from err
-        raise ConfigEntryNotReady("Temporary connection error") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="oauth_session_not_valid",
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="temporary_connection_error",
+        ) from err
     except ClientError as err:
-        raise ConfigEntryNotReady("Network issue during OAuth setup") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="network_issue",
+        ) from err
 
     session = aiohttp_client.async_get_clientsession(hass)
     auth = WattsVisionAuth(
@@ -124,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     device_coordinators: dict[str, WattsVisionDeviceCoordinator] = {}
     for device_id in hub_coordinator.device_ids:
         device = hub_coordinator.data[device_id]
-        if not isinstance(device, ThermostatDevice):
+        if not isinstance(device, SUPPORTED_DEVICE_TYPES):
             continue
 
         device_coordinator = WattsVisionDeviceCoordinator(

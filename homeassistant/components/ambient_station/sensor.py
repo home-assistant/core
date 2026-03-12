@@ -33,13 +33,19 @@ from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
 from .entity import AmbientWeatherEntity
 
 TYPE_24HOURRAININ = "24hourrainin"
+TYPE_AQI_PM10_24H_AQIN = "aqi_pm10_24h_aqin"
+TYPE_AQI_PM10_AQIN = "aqi_pm10_aqin"
 TYPE_AQI_PM25 = "aqi_pm25"
 TYPE_AQI_PM25_24H = "aqi_pm25_24h"
+TYPE_AQI_PM25_24H_AQIN = "aqi_pm25_24h_aqin"
+TYPE_AQI_PM25_AQIN = "aqi_pm25_aqin"
 TYPE_AQI_PM25_IN = "aqi_pm25_in"
 TYPE_AQI_PM25_IN_24H = "aqi_pm25_in_24h"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
+TYPE_CO2_IN_24H_AQIN = "co2_in_24h_aqin"
+TYPE_CO2_IN_AQIN = "co2_in_aqin"
 TYPE_DAILYRAININ = "dailyrainin"
 TYPE_DEWPOINT = "dewPoint"
 TYPE_EVENTRAININ = "eventrainin"
@@ -57,17 +63,23 @@ TYPE_HUMIDITY7 = "humidity7"
 TYPE_HUMIDITY8 = "humidity8"
 TYPE_HUMIDITY9 = "humidity9"
 TYPE_HUMIDITYIN = "humidityin"
+TYPE_LASTLIGHTNING = "lightning_time"
+TYPE_LASTLIGHTNING_DISTANCE = "lightning_distance"
 TYPE_LASTRAIN = "lastRain"
 TYPE_LIGHTNING_PER_DAY = "lightning_day"
 TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
-TYPE_LASTLIGHTNING_DISTANCE = "lightning_distance"
-TYPE_LASTLIGHTNING = "lightning_time"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
+TYPE_PM_IN_HUMIDITY_AQIN = "pm_in_humidity_aqin"
+TYPE_PM_IN_TEMP_AQIN = "pm_in_temp_aqin"
+TYPE_PM10_IN_24H_AQIN = "pm10_in_24h_aqin"
+TYPE_PM10_IN_AQIN = "pm10_in_aqin"
 TYPE_PM25 = "pm25"
 TYPE_PM25_24H = "pm25_24h"
 TYPE_PM25_IN = "pm25_in"
 TYPE_PM25_IN_24H = "pm25_in_24h"
+TYPE_PM25_IN_24H_AQIN = "pm25_in_24h_aqin"
+TYPE_PM25_IN_AQIN = "pm25_in_aqin"
 TYPE_SOILHUM1 = "soilhum1"
 TYPE_SOILHUM10 = "soilhum10"
 TYPE_SOILHUM2 = "soilhum2"
@@ -78,8 +90,8 @@ TYPE_SOILHUM6 = "soilhum6"
 TYPE_SOILHUM7 = "soilhum7"
 TYPE_SOILHUM8 = "soilhum8"
 TYPE_SOILHUM9 = "soilhum9"
-TYPE_SOILTEMP1F = "soiltemp1f"
 TYPE_SOILTEMP10F = "soiltemp10f"
+TYPE_SOILTEMP1F = "soiltemp1f"
 TYPE_SOILTEMP2F = "soiltemp2f"
 TYPE_SOILTEMP3F = "soiltemp3f"
 TYPE_SOILTEMP4F = "soiltemp4f"
@@ -142,6 +154,86 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_AQI_PM25_IN_24H,
         translation_key="pm25_indoor_aqi_24h_average",
         device_class=SensorDeviceClass.AQI,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM25_IN_AQIN,
+        translation_key="pm25_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM25_IN_24H_AQIN,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        translation_key="pm25_indoor_24h_aqin",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_AQIN,
+        translation_key="pm10_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM10_IN_24H_AQIN,
+        translation_key="pm10_indoor_24h_aqin",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_AQIN,
+        translation_key="co2_indoor_aqin",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_CO2_IN_24H_AQIN,
+        translation_key="co2_indoor_24h_aqin",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM_IN_TEMP_AQIN,
+        translation_key="pm_indoor_temp_aqin",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_PM_IN_HUMIDITY_AQIN,
+        translation_key="pm_indoor_humidity_aqin",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_AQIN,
+        translation_key="pm25_aqi_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_24H_AQIN,
+        translation_key="pm25_aqi_24h_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM10_AQIN,
+        translation_key="pm10_aqi_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM10_24H_AQIN,
+        translation_key="pm10_aqi_24h_aqin",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMABSIN,
