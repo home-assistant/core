@@ -183,6 +183,12 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             )
         )
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                EventKey(SettingKey.BSH_COMMON_POWER_STATE),
+            )
+        )
 
     def update_native_value(self) -> None:
         """Set the HVAC Mode and preset mode values."""
