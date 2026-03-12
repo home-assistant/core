@@ -189,3 +189,31 @@ async def test_zeroconf_missing_api_domain(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_api_domain"
+
+
+async def test_zeroconf_invalid_port(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf flow aborts if port is invalid."""
+    import ipaddress
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ipaddress.ip_address("192.168.1.254"),
+            ip_addresses=[ipaddress.ip_address("192.168.1.254")],
+            port=80,
+            hostname="Freebox-Server.local.",
+            type="_fbx-api._tcp.local.",
+            name="Freebox Server._fbx-api._tcp.local.",
+            properties={
+                "api_domain": "r1.freeboxos.local",
+                "api_version": "8.0",
+                "https_port": "not_a_number",  # Ceci va déclencher le ValueError
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
