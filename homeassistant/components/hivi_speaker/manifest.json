@@ -3,7 +3,7 @@
     "name": "HiVi Speaker",
     "codeowners": ["@swansmart"],
     "config_flow": true,
-    "dependencies": ["dlna_dms"],
+    "dependencies": [],
     "documentation": "https://www.home-assistant.io/integrations/hivi_speaker/",
     "integration_type": "hub",
     "iot_class": "local_polling",
