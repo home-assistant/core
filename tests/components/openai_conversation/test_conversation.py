@@ -642,7 +642,10 @@ async def test_flex_tier_retry(
 
     mock_create_stream.return_value = [
         RateLimitError(
-            response=httpx.Response(status_code=429, request=""),
+            response=httpx.Response(
+                status_code=429,
+                request=httpx.Request("POST", "https://api.openai.com/v1/responses"),
+            ),
             body=None,
             message="Resource Unavailable",
         ),
