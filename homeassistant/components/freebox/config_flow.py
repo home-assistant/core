@@ -107,10 +107,4 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         if not host:
             return self.async_abort(reason="missing_api_domain")
         port = zeroconf_properties.get("https_port") or discovery_info.port
-        try:
-            port_int = int(port)
-        except (TypeError, ValueError):
-            return self.async_abort(reason="cannot_connect")
-        if port_int <= 0:
-            return self.async_abort(reason="cannot_connect")
-        return await self.async_step_user({CONF_HOST: host, CONF_PORT: port_int})
+        return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})
