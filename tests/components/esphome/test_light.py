@@ -1953,6 +1953,70 @@ async def test_only_cold_warm_white_support(
     mock_client.light_command.reset_mock()
 
 
+async def test_cold_warm_white_no_mireds_set(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test cold/warm white light with no mireds set doesn't divide by zero."""
+    mock_client.api_version = APIVersion(1, 7)
+    color_modes = (
+        LightColorCapability.COLD_WARM_WHITE
+        | LightColorCapability.ON_OFF
+        | LightColorCapability.BRIGHTNESS
+    )
+    entity_info = [
+        LightInfo(
+            object_id="mylight",
+            key=1,
+            name="my light",
+            min_mireds=0,
+            max_mireds=0,
+            supported_color_modes=[color_modes],
+        )
+    ]
+    states = [
+        LightState(
+            key=1,
+            state=True,
+            brightness=100,
+            warm_white=1,
+            cold_white=1,
+            color_mode=color_modes,
+        )
+    ]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("light.test_my_light")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_my_light", ATTR_COLOR_TEMP_KELVIN: 3600},
+        blocking=True,
+    )
+    mock_client.light_command.assert_has_calls(
+        [
+            call(
+                key=1,
+                state=True,
+                color_mode=color_modes,
+                cold_white=1.0,
+                warm_white=1.0,
+                device_id=0,
+            )
+        ]
+    )
+    mock_client.light_command.reset_mock()
+
+
 async def test_light_no_color_modes(
     hass: HomeAssistant,
     mock_client: APIClient,
