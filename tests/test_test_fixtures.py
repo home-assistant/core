@@ -164,7 +164,9 @@ def test_pipe_self_wakeup_env_var_installs_on_conftest_import(
     This verifies that the custom pipe-based wakeup path is actually installed
     when enabled and not installed when disabled. It does not try to assert
     whether the sandbox blocks the default socketpair-based wakeup on the
-    current platform.
+    current platform. On loop implementations that do not expose the selector
+    internals required by the workaround, the enabled case should no-op rather
+    than crash.
     """
     cwd = pathlib.Path(__file__).resolve().parents[1]
     command = [
@@ -172,14 +174,21 @@ def test_pipe_self_wakeup_env_var_installs_on_conftest_import(
         "-c",
         (
             "import asyncio; "
+            "import os; "
             "import tests.conftest; "
             "loop = asyncio.new_event_loop(); "
+            "required = ('_ssock', '_csock', '_add_reader', '_remove_reader', "
+            "'_process_self_data', '_internal_fds'); "
+            "supported = all(hasattr(loop, attr) for attr in required); "
+            "enabled = os.environ['HASS_TEST_USE_PIPE_SELF_WAKEUP'] == '1'; "
+            "expected = enabled and supported; "
+            "installed = getattr(loop, '_pipe_self_wakeup_installed', False); "
             "raise SystemExit("
-            "0 if getattr(loop, '_pipe_self_wakeup_installed', False) else 1)"
+            "0 if installed == expected else 1)"
         ),
     ]
 
-    for env_value, expected_returncode in (("0", 1), ("1", 0)):
+    for env_value in ("0", "1"):
         env = {
             **os.environ,
             "HASS_TEST_USE_PIPE_SELF_WAKEUP": env_value,
@@ -196,6 +205,6 @@ def test_pipe_self_wakeup_env_var_installs_on_conftest_import(
             text=True,
             timeout=20,
         )
-        assert result.returncode == expected_returncode, (
+        assert result.returncode == 0, (
             f"env={env_value}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )

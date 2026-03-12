@@ -186,6 +186,8 @@ class _PipeSelfWakeup:
         os.set_blocking(self._read_fd, False)
         os.set_blocking(self._write_fd, False)
 
+    def install(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Replace the loop self-wakeup internals with the pipe-backed version."""
         loop._ssock = self._FD(self._read_fd)
         loop._csock = self._FD(self._write_fd)
         loop._pipe_self_wakeup_installed = True
@@ -237,12 +239,57 @@ def _install_pipe_self_wakeup(loop: asyncio.AbstractEventLoop) -> None:
     if getattr(loop, "_pipe_self_wakeup_installed", False):
         return
 
+    required_attrs = (
+        "_ssock",
+        "_csock",
+        "_add_reader",
+        "_remove_reader",
+        "_process_self_data",
+        "_internal_fds",
+    )
+    if not all(hasattr(loop, attr) for attr in required_attrs):
+        _LOGGER.info(
+            "Skipping pipe self-wakeup for unsupported loop implementation %s",
+            type(loop).__name__,
+        )
+        return
+
     old_ssock = loop._ssock
     old_csock = loop._csock
-    loop._remove_reader(old_ssock.fileno())
-    old_ssock.close()
-    old_csock.close()
-    _PipeSelfWakeup(loop)
+    try:
+        pipe_self_wakeup = _PipeSelfWakeup(loop)
+        pipe_self_wakeup.install(loop)
+    except OSError:
+        _LOGGER.warning(
+            "Failed to install pipe self-wakeup; keeping socketpair wakeup",
+            exc_info=True,
+        )
+        return
+
+    try:
+        loop._remove_reader(old_ssock.fileno())
+    except OSError, RuntimeError, ValueError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to remove old self-wakeup reader from loop",
+                exc_info=True,
+            )
+    try:
+        old_ssock.close()
+    except OSError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to close old self-wakeup reader socket",
+                exc_info=True,
+            )
+    try:
+        old_csock.close()
+    except OSError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to close old self-wakeup writer socket",
+                exc_info=True,
+            )
 
 
 class _PipeWakeupHassEventLoopPolicy(runner.HassEventLoopPolicy):
