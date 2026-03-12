@@ -139,9 +139,10 @@ async def async_remove_config_entry_device(
             device_obj = HIVIDevice(**device_dict)
             speaker_device_id = device_obj.speaker_device_id
 
-        await device_manager.async_remove_device_with_entities(ha_device_id)
+        await device_manager.async_remove_entities_for_device(ha_device_id)
+        await device_manager.device_data_registry.async_remove_device_data(ha_device_id)
         _LOGGER.debug(
-            "Requested device manager to delete device %s and its entities",
+            "Cleaned up entities and data for device %s, HA will remove the device entry",
             ha_device_id,
         )
 
