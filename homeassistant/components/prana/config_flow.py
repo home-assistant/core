@@ -5,7 +5,7 @@ from typing import Any
 
 from prana_local_api_client.exceptions import PranaApiCommunicationError
 from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
-from prana_local_api_client.prana_api_client import PranaLocalApiClient
+from prana_local_api_client.prana_local_api_client import PranaLocalApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
