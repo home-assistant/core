@@ -1,7 +1,7 @@
 # serializer version: 1
-# name: test_victron_battery_sensor
-  list([
-    EntityRegistryEntrySnapshot({
+# name: test_victron_battery_sensor[sensor.battery_dc_bus_current]
+  dict({
+    'entry': EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
       'area_id': None,
@@ -40,5 +40,19 @@
       'unique_id': 'battery_0_battery_current',
       'unit_of_measurement': 'A',
     }),
-  ])
+    'state': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'current',
+        'friendly_name': 'Battery DC bus current',
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        'unit_of_measurement': 'A',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.battery_dc_bus_current',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '10.5',
+    }),
+  })
 # ---

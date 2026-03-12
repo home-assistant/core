@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,20 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "[%key:component::victron_gx::config::step::user::data_description::password%]",
-          "ssl": "[%key:component::victron_gx::config::step::user::data_description::ssl%]",
-          "username": "[%key:component::victron_gx::config::step::user::data_description::username%]"
-        },
-        "description": "The credentials for {host} need to be updated.",
-        "title": "Reauthenticate Victron GX"
-      },
       "ssdp_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

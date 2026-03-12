@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from victron_mqtt import MetricKind
+from victron_mqtt import CannotConnectError, MetricKind
 
 from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import CONF_INSTALLATION_ID, DOMAIN
@@ -260,3 +260,31 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
     assert config_entry.runtime_data.new_metric_callbacks == {}
     mock_forward.assert_called_once()
     mock_unload.assert_called_once()
+
+
+async def test_hub_start_connection_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test hub start with connection error."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+        },
+        unique_id=MOCK_INSTALLATION_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.victron_gx.hub.VictronVenusHub.connect",
+        side_effect=CannotConnectError("Connection failed"),
+    ):
+        # Attempt to set up the config entry - should fail and mark as SETUP_RETRY
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify the config entry is in SETUP_RETRY state (not loaded due to error)
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
