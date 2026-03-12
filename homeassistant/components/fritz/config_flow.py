@@ -173,17 +173,18 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             or discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
         )
 
-        uuid: str | None
-        if uuid := discovery_info.upnp.get(ATTR_UPNP_UDN):
-            uuid = uuid.removeprefix("uuid:")
-            await self.async_set_unique_id(uuid)
-            self._abort_if_unique_id_configured({CONF_HOST: self._host})
+        uuid: str | None = None
+        if raw_udn := discovery_info.upnp.get(ATTR_UPNP_UDN):
+            uuid = raw_udn.removeprefix("uuid:").strip() or None
+        unique_id_for_flow = uuid or host
+        await self.async_set_unique_id(unique_id_for_flow)
+        self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
 
         if entry := await self.async_check_configured_entry():
-            if uuid and not entry.unique_id:
+            if uuid:
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
