@@ -137,19 +137,21 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
-    "binary_sensor",
     "button",
     "climate",
     "cover",
     "device_tracker",
     "door",
     "fan",
+    "garage_door",
+    "gate",
     "humidifier",
+    "humidity",
+    "input_boolean",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
-    "number",
     "person",
     "remote",
     "scene",
@@ -159,6 +161,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "text",
     "update",
     "vacuum",
+    "window",
 }
 
 

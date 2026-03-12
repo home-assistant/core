@@ -54,7 +54,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The device's BLE MAC address is both its unique identifier and does not change.

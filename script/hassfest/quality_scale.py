@@ -2111,6 +2111,8 @@ NO_QUALITY_SCALE = [
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -2120,6 +2122,7 @@ NO_QUALITY_SCALE = [
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
+    "humidity",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -2154,6 +2157,7 @@ NO_QUALITY_SCALE = [
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 

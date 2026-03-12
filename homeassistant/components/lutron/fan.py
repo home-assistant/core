@@ -83,7 +83,7 @@ class LutronFan(LutronDevice, FanEntity):
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        level = self._lutron_device.last_level()
+        level = int(self._lutron_device.last_level())
         self._attr_is_on = level > 0
         self._attr_percentage = level
         if self._prev_percentage is None or level != 0:
