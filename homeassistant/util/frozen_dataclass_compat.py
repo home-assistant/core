@@ -101,7 +101,7 @@ class FrozenOrThawed(type):
                 cls.__annotations__ = annotations
             else:
 
-                def wrapped_annotate(format: Format) -> dict:
+                def wrapped_annotate(format: Format) -> dict[str, Any]:
                     return annotations
 
                 cls.__annotate__ = wrapped_annotate
