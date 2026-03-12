@@ -3,12 +3,11 @@ from typing import Dict
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN
-from .device import ConnectionStatus, HIVIDevice, SlaveDeviceInfo
+from .device import ConnectionStatus, HIVIDevice
 from .device_manager import HIVIDeviceManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,29 +66,30 @@ class HIVISlaveControlSwitch(SwitchEntity):
 
         self._hub.add_switch(self)
 
+        # Store slave's ha_device_id at init to avoid race: DeviceDataRegistry also
+        # listens to device_registry_updated and may pop the device before we look up.
+        self._slave_ha_device_id: str | None = (
+            self._device_manager.device_data_registry.get_ha_device_id_by_speaker_device_id(
+                self._slave_speaker_device_id
+            )
+        )
+
         async def device_registry_updated(event):
             _LOGGER.debug("Device registry updated event: %s", event.data)
             ha_device_id = event.data["device_id"]
             action = event.data["action"]
-            if action == "remove":
-                # Device deleted - delete current switch if slave device is removed
-                slave_device_dict = self._device_manager.device_data_registry.get_device_dict_by_ha_device_id(
-                    ha_device_id=ha_device_id
+            if action == "remove" and ha_device_id == self._slave_ha_device_id:
+                _LOGGER.debug(
+                    "Removing switch entity for deleted slave device %s",
+                    self._slave_speaker_device_id,
                 )
-                if slave_device_dict is not None:
-                    speaker_device_id = slave_device_dict.get("speaker_device_id")
-                    if speaker_device_id == self._slave_speaker_device_id:
-                        _LOGGER.debug(
-                            "Removing switch entity for deleted slave device %s",
-                            speaker_device_id,
-                        )
-                        # Remove from hub
-                        self._hub.switches.pop(self._attr_unique_id, None)
-                        # Remove entity from Home Assistant
-                        if self.hass and hasattr(self, "async_remove"):
-                            await self.async_remove()
+                self._hub.switches.pop(self._attr_unique_id, None)
+                if self.hass and hasattr(self, "async_remove"):
+                    await self.async_remove()
 
-        self.hass.bus.async_listen("device_registry_updated", device_registry_updated)
+        self._unsub_device_registry = self.hass.bus.async_listen(
+            "device_registry_updated", device_registry_updated
+        )
 
     def get_master_device(self):
         """Get master and slave device objects"""
@@ -176,15 +176,21 @@ class HIVISlaveControlSwitch(SwitchEntity):
 
     async def async_added_to_hass(self):
         """When entity is added to hass"""
-
-        _LOGGER.debug(f"Adding switch entity {self.name} to Home Assistant")
-
+        _LOGGER.debug("Adding switch entity %s to Home Assistant", self.name)
         await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from device_registry_updated when entity is removed."""
+        if self._unsub_device_registry is not None:
+            self._unsub_device_registry()
+            self._unsub_device_registry = None
 
     @property
     def available(self) -> bool:
-        """Whether the switch is available"""
+        """Whether the switch is available."""
         master_device = self.get_master_device()
+        if master_device is None:
+            return False
         return (
             master_device.connection_status == ConnectionStatus.ONLINE
             and master_device.can_be_master
