@@ -1,17 +1,23 @@
+"""Discovery scheduler for the HiVi Speaker integration."""
+
 from __future__ import annotations
+
 import asyncio
-import logging
+import contextlib
 from datetime import datetime, timedelta
-from typing import Dict, Optional, List, Tuple
-from defusedxml import ElementTree as ET
+import logging
 import socket
-import aiohttp
 import time
 
+import aiohttp
+from defusedxml import ElementTree as ET
+
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from .const import DOMAIN, SIGNAL_DEVICE_DISCOVERED
+
+from .const import SIGNAL_DEVICE_DISCOVERED
 from .device import ConnectionStatus
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,9 +29,16 @@ MCAST_ADDR = ("239.255.255.250", 1900)
 
 
 class HIVIDiscoveryScheduler:
-    """Intelligent discovery scheduler"""
+    """Intelligent discovery scheduler."""
 
-    def __init__(self, hass, config_entry, device_manager, base_interval: int = 300):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry,
+        device_manager,
+        base_interval: int = 300,
+    ) -> None:
+        """Initialize the discovery scheduler."""
         self.hass = hass
         self.config_entry = config_entry
         self.device_manager = device_manager
@@ -33,16 +46,16 @@ class HIVIDiscoveryScheduler:
 
         # Dynamic adjustment
         self.current_interval = base_interval
-        self.min_interval = 120  # Minimum 10 seconds
+        self.min_interval = 120  # Minimum 2 minutes
         self.max_interval = 600  # Maximum 10 minutes
 
         # Status flags
-        self._discovery_task: Optional[asyncio.Task] = None
+        self._discovery_task: asyncio.Task | None = None
         self._discovery_running = False
-        self._next_discovery: Optional[datetime] = None
+        self._next_discovery: datetime | None = None
 
         # Operation delay tracking
-        self._operation_delays: Dict[
+        self._operation_delays: dict[
             str, datetime
         ] = {}  # speaker_device_id -> operation time
         # Immediate discovery flag
@@ -53,7 +66,7 @@ class HIVIDiscoveryScheduler:
         self._discovery_unsub = None
 
     async def async_start(self):
-        """Start scheduler"""
+        """Start scheduler."""
 
         _LOGGER.debug("Starting HIVI device discovery scheduler")
 
@@ -108,8 +121,10 @@ class HIVIDiscoveryScheduler:
         _LOGGER.debug("_reschedule next discovery in %s seconds", delay)
 
         def _callback(_now):
-            """async_call_later callback: may execute in a non-event-loop thread,
-            so we need to use loop.call_soon_threadsafe to send the task creation operation back to the event loop thread for execution."""
+            """Run discovery from async_call_later callback.
+
+            Uses call_soon_threadsafe since callback may run in a non-event-loop thread.
+            """
             _LOGGER.debug(
                 "_reschedule callback triggered, create _run_discovery task (thread-safe)"
             )
@@ -142,7 +157,7 @@ class HIVIDiscoveryScheduler:
                 self._discovery_unsub = None
 
     async def _run_discovery(self):
-        """Run discovery"""
+        """Run discovery."""
         try:
             _LOGGER.debug("Performing discovery")
             await self._perform_discovery()
@@ -155,7 +170,7 @@ class HIVIDiscoveryScheduler:
             # adjust interval
             await self._adjust_interval()
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             _LOGGER.error("Discovery failed: %s", e)
             # wait 60 seconds before retrying
             self._next_discovery = datetime.now() + timedelta(seconds=60)
@@ -164,7 +179,7 @@ class HIVIDiscoveryScheduler:
             await self._reschedule()
 
     async def schedule_immediate_discovery(self, force: bool = False):
-        """Immediate discovery"""
+        """Immediate discovery."""
         if force:
             _LOGGER.info("Forcing immediate discovery")
             self.hass.async_create_task(self._run_discovery())
@@ -176,7 +191,7 @@ class HIVIDiscoveryScheduler:
                 await self._reschedule()
 
     async def postpone_discovery(self, delay_seconds: int = 300):
-        """Postpone discovery"""
+        """Postpone discovery."""
 
         _LOGGER.debug("postpone_discovery")
 
@@ -190,7 +205,7 @@ class HIVIDiscoveryScheduler:
         return False
 
     async def _perform_discovery(self):
-        """Perform device discovery"""
+        """Perform device discovery."""
 
         # Record start time
         start_time = datetime.now()
@@ -203,15 +218,15 @@ class HIVIDiscoveryScheduler:
                     self.hass, SIGNAL_DEVICE_DISCOVERED, discovered_devices
                 )
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             _LOGGER.error("Device discovery failed: %s", e)
 
         # Record execution time
         duration = (datetime.now() - start_time).total_seconds()
         _LOGGER.debug("Device discovery completed, took %.2f seconds", duration)
 
-    async def _discover_all_devices(self) -> List[Dict]:
-        """Discover all devices"""
+    async def _discover_all_devices(self) -> list[dict]:
+        """Discover all devices."""
 
         results = await self._discover_private_devices()
 
@@ -232,19 +247,17 @@ class HIVIDiscoveryScheduler:
 
         return discovered
 
-    async def _discover_private_devices(self) -> List[Dict]:
-        """
-        Put blocking scans in executor, then concurrently parse each response in event loop, finally return device dictionary with device_key as key.
-        """
-        discovered_devices: List[Dict] = []
+    async def _discover_private_devices(self) -> list[dict]:
+        """Put blocking scans in executor, then parse responses concurrently."""
+        discovered_devices: list[dict] = []
         seen_keys = set()  # Set for deduplication
         lock = asyncio.Lock()  # Lock to protect shared resources
 
         # 1) Execute synchronous scan in thread pool to avoid blocking event loop
         try:
             # Use Home Assistant recommended executor (will use HA thread pool)
-            raw_responses: List[
-                Tuple[str, Tuple[str, int]]
+            raw_responses: list[
+                tuple[str, tuple[str, int]]
             ] = await self.hass.async_add_executor_job(_scan_speaker_sync)
         except Exception:
             _LOGGER.exception("Private protocol scan (thread) failed")
@@ -260,7 +273,7 @@ class HIVIDiscoveryScheduler:
 
         session = async_get_clientsession(self.hass)
 
-        async def _parse_one(response_text: str, addr: Tuple[str, int]):
+        async def _parse_one(response_text: str, addr: tuple[str, int]):
             async with sem:
                 try:
                     dlna_info = await parse_ssdp_response(response_text, addr)
@@ -296,7 +309,7 @@ class HIVIDiscoveryScheduler:
         return discovered_devices
 
     async def _adjust_interval(self):
-        """Dynamically adjust discovery interval"""
+        """Dynamically adjust discovery interval."""
 
         online_count = 0
         offline_count = 0
@@ -305,7 +318,7 @@ class HIVIDiscoveryScheduler:
             online_count = len(
                 [
                     d
-                    for d in self.device_manager.device_data_registry._device_data.values()
+                    for d in self.device_manager.device_data_registry._device_data.values()  # noqa: SLF001
                     if d.get("device_dict", {}).get("connection_status")
                     == ConnectionStatus.ONLINE.value
                 ]
@@ -313,14 +326,14 @@ class HIVIDiscoveryScheduler:
             offline_count = len(
                 [
                     d
-                    for d in self.device_manager.device_data_registry._device_data.values()
+                    for d in self.device_manager.device_data_registry._device_data.values()  # noqa: SLF001
                     if d.get("device_dict", {}).get("connection_status")
                     == ConnectionStatus.OFFLINE.value
                 ]
             )
-        except Exception as e:
+        except Exception:
             _LOGGER.exception(
-                "error in calculating online/offline device count during discovery interval adjustment: %s", e
+                "Error in calculating online/offline device count during discovery interval adjustment"
             )
 
         _LOGGER.debug("Current online device count: %d", online_count)
@@ -352,10 +365,8 @@ class HIVIDiscoveryScheduler:
                 )
 
 
-def _scan_speaker_sync() -> List[Tuple[str, Tuple[str, int]]]:
-    """
-    scan_speaker_sync performs synchronous SSDP M-SEARCH to discover devices.
-    """
+def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
+    """Perform synchronous SSDP M-SEARCH to discover devices."""
     discovered_raw = []
     sock = None
     try:
@@ -365,19 +376,19 @@ def _scan_speaker_sync() -> List[Tuple[str, Tuple[str, int]]]:
         sock.settimeout(SOCKET_TIMEOUT)
 
         msearch_message = (
-            "M-SEARCH * HTTP/1.1\r\n"
-            "HOST: 239.255.255.250:1900\r\n"
-            'MAN: "ssdp:discover"\r\n'
-            "MX: 3\r\n"
-            f"ST: ssdp:wiimudevice\r\n"
-            "USER-AGENT: iOS UPnP/1.1\r\n"
-            "\r\n"
-        ).encode("utf-8")
+            b"M-SEARCH * HTTP/1.1\r\n"
+            b"HOST: 239.255.255.250:1900\r\n"
+            b'MAN: "ssdp:discover"\r\n'
+            b"MX: 3\r\n"
+            b"ST: ssdp:wiimudevice\r\n"
+            b"USER-AGENT: iOS UPnP/1.1\r\n"
+            b"\r\n"
+        )
 
         for _ in range(SEND_REPEAT):
             try:
                 sock.sendto(msearch_message, MCAST_ADDR)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 # If sending fails, break out of send loop but still try to receive packets that may have arrived
                 break
 
@@ -387,19 +398,17 @@ def _scan_speaker_sync() -> List[Tuple[str, Tuple[str, int]]]:
                 data, addr = sock.recvfrom(4096)
                 text = data.decode("utf-8", errors="ignore")
                 discovered_raw.append((text, addr))
-            except socket.timeout:
+            except TimeoutError:
                 # Expected behavior, continue until total time is reached
                 continue
-            except Exception:
+            except Exception:  # noqa: BLE001
                 # If there are other socket errors, record and break (or continue, depending on requirements)
                 break
 
     finally:
         if sock is not None:
-            try:
+            with contextlib.suppress(Exception):
                 sock.close()
-            except Exception:
-                pass
 
     return discovered_raw
 
@@ -428,12 +437,13 @@ async def parse_local_url(session: aiohttp.ClientSession, url: str):
                     "UDN": device.findtext("device:UDN", "", ns),
                 }
             return None
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         _LOGGER.debug("Error parsing DLNA description: %s", e)
         return None
 
 
 async def parse_ssdp_response(response_text, addr):
+    """Parse an SSDP response into a device info dictionary."""
     device_info = {"ip": addr[0], "port": addr[1], "raw_response": response_text}
 
     lines = response_text.split("\r\n")
@@ -443,7 +453,7 @@ async def parse_ssdp_response(response_text, addr):
                 key, value = line.split(":", 1)
                 key = key.strip().lower()  # Header keys are case-insensitive
                 value = value.strip()
-                if key in [
+                if key in {
                     "server",
                     "location",
                     "st",
@@ -451,10 +461,10 @@ async def parse_ssdp_response(response_text, addr):
                     "cache-control",
                     "ext",
                     "date",
-                ]:
+                }:
                     device_info[key] = value
                 elif key.startswith("http/"):  # Status line
                     device_info["connection_status"] = value
-            except Exception:
+            except Exception:  # noqa: BLE001
                 continue
     return device_info
