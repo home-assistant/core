@@ -3,10 +3,10 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_MAC
 
-from homeassistant.components.solarman.const import DOMAIN
+from homeassistant.components.solarman.const import DOMAIN, CONF_SN
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -15,11 +15,12 @@ TEST_HOST = "192.168.1.100"
 TEST_PORT = 8080
 TEST_DEVICE_SN = "SN1234567890"
 TEST_MODEL = "SP-2W-EU"
+TEST_MAC = "AA:BB:CC:DD:EE:FF"
 
 @pytest.fixture
-def device_fixture(request) -> str:
+def device_fixture(request) -> str | None:
     """Return the device fixtures for a specific device."""
-    return request.param
+    return getattr(request, "param", None)
 
 @pytest.fixture
 def mock_config_entry(device_fixture: str) -> MockConfigEntry:
@@ -28,12 +29,11 @@ def mock_config_entry(device_fixture: str) -> MockConfigEntry:
         domain=DOMAIN,
         title=f"{device_fixture} ({TEST_HOST})",
         data={
-            "host": TEST_HOST,
-            "port": TEST_PORT,
-            "sn": TEST_DEVICE_SN,
-            "model": device_fixture,
+            CONF_HOST: TEST_HOST,
+            CONF_SN: TEST_DEVICE_SN,
+            CONF_MODEL: device_fixture,
+            CONF_MAC: TEST_MAC
         },
-        source="user",
         unique_id=TEST_DEVICE_SN,
     )
 
@@ -46,9 +46,8 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
             autospec=True,
         ) as mock_client,
         patch(
-            "homeassistant.components.solarman.config_flow.Solarman.get_config",
-            new_callable=AsyncMock,
-            return_value=load_json_object_fixture(f"{device_fixture}/config.json", DOMAIN)
+            "homeassistant.components.solarman.config_flow.Solarman",
+            new=mock_client,
         )
     ):
         client = mock_client.return_value
@@ -57,11 +56,11 @@ def mock_solarman(device_fixture: str) -> Generator[AsyncMock]:
         yield client
 
 
-async def setup_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry
-) -> None:
-    """Set up the integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.solarman.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

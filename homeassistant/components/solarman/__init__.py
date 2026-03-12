@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from solarman_opendata.solarman import Solarman
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import PLATFORMS
+from .const import DEFAULT_PORT, PLATFORMS
 from .coordinator import SolarmanConfigEntry, SolarmanDeviceUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarmanConfigEntry) -> bool:
     """Set up Solarman from a config entry."""
     client = Solarman(
-        async_get_clientsession(hass), entry.data[CONF_HOST], entry.data[CONF_PORT]
+        async_get_clientsession(hass), entry.data[CONF_HOST], DEFAULT_PORT
     )
     coordinator = SolarmanDeviceUpdateCoordinator(hass, entry, client)
 

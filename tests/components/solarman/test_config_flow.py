@@ -3,10 +3,11 @@ from ipaddress import ip_address
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.components.solarman.const import DOMAIN
+from homeassistant.components.solarman.const import DOMAIN, CONF_SN, MODEL_NAME_MAP
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -16,41 +17,42 @@ TEST_HOST = "192.168.1.100"
 TEST_DEVICE_SN = "SN1234567890"
 TEST_MODEL = "SP-2W-EU"
 
-
-async def test_flow_success(hass: HomeAssistant):
+@pytest.mark.parametrize(
+    "device_fixture", ["P1-2W"], indirect=True
+)
+async def test_flow_success(hass: HomeAssistant, mock_solarman: AsyncMock):
     """Test successful configuration flow."""
 
     # Initiate config flow
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Verify initial form
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Mock get_config returning success.
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        return_value=load_json_object_fixture("P1-2W/config.json", DOMAIN)
-    ):
-        # Submit valid data
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": TEST_HOST},
-        )
+    mock_solarman.get_config.return_value = load_json_object_fixture("P1-2W/config.json", DOMAIN)
+
+    # Submit valid data
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST}
+    )
 
     # Verify entry creation
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{"P1-2W"} ({TEST_HOST})"
+    assert result["title"] == f"P1 Meter Reader ({TEST_HOST})"
+    assert result["context"]["unique_id"] == "SN2345678901"
 
     # Verify configuration data.
     data = result["data"]
-    assert data["host"] == TEST_HOST
-    assert data["sn"] == "SN2345678901"
-    assert data["model"] == "P1-2W"
-
+    assert data[CONF_HOST] == TEST_HOST
+    assert data[CONF_SN] == "SN2345678901"
+    assert data[CONF_MODEL] == "P1-2W"
+@pytest.mark.parametrize(
+    "device_fixture", ["SP-2W-EU"], indirect=True
+)
 @pytest.mark.parametrize(
     "exception, expected_error",
     [
@@ -60,31 +62,41 @@ async def test_flow_success(hass: HomeAssistant):
     ]
 )
 async def test_flow_error(
-    hass: HomeAssistant, 
+    hass: HomeAssistant,
+    mock_solarman: AsyncMock,
     exception: Exception,
     expected_error: str
 ):
     """Test connection error handling."""
     # Initiate and submit config flow
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Mock get_config raising connection error
-    with patch(
-        "homeassistant.components.solarman.config_flow.Solarman.get_config",
-        new_callable=AsyncMock,
-        side_effect=exception,
-    ):
-        # Submit config flow
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": TEST_HOST},
-        )
+    mock_solarman.get_config.side_effect = exception
+
+
+    # Submit config flow
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": TEST_HOST},
+    )
 
     # Verify error form display.
     assert result["type"] == FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
+
+    mock_solarman.get_config.side_effect = None
+    mock_solarman.get_config.return_value = load_json_object_fixture(
+        "P1-2W/config.json", DOMAIN
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": TEST_HOST},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 @pytest.mark.parametrize(
     "device_fixture", ["SP-2W-EU"], indirect=True
@@ -104,7 +116,7 @@ async def test_flow_duplicate_entry(
     ):
         # Initiate and submit config flow
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
 
         result = await hass.config_entries.flow.async_configure(
@@ -121,7 +133,7 @@ async def test_flow_duplicate_entry(
 async def test_zeroconf(hass: HomeAssistant, mock_solarman: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
@@ -140,17 +152,18 @@ async def test_zeroconf(hass: HomeAssistant, mock_solarman: AsyncMock) -> None:
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], 
-        user_input={},
+        result["flow_id"],
+        {}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{TEST_MODEL} ({TEST_HOST})"
+    assert result["title"] == f"{MODEL_NAME_MAP[TEST_MODEL]} ({TEST_HOST})"
 
     data = result["data"]
-    assert data["host"] == TEST_HOST
-    assert data["sn"] == TEST_DEVICE_SN
-    assert data["model"] == TEST_MODEL
+    assert data[CONF_HOST] == TEST_HOST
+    assert data[CONF_SN] == TEST_DEVICE_SN
+    assert data[CONF_MODEL] == TEST_MODEL
+    assert result["context"]["unique_id"] == TEST_DEVICE_SN
 
 @pytest.mark.parametrize(
     "device_fixture", ["SP-2W-EU"], indirect=True
@@ -165,7 +178,7 @@ async def test_zeroconf_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
@@ -203,7 +216,7 @@ async def test_zeroconf_ip_change(
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
+            context={"source": SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
                 ip_address=ip_address("192.168.1.101"),
                 ip_addresses=[ip_address("192.168.1.101")],
@@ -248,7 +261,7 @@ async def test_zeroconf_error(
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
+            context={"source": SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
                 ip_address=ip_address(TEST_HOST),
                 ip_addresses=[ip_address(TEST_HOST)],
@@ -263,12 +276,6 @@ async def test_zeroconf_error(
             ),
         )
 
-        """
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], 
-            user_input={},
-        )
-        """
 
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == expected_error

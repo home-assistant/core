@@ -91,17 +91,8 @@
       "total_gas": {
         "name": "Total gas consumption"
       },
-      "current": {
-        "name": "Current"
-      },
       "active_power": {
         "name": "Active power"
-      },
-      "apparent_power": {
-        "name": "Apparent power"
-      },
-      "reactive_power": {
-        "name": "Reactive power"
       },
       "power_factor": {
         "name": "Power factor"

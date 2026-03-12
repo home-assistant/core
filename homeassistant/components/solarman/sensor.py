@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import SolarmanDeviceUpdateCoordinator, SolarmanConfigEntry
+from .coordinator import SolarmanConfigEntry, SolarmanDeviceUpdateCoordinator
 from .entity import SolarmanEntity
 
 PARALLEL_UPDATES = 1
@@ -195,7 +195,6 @@ SENSORS: Final = (
     ),
     SensorEntityDescription(
         key="current",
-        translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -209,14 +208,12 @@ SENSORS: Final = (
     ),
     SensorEntityDescription(
         key="apparent power",
-        translation_key="apparent_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="reactive power",
-        translation_key="reactive_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.REACTIVE_POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -281,4 +278,4 @@ class SolarmanSensorEntity(SolarmanEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        return self.coordinator.data[self.entity_description.key]  # type: ignore[no-any-return]

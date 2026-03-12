@@ -7,8 +7,8 @@ from typing import Any
 
 from solarman_opendata.solarman import Solarman
 
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type SolarmanConfigEntry = ConfigEntry[SolarmanDeviceUpdateCoordinator]
 
 
-class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator):
+class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for managing Solarman device data updates and control operations."""
 
     config_entry: SolarmanConfigEntry
@@ -41,13 +41,10 @@ class SolarmanDeviceUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch and update device data."""
-        data: dict[str, Any] = {}
         try:
-            data = await self.api.fetch_data()
+            return await self.api.fetch_data()  # type: ignore[no-any-return]
         except ConnectionError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
-
-        return data

@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform, STATE_UNAVAILABLE
@@ -13,7 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.components.solarman.const import UPDATE_INTERVAL
 
 
-from .conftest import setup_integration
+from  . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform, async_fire_time_changed
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -40,16 +41,18 @@ async def test_sensor(
 async def test_sensor_availability(
     hass: HomeAssistant, 
     mock_solarman: AsyncMock, 
-    mock_config_entry: MockConfigEntry
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     with patch("homeassistant.components.solarman.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-    
+
     assert (state := hass.states.get("sensor.smart_plug_voltage"))
     assert state.state == "230"
 
     mock_solarman.fetch_data.side_effect = ConnectionError
-    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("sensor.smart_plug_voltage"))

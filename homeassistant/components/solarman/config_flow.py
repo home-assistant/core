@@ -7,7 +7,7 @@ from solarman_opendata.solarman import Solarman
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TYPE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -17,6 +17,7 @@ from .const import (
     CONF_SN,
     DEFAULT_PORT,
     DOMAIN,
+    MODEL_NAME_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,13 +28,11 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host = ""
-    model = ""
-    device_sn = ""
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.client: Solarman
+    host: str | None = None
+    model: str | None = None
+    device_sn: str | None = None
+    mac: str | None = None
+    client: Solarman | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -43,7 +42,9 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
 
-            self.client = Solarman(async_get_clientsession(self.hass), self.host, DEFAULT_PORT)
+            self.client = Solarman(
+                async_get_clientsession(self.hass), self.host, DEFAULT_PORT
+            )
 
             try:
                 config_data = await self.client.get_config()
@@ -59,18 +60,21 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 self.device_sn = device_info[CONF_SN]
                 self.model = device_info[CONF_TYPE]
+                self.mac = ":".join(
+                    device_info[CONF_MAC][i : i + 2] for i in range(0, 12, 2)
+                )
 
                 await self.async_set_unique_id(self.device_sn)
                 self._abort_if_unique_id_configured()
 
                 if not errors:
                     return self.async_create_entry(
-                        title=f"{self.model} ({self.host})",
+                        title=f"{MODEL_NAME_MAP[self.model]!s} ({self.host})",
                         data={
                             CONF_HOST: self.host,
-                            CONF_PORT: DEFAULT_PORT,
                             CONF_SN: self.device_sn,
                             CONF_MODEL: self.model,
+                            CONF_MAC: self.mac,
                         },
                     )
 
@@ -95,7 +99,7 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            await self.client.get_config()
+            config_data = await self.client.get_config()
         except TimeoutError:
             return self.async_abort(reason="timeout")
         except ConnectionError:
@@ -106,6 +110,9 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.model = discovery_info.properties[CONF_PRODUCT_TYPE]
         self.device_sn = discovery_info.properties[CONF_SERIAL]
+
+        device_info = config_data.get(CONF_DEVICE, config_data)
+        self.mac = ":".join(device_info[CONF_MAC][i : i + 2] for i in range(0, 12, 2))
 
         await self.async_set_unique_id(self.device_sn)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
@@ -122,12 +129,12 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{self.model} ({self.host})",
+                title=f"{MODEL_NAME_MAP[self.model]!s} ({self.host})",
                 data={
                     CONF_HOST: self.host,
-                    CONF_PORT: DEFAULT_PORT,
                     CONF_SN: self.device_sn,
                     CONF_MODEL: self.model,
+                    CONF_MAC: self.mac,
                 },
             )
 
@@ -142,5 +149,6 @@ class SolarmanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self.model,
                 CONF_SN: self.device_sn,
                 CONF_HOST: self.host,
+                CONF_MAC: str(self.mac),
             },
         )

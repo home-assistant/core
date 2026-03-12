@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_MODEL
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import CONF_MAC, CONF_MODEL
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SN, DOMAIN, MODEL_NAME_MAP
@@ -22,12 +22,14 @@ class SolarmanEntity(CoordinatorEntity[SolarmanDeviceUpdateCoordinator]):
         entry = coordinator.config_entry
 
         sn = entry.data[CONF_SN]
-        model = entry.data[CONF_MODEL]
+        model_id = entry.data[CONF_MODEL]
 
         self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
             identifiers={(DOMAIN, sn)},
-            name=MODEL_NAME_MAP[model],
+            name=MODEL_NAME_MAP[model_id],
             manufacturer="SOLARMAN",
-            model=model,
+            model=MODEL_NAME_MAP[model_id],
+            model_id=model_id,
             serial_number=sn,
         )
