@@ -24,6 +24,10 @@ CONF_ENCRYPTION_KEY: Final = "encryption_key"
 CONF_IGNORE_TIMESTAMPS: Final = "ignore_timestamps"
 CONF_PING_INTERVAL: Final = "ping_interval"
 CONF_ZONES: Final = "zones"
+CONF_PANEL_ID: Final = "panel_id"
+CONF_FORWARD_HEARTBEAT: Final = "forward_heartbeat"
+
+PROTOCOL_OH: Final = "OH"
 
 SIA_HUB_ZONE: Final = 0
 SIA_EVENT: Final = "sia_event_{}_{}"
