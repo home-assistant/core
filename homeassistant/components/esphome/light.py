@@ -106,20 +106,6 @@ def _mired_to_kelvin(mired_temperature: float) -> int:
     return round(1000000 / mired_temperature)
 
 
-def _color_temp_to_cold_warm(
-    color_temp_mired: float, min_mireds: float, max_mireds: float
-) -> tuple[float, float]:
-    """Convert a color temperature in mireds to cold/warm white fractions.
-
-    Returns (cold_white, warm_white) normalized so the brighter channel is 1.0.
-    """
-    color_temp_clamped = min(max(color_temp_mired, min_mireds), max_mireds)
-    ww_frac = (color_temp_clamped - min_mireds) / (max_mireds - min_mireds)
-    cw_frac = 1 - ww_frac
-    max_frac = max(cw_frac, ww_frac)
-    return cw_frac / max_frac, ww_frac / max_frac
-
-
 @lru_cache
 def _color_mode_to_ha(mode: ESPHomeColorMode) -> ColorMode:
     """Convert an esphome color mode to a HA color mode constant.
@@ -173,6 +159,21 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
     _native_supported_color_modes: tuple[ESPHomeColorMode, ...]
     _supports_color_mode = False
+
+    def _color_temp_to_cold_warm(self, color_temp_mired: float) -> tuple[float, float]:
+        """Convert a color temperature in mireds to cold/warm white fractions.
+
+        Returns (cold_white, warm_white) normalized so the brighter channel
+        is 1.0.
+        """
+        static_info = self._static_info
+        min_mireds = static_info.min_mireds
+        max_mireds = static_info.max_mireds
+        color_temp_clamped = min(max(color_temp_mired, min_mireds), max_mireds)
+        ww_frac = (color_temp_clamped - min_mireds) / (max_mireds - min_mireds)
+        cw_frac = 1 - ww_frac
+        max_frac = max(cw_frac, ww_frac)
+        return cw_frac / max_frac, ww_frac / max_frac
 
     @property
     @esphome_state_property
@@ -265,9 +266,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # Convert color temperature to explicit cold/warm white
                 # values to avoid ESPHome applying brightness to both
                 # master brightness and white channels (b² effect).
-                static_info = self._static_info
-                data["cold_white"], data["warm_white"] = _color_temp_to_cold_warm(
-                    color_temp_mired, static_info.min_mireds, static_info.max_mireds
+                data["cold_white"], data["warm_white"] = self._color_temp_to_cold_warm(
+                    color_temp_mired
                 )
                 color_modes = _filter_color_modes(
                     color_modes, LightColorCapability.COLD_WARM_WHITE
@@ -367,11 +367,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             self._native_supported_color_modes, LightColorCapability.COLD_WARM_WHITE
         ):
             # Try to reverse white + color temp to cwww
-            static_info = self._static_info
             white = state.white
-            cw, ww = _color_temp_to_cold_warm(
-                state.color_temperature, static_info.min_mireds, static_info.max_mireds
-            )
+            cw, ww = self._color_temp_to_cold_warm(state.color_temperature)
 
             return (
                 *rgb,
