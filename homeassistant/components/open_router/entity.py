@@ -298,6 +298,7 @@ class OpenRouterEntity(Entity):
 
             result_message = result.choices[0].message
 
+            prev_message_count = len(model_args["messages"])
             model_args["messages"].extend(
                 [
                     msg
@@ -307,5 +308,17 @@ class OpenRouterEntity(Entity):
                     if (msg := _convert_content_to_chat_message(content))
                 ]
             )
+
+            # Preserve reasoning_details in the assistant message so that
+            # reasoning context is maintained across turns (required by OpenRouter
+            # for models like DeepSeek R1, Gemini reasoning, and Anthropic Claude
+            # extended thinking when tool calls are involved).
+            reasoning_details = getattr(result_message, "reasoning_details", None)
+            if reasoning_details:
+                for msg in model_args["messages"][prev_message_count:]:
+                    if msg.get("role") == "assistant":
+                        msg["reasoning_details"] = reasoning_details
+                        break
+
             if not chat_log.unresponded_tool_results:
                 break
