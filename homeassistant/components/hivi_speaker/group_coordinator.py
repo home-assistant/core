@@ -3,9 +3,9 @@
 import asyncio
 import binascii
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional, Set
+from typing import Any, Awaitable, Callable, Dict, Optional, Set
 import logging
-from homeassistant.core import callback, Callable
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN
@@ -13,6 +13,9 @@ from .device import HIVIDevice
 from hivico import HivicoClient
 
 _LOGGER = logging.getLogger(__name__)
+
+# Callback invoked with a single result dict; must be async (awaitable).
+OperationResultCallback = Optional[Callable[[Dict[str, Any]], Awaitable[None]]]
 
 
 class HIVIGroupCoordinator:
@@ -39,18 +42,20 @@ class HIVIGroupCoordinator:
 
         # Store cancellation functions
         self._dispatcher_connections = []
+        self._unsub_operation_started = None
+        self._unsub_device_updated = None
 
     async def async_start(self):
         """Start coordinator"""
         self._coordinator_running = True
 
         # Listen for operation events
-        self.hass.bus.async_listen(
+        self._unsub_operation_started = self.hass.bus.async_listen(
             f"{DOMAIN}_group_operation_started", self._handle_operation_started
         )
 
         # Listen for device status changes
-        self.hass.bus.async_listen(
+        self._unsub_device_updated = self.hass.bus.async_listen(
             f"{DOMAIN}_device_updated", self._handle_device_updated
         )
 
@@ -84,9 +89,17 @@ class HIVIGroupCoordinator:
         self._poll_tasks.clear()
         self._pending_operations.clear()
 
-        # Cancel all signal listeners
+        # Cancel bus listeners
+        if self._unsub_operation_started is not None:
+            self._unsub_operation_started()
+            self._unsub_operation_started = None
+        if self._unsub_device_updated is not None:
+            self._unsub_device_updated()
+            self._unsub_device_updated = None
+
+        # Cancel all dispatcher signal listeners
         for cancel_func in self._dispatcher_connections:
-            cancel_func()  # Call cancellation function
+            cancel_func()
         self._dispatcher_connections.clear()
 
         _LOGGER.debug("group coordinator stopped")
@@ -94,7 +107,7 @@ class HIVIGroupCoordinator:
     async def async_set_slave_speaker(
         self,
         operation_data: Dict,
-        callback_func: Optional[Callable[[bool, Dict], None]] = None,
+        callback_func: OperationResultCallback = None,
     ) -> Dict[str, Any]:
         """Set slave speaker (with full callback support)"""
 
@@ -117,7 +130,7 @@ class HIVIGroupCoordinator:
         self,
         master_speaker_device_id: str,
         slave_speaker_device_id: str,
-        callback_func: Optional[Callable[[bool, Dict], None]] = None,
+        callback_func: OperationResultCallback = None,
     ) -> Dict[str, Any]:
         """Remove slave speaker (with full callback support)"""
         operation_data = {
@@ -145,7 +158,7 @@ class HIVIGroupCoordinator:
     async def async_handle_discovery_request(
         self,
         operation_data: Dict,
-        callback_func: Optional[Callable[[bool, Dict], None]] = None,
+        callback_func: OperationResultCallback = None,
     ) -> Dict[str, Any]:
         """Handle discovery request, return result via callback_func"""
         operation_id = self._generate_operation_id(operation_data)
@@ -643,14 +656,24 @@ class HIVIGroupCoordinator:
                 # )
                 try:
                     params = operation_data.get("params", {})
-                    slave_ip = params.get("slave_ip", "172.18.8.207")
-                    ssid = params.get("ssid", "5357414E204C532D3130305F30353139")
-                    wifi_channel = params.get("wifi_channel", 1)
-                    auth = params.get("auth", "WPAPSKWPA2PSK")
-                    encry = params.get("encry", "AES")
-                    psk = params.get("psk", "12345678")
-                    master_ip = params.get("master_ip", "172.18.8.205")
-                    uuid = params.get("uuid", "FF31F0121338FA6FEED60519")
+                    required_keys = (
+                        "slave_ip", "ssid", "wifi_channel", "auth",
+                        "encry", "psk", "master_ip", "uuid",
+                    )
+                    missing = [k for k in required_keys if k not in params]
+                    if missing:
+                        _LOGGER.error(
+                            "Missing required params for set_slave: %s", missing
+                        )
+                        return False
+                    slave_ip = params["slave_ip"]
+                    ssid = params["ssid"]
+                    wifi_channel = params["wifi_channel"]
+                    auth = params["auth"]
+                    encry = params["encry"]
+                    psk = params["psk"]
+                    master_ip = params["master_ip"]
+                    uuid = params["uuid"]
                     ssid_hex = binascii.hexlify(ssid.encode()).decode()
                     # await set_slave_device(
                     #     slave_ip,
@@ -682,11 +705,16 @@ class HIVIGroupCoordinator:
                 #     master, slave
                 # )
                 try:
-                    # master_ip = "172.18.8.205"
-                    # slave_ip_ra0 = "10.10.10.43"
                     params = operation_data.get("params", {})
-                    master_ip = params.get("master_ip", "172.18.8.205")
-                    slave_ip_ra0 = params.get("slave_ip_ra0", "10.10.10.43")
+                    required_keys = ("master_ip", "slave_ip_ra0")
+                    missing = [k for k in required_keys if k not in params]
+                    if missing:
+                        _LOGGER.error(
+                            "Missing required params for remove_slave: %s", missing
+                        )
+                        return False
+                    master_ip = params["master_ip"]
+                    slave_ip_ra0 = params["slave_ip_ra0"]
                     # await remove_slave_device(master_ip, slave_ip_ra0)
                     async with HivicoClient(timeout=5, debug=True) as client:
                         await client.remove_slave_from_group(master_ip, slave_ip_ra0)
@@ -928,41 +956,6 @@ class HIVIGroupCoordinator:
                     _LOGGER.error("Failed to get slave speaker list: %s", e)
                     return False
 
-            # # Get device client
-            # master_client = await self.device_manager.async_get_device_client(
-            #     master_speaker_device_id
-            # )
-            # if not master_client:
-            #     _LOGGER.debug("Cannot get master device client: %s", master_speaker_device_id)
-            #     return False
-
-            # # Check actual status
-            # actual_state = await self._check_actual_state(
-            #     master_client, slave_speaker_device_id
-            # )
-
-            # if actual_state == "unknown":
-            #     _LOGGER.debug("Cannot get device status: %s", master_speaker_device_id)
-            #     return False
-
-            # if actual_state == expected_state:
-            #     _LOGGER.debug(
-            #         "Status verification successful: %s -> %s (expected: %s, actual: %s)",
-            #         operation["slave"],
-            #         operation["master"],
-            #         expected_state,
-            #         actual_state,
-            #     )
-            #     return True
-            # else:
-            #     _LOGGER.debug(
-            #         "Status mismatch: %s -> %s (expected: %s, actual: %s)",
-            #         operation["slave"],
-            #         operation["master"],
-            #         expected_state,
-            #         actual_state,
-            #     )
-            #     return False
 
         except Exception as e:
             _LOGGER.error("Exception verifying operation status: %s", e)
@@ -989,78 +982,6 @@ class HIVIGroupCoordinator:
         except Exception as e:
             _LOGGER.debug("Exception getting slave speaker list: %s", e)
             return "unknown"
-
-    async def _handle_operation_success(self, operation_id: str):
-        """Handle operation success"""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
-
-        # Update operation status
-        operation["status"] = "success"
-        operation["end_time"] = datetime.now()
-
-        duration = (operation["end_time"] - operation["start_time"]).total_seconds()
-
-        _LOGGER.debug(
-            "operation: %s (time: %.1f seconds, try num: %d)",
-            operation_id,
-            duration,
-            operation["retry_count"],
-        )
-
-        # Send operation success event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_succeeded",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "duration": duration,
-                "retry_count": operation["retry_count"],
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Trigger immediate discovery to ensure status synchronization
-        _LOGGER.debug("Trigger immediate discovery to synchronize status")
-        # self.discovery_scheduler.schedule_immediate_discovery(force=False)
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
-
-    async def _handle_operation_timeout(self, operation_id: str):
-        """Handle operation timeout"""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
-
-        # Update operation status
-        operation["status"] = "timeout"
-        operation["end_time"] = datetime.now()
-
-        _LOGGER.warning("Operation timeout: %s", operation_id)
-
-        # Send operation timeout event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_timeout",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "duration": self._operation_timeout,
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Even if timeout, trigger discovery to get current status
-        _LOGGER.debug("Operation timeout, trigger discovery to get current status")
-        # await self.discovery_scheduler.schedule_immediate_discovery(force=False)
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
 
     async def _handle_operation_failed(self, operation_id: str, reason: str):
         """Handle operation failure"""
@@ -1091,20 +1012,6 @@ class HIVIGroupCoordinator:
 
         # Clean up operation
         await self._cleanup_operation(operation_id)
-
-    async def _cleanup_operation(self, operation_id: str):
-        """Clean up operation"""
-        # Delay cleanup to give event handling time
-        await asyncio.sleep(1)
-
-        if operation_id in self._pending_operations:
-            del self._pending_operations[operation_id]
-
-        if operation_id in self._poll_tasks:
-            task = self._poll_tasks[operation_id]
-            if not task.done():
-                task.cancel()
-            del self._poll_tasks[operation_id]
 
     @callback
     def _handle_operation_started(self, event):
