@@ -8,6 +8,7 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 from homeassistant.helpers.entity import get_supported_features
+from homeassistant.helpers.trigger import ValueSource
 
 from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelState
 
@@ -43,7 +44,7 @@ def make_entity_state_required_features_condition(
     class CustomCondition(EntityStateRequiredFeaturesCondition):
         """Condition for entity state changes."""
 
-        _domain = domain
+        _value_sources = {domain: ValueSource()}
         _states = {to_state}
         _required_features = required_features
 

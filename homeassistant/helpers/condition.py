@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -94,6 +94,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
+from .trigger import ValueSource
 from .typing import ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
@@ -335,7 +336,7 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
-    _domain: str
+    _value_sources: Mapping[str, ValueSource]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -355,13 +356,27 @@ class EntityConditionBase(Condition):
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
 
+    def get_value_source_for_entity(self, entity_id: str) -> ValueSource | None:
+        """Find the matching value source for an entity."""
+        return self._value_sources.get(split_entity_id(entity_id)[0])
+
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
-        }
+        """Filter entities matching any of the value sources."""
+        from .entity import get_device_class_or_undefined  # noqa: PLC0415
+
+        result: set[str] = set()
+        for entity_id in entities:
+            vs = self._value_sources.get(split_entity_id(entity_id)[0])
+            if vs is None:
+                continue
+            if vs.device_class is not None:
+                if (
+                    get_device_class_or_undefined(self._hass, entity_id)
+                    != vs.device_class
+                ):
+                    continue
+            result.add(entity_id)
+        return result
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -428,7 +443,7 @@ def make_entity_state_condition(
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain = domain
+        _value_sources = {domain: ValueSource()}
         _states = states_set
 
     return CustomCondition
@@ -458,7 +473,7 @@ def make_entity_state_attribute_condition(
     class CustomCondition(EntityStateAttributeConditionBase):
         """Condition for entity attribute."""
 
-        _domain = domain
+        _value_sources = {domain: ValueSource()}
         _attribute = attribute
         _attribute_states = attribute_states_set
 

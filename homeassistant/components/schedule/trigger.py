@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
     EntityTransitionTriggerBase,
     Trigger,
+    ValueSource,
     make_entity_target_state_trigger,
 )
 
@@ -14,7 +15,7 @@ from .const import ATTR_NEXT_EVENT, DOMAIN
 class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
     """Trigger for back-to-back schedule blocks."""
 
-    _domains = {DOMAIN}
+    _value_sources = {DOMAIN: ValueSource()}
     _from_states = {STATE_OFF, STATE_ON}
     _to_states = {STATE_ON}
 

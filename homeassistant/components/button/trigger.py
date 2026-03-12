@@ -6,6 +6,7 @@ from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
     Trigger,
+    ValueSource,
 )
 
 from . import DOMAIN
@@ -14,7 +15,7 @@ from . import DOMAIN
 class ButtonPressedTrigger(EntityTriggerBase):
     """Trigger for button entity presses."""
 
-    _domains = {DOMAIN}
+    _value_sources = {DOMAIN: ValueSource()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:

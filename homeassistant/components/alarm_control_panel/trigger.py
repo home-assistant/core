@@ -6,6 +6,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
     Trigger,
+    ValueSource,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
@@ -44,7 +45,7 @@ def make_entity_state_trigger_required_features(
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
         """Trigger for entity state changes."""
 
-        _domains = {domain}
+        _value_sources = {domain: ValueSource()}
         _to_states = {to_state}
         _required_features = required_features
 

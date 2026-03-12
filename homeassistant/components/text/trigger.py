@@ -6,6 +6,7 @@ from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
     Trigger,
+    ValueSource,
 )
 
 from .const import DOMAIN
@@ -14,7 +15,7 @@ from .const import DOMAIN
 class TextChangedTrigger(EntityTriggerBase):
     """Trigger for text entity when its content changes."""
 
-    _domains = {DOMAIN}
+    _value_sources = {DOMAIN: ValueSource()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
