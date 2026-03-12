@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
+    UnitOfConductivity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -268,6 +269,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="SOIL_MOISTURE",
         device_class=SensorDeviceClass.MOISTURE,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.SOIL_EC: SensorEntityDescription(
+        key="SOIL_EC",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
