@@ -2411,6 +2411,28 @@ async def test_entity_service_call_warn_referenced(
     ) in caplog.text
 
 
+async def test_entity_service_call_warn_unavailable(
+    hass: HomeAssistant,
+    mock_entities: dict[str, MockEntity],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that explicitly referenced unavailable entities are logged."""
+    mock_entities["light.kitchen"] = MockEntity(
+        entity_id="light.kitchen", available=False
+    )
+
+    call = ServiceCall(
+        hass,
+        "test_domain",
+        "test_service",
+        {"entity_id": ["light.kitchen"]},
+    )
+    await service.entity_service_call(hass, mock_entities, "", call)
+    assert (
+        "Referenced entities light.kitchen are missing or not currently available"
+    ) in caplog.text
+
+
 async def test_async_extract_entities_warn_referenced(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
