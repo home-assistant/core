@@ -106,19 +106,16 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         coordinator: HomeConnectApplianceCoordinator,
     ) -> None:
         """Initialize the entity."""
-        self._attr_fan_modes = list(FAN_MODES_OPTIONS.keys())
-        self._original_option_keys = set(FAN_MODES_OPTIONS_INVERTED)
         super().__init__(
             coordinator,
             AIR_CONDITIONER_ENTITY_DESCRIPTION,
             context_override=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         )
-        self.update_fan_mode()
-        self.set_hvac_modes_and_preset()
 
-    def set_hvac_modes_and_preset(self) -> None:
-        """Set the HVAC modes and preset modes for the entity."""
-        self._attr_hvac_modes = [
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available hvac operation modes."""
+        hvac_modes = [
             hvac_mode
             for program in self.appliance.programs
             if (hvac_mode := PROGRAMS_HVAC_MODES_MAP.get(program.key))
@@ -129,9 +126,13 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
         ]
         if SettingKey.BSH_COMMON_POWER_STATE in self.appliance.settings:
-            self._attr_hvac_modes.append(HVACMode.OFF)
+            hvac_modes.append(HVACMode.OFF)
+        return hvac_modes
 
-        self._attr_preset_modes = (
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes."""
+        return (
             [
                 PROGRAMS_PRESET_MODES_MAP[
                     ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
@@ -139,45 +140,40 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             ]
             if any(
                 program.key
-                == ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
+                is ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
                 for program in self.appliance.programs
             )
-            else []
+            else None
         )
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        features = ClimateEntityFeature(0)
         if SettingKey.BSH_COMMON_POWER_STATE in self.appliance.settings:
-            self._attr_supported_features |= (
-                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-            )
-        else:
-            self._attr_supported_features &= ~(
-                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-            )
-        if self._attr_preset_modes:
-            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-        else:
-            self._attr_supported_features &= ~ClimateEntityFeature.PRESET_MODE
+            features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        if self.preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+        if self.appliance.options.get(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
+        ):
+            features |= ClimateEntityFeature.FAN_MODE
+        return features
 
     @callback
     def _handle_coordinator_update_fan_mode(self) -> None:
         """Handle updated data from the coordinator."""
-        self.update_fan_mode()
         self.async_write_ha_state()
         _LOGGER.debug(
             "Updated %s (fan mode), new state: %s", self.entity_id, self.fan_mode
         )
-
-    @callback
-    def refresh_options(self) -> None:
-        """Refresh the options for the entity."""
-        self.set_hvac_modes_and_preset()
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_listener(
-                self.refresh_options,
+                self.async_write_ha_state,
                 EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
             )
         )
@@ -198,6 +194,8 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             if power_state is not None and power_state.value != BSH_POWER_ON
             else PROGRAMS_HVAC_MODES_MAP.get(program_key)
             if program_key
+            and program_key
+            != ProgramKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_ACTIVE_CLEAN
             else None
         )
         self._attr_preset_mode = (
@@ -207,8 +205,9 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             else None
         )
 
-    def update_fan_mode(self) -> None:
-        """Set the fan mode value."""
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting."""
         option_value = None
         if event := self.appliance.events.get(
             EventKey(
@@ -216,11 +215,15 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
         ):
             option_value = event.value
-        self._attr_fan_mode = (
+        return (
             FAN_MODES_OPTIONS_INVERTED.get(cast(str, option_value))
             if option_value is not None
             else None
         )
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Return the list of available fan modes."""
         if (
             (
                 option_definition := self.appliance.options.get(
@@ -229,31 +232,17 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             )
             and (option_constraints := option_definition.constraints)
             and option_constraints.allowed_values
-            and (
-                normalized_allowed_values := {
-                    value
-                    for value in option_constraints.allowed_values
-                    if value is not None
-                }
-            )
-            and self._original_option_keys != normalized_allowed_values
         ):
-            self._original_option_keys = normalized_allowed_values
-            self._attr_fan_modes = [
+            return [
                 fan_mode
                 for fan_mode, api_value in FAN_MODES_OPTIONS.items()
-                if api_value in normalized_allowed_values
+                if api_value in option_constraints.allowed_values
             ]
-        match (
-            self._attr_supported_features & ClimateEntityFeature.FAN_MODE,
-            option_definition is not None,
-        ):
-            case (0, True):
-                self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
-                self.__dict__.pop("supported_features", None)
-            case (ClimateEntityFeature.FAN_MODE, False):
-                self._attr_supported_features &= ~ClimateEntityFeature.FAN_MODE
-                self.__dict__.pop("supported_features", None)
+        if option_definition:
+            # Then the constraints or the allowed values are not present
+            # So we stick to the default values
+            return list(FAN_MODES_OPTIONS.keys())
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
@@ -311,7 +300,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_turn_off()
         else:
             await self._set_program(HVAC_MODES_PROGRAMS_MAP[hvac_mode])
