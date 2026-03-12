@@ -2063,7 +2063,7 @@
       }
     },
     "start_selected_program": {
-      "description": "Starts the program that is already selected. You can optionally provide additional options that are only supported when starting a program.",
+      "description": "Starts the already selected program. You can also update start-only options to start the program with them or modify them on a program that is already delayed.",
       "fields": {
         "b_s_h_common_option_finish_in_relative": {
           "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::description%]",
