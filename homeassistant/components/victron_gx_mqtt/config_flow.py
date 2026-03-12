@@ -60,7 +60,7 @@ async def validate_input(data: dict[str, Any]) -> str:
     try:
         hub = VictronVenusHub(
             host=data[CONF_HOST],
-            port=data.get(CONF_PORT, DEFAULT_PORT),
+            port=data[CONF_PORT],
             username=data.get(CONF_USERNAME) or None,
             password=data.get(CONF_PASSWORD) or None,
             use_ssl=data.get(CONF_SSL, False),

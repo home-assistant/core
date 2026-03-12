@@ -1429,37 +1429,5 @@
         "name": "ESS BatteryLife schedule charge {slot} start"
       }
     }
-  },
-  "options": {
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "step": {
-      "init": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data::root_topic_prefix%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data::update_frequency%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "host": "[%key:component::victron_gx_mqtt::config::step::user::data_description::host%]",
-          "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",
-          "port": "[%key:component::victron_gx_mqtt::config::step::user::data_description::port%]",
-          "root_topic_prefix": "[%key:component::victron_gx_mqtt::config::step::user::data_description::root_topic_prefix%]",
-          "ssl": "[%key:component::victron_gx_mqtt::config::step::user::data_description::ssl%]",
-          "update_frequency": "[%key:component::victron_gx_mqtt::config::step::user::data_description::update_frequency%]",
-          "username": "[%key:component::victron_gx_mqtt::config::step::user::data_description::username%]"
-        }
-      }
-    }
   }
 }
