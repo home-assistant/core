@@ -184,7 +184,7 @@ async def async_setup_platform(
             _LOGGER.debug("enabling 'light' automatic add function")
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
-    if not discovery_info:
+    if discovery_info is None:
         create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
         device_config = config[CONF_DEVICE_DEFAULTS]
         async_add_entities(devices_from_config(config))

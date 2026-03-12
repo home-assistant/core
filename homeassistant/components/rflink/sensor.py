@@ -342,7 +342,7 @@ async def async_setup_platform(
             _LOGGER.debug("enabling 'sensor' automatic add function")
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
-    if not discovery_info:
+    if discovery_info is None:
         create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
         async_add_entities(devices_from_config(config))
         automatic_add_config(hass, config)

@@ -131,11 +131,11 @@ SEND_COMMAND_SCHEMA = vol.Schema(
 )
 
 ALLOWED_PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.COVER,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
+    Platform.BINARY_SENSOR.value,
+    Platform.COVER.value,
+    Platform.LIGHT.value,
+    Platform.SENSOR.value,
+    Platform.SWITCH.value,
 ]
 
 
@@ -345,6 +345,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Load RFLink platforms definitions
     for pltfrm in ALLOWED_PLATFORMS:
         if pltfrm in config[DOMAIN]:
+            _LOGGER.debug("Loading Rflink platform '%s'", pltfrm)
             hass.async_create_task(
                 async_load_platform(
                     hass, pltfrm, DOMAIN, config[DOMAIN][pltfrm], config

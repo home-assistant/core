@@ -28,7 +28,7 @@ def identify_event_type(event):
     return "unknown"
 
 
-def create_issue_yaml_migration(hass: HomeAssistant, platform: str):
+def create_issue_yaml_migration(hass: HomeAssistant, platform: str) -> None:
     """Create a YAML migration repair."""
     async_create_issue(
         hass=hass,

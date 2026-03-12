@@ -129,7 +129,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink cover platform."""
-    if not discovery_info:
+    if discovery_info is None:
         create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
         async_add_entities(devices_from_config(config))
     else:

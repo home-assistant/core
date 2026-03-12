@@ -8,7 +8,6 @@ automatic sensor creation.
 import pytest
 
 from homeassistant.components.rflink import (
-    CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfPrecipitationDepth,
     UnitOfTemperature,
@@ -143,9 +143,19 @@ async def test_entity_availability_old(
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
-    config = CONFIG_OLD
-    failures = [True, True]
-    config[CONF_RECONNECT_INTERVAL] = 60
+
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "reconnect_interval": 60,
+        },
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+        },
+    }
+
+    failures = [False, True, False]
 
     # Create platform and entities
     _, _, _, disconnect_callback = await mock_rflink(
@@ -162,7 +172,7 @@ async def test_entity_availability_old(
     await hass.async_block_till_done()
 
     # Entity should be unavailable
-    assert hass.states.get("sensor.test").state == "unavailable"
+    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
 
     # Reconnect the Rflink device
     disconnect_callback()
@@ -347,7 +357,6 @@ CONFIG = {
         "port": "/dev/ttyABC0",
         "ignore_devices": ["ignore_wildcard_*", "ignore_sensor"],
         DOMAIN: {
-            "platform": "rflink",
             "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
         },
     },
@@ -452,9 +461,18 @@ async def test_entity_availability(
     """If Rflink device is disconnected, entities should become unavailable."""
     # Make sure Rflink mock does not 'recover' to quickly from the
     # disconnect or else the unavailability cannot be measured
-    config = CONFIG
+
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "reconnect_interval": 60,
+            DOMAIN: {
+                "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+            },
+        },
+    }
+
     failures = [True, True]
-    config[CONF_RECONNECT_INTERVAL] = 60
 
     # Create platform and entities
     _, _, _, disconnect_callback = await mock_rflink(
@@ -471,7 +489,7 @@ async def test_entity_availability(
     await hass.async_block_till_done()
 
     # Entity should be unavailable
-    assert hass.states.get("sensor.test").state == "unavailable"
+    assert hass.states.get("sensor.test").state == STATE_UNAVAILABLE
 
     # Reconnect the Rflink device
     disconnect_callback()
@@ -641,3 +659,47 @@ async def test_sensor_attributes(
     assert fahrenheit_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
     assert fahrenheit_state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert fahrenheit_state.attributes["unit_of_measurement"] == "F"
+
+
+async def test_empty_discovery_info(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sensor platform initialization with empty discovery info."""
+
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {},
+        },
+    }
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    # test event for new unconfigured sensor
+    event_callback(
+        {
+            "id": "test2",
+            "sensor": "temperature",
+            "value": 20,
+            "unit": UnitOfTemperature.CELSIUS,
+        }
+    )
+    await hass.async_block_till_done()
+
+    # test state of temp sensor
+    temp_sensor = hass.states.get("sensor.test2")
+    assert temp_sensor
+    assert temp_sensor.state == "20"
+    assert temp_sensor.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert "device_id not known and automatic add disabled" not in caplog.text
+
+    # test event for command type event (should not create sensor)
+    event_callback({"id": "protocol_0_0", "command": "off"})
+    await hass.async_block_till_done()
+
+    # make sure new device is not added
+    assert not hass.states.get(f"{DOMAIN}.protocol_0_0")
+    assert not hass.states.get("light.protocol_0_0")
+    assert "device_id not known and automatic add disabled" in caplog.text
