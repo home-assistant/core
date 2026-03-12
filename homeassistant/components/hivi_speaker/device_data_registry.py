@@ -1,7 +1,11 @@
-import logging
-from typing import Any, Dict, Optional
+"""Device data registry for the HiVi Speaker integration."""
 
-from homeassistant.core import callback
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from .device import ConnectionStatus, SyncGroupStatus
@@ -12,13 +16,14 @@ SAVE_DELAY = 5  # seconds – batches rapid writes from a single discovery cycle
 
 
 class DeviceDataRegistry:
-    """Device data extension registry"""
+    """Device data extension registry."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the device data registry."""
         self.hass = hass
         self._store = Store(hass, 1, "hivi_speaker_device_data")
-        self._device_data: Dict[str, Dict[str, Any]] = {}
-        self._listeners: Dict[str, list] = {}
+        self._device_data: dict[str, dict[str, Any]] = {}
+        self._listeners: dict[str, list] = {}
 
         async def device_registry_updated(event):
             _LOGGER.debug("Device registry updated event: %s", event.data)
@@ -46,7 +51,7 @@ class DeviceDataRegistry:
         )
 
     async def async_load(self):
-        """Load persistent data"""
+        """Load persistent data."""
         if data := await self._store.async_load():
             self._device_data = data.get("device_data", {})
         else:
@@ -66,15 +71,15 @@ class DeviceDataRegistry:
         """Return the data dict for Store to persist."""
         return {"device_data": self._device_data, "version": 1}
 
-    def get_device_data(self, ha_device_id: str, key: str = None, default=None):
-        """Get device data"""
+    def get_device_data(self, ha_device_id: str, key: str | None = None, default=None):
+        """Get device data."""
         device_entry = self._device_data.get(ha_device_id, {})
         if key is None:
             return device_entry
         return device_entry.get(key, default)
 
     def set_device_data(self, ha_device_id: str, key: str, value: Any):
-        """Set device data"""
+        """Set device data."""
         if ha_device_id not in self._device_data:
             self._device_data[ha_device_id] = {}
 
@@ -87,27 +92,27 @@ class DeviceDataRegistry:
         )
 
     async def async_remove_device_data(self, ha_device_id: str):
-        """Remove device data (called when device is deleted)"""
+        """Remove device data (called when device is deleted)."""
         if ha_device_id in self._device_data:
             del self._device_data[ha_device_id]
             await self.async_save()
 
-    def _trigger_event(self, event_type: str, data: Dict):
-        """Trigger event"""
-        for callback in self._listeners.get(event_type, []):
+    def _trigger_event(self, event_type: str, data: dict):
+        """Trigger event."""
+        for listener_fn in self._listeners.get(event_type, []):
             try:
-                callback(data)
-            except Exception as e:
-                _LOGGER.error("Error in event listener: %s", e)
+                listener_fn(data)
+            except Exception:
+                _LOGGER.exception("Error in event listener")
 
-    def add_listener(self, event_type: str, callback):
-        """Add event listener"""
+    def add_listener(self, event_type: str, listener):
+        """Add event listener."""
         if event_type not in self._listeners:
             self._listeners[event_type] = []
-        self._listeners[event_type].append(callback)
+        self._listeners[event_type].append(listener)
 
     def set_device_dict_by_ha_device_id(self, ha_device_id: str, value: Any):
-        """Set device data"""
+        """Set device data."""
         if ha_device_id not in self._device_data:
             self._device_data[ha_device_id] = {}
 
@@ -116,7 +121,8 @@ class DeviceDataRegistry:
 
     def get_device_dict_by_ha_device_id(
         self, ha_device_id: str, default=None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
+        """Return device dict for a given HA device ID, or default."""
         data = self.get_device_data(ha_device_id)
         if data:
             device_dict = data.get("device_dict")
@@ -127,8 +133,9 @@ class DeviceDataRegistry:
 
     def get_device_dict_by_speaker_device_id(
         self, speaker_device_id: str, default=None
-    ) -> Optional[Dict[str, Any]]:
-        for ha_device_id in self._device_data.keys():
+    ) -> dict[str, Any] | None:
+        """Return device dict for a given speaker device ID, or default."""
+        for ha_device_id in self._device_data:
             data = self.get_device_data(ha_device_id)
             if not data:
                 continue
@@ -140,7 +147,7 @@ class DeviceDataRegistry:
 
     def get_ha_device_id_by_speaker_device_id(
         self, speaker_device_id: str
-    ) -> Optional[str]:
+    ) -> str | None:
         """Return ha_device_id for a given speaker_device_id, or None if not found."""
         for ha_device_id, data in self._device_data.items():
             device_dict = data.get("device_dict") if data else None
@@ -152,9 +159,9 @@ class DeviceDataRegistry:
         return None
 
     def get_available_slave_device_dict_list(
-        self, exclude_speaker_device_id: str = None
+        self, exclude_speaker_device_id: str | None = None
     ) -> list[dict]:
-        """Get available slave speakers (excluding self)"""
+        """Get available slave speakers (excluding self)."""
 
         available_devices = []
 
