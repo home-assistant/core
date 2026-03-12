@@ -20,8 +20,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     HomeAssistantError,
-    OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
 )
 from homeassistant.helpers import (
     device_registry as dr,
@@ -332,13 +332,15 @@ async def test_oauth_token_request_reauth_error(hass: HomeAssistant) -> None:
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_oauth_token_request_error_is_retryable(hass: HomeAssistant) -> None:
-    """Test OAuth token request error marks entry for setup retry."""
+async def test_oauth_token_request_transient_error_is_retryable(
+    hass: HomeAssistant,
+) -> None:
+    """Test OAuth token transient request error marks entry for setup retry."""
     entry = await mock_august_config_entry(hass)
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=OAuth2TokenRequestError(
+        side_effect=OAuth2TokenRequestTransientError(
             request_info=Mock(real_url="https://auth.august.com/access_token"),
             status=500,
             domain=DOMAIN,
