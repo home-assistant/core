@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -35,6 +34,8 @@ DEFAULT_PORT = 1883
 _LOGGER = logging.getLogger(__name__)
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
+
+ENTRY_TITLE_FORMAT = "Victron OS {installation_id} ({host}:{port})"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -93,11 +94,6 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
 
-    @staticmethod
-    def _build_entry_title(installation_id: str, host: str, port: int) -> str:
-        """Build a config entry title."""
-        return f"Victron OS {installation_id} ({host}:{port})"
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -109,9 +105,6 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 async_redact_data(user_input, TO_REDACT),
             )
             data = {**user_input, CONF_SERIAL: self.serial, CONF_MODEL: self.model_name}
-            data = {
-                k: v for k, v in data.items() if v is not None
-            }  # remove None values.
 
             try:
                 installation_id = await validate_input(data)
@@ -133,88 +126,20 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
 
                 self._abort_if_unique_id_configured()
-
-                title = self._build_entry_title(
-                    installation_id,
-                    data[CONF_HOST],
-                    data.get(CONF_PORT, DEFAULT_PORT),
+                title = ENTRY_TITLE_FORMAT.format(
+                    installation_id=installation_id,
+                    host=data[CONF_HOST],
+                    port=data.get(CONF_PORT, DEFAULT_PORT),
                 )
                 return self.async_create_entry(title=title, data=data)
 
-        if len(errors) > 0:
-            _LOGGER.warning("Showing form with errors: %s", errors)
-        else:
-            _LOGGER.debug("Showing form without errors")
+        _LOGGER.debug("Showing form with errors: %s", errors)
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication request."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication confirmation."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            _LOGGER.debug(
-                "Reauth user input received: %s",
-                async_redact_data(user_input, TO_REDACT),
-            )
-            data = {
-                **reauth_entry.data,
-                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
-                CONF_SSL: user_input.get(CONF_SSL),
-            }
-            data = {k: v for k, v in data.items() if v is not None}
-
-            try:
-                await validate_input(data)
-                _LOGGER.info("Reauthentication successful")
-            except AuthenticationError:
-                _LOGGER.warning("Authentication failed during reauthentication")
-                errors["base"] = "invalid_auth"
-            except CannotConnectError:
-                _LOGGER.warning("Cannot connect during reauthentication")
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("General error during reauthentication")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry,
-                    data=data,
-                    reason="reauth_successful",
-                )
-
-        reauth_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_USERNAME, default=reauth_entry.data.get(CONF_USERNAME, "")
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD, default=reauth_entry.data.get(CONF_PASSWORD, "")
-                ): str,
-                vol.Optional(
-                    CONF_SSL, default=reauth_entry.data.get(CONF_SSL, False)
-                ): bool,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=reauth_schema,
-            errors=errors,
-            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
         )
 
     async def async_step_ssdp_auth(
@@ -257,8 +182,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=self._build_entry_title(
-                        self.installation_id, self.hostname, DEFAULT_PORT
+                    title=ENTRY_TITLE_FORMAT.format(
+                        installation_id=self.installation_id,
+                        host=self.hostname,
+                        port=DEFAULT_PORT,
                     ),
                     data=data,
                 )
@@ -315,8 +242,10 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.installation_id is not None
         return self.async_create_entry(
-            title=self._build_entry_title(
-                self.installation_id, self.hostname, DEFAULT_PORT
+            title=ENTRY_TITLE_FORMAT.format(
+                installation_id=self.installation_id,
+                host=self.hostname,
+                port=DEFAULT_PORT,
             ),
             data={
                 CONF_HOST: self.hostname,

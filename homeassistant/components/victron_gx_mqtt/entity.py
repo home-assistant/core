@@ -60,7 +60,6 @@ class VictronBaseEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        # Now we can safely register for updates as the entity is fully registered with Home Assistant
         self._metric.on_update = self._on_update
 
     async def async_will_remove_from_hass(self) -> None:
