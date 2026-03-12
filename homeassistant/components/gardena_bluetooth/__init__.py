@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from bleak.backends.device import BLEDevice
 from gardena_bluetooth.client import CachedConnection, Client
 from gardena_bluetooth.const import DeviceConfiguration, DeviceInformation
-from gardena_bluetooth.exceptions import CommunicationFailure
+from gardena_bluetooth.exceptions import (
+    CharacteristicNoAccess,
+    CharacteristicNotFound,
+    CommunicationFailure,
+)
+from gardena_bluetooth.parse import CharacteristicTime
 
 from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS, Platform
@@ -23,6 +29,7 @@ from .coordinator import (
     GardenaBluetoothConfigEntry,
     GardenaBluetoothCoordinator,
 )
+from .util import async_get_product_type
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -51,22 +58,41 @@ def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
     return CachedConnection(DISCONNECT_DELAY, _device_lookup)
 
 
+async def _update_timestamp(client: Client, characteristics: CharacteristicTime):
+    try:
+        await client.update_timestamp(characteristics, dt_util.now())
+    except CharacteristicNotFound:
+        pass
+    except CharacteristicNoAccess:
+        LOGGER.debug("No access to update internal time")
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: GardenaBluetoothConfigEntry
 ) -> bool:
     """Set up Gardena Bluetooth from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
-    client = Client(get_connection(hass, address))
+
     try:
+        async with asyncio.timeout(TIMEOUT):
+            product_type = await async_get_product_type(hass, address)
+    except TimeoutError as exception:
+        raise ConfigEntryNotReady("Unable to find product type") from exception
+
+    client = Client(get_connection(hass, address), product_type)
+    try:
+        chars = await client.get_all_characteristics()
+
         sw_version = await client.read_char(DeviceInformation.firmware_version, None)
         manufacturer = await client.read_char(DeviceInformation.manufacturer_name, None)
         model = await client.read_char(DeviceInformation.model_number, None)
-        name = await client.read_char(
-            DeviceConfiguration.custom_device_name, entry.title
-        )
-        uuids = await client.get_all_characteristics_uuid()
-        await client.update_timestamp(dt_util.now())
+
+        name = entry.title
+        name = await client.read_char(DeviceConfiguration.custom_device_name, name)
+
+        await _update_timestamp(client, DeviceConfiguration.unix_timestamp)
+
     except (TimeoutError, CommunicationFailure, DeviceUnavailable) as exception:
         await client.disconnect()
         raise ConfigEntryNotReady(
@@ -83,7 +109,7 @@ async def async_setup_entry(
     )
 
     coordinator = GardenaBluetoothCoordinator(
-        hass, entry, LOGGER, client, uuids, device, address
+        hass, entry, LOGGER, client, set(chars.keys()), device, address
     )
 
     entry.runtime_data = coordinator
