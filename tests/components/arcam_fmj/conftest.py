@@ -8,14 +8,11 @@ from arcam.fmj.state import State
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
-from homeassistant.components.arcam_fmj.coordinator import ArcamFmjCoordinator
-from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockEntityPlatform
+from tests.common import MockConfigEntry
 
 MOCK_HOST = "127.0.0.1"
 MOCK_PORT = 50000
@@ -73,12 +70,6 @@ def state_2_fixture(client: Mock) -> State:
     return state
 
 
-@pytest.fixture(name="state")
-def state_fixture(state_1: State) -> State:
-    """Get a mocked state."""
-    return state_1
-
-
 @pytest.fixture(name="mock_config_entry")
 def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Get a mock config entry."""
@@ -90,29 +81,6 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
-
-
-@pytest.fixture(name="player")
-def player_fixture(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    client: Mock,
-    state_1: Mock,
-) -> ArcamFmj:
-    """Get standard player.
-
-    This fixture tests internals and should not be used going forward.
-    """
-    coordinator = ArcamFmjCoordinator(hass, mock_config_entry, client, 1)
-    coordinator.state = state_1
-    coordinator.last_update_success = True
-    player = ArcamFmj(MOCK_NAME, coordinator, MOCK_UUID)
-    player.entity_id = MOCK_ENTITY_ID
-    player.hass = hass
-    player.platform = MockEntityPlatform(hass)
-    player._platform_state = EntityPlatformState.ADDED
-    player.async_write_ha_state = Mock()
-    return player
 
 
 @pytest.fixture(name="player_setup")
