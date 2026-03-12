@@ -11,6 +11,7 @@ from homeassistant.components.indevolt.const import (
     PORTABLE_MODE,
     REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
+    RealtimeAction,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -59,7 +60,7 @@ async def test_service_charge(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [1, 1200, 60]),
+            call(REALTIME_ACTION_KEY, (RealtimeAction.CHARGE, 1200, 60)),
         ]
     )
 
@@ -92,7 +93,7 @@ async def test_service_discharge(
     mock_indevolt.set_data.assert_has_calls(
         [
             call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
-            call(REALTIME_ACTION_KEY, [2, 1200, 40]),
+            call(REALTIME_ACTION_KEY, (RealtimeAction.DISCHARGE, 1200, 40)),
         ]
     )
 

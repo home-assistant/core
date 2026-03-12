@@ -1,5 +1,6 @@
 """Constants for the Indevolt integration."""
 
+from enum import IntEnum
 from typing import Final
 
 DOMAIN: Final = "indevolt"
@@ -19,6 +20,15 @@ PORTABLE_MODE: Final = 0
 # API write key and value for real-time control mode
 REALTIME_ACTION_KEY: Final = "47015"
 REALTIME_ACTION_MODE: Final = 4
+
+
+class RealtimeAction(IntEnum):
+    """Actions for real-time control mode."""
+
+    STOP = 0
+    CHARGE = 1
+    DISCHARGE = 2
+
 
 # API key fields
 SENSOR_KEYS: Final[dict[int, list[str]]] = {

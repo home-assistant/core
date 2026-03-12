@@ -27,6 +27,7 @@ from .const import (
     REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
     SENSOR_KEYS,
+    RealtimeAction,
 )
 
 EMERGENCY_SOC_READ_KEY: Final = "6105"
@@ -144,7 +145,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if refresh:
                 await self.async_request_refresh()
 
-    async def async_execute_realtime_action(self, action: list[int]) -> None:
+    async def async_execute_realtime_action(
+        self, action: tuple[RealtimeAction, int, int]
+    ) -> None:
         """Switch mode, execute action, and refresh for real-time control."""
 
         await self.async_switch_energy_mode(REALTIME_ACTION_MODE, refresh=False)

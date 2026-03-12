@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
-from .const import DOMAIN, POWER_LIMITS
+from .const import DOMAIN, POWER_LIMITS, RealtimeAction
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             )
 
         # Perform actions & process results
-        await _execute_realtime_action(coordinators, 1, power, target_soc)
+        await _execute_realtime_action(
+            coordinators, RealtimeAction.CHARGE, power, target_soc
+        )
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
@@ -118,7 +120,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             )
 
         # Perform actions & process results
-        await _execute_realtime_action(coordinators, 2, power, target_soc)
+        await _execute_realtime_action(
+            coordinators, RealtimeAction.DISCHARGE, power, target_soc
+        )
 
     hass.services.async_register(
         DOMAIN, "charge", charge, schema=RT_ACTION_SERVICE_SCHEMA
@@ -179,14 +183,14 @@ async def _async_get_coordinators_from_call(
 
 async def _execute_realtime_action(
     coordinators: list[IndevoltCoordinator],
-    action_code: int,
+    action_code: RealtimeAction,
     power: int,
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
     results: list[None | BaseException] = await asyncio.gather(
         *(
-            coordinator.async_execute_realtime_action([action_code, power, target_soc])
+            coordinator.async_execute_realtime_action((action_code, power, target_soc))
             for coordinator in coordinators
         ),
         return_exceptions=True,
