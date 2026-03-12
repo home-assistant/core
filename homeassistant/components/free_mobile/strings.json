@@ -21,5 +21,15 @@
         "description": "Enter your Free Mobile credentials to enable notifications. You can find your username and access token in your Free Mobile account settings.\n\nA test SMS will be sent to verify your credentials."
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_import_failed": {
+      "title": "YAML configuration for Free Mobile could not be imported",
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and an existing YAML configuration could not be imported. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+    },
+    "deprecated_yaml_import_issue_removed_yaml": {
+      "title": "YAML configuration for Free Mobile is deprecated",
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and will be removed in a future release. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+    }
   }
 }
