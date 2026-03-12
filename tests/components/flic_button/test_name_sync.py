@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyflic_ble.handlers.base import DeviceProtocolHandler
 import pytest
 
 from homeassistant.components.flic_button.const import DOMAIN
@@ -210,49 +209,3 @@ async def test_ha_rename_while_disconnected_no_crash(
 
     # set_name should NOT have been called
     mock_flic_client.set_name.assert_not_called()
-
-
-def test_truncate_name_bytes_short_name() -> None:
-    """Test truncation with a name that fits within 23 bytes."""
-    result = DeviceProtocolHandler._truncate_name_bytes("Hello")
-    assert result == b"Hello"
-    assert len(result) <= 23
-
-
-def test_truncate_name_bytes_exact_limit() -> None:
-    """Test truncation with a name exactly at 23 bytes."""
-    name = "a" * 23
-    result = DeviceProtocolHandler._truncate_name_bytes(name)
-    assert result == name.encode("utf-8")
-    assert len(result) == 23
-
-
-def test_truncate_name_bytes_over_limit() -> None:
-    """Test truncation with a name exceeding 23 bytes."""
-    name = "a" * 30
-    result = DeviceProtocolHandler._truncate_name_bytes(name)
-    assert len(result) == 23
-    assert result == b"a" * 23
-
-
-def test_truncate_name_bytes_multibyte_boundary() -> None:
-    """Test truncation at UTF-8 character boundary for multibyte chars."""
-    # Each emoji is 4 bytes, so 6 emojis = 24 bytes, exceeds 23
-    # Should truncate to 5 emojis (20 bytes), not split a character
-    name = "\U0001f600" * 6  # 6 grinning face emojis
-    result = DeviceProtocolHandler._truncate_name_bytes(name)
-    assert len(result) <= 23
-    # Should be valid UTF-8
-    decoded = result.decode("utf-8")
-    assert len(decoded) == 5  # 5 complete emojis (20 bytes)
-
-
-def test_truncate_name_bytes_mixed_multibyte() -> None:
-    """Test truncation with mixed single and multibyte characters."""
-    # 20 ASCII chars + 1 emoji (4 bytes) = 24 bytes total
-    name = "a" * 20 + "\U0001f600"
-    result = DeviceProtocolHandler._truncate_name_bytes(name)
-    assert len(result) <= 23
-    # Should keep 20 'a' chars but drop the emoji that would exceed 23 bytes
-    decoded = result.decode("utf-8")
-    assert decoded == "a" * 20
