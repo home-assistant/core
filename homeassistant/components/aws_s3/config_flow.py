@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
@@ -41,6 +42,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
         vol.Optional(CONF_PREFIX, default=""): cv.string,
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
+        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
+            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -112,5 +122,52 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "aws_s3_docs_url": DESCRIPTION_AWS_S3_DOCS_URL,
                 "boto3_docs_url": DESCRIPTION_BOTO3_DOCS_URL,
+            },
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
+            try:
+                session = AioSession()
+                async with session.create_client(
+                    "s3",
+                    endpoint_url=reauth_entry.data.get(CONF_ENDPOINT_URL),
+                    aws_secret_access_key=user_input[CONF_SECRET_ACCESS_KEY],
+                    aws_access_key_id=user_input[CONF_ACCESS_KEY_ID],
+                ) as client:
+                    await client.head_bucket(Bucket=reauth_entry.data[CONF_BUCKET])
+            except ClientError:
+                errors["base"] = "invalid_credentials"
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_ACCESS_KEY_ID: user_input[CONF_ACCESS_KEY_ID],
+                        CONF_SECRET_ACCESS_KEY: user_input[CONF_SECRET_ACCESS_KEY],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+            description_placeholders={
+                "bucket": self._get_reauth_entry().data[CONF_BUCKET],
             },
         )
