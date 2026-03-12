@@ -17,7 +17,6 @@ from homeassistant.components.victron_gx_mqtt.const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
 from homeassistant.components.victron_gx_mqtt.hub import Hub
@@ -48,7 +47,6 @@ def basic_config():
         CONF_MODEL: "Venus GX",
         CONF_SERIAL: "HQ12345678",
         CONF_ROOT_TOPIC_PREFIX: "N/",
-        CONF_UPDATE_FREQUENCY_SECONDS: 30,
     }
 
 

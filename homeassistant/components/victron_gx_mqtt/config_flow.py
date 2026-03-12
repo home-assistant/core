@@ -10,12 +10,7 @@ from urllib.parse import urlparse
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -31,12 +26,11 @@ from .const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_UPDATE_FREQUENCY_SECONDS,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
+
+DEFAULT_HOST = "venus.local"
+DEFAULT_PORT = 1883
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,17 +44,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_SSL, default=False): bool,
         vol.Optional(CONF_ROOT_TOPIC_PREFIX): str,
-        vol.Optional(
-            CONF_UPDATE_FREQUENCY_SECONDS, default=DEFAULT_UPDATE_FREQUENCY_SECONDS
-        ): int,
-    }
-)
-
-STEP_OPTIONS_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(
-            CONF_UPDATE_FREQUENCY_SECONDS, default=DEFAULT_UPDATE_FREQUENCY_SECONDS
-        ): int,
     }
 )
 
@@ -234,12 +217,6 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
         )
 
-    @staticmethod
-    def async_get_options_flow(config_entry: ConfigEntry) -> VictronMQTTOptionsFlow:
-        """Get the options flow for this handler."""
-        _LOGGER.debug("Getting options flow handler")
-        return VictronMQTTOptionsFlow()
-
     async def async_step_ssdp_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -348,65 +325,4 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_INSTALLATION_ID: self.installation_id,
                 CONF_MODEL: self.model_name,
             },
-        )
-
-
-class VictronMQTTOptionsFlow(OptionsFlowWithReload):
-    """Handle options flow for Victron MQTT."""
-
-    def _get_effective_config(self) -> dict[str, Any]:
-        """Get the effective config with options overriding data."""
-        update_frequency = self.config_entry.options.get(
-            CONF_UPDATE_FREQUENCY_SECONDS,
-            self.config_entry.data.get(
-                CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
-            ),
-        )
-        return {CONF_UPDATE_FREQUENCY_SECONDS: update_frequency}
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle options flow."""
-        current_config = self._get_effective_config()
-        _LOGGER.debug(
-            "Initializing options flow. current config: %s",
-            async_redact_data(current_config, TO_REDACT),
-        )
-        if user_input is not None:
-            _LOGGER.debug(
-                "User input received: %s", async_redact_data(user_input, TO_REDACT)
-            )
-            validate_data = {
-                **self.config_entry.data,
-                **user_input,
-            }
-            try:
-                await validate_input(validate_data)
-            except AuthenticationError:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=self._get_options_schema(),
-                    errors={"base": "invalid_auth"},
-                )
-            except CannotConnectError:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=self._get_options_schema(),
-                    errors={"base": "cannot_connect"},
-                )
-            _LOGGER.info(
-                "Options flow completed successfully. new config: %s",
-                async_redact_data(user_input, TO_REDACT),
-            )
-            return self.async_create_entry(title="", data=user_input)
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self._get_options_schema(),
-        )
-
-    def _get_options_schema(self) -> vol.Schema:
-        """Get the options schema with current values as defaults."""
-        return self.add_suggested_values_to_schema(
-            STEP_OPTIONS_DATA_SCHEMA, self._get_effective_config()
         )

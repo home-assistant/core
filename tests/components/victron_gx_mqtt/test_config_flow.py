@@ -6,15 +6,15 @@ import pytest
 from victron_mqtt import CannotConnectError
 from victron_mqtt.hub import AuthenticationError
 
-from homeassistant.components.victron_gx_mqtt.config_flow import validate_input
+from homeassistant.components.victron_gx_mqtt.config_flow import (
+    DEFAULT_PORT,
+    validate_input,
+)
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_UPDATE_FREQUENCY_SECONDS,
-    DEFAULT_PORT,
-    DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
@@ -83,7 +83,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
             CONF_PASSWORD: "test-password",
             CONF_SSL: False,
             CONF_ROOT_TOPIC_PREFIX: "N/test",
-            CONF_UPDATE_FREQUENCY_SECONDS: 60,
         },
     )
 
@@ -96,7 +95,6 @@ async def test_user_flow_full_config(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "test-password",
         CONF_SSL: False,
         CONF_ROOT_TOPIC_PREFIX: "N/test",
-        CONF_UPDATE_FREQUENCY_SECONDS: 60,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -116,7 +114,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -126,7 +123,6 @@ async def test_user_flow_minimal_config(hass: HomeAssistant) -> None:
         CONF_HOST: MOCK_HOST,
         CONF_PORT: DEFAULT_PORT,
         CONF_SSL: False,
-        CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
     }
 
@@ -147,7 +143,6 @@ async def test_user_flow_cannot_connect(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -164,7 +159,6 @@ async def test_user_flow_cannot_connect(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -187,7 +181,6 @@ async def test_user_flow_unknown_error(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -204,7 +197,6 @@ async def test_user_flow_unknown_error(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -229,7 +221,6 @@ async def test_user_flow_invalid_auth(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -246,7 +237,6 @@ async def test_user_flow_invalid_auth(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -277,7 +267,6 @@ async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
 
@@ -561,83 +550,6 @@ async def test_ssdp_auth_cannot_connect(
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
-async def test_options_flow_success(hass: HomeAssistant) -> None:
-    """Test options flow allows updating configuration."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-            CONF_SERIAL: MOCK_SERIAL,
-            CONF_MODEL: MOCK_MODEL,
-            CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_UPDATE_FREQUENCY_SECONDS: 45,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.data == {
-        CONF_HOST: MOCK_HOST,
-        CONF_PORT: DEFAULT_PORT,
-        CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-        CONF_SERIAL: MOCK_SERIAL,
-        CONF_MODEL: MOCK_MODEL,
-        CONF_SSL: False,
-        CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-    }
-    assert mock_config_entry.options == {
-        CONF_UPDATE_FREQUENCY_SECONDS: 45,
-    }
-
-
-async def test_options_flow_cannot_connect(
-    hass: HomeAssistant, mock_victron_hub: MagicMock
-) -> None:
-    """Test options flow handles connection errors."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-            CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    mock_victron_hub.return_value.connect.side_effect = CannotConnectError
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_victron_hub")
 async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     """Test successful reauthentication flow."""
     mock_config_entry = MockConfigEntry(
@@ -650,7 +562,6 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: 42,
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -678,7 +589,6 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert mock_config_entry.data[CONF_USERNAME] == "new-username"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_SSL] is True
-    assert mock_config_entry.data[CONF_UPDATE_FREQUENCY_SECONDS] == 42
 
 
 @pytest.mark.usefixtures("mock_victron_hub")
@@ -696,7 +606,6 @@ async def test_reauth_flow_success_clears_credentials_from_data(
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: 42,
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -738,7 +647,6 @@ async def test_reauth_flow_cannot_connect(
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -795,7 +703,6 @@ async def test_reauth_flow_unknown_error(
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -834,7 +741,6 @@ async def test_reauth_flow_invalid_auth(
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         },
     )
     mock_config_entry.add_to_hass(hass)
@@ -929,40 +835,6 @@ async def test_ssdp_flow_unknown_error(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow_invalid_auth(
-    hass: HomeAssistant, mock_victron_hub: MagicMock
-) -> None:
-    """Test options flow handles authentication errors."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_INSTALLATION_ID,
-        data={
-            CONF_HOST: MOCK_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
-            CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
-        "Invalid auth"
-    )
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
 async def test_validate_input_ignores_disconnect_error(
     hass: HomeAssistant, mock_victron_hub: MagicMock
 ) -> None:
@@ -974,7 +846,6 @@ async def test_validate_input_ignores_disconnect_error(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
         }
     )
 

@@ -4,13 +4,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.victron_gx_mqtt.const import (
-    CONF_INSTALLATION_ID,
-    CONF_UPDATE_FREQUENCY_SECONDS,
-    DEFAULT_PORT,
-    DEFAULT_UPDATE_FREQUENCY_SECONDS,
-    DOMAIN,
-)
+from homeassistant.components.victron_gx_mqtt.config_flow import DEFAULT_PORT
+from homeassistant.components.victron_gx_mqtt.const import CONF_INSTALLATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -45,7 +40,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,
@@ -72,7 +66,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,
@@ -110,7 +103,6 @@ async def test_unload_entry_does_not_cleanup_on_platform_unload_failure(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,
@@ -150,7 +142,6 @@ async def test_update_entry_does_not_reload(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,
@@ -178,7 +169,6 @@ async def test_update_entry_does_not_reload(hass: HomeAssistant) -> None:
                 CONF_HOST: MOCK_HOST,
                 CONF_PORT: DEFAULT_PORT,
                 CONF_SSL: False,
-                CONF_UPDATE_FREQUENCY_SECONDS: 60,  # Changed
                 CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             },
         )
@@ -197,7 +187,6 @@ async def test_stop_on_homeassistant_stop(hass: HomeAssistant) -> None:
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,
@@ -242,7 +231,6 @@ async def test_setup_entry_start_failure_unloads_platforms_and_callbacks(
             CONF_HOST: MOCK_HOST,
             CONF_PORT: DEFAULT_PORT,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
         },
         unique_id=MOCK_INSTALLATION_ID,

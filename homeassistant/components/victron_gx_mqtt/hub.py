@@ -34,12 +34,12 @@ from .const import (
     CONF_MODEL,
     CONF_ROOT_TOPIC_PREFIX,
     CONF_SERIAL,
-    CONF_UPDATE_FREQUENCY_SECONDS,
-    DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+UPDATE_INTERVAL_SECONDS = 30
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -81,9 +81,7 @@ class Hub:
             serial=config.get(CONF_SERIAL, "noserial"),
             topic_prefix=config.get(CONF_ROOT_TOPIC_PREFIX) or None,
             operation_mode=OperationMode.READ_ONLY,
-            update_frequency_seconds=config.get(
-                CONF_UPDATE_FREQUENCY_SECONDS, DEFAULT_UPDATE_FREQUENCY_SECONDS
-            ),
+            update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
