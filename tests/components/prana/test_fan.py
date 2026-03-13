@@ -2,7 +2,7 @@
 
 import math
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -36,7 +36,7 @@ FAN_TEST_CASES = [
 
 async def _async_setup_fan_entity(
     hass: HomeAssistant,
-    mock_prana_api: MagicMock,
+    mock_prana_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     type_key: str,
@@ -63,7 +63,7 @@ async def test_fans(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_prana_api: MagicMock,
+    mock_prana_api: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Prana fans snapshot."""
@@ -79,7 +79,7 @@ async def test_fans(
 )
 async def test_fans_turn_on_off(
     hass: HomeAssistant,
-    mock_prana_api: MagicMock,
+    mock_prana_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     type_key: str,
@@ -126,7 +126,7 @@ async def test_fans_turn_on_off(
 )
 async def test_fans_set_percentage(
     hass: HomeAssistant,
-    mock_prana_api: MagicMock,
+    mock_prana_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     type_key: str,
