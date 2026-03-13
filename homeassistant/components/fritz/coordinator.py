@@ -760,7 +760,8 @@ class AvmWrapper(FritzBoxTools):
             )
             return {}
         except requests.exceptions.ConnectionError as ex:
-            raise UpdateFailed(f"Connection aborted by FritzBox: {ex}") from ex
+            _LOGGER.warning("Connection aborted by FritzBox: %s", ex)
+            return {}
         return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
