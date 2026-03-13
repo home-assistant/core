@@ -18,6 +18,7 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -113,7 +114,7 @@ async def test_new_entry_defaults_track_clients_off(
     )
     config_entry.add_to_hass(hass)
 
-    mock_requests(config_entry.data["host"], config_entry.data[CONF_SITE_ID])
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
