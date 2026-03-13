@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import get_device_class_or_undefined
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
     EntityTriggerBase,
@@ -17,17 +17,9 @@ from homeassistant.helpers.trigger import (
 class _MotionBinaryTriggerBase(EntityTriggerBase):
     """Base trigger for motion binary sensor state changes."""
 
-    _domains = {BINARY_SENSOR_DOMAIN}
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities by motion device class."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if get_device_class_or_undefined(self._hass, entity_id)
-            == BinarySensorDeviceClass.MOTION
-        }
+    _domain_specs = {
+        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
+    }
 
 
 class MotionDetectedTrigger(_MotionBinaryTriggerBase, EntityTargetStateTriggerBase):
