@@ -29,14 +29,22 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        AirtouchDiscovery_instance = AirtouchDiscovery()
-        await AirtouchDiscovery_instance.establish_server()
-        devices = await AirtouchDiscovery_instance.discover()
 
-        options = {
-            f"{device.system_id:}": f"{device.name} - {device.ip}" for device in devices
-        }
-        options["manual"] = "Manual Entry"  # Placeholder option
+        try:
+            AirtouchDiscovery_instance = AirtouchDiscovery()
+            await AirtouchDiscovery_instance.establish_server()
+            devices = await AirtouchDiscovery_instance.discover()
+            _LOGGER.info("Finished waiting for airtouch device")
+
+            options = {
+                f"{device.system_id:}": f"{device.name} - {device.ip}"
+                for device in devices
+            }
+            options["manual"] = "Manual Entry"  # Placeholder option
+        except Exception:
+            _LOGGER.exception("Unexpected exception during discovery")
+        finally:
+            await AirtouchDiscovery_instance.close()
 
         self.devices = devices
 
@@ -95,6 +103,31 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         host_str = str(host)
         client = Airtouch5SimpleClient(host_str)
+        try:
+            AirtouchDiscovery_instance = AirtouchDiscovery()
+            await AirtouchDiscovery_instance.establish_server()
+            device = await AirtouchDiscovery_instance.discover_by_ip(host_str)
+            _LOGGER.info("Finished waiting for airtouch device")
+            assert device is not None, "Device not found during setup"
+
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors = {"base": "Device not found during setup"}
+        else:
+            await self.async_set_unique_id(device.system_id)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"{device.name} ({device.system_id})",
+                data={
+                    "system_id": device.system_id,
+                    "host": device.ip,
+                    "model": device.model,
+                    "console_id": device.console_id,
+                    "name": device.name,
+                },
+            )
+        finally:
+            await AirtouchDiscovery_instance.close()
         try:
             await client.test_connection()
         except Exception:
