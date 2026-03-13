@@ -66,10 +66,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
     """Set up Ollama from a config entry."""
     settings = {**entry.data, **entry.options}
-    api_key = (settings.get(CONF_API_KEY) or "").strip()
+    api_key = settings.get(CONF_API_KEY)
     client = ollama.AsyncClient(
         host=settings[CONF_URL],
-        headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
+        headers={"Authorization": f"Bearer {api_key.strip()}"} if api_key else None,
         verify=get_default_context(),
     )
     try:
