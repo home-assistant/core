@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-import requests
 import re
 from typing import Any, TypedDict, cast
 
@@ -18,6 +17,7 @@ from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import FritzGuestWLAN
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import xmltodict
 
 from homeassistant.components.device_tracker import (
@@ -759,9 +759,17 @@ class AvmWrapper(FritzBoxTools):
                 action_name,
             )
             return {}
-        except requests.exceptions.ConnectionError as ex:
-            _LOGGER.warning("Connection aborted by FritzBox: %s", ex)
+        except RequestsConnectionError as ex:
+            _LOGGER.warning(
+                "Connection aborted by %s during %s/%s %s: %s",
+                self.host,
+                service_name,
+                service_suffix,
+                action_name,
+                ex,
+            )
             return {}
+
         return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
