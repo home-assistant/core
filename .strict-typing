@@ -493,6 +493,7 @@ homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
 homeassistant.components.sftp_storage.*
+homeassistant.components.sharp_cocoro_air.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*
