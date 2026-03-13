@@ -63,7 +63,6 @@ class EsphomeWaterHeater(
         self._attr_target_temperature_step = static_info.target_temperature_step
         features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
         if static_info.supported_modes:
-        if static_info.supported_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
             self._attr_operation_list = [
                 _WATER_HEATER_MODES.from_esphome(mode)
