@@ -22,10 +22,10 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import EVENT_TURN_ON
 from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
+from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +39,7 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data.coordinators
 
     async_add_entities(
-        [
-            ArcamFmj(
-                config_entry.title,
-                coordinators[zone],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-            for zone in (1, 2)
-        ],
+        [ArcamFmj(coordinators[zone]) for zone in (1, 2)],
     )
 
 
@@ -67,21 +60,14 @@ def convert_exception[**_P, _R](
     return _convert_exception
 
 
-class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
+class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     """Representation of a media device."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self,
-        device_name: str,
-        coordinator: ArcamFmjCoordinator,
-        uuid: str,
-    ) -> None:
+    def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
         """Initialize device."""
         super().__init__(coordinator)
-        self._state = coordinator.state
-        self._attr_name = f"Zone {self._state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -92,23 +78,20 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.TURN_ON
         )
-        if self._state.zn == 1:
+        if coordinator.state.zn == 1:
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        self._attr_unique_id = f"{uuid}-{self._state.zn}"
-        self._attr_entity_registry_enabled_default = self._state.zn == 1
-        self._attr_device_info = coordinator.device_info
 
     @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
-        if self._state.get_power():
+        if self.coordinator.state.get_power():
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
     @convert_exception
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._state.set_mute(mute)
+        await self.coordinator.state.set_mute(mute)
         self.async_write_ha_state()
 
     @convert_exception
@@ -120,14 +103,14 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
             _LOGGER.error("Unsupported source %s", source)
             return
 
-        await self._state.set_source(value)
+        await self.coordinator.state.set_source(value)
         self.async_write_ha_state()
 
     @convert_exception
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a specific source."""
         try:
-            await self._state.set_decode_mode(sound_mode)
+            await self.coordinator.state.set_decode_mode(sound_mode)
         except (KeyError, ValueError) as exception:
             raise HomeAssistantError(
                 f"Unsupported sound_mode {sound_mode}"
@@ -138,27 +121,27 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @convert_exception
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self._state.set_volume(round(volume * 99.0))
+        await self.coordinator.state.set_volume(round(volume * 99.0))
         self.async_write_ha_state()
 
     @convert_exception
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
-        await self._state.inc_volume()
+        await self.coordinator.state.inc_volume()
         self.async_write_ha_state()
 
     @convert_exception
     async def async_volume_down(self) -> None:
         """Turn volume up for media player."""
-        await self._state.dec_volume()
+        await self.coordinator.state.dec_volume()
         self.async_write_ha_state()
 
     @convert_exception
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        if self._state.get_power() is not None:
+        if self.coordinator.state.get_power() is not None:
             _LOGGER.debug("Turning on device using connection")
-            await self._state.set_power(True)
+            await self.coordinator.state.set_power(True)
         else:
             _LOGGER.debug("Firing event to turn on device")
             self.hass.bus.async_fire(EVENT_TURN_ON, {ATTR_ENTITY_ID: self.entity_id})
@@ -166,7 +149,7 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @convert_exception
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        await self._state.set_power(False)
+        await self.coordinator.state.set_power(False)
 
     async def async_browse_media(
         self,
@@ -179,7 +162,7 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
 
-        presets = self._state.get_preset_details()
+        presets = self.coordinator.state.get_preset_details()
 
         radio = [
             BrowseMedia(
@@ -211,7 +194,7 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
 
         if media_id.startswith("preset:"):
             preset = int(media_id[7:])
-            await self._state.set_tuner_preset(preset)
+            await self.coordinator.state.set_tuner_preset(preset)
         else:
             _LOGGER.error("Media %s is not supported", media_id)
             return
@@ -219,47 +202,47 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        if (value := self._state.get_source()) is None:
+        if (value := self.coordinator.state.get_source()) is None:
             return None
         return value.name
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return [x.name for x in self._state.get_source_list()]
+        return [x.name for x in self.coordinator.state.get_source_list()]
 
     @property
     def sound_mode(self) -> str | None:
         """Name of the current sound mode."""
-        if (value := self._state.get_decode_mode()) is None:
+        if (value := self.coordinator.state.get_decode_mode()) is None:
             return None
         return value.name
 
     @property
     def sound_mode_list(self) -> list[str] | None:
         """List of available sound modes."""
-        if (values := self._state.get_decode_modes()) is None:
+        if (values := self.coordinator.state.get_decode_modes()) is None:
             return None
         return [x.name for x in values]
 
     @property
     def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
-        if (value := self._state.get_mute()) is None:
+        if (value := self.coordinator.state.get_mute()) is None:
             return None
         return value
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of device."""
-        if (value := self._state.get_volume()) is None:
+        if (value := self.coordinator.state.get_volume()) is None:
             return None
         return value / 99.0
 
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
-        source = self._state.get_source()
+        source = self.coordinator.state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
             value = MediaType.MUSIC
         else:
@@ -269,9 +252,9 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @property
     def media_content_id(self) -> str | None:
         """Content type of current playing media."""
-        source = self._state.get_source()
+        source = self.coordinator.state.get_source()
         if source in (SourceCodes.DAB, SourceCodes.FM):
-            if preset := self._state.get_tuner_preset():
+            if preset := self.coordinator.state.get_tuner_preset():
                 value = f"preset:{preset}"
             else:
                 value = None
@@ -283,11 +266,11 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @property
     def media_channel(self) -> str | None:
         """Channel currently playing."""
-        source = self._state.get_source()
+        source = self.coordinator.state.get_source()
         if source == SourceCodes.DAB:
-            value = self._state.get_dab_station()
+            value = self.coordinator.state.get_dab_station()
         elif source == SourceCodes.FM:
-            value = self._state.get_rds_information()
+            value = self.coordinator.state.get_rds_information()
         else:
             value = None
         return value
@@ -295,8 +278,8 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        if self._state.get_source() == SourceCodes.DAB:
-            value = self._state.get_dls_pdt()
+        if self.coordinator.state.get_source() == SourceCodes.DAB:
+            value = self.coordinator.state.get_dls_pdt()
         else:
             value = None
         return value
@@ -304,7 +287,7 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        if (source := self._state.get_source()) is None:
+        if (source := self.coordinator.state.get_source()) is None:
             return None
 
         if channel := self.media_channel:
