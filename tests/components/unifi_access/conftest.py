@@ -31,7 +31,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_API_TOKEN: MOCK_API_TOKEN,
             CONF_VERIFY_SSL: False,
         },
-        unique_id=MOCK_HOST,
         version=1,
         minor_version=1,
     )
