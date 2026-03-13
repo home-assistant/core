@@ -1,0 +1,30 @@
+{
+  "config": {
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to add Powersensor to Home Assistant?",
+        "title": "Powersensor plugs discovered"
+      },
+      "manual_confirm": {
+        "description": "No Powersensor plugs were discovered on your network. You can still add the integration and if plugs are later discovered they will be added to Home Assistant. Do you want to add Powersensor to Home Assistant?",
+        "title": "No Powersensor plugs discovered"
+      },
+      "reconfigure" : {
+        "title" : "Update sensor roles",
+        "description": "Note: Roles provided by sensors will override user settings"
+      }
+    },
+    "error": {
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "cannot_reconfigure": "Cannot reconfigure. Initial configuration incomplete or broken.",
+      "firmware_not_compatible": "Plug firmware not compatible",
+      "roles_applied": "Roles successfully applied!",
+      "no_devices_found": "No devices found on the network",
+      "single_instance_allowed": "Already configured. Only a single configuration possible.",
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect"
+    }
+  }
+}
