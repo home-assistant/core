@@ -80,6 +80,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
             _LOGGER.info("Finished waiting for airtouch device")
             assert airtouch_device is not None, "Device not found during migration"
             # If for some reason the device is not found during migration, it will fail and will retry next time. This could leave a persistent error if the device cannout route UDP.
+            new_data = {
+                "system_id": airtouch_device.system_id,
+                "host": airtouch_device.ip,
+                "model": airtouch_device.model,
+                "console_id": airtouch_device.console_id,
+                "name": airtouch_device.name,
+            }
         except TimeoutError as exception:
             _LOGGER.error("Error while migrating: %s", exception)
             return False
@@ -111,9 +118,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 assert entity_id is not None
                 entity_entry = entity_registry.async_get(entity_id)
                 assert entity_entry is not None
+
                 entity_registry.async_update_entity(
                     entity_entry.entity_id, new_unique_id=new_unique_id
                 )
+
                 _LOGGER.debug(
                     "Found entity: %s (unique_id=%s) new ID=%s",
                     entity.entity_id,
@@ -180,6 +189,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
         hass.config_entries.async_update_entry(
             entry,
             unique_id=airtouch_device.system_id,
+            data=new_data,
             minor_version=2,
         )
     return True
