@@ -65,8 +65,8 @@ async def async_setup_entry(
     """Set up TRMNL sensor entities based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        TRMNLSensor(coordinator, device, description)
-        for device in coordinator.data.values()
+        TRMNLSensor(coordinator, device_id, description)
+        for device_id in coordinator.data
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -79,13 +79,13 @@ class TRMNLSensor(TRMNLEntity, SensorEntity):
     def __init__(
         self,
         coordinator: TRMNLCoordinator,
-        device: Device,
+        device_id: int,
         description: TRMNLSensorEntityDescription,
     ) -> None:
         """Initialize TRMNL sensor."""
-        super().__init__(coordinator, device)
+        super().__init__(coordinator, device_id)
         self.entity_description = description
-        self._attr_unique_id = f"{device.mac_address}_{description.key}"
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

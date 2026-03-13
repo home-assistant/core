@@ -15,10 +15,11 @@ class TRMNLEntity(CoordinatorEntity[TRMNLCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TRMNLCoordinator, device: Device) -> None:
+    def __init__(self, coordinator: TRMNLCoordinator, device_id: int) -> None:
         """Initialize TRMNL entity."""
         super().__init__(coordinator)
-        self._device_mac = device.mac_address
+        self._device_id = device_id
+        device = self._device
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             name=device.name,
@@ -28,9 +29,9 @@ class TRMNLEntity(CoordinatorEntity[TRMNLCoordinator]):
     @property
     def _device(self) -> Device:
         """Return the device from coordinator data."""
-        return self.coordinator.data[self._device_mac]
+        return self.coordinator.data[self._device_id]
 
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self._device_mac in self.coordinator.data
+        return super().available and self._device_id in self.coordinator.data

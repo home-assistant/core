@@ -18,7 +18,7 @@ from .const import DOMAIN, LOGGER
 type TRMNLConfigEntry = ConfigEntry[TRMNLCoordinator]
 
 
-class TRMNLCoordinator(DataUpdateCoordinator[dict[str, Device]]):
+class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
     """Class to manage fetching TRMNL data."""
 
     config_entry: TRMNLConfigEntry
@@ -39,7 +39,7 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.client = client
 
-    async def _async_update_data(self) -> dict[str, Device]:
+    async def _async_update_data(self) -> dict[int, Device]:
         """Fetch data from TRMNL."""
         try:
             devices = await self.client.get_devices()
@@ -54,4 +54,4 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 translation_key="update_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return {device.mac_address: device for device in devices}
+        return {device.identifier: device for device in devices}
