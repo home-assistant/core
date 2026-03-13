@@ -355,7 +355,7 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     appliance_coordinator: HomeConnectApplianceCoordinator,
     entity_registry: er.EntityRegistry,
-) -> list[HomeConnectOptionEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         HomeConnectSelectOptionEntity(appliance_coordinator, desc)
@@ -403,7 +403,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in self.appliance.programs
-            if program.key != ProgramKey.UNKNOWN
+            if program.key in PROGRAMS_TRANSLATION_KEYS_MAP
             and (
                 program.constraints is None
                 or program.constraints.execution

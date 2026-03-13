@@ -30,6 +30,11 @@
     }
   },
   "entity": {
+    "button": {
+      "send_diagnostics": {
+        "name": "Send diagnostics"
+      }
+    },
     "number": {
       "intensity": {
         "name": "Intensity"
@@ -48,6 +53,9 @@
       "swing_count": {
         "name": "Swing count",
         "unit_of_measurement": "swings"
+      },
+      "total_swing_time": {
+        "name": "Total swing time"
       }
     },
     "switch": {
