@@ -267,11 +267,11 @@ class SupervisorIssues:
                     placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
                         f"/hassio/addon/{issue.reference}"
                     )
-                    apps_list = get_apps_list(self._hass) or []
+                    addons_list = get_apps_list(self._hass) or []
                     placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
-                    for app in apps_list:
-                        if app[ATTR_SLUG] == issue.reference:
-                            placeholders[PLACEHOLDER_KEY_ADDON] = app[ATTR_NAME]
+                    for addon in addons_list:
+                        if addon[ATTR_SLUG] == issue.reference:
+                            placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
                             break
 
             elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
