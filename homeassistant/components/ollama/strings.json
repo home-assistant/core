@@ -15,7 +15,7 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
-        "description": "The Ollama integration needs to re-authenticate your account.",
+        "description": "The Ollama integration needs to re-authenticate with your Ollama server or API key.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
