@@ -12,8 +12,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_UUID
-
 from tests.common import MockConfigEntry, snapshot_platform
 
 
@@ -22,14 +20,6 @@ def sensor_only() -> Generator[None]:
     """Limit platform setup to sensor only."""
     with patch("homeassistant.components.arcam_fmj.PLATFORMS", [Platform.SENSOR]):
         yield
-
-
-def _get_entity_id(entity_registry: er.EntityRegistry, zone: int, key: str) -> str:
-    """Get entity_id by unique_id."""
-    unique_id = f"{MOCK_UUID}-{zone}-{key}"
-    entity_id = entity_registry.async_get_entity_id("sensor", "arcam_fmj", unique_id)
-    assert entity_id is not None, f"Missing sensor: zone {zone} {key}"
-    return entity_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "player_setup")
@@ -46,7 +36,6 @@ async def test_setup(
 @pytest.mark.usefixtures("player_setup")
 async def test_sensor_video_parameters(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     state_1: State,
     client: Mock,
 ) -> None:
@@ -70,8 +59,7 @@ async def test_sensor_video_parameters(
         "incoming_video_colorspace": "hdr10",
     }
     for key, value in expected.items():
-        entity_id = _get_entity_id(entity_registry, 1, key)
-        state = hass.states.get(entity_id)
+        state = hass.states.get(f"sensor.arcam_fmj_127_0_0_1_{key}")
         assert state is not None, f"State missing for {key}"
         assert state.state == value, f"Expected {value} for {key}, got {state.state}"
 
@@ -79,7 +67,6 @@ async def test_sensor_video_parameters(
 @pytest.mark.usefixtures("player_setup")
 async def test_sensor_audio_parameters(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     state_1: State,
     client: Mock,
 ) -> None:
@@ -93,11 +80,15 @@ async def test_sensor_audio_parameters(
     client.notify_data_updated()
     await hass.async_block_till_done()
 
-    entity_id = _get_entity_id(entity_registry, 1, "incoming_audio_format")
-    assert hass.states.get(entity_id).state == "pcm"
-
-    entity_id = _get_entity_id(entity_registry, 1, "incoming_audio_config")
-    assert hass.states.get(entity_id).state == "stereo_only"
-
-    entity_id = _get_entity_id(entity_registry, 1, "incoming_audio_sample_rate")
-    assert hass.states.get(entity_id).state == "48000"
+    assert (
+        hass.states.get("sensor.arcam_fmj_127_0_0_1_incoming_audio_format").state
+        == "pcm"
+    )
+    assert (
+        hass.states.get("sensor.arcam_fmj_127_0_0_1_incoming_audio_configuration").state
+        == "stereo_only"
+    )
+    assert (
+        hass.states.get("sensor.arcam_fmj_127_0_0_1_incoming_audio_sample_rate").state
+        == "48000"
+    )

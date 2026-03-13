@@ -57,7 +57,7 @@ async def test_if_fires_on_turn_on_request(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    player_setup: None,
+    player_setup,
     state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
@@ -107,7 +107,7 @@ async def test_if_fires_on_turn_on_request_legacy(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     service_calls: list[ServiceCall],
-    player_setup: None,
+    player_setup,
     state_1: State,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
