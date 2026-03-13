@@ -38,7 +38,7 @@ PARALLEL_UPDATES = 0
 class ToGrillNumberEntityDescription(NumberEntityDescription):
     """Description of entity."""
 
-    get_value: Callable[[ToGrillCoordinator], float | None]
+    get_value: Callable[[ToGrillCoordinator], float]
     set_packet: Callable[[ToGrillCoordinator, float], PacketWrite]
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
     probe_number: int | None = None
@@ -51,7 +51,7 @@ def _get_temperature_descriptions(
         variant: str,
         icon: str | None,
         set_packet: Callable[[ToGrillCoordinator, float], PacketWrite],
-        get_value: Callable[[ToGrillCoordinator], float | None],
+        get_value: Callable[[ToGrillCoordinator], float],
     ) -> ToGrillNumberEntityDescription:
         return ToGrillNumberEntityDescription(
             key=f"temperature_{variant}_{probe_number}",
@@ -71,14 +71,14 @@ def _get_temperature_descriptions(
 
     def _get_temperatures(
         coordinator: ToGrillCoordinator, alarm_type: AlarmType
-    ) -> tuple[None | float, None | float]:
+    ) -> tuple[float, float]:
         if not (packet := coordinator.get_packet(PacketA8Notify, probe_number)):
-            return None, None
+            return 0.0, 0.0
 
         if packet.alarm_type != alarm_type:
-            return None, None
+            return 0.0, 0.0
 
-        return packet.temperature_1, packet.temperature_2
+        return packet.temperature_1 or 0.0, packet.temperature_2 or 0.0
 
     def _set_target(
         coordinator: ToGrillCoordinator, value: float | None
@@ -194,7 +194,7 @@ ENTITY_DESCRIPTIONS = (
             temperature_unit=None, alarm_interval=round(x)
         ),
         get_value=lambda x: (
-            packet.alarm_interval if (packet := x.get_packet(PacketA0Notify)) else None
+            packet.alarm_interval if (packet := x.get_packet(PacketA0Notify)) else 0.0
         ),
     ),
 )
