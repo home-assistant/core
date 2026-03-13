@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.time import DOMAIN as TIME_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import setup_integration
 
@@ -36,3 +37,18 @@ async def test_sleep_mode_start_time(
         blocking=True,
     )
     robot.set_sleep_mode.assert_awaited_once_with(True, time(23, 0))
+
+
+async def test_time_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
+) -> None:
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, TIME_DOMAIN)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            "set_value",
+            {ATTR_ENTITY_ID: SLEEP_START_TIME_ENTITY_ID, "time": time(23, 0)},
+            blocking=True,
+        )
