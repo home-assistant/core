@@ -18,34 +18,31 @@ from .services import async_setup_services
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Set up the config entry."""
+PLATFORMS = ["switch"]
 
-    # Create device manager
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the config entry."""
     device_manager = HIVIDeviceManager(hass, config_entry)
     await device_manager.async_setup()
 
-    # Store to hass data
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
     hass.data[DOMAIN][config_entry.entry_id]["device_manager"] = device_manager
 
-    # Set up platforms
-    await hass.config_entries.async_forward_entry_setups(config_entry, ["switch"])
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     await async_setup_services(hass)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry and clean up related resources."""
     _LOGGER.debug("Starting to unload config entry %s", entry.entry_id)
 
-    # Get stored data (may have been partially cleaned up)
     data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
 
-    # 1) Clean up device manager (cancel background tasks, etc.)
     device_manager = data.get("device_manager")
     if device_manager:
         try:
@@ -53,17 +50,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         except Exception:
             _LOGGER.exception("Exception occurred while cleaning up device_manager")
 
-    # 2) Standard platform unloading
     try:
-        unload_ok = await hass.config_entries.async_unload_platforms(entry, ["switch"])
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     except Exception:
         _LOGGER.exception("Failed to call async_unload_platforms")
         unload_ok = False
 
-    # 3) Clean up this extension's entry from hass.data
-    # Note: Do not remove devices from the device registry here. Unload (e.g. on
-    # reload) should not delete devices; removal is handled by
-    # async_remove_config_entry_device or when the config entry is removed.
     try:
         if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
             hass.data[DOMAIN].pop(entry.entry_id, None)
@@ -113,7 +105,6 @@ async def async_remove_config_entry_device(
     Return True to allow Home Assistant to remove the device entry.
     Only devices belonging to this integration (DOMAIN in identifiers) are cleaned up.
     """
-    # Only handle devices that belong to this integration
     if not any(identifier[0] == DOMAIN for identifier in device_entry.identifiers):
         return False
 
