@@ -2,13 +2,22 @@
 
 from unittest.mock import call
 
-from aioesphomeapi import APIClient, WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
+from aioesphomeapi import (
+    APIClient,
+    WaterHeaterFeature,
+    WaterHeaterInfo,
+    WaterHeaterMode,
+    WaterHeaterState,
+)
 
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_LIST,
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
@@ -182,4 +191,131 @@ async def test_water_heater_set_operation_mode(
 
     mock_client.water_heater_command.assert_has_calls(
         [call(key=1, mode=WaterHeaterMode.GAS, device_id=0)]
+    )
+
+
+async def test_water_heater_on_off(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test turning the water heater on and off."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            supported_features=WaterHeaterFeature.SUPPORTS_ON_OFF,
+        )
+    ]
+    states = [
+        WaterHeaterState(
+            key=1,
+            target_temperature=50.0,
+        )
+    ]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.attributes["supported_features"] & WaterHeaterEntityFeature.ON_OFF
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "water_heater.test_my_boiler"},
+        blocking=True,
+    )
+
+    mock_client.water_heater_command.assert_has_calls(
+        [call(key=1, on=True, device_id=0)]
+    )
+
+    mock_client.water_heater_command.reset_mock()
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "water_heater.test_my_boiler"},
+        blocking=True,
+    )
+
+    mock_client.water_heater_command.assert_has_calls(
+        [call(key=1, on=False, device_id=0)]
+    )
+
+
+async def test_water_heater_target_temperature_step(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test target temperature step is respected."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+            target_temperature_step=5.0,
+        )
+    ]
+    states = [
+        WaterHeaterState(
+            key=1,
+            target_temperature=50.0,
+        )
+    ]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert state.attributes["target_temp_step"] == 5.0
+
+
+async def test_water_heater_no_on_off_without_feature(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test ON_OFF feature is not set when not supported."""
+    entity_info = [
+        WaterHeaterInfo(
+            object_id="my_boiler",
+            key=1,
+            name="My Boiler",
+            min_temperature=10.0,
+            max_temperature=85.0,
+        )
+    ]
+    states = [
+        WaterHeaterState(
+            key=1,
+            target_temperature=50.0,
+        )
+    ]
+
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    state = hass.states.get("water_heater.test_my_boiler")
+    assert state is not None
+    assert not (
+        state.attributes["supported_features"] & WaterHeaterEntityFeature.ON_OFF
     )
