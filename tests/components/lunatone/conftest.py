@@ -3,13 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from lunatone_rest_api_client import Device, Devices
+from lunatone_rest_api_client import Device, Devices, Info
+from lunatone_rest_api_client.models import InfoData
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER, build_devices_data
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, UUID, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -71,11 +72,18 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
         ),
     ):
         info = mock_info.return_value
-        info.data = INFO_DATA
-        info.name = info.data.name
-        info.version = info.data.version
-        info.serial_number = info.data.device.serial
-        info.product_name = PRODUCT_NAME
+
+        def _set_data(data: InfoData) -> Info:
+            info.data = data
+            info.name = info.data.name
+            info.product_name = PRODUCT_NAME
+            info.serial_number = info.data.device.serial
+            info.uid = info.data.uid
+            info.version = info.data.version
+            return info
+
+        info.set_data = _set_data
+        info.set_data(INFO_DATA)
         yield info
 
 
@@ -98,5 +106,5 @@ def mock_config_entry() -> MockConfigEntry:
         title=BASE_URL,
         domain=DOMAIN,
         data={CONF_URL: BASE_URL},
-        unique_id=str(SERIAL_NUMBER),
+        unique_id=UUID.replace("-", ""),
     )
