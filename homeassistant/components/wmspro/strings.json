@@ -21,5 +21,23 @@
         }
       }
     }
+  },
+  "entity": {
+    "cover": {
+      "valance": {
+        "name": "Valance"
+      }
+    },
+    "number": {
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotation-max": {
+        "name": "Maximum Rotation"
+      },
+      "rotation-min": {
+        "name": "Minimum Rotation"
+      }
+    }
   }
 }
