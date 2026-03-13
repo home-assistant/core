@@ -80,13 +80,41 @@ async def test_ws_disconnect_marks_unavailable(
     assert coordinator.last_update_success is False
 
 
-async def test_ws_connect_logs(
+async def test_ws_connect_triggers_refresh(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_client: MagicMock,
 ) -> None:
-    """Test WebSocket connect callback runs without error."""
+    """Test WebSocket connect triggers a data refresh to recover availability."""
     coordinator = init_integration.runtime_data
+
+    # Simulate disconnect → unavailable
+    coordinator._on_ws_disconnect()
+    assert coordinator.last_update_success is False
+
+    # Simulate reconnect
     coordinator._on_ws_connect()
+    await hass.async_block_till_done()
+
+    # Refresh should have been triggered, restoring availability
+    assert coordinator.last_update_success is True
+    assert mock_client.get_doors.call_count == 2
+
+
+async def test_ws_connect_no_refresh_when_healthy(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test initial WebSocket connect does not trigger redundant refresh."""
+    coordinator = init_integration.runtime_data
+    assert coordinator.last_update_success is True
+
+    coordinator._on_ws_connect()
+    await hass.async_block_till_done()
+
+    # No extra refresh — only the initial setup call
+    assert mock_client.get_doors.call_count == 1
 
 
 @pytest.mark.parametrize(

@@ -80,6 +80,12 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""
         _LOGGER.debug("WebSocket connected to UniFi Access")
+        if not self.last_update_success:
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_request_refresh(),
+                "unifi_access_reconnect_refresh",
+            )
 
     def _on_ws_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
