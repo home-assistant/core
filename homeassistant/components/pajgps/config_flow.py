@@ -11,6 +11,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -25,14 +27,17 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_credentials(email: str, password: str) -> str | None:
+async def _validate_credentials(
+    email: str, password: str, hass: HomeAssistant
+) -> str | None:
     """Attempt a real login with the given credentials.
 
     Returns an error key string on failure, or None on success.
     """
-    api: PajGpsApi | None = None
+    api: PajGpsApi
+    websession = async_get_clientsession(hass)
     try:
-        api = PajGpsApi(email=email, password=password)
+        api = PajGpsApi(email=email, password=password, websession=websession)
         await api.login()
     except AuthenticationError, TokenRefreshError:
         return "invalid_auth"
@@ -59,4 +64,12 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         normalized_email = self.data[CONF_EMAIL].strip().lower()
         self.data[CONF_EMAIL] = normalized_email
         self._async_abort_entries_match({CONF_EMAIL: normalized_email})
+        # Validate credentials by attempting a real login
+        error = await _validate_credentials(
+            self.data[CONF_EMAIL], self.data[CONF_PASSWORD], self.hass
+        )
+        if error is not None:
+            return self.async_show_form(
+                step_id="user", data_schema=CONFIG_SCHEMA, errors={"base": error}
+            )
         return self.async_create_entry(title=normalized_email, data=self.data)
