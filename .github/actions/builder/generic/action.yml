@@ -1,0 +1,129 @@
+name: "Image builder"
+description: "Build a Docker image"
+inputs:
+  base-image:
+    description: "Base image to use for the build"
+    required: true
+    # example: 'ghcr.io/home-assistant/amd64-homeassistant-base:2024.6.0'
+  tags:
+    description: "Tag(s) for the built image (can be multiline for multiple tags)"
+    required: true
+    # example: 'ghcr.io/home-assistant/amd64-homeassistant:2026.2.0' or multiline for multiple tags
+  arch:
+    description: "Architecture for the build (used for default labels)"
+    required: true
+    # example: 'amd64'
+  version:
+    description: "Version for the build (used for default labels)"
+    required: true
+    # example: '2026.2.0'
+  dockerfile:
+    description: "Path to the Dockerfile to build"
+    required: true
+    # example: './Dockerfile'
+  cosign-base-identity:
+    description: "Certificate identity regexp for base image verification"
+    required: true
+    # example: 'https://github.com/home-assistant/docker/.*'
+  additional-labels:
+    description: "Additional labels to add to the built image (merged with default labels)"
+    required: false
+    default: ""
+    # example: 'custom.label=value'
+  push:
+    description: "Whether to push the image to the registry"
+    required: false
+    default: "true"
+    # example: 'true' or 'false'
+runs:
+  using: "composite"
+  steps:
+    - name: Install Cosign
+      uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+      with:
+        cosign-release: "v2.5.3"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+    - name: Verify base image signature
+      shell: bash
+      run: |
+        cosign verify \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          --certificate-identity-regexp "${INPUTS_COSIGN_BASE_IDENTITY}" \
+          "${INPUTS_BASE_IMAGE}"
+      env:
+        INPUTS_COSIGN_BASE_IDENTITY: ${{ inputs.cosign-base-identity }}
+        INPUTS_BASE_IMAGE: ${{ inputs.base-image }}
+
+    - name: Verify cache image signature
+      id: cache
+      continue-on-error: true
+      shell: bash
+      run: |
+        cosign verify \
+          --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+          --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
+          "ghcr.io/home-assistant/${INPUTS_ARCH}-homeassistant:latest"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
+
+    - name: Prepare labels
+      id: labels
+      shell: bash
+      run: |
+        # Generate creation timestamp
+        CREATED=$(date --rfc-3339=seconds --utc)
+
+        # Build default labels array
+        LABELS=(
+          "io.hass.arch=${INPUTS_ARCH}"
+          "io.hass.version=${INPUTS_VERSION}"
+          "org.opencontainers.image.created=${CREATED}"
+          "org.opencontainers.image.version=${INPUTS_VERSION}"
+        )
+
+        # Append additional labels if provided
+        if [ -n "${INPUTS_ADDITIONAL_LABELS}" ]; then
+          while IFS= read -r label; do
+            [ -n "$label" ] && LABELS+=("$label")
+          done <<< "${INPUTS_ADDITIONAL_LABELS}"
+        fi
+
+        # Output the combined labels using EOF delimiter for multiline
+        {
+          echo 'result<<EOF'
+          printf '%s\n' "${LABELS[@]}"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_ADDITIONAL_LABELS: ${{ inputs.additional-labels }}
+
+    - name: Build base image
+      id: build
+      uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      with:
+        context: .
+        file: ${{ inputs.dockerfile }}
+        push: ${{ inputs.push }}
+        cache-from: ${{ steps.cache.outcome == 'success' && format('ghcr.io/home-assistant/{0}-homeassistant:latest', inputs.arch) || '' }}
+        build-args: |
+          BUILD_FROM=${{ inputs.base-image }}
+        tags: ${{ inputs.tags }}
+        outputs: type=image,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
+        labels: ${{ steps.labels.outputs.result }}
+
+    - name: Sign image
+      if: ${{ inputs.push == 'true' }}
+      shell: bash
+      run: |
+        # Sign each tag
+        while IFS= read -r tag; do
+          [ -n "$tag" ] && cosign sign --yes "${tag}@${STEPS_BUILD_OUTPUTS_DIGEST}"
+        done <<< "${INPUTS_TAGS}"
+      env:
+        STEPS_BUILD_OUTPUTS_DIGEST: ${{ steps.build.outputs.digest }}
+        INPUTS_TAGS: ${{ inputs.tags }}

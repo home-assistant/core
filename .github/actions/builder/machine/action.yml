@@ -1,0 +1,72 @@
+name: "Machine image builder"
+description: "Build or copy a machine-specific Docker image"
+inputs:
+  machine:
+    description: "Machine name"
+    required: true
+    # example: 'raspberrypi4-64'
+  version:
+    description: "Version for the build"
+    required: true
+    # example: '2026.2.0'
+  arch:
+    description: "Architecture for the build"
+    required: true
+    # example: 'aarch64'
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare build variables
+      id: vars
+      shell: bash
+      run: |
+        echo "base_image=ghcr.io/home-assistant/${INPUTS_ARCH}-homeassistant:${INPUTS_VERSION}" >> "$GITHUB_OUTPUT"
+
+        # Build tags array with version-specific tag
+        TAGS=(
+          "ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:${INPUTS_VERSION}"
+        )
+
+        # Add general tag based on version
+        if [[ "${INPUTS_VERSION}" =~ d ]]; then
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:dev")
+        elif [[ "${INPUTS_VERSION}" =~ b ]]; then
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:beta")
+        else
+          TAGS+=("ghcr.io/home-assistant/${INPUTS_MACHINE}-homeassistant:stable")
+        fi
+
+        # Output tags using EOF delimiter for multiline
+        {
+          echo 'tags<<EOF'
+          printf '%s\n' "${TAGS[@]}"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+
+        LABELS=(
+          "io.hass.type=core"
+          "io.hass.machine=${INPUTS_MACHINE}"
+          "org.opencontainers.image.source=https://github.com/home-assistant/core"
+        )
+
+        # Output the labels using EOF delimiter for multiline
+        {
+          echo 'labels<<EOF'
+          printf '%s\n' "${LABELS[@]}"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+      env:
+        INPUTS_ARCH: ${{ inputs.arch }}
+        INPUTS_VERSION: ${{ inputs.version }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+
+    - name: Build machine image
+      uses: ./.github/actions/builder/generic
+      with:
+        base-image: ${{ steps.vars.outputs.base_image }}
+        tags: ${{ steps.vars.outputs.tags }}
+        arch: ${{ inputs.arch }}
+        version: ${{ inputs.version }}
+        dockerfile: machine/${{ inputs.machine }}
+        cosign-base-identity: "https://github.com/home-assistant/core/.*"
+        additional-labels: ${{ steps.vars.outputs.labels }}
