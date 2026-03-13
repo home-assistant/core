@@ -41,8 +41,11 @@ async def _validate_credentials(
         await api.login()
     except AuthenticationError, TokenRefreshError:
         return "invalid_auth"
-    except Exception:  # noqa: BLE001
-        return "cannot_connect"
+    except Exception:
+        _LOGGER.exception(
+            "Unexpected error validating PAJ GPS credentials for %s", email
+        )
+        return "unknown"
 
     return None
 

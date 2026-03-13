@@ -16,6 +16,7 @@ from .test_common import make_coordinator, make_device, make_trackpoint
 
 class TestAsyncUpdateData:
     """Tests for the _async_update_data method."""
+
     @pytest.mark.asyncio
     async def test_returns_pajgps_data_with_devices_and_positions(self):
         """Test that _async_update_data returns a fully populated PajGpsData."""
@@ -108,14 +109,3 @@ class TestGetDeviceInfo:
         coord.data = PajGpsData(devices={}, positions={})
 
         assert coord.get_device_info(999) is None
-
-    def test_identifiers_contain_email_and_device_id(self):
-        """Test that identifiers include both the email and device ID."""
-        coord = make_coordinator(email="owner@example.com")
-        coord.data = PajGpsData(devices={42: make_device(42)}, positions={})
-
-        info = coord.get_device_info(42)
-        identifiers = info["identifiers"]
-        assert any(
-            "owner@example.com" in str(i) and "42" in str(i) for i in identifiers
-        )

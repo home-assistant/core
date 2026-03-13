@@ -185,8 +185,8 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
 
         assert result == "invalid_auth"
 
-    async def test_returns_cannot_connect_on_generic_exception(self):
-        """Any unexpected exception from login() must map to 'cannot_connect'."""
+    async def test_returns_unknown_on_generic_exception(self):
+        """Any unexpected exception from login() must map to 'unknown'."""
         hass = MagicMock()
         with (
             patch(
@@ -199,4 +199,4 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
             )
             result = await _validate_credentials("user@example.com", "secret", hass)
 
-        assert result == "cannot_connect"
+        assert result == "unknown"
