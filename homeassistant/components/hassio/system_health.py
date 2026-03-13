@@ -36,7 +36,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
     network_info = get_network_info(hass) or {}
-    apps_list = get_apps_list(hass) or []
+    addons_list = get_apps_list(hass) or []
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
@@ -99,7 +99,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     )
 
     information["installed_addons"] = ", ".join(
-        f"{app['name']} ({app['version']})" for app in apps_list
+        f"{addon['name']} ({addon['version']})" for addon in addons_list
     )
 
     return information

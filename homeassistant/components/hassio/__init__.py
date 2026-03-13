@@ -552,7 +552,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 supervisor_info,
                 os_info,
                 network_info,
-                apps_list,
+                addons_list,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -586,7 +586,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
             hass.data[DATA_OS_INFO] = os_info.to_dict()
             hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
-            hass.data[DATA_APPS_LIST] = [app.to_dict() for app in apps_list]
+            hass.data[DATA_APPS_LIST] = [addon.to_dict() for addon in addons_list]
 
             # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
             # Can drop this after removal period

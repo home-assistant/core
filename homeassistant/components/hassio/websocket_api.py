@@ -166,15 +166,15 @@ async def websocket_update_addon(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to update an addon."""
-    app_name: str | None = None
-    app_version: str | None = None
-    apps_list: list[dict[str, Any]] = get_apps_list(hass) or []
-    for app in apps_list:
-        if app[ATTR_SLUG] == msg["addon"]:
-            app_name = app[ATTR_NAME]
-            app_version = app[ATTR_VERSION]
+    addon_name: str | None = None
+    addon_version: str | None = None
+    addons_list: list[dict[str, Any]] = get_apps_list(hass) or []
+    for addon in addons_list:
+        if addon[ATTR_SLUG] == msg["addon"]:
+            addon_name = addon[ATTR_NAME]
+            addon_version = addon[ATTR_VERSION]
             break
-    await update_addon(hass, msg["addon"], msg["backup"], app_name, app_version)
+    await update_addon(hass, msg["addon"], msg["backup"], addon_name, addon_version)
     connection.send_result(msg[WS_ID])
 
 

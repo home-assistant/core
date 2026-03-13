@@ -362,11 +362,11 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
 
         new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass) or {}
-        apps_info = get_addons_info(self.hass) or {}
-        apps_stats = get_addons_stats(self.hass)
+        addons_info = get_addons_info(self.hass) or {}
+        addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
         mounts_info = await self.supervisor_client.mounts.info()
-        apps_list = get_apps_list(self.hass) or []
+        addons_list = get_apps_list(self.hass) or []
 
         if store_data:
             repositories = {
@@ -377,17 +377,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             repositories = {}
 
         new_data[DATA_KEY_ADDONS] = {
-            (slug := app[ATTR_SLUG]): {
-                **app,
-                **(apps_stats.get(slug) or {}),
-                ATTR_AUTO_UPDATE: (apps_info.get(slug) or {}).get(
+            (slug := addon[ATTR_SLUG]): {
+                **addon,
+                **(addons_stats.get(slug) or {}),
+                ATTR_AUTO_UPDATE: (addons_info.get(slug) or {}).get(
                     ATTR_AUTO_UPDATE, False
                 ),
                 ATTR_REPOSITORY: repositories.get(
-                    repo_slug := app.get(ATTR_REPOSITORY, ""), repo_slug
+                    repo_slug := addon.get(ATTR_REPOSITORY, ""), repo_slug
                 ),
             }
-            for app in apps_list
+            for addon in addons_list
         }
         if self.is_hass_os:
             new_data[DATA_KEY_OS] = get_os_info(self.hass)
@@ -494,33 +494,33 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             updates[DATA_SUPERVISOR_STATS] = client.supervisor.stats()
 
         # Pull off addons.list results for further processing before caching
-        apps_list, *results = await asyncio.gather(
+        addons_list, *results = await asyncio.gather(
             client.addons.list(), *updates.values()
         )
         for key, result in zip(updates, cast(list[ResponseData], results), strict=True):
             data[key] = result.to_dict()
 
-        installed_apps = cast(list[InstalledAddon], apps_list)
-        data[DATA_APPS_LIST] = [app.to_dict() for app in installed_apps]
+        installed_addons = cast(list[InstalledAddon], addons_list)
+        data[DATA_APPS_LIST] = [addon.to_dict() for addon in installed_addons]
 
         # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
         # Can drop this after removal period
         data[DATA_SUPERVISOR_INFO].update(
             {
                 "repositories": data[DATA_STORE][ATTR_REPOSITORIES],
-                "addons": [app.to_dict() for app in installed_apps],
+                "addons": [addon.to_dict() for addon in installed_addons],
             }
         )
 
-        all_apps = {app.slug for app in installed_apps}
-        started_apps = {
-            app.slug
-            for app in installed_apps
-            if app.state in {AddonState.STARTED, AddonState.STARTUP}
+        add_addons = {addon.slug for addon in installed_addons}
+        started_addons = {
+            addon.slug
+            for addon in installed_addons
+            if addon.state in {AddonState.STARTED, AddonState.STARTUP}
         }
 
         #
-        # Update app info if its the first update or
+        # Update addon info if its the first update or
         # there is at least one entity that needs the data.
         #
         # When entities are added they call async_enable_container_updates
@@ -533,16 +533,16 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         for data_key, update_func, enabled_key, wanted_addons, needs_first_update in (
             (
                 DATA_ADDONS_STATS,
-                self._update_app_stats,
+                self._update_addon_stats,
                 CONTAINER_STATS,
-                started_apps,
+                started_addons,
                 False,
             ),
             (
                 DATA_ADDONS_INFO,
-                self._update_app_info,
+                self._update_addon_info,
                 CONTAINER_INFO,
-                all_apps,
+                add_addons,
                 True,
             ),
         ):
@@ -569,8 +569,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # Refresh jobs data
         await self.jobs.refresh_data(first_update)
 
-    async def _update_app_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
-        """Update single app stats."""
+    async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
+        """Update single addon stats."""
         try:
             stats = await self.supervisor_client.addons.addon_stats(slug)
         except SupervisorError as err:
@@ -578,8 +578,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             return (slug, None)
         return (slug, stats.to_dict())
 
-    async def _update_app_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
-        """Return the info for an app."""
+    async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
+        """Return the info for an addon."""
         try:
             info = await self.supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:
@@ -634,7 +634,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
         try:
-            slug, info = await self._update_app_info(addon_slug)
+            slug, info = await self._update_addon_info(addon_slug)
             if info is not None and DATA_KEY_ADDONS in self.data:
                 if slug in self.data[DATA_KEY_ADDONS]:
                     data = deepcopy(self.data)

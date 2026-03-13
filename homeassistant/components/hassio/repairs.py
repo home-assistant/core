@@ -156,7 +156,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
         supervisor_issues = get_issues_info(self.hass)
         if supervisor_issues and self.issue:
-            apps_list = get_apps_list(self.hass) or []
+            addons_list = get_apps_list(self.hass) or []
             components: list[str] = []
             for issue in supervisor_issues.issues:
                 if issue.key == self.issue.key or issue.type != self.issue.type:
@@ -168,9 +168,9 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
                     components.append(
                         next(
                             (
-                                app[ATTR_NAME]
-                                for app in apps_list
-                                if app[ATTR_SLUG] == issue.reference
+                                addon[ATTR_NAME]
+                                for addon in addons_list
+                                if addon[ATTR_SLUG] == issue.reference
                             ),
                             issue.reference or "",
                         )
@@ -189,11 +189,11 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
-            apps_list = get_apps_list(self.hass) or []
+            addons_list = get_apps_list(self.hass) or []
             placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
-            for app in apps_list:
-                if app[ATTR_SLUG] == self.issue.reference:
-                    placeholders[PLACEHOLDER_KEY_ADDON] = app[ATTR_NAME]
+            for addon in addons_list:
+                if addon[ATTR_SLUG] == self.issue.reference:
+                    placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
                     break
 
         return placeholders or None
