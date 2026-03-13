@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,7 +43,6 @@ class KWBRediscoverButton(ButtonEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information."""
-        host = self._entry.data.get(CONF_HOST, "unknown")
         model = HEATING_DEVICES.get(self._entry.data.get(CONF_HEATING_DEVICE, ""), "KWB Heating")
         data = self._coordinator.data or {}
         major, minor, patch = data.get(8192), data.get(8193), data.get(8194)
@@ -53,7 +51,7 @@ class KWBRediscoverButton(ButtonEntity):
         )
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            name=f"KWB Heating ({host})",
+            name=model,
             manufacturer="KWB",
             model=model,
             sw_version=sw_version,

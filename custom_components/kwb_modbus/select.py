@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.const import CONF_HOST, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -131,7 +131,6 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         sub-device linked to the main KWB boiler device via via_device.
         Non-indexed entities live directly on the main device.
         """
-        host = self._entry.data.get(CONF_HOST, "unknown")
         if self._register.index:
             friendly_name = self._instance_names.get(
                 self._register.index, self._register.index
@@ -152,7 +151,7 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         )
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            name=f"KWB Heating ({host})",
+            name=model,
             manufacturer="KWB",
             model=model,
             sw_version=sw_version,

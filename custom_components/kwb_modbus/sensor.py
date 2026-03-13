@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_HOST, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -133,7 +133,6 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         sub-device that is linked to the main KWB boiler device via via_device.
         Non-indexed entities live directly on the main device.
         """
-        host = self._entry.data.get(CONF_HOST, "unknown")
         if self._register.index:
             friendly_name = self._instance_names.get(
                 self._register.index, self._register.index
@@ -152,7 +151,7 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         )
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry.entry_id)},
-            name=f"KWB Heating ({host})",
+            name=model,
             manufacturer="KWB",
             model=model,
             sw_version=sw_version,
