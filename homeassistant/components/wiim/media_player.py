@@ -510,15 +510,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        self._device.general_event_callback = self._handle_sdk_general_device_update
-        self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
-        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
-        self._device.play_queue_event_callback = self._handle_sdk_refresh_event
-        LOGGER.debug(
-            "Entity %s registered callbacks with WiimDevice %s",
-            self.entity_id,
-            self._device.name,
-        )
         if self._device.supports_http_api:
             await self._update_output_mode()
 
@@ -532,6 +523,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await self._from_device_update_supported_features(write_state=False)
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
+        )
+        self._device.general_event_callback = self._handle_sdk_general_device_update
+        self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
+        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
+        self._device.play_queue_event_callback = self._handle_sdk_refresh_event
+        LOGGER.debug(
+            "Entity %s registered callbacks with WiimDevice %s",
+            self.entity_id,
+            self._device.name,
         )
 
     async def async_will_remove_from_hass(self) -> None:
