@@ -70,7 +70,7 @@ async def test_ws_disconnect_marks_entities_unavailable(
     mock_client: MagicMock,
 ) -> None:
     """Test WebSocket disconnect marks entities as unavailable."""
-    assert hass.states.get(FRONT_DOOR_ENTITY).state != "unavailable"
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "unknown"
 
     on_disconnect = _get_on_disconnect(mock_client)
     on_disconnect()
@@ -96,8 +96,8 @@ async def test_ws_reconnect_restores_entities(
     on_connect()
     await hass.async_block_till_done()
 
-    assert hass.states.get(FRONT_DOOR_ENTITY).state != "unavailable"
-    assert hass.states.get(BACK_DOOR_ENTITY).state != "unavailable"
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "unknown"
+    assert hass.states.get(BACK_DOOR_ENTITY).state == "unknown"
 
 
 async def test_ws_connect_no_refresh_when_healthy(
