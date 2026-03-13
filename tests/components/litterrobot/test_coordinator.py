@@ -1,12 +1,12 @@
 """Tests for the Litter-Robot coordinator."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.components.litterrobot.const import DOMAIN
+from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE
@@ -31,7 +31,7 @@ async def test_coordinator_update_error(
 
     # Simulate an API error during update
     mock_account.refresh_robots.side_effect = LitterRobotException("Unable to connect")
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -40,7 +40,7 @@ async def test_coordinator_update_error(
 
     # Recover
     mock_account.refresh_robots.side_effect = None
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -63,7 +63,7 @@ async def test_coordinator_update_auth_error(
     mock_account.refresh_robots.side_effect = LitterRobotLoginException(
         "Invalid credentials"
     )
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

@@ -55,7 +55,9 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:
-            raise UpdateFailed("Unable to connect to Whisker API") from ex
+            raise UpdateFailed(
+                f"Unable to fetch data from the Whisker API: {ex}"
+            ) from ex
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
