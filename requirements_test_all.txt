@@ -519,6 +519,9 @@ async-upnp-client==0.46.2
 # homeassistant.components.arve
 asyncarve==0.1.1
 
+# homeassistant.components.keyboard_remote
+asyncinotify==4.2.0
+
 # homeassistant.components.sleepiq
 asyncsleepiq==1.7.0
 
@@ -828,6 +831,9 @@ eternalegypt==0.0.18
 
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
+
+# homeassistant.components.keyboard_remote
+# evdev==1.6.1
 
 # homeassistant.components.evohome
 evohome-async==1.1.3

@@ -6,39 +6,53 @@ import asyncio
 from contextlib import suppress
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from asyncinotify import Inotify, Mask
-from evdev import InputDevice, categorize, ecodes, list_devices
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+if TYPE_CHECKING:
+    from evdev import InputDevice
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType
+
+from .const import (
+    CONF_DEVICE_DESCRIPTOR,
+    CONF_DEVICE_NAME,
+    CONF_DEVICE_PATH,
+    CONF_EMULATE_KEY_HOLD,
+    CONF_EMULATE_KEY_HOLD_DELAY,
+    CONF_EMULATE_KEY_HOLD_REPEAT,
+    CONF_KEY_TYPES,
+    DEFAULT_EMULATE_KEY_HOLD,
+    DEFAULT_EMULATE_KEY_HOLD_DELAY,
+    DEFAULT_EMULATE_KEY_HOLD_REPEAT,
+    DEFAULT_KEY_TYPES,
+    DEVINPUT,
+    DOMAIN,
+    EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
+    EVENT_KEYBOARD_REMOTE_CONNECTED,
+    EVENT_KEYBOARD_REMOTE_DISCONNECTED,
+    KEY_CODE,
+    KEY_VALUE,
+    KEY_VALUE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEVICE_DESCRIPTOR = "device_descriptor"
-DEVICE_ID_GROUP = "Device description"
-DEVICE_NAME = "device_name"
-DOMAIN = "keyboard_remote"
-
-ICON = "mdi:remote"
-
-KEY_CODE = "key_code"
-KEY_VALUE = {"key_up": 0, "key_down": 1, "key_hold": 2}
-KEY_VALUE_NAME = {value: key for key, value in KEY_VALUE.items()}
-KEYBOARD_REMOTE_COMMAND_RECEIVED = "keyboard_remote_command_received"
-KEYBOARD_REMOTE_CONNECTED = "keyboard_remote_connected"
-KEYBOARD_REMOTE_DISCONNECTED = "keyboard_remote_disconnected"
-
-TYPE = "type"
-EMULATE_KEY_HOLD = "emulate_key_hold"
-EMULATE_KEY_HOLD_DELAY = "emulate_key_hold_delay"
-EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
-
-DEVINPUT = "/dev/input"
+# Legacy YAML constants (used only for CONFIG_SCHEMA parsing)
+_DEVICE_DESCRIPTOR = "device_descriptor"
+_DEVICE_ID_GROUP = "Device description"
+_DEVICE_NAME = "device_name"
+_TYPE = "type"
+_EMULATE_KEY_HOLD = "emulate_key_hold"
+_EMULATE_KEY_HOLD_DELAY = "emulate_key_hold_delay"
+_EMULATE_KEY_HOLD_REPEAT = "emulate_key_hold_repeat"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -47,17 +61,17 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Schema(
                     {
-                        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
-                        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
-                        vol.Optional(TYPE, default=["key_up"]): vol.All(
+                        vol.Exclusive(_DEVICE_DESCRIPTOR, _DEVICE_ID_GROUP): cv.string,
+                        vol.Exclusive(_DEVICE_NAME, _DEVICE_ID_GROUP): cv.string,
+                        vol.Optional(_TYPE, default=["key_up"]): vol.All(
                             cv.ensure_list, [vol.In(KEY_VALUE)]
                         ),
-                        vol.Optional(EMULATE_KEY_HOLD, default=False): cv.boolean,
-                        vol.Optional(EMULATE_KEY_HOLD_DELAY, default=0.250): float,
-                        vol.Optional(EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
+                        vol.Optional(_EMULATE_KEY_HOLD, default=False): cv.boolean,
+                        vol.Optional(_EMULATE_KEY_HOLD_DELAY, default=0.250): float,
+                        vol.Optional(_EMULATE_KEY_HOLD_REPEAT, default=0.033): float,
                     }
                 ),
-                cv.has_at_least_one_key(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP),
+                cv.has_at_least_one_key(_DEVICE_DESCRIPTOR, _DEVICE_NAME),
             ],
         )
     },
@@ -66,142 +80,265 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the keyboard_remote."""
-    domain_config: list[dict[str, Any]] = config[DOMAIN]
+    """Set up Keyboard Remote from YAML (triggers import only)."""
+    if DOMAIN not in config:
+        return True
 
-    remote = KeyboardRemote(hass, domain_config)
-    remote.setup()
+    for dev_block in config[DOMAIN]:
+        hass.async_create_task(_async_import_yaml_device(hass, dev_block))
 
     return True
 
 
-class KeyboardRemote:
-    """Manage device connection/disconnection using inotify to asynchronously monitor."""
+async def _async_import_yaml_device(
+    hass: HomeAssistant, dev_block: dict[str, Any]
+) -> None:
+    """Import a single YAML device block and create deprecation issues."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=dev_block,
+    )
 
-    def __init__(self, hass: HomeAssistant, config: list[dict[str, Any]]) -> None:
-        """Create handlers and setup dictionaries to keep track of them."""
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        reason = result.get("reason", "unknown")
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{reason}",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{reason}",
+            translation_placeholders={
+                "url": "/config/integrations/dashboard/add?domain=keyboard_remote"
+            },
+        )
+        return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2026.9.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Keyboard Remote",
+        },
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a single keyboard remote device from a config entry."""
+    # Get or create the shared manager
+    if DOMAIN not in hass.data:
+        manager = KeyboardRemoteManager(hass)
+        hass.data[DOMAIN] = manager
+    else:
+        manager = hass.data[DOMAIN]
+
+    # Create the device handler for this entry and register it
+    handler = DeviceHandler(hass, entry)
+    manager.register_handler(entry.entry_id, handler)
+
+    # Start the manager when HA is running (idempotent — first call starts,
+    # subsequent calls are no-ops). async_at_start fires immediately if HA
+    # is already running, or waits for EVENT_HOMEASSISTANT_START.
+    async def _start_manager(hass: HomeAssistant) -> None:
+        await manager.async_start()
+
+    entry.async_on_unload(async_at_start(hass, _start_manager))
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a keyboard remote config entry."""
+    manager: KeyboardRemoteManager = hass.data[DOMAIN]
+    await manager.unregister_handler(entry.entry_id)
+
+    # If this was the last loaded entry, tear down the shared manager
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        await manager.async_stop()
+        hass.data.pop(DOMAIN, None)
+
+    return True
+
+
+class KeyboardRemoteManager:
+    """Shared inotify manager for all keyboard_remote config entries.
+
+    Created by the first config entry to load. Destroyed when the last
+    config entry unloads.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the shared manager."""
         self.hass = hass
-        self.handlers_by_name = {}
-        self.handlers_by_descriptor = {}
-        self.active_handlers_by_descriptor: dict[str, asyncio.Future] = {}
-        self.inotify = None
-        self.watcher = None
-        self.monitor_task = None
+        self._lock = asyncio.Lock()
+        self._handlers: dict[str, DeviceHandler] = {}  # entry_id -> handler
+        self._active_handlers_by_descriptor: dict[str, DeviceHandler] = {}
+        self._inotify: Inotify | None = None
+        self._watcher: Any = None
+        self._monitor_task: asyncio.Task | None = None
+        self._started = False
 
-        for dev_block in config:
-            handler = self.DeviceHandler(hass, dev_block)
-            descriptor = dev_block.get(DEVICE_DESCRIPTOR)
-            if descriptor is not None:
-                self.handlers_by_descriptor[descriptor] = handler
-            else:
-                name = dev_block.get(DEVICE_NAME)
-                self.handlers_by_name[name] = handler
+    async def async_start(self) -> None:
+        """Start the inotify watcher (idempotent, lock-protected)."""
+        async with self._lock:
+            if self._started:
+                return
 
-    def setup(self):
-        """Listen for Home Assistant start and stop events."""
+            _LOGGER.debug("Start monitoring")
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self.async_start_monitoring
-        )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop_monitoring
-        )
+            self._inotify = Inotify()
+            self._watcher = self._inotify.add_watch(
+                DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
+            )
 
-    async def async_start_monitoring(self, event):
-        """Start monitoring of events and devices.
+            # Scan initial devices AFTER starting watcher to avoid race
+            # conditions leading to missing device connections
+            await self._async_scan_initial_devices()
 
-        Start inotify watching for events, start event monitoring for those already
-        connected, and start monitoring for device connection/disconnection.
+            self._monitor_task = self.hass.async_create_task(
+                self._async_monitor_devices()
+            )
+            self._started = True
+
+    async def async_stop(self) -> None:
+        """Stop the inotify watcher and all device handlers."""
+        async with self._lock:
+            if not self._started:
+                return
+
+            _LOGGER.debug("Cleanup on shutdown")
+
+            if self._inotify and self._watcher:
+                self._inotify.rm_watch(self._watcher)
+                self._watcher = None
+
+            if self._monitor_task is not None:
+                if not self._monitor_task.done():
+                    self._monitor_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await self._monitor_task
+                self._monitor_task = None
+
+            # Stop all active device handlers
+            stop_tasks = {
+                self.hass.async_create_task(handler.async_device_stop_monitoring())
+                for handler in self._active_handlers_by_descriptor.values()
+            }
+            if stop_tasks:
+                await asyncio.wait(stop_tasks)
+            self._active_handlers_by_descriptor.clear()
+
+            if self._inotify:
+                self._inotify.close()
+                self._inotify = None
+
+            self._started = False
+
+    def register_handler(self, entry_id: str, handler: DeviceHandler) -> None:
+        """Register a DeviceHandler for a config entry."""
+        self._handlers[entry_id] = handler
+        # If already started, check if this handler's device is connected
+        if self._started:
+            self.hass.async_create_task(self._async_check_handler(handler))
+
+    async def unregister_handler(self, entry_id: str) -> None:
+        """Unregister a DeviceHandler and stop its monitoring."""
+        handler = self._handlers.pop(entry_id, None)
+        if handler is None:
+            return
+        # Remove from active handlers
+        descriptors_to_remove = [
+            desc
+            for desc, h in self._active_handlers_by_descriptor.items()
+            if h is handler
+        ]
+        for desc in descriptors_to_remove:
+            del self._active_handlers_by_descriptor[desc]
+        await handler.async_device_stop_monitoring()
+
+    def _get_handler_for_device(
+        self, descriptor: str, handlers: list[DeviceHandler]
+    ) -> tuple[InputDevice | None, DeviceHandler | None]:
+        """Find the matching handler for a device descriptor (path).
+
+        The handlers list must be a snapshot taken on the event loop thread
+        to avoid race conditions with register/unregister.
         """
+        from evdev import InputDevice  # noqa: PLC0415
 
-        _LOGGER.debug("Start monitoring")
-
-        self.inotify = Inotify()
-        self.watcher = self.inotify.add_watch(
-            DEVINPUT, Mask.CREATE | Mask.ATTRIB | Mask.DELETE
-        )
-
-        # add initial devices (do this AFTER starting watcher in order to
-        # avoid race conditions leading to missing device connections)
-        initial_start_monitoring = set()
-        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
-        for descriptor in descriptors:
-            dev, handler = await self.hass.async_add_executor_job(
-                self.get_device_handler, descriptor
-            )
-
-            if handler is None:
-                continue
-
-            self.active_handlers_by_descriptor[descriptor] = handler
-            initial_start_monitoring.add(
-                asyncio.create_task(handler.async_device_start_monitoring(dev))
-            )
-
-        if initial_start_monitoring:
-            await asyncio.wait(initial_start_monitoring)
-
-        self.monitor_task = self.hass.async_create_task(self.async_monitor_devices())
-
-    async def async_stop_monitoring(self, event):
-        """Stop and cleanup running monitoring tasks."""
-
-        _LOGGER.debug("Cleanup on shutdown")
-
-        if self.inotify and self.watcher:
-            self.inotify.rm_watch(self.watcher)
-            self.watcher = None
-
-        if self.monitor_task is not None:
-            if not self.monitor_task.done():
-                self.monitor_task.cancel()
-            await self.monitor_task
-
-        handler_stop_monitoring = set()
-        for handler in self.active_handlers_by_descriptor.values():
-            handler_stop_monitoring.add(
-                asyncio.create_task(handler.async_device_stop_monitoring())
-            )
-        if handler_stop_monitoring:
-            await asyncio.wait(handler_stop_monitoring)
-
-        if self.inotify:
-            self.inotify.close()
-            self.inotify = None
-
-    def get_device_handler(self, descriptor):
-        """Find the correct device handler given a descriptor (path)."""
-
-        # devices are often added and then correct permissions set after
+        # Devices are often added and then correct permissions set after
         try:
             dev = InputDevice(descriptor)
         except OSError:
             return (None, None)
 
-        handler = None
-        if descriptor in self.handlers_by_descriptor:
-            handler = self.handlers_by_descriptor[descriptor]
-        elif dev.name in self.handlers_by_name:
-            handler = self.handlers_by_name[dev.name]
-        else:
-            # check for symlinked paths matching descriptor
-            for test_descriptor, test_handler in self.handlers_by_descriptor.items():
-                if test_handler.dev is not None:
-                    fullpath = test_handler.dev.path
-                else:
-                    fullpath = os.path.realpath(test_descriptor)
-                if fullpath == descriptor:
-                    handler = test_handler
+        for handler in handlers:
+            if handler.matches_device(descriptor, dev):
+                return (dev, handler)
 
-        return (dev, handler)
+        dev.close()
+        return (None, None)
 
-    async def async_monitor_devices(self):
-        """Monitor asynchronously for device connection/disconnection or permissions changes."""
+    async def _async_scan_initial_devices(self) -> None:
+        """Scan all current /dev/input/ devices and start matching handlers."""
+        from evdev import list_devices  # noqa: PLC0415
 
+        start_tasks: set[asyncio.Task] = set()
+        handlers = list(self._handlers.values())
+        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
+        for descriptor in descriptors:
+            dev, handler = await self.hass.async_add_executor_job(
+                self._get_handler_for_device, descriptor, handlers
+            )
+
+            if handler is None or dev is None:
+                continue
+
+            self._active_handlers_by_descriptor[descriptor] = handler
+            start_tasks.add(
+                self.hass.async_create_task(handler.async_device_start_monitoring(dev))
+            )
+
+        if start_tasks:
+            await asyncio.wait(start_tasks)
+
+    async def _async_check_handler(self, handler: DeviceHandler) -> None:
+        """Check if a newly registered handler's device is currently connected."""
+        from evdev import list_devices  # noqa: PLC0415
+
+        handlers = list(self._handlers.values())
+        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
+        for descriptor in descriptors:
+            if descriptor in self._active_handlers_by_descriptor:
+                continue
+            dev, matched = await self.hass.async_add_executor_job(
+                self._get_handler_for_device, descriptor, handlers
+            )
+            if matched is handler and dev is not None:
+                self._active_handlers_by_descriptor[descriptor] = handler
+                await handler.async_device_start_monitoring(dev)
+                return
+
+    async def _async_monitor_devices(self) -> None:
+        """Monitor /dev/input/ for device add/remove events via inotify."""
         _LOGGER.debug("Start monitoring loop")
 
+        assert self._inotify is not None
         try:
-            async for event in self.inotify:
+            async for event in self._inotify:
                 descriptor = f"{DEVINPUT}/{event.name}"
                 _LOGGER.debug(
                     "got event for %s: %s",
@@ -209,165 +346,226 @@ class KeyboardRemote:
                     event.mask,
                 )
 
-                descriptor_active = descriptor in self.active_handlers_by_descriptor
+                descriptor_active = descriptor in self._active_handlers_by_descriptor
 
                 if (event.mask & Mask.DELETE) and descriptor_active:
                     _LOGGER.debug("removing: %s", descriptor)
-                    handler = self.active_handlers_by_descriptor[descriptor]
-                    del self.active_handlers_by_descriptor[descriptor]
+                    handler = self._active_handlers_by_descriptor[descriptor]
+                    del self._active_handlers_by_descriptor[descriptor]
                     await handler.async_device_stop_monitoring()
                 elif (
                     (event.mask & Mask.CREATE) or (event.mask & Mask.ATTRIB)
                 ) and not descriptor_active:
                     _LOGGER.debug("checking new: %s", descriptor)
-                    dev, handler = await self.hass.async_add_executor_job(
-                        self.get_device_handler, descriptor
+                    handlers = list(self._handlers.values())
+                    result = await self.hass.async_add_executor_job(
+                        self._get_handler_for_device, descriptor, handlers
                     )
-                    if handler is None:
+                    if result[0] is None or result[1] is None:
                         continue
+                    dev, handler = result[0], result[1]
                     _LOGGER.debug("adding: %s", descriptor)
-                    self.active_handlers_by_descriptor[descriptor] = handler
+                    self._active_handlers_by_descriptor[descriptor] = handler
                     await handler.async_device_start_monitoring(dev)
         except asyncio.CancelledError:
             _LOGGER.debug("Monitoring canceled")
             return
 
-    class DeviceHandler:
-        """Manage input events using evdev with asyncio."""
 
-        def __init__(self, hass: HomeAssistant, dev_block: dict[str, Any]) -> None:
-            """Fill configuration data."""
+class DeviceHandler:
+    """Manage input events for a single keyboard device (one config entry)."""
 
-            self.hass = hass
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize from config entry data and options."""
+        self.hass = hass
+        self.entry = entry
+        self._monitor_task: asyncio.Task | None = None
+        self.dev: InputDevice | None = None
+        self._descriptor: str | None = None
 
-            key_types = dev_block[TYPE]
+    @property
+    def _device_path(self) -> str:
+        """The configured device path (by-id or raw)."""
+        return self.entry.data[CONF_DEVICE_PATH]
 
-            self.key_values = set()
-            for key_type in key_types:
-                self.key_values.add(KEY_VALUE[key_type])
+    @property
+    def _device_name_config(self) -> str | None:
+        """The configured device name."""
+        return self.entry.data.get(CONF_DEVICE_NAME)
 
-            self.emulate_key_hold = dev_block[EMULATE_KEY_HOLD]
-            self.emulate_key_hold_delay = dev_block[EMULATE_KEY_HOLD_DELAY]
-            self.emulate_key_hold_repeat = dev_block[EMULATE_KEY_HOLD_REPEAT]
-            self.monitor_task = None
-            self.dev = None
-            self.config_descriptor = dev_block.get(DEVICE_DESCRIPTOR)
-            self.descriptor = None
+    @property
+    def _device_descriptor(self) -> str | None:
+        """The original YAML device_descriptor, if any."""
+        return self.entry.data.get(CONF_DEVICE_DESCRIPTOR)
 
-        async def async_device_keyrepeat(self, code, delay, repeat):
-            """Emulate keyboard delay/repeat behaviour by sending key events on a timer."""
+    @property
+    def _key_values(self) -> set[int]:
+        """Key event values to monitor."""
+        key_types = self.entry.options.get(CONF_KEY_TYPES, DEFAULT_KEY_TYPES)
+        return {KEY_VALUE[kt] for kt in key_types}
 
-            await asyncio.sleep(delay)
-            while True:
-                self.hass.bus.async_fire(
-                    KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {
-                        KEY_CODE: code,
-                        TYPE: "key_hold",
-                        DEVICE_DESCRIPTOR: self.descriptor,
-                        DEVICE_NAME: self.dev.name,
-                    },
-                )
-                await asyncio.sleep(repeat)
+    @property
+    def _emulate_key_hold(self) -> bool:
+        """Whether key hold emulation is enabled."""
+        return self.entry.options.get(CONF_EMULATE_KEY_HOLD, DEFAULT_EMULATE_KEY_HOLD)
 
-        async def async_device_start_monitoring(self, dev):
-            """Start event monitoring task and issue event."""
-            _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
-            if self.monitor_task is None:
-                self.dev = dev
-                # set the descriptor to the one provided to the config if any, falling back to the device path if not set
-                if self.config_descriptor:
-                    self.descriptor = self.config_descriptor
-                else:
-                    self.descriptor = self.dev.path
+    @property
+    def _emulate_key_hold_delay(self) -> float:
+        """Delay before key hold emulation starts."""
+        return self.entry.options.get(
+            CONF_EMULATE_KEY_HOLD_DELAY, DEFAULT_EMULATE_KEY_HOLD_DELAY
+        )
 
-                self.monitor_task = self.hass.async_create_task(
-                    self.async_device_monitor_input()
-                )
-                self.hass.bus.async_fire(
-                    KEYBOARD_REMOTE_CONNECTED,
-                    {
-                        DEVICE_DESCRIPTOR: self.descriptor,
-                        DEVICE_NAME: dev.name,
-                    },
-                )
-                _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
+    @property
+    def _emulate_key_hold_repeat(self) -> float:
+        """Repeat interval for key hold emulation."""
+        return self.entry.options.get(
+            CONF_EMULATE_KEY_HOLD_REPEAT, DEFAULT_EMULATE_KEY_HOLD_REPEAT
+        )
 
-        async def async_device_stop_monitoring(self):
-            """Stop event monitoring task and issue event."""
-            if self.monitor_task is not None:
-                with suppress(OSError):
-                    await self.hass.async_add_executor_job(self.dev.ungrab)
-                # monitoring of the device form the event loop and closing of the
-                # device has to occur before cancelling the task to avoid
-                # triggering unhandled exceptions inside evdev coroutines
-                asyncio.get_event_loop().remove_reader(self.dev.fileno())
-                self.dev.close()
-                if not self.monitor_task.done():
-                    self.monitor_task.cancel()
-                await self.monitor_task
-                self.monitor_task = None
-                self.hass.bus.async_fire(
-                    KEYBOARD_REMOTE_DISCONNECTED,
-                    {
-                        DEVICE_DESCRIPTOR: self.descriptor,
-                        DEVICE_NAME: self.dev.name,
-                    },
-                )
-                _LOGGER.debug("Keyboard disconnected, %s", self.dev.name)
-                self.dev = None
-                self.descriptor = self.config_descriptor
+    def matches_device(self, descriptor: str, dev: InputDevice) -> bool:
+        """Check if this handler matches the given device.
 
-        async def async_device_monitor_input(self):
-            """Event monitoring loop.
+        Matching order:
+        1. By-id device_path realpath comparison
+        2. Original YAML descriptor realpath comparison
+        3. Device name match
+        """
+        real_path = os.path.realpath(descriptor)
 
-            Monitor one device for new events using evdev with asyncio,
-            start and stop key hold emulation tasks as needed.
-            """
+        # Check by-id or configured path
+        device_path = self._device_path
+        if device_path and os.path.exists(device_path):
+            if os.path.realpath(device_path) == real_path:
+                return True
 
-            repeat_tasks = {}
+        # Check original YAML descriptor
+        yaml_descriptor = self._device_descriptor
+        if yaml_descriptor:
+            if os.path.realpath(yaml_descriptor) == real_path:
+                return True
 
-            try:
-                _LOGGER.debug("Start device monitoring")
-                await self.hass.async_add_executor_job(self.dev.grab)
-                async for event in self.dev.async_read_loop():
-                    if event.type is ecodes.EV_KEY:
-                        if event.value in self.key_values:
-                            _LOGGER.debug(
-                                "device: %s: %s", self.dev.name, categorize(event)
+        # Check by device name
+        if self._device_name_config and dev.name == self._device_name_config:
+            return True
+
+        return False
+
+    async def async_device_start_monitoring(self, dev: InputDevice) -> None:
+        """Start event monitoring task and fire connected event."""
+        _LOGGER.debug("Keyboard async_device_start_monitoring, %s", dev.name)
+        if self._monitor_task is not None:
+            return
+
+        self.dev = dev
+        # Use the configured path for event data, falling back to device path
+        self._descriptor = self._device_path or self.dev.path
+
+        self._monitor_task = self.hass.async_create_task(self._async_monitor_input())
+        self.hass.bus.async_fire(
+            EVENT_KEYBOARD_REMOTE_CONNECTED,
+            {
+                CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                CONF_DEVICE_NAME: dev.name,
+            },
+        )
+        _LOGGER.debug("Keyboard (re-)connected, %s", dev.name)
+
+    async def async_device_stop_monitoring(self) -> None:
+        """Stop event monitoring task and fire disconnected event."""
+        if self._monitor_task is None:
+            return
+
+        dev = self.dev
+        assert dev is not None
+
+        with suppress(OSError):
+            await self.hass.async_add_executor_job(dev.ungrab)
+        # Remove reader and close device before cancelling the task to avoid
+        # triggering unhandled exceptions inside evdev coroutines
+        self.hass.loop.remove_reader(dev.fileno())
+        dev.close()
+        if not self._monitor_task.done():
+            self._monitor_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await self._monitor_task
+        self._monitor_task = None
+        self.hass.bus.async_fire(
+            EVENT_KEYBOARD_REMOTE_DISCONNECTED,
+            {
+                CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                CONF_DEVICE_NAME: dev.name,
+            },
+        )
+        _LOGGER.debug("Keyboard disconnected, %s", dev.name)
+        self.dev = None
+
+    async def _async_keyrepeat(
+        self, dev: InputDevice, code: int, delay: float, repeat: float
+    ) -> None:
+        """Emulate keyboard delay/repeat by firing key hold events on a timer."""
+        await asyncio.sleep(delay)
+        while True:
+            self.hass.bus.async_fire(
+                EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
+                {
+                    KEY_CODE: code,
+                    "type": "key_hold",
+                    CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                    CONF_DEVICE_NAME: dev.name,
+                },
+            )
+            await asyncio.sleep(repeat)
+
+    async def _async_monitor_input(self) -> None:
+        """Monitor one device for key events using evdev with asyncio."""
+        from evdev import categorize, ecodes  # noqa: PLC0415
+
+        dev = self.dev
+        assert dev is not None
+        repeat_tasks: dict[int, asyncio.Task] = {}
+
+        try:
+            _LOGGER.debug("Start device monitoring")
+            await self.hass.async_add_executor_job(dev.grab)
+            async for event in dev.async_read_loop():
+                if event.type == ecodes.EV_KEY:
+                    if event.value in self._key_values:
+                        _LOGGER.debug(
+                            "device: %s: %s",
+                            dev.name,
+                            categorize(event),
+                        )
+
+                        self.hass.bus.async_fire(
+                            EVENT_KEYBOARD_REMOTE_COMMAND_RECEIVED,
+                            {
+                                KEY_CODE: event.code,
+                                "type": KEY_VALUE_NAME[event.value],
+                                CONF_DEVICE_DESCRIPTOR: self._descriptor,
+                                CONF_DEVICE_NAME: dev.name,
+                            },
+                        )
+
+                    if event.value == KEY_VALUE["key_down"] and self._emulate_key_hold:
+                        repeat_tasks[event.code] = self.hass.async_create_task(
+                            self._async_keyrepeat(
+                                dev,
+                                event.code,
+                                self._emulate_key_hold_delay,
+                                self._emulate_key_hold_repeat,
                             )
+                        )
+                    elif (
+                        event.value == KEY_VALUE["key_up"]
+                        and event.code in repeat_tasks
+                    ):
+                        repeat_tasks[event.code].cancel()
+                        del repeat_tasks[event.code]
+        except OSError, asyncio.CancelledError:
+            # Cancel key repeat tasks
+            for task in repeat_tasks.values():
+                task.cancel()
 
-                            self.hass.bus.async_fire(
-                                KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                                {
-                                    KEY_CODE: event.code,
-                                    TYPE: KEY_VALUE_NAME[event.value],
-                                    DEVICE_DESCRIPTOR: self.descriptor,
-                                    DEVICE_NAME: self.dev.name,
-                                },
-                            )
-
-                        if (
-                            event.value == KEY_VALUE["key_down"]
-                            and self.emulate_key_hold
-                        ):
-                            repeat_tasks[event.code] = self.hass.async_create_task(
-                                self.async_device_keyrepeat(
-                                    event.code,
-                                    self.emulate_key_hold_delay,
-                                    self.emulate_key_hold_repeat,
-                                )
-                            )
-                        elif (
-                            event.value == KEY_VALUE["key_up"]
-                            and event.code in repeat_tasks
-                        ):
-                            repeat_tasks[event.code].cancel()
-                            del repeat_tasks[event.code]
-            except OSError, asyncio.CancelledError:
-                # cancel key repeat tasks
-                for task in repeat_tasks.values():
-                    task.cancel()
-
-                if repeat_tasks:
-                    await asyncio.wait(repeat_tasks.values())
+            if repeat_tasks:
+                await asyncio.wait(repeat_tasks.values())
