@@ -76,9 +76,7 @@ async def test_robot_with_update(
 
     robot.update_firmware = AsyncMock(return_value=False)
 
-    with pytest.raises(
-        HomeAssistantError, match="Unable to start firmware update"
-    ):
+    with pytest.raises(HomeAssistantError, match="Unable to start firmware update"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
