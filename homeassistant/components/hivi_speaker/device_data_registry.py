@@ -30,8 +30,6 @@ class DeviceDataRegistry:
             ha_device_id = event.data["device_id"]
             action = event.data["action"]
             if action == "remove":
-                # Clean up data when device is deleted
-                # Check if device exists
                 if ha_device_id in self._device_data:
                     removed_data = self._device_data.pop(ha_device_id)
                     _LOGGER.debug(
@@ -212,7 +210,6 @@ class DeviceDataRegistry:
             self._unsub_device_registry()
             self._unsub_device_registry = None
 
-        # Persist any pending delayed writes before clearing memory
         await self.async_save()
 
         self._device_data.clear()
