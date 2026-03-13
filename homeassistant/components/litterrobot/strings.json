@@ -195,6 +195,14 @@
       }
     }
   },
+  "exceptions": {
+    "command_failed": {
+      "message": "An error occurred while communicating with the device: {error}"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to start firmware update on {name}"
+    }
+  },
   "issues": {
     "deprecated_entity": {
       "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
