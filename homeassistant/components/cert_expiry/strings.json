@@ -8,12 +8,15 @@
       "connection_refused": "Connection refused when connecting to host",
       "connection_reset": "Connection reset when connecting to host",
       "connection_timeout": "Timeout when connecting to this host",
+      "invalid_pem": "Invalid PEM-encoded data",
       "resolve_failed": "This host cannot be resolved"
     },
     "step": {
       "user": {
         "data": {
+          "ca_data": "Optional CA certificate data (PEM format)",
           "host": "[%key:common::config_flow::data::host%]",
+          "ignore_hostname": "Ignore hostname mismatch errors",
           "name": "The name of the certificate",
           "port": "[%key:common::config_flow::data::port%]"
         },

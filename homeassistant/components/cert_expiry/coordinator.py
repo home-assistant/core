@@ -29,10 +29,14 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         config_entry: CertExpiryConfigEntry,
         host: str,
         port: int,
+        ignore_hostname: bool,
+        ca_data: str,
     ) -> None:
         """Initialize global Cert Expiry data updater."""
         self.host = host
         self.port = port
+        self.ignore_hostname = ignore_hostname
+        self.ca_data = ca_data
         self.cert_error: ValidationFailure | None = None
         self.is_cert_valid = False
 
@@ -51,7 +55,9 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            timestamp = await get_cert_expiry_timestamp(
+                self.hass, self.host, self.port, self.ignore_hostname, self.ca_data
+            )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
