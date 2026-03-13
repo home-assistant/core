@@ -52,6 +52,27 @@ async def test_media_player_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
+            trigger="media_player.paused_playing",
+            target_states=[
+                MediaPlayerState.PAUSED,
+            ],
+            other_states=[
+                MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.started_playing",
+            target_states=[
+                MediaPlayerState.PLAYING,
+            ],
+            other_states=[
+                MediaPlayerState.IDLE,
+                MediaPlayerState.OFF,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+            ],
+        ),
+        *parametrize_trigger_states(
             trigger="media_player.stopped_playing",
             target_states=[
                 MediaPlayerState.IDLE,
@@ -62,6 +83,32 @@ async def test_media_player_triggers_gated_by_labs_flag(
                 MediaPlayerState.BUFFERING,
                 MediaPlayerState.PAUSED,
                 MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.turned_off",
+            target_states=[
+                MediaPlayerState.OFF,
+            ],
+            other_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="media_player.turned_on",
+            target_states=[
+                MediaPlayerState.BUFFERING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.ON,
+                MediaPlayerState.PAUSED,
+                MediaPlayerState.PLAYING,
+            ],
+            other_states=[
+                MediaPlayerState.OFF,
             ],
         ),
     ],
