@@ -95,7 +95,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_REPOSITORIES,
     ATTR_SLUG,
-    DATA_APPS_LIST,
+    DATA_ADDONS_LIST,
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_CORE_INFO,
@@ -113,8 +113,8 @@ from .const import (
 from .coordinator import (
     HassioDataUpdateCoordinator,
     get_addons_info,
+    get_addons_list,
     get_addons_stats,
-    get_apps_list,
     get_core_info,
     get_core_stats,
     get_host_info,
@@ -148,8 +148,8 @@ __all__ = [
     "YellowOptions",
     "async_update_diagnostics",
     "get_addons_info",
+    "get_addons_list",
     "get_addons_stats",
-    "get_apps_list",
     "get_core_info",
     "get_core_stats",
     "get_host_info",
@@ -586,14 +586,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             hass.data[DATA_SUPERVISOR_INFO] = supervisor_info.to_dict()
             hass.data[DATA_OS_INFO] = os_info.to_dict()
             hass.data[DATA_NETWORK_INFO] = network_info.to_dict()
-            hass.data[DATA_APPS_LIST] = [addon.to_dict() for addon in addons_list]
+            hass.data[DATA_ADDONS_LIST] = [addon.to_dict() for addon in addons_list]
 
             # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
             # Can drop this after removal period
             hass.data[DATA_SUPERVISOR_INFO]["repositories"] = hass.data[DATA_STORE][
                 ATTR_REPOSITORIES
             ]
-            hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_APPS_LIST]
+            hass.data[DATA_SUPERVISOR_INFO]["addons"] = hass.data[DATA_ADDONS_LIST]
 
         async_call_later(
             hass,

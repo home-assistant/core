@@ -93,7 +93,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
-DATA_APPS_LIST = "hassio_apps_list"
+DATA_ADDONS_LIST = "hassio_addons_list"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ATTR_AUTO_UPDATE = "auto_update"

@@ -39,7 +39,7 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .coordinator import get_apps_list
+from .coordinator import get_addons_list
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
@@ -168,7 +168,7 @@ async def websocket_update_addon(
     """Websocket handler to update an addon."""
     addon_name: str | None = None
     addon_version: str | None = None
-    addons_list: list[dict[str, Any]] = get_apps_list(hass) or []
+    addons_list: list[dict[str, Any]] = get_addons_list(hass) or []
     for addon in addons_list:
         if addon[ATTR_SLUG] == msg["addon"]:
             addon_name = addon[ATTR_NAME]
