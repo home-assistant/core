@@ -188,6 +188,26 @@ class _PipeSelfWakeup:
 
     def install(self, loop: asyncio.AbstractEventLoop) -> None:
         """Replace the loop self-wakeup internals with the pipe-backed version."""
+
+        # Register the reader callback before mutating loop internals so that
+        # a failure in _add_reader does not leave the loop in a partially
+        # installed state or leak the pipe file descriptors.
+        def _reader() -> None:
+            self._read_from_self(loop)
+
+        try:
+            loop._add_reader(self._read_fd, _reader)
+        except OSError:
+            # If we fail to register the reader, close the fds and mark them
+            # invalid to avoid leaks and partial installation.
+            if self._read_fd != -1:
+                os.close(self._read_fd)
+                self._read_fd = -1
+            if self._write_fd != -1:
+                os.close(self._write_fd)
+                self._write_fd = -1
+            raise
+
         loop._ssock = self._FD(self._read_fd)
         loop._csock = self._FD(self._write_fd)
         loop._pipe_self_wakeup_installed = True
@@ -195,7 +215,6 @@ class _PipeSelfWakeup:
         loop._read_from_self = types.MethodType(self._read_from_self, loop)
         loop._write_to_self = types.MethodType(self._write_to_self, loop)
         loop._close_self_pipe = types.MethodType(self._close_self_pipe, loop)
-        loop._add_reader(self._read_fd, loop._read_from_self)
 
     def _read_from_self(self, loop: asyncio.AbstractEventLoop) -> None:
         """Drain the pipe-based self-wakeup reader."""
