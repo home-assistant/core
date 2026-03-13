@@ -344,6 +344,7 @@ homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
 homeassistant.components.lutron.*
 homeassistant.components.madvr.*
+homeassistant.components.mammotion.*
 homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*

@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "bluetooth_and_account_mismatch": "Bluetooth device not found in your account",
+      "missing_wifi_data": "Missing Wi-Fi configuration data",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_devices_found_in_account": "No devices present in your account",
+      "no_longer_present": "Device is no longer present",
+      "not_supported": "Device not supported",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "Configure your Mammotion lawn mower",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Set up {name}"
+      },
+      "reconfigure": {
+        "data": {
+          "account_name": "[%key:component::mammotion::config::step::wifi::data::account_name%]",
+          "password": "[%key:component::mammotion::config::step::wifi::data::password%]"
+        },
+        "data_description": {
+          "account_name": "[%key:component::mammotion::config::step::wifi::data_description::account_name%]",
+          "password": "[%key:component::mammotion::config::step::wifi::data_description::password%]"
+        },
+        "description": "Enter your Mammotion account email or ID and password",
+        "title": "Connect to Wi-Fi"
+      },
+      "user": {
+        "data": {
+          "address": "Device"
+        },
+        "data_description": {
+          "address": "Bluetooth address of the mower"
+        },
+        "description": "Select your mower"
+      },
+      "wifi": {
+        "data": {
+          "account_name": "Mammotion email or account number",
+          "password": "Mammotion account password"
+        },
+        "data_description": {
+          "account_name": "Mammotion email or account number for your shared Mammotion account.",
+          "password": "Mammotion shared account password"
+        }
+      }
+    }
+  },
+  "entity": {},
+  "exceptions": {
+    "command_failed": {
+      "message": "Failed to send command to the mower."
+    },
+    "device_not_ready": {
+      "message": "Device is not ready."
+    },
+    "dock_cancel_failed": {
+      "message": "Failed to stop the mower returning to the dock."
+    },
+    "dock_failed": {
+      "message": "Failed to send the mower to the dock."
+    },
+    "pause_failed": {
+      "message": "Failed to pause the mower."
+    },
+    "resume_failed": {
+      "message": "Failed to resume the mower."
+    },
+    "start_failed": {
+      "message": "Failed to start the mower."
+    }
+  }
+}
