@@ -55,13 +55,17 @@ from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
+    CONF_MIN_GRADIENT_TIME_UNIT,
+    CONF_MIN_GRADIENT_VALUE,
     CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
     DEFAULT_MAX_SAMPLES,
-    DEFAULT_MIN_GRADIENT,
+    DEFAULT_MIN_GRADIENT_TIME_UNIT,
+    DEFAULT_MIN_GRADIENT_VALUE,
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
     DOMAIN,
+    TIME_UNIT_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,13 +137,21 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
+def _calculate_min_gradient(options: Mapping[str, Any]) -> float:
+    """Calculate min_gradient from user-friendly options."""
+    gradient_value = options.get(CONF_MIN_GRADIENT_VALUE, DEFAULT_MIN_GRADIENT_VALUE)
+    time_unit = options.get(CONF_MIN_GRADIENT_TIME_UNIT, DEFAULT_MIN_GRADIENT_TIME_UNIT)
+    seconds = TIME_UNIT_SECONDS.get(time_unit, TIME_UNIT_SECONDS["hour"])
+
+    return float(gradient_value) / seconds
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up trend sensor from config entry."""
-
     async_add_entities(
         [
             SensorTrend(
@@ -151,7 +163,7 @@ async def async_setup_entry(
                 sample_duration=entry.options.get(
                     CONF_SAMPLE_DURATION, DEFAULT_SAMPLE_DURATION
                 ),
-                min_gradient=entry.options.get(CONF_MIN_GRADIENT, DEFAULT_MIN_GRADIENT),
+                min_gradient=_calculate_min_gradient(entry.options),
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,

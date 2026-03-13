@@ -26,16 +26,28 @@
           "entity_id": "[%key:component::trend::config::step::user::data::entity_id%]",
           "invert": "[%key:component::trend::config::step::settings::data::invert%]",
           "max_samples": "Maximum number of stored samples",
-          "min_gradient": "Minimum rate at which the value must be changing",
+          "min_gradient_time_unit": "Time unit for rate of change",
+          "min_gradient_value": "Minimum rate of change",
           "min_samples": "Minimum number of stored samples",
           "sample_duration": "Duration in seconds to store samples for"
         },
         "data_description": {
           "max_samples": "The maximum number of samples to store. If the number of samples exceeds this value, the oldest samples will be discarded.",
-          "min_gradient": "The minimum rate at which the observed value must be changing for this sensor to switch on. The gradient is measured in sensor units per second.",
+          "min_gradient_time_unit": "The time unit for the rate of change. Combined with the minimum rate of change value to determine the trend threshold.",
+          "min_gradient_value": "The minimum amount the observed value must change per time unit for this sensor to switch on. For example, enter 2 with time unit 'hour' to detect a change of at least 2 units per hour.",
           "min_samples": "The minimum number of samples that must be collected before the gradient can be calculated.",
           "sample_duration": "The duration in seconds to store samples for. Samples older than this value will be discarded."
         }
+      }
+    }
+  },
+  "selector": {
+    "min_gradient_time_unit": {
+      "options": {
+        "day": "Per day",
+        "hour": "Per hour",
+        "minute": "Per minute",
+        "second": "Per second"
       }
     }
   },

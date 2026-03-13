@@ -428,7 +428,7 @@ async def test_migration_1_1(
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert trend_config_entry.version == 1
-    assert trend_config_entry.minor_version == 2
+    assert trend_config_entry.minor_version == 3
 
 
 async def test_migration_from_future_version(
@@ -452,3 +452,107 @@ async def test_migration_from_future_version(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migration_1_2_to_1_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from v1.2 to v1.3 converts min_gradient to new format."""
+    # Old config entry with min_gradient in units per second
+    # 0.001 units/second = 3.6 units/hour
+    trend_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My trend",
+            "entity_id": "sensor.test_state",
+            "invert": False,
+            "min_gradient": 0.001,
+            "max_samples": 10,
+            "min_samples": 2,
+            "sample_duration": 0,
+        },
+        title="My trend",
+        version=1,
+        minor_version=2,
+    )
+    trend_config_entry.add_to_hass(hass)
+
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(trend_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert trend_config_entry.state is ConfigEntryState.LOADED
+
+    # Check that migration happened
+    assert trend_config_entry.version == 1
+    assert trend_config_entry.minor_version == 3
+
+    # Check that min_gradient was converted to the new format
+    # 0.001 units/second * 3600 seconds/hour = 3.6 units/hour
+    assert "min_gradient" not in trend_config_entry.options
+    assert trend_config_entry.options["min_gradient_value"] == 3.6
+    assert trend_config_entry.options["min_gradient_time_unit"] == "hour"
+
+
+async def test_migration_1_2_to_1_3_zero_gradient(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from v1.2 to v1.3 with zero gradient."""
+    trend_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My trend",
+            "entity_id": "sensor.test_state",
+            "invert": False,
+            "min_gradient": 0.0,
+        },
+        title="My trend",
+        version=1,
+        minor_version=2,
+    )
+    trend_config_entry.add_to_hass(hass)
+
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(trend_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert trend_config_entry.state is ConfigEntryState.LOADED
+    assert trend_config_entry.minor_version == 3
+    assert trend_config_entry.options["min_gradient_value"] == 0.0
+    assert trend_config_entry.options["min_gradient_time_unit"] == "hour"
+
+
+async def test_migration_1_2_to_1_3_no_min_gradient(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from v1.2 to v1.3 without min_gradient option."""
+    trend_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My trend",
+            "entity_id": "sensor.test_state",
+            "invert": False,
+        },
+        title="My trend",
+        version=1,
+        minor_version=2,
+    )
+    trend_config_entry.add_to_hass(hass)
+
+    hass.states.async_set("sensor.test_state", "1")
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(trend_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert trend_config_entry.state is ConfigEntryState.LOADED
+    assert trend_config_entry.minor_version == 3
+    assert trend_config_entry.options["min_gradient_value"] == 0.0
+    assert trend_config_entry.options["min_gradient_time_unit"] == "hour"

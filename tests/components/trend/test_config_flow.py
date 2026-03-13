@@ -75,7 +75,8 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
         "max_samples": 50,
         "entity_id": "sensor.cpu_temp",
         "invert": False,
-        "min_gradient": 0.0,
+        "min_gradient_value": 0.0,
+        "min_gradient_time_unit": "hour",
         "name": "My trend",
         "sample_duration": 0.0,
     }
