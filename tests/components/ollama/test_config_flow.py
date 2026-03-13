@@ -739,6 +739,11 @@ async def test_ai_task_subentry_not_loaded(
             {CONF_URL: "http://localhost:11434"},
         ),
         (
+            {CONF_URL: "http://localhost:11434", CONF_API_KEY: "          "},
+            None,
+            {CONF_URL: "http://localhost:11434"},
+        ),
+        (
             {CONF_URL: "http://localhost:11434"},
             None,
             {CONF_URL: "http://localhost:11434"},
