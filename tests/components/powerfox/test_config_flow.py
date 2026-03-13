@@ -23,7 +23,7 @@ MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     name="Powerfox",
     port=443,
     type="_http._tcp",
-    properties={},
+    properties={"id": "9x9x1f12xx3x"},
 )
 
 
@@ -58,15 +58,38 @@ async def test_full_user_flow(
 
 async def test_zeroconf_discovery(
     hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery aborts when local API is reachable."""
+    with patch(
+        "homeassistant.components.powerfox.config_flow.PowerfoxLocal",
+        autospec=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DISCOVERY_INFO,
+        )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "local_available"
+
+
+async def test_zeroconf_discovery_fallback_to_cloud(
+    hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_DISCOVERY_INFO,
-    )
+    """Test zeroconf discovery falls back to cloud setup when local API fails."""
+    with patch(
+        "homeassistant.components.powerfox.config_flow.PowerfoxLocal",
+        autospec=True,
+    ) as mock_local_client:
+        mock_local_client.return_value.value.side_effect = PowerfoxConnectionError
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=MOCK_ZEROCONF_DISCOVERY_INFO,
+        )
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
