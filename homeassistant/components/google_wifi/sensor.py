@@ -35,167 +35,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass(frozen=True, kw_only=True)
-class GoogleWifiSensorEntityDescription(SensorEntityDescription):
-    """Describes Google Wifi sensor entity."""
-
-    primary_key: str
-    sensor_key: str
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the Google Wifi sensor from a config entry."""
-    # Add all sensors defined in SENSOR_TYPES
-    async_add_entities(
-        GoogleWifiSensor(entry, description) for description in SENSOR_TYPES
-    )
-
-    # Create the sensor objects
-    entities = [GoogleWifiSensor(entry, description) for description in SENSOR_TYPES]
-
-    # Trigger an initial update for all sensors immediately
-    # so they have data before they are added to HA
-    for entity in entities:
-        await entity.async_update()
-
-    async_add_entities(entities)
-
-class GoogleWifiSensor(SensorEntity):
-    """Representation of a Google Wifi sensor."""
-
-    # Makes sensors get prefixed from device name
-    _attr_has_entity_name = True
-    # Type annotation
-    _attr_data: dict[str, Any]
-
-    def __init__(
-        self, entry: ConfigEntry, description: GoogleWifiSensorEntityDescription
-    ) -> None:
-        """Initialize the sensor."""
-        self.entity_description = description
-        self._entry = entry
-        self._attr_data = {}
-        # Create a unique ID so the user can rename/customize this in the UI
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
-
-        # Use the name defined in the config entry title for the device name
-        self._attr_name = cast(str | None, description.name)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information the router."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name=self._entry.title,
-            manufacturer="Google",
-            model=self._attr_data.get("system", {}).get("modelId", "Google Wifi"),
-            # Use the current IP from the entry data for the link
-            configuration_url=f"http://{self._entry.data[CONF_IP_ADDRESS]}/api/v1/status",
-            # Pull software version from the last successful data fetch
-            sw_version=self._attr_data.get("software", {}).get("softwareVersion"),
-        )
-
-    async def async_update(self) -> None:
-        """Fetch new state data for the sensor."""
-        host = self._entry.data[CONF_IP_ADDRESS]
-        url = f"http://{host}/api/v1/status"
-
-        try:
-            # short timeout to prevent hanging the event loop
-            # also if your own router isn't returning you data within 2 seconds... you aren't getting it.
-            response = await self.hass.async_add_executor_job(
-                lambda: requests.get(url, timeout=2)
-            )
-            response.raise_for_status()
-            new_data = response.json()
-
-            # Only update if we actually got data to prevent "Unknown" flickers
-            if new_data:
-                self._attr_data = new_data
-                #mark as available to wipe any previous failure
-                self._attr_available = True
-        except Exception as err:
-            _LOGGER.error("Error updating %s: %s", self.name, err)
-            #mark as unavailable in case the router stonewalls us
-            self._attr_available = False
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if not self._attr_data:
-            return None
-
-        # cast Desc as a googlewifisensorentitydescription so mypy stops being mad
-        desc = cast(GoogleWifiSensorEntityDescription, self.entity_description)
-        raw_data = self._attr_data
-
-        try:
-            val = raw_data[desc.primary_key][desc.sensor_key]
-        except KeyError:
-            return None
-        else:
-            # Formatting Logic
-            if desc.key == ATTR_NEW_VERSION and val == "0.0.0.0":
-                return "Latest"
-            if desc.key == ATTR_UPTIME:
-                return round(val / (3600 * 24), 2)
-            if desc.key == ATTR_LAST_RESTART:
-                last_restart = dt_util.now() - timedelta(seconds=val)
-                return last_restart.strftime("%Y-%m-%d %H:%M:%S")
-            if desc.key == ATTR_STATUS:
-                return "Online" if val else "Offline"
-            if desc.key == ATTR_LOCAL_IP and not raw_data["wan"]["online"]:
-                return None
-
-            return val
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Handle legacy YAML configuration by importing it."""
-
-    # 1. Map legacy keys to modern ones
-    # Old YAML might use 'host' while our flow uses 'ip_address'
-    import_data = {
-        CONF_IP_ADDRESS: config.get("host") or config.get(CONF_IP_ADDRESS),
-        CONF_NAME: config.get(CONF_NAME, "Google Wifi"),
-    }
-
-    # 2. Filter out None values (ensure we have at least an IP)
-    if not import_data[CONF_IP_ADDRESS]:
-        _LOGGER.error("Legacy Google Wifi YAML missing 'host' or 'ip_address'")
-        return
-
-    # 3. Create a Repair Issue to warn the user that YAML is deprecated
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2026.9.0",  # Arbitrary future target version to tell user this support is going away
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-
-    # 4. Trigger the Config Flow import
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=import_data,
-        )
-    )
-
-
 # Define all sensors in one tuple to be imported by sensor.py
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
     GoogleWifiSensorEntityDescription(
@@ -242,3 +81,104 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
         icon="mdi:google",
     ),
 )
+
+
+@dataclass(frozen=True, kw_only=True)
+class GoogleWifiSensorEntityDescription(SensorEntityDescription):
+    """Describes Google Wifi sensor entity."""
+
+    primary_key: str
+    sensor_key: str
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Google Wifi sensor from a config entry."""
+    # Get the shared API instance
+    api = hass.data[DOMAIN][entry.entry_id]
+    
+    entities = [GoogleWifiSensor(api, entry, description) for description in SENSOR_TYPES]
+    async_add_entities(entities)
+
+class GoogleWifiSensor(SensorEntity):
+    """Representation of a Google Wifi sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, api, entry, description):
+        """Initialize the sensor."""
+        self.api = api
+        self._entry = entry
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return availability from API."""
+        return self.api.available
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        # Pull software version from the API's formatted data
+        from .const import ATTR_CURRENT_VERSION
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._entry.entry_id)},
+            name=self._entry.title,
+            manufacturer="Google",
+            sw_version=self.api.data.get(ATTR_CURRENT_VERSION),
+        )
+
+    async def async_update(self) -> None:
+        """Fetch new state data via the API class."""
+        # Use executor because API.update is synchronous
+        await self.hass.async_add_executor_job(self.api.update)
+
+    @property
+    def native_value(self):
+        """Return the pre-formatted state from the API object."""
+        # The API class already did the formatting in data_format()
+        return self.api.data.get(self.entity_description.key)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Handle legacy YAML configuration by importing it."""
+
+    # 1. Map legacy keys to modern ones
+    # Old YAML might use 'host' while our flow uses 'ip_address'
+    import_data = {
+        CONF_IP_ADDRESS: config.get("host") or config.get(CONF_IP_ADDRESS),
+        CONF_NAME: config.get(CONF_NAME, "Google Wifi"),
+    }
+
+    # 2. Filter out None values (ensure we have at least an IP)
+    if not import_data[CONF_IP_ADDRESS]:
+        _LOGGER.error("Legacy Google Wifi YAML missing 'host' or 'ip_address'")
+        return
+
+    # 3. Create a Repair Issue to warn the user that YAML is deprecated
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.9.0",  # Arbitrary future target version to tell user this support is going away
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+    # 4. Trigger the Config Flow import
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=import_data,
+        )
+    )

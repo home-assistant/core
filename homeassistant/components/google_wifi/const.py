@@ -12,3 +12,7 @@ ATTR_NEW_VERSION = "new_version"
 ATTR_STATUS = "status"
 ATTR_UPTIME = "uptime"
 ATTR_GROUP_ROLE = "group_role"
+
+#API Constants
+ENDPOINT = "/api/v1/status"
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
