@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "Failed to connect (aborted)"
+      "cannot_connect": "Failed to connect (aborted)",
+      "different_device": "The device at the new host has a different serial number. Please ensure the new host is the same device.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,6 +12,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::indevolt::config::step::user::data_description::host%]"
+        },
+        "description": "Update the connection details for your Indevolt device.",
+        "title": "Reconfigure Indevolt device"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -57,8 +69,8 @@
       "battery_charge_discharge_state": {
         "name": "Battery charge/discharge state",
         "state": {
-          "charging": "Charging",
-          "discharging": "Discharging",
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
           "static": "Static"
         }
       },

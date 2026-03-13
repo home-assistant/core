@@ -122,7 +122,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
@@ -149,7 +148,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
     "harmony": {"aioharmony": {"async-timeout"}},
     "here_travel_time": {
         "here-routing": {"async-timeout"},
