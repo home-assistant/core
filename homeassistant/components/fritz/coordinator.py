@@ -406,7 +406,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
             )
             return not wan_access.get("NewDisallow")
-        except (FRITZ_EXCEPTIONS, RequestsConnectionError) as ex:
+        except (*FRITZ_EXCEPTIONS, RequestsConnectionError) as ex:
             _LOGGER.debug(
                 (
                     "could not get WAN access rule for client device with IP '%s',"
