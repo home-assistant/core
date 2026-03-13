@@ -1,12 +1,68 @@
 """Helpers for automation."""
 
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
+from homeassistant.core import HomeAssistant, split_entity_id
 
+from .entity import get_device_class_or_undefined
 from .typing import ConfigType
+
+
+class AnyDeviceClassType(Enum):
+    """Singleton type for matching any device class."""
+
+    _singleton = 0
+
+
+ANY_DEVICE_CLASS = AnyDeviceClassType._singleton  # noqa: SLF001
+
+
+@dataclass(frozen=True, slots=True)
+class DomainSpec:
+    """Describes how to match and extract a value from an entity.
+
+    Used by triggers and conditions.
+    """
+
+    device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
+    value_source: str | None = None
+    """Attribute name to extract the value from, or None for state.state."""
+
+
+@dataclass(frozen=True, slots=True)
+class NumericalDomainSpec(DomainSpec):
+    """DomainSpec with an optional value converter for numerical triggers."""
+
+    value_converter: Callable[[Any], float] | None = None
+    """Optional converter for numerical values (e.g. uint8 → percentage)."""
+
+
+class DomainSpecFilterMixin[DomainSpecT: DomainSpec = DomainSpec]:
+    """Mixin providing entity filtering based on domain specs."""
+
+    _domain_specs: Mapping[str, DomainSpecT]
+    _hass: HomeAssistant
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        result: set[str] = set()
+        for entity_id in entities:
+            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
+                continue
+            if (
+                vs.device_class is not ANY_DEVICE_CLASS
+                and get_device_class_or_undefined(self._hass, entity_id)
+                != vs.device_class
+            ):
+                continue
+            result.add(entity_id)
+        return result
 
 
 def get_absolute_description_key(domain: str, key: str) -> str:

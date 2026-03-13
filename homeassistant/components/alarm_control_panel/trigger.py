@@ -2,9 +2,9 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    DomainSpec,
     EntityTargetStateTriggerBase,
     Trigger,
     make_entity_target_state_trigger,

@@ -2,13 +2,13 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     EntityStateConditionBase,
     make_entity_state_condition,
 )
 from homeassistant.helpers.entity import get_supported_features
-from homeassistant.helpers.trigger import DomainSpec
 
 from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelState
 

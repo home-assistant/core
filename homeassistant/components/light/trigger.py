@@ -4,10 +4,10 @@ from typing import Any
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    NumericalDomainSpec,
     Trigger,
     make_entity_target_state_trigger,
 )

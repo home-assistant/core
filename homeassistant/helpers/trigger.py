@@ -69,11 +69,13 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
 from .automation import (
+    DomainSpec,
+    DomainSpecFilterMixin,
+    NumericalDomainSpec,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
-from .entity import get_device_class_or_undefined
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .target import (
@@ -81,7 +83,7 @@ from .target import (
     async_track_target_selector_state_change_event,
 )
 from .template import Template
-from .typing import ANY_DEVICE_CLASS, AnyDeviceClassType, ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -334,30 +336,11 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class DomainSpec:
-    """Describes how to match and extract a value from an entity.
-
-    Used by triggers and conditions.
-    """
-
-    device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
-    value_source: str | None = None
-    """Attribute name to extract the value from, or None for state.state."""
-
-
-@dataclass(frozen=True, slots=True)
-class NumericalDomainSpec(DomainSpec):
-    """DomainSpec with an optional value converter for numerical triggers."""
-
-    value_converter: Callable[[Any], float] | None = None
-    """Optional converter for numerical values (e.g. uint8 → percentage)."""
-
-
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
+    DomainSpecFilterMixin[DomainSpecT], Trigger
+):
     """Trigger for entity state changes."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -405,21 +388,6 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
             )
             == 1
         )
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities matching any of the domain specs."""
-        result: set[str] = set()
-        for entity_id in entities:
-            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
-                continue
-            if (
-                vs.device_class is not ANY_DEVICE_CLASS
-                and get_device_class_or_undefined(self._hass, entity_id)
-                != vs.device_class
-            ):
-                continue
-            result.add(entity_id)
-        return result
 
     @override
     async def async_attach_runner(

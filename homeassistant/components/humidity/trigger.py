@@ -16,10 +16,10 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    NumericalDomainSpec,
     Trigger,
 )
 

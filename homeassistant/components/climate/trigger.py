@@ -5,11 +5,10 @@ import voluptuous as vol
 from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
-    DomainSpec,
     EntityTargetStateTriggerBase,
-    NumericalDomainSpec,
     Trigger,
     TriggerConfig,
     make_entity_numerical_state_changed_trigger,

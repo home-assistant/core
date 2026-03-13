@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -54,7 +54,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -76,11 +76,12 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    DomainSpec,
+    DomainSpecFilterMixin,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
-from .entity import get_device_class_or_undefined
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .target import TargetSelection, async_extract_referenced_entity_ids
@@ -95,8 +96,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
-from .trigger import DomainSpec
-from .typing import ANY_DEVICE_CLASS, ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType
 
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
@@ -334,10 +334,11 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](
+    DomainSpecFilterMixin[DomainSpecT], Condition
+):
     """Base class for entity conditions."""
 
-    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -356,21 +357,6 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
             assert config.options
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities matching any of the value sources."""
-        result: set[str] = set()
-        for entity_id in entities:
-            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
-                continue
-            if (
-                vs.device_class is not ANY_DEVICE_CLASS
-                and get_device_class_or_undefined(self._hass, entity_id)
-                != vs.device_class
-            ):
-                continue
-            result.add(entity_id)
-        return result
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:

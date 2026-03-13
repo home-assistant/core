@@ -35,15 +35,18 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, trigger
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.automation import (
+    ANY_DEVICE_CLASS,
+    DomainSpec,
+    NumericalDomainSpec,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
     CONF_THRESHOLD_TYPE,
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
-    DomainSpec,
     EntityTriggerBase,
-    NumericalDomainSpec,
     PluggableAction,
     Trigger,
     TriggerActionRunner,
@@ -54,7 +57,7 @@ from homeassistant.helpers.trigger import (
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
 )
-from homeassistant.helpers.typing import ANY_DEVICE_CLASS, ConfigType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
@@ -1579,21 +1582,20 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
         )
 
 
-class _SimpleTrigger(EntityTriggerBase):
-    """Minimal concrete trigger for testing entity_filter."""
-
-    _domain_specs: Mapping[str, DomainSpec] = {}
-
-    def is_valid_state(self, state):
-        """Accept any state."""
-        return True
-
-
 def _make_trigger(
-    hass: HomeAssistant, domain_specs: dict[str, DomainSpec]
-) -> _SimpleTrigger:
-    """Create a _SimpleTrigger with the given value sources."""
-    _SimpleTrigger._domain_specs = domain_specs
+    hass: HomeAssistant, domain_specs: Mapping[str, DomainSpec]
+) -> EntityTriggerBase:
+    """Create a minimal EntityTriggerBase subclass with the given domain specs."""
+
+    class _SimpleTrigger(EntityTriggerBase):
+        """Minimal concrete trigger for testing entity_filter."""
+
+        _domain_specs = domain_specs
+
+        def is_valid_state(self, state):
+            """Accept any state."""
+            return True
+
     config = TriggerConfig(key="test.test_trigger", target={CONF_ENTITY_ID: []})
     return _SimpleTrigger(hass, config)
 
