@@ -14,6 +14,7 @@ from .common import setup_platform
 
 VENTILATOR_MIN_HOME_ID = "number.ecobee_ventilator_minimum_time_home"
 VENTILATOR_MIN_AWAY_ID = "number.ecobee_ventilator_minimum_time_away"
+AUX_MAX_OUTDOOR_TEMP_ID = "number.ecobee2_auxiliary_maximum_outdoor_temperature"
 THERMOSTAT_ID = 0
 
 
@@ -106,17 +107,93 @@ async def test_set_compressor_protection_min_temp(hass: HomeAssistant) -> None:
 
     Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary
     """
-    target_value = 0
-    with patch(
-        "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
-    ) as mock_set_compressor_min_temp:
-        await setup_platform(hass, NUMBER_DOMAIN)
+    target_value = 10
+    await setup_platform(hass, NUMBER_DOMAIN)
 
+    with (
+        patch(
+            "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
+        ) as mock_set_compressor_min_temp,
+        patch(
+            "homeassistant.components.ecobee.Ecobee.set_aux_maxtemp_threshold"
+        ) as mock_set_aux_max_temp_threshold,
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        mock_set_compressor_min_temp.assert_called_once_with(1, 32)
+
+        mock_set_compressor_min_temp.assert_called_once_with(1, 50)
+        mock_set_aux_max_temp_threshold.assert_called_once_with(1, 55)
+
+        target_value = 18
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: COMPRESSOR_MIN_TEMP_ID, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+
+        assert mock_set_compressor_min_temp.call_count == 2
+        calls = mock_set_compressor_min_temp.call_args_list
+        assert calls[1].args == (1, 64)
+
+        assert mock_set_aux_max_temp_threshold.call_count == 2
+        calls = mock_set_aux_max_temp_threshold.call_args_list
+        assert calls[1].args == (1, 69)
+
+
+async def test_auxiliary_max_outdoor_temp_attributes(hass: HomeAssistant) -> None:
+    """Test the aux max outdoor temp value is correct.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary.
+    """
+    await setup_platform(hass, NUMBER_DOMAIN)
+
+    state = hass.states.get(AUX_MAX_OUTDOOR_TEMP_ID)
+    assert state.state == "5.0"
+    assert (
+        state.attributes.get("friendly_name")
+        == "ecobee2 Auxiliary maximum outdoor temperature"
+    )
+
+
+async def test_set_auxiliary_max_outdoor_temp(hass: HomeAssistant) -> None:
+    """Test the number can set aux max outdoor temp.
+
+    Ecobee runs in Fahrenheit; the test rig runs in Celsius. Conversions are necessary.
+    """
+    target_value = -14
+    await setup_platform(hass, NUMBER_DOMAIN)
+    with (
+        patch(
+            "homeassistant.components.ecobee.Ecobee.set_aux_cutover_threshold"
+        ) as mock_set_compressor_min_temp,
+        patch(
+            "homeassistant.components.ecobee.Ecobee.set_aux_maxtemp_threshold"
+        ) as mock_set_aux_max_temp_threshold,
+    ):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: AUX_MAX_OUTDOOR_TEMP_ID, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+
+        mock_set_aux_max_temp_threshold.assert_called_once_with(1, 6)
+        mock_set_compressor_min_temp.assert_called_once_with(1, 0)
+
+        target_value = 25
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: AUX_MAX_OUTDOOR_TEMP_ID, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+
+        assert mock_set_aux_max_temp_threshold.call_count == 2
+        calls = mock_set_aux_max_temp_threshold.call_args_list
+        assert calls[1].args == (1, 77)
+        mock_set_compressor_min_temp.assert_called_once()
