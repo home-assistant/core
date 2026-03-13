@@ -122,13 +122,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 )
         device_registry = dr.async_get(hass)
         for device in device_registry.devices.values():
-            if any(d[0] == DOMAIN for d in device.identifiers):
-                _LOGGER.debug(
-                    "Found device: %s, identifiers=%s",
-                    airtouch_device.name,
-                    device.identifiers,
-                )
-                domain, unique_id = next(iter(device.identifiers))
+            # Track whether we actually need to update this device
+            updated_identifiers = set(device.identifiers)
+
+            for domain, unique_id in device.identifiers:
+                # Only process devices in your integration domain
+                if domain != DOMAIN:
+                    continue
+
                 if domain == "airtouch5":
                     if unique_id.startswith("zone_"):
                         zone_number = unique_id.split("_")[1]
@@ -144,8 +145,36 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                     )
                 else:
                     continue
+
+                # Skip if the new identifier is already present for this device
+                if (DOMAIN, new_unique_id) in updated_identifiers:
+                    continue
+
+                # Skip if another device already has this identifier (prevents duplicates)
+                existing_device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, new_unique_id)}
+                )
+                if existing_device and existing_device.id != device.id:
+                    _LOGGER.warning(
+                        "Skipping identifier %s for device %s: already used by device %s",
+                        new_unique_id,
+                        device.name,
+                        existing_device.name,
+                    )
+                    continue
+
+                updated_identifiers.add((DOMAIN, new_unique_id))
+                _LOGGER.debug(
+                    "Updating device %s identifiers: %s",
+                    device.name,
+                    updated_identifiers,
+                )
+
+            # Update device only if there are changes
+            if updated_identifiers != device.identifiers:
                 device_registry.async_update_device(
-                    device.id, new_identifiers={(DOMAIN, new_unique_id)}
+                    device.id,
+                    new_identifiers=updated_identifiers,
                 )
 
         hass.config_entries.async_update_entry(
