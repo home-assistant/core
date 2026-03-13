@@ -1,7 +1,5 @@
 """Base classes for KNX entities."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from xknx.devices import Device as XknxDevice
