@@ -119,6 +119,25 @@ async def test_user_flow_no_devices(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_account_id_none(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test user flow when account_id is None."""
+    mock_waterfurnace_client.account_id = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -206,6 +225,22 @@ async def test_import_flow_exceptions(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_import_flow_account_id_none(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test import flow when account_id is None."""
+    mock_waterfurnace_client.account_id = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_USERNAME: "test_user", CONF_PASSWORD: "test_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_no_devices(
