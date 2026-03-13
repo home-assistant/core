@@ -509,6 +509,7 @@ homeassistant.components.smlight.*
 homeassistant.components.smtp.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
+homeassistant.components.solarman.*
 homeassistant.components.sonarr.*
 homeassistant.components.spaceapi.*
 homeassistant.components.speedtestdotnet.*
