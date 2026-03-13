@@ -155,7 +155,21 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to connect to printer")
             raise CannotConnect from err
 
-        await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
+        if discovery is None:
+            _LOGGER.warning("Failed getting discovery info, inferring id from hostname")
+            unique_id = f"{user_input[CONF_HOST]}-{user_input[CONF_PORT]}-{user_input[CONF_PATH]}"
+        else:
+            unique_id = discovery.upnp_uuid
+
+        self._async_abort_entries_match(
+            {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_PATH: user_input[CONF_PATH],
+            }
+        )
+
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
