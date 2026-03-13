@@ -587,6 +587,7 @@ homeassistant.components.vallox.*
 homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.velux.*
+homeassistant.components.vesync.*
 homeassistant.components.vivotek.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
