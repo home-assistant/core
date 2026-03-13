@@ -179,7 +179,9 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return PRESET_HOLIDAY
         if self.data.summer_active:
             return PRESET_SUMMER
-        if self.data.target_temperature == ON_API_TEMPERATURE:
+        if self.data.target_temperature == ON_API_TEMPERATURE or getattr(
+            self.data, "boost_active", False
+        ):
             return PRESET_BOOST
         if self.data.target_temperature == self.data.comfort_temperature:
             return PRESET_COMFORT
