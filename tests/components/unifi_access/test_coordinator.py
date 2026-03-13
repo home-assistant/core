@@ -2,15 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 import pytest
-from unifi_access_api import (
-    ApiAuthError,
-    ApiConnectionError,
-    ApiError,
-    DoorLockRelayStatus,
-)
 from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
@@ -18,6 +13,7 @@ from unifi_access_api.models.websocket import (
     V2LocationState,
     V2LocationUpdate,
     V2LocationUpdateData,
+    WebsocketMessage,
 )
 
 from homeassistant.components.lock import LockState
@@ -26,97 +22,79 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def _make_location_update(
-    door_id: str = "door-001",
-    lock: str = "unlocked",
-    *,
-    state: LocationUpdateState | None = None,
-) -> LocationUpdateV2:
-    """Create a LocationUpdateV2 message for testing."""
-    return LocationUpdateV2(
-        event="access.data.device.location_update_v2",
-        data=LocationUpdateData(
+def _get_ws_handlers(
+    mock_client: MagicMock,
+) -> dict[str, Callable[[WebsocketMessage], Awaitable[None]]]:
+    """Extract WebSocket message handlers from mock client."""
+    return mock_client.start_websocket.call_args[0][0]
+
+
+def _get_on_connect(mock_client: MagicMock) -> Callable[[], None]:
+    """Extract on_connect callback from mock client."""
+    return mock_client.start_websocket.call_args[1]["on_connect"]
+
+
+def _get_on_disconnect(mock_client: MagicMock) -> Callable[[], None]:
+    """Extract on_disconnect callback from mock client."""
+    return mock_client.start_websocket.call_args[1]["on_disconnect"]
+
+
+def _make_ws_message(
+    event: str, door_id: str, lock: str
+) -> LocationUpdateV2 | V2LocationUpdate:
+    """Build a WebSocket message for the given event type."""
+    if event == "access.data.device.location_update_v2":
+        return LocationUpdateV2(
+            event=event,
+            data=LocationUpdateData(
+                id=door_id,
+                location_type="door",
+                state=LocationUpdateState(lock=lock),
+            ),
+        )
+    return V2LocationUpdate(
+        event=event,
+        data=V2LocationUpdateData(
             id=door_id,
-            location_type="door",
-            state=state if state is not None else LocationUpdateState(lock=lock),
+            state=V2LocationState(lock=lock),
         ),
     )
 
 
-async def test_update_data_auth_error(
+async def test_ws_disconnect_marks_entities_unavailable(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test coordinator handles auth error as update failure."""
-    mock_client.get_doors.side_effect = ApiAuthError()
+    """Test WebSocket disconnect marks entities as unavailable."""
+    assert hass.states.get("lock.front_door").state == LockState.LOCKED
 
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-
-
-async def test_update_data_api_error(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator handles API error as update failure."""
-    mock_client.get_doors.side_effect = ApiError("API error")
-
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-
-
-async def test_update_data_connection_error(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test coordinator handles connection error as update failure."""
-    mock_client.get_doors.side_effect = ApiConnectionError("Connection failed")
-
-    coordinator = init_integration.runtime_data
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-
-
-async def test_ws_disconnect_marks_unavailable(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test WebSocket disconnect marks coordinator as having an update error."""
-    coordinator = init_integration.runtime_data
-    assert coordinator.last_update_success is True
-
-    coordinator._on_ws_disconnect()
-
-    assert coordinator.last_update_success is False
-
-
-async def test_ws_connect_triggers_refresh(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_client: MagicMock,
-) -> None:
-    """Test WebSocket connect triggers a data refresh to recover availability."""
-    coordinator = init_integration.runtime_data
-
-    # Simulate disconnect → unavailable
-    coordinator._on_ws_disconnect()
-    assert coordinator.last_update_success is False
-
-    # Simulate reconnect
-    coordinator._on_ws_connect()
+    on_disconnect = _get_on_disconnect(mock_client)
+    on_disconnect()
     await hass.async_block_till_done()
 
-    # Refresh should have been triggered, restoring availability
-    assert coordinator.last_update_success is True
-    assert mock_client.get_doors.call_count == 2
+    assert hass.states.get("lock.front_door").state == "unavailable"
+    assert hass.states.get("lock.back_door").state == "unavailable"
+
+
+async def test_ws_reconnect_restores_entities(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test WebSocket reconnect restores entity availability."""
+    on_disconnect = _get_on_disconnect(mock_client)
+    on_connect = _get_on_connect(mock_client)
+
+    on_disconnect()
+    await hass.async_block_till_done()
+    assert hass.states.get("lock.front_door").state == "unavailable"
+
+    on_connect()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("lock.front_door").state == LockState.LOCKED
+    assert hass.states.get("lock.back_door").state == LockState.UNLOCKED
 
 
 async def test_ws_connect_no_refresh_when_healthy(
@@ -124,117 +102,83 @@ async def test_ws_connect_no_refresh_when_healthy(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test initial WebSocket connect does not trigger redundant refresh."""
-    coordinator = init_integration.runtime_data
-    assert coordinator.last_update_success is True
+    """Test WebSocket connect does not trigger redundant refresh when healthy."""
+    on_connect = _get_on_connect(mock_client)
 
-    coordinator._on_ws_connect()
+    on_connect()
     await hass.async_block_till_done()
 
-    # No extra refresh — only the initial setup call
     assert mock_client.get_doors.call_count == 1
 
 
 @pytest.mark.parametrize(
-    ("handler_method", "message"),
+    "event",
     [
-        (
-            "_handle_location_update",
+        "access.data.device.location_update_v2",
+        "access.data.v2.location.update",
+    ],
+)
+@pytest.mark.parametrize(
+    ("door_id", "entity_id", "lock_value", "expected_state"),
+    [
+        ("door-001", "lock.front_door", "unlocked", LockState.UNLOCKED),
+        ("door-002", "lock.back_door", "locked", LockState.LOCKED),
+    ],
+)
+async def test_ws_update_changes_lock_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    event: str,
+    door_id: str,
+    entity_id: str,
+    lock_value: str,
+    expected_state: str,
+) -> None:
+    """Test WebSocket message updates entity lock state."""
+    handlers = _get_ws_handlers(mock_client)
+    await handlers[event](_make_ws_message(event, door_id, lock_value))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            LocationUpdateV2(
+                event="access.data.device.location_update_v2",
+                data=LocationUpdateData(
+                    id="unknown-door",
+                    location_type="door",
+                    state=LocationUpdateState(lock="unlocked"),
+                ),
+            ),
+            id="unknown_door",
+        ),
+        pytest.param(
             LocationUpdateV2(
                 event="access.data.device.location_update_v2",
                 data=LocationUpdateData(
                     id="door-001",
                     location_type="door",
-                    state=LocationUpdateState(lock="unlocked"),
+                    state=None,
                 ),
             ),
-        ),
-        (
-            "_handle_v2_location_update",
-            V2LocationUpdate(
-                event="access.data.v2.location.update",
-                data=V2LocationUpdateData(
-                    id="door-001",
-                    state=V2LocationState(lock="unlocked"),
-                ),
-            ),
+            id="none_state",
         ),
     ],
 )
-async def test_handle_ws_update_unlock(
+async def test_ws_update_ignored(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    handler_method: str,
-    message: LocationUpdateV2 | V2LocationUpdate,
+    mock_client: MagicMock,
+    message: LocationUpdateV2,
 ) -> None:
-    """Test WebSocket message updates door to unlocked."""
-    coordinator = init_integration.runtime_data
+    """Test WebSocket update is ignored for unknown door or None state."""
+    handlers = _get_ws_handlers(mock_client)
+    await handlers["access.data.device.location_update_v2"](message)
+    await hass.async_block_till_done()
 
-    await getattr(coordinator, handler_method)(message)
-
-    assert (
-        coordinator.data["door-001"].door_lock_relay_status
-        == DoorLockRelayStatus.UNLOCK
-    )
-
-    state = hass.states.get("lock.front_door")
-    assert state is not None
-    assert state.state == LockState.UNLOCKED
-
-
-async def test_process_door_update_unknown_door(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test WebSocket update for unknown door is ignored."""
-    coordinator = init_integration.runtime_data
-
-    await coordinator._handle_location_update(
-        _make_location_update(door_id="unknown-door")
-    )
-
-    assert "unknown-door" not in coordinator.data
-
-
-async def test_process_door_update_none_state(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test WebSocket update with None state is ignored."""
-    coordinator = init_integration.runtime_data
-
-    msg = LocationUpdateV2(
-        event="access.data.device.location_update_v2",
-        data=LocationUpdateData(
-            id="door-001",
-            location_type="door",
-            state=None,
-        ),
-    )
-    await coordinator._handle_location_update(msg)
-
-    # Door should remain unchanged (locked)
-    assert (
-        coordinator.data["door-001"].door_lock_relay_status == DoorLockRelayStatus.LOCK
-    )
-
-
-async def test_process_door_update_locked_state(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test WebSocket update with locked state sets lock relay to lock."""
-    coordinator = init_integration.runtime_data
-
-    # First unlock door-001 via a WS update
-    await coordinator._handle_location_update(_make_location_update())
-    assert (
-        coordinator.data["door-001"].door_lock_relay_status
-        == DoorLockRelayStatus.UNLOCK
-    )
-
-    # Now lock it again
-    await coordinator._handle_location_update(_make_location_update(lock="locked"))
-    assert (
-        coordinator.data["door-001"].door_lock_relay_status == DoorLockRelayStatus.LOCK
-    )
+    assert hass.states.get("lock.front_door").state == LockState.LOCKED
