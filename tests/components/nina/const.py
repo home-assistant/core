@@ -37,3 +37,21 @@ DUMMY_CONFIG_ENTRY: dict[str, Any] = {
     CONST_REGION_A_TO_D: deepcopy(DUMMY_USER_INPUT[CONST_REGION_A_TO_D]),
     CONF_REGIONS: {"095760000000": "Aach"},
 }
+
+DUMMY_CONFIG_ENTRY_NO_FILTERS: dict[str, Any] = {
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*",
+    },
+}
+
+DUMMY_CONFIG_ENTRY_AREA_FILTERS: dict[str, Any] = {
+    CONF_MESSAGE_SLOTS: 5,
+    CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+    CONF_FILTERS: {
+        CONF_HEADLINE_FILTER: "/(?!)/",
+        CONF_AREA_FILTER: ".*nagold.*",
+    },
+}

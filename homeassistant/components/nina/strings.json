@@ -45,6 +45,37 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning: {region_name} {slot_id}"
+      }
+    },
+    "sensor": {
+      "affected_areas": {
+        "name": "Affected areas: {region_name} {slot_id}"
+      },
+      "headline": {
+        "name": "Headline: {region_name} {slot_id}"
+      },
+      "more_info_url": {
+        "name": "More information URL: {region_name} {slot_id}"
+      },
+      "sender": {
+        "name": "Sender: {region_name} {slot_id}"
+      },
+      "severity": {
+        "name": "Severity: {region_name} {slot_id}",
+        "state": {
+          "extreme": "Extreme",
+          "minor": "Minor",
+          "moderate": "Moderate",
+          "severe": "Severe",
+          "unknown": "Unknown"
+        }
+      }
+    }
+  },
   "options": {
     "abort": {
       "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
@@ -89,6 +120,20 @@
         },
         "title": "Options"
       }
+    }
+  },
+  "services": {
+    "get_affected_areas": {
+      "description": "Get all the affected areas of a warning.",
+      "name": "Get affected areas"
+    },
+    "get_description": {
+      "description": "Get the description of a warning.",
+      "name": "Get description"
+    },
+    "get_recommended_actions": {
+      "description": "Get the recommended actions of a warning.",
+      "name": "Get recommended actions"
     }
   }
 }

@@ -10,7 +10,11 @@ import pytest
 from homeassistant.components.nina.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .const import DUMMY_CONFIG_ENTRY
+from .const import (
+    DUMMY_CONFIG_ENTRY,
+    DUMMY_CONFIG_ENTRY_AREA_FILTERS,
+    DUMMY_CONFIG_ENTRY_NO_FILTERS,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -35,6 +39,38 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         title="NINA",
         data=deepcopy(DUMMY_CONFIG_ENTRY),
+        version=1,
+        minor_version=3,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    return config_entry
+
+
+@pytest.fixture
+def mock_config_entry_no_filter(hass: HomeAssistant) -> MockConfigEntry:
+    """Provide a common mock config entry with no filters."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=deepcopy(DUMMY_CONFIG_ENTRY_NO_FILTERS),
+        version=1,
+        minor_version=3,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    return config_entry
+
+
+@pytest.fixture
+def mock_config_entry_area_filter(hass: HomeAssistant) -> MockConfigEntry:
+    """Provide a common mock config entry with an area filter."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=deepcopy(DUMMY_CONFIG_ENTRY_AREA_FILTERS),
         version=1,
         minor_version=3,
     )
