@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_token": "API token generated in the UniFi Access settings.",
+          "host": "Hostname or IP address of the UniFi Access controller.",
+          "verify_ssl": "Verify the SSL certificate of the controller."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "unlock": {
+        "name": "Unlock"
+      }
+    }
+  },
+  "exceptions": {
+    "unlock_failed": {
+      "message": "Failed to unlock the door."
+    }
+  }
+}
