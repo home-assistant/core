@@ -70,8 +70,8 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, selector
 from .automation import (
     DomainSpec,
-    DomainSpecFilterMixin,
     NumericalDomainSpec,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -336,11 +336,10 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
-    DomainSpecFilterMixin[DomainSpecT], Trigger
-):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
     """Trigger for entity state changes."""
 
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -358,6 +357,10 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](
             assert config.target is not None
         self._options = config.options or {}
         self._target = config.target
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""

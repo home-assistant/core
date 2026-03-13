@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -77,7 +77,7 @@ from homeassistant.util.yaml import load_yaml_dict
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
     DomainSpec,
-    DomainSpecFilterMixin,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -334,11 +334,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](
-    DomainSpecFilterMixin[DomainSpecT], Condition
-):
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
     """Base class for entity conditions."""
 
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -357,6 +356,10 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](
             assert config.options
         self._target_selection = TargetSelection(config.target)
         self._behavior = config.options[ATTR_BEHAVIOR]
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
