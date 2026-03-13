@@ -26,6 +26,8 @@ CONF_SLAVE_ID = "slave_id"
 CONF_DISCOVERED_SENSORS = "discovered_sensors"
 # Maps module_key → list of selected instance labels (e.g. {"heating_circuits": ["HC 1.1", "HC 2.1"]})
 CONF_ACTIVE_INSTANCES = "active_instances"
+# Maps module_key → {instance_label → friendly_name} (e.g. {"heating_circuits": {"HC 1.1": "Underfloor heating"}})
+CONF_INSTANCE_NAMES = "instance_names"
 
 DEFAULT_SLAVE_ID = 1
 

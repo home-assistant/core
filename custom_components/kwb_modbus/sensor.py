@@ -20,6 +20,7 @@ from .const import (
     CONF_ACTIVE_INSTANCES,
     CONF_DISCOVERED_SENSORS,
     CONF_HEATING_DEVICE,
+    CONF_INSTANCE_NAMES,
     DIAGNOSTIC_ADDRESSES,
     DOMAIN,
     HEATING_DEVICES,
@@ -47,8 +48,15 @@ async def async_setup_entry(
         for instance in instances
     }
 
+    # Flat lookup: instance_label → friendly_name (e.g. "HC 1.1" → "Underfloor heating")
+    instance_names: dict[str, str] = {
+        inst: name
+        for names in entry.data.get(CONF_INSTANCE_NAMES, {}).values()
+        for inst, name in names.items()
+    }
+
     entities = [
-        KWBSensor(coordinator, r, entry, discovered.get(f"kwb_{r.address}", True))
+        KWBSensor(coordinator, r, entry, discovered.get(f"kwb_{r.address}", True), instance_names)
         for r in coordinator.get_all_registers()
         if r.address not in SW_VERSION_ADDRESSES
         and (not r.index or r.index in active_indices)
@@ -67,6 +75,7 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         register: RegisterDef,
         entry: KwbModbusConfigEntry,
         enabled_default: bool,
+        instance_names: dict[str, str] | None = None,
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(coordinator)
@@ -74,7 +83,11 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{register.address}"
         self._attr_entity_registry_enabled_default = enabled_default
-        self._attr_name = f"{register.index} {register.name}".strip() if register.index else register.name
+        if register.index:
+            display_index = (instance_names or {}).get(register.index, register.index)
+            self._attr_name = f"{display_index} {register.name}"
+        else:
+            self._attr_name = register.name
         if register.address in DIAGNOSTIC_ADDRESSES:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         unit = register.unit

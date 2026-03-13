@@ -37,6 +37,10 @@
           "instances": "Aktive Instanzen"
         }
       },
+      "module_instance_names": {
+        "title": "{module_name}-Instanzen benennen",
+        "description": "Vergib für jede {module_name}-Instanz einen Anzeigenamen. Dieser Name wird für alle Entitäten dieser Instanz verwendet (z.B. 'Fußbodenheizung', 'Badezimmer')."
+      },
       "reconfigure": {
         "title": "Verbindung aktualisieren",
         "description": "Passe die Verbindungseinstellungen für diesen Eintrag an.",

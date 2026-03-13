@@ -31,6 +31,10 @@
         "data": {
           "instances": "Active Instances"
         }
+      },
+      "module_instance_names": {
+        "title": "Name {module_name} Instances",
+        "description": "Give each {module_name} instance a friendly name. This name will be used for all entities of that instance (e.g. 'Underfloor heating', 'Bathroom')."
       }
     },
     "error": {

@@ -27,6 +27,7 @@ from .const import (
     CONF_DISCOVERED_SENSORS,
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
+    CONF_INSTANCE_NAMES,
     CONF_SLAVE_ID,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -148,6 +149,8 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current_indexed_module: str = ""
         # Accumulated instance selections: module_key → list of instance labels
         self._active_instances: dict[str, list[str]] = {}
+        # Accumulated friendly names: module_key → {instance_label → friendly_name}
+        self._instance_names: dict[str, dict[str, str]] = {}
         # Discovered (pre-selected) instances per module from Modbus scan
         self._discovered_indices: dict[str, list[str]] = {}
 
@@ -227,7 +230,7 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     await _discover_active_instances(host, port, slave_id, module_key)
                 )
 
-            return await self.async_step_module_instances()
+            return await self._advance_to_next_module()
 
         schema = vol.Schema(
             {
@@ -247,20 +250,18 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_module_instances(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle instance selection for an indexed add-on module.
+        """Handle instance selection for the current indexed add-on module.
 
-        This step is reused for each indexed module in sequence.
         Instances discovered via Modbus are pre-selected; the user can adjust.
+        After confirming the selection, the user is asked to name each instance.
         """
         if user_input is not None:
-            self._active_instances[self._current_indexed_module] = user_input.get(
-                "instances", []
-            )
+            selected = user_input.get("instances", [])
+            self._active_instances[self._current_indexed_module] = selected
+            if selected:
+                return await self.async_step_module_instance_names()
+            return await self._advance_to_next_module()
 
-        if not self._pending_indexed_modules:
-            return self._create_entry()
-
-        self._current_indexed_module = self._pending_indexed_modules.pop(0)
         all_instances = _sorted_instances(self._current_indexed_module)
         discovered = self._discovered_indices.get(self._current_indexed_module, [])
         module_label = ADDON_MODULES.get(
@@ -284,6 +285,41 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"module_name": module_label},
         )
 
+    async def async_step_module_instance_names(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a friendly name for each selected instance of the current module.
+
+        Field keys are the instance labels themselves (e.g. "HC 1.1"), so the UI
+        shows them as-is. The user replaces the default with a friendly name.
+        """
+        selected = self._active_instances.get(self._current_indexed_module, [])
+
+        if user_input is not None:
+            self._instance_names[self._current_indexed_module] = {
+                inst: user_input.get(inst, inst) for inst in selected
+            }
+            return await self._advance_to_next_module()
+
+        module_label = ADDON_MODULES.get(
+            self._current_indexed_module, self._current_indexed_module
+        )
+        schema = vol.Schema(
+            {vol.Optional(inst, default=inst): str for inst in selected}
+        )
+        return self.async_show_form(
+            step_id="module_instance_names",
+            data_schema=schema,
+            description_placeholders={"module_name": module_label},
+        )
+
+    async def _advance_to_next_module(self) -> ConfigFlowResult:
+        """Pop the next pending module or finish setup if none remain."""
+        if not self._pending_indexed_modules:
+            return self._create_entry()
+        self._current_indexed_module = self._pending_indexed_modules.pop(0)
+        return await self.async_step_module_instances()
+
     def _create_entry(self) -> ConfigFlowResult:
         """Create the config entry once all steps are complete."""
         heating_device = self._connection_data[CONF_HEATING_DEVICE]
@@ -296,6 +332,7 @@ class KwbModbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_MODULES: self._modules_data[CONF_ADDON_MODULES],
                 CONF_EXPERT_MODE: self._modules_data[CONF_EXPERT_MODE],
                 CONF_ACTIVE_INSTANCES: self._active_instances,
+                CONF_INSTANCE_NAMES: self._instance_names,
                 CONF_DISCOVERED_SENSORS: {},
             },
         )

@@ -14,6 +14,7 @@ from .const import (
     CONF_ACTIVE_INSTANCES,
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
+    CONF_INSTANCE_NAMES,
     DOMAIN,
     EXPERT_SELECT_ADDRESSES,
     HEATING_DEVICES,
@@ -40,8 +41,15 @@ async def async_setup_entry(
         for instance in instances
     }
 
+    # Flat lookup: instance_label → friendly_name
+    instance_names: dict[str, str] = {
+        inst: name
+        for names in entry.data.get(CONF_INSTANCE_NAMES, {}).values()
+        for inst, name in names.items()
+    }
+
     entities = [
-        KWBSelectEntity(coordinator, register, entry, expert_mode)
+        KWBSelectEntity(coordinator, register, entry, expert_mode, instance_names)
         for register in coordinator.get_all_select_registers()
         if not register.index or register.index in active_indices
     ]
@@ -59,6 +67,7 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         register: SelectRegisterDef,
         entry: KwbModbusConfigEntry,
         expert_mode: bool,
+        instance_names: dict[str, str] | None = None,
     ) -> None:
         """Initialize the select entity."""
         super().__init__(coordinator)
@@ -66,10 +75,11 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_select_{register.address}"
 
-        self._attr_name = (
-            f"{register.index} {register.name}".strip()
-            if register.index else register.name
-        )
+        if register.index:
+            display_index = (instance_names or {}).get(register.index, register.index)
+            self._attr_name = f"{display_index} {register.name}"
+        else:
+            self._attr_name = register.name
 
         table = VALUE_TABLES.get(register.value_table, {})
         self._table: dict[int, str] = table
