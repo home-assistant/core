@@ -584,7 +584,7 @@ _number_or_entity = vol.All(
 
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        vol.Required(CONF_OPTIONS, default={}): vol.All(
             {
                 vol.Optional(CONF_ABOVE): _number_or_entity,
                 vol.Optional(CONF_BELOW): _number_or_entity,

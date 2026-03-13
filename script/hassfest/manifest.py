@@ -102,6 +102,7 @@ NO_IOT_CLASS = [
     "logger",
     "lovelace",
     "media_source",
+    "motion",
     "my",
     "occupancy",
     "onboarding",

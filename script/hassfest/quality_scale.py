@@ -2137,6 +2137,7 @@ NO_QUALITY_SCALE = [
     "logger",
     "lovelace",
     "media_source",
+    "motion",
     "my",
     "occupancy",
     "onboarding",
