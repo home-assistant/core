@@ -20,6 +20,7 @@ from .coordinator import DevialetConfigEntry, DevialetCoordinator
 
 SUPPORT_DEVIALET = (
     MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -74,6 +75,7 @@ class DevialetMediaPlayerEntity(
             return
 
         self._attr_volume_level = self.coordinator.client.volume_level
+        self._attr_volume_step = self.coordinator.client.volume_step
         self._attr_is_volume_muted = self.coordinator.client.is_volume_muted
         self._attr_source_list = self.coordinator.client.source_list
         self._attr_sound_mode_list = sorted(SOUND_MODES)
