@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
+from soco.exceptions import SoCoException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -337,3 +338,22 @@ async def test_alarm_change_device(
     alarm_14 = entity_registry.async_get(entity_id)
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
+
+
+async def test_alarm_update_exception_logs_warning(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+    soco: MockSoCo,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test household mismatch logs warning and prevents speaker setup."""
+    soco.alarmClock.ListAlarms.side_effect = SoCoException(
+        "Alarm list UID RINCON_0001234567890:31 does not match RINCON_000E987654321:0"
+    )
+    await async_setup_sonos()
+    await hass.async_block_till_done()
+
+    # Speaker should not be set up due to household mismatch
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
+    assert "cannot be updated due to a household mismatch" in caplog.text
