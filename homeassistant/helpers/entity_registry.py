@@ -79,8 +79,8 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_VERSION_MAJOR = 2
-STORAGE_VERSION_MINOR = 1
+STORAGE_VERSION_MAJOR = 1
+STORAGE_VERSION_MINOR = 21
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -237,6 +237,11 @@ class RegistryEntry:
     supported_features: int = attr.ib()
     translation_key: str | None = attr.ib()
     unit_of_measurement: str | None = attr.ib()
+
+    # For backwards compatibility, should be removed in the future
+    compat_aliases: list[str] = attr.ib(factory=list, eq=False)
+    compat_name: str | None = attr.ib(default=None, eq=False)
+
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -371,7 +376,8 @@ class RegistryEntry:
         return json_fragment(
             json_bytes(
                 {
-                    "aliases": _serialize_aliases(self.aliases),
+                    "aliases": self.compat_aliases,
+                    "aliases_v2": _serialize_aliases(self.aliases),
                     "area_id": self.area_id,
                     "categories": self.categories,
                     "capabilities": self.capabilities,
@@ -389,7 +395,8 @@ class RegistryEntry:
                     "has_entity_name": self.has_entity_name,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
-                    "name": self.name,
+                    "name": self.compat_name,
+                    "name_v2": self.name,
                     "object_id_base": self.object_id_base,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
@@ -604,6 +611,10 @@ class DeletedRegistryEntry:
     )
     orphaned_timestamp: float | None = attr.ib()
 
+    # For backwards compatibility, should be removed in the future
+    compat_aliases: list[str] = attr.ib(factory=list, eq=False)
+    compat_name: str | None = attr.ib(default=None, eq=False)
+
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
@@ -617,7 +628,8 @@ class DeletedRegistryEntry:
         return json_fragment(
             json_bytes(
                 {
-                    "aliases": _serialize_aliases(self.aliases),
+                    "aliases": self.compat_aliases,
+                    "aliases_v2": _serialize_aliases(self.aliases),
                     "area_id": self.area_id,
                     "categories": self.categories,
                     "config_entry_id": self.config_entry_id,
@@ -637,7 +649,8 @@ class DeletedRegistryEntry:
                     "id": self.id,
                     "labels": list(self.labels),
                     "modified_at": self.modified_at,
-                    "name": self.name,
+                    "name": self.compat_name,
+                    "name_v2": self.name,
                     "options": self.options if self.options is not UNDEFINED else {},
                     "options_undefined": self.options is UNDEFINED,
                     "orphaned_timestamp": self.orphaned_timestamp,
@@ -790,46 +803,49 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entity in data["entities"]:
                     entity["object_id_base"] = entity["original_name"]
 
-        if old_major_version < 2:
-            # Version 2.1 migrates the full name to include device name,
-            # even if entity name is overwritten by user.
-            # It also adds support for COMPUTED_NAME in aliases and starts preserving their order.
-            device_registry = dr.async_get(self.hass)
+            if old_minor_version < 21:
+                # Version 1.21 migrates the full name to include device name,
+                # even if entity name is overwritten by user.
+                # It also adds support for COMPUTED_NAME in aliases and starts preserving their order.
+                # To avoid a major version bump, we keep the old name and aliases as-is
+                # and use new name_v2 and aliases_v2 fields instead.
+                device_registry = dr.async_get(self.hass)
 
-            for entity in data["entities"]:
-                alias_to_add: str | None = None
-                if (
-                    (name := entity["name"])
-                    and (device_id := entity["device_id"]) is not None
-                    and (device := device_registry.async_get(device_id)) is not None
-                    and (device_name := device.name_by_user or device.name)
-                ):
-                    # Strip the device name prefix from the entity name if present,
-                    # and add the full generated name as an alias.
-                    # If the name doesn't have the device name prefix and the
-                    # entity is exposed to a voice assistant, add the previous
-                    # name as an alias instead to preserve backwards compatibility.
+                for entity in data["entities"]:
+                    alias_to_add: str | None = None
                     if (
-                        new_name := _async_strip_prefix_from_entity_name(
-                            name, device_name
-                        )
-                    ) is not None:
-                        entity["name"] = new_name
-                    elif any(
-                        entity.get("options", {}).get(key, {}).get("should_expose")
-                        for key in ("conversation", "cloud.google_assistant")
+                        (name := entity["name"])
+                        and (device_id := entity["device_id"]) is not None
+                        and (device := device_registry.async_get(device_id)) is not None
+                        and (device_name := device.name_by_user or device.name)
                     ):
-                        alias_to_add = name
+                        # Strip the device name prefix from the entity name if present,
+                        # and add the full generated name as an alias.
+                        # If the name doesn't have the device name prefix and the
+                        # entity is exposed to a voice assistant, add the previous
+                        # name as an alias instead to preserve backwards compatibility.
+                        if (
+                            new_name := _async_strip_prefix_from_entity_name(
+                                name, device_name
+                            )
+                        ) is not None:
+                            name = new_name
+                        elif any(
+                            entity.get("options", {}).get(key, {}).get("should_expose")
+                            for key in ("conversation", "cloud.google_assistant")
+                        ):
+                            alias_to_add = name
 
-                entity["aliases"] = [alias_to_add, *entity["aliases"]]
+                    entity["name_v2"] = name
+                    entity["aliases_v2"] = [alias_to_add, *entity["aliases"]]
 
-            for entity in data["deleted_entities"]:
-                # We don't know what the device name was, so the only thing we can do
-                # is to clear the overwritten name to not mislead users.
-                entity["name"] = None
-                entity["aliases"] = [None, *entity["aliases"]]
+                for entity in data["deleted_entities"]:
+                    # We don't know what the device name was, so the only thing we can do
+                    # is to clear the overwritten name to not mislead users.
+                    entity["name_v2"] = None
+                    entity["aliases_v2"] = [None, *entity["aliases"]]
 
-        if old_major_version > 2:
+        if old_major_version > 1:
             raise NotImplementedError
         return data
 
@@ -1299,6 +1315,8 @@ class EntityRegistry(BaseRegistry):
             aliases = deleted_entity.aliases
             area_id = deleted_entity.area_id
             categories = deleted_entity.categories
+            compat_aliases = deleted_entity.compat_aliases
+            compat_name = deleted_entity.compat_name
             created_at = deleted_entity.created_at
             device_class = deleted_entity.device_class
             if deleted_entity.disabled_by is not UNDEFINED:
@@ -1329,6 +1347,8 @@ class EntityRegistry(BaseRegistry):
             aliases = [COMPUTED_NAME]
             area_id = None
             categories = {}
+            compat_aliases = []
+            compat_name = None
             device_class = None
             icon = None
             labels = set()
@@ -1370,6 +1390,8 @@ class EntityRegistry(BaseRegistry):
             area_id=area_id,
             categories=categories,
             capabilities=none_if_undefined(capabilities),
+            compat_aliases=compat_aliases,
+            compat_name=compat_name,
             config_entry_id=none_if_undefined(config_entry_id),
             config_subentry_id=none_if_undefined(config_subentry_id),
             created_at=created_at,
@@ -1430,6 +1452,8 @@ class EntityRegistry(BaseRegistry):
             aliases=entity.aliases,
             area_id=entity.area_id,
             categories=entity.categories,
+            compat_aliases=entity.compat_aliases,
+            compat_name=entity.compat_name,
             config_entry_id=config_entry_id,
             config_subentry_id=entity.config_subentry_id,
             created_at=entity.created_at,
@@ -1855,10 +1879,12 @@ class EntityRegistry(BaseRegistry):
                     continue
 
                 entities[entity["entity_id"]] = RegistryEntry(
-                    aliases=_deserialize_aliases(entity["aliases"]),
+                    aliases=_deserialize_aliases(entity["aliases_v2"]),
                     area_id=entity["area_id"],
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
+                    compat_aliases=entity["aliases"],
+                    compat_name=entity["name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -1879,7 +1905,7 @@ class EntityRegistry(BaseRegistry):
                     has_entity_name=entity["has_entity_name"],
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
-                    name=entity["name"],
+                    name=entity["name_v2"],
                     object_id_base=entity.get("object_id_base"),
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -1925,9 +1951,11 @@ class EntityRegistry(BaseRegistry):
                     entity["unique_id"],
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
-                    aliases=_deserialize_aliases(entity["aliases"]),
+                    aliases=_deserialize_aliases(entity["aliases_v2"]),
                     area_id=entity["area_id"],
                     categories=entity["categories"],
+                    compat_aliases=entity["aliases"],
+                    compat_name=entity["name"],
                     config_entry_id=entity["config_entry_id"],
                     config_subentry_id=entity["config_subentry_id"],
                     created_at=datetime.fromisoformat(entity["created_at"]),
@@ -1947,7 +1975,7 @@ class EntityRegistry(BaseRegistry):
                     id=entity["id"],
                     labels=set(entity["labels"]),
                     modified_at=datetime.fromisoformat(entity["modified_at"]),
-                    name=entity["name"],
+                    name=entity["name_v2"],
                     options=entity["options"]
                     if not entity["options_undefined"]
                     else UNDEFINED,

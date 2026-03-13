@@ -621,6 +621,7 @@ async def test_load_bad_data(
             "entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "capabilities": None,
                     "categories": {},
@@ -639,6 +640,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -654,6 +656,7 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "capabilities": None,
                     "categories": {},
@@ -672,6 +675,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
@@ -689,6 +693,7 @@ async def test_load_bad_data(
             "deleted_entities": [
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -705,6 +710,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -713,6 +719,7 @@ async def test_load_bad_data(
                 },
                 {
                     "aliases": [],
+                    "aliases_v2": [],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -729,6 +736,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": None,
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -1064,7 +1072,8 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
         "data": {
             "entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1082,6 +1091,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -1258,7 +1268,8 @@ async def test_migration_1_11(
         "data": {
             "entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1276,6 +1287,7 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
@@ -1293,7 +1305,8 @@ async def test_migration_1_11(
             ],
             "deleted_entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1310,6 +1323,7 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": {},
                     "options_undefined": True,
                     "orphaned_timestamp": None,
@@ -1423,7 +1437,8 @@ async def test_migration_1_18(
         "data": {
             "entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1441,6 +1456,7 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": "Test Entity",
                     "options": {},
                     "original_device_class": "best_class",
@@ -1458,7 +1474,8 @@ async def test_migration_1_18(
             ],
             "deleted_entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1475,6 +1492,7 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "options": {},
                     "options_undefined": False,
                     "orphaned_timestamp": None,
@@ -1767,7 +1785,8 @@ async def test_migration_1_20(
         "data": {
             "entities": [
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1785,6 +1804,7 @@ async def test_migration_1_20(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "name_v2": None,
                     "object_id_base": "Test entity",
                     "options": {},
                     "original_device_class": None,
@@ -1800,7 +1820,8 @@ async def test_migration_1_20(
                     "device_class": None,
                 },
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1818,6 +1839,7 @@ async def test_migration_1_20(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": "Standalone Sensor",
+                    "name_v2": "Standalone Sensor",
                     "object_id_base": "Test entity",
                     "options": {},
                     "original_device_class": None,
@@ -1833,7 +1855,8 @@ async def test_migration_1_20(
                     "device_class": None,
                 },
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1850,7 +1873,8 @@ async def test_migration_1_20(
                     "id": "entity-3",
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": "Temperature",
+                    "name": "My device temperature",
+                    "name_v2": "Temperature",
                     "object_id_base": "Test entity",
                     "options": {},
                     "original_device_class": None,
@@ -1866,7 +1890,8 @@ async def test_migration_1_20(
                     "device_class": None,
                 },
                 {
-                    "aliases": [None],
+                    "aliases": [],
+                    "aliases_v2": [None],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1884,6 +1909,7 @@ async def test_migration_1_20(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": "Living Room Light",
+                    "name_v2": "Living Room Light",
                     "object_id_base": "Test entity",
                     "options": {},
                     "original_device_class": None,
@@ -1899,7 +1925,8 @@ async def test_migration_1_20(
                     "device_class": None,
                 },
                 {
-                    "aliases": ["Living Room Light"],
+                    "aliases": [],
+                    "aliases_v2": ["Living Room Light"],
                     "area_id": None,
                     "capabilities": {},
                     "categories": {},
@@ -1917,6 +1944,7 @@ async def test_migration_1_20(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": "Living Room Light",
+                    "name_v2": "Living Room Light",
                     "object_id_base": "Test entity",
                     "options": {
                         "conversation": {"should_expose": True},
@@ -1936,7 +1964,8 @@ async def test_migration_1_20(
             ],
             "deleted_entities": [
                 {
-                    "aliases": [None, "deleted_alias"],
+                    "aliases": ["deleted_alias"],
+                    "aliases_v2": [None, "deleted_alias"],
                     "area_id": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -1952,7 +1981,8 @@ async def test_migration_1_20(
                     "id": "deleted-1",
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
-                    "name": None,
+                    "name": "Deleted Name",
+                    "name_v2": None,
                     "options": {},
                     "options_undefined": False,
                     "orphaned_timestamp": None,
