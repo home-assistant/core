@@ -7,6 +7,7 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -51,17 +52,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
         device_manager: HIVIDeviceManager,
         create_type: str = "standalone",
     ) -> None:
-        """Initialize.
-
-        Args:
-            hass: Home Assistant instance.
-            hub: Switch entity hub.
-            master_speaker_device_id: Master speaker device ID.
-            slave_speaker_device_id: Slave speaker device ID.
-            device_manager: Device manager instance.
-            create_type: Creation type (standalone or slave).
-
-        """
+        """Initialize the slave control switch entity."""
         self.hass = hass
         self._hub = hub
         self._master_speaker_device_id = master_speaker_device_id
@@ -71,43 +62,25 @@ class HIVISlaveControlSwitch(SwitchEntity):
         self._slave_device_friendly_name = self.get_slave_device_friendly_name(
             create_type
         )
-        # Entity attributes
         self._attr_name = f"{self._slave_device_friendly_name} Play in sync"
         self._attr_unique_id = (
             f"{master_speaker_device_id}_slave_{slave_speaker_device_id}"
         )
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, master_speaker_device_id)},
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, master_speaker_device_id)},
+        )
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_is_on = False
 
         self._unsub_status = None
+        self._unsub_device_registry = None
         self._hub.add_switch(self)
 
-        # Store slave's ha_device_id at init to avoid race: DeviceDataRegistry also
-        # listens to device_registry_updated and may pop the device before we look up.
+        # Cache slave ha_device_id to avoid race with DeviceDataRegistry event handler.
         self._slave_ha_device_id: str | None = (
             self._device_manager.device_data_registry.get_ha_device_id_by_speaker_device_id(
                 self._slave_speaker_device_id
             )
-        )
-
-        async def device_registry_updated(event):
-            _LOGGER.debug("Device registry updated event: %s", event.data)
-            ha_device_id = event.data["device_id"]
-            action = event.data["action"]
-            if action == "remove" and ha_device_id == self._slave_ha_device_id:
-                _LOGGER.debug(
-                    "Removing switch entity for deleted slave device %s",
-                    self._slave_speaker_device_id,
-                )
-                self._hub.switches.pop(self._attr_unique_id, None)
-                if self.hass and hasattr(self, "async_remove"):
-                    await self.async_remove()
-
-        self._unsub_device_registry = self.hass.bus.async_listen(
-            "device_registry_updated", device_registry_updated
         )
 
     def get_master_device(self):
@@ -210,14 +183,16 @@ class HIVISlaveControlSwitch(SwitchEntity):
 
         return slave_device_ip_addr
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        _LOGGER.debug("Adding switch entity %s to Home Assistant", self.name)
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to events when entity is added to hass."""
         await super().async_added_to_hass()
         self._unsub_status = async_dispatcher_connect(
             self.hass,
             SIGNAL_DEVICE_STATUS_UPDATED,
             self._handle_device_status_updated,
+        )
+        self._unsub_device_registry = self.hass.bus.async_listen(
+            "device_registry_updated", self._handle_device_registry_updated
         )
 
     def _handle_device_status_updated(self, speaker_device_id: str) -> None:
@@ -226,12 +201,21 @@ class HIVISlaveControlSwitch(SwitchEntity):
             return
         self.async_write_ha_state()
 
+    async def _handle_device_registry_updated(self, event) -> None:
+        """Remove switch when its slave device is deleted from the registry."""
+        if (
+            event.data.get("action") == "remove"
+            and event.data.get("device_id") == self._slave_ha_device_id
+        ):
+            self._hub.switches.pop(self._attr_unique_id, None)
+            await self.async_remove()
+
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe listeners when entity is removed."""
         if self._unsub_device_registry is not None:
             self._unsub_device_registry()
             self._unsub_device_registry = None
-        if hasattr(self, "_unsub_status") and self._unsub_status is not None:
+        if self._unsub_status is not None:
             self._unsub_status()
             self._unsub_status = None
 
@@ -247,16 +231,10 @@ class HIVISlaveControlSwitch(SwitchEntity):
         )
 
     def on_off_switch(self, is_on: bool):
-        """Enable or disable the switch.
-
-        Args:
-            is_on: True for on, False for off.
-
-        """
+        """Enable or disable the switch."""
         if self._attr_is_on != is_on:
             self._attr_is_on = is_on
-            # Notify Home Assistant to update state
-            if self.hass and hasattr(self, "async_write_ha_state"):
+            if self.hass:
                 self.async_write_ha_state()
 
             _LOGGER.debug(
@@ -336,7 +314,6 @@ class HIVISlaveControlSwitch(SwitchEntity):
             self.async_write_ha_state()
             return
 
-        # Prepare operation data
         slave_ip = slave_device_ip_addr
         ssid = master_device.ssid
         wifi_channel = master_device.wifi_channel
@@ -362,16 +339,15 @@ class HIVISlaveControlSwitch(SwitchEntity):
             },
         }
 
-        # Send request via dispatcher (requires corresponding receiver support)
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_sync_group_operation",
             operation_data,
-            operation_callback,  # Pass callback function
+            operation_callback,
         )
 
     async def async_turn_off(self, **kwargs):
-        """Turn off the switch - remove master-slave relationship."""
+        """Turn off the switch - remove the follower relationship."""
         master_device = self.get_master_device()
         if master_device is None:
             _LOGGER.error(
@@ -389,7 +365,7 @@ class HIVISlaveControlSwitch(SwitchEntity):
 
         async def operation_callback(result: dict):
             """Operation callback function."""
-            _LOGGER.debug("sync_group_operation turn on result: %s", result)
+            _LOGGER.debug("sync_group_operation turn off result: %s", result)
             need_refresh_flg = False
             if result.get("status") == "rejected":
                 self._attr_is_on = True
@@ -442,12 +418,11 @@ class HIVISlaveControlSwitch(SwitchEntity):
             },
         }
 
-        # Send request via dispatcher (requires corresponding receiver support)
         async_dispatcher_send(
             self.hass,
             f"{DOMAIN}_sync_group_operation",
             operation_data,
-            operation_callback,  # Pass callback function
+            operation_callback,
         )
 
     @property
