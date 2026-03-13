@@ -35,6 +35,7 @@ from .const import (
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
     MANUFACTURER,
+    NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
@@ -185,9 +186,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             elif event_type == EVENT_TYPE_LIGHT_MODE:
                 if data.get("sub_type"):
                     self._light_state = data["sub_type"]
-                    self._attr_extra_state_attributes.update(
-                        {"light_state": self._light_state}
-                    )
                 else:
                     _LOGGER.debug(
                         "Camera %s has received light mode event without sub_type",
@@ -227,6 +225,20 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return entity specific state attributes."""
+        return {
+            "id": self.device.entity_id,
+            "monitoring": self._monitoring,
+            "sd_status": self.device.sd_status,
+            "alim_status": self.device.alim_status,
+            "is_local": self.device.is_local,
+            "vpn_url": self.device.vpn_url,
+            "local_url": self.device.local_url,
+            "light_state": self._light_state,
+        }
+
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         await self.device.async_monitoring_off()
@@ -250,25 +262,15 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         self._attr_is_on = self.device.alim_status is not None
         self._attr_available = self.device.alim_status is not None
 
-        if self.device.monitoring is not None:
+        if self.device_type == "NDB":
+            self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
+        elif self.device.monitoring is not None:
+            self._monitoring = self.device.monitoring
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
-        )
-
-        self._attr_extra_state_attributes.update(
-            {
-                "id": self.device.entity_id,
-                "monitoring": self._monitoring,
-                "sd_status": self.device.sd_status,
-                "alim_status": self.device.alim_status,
-                "is_local": self.device.is_local,
-                "vpn_url": self.device.vpn_url,
-                "local_url": self.device.local_url,
-                "light_state": self._light_state,
-            }
         )
 
     def process_events(self, event_list: list[NaEvent]) -> dict:

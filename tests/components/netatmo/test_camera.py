@@ -81,6 +81,7 @@ async def test_setup_component_with_webhook(
 
     # Test on/off camera events
     assert hass.states.get(camera_entity).state == expected_state
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
     response = {
         "event_type": "off",
         "device_id": camera_id,
@@ -91,6 +92,7 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     response = {
         "event_type": "on",
@@ -102,6 +104,7 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity).state == expected_state
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on/turn_off services
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -516,6 +519,7 @@ async def test_camera_reconnect_webhook(
 
         # Real camera disconnect
         assert hass.states.get(camera_entity).state == expected_state
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
         response = {
             "event_type": "disconnection",
             "device_id": camera_id,
@@ -526,6 +530,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
 
         assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
         response = {
             "event_type": "connection",
@@ -537,6 +542,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
 
         assert hass.states.get(camera_entity).state == expected_state
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
 
 @pytest.mark.parametrize(
