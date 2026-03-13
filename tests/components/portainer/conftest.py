@@ -80,6 +80,8 @@ def mock_portainer_client() -> Generator[AsyncMock]:
 
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
+        client.pause_container = AsyncMock(return_value=None)
+        client.unpause_container = AsyncMock(return_value=None)
         client.start_container = AsyncMock(return_value=None)
         client.stop_container = AsyncMock(return_value=None)
         client.start_stack = AsyncMock(return_value=None)

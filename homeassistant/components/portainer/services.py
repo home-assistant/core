@@ -21,6 +21,8 @@ from .coordinator import PortainerConfigEntry
 ATTR_DATE_UNTIL = "until"
 ATTR_DANGLING = "dangling"
 
+ATTR_CONTAINER_ID = "container_id"
+
 SERVICE_PRUNE_IMAGES = "prune_images"
 SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
     {
@@ -29,6 +31,15 @@ SERVICE_PRUNE_IMAGES_SCHEMA = vol.Schema(
             cv.time_period, vol.Range(min=timedelta(minutes=1))
         ),
         vol.Optional(ATTR_DANGLING): cv.boolean,
+    },
+)
+
+SERVICE_PAUSE_CONTAINER = "pause_container"
+SERVICE_UNPAUSE_CONTAINER = "unpause_container"
+SERVICE_PAUSE_CONTAINER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_CONTAINER_ID): cv.string,
     },
 )
 
@@ -52,8 +63,7 @@ async def _extract_config_entry(service_call: ServiceCall) -> PortainerConfigEnt
 
 
 async def _get_endpoint_id(
-    call: ServiceCall,
-    config_entry: PortainerConfigEntry,
+    call: ServiceCall, config_entry: PortainerConfigEntry
 ) -> int:
     """Get endpoint data from device ID."""
     device_reg = dr.async_get(call.hass)
@@ -73,6 +83,29 @@ async def _get_endpoint_id(
 
     assert endpoint_data
     return endpoint_data.endpoint.id
+
+
+async def _get_container_id(
+    call: ServiceCall, config_entry: PortainerConfigEntry, endpoint_id: int
+) -> str:
+    """Get container ID from service call."""
+    device_reg = dr.async_get(call.hass)
+    container_id = call.data[ATTR_CONTAINER_ID]
+    device = device_reg.async_get(container_id)
+    assert device
+    coordinator = config_entry.runtime_data
+
+    container_data = None
+
+    for container_name, data in coordinator.data[endpoint_id].containers.items():
+        if (
+            DOMAIN,
+            f"{config_entry.entry_id}_{container_name}",
+        ) in device.identifiers:
+            container_data = data
+            break
+    assert container_data
+    return container_data.container.id
 
 
 async def prune_images(call: ServiceCall) -> None:
@@ -104,6 +137,42 @@ async def prune_images(call: ServiceCall) -> None:
         ) from err
 
 
+async def pause_container(call: ServiceCall) -> None:
+    """Pause or unpause a container in Portainer."""
+    config_entry = await _extract_config_entry(call)
+    coordinator = config_entry.runtime_data
+    endpoint_id = await _get_endpoint_id(call, config_entry)
+    container_id = await _get_container_id(call, config_entry, endpoint_id)
+
+    try:
+        # Toggle pause/unpause based on service called
+        if call.service == SERVICE_PAUSE_CONTAINER:
+            await coordinator.portainer.pause_container(
+                endpoint_id=endpoint_id,
+                container_id=container_id,
+            )
+        else:
+            await coordinator.portainer.unpause_container(
+                endpoint_id=endpoint_id,
+                container_id=container_id,
+            )
+    except PortainerAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth_no_details",
+        ) from err
+    except PortainerConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_no_details",
+        ) from err
+    except PortainerTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect_no_details",
+        ) from err
+
+
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
@@ -112,4 +181,18 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_PRUNE_IMAGES,
         prune_images,
         SERVICE_PRUNE_IMAGES_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PAUSE_CONTAINER,
+        pause_container,
+        SERVICE_PAUSE_CONTAINER_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNPAUSE_CONTAINER,
+        pause_container,
+        SERVICE_PAUSE_CONTAINER_SCHEMA,
     )
