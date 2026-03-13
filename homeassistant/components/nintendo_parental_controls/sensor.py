@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
+from pynintendoparental.player import Player
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,20 +30,30 @@ class NintendoParentalControlsSensor(StrEnum):
     """Store keys for Nintendo parental controls sensors."""
 
     PLAYING_TIME = "playing_time"
+    PLAYER_PLAYING_TIME = "player_playing_time"
     TIME_REMAINING = "time_remaining"
     TIME_EXTENDED = "time_extended"
 
 
 @dataclass(kw_only=True, frozen=True)
-class NintendoParentalControlsSensorEntityDescription(SensorEntityDescription):
-    """Description for Nintendo parental controls sensor entities."""
+class NintendoParentalControlsDeviceSensorEntityDescription(SensorEntityDescription):
+    """Description for Nintendo parental controls device sensor entities."""
 
     value_fn: Callable[[Device], datetime | int | float | None]
     available_fn: Callable[[Device], bool] = lambda device: True
 
 
-SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...] = (
-    NintendoParentalControlsSensorEntityDescription(
+@dataclass(kw_only=True, frozen=True)
+class NintendoParentalControlsPlayerSensorEntityDescription(SensorEntityDescription):
+    """Description for Nintendo parental controls player sensor entities."""
+
+    value_fn: Callable[[Player], int | float | None]
+
+
+DEVICE_SENSOR_DESCRIPTIONS: tuple[
+    NintendoParentalControlsDeviceSensorEntityDescription, ...
+] = (
+    NintendoParentalControlsDeviceSensorEntityDescription(
         key=NintendoParentalControlsSensor.PLAYING_TIME,
         translation_key=NintendoParentalControlsSensor.PLAYING_TIME,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -49,7 +61,7 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...]
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_playing_time,
     ),
-    NintendoParentalControlsSensorEntityDescription(
+    NintendoParentalControlsDeviceSensorEntityDescription(
         key=NintendoParentalControlsSensor.TIME_REMAINING,
         translation_key=NintendoParentalControlsSensor.TIME_REMAINING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -57,7 +69,7 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...]
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_time_remaining,
     ),
-    NintendoParentalControlsSensorEntityDescription(
+    NintendoParentalControlsDeviceSensorEntityDescription(
         key=NintendoParentalControlsSensor.TIME_EXTENDED,
         translation_key=NintendoParentalControlsSensor.TIME_EXTENDED,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -68,30 +80,53 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...]
     ),
 )
 
+PLAYER_SENSOR_DESCRIPTIONS: tuple[
+    NintendoParentalControlsPlayerSensorEntityDescription, ...
+] = (
+    NintendoParentalControlsPlayerSensorEntityDescription(
+        key=NintendoParentalControlsSensor.PLAYER_PLAYING_TIME,
+        translation_key=NintendoParentalControlsSensor.PLAYER_PLAYING_TIME,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda player: player.playing_time,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NintendoParentalControlsConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    async_add_devices(
-        NintendoParentalControlsSensorEntity(entry.runtime_data, device, sensor)
+    entities: list[NintendoDevice] = []
+    entities.extend(
+        NintendoParentalControlsDeviceSensorEntity(entry.runtime_data, device, sensor)
         for device in entry.runtime_data.api.devices.values()
-        for sensor in SENSOR_DESCRIPTIONS
+        for sensor in DEVICE_SENSOR_DESCRIPTIONS
     )
+    for device in entry.runtime_data.api.devices.values():
+        entities.extend(
+            NintendoParentalControlsPlayerSensorEntity(
+                entry.runtime_data, device, player, sensor
+            )
+            for player in device.players
+            for sensor in PLAYER_SENSOR_DESCRIPTIONS
+        )
+    async_add_entities(entities)
 
 
-class NintendoParentalControlsSensorEntity(NintendoDevice, SensorEntity):
+class NintendoParentalControlsDeviceSensorEntity(NintendoDevice, SensorEntity):
     """Represent a single sensor."""
 
-    entity_description: NintendoParentalControlsSensorEntityDescription
+    entity_description: NintendoParentalControlsDeviceSensorEntityDescription
 
     def __init__(
         self,
         coordinator: NintendoUpdateCoordinator,
         device: Device,
-        description: NintendoParentalControlsSensorEntityDescription,
+        description: NintendoParentalControlsDeviceSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, device=device, key=description.key)
@@ -106,3 +141,39 @@ class NintendoParentalControlsSensorEntity(NintendoDevice, SensorEntity):
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self.entity_description.available_fn(self._device)
+
+
+class NintendoParentalControlsPlayerSensorEntity(NintendoDevice, SensorEntity):
+    """Represent a single player sensor."""
+
+    entity_description: NintendoParentalControlsPlayerSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: NintendoUpdateCoordinator,
+        device: Device,
+        player: str,
+        description: NintendoParentalControlsPlayerSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator, device=device, key=description.key)
+        self.entity_description = description
+        self.player_id = player
+        player_obj = device.get_player(player)
+        nickname = player_obj.nickname or ""
+        self._attr_translation_placeholders = {"nickname": nickname}
+        self._attr_unique_id = f"{device.device_id}_{player}_{description.key}"
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+        if self.player_id not in self._device.players:
+            return None
+        return self._device.get_player(self.player_id).player_image
+
+    @property
+    def native_value(self) -> int | float | None:
+        """Return the native value."""
+        if self.player_id not in self._device.players:
+            return None
+        return self.entity_description.value_fn(self._device.get_player(self.player_id))
