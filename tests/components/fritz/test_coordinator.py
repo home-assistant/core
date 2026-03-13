@@ -167,9 +167,8 @@ async def test_async_service_call_connection_reset(
     )
     fc_class_mock.return_value.services = {"WLANConfiguration1": MagicMock()}
 
-    result = await coordinator._async_service_call(
-        "WLANConfiguration", "1", "GetInfo"
-    )
+    result = await coordinator._async_service_call("WLANConfiguration", "1", "GetInfo")
+
 
     assert result == {}
     assert "Connection aborted by" in caplog.text
