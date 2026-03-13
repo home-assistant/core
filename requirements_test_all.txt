@@ -1451,6 +1451,9 @@ odp-amsterdam==6.1.2
 # homeassistant.components.ohme
 ohme==1.7.0
 
+# homeassistant.components.olarm
+olarmflowclient==1.0.5
+
 # homeassistant.components.ollama
 ollama==0.5.1
 
