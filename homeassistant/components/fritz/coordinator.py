@@ -407,7 +407,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             return self.connection.call_action(service, action_name, **kwargs)
         except RequestsConnectionError as ex:
             _LOGGER.warning(
-                "Connection aborted by %s during %s %s: %s",
+                "Connection error to %s while calling %s %s: %s",
                 self.host,
                 log_context,
                 action_name,
@@ -423,7 +423,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     self._call_action_with_connection_handling,
                     "X_AVM-DE_HostFilter:1",
                     "GetWANAccessByIP",
-                    log_context=f"X_AVM-DE_HostFilter:1 GetWANAccessByIP for {ip_address}",
+                    log_context=f"X_AVM-DE_HostFilter:1 for {ip_address}",
                     NewIPv4Address=ip_address,
                 )
             )
@@ -690,8 +690,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
         results = await self.hass.async_add_executor_job(
-            self.connection.call_action, "UserInterface:1", "X_AVM-DE_DoUpdate"
+            partial(
+                self._call_action_with_connection_handling,
+                "UserInterface:1",
+                "X_AVM-DE_DoUpdate",
+                log_context="firmware update",
+            )
         )
+        if not results:
+            return False
         return cast(bool, results["NewX_AVM-DE_UpdateState"])
 
     async def async_trigger_reboot(self) -> None:

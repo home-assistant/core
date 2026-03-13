@@ -170,4 +170,4 @@ async def test_async_service_call_connection_reset(
     result = await coordinator._async_service_call("WLANConfiguration", "1", "GetInfo")
 
     assert result == {}
-    assert "Connection aborted by" in caplog.text
+    assert "Connection error to" in caplog.text
