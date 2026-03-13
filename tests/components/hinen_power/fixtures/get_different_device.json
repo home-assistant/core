@@ -1,0 +1,10 @@
+[
+  {
+    "id": "different_device_id",
+    "deviceName": "Different Device",
+    "serialNumber": "DSN123456789",
+    "imgUrl": "https://example.com/device_image.jpg",
+    "createTime": "2023-01-01 12:00:00",
+    "updateTime": "2023-01-01 12:00:00"
+  }
+]
