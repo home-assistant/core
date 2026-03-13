@@ -3,6 +3,7 @@
   "name": "Apple iCloud",
   "codeowners": ["@Quentame", "@nzapponi"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/icloud",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
