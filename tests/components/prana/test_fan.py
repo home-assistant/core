@@ -200,4 +200,4 @@ async def test_fans_set_preset_mode(
         {ATTR_ENTITY_ID: target, ATTR_PRESET_MODE: "night"},
         blocking=True,
     )
-    mock_prana_api.set_switch.assert_called_with("night", value=True)
+    mock_prana_api.set_switch.assert_called_with("night", True)
