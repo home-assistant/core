@@ -90,7 +90,7 @@ async def test_config_entry_auth_failed_triggers_reauth(
             BSBLANAuthError("Authentication failed"),
             ConfigEntryState.SETUP_ERROR,
         ),
-        ("static_values", BSBLANError("General error"), ConfigEntryState.SETUP_ERROR),
+        ("static_values", BSBLANError("General error"), ConfigEntryState.LOADED),
     ],
 )
 async def test_config_entry_static_data_errors(
@@ -110,6 +110,37 @@ async def test_config_entry_static_data_errors(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_entry_loads_without_static_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test the config entry still loads when static values are not available."""
+    mock_bsblan.static_values.side_effect = BSBLANError("General error")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.static is None
+
+
+async def test_config_entry_general_setup_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test a general BSBLAN setup error results in setup failure."""
+    mock_bsblan.initialize.side_effect = BSBLANError("General error")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_coordinator_dhw_config_update_error(
