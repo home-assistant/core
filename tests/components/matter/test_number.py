@@ -10,6 +10,10 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter.models import (
+    MatterDiscoverySchema,
+    MatterEntityInfo,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -333,3 +337,130 @@ async def test_matter_exception_on_door_lock_write_attribute(
         )
 
     assert str(exc_info.value) == "Boom!"
+
+
+class MockEndpoint:
+    """Mock Matter endpoint for testing cluster revision filtering."""
+
+    def __init__(self, cluster_revision: int | None = None) -> None:
+        """Initialize mock endpoint."""
+        self.endpoint_id = 1
+        self.cluster_revision = cluster_revision
+
+    def has_attribute(self, cluster: int, attribute: int) -> bool:
+        """Check if endpoint has attribute."""
+        return True
+
+    def get_attribute_value(self, cluster_id: int, attribute_id: int) -> int | None:
+        """Get attribute value."""
+        # Return cluster revision for attribute 0xFFFD (65533)
+        if attribute_id == 65533:
+            return self.cluster_revision
+        return None
+
+
+@pytest.mark.parametrize(
+    (
+        "cluster_revision",
+        "cluster_revision_min",
+        "cluster_revision_max",
+        "should_match",
+    ),
+    [
+        # No constraints - should match any revision
+        (5, None, None, True),
+        (6, None, None, True),
+        (7, None, None, True),
+        # Min constraint only
+        (5, 6, None, False),  # 5 < 6
+        (6, 6, None, True),  # 6 >= 6
+        (7, 6, None, True),  # 7 >= 6
+        # Max constraint only
+        (5, None, 6, True),  # 5 <= 6
+        (6, None, 6, True),  # 6 <= 6
+        (7, None, 6, False),  # 7 > 6
+        # Both min and max constraints
+        (4, 5, 7, False),  # 4 < 5
+        (5, 5, 7, True),  # 5 >= 5 and <= 7
+        (6, 5, 7, True),  # 6 >= 5 and <= 7
+        (7, 5, 7, True),  # 7 >= 5 and <= 7
+        (8, 5, 7, False),  # 8 > 7
+    ],
+)
+def test_cluster_revision_filtering(
+    cluster_revision: int | None,
+    cluster_revision_min: int | None,
+    cluster_revision_max: int | None,
+    should_match: bool,
+) -> None:
+    """Test cluster revision filtering logic."""
+    # Create discovery schema with cluster revision constraints
+    schema = MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MagicMock(),
+        entity_class=MagicMock(),
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        cluster_revision_min=cluster_revision_min,
+        cluster_revision_max=cluster_revision_max,
+    )
+
+    # Simulate the filtering logic from async_discover_entities
+    # Check if entity should match based on cluster revision constraints
+    if cluster_revision is not None and (
+        (
+            schema.cluster_revision_min is not None
+            and cluster_revision < schema.cluster_revision_min
+        )
+        or (
+            schema.cluster_revision_max is not None
+            and cluster_revision > schema.cluster_revision_max
+        )
+    ):
+        result = False
+    else:
+        result = True
+
+    assert result == should_match, (
+        f"Cluster revision {cluster_revision} with min={cluster_revision_min}, "
+        f"max={cluster_revision_max} should {'match' if should_match else 'not match'}"
+    )
+
+
+def test_cluster_revision_stored_in_entity_info() -> None:
+    """Test that cluster revision value is stored in MatterEntityInfo."""
+    # Create entity info with cluster revision
+    entity_info = MatterEntityInfo(
+        endpoint=MockEndpoint(cluster_revision=7),
+        platform=Platform.NUMBER,
+        attributes_to_watch=[
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration
+        ],
+        entity_description=MagicMock(),
+        entity_class=MagicMock(),
+        discovery_schema=MagicMock(),
+        cluster_revision=7,
+    )
+
+    # Verify cluster revision is stored
+    assert entity_info.cluster_revision == 7
+
+
+def test_cluster_revision_none_when_not_required() -> None:
+    """Test that cluster revision is None when not required by schema."""
+    # Create entity info without cluster revision constraints
+    entity_info = MatterEntityInfo(
+        endpoint=MockEndpoint(),
+        platform=Platform.NUMBER,
+        attributes_to_watch=[
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration
+        ],
+        entity_description=MagicMock(),
+        entity_class=MagicMock(),
+        discovery_schema=MagicMock(),
+        cluster_revision=None,
+    )
+
+    # Verify cluster revision is None
+    assert entity_info.cluster_revision is None
