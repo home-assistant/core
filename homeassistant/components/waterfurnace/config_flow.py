@@ -107,6 +107,9 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             if not errors:
+                await self.async_set_unique_id(client.gwid)
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={**reauth_entry.data, **user_input},
