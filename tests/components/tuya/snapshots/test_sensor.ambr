@@ -141,8 +141,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -151,14 +157,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.pykascx9yfqrxtbgzcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.3dprinter_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': '3DPrinter Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.3dprinter_total_energy',
@@ -371,7 +379,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -781,8 +792,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -791,15 +808,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.ZDldMHS0tjmQgGxEzcadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ak1_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'AK1 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ak1_total_energy',
@@ -1611,8 +1629,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -1621,14 +1645,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.cju47ovcbeuapei2zcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aubess_cooker_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Aubess Cooker Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aubess_cooker_total_energy',
@@ -1840,8 +1866,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -1850,14 +1882,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.zjh9xhtm3gibs9kizcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Aubess Washing Machine Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aubess_washing_machine_total_energy',
@@ -2400,7 +2434,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4176,7 +4213,10 @@
     'object_id_base': 'Lifetime battery charge energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4233,7 +4273,10 @@
     'object_id_base': 'Lifetime battery discharge energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4290,7 +4333,10 @@
     'object_id_base': 'Lifetime inverter output energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4347,7 +4393,10 @@
     'object_id_base': 'Lifetime off-grid port energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4359,7 +4408,7 @@
     'supported_features': 0,
     'translation_key': 'lifetime_offgrid_port_energy',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxcuml_e_export_offgrid1',
-    'unit_of_measurement': 'Wh',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cbe_pro_2_lifetime_off_grid_port_energy-state]
@@ -4368,7 +4417,7 @@
       'device_class': 'energy',
       'friendly_name': 'CBE Pro 2 Lifetime off-grid port energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cbe_pro_2_lifetime_off_grid_port_energy',
@@ -4404,7 +4453,10 @@
     'object_id_base': 'Lifetime PV energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -4856,7 +4908,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -5197,8 +5252,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -5207,14 +5268,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.jgsopsvzh2ec3itjzcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.dehumidifier_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Dehumidifier  Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dehumidifier_total_energy',
@@ -5641,8 +5704,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -5651,15 +5720,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.l8uxezzkc7c5a0jhzcadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.droger_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'droger Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.droger_total_energy',
@@ -5989,7 +6059,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -6162,8 +6235,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -6172,15 +6251,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.a3qtb7pulkcc6jdjqldadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.eau_chaude_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Eau Chaude Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.eau_chaude_total_energy',
@@ -6807,7 +6887,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -6980,8 +7063,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -6990,14 +7079,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.cq4hzlrnqn4qi0mqzcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Elivco Kitchen Socket Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.elivco_kitchen_socket_total_energy',
@@ -7209,8 +7300,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -7219,14 +7316,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.pz2xuth8hczv6zrwzcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.elivco_tv_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Elivco TV Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.elivco_tv_total_energy',
@@ -7492,8 +7591,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -7502,14 +7607,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.51tdkcsamisw9ukycpadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.framboisier_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Framboisier Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.framboisier_total_energy',
@@ -7993,7 +8100,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -8891,8 +9001,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -8901,14 +9017,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.sxa4ealyi9cotiugzcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ha_socket_delta_test_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'HA Socket Delta Test Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ha_socket_delta_test_total_energy',
@@ -9933,7 +10051,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -10326,8 +10447,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -10336,14 +10463,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.vx2owjsg86g2ys93zcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.ineox_sp2_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Ineox SP2 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ineox_sp2_total_energy',
@@ -10663,7 +10792,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -10720,7 +10852,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -11425,8 +11560,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -11435,15 +11576,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.g7af6lrt4miugbstcpadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.keller_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Keller Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.keller_total_energy',
@@ -11758,7 +11900,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -11991,8 +12136,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -12001,15 +12152,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.uvh6oeqrfliovfiwzcadd_ele',
-    'unit_of_measurement': '度',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.licht_drucker_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Licht drucker Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '度',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.licht_drucker_total_energy',
@@ -13082,7 +13234,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -13139,7 +13294,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -13373,7 +13531,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -13430,7 +13591,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -14075,7 +14239,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -14781,8 +14948,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -14791,15 +14964,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.uc9fL2NpR79iCzGIzcadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.n4_auto_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'N4-Auto Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.n4_auto_total_energy',
@@ -15176,8 +15350,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -15186,14 +15366,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.2x473nefusdo7af6zcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.office_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Office Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_total_energy',
@@ -15820,7 +16002,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -16795,7 +16980,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -16909,7 +17097,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -17460,7 +17651,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -19030,7 +19224,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -19263,8 +19460,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -19273,14 +19476,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.4q5c2am8n1bwb6bszcadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.socket4_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Socket4 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.socket4_total_energy',
@@ -19596,7 +19801,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -19926,7 +20134,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -22340,7 +22551,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -23128,8 +23342,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -23138,15 +23358,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.dNBnmtjLU8eRWHf0zcadd_ele',
-    'unit_of_measurement': '',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.weihnachten3_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': 'Weihnachten3 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': '',
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.weihnachten3_total_energy',
@@ -23359,7 +23580,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -23593,7 +23817,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -23650,7 +23877,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -23764,7 +23994,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -24425,7 +24658,10 @@
     'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -24539,7 +24775,10 @@
     'object_id_base': 'Total production',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -24712,8 +24951,14 @@
     'name': None,
     'object_id_base': 'Total energy',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total energy',
     'platform': 'tuya',
@@ -24722,14 +24967,16 @@
     'supported_features': 0,
     'translation_key': 'total_energy',
     'unique_id': 'tuya.fcdadqsiax2gvnt0qldadd_ele',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'energy',
       'friendly_name': '一路带计量磁保持通断器 Total energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_total_energy',
