@@ -63,8 +63,6 @@ def convert_exception[**_P, _R](
 class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     """Representation of a media device."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
         """Initialize device."""
         super().__init__(coordinator)
