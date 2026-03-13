@@ -91,6 +91,37 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_flow_invalid_url(
+    hass: HomeAssistant,
+    mock_autoskope_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test config flow rejects invalid URL with recovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            SECTION_ADVANCED_SETTINGS: {
+                CONF_HOST: "not-a-valid-url",
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_url"}
+
+    # Recovery: provide a valid URL
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

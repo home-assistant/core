@@ -1,6 +1,5 @@
 """Test Autoskope device tracker."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from autoskope_client.models import CannotConnect, InvalidAuth, Vehicle, VehiclePosition
@@ -98,7 +97,7 @@ async def test_entity_unavailable_on_coordinator_error(
     # Simulate connection error on next update
     mock_autoskope_client.get_vehicles.side_effect = CannotConnect("Connection lost")
 
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -119,7 +118,7 @@ async def test_entity_recovers_after_error(
 
     # Simulate error
     mock_autoskope_client.get_vehicles.side_effect = CannotConnect("Connection lost")
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -128,7 +127,7 @@ async def test_entity_recovers_after_error(
     # Recover
     mock_autoskope_client.get_vehicles.side_effect = None
     mock_autoskope_client.get_vehicles.return_value = mock_vehicles
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -152,7 +151,7 @@ async def test_reauth_success(
         mock_vehicles,
     ]
 
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -175,7 +174,7 @@ async def test_reauth_failure(
     mock_autoskope_client.get_vehicles.side_effect = InvalidAuth("Token expired")
     mock_autoskope_client.authenticate.side_effect = InvalidAuth("Invalid credentials")
 
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -223,7 +222,7 @@ async def test_vehicle_name_update(
         )
     ]
 
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

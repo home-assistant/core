@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import section
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -53,29 +54,35 @@ class AutoskopeConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME].lower()
             host = user_input[SECTION_ADVANCED_SETTINGS][CONF_HOST].lower()
 
-            await self.async_set_unique_id(f"{username}@{host}")
-            self._abort_if_unique_id_configured()
-
             try:
-                async with AutoskopeApi(
-                    host=host,
-                    username=username,
-                    password=user_input[CONF_PASSWORD],
-                ):
-                    pass
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            else:
-                return self.async_create_entry(
-                    title=f"Autoskope ({username})",
-                    data={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        CONF_HOST: host,
-                    },
-                )
+                cv.url(host)
+            except vol.Invalid:
+                errors["base"] = "invalid_url"
+
+            if not errors:
+                await self.async_set_unique_id(f"{username}@{host}")
+                self._abort_if_unique_id_configured()
+
+                try:
+                    async with AutoskopeApi(
+                        host=host,
+                        username=username,
+                        password=user_input[CONF_PASSWORD],
+                    ):
+                        pass
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                else:
+                    return self.async_create_entry(
+                        title=f"Autoskope ({username})",
+                        data={
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                            CONF_HOST: host,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
