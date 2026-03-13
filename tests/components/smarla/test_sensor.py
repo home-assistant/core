@@ -101,8 +101,6 @@ async def test_sensor_state_update(
 
     test_value, expected_state = entity_info["test"]
 
-    mock_sensor_property.get.return_value = test_value
-
     # Set new value and trigger update
     mock_sensor_property.get.return_value = test_value
     await update_property_listeners(mock_sensor_property)
