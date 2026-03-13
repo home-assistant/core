@@ -33,7 +33,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
@@ -419,7 +423,7 @@ def _async_check_legacy_entity_repair(
 
     @callback
     def _async_do_check(hass: HomeAssistant) -> None:
-        """Create a repair issue if a deprecated legacy door state entity is used."""
+        """Create or delete a repair issue for a deprecated legacy door state entity."""
         ent_reg = er.async_get(hass)
         if entity.unique_id is None:
             return
@@ -429,14 +433,38 @@ def _async_check_legacy_entity_repair(
         if entity_id is None:
             return
 
+        issue_id = f"deprecated_legacy_door_state.{entity_id}"
+
+        # Delete any stale repair issue if the entity is disabled or missing —
+        # the user has already dealt with it.
         entity_entry = ent_reg.async_get(entity_id)
         if entity_entry is None or entity_entry.disabled:
+            async_delete_issue(hass, DOMAIN, issue_id)
             return
 
         entity_automations = automations_with_entity(hass, entity_id)
         entity_scripts = scripts_with_entity(hass, entity_id)
 
+        # Delete any stale repair issue if the entity is no longer referenced
+        # in any automation or script.
         if not entity_automations and not entity_scripts:
+            async_delete_issue(hass, DOMAIN, issue_id)
+            return
+
+        opening_state_value = get_opening_state_notification_value(entity.info.node)
+        if opening_state_value is None:
+            async_delete_issue(hass, DOMAIN, issue_id)
+            return
+        opening_state_unique_id = (
+            f"{driver.controller.home_id}.{opening_state_value.value_id}"
+        )
+        opening_state_entity_id = ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
+        )
+        # Delete any stale repair issue if the replacement opening state sensor
+        # no longer exists for some reason
+        if opening_state_entity_id is None:
+            async_delete_issue(hass, DOMAIN, issue_id)
             return
 
         items = [
@@ -449,22 +477,10 @@ def _async_check_legacy_entity_repair(
             if (item := ent_reg.async_get(eid))
         ]
 
-        opening_state_value = get_opening_state_notification_value(entity.info.node)
-        if opening_state_value is None:
-            return
-        opening_state_unique_id = (
-            f"{driver.controller.home_id}.{opening_state_value.value_id}"
-        )
-        opening_state_entity_id = ent_reg.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, opening_state_unique_id
-        )
-        if opening_state_entity_id is None:
-            return
-
         async_create_issue(
             hass,
             DOMAIN,
-            f"deprecated_legacy_door_state.{entity_id}",
+            issue_id,
             is_fixable=False,
             is_persistent=False,
             severity=IssueSeverity.WARNING,

@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1087,3 +1088,64 @@ async def test_hoppe_custom_tilt_sensor_no_repair_issue(
         DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
     )
     assert issue is None
+
+
+async def test_legacy_door_state_stale_repair_issue_cleaned_up(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    client: MagicMock,
+    hoppe_ehandle_connectsense_state: NodeDataType,
+) -> None:
+    """Test that a stale repair issue is deleted when there are no automations."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
+    client.driver.controller.nodes[node.node_id] = node
+    home_id = client.driver.controller.home_id
+
+    # Pre-register the legacy entity as enabled.
+    unique_id = f"{home_id}.20-113-0-Access Control-Door state.22"
+    entity_entry = entity_registry.async_get_or_create(
+        BINARY_SENSOR_DOMAIN,
+        DOMAIN,
+        unique_id,
+        suggested_object_id="ehandle_connectsense_window_door_is_open",
+        original_name="Window/door is open",
+    )
+    entity_id = entity_entry.entity_id
+
+    # Seed a stale repair issue as if it had been created in a previous run.
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_legacy_door_state.{entity_id}",
+        is_fixable=False,
+        is_persistent=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_legacy_door_state",
+        translation_placeholders={
+            "entity_id": entity_id,
+            "entity_name": "Window/door is open",
+            "opening_state_entity_id": "sensor.ehandle_connectsense_opening_state",
+            "items": "- [test](/config/automation/edit/test_automation)",
+        },
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+        )
+        is not None
+    )
+
+    # Load the integration with no automation referencing the legacy entity.
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Stale issue should have been cleaned up.
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"deprecated_legacy_door_state.{entity_id}"
+        )
+        is None
+    )
