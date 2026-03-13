@@ -99,7 +99,9 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         self._switch_count = switch_count
 
         # Include index in unique_id for devices with multiple switches
-        unique_key = f"{description.key}{index}" if index else description.key
+        unique_key = (
+            f"{description.key}{index}" if self._switch_count > 1 else description.key
+        )
 
         self._attr_unique_id = f"{self._attr_unique_id}_{unique_key}".lower()
 
