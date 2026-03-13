@@ -58,6 +58,14 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
         )
 
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        for account in self.coordinator.data.accounts:
+            if account.id == self._account.id:
+                self._account = account
+                break
+        super()._handle_coordinator_update()
+
 
 class FireflyCategoryBaseEntity(FireflyBaseEntity):
     """Base class for Firefly III category entity."""
@@ -84,6 +92,14 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
         )
 
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        for category in self.coordinator.data.category_details:
+            if category.id == self._category.id:
+                self._category = category
+                break
+        super()._handle_coordinator_update()
+
 
 class FireflyBudgetBaseEntity(FireflyBaseEntity):
     """Base class for Firefly III budget entity."""
@@ -109,3 +125,11 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
         )
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        for budget in self.coordinator.data.budgets:
+            if budget.id == self._budget.id:
+                self._budget = budget
+                break
+        super()._handle_coordinator_update()
