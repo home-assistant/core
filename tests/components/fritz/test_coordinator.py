@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.components.fritz.const import (
     CONF_FEATURE_DEVICE_TRACKING,
@@ -141,3 +142,34 @@ async def test_no_software_version(
     )
     assert device
     assert device.sw_version == "string_version_not_number"
+
+
+async def test_async_service_call_connection_reset(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test _async_service_call handles RequestsConnectionError gracefully."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    coordinator: AvmWrapper = entry.runtime_data
+
+    fc_class_mock.return_value.call_action.side_effect = RequestsConnectionError(
+        "Connection reset by peer"
+    )
+    fc_class_mock.return_value.services = {"WLANConfiguration1": MagicMock()}
+
+    result = await coordinator._async_service_call(
+        "WLANConfiguration", "1", "GetInfo"
+    )
+
+    assert result == {}
+    assert "Connection aborted by" in caplog.text
