@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ColorMode,
+    HomeAssistantError,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -146,12 +147,19 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         if attribute_adjustment_only:
             return
         # send turn_on command to pyvesync api
-        await self.device.turn_on()
+        if not await self.device.turn_on():
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Unknown error turning on device, no response.")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.device.turn_off()
+        if not await self.device.turn_off():
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Unknown error turning off device, no response.")
+
         self.async_write_ha_state()
 
 

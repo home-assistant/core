@@ -13,7 +13,10 @@ ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
-ENTITY_FAN = "fan.SmartTowerFan"
+ENTITY_FAN = "fan.smarttowerfan"
+
+ENTITY_LIGHT = "light.temperature_light"
+
 
 ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
 

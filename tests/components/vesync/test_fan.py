@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import ALL_DEVICE_NAMES, ENTITY_FAN, mock_devices_response
@@ -65,16 +65,15 @@ async def test_fan_state(
         (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_turn_on_off_success(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
 ) -> None:
     """Test turn_on and turn_off method."""
-
-    mock_devices_response(aioclient_mock, "SmartTowerFan")
 
     with (
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
@@ -107,9 +106,10 @@ async def test_turn_on_off_success(
         ),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_turn_on_off_raises_error(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     action: str,
     command: str,
 ) -> None:
@@ -150,9 +150,10 @@ async def test_turn_on_off_raises_error(
         ("auto", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode"),
     ],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_set_preset_mode(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     api_response: bool,
     expectation,
     preset_mode: str,
@@ -161,6 +162,50 @@ async def test_set_preset_mode(
     """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
 
     # If VeSyncTowerFan.mode fails (returns False), then HomeAssistantError is raised
+    with (
+        expectation,
+        patch(
+            patch_target,
+            return_value=api_response,
+        ) as method_mock,
+    ):
+        with patch(
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: preset_mode},
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        method_mock.assert_called_once()
+        update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(False, pytest.raises(ServiceValidationError))],
+)
+@pytest.mark.parametrize(
+    ("preset_mode", "patch_target"),
+    [
+        ("wrong_normal", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode"),
+    ],
+)
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
+async def test_set_preset_mode_service_mode_failure(
+    hass: HomeAssistant,
+    device_config_entry: MockConfigEntry,
+    api_response: bool,
+    expectation,
+    preset_mode: str,
+    patch_target: str,
+) -> None:
+    """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
+
+    # Pass a preset mode that isn't valid.  Should raise ServiceValidationError.
     with (
         expectation,
         patch(
@@ -194,9 +239,10 @@ async def test_set_preset_mode(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
+@pytest.mark.parametrize("device_config_entry", ["SmartTowerFan"], indirect=True)
 async def test_oscillation_success(
     hass: HomeAssistant,
-    fan_config_entry: MockConfigEntry,
+    device_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
