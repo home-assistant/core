@@ -20,7 +20,7 @@ MOCK_TURN_ON = {
     "service": "switch.turn_on",
     "data": {"entity_id": "switch.test"},
 }
-MOCK_ENTITY_ID = "media_player.arcam_fmj_127_0_0_1_zone_1"
+MOCK_ENTITY_ID = "media_player.arcam_fmj_127_0_0_1"
 MOCK_UUID = "456789abcdef"
 MOCK_UDN = f"uuid:01234567-89ab-cdef-0123-{MOCK_UUID}"
 MOCK_NAME = f"{DEFAULT_NAME} ({MOCK_HOST})"
