@@ -693,8 +693,40 @@ async def test_user_step_async_client_headers(
     )
 
 
-@pytest.mark.parametrize("status_code", [401, 403])
-async def test_user_step_invalid_auth(hass: HomeAssistant, status_code: int) -> None:
+@pytest.mark.parametrize(
+    ("status_code", "error_message", "user_input"),
+    [
+        (
+            401,
+            "Unauthorized",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
+            403,
+            "Unauthorized",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
+            403,
+            "Forbidden",
+            {
+                CONF_URL: "http://localhost:11434",
+            },
+        ),
+    ],
+)
+async def test_user_step_invalid_auth(
+    hass: HomeAssistant,
+    status_code: int,
+    error_message: str,
+    user_input: dict[str, str],
+) -> None:
     """Test invalid_auth error when ollama returns HTTP 401/403."""
     with patch(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient"
@@ -703,7 +735,7 @@ async def test_user_step_invalid_auth(hass: HomeAssistant, status_code: int) -> 
         mock_async_client.return_value = mock_client_instance
 
         mock_client_instance.list.side_effect = ResponseError(
-            error="Unauthorized", status_code=status_code
+            error=error_message, status_code=status_code
         )
 
         result = await hass.config_entries.flow.async_init(
@@ -713,39 +745,7 @@ async def test_user_step_invalid_auth(hass: HomeAssistant, status_code: int) -> 
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_URL: "http://localhost:11434",
-                CONF_API_KEY: "my-secret-token",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_auth"}
-
-
-async def test_user_step_invalid_auth_without_api_key(hass: HomeAssistant) -> None:
-    """Test invalid_auth error when ollama returns HTTP 401/403 without api_key."""
-    with patch(
-        "homeassistant.components.ollama.config_flow.ollama.AsyncClient"
-    ) as mock_async_client:
-        mock_client_instance = AsyncMock()
-        mock_async_client.return_value = mock_client_instance
-
-        mock_client_instance.list.side_effect = ResponseError(
-            error="Forbidden", status_code=403
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_URL: "http://localhost:11434",
-            },
+            user_input=user_input,
         )
         await hass.async_block_till_done()
 
