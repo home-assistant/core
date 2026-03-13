@@ -164,6 +164,14 @@
       }
     },
     "select": {
+      "dhw_ovrd_mode": {
+        "name": "Hot water override",
+        "state": {
+          "force_off": "Force off",
+          "force_on": "Force on",
+          "override_disabled": "[%key:common::state::disabled%]"
+        }
+      },
       "gpio_mode_n": {
         "name": "GPIO {gpio_id} mode",
         "state": {
