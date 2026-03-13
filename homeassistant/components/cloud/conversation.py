@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONVERSATION_ENTITY_UNIQUE_ID, DATA_CLOUD, DOMAIN
+from .const import CONF_PROMPT, CONVERSATION_ENTITY_UNIQUE_ID, DATA_CLOUD, DOMAIN
 from .entity import BaseCloudLLMEntity
 
 
@@ -57,7 +57,7 @@ class CloudConversationEntity(
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
                 llm.LLM_API_ASSIST,
-                None,
+                self._entry.options.get(CONF_PROMPT),
                 user_input.extra_system_prompt,
             )
         except conversation.ConverseError as err:
