@@ -349,7 +349,14 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert entry.options == {}
 
 
-async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ResponseError(error="Unauthorized", status_code=401), "invalid_auth"),
+        (ConnectError(message="Connection failed"), "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> None:
     """Test reauthentication flow when authentication fails."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -368,51 +375,18 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
-        side_effect=ResponseError(error="Unauthorized", status_code=401),
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_API_KEY: "still-invalid-api-key",
+                CONF_API_KEY: "other-api-key",
             },
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_reauth_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test reauthentication flow when server cannot be reached."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_URL: "http://localhost:11434",
-            CONF_API_KEY: "old-api-key",
-        },
-        version=3,
-        minor_version=3,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch(
-        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
-        side_effect=ConnectError(message="Connection failed"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "new-api-key",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
 
 @pytest.mark.parametrize(
