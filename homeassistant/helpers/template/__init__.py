@@ -406,6 +406,33 @@ class Template:
             except jinja2.TemplateError as err:
                 raise TemplateError(err) from err
 
+    @overload
+    def render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: Literal[True] = True,
+        limited: bool = False,
+        **kwargs: Any,
+    ) -> Any: ...
+
+    @overload
+    def render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: Literal[False] = False,
+        limited: bool = False,
+        **kwargs: Any,
+    ) -> str: ...
+
+    @overload
+    def render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        limited: bool = False,
+        **kwargs: Any,
+    ) -> str | Any: ...
+
     def render(
         self,
         variables: TemplateVarsType = None,
@@ -427,6 +454,39 @@ class Template:
             self.hass.loop,
             partial(self.async_render, variables, parse_result, limited, **kwargs),
         ).result()
+
+    @overload
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: Literal[True] = True,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+        **kwargs: Any,
+    ) -> Any: ...
+
+    @overload
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: Literal[False] = False,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+        **kwargs: Any,
+    ) -> str: ...
+
+    @overload
+    def async_render(
+        self,
+        variables: TemplateVarsType = None,
+        parse_result: bool = True,
+        limited: bool = False,
+        strict: bool = False,
+        log_fn: Callable[[int, str], None] | None = None,
+        **kwargs: Any,
+    ) -> str | Any: ...
 
     @callback
     def async_render(

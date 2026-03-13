@@ -326,7 +326,7 @@ def async_prepare_call_from_config(
 
     domain, _, service = domain_service.partition(".")
 
-    target = {}
+    target: dict[str, Any] = {}
     if CONF_TARGET in config:
         conf = config[CONF_TARGET]
         try:
