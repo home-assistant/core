@@ -126,8 +126,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                     airtouch_device.name,
                     device.identifiers,
                 )
+                domain, unique_id = next(iter(device.identifiers))
+                if domain == "airtouch5":
+                    if unique_id.startswith("zone_"):
+                        zone_number = unique_id.split("_")[1]
+                        new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
+                    elif unique_id.startswith("ac_"):
+                        new_unique_id = f"{airtouch_device.system_id}"
+                    else:
+                        continue
+                elif domain == "cover":
+                    zone_number = unique_id.split("_")[1]
+                    new_unique_id = (
+                        f"{airtouch_device.system_id}_{zone_number}_open_percentage"
+                    )
+                else:
+                    continue
                 device_registry.async_update_device(
-                    device.id, new_identifiers={(DOMAIN, airtouch_device.system_id)}
+                    device.id, new_identifiers={(DOMAIN, new_unique_id)}
                 )
 
         hass.config_entries.async_update_entry(
