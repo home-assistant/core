@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "authentication_failed": "Authentication failed. Check your username and access token.",
+      "client_initialization_failed": "Failed to initialize Free Mobile client. Check your username and access token.",
+      "test_sms_failed": "Failed to send test SMS. Check that your Free Mobile account allows notifications."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "Access Token",
+          "username": "Username"
+        },
+        "data_description": {
+          "access_token": "Find it in your Free Mobile account settings",
+          "username": "Your Free Mobile credential, this is not your phone number"
+        },
+        "description": "Enter your Free Mobile credentials to enable notifications. You can find your username and access token in your Free Mobile account settings.\n\nA test SMS will be sent to verify your credentials."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_import_failed": {
+      "title": "YAML configuration for Free Mobile could not be imported",
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and an existing YAML configuration could not be imported. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+    },
+    "deprecated_yaml_import_issue_removed_yaml": {
+      "title": "YAML configuration for Free Mobile is deprecated",
+      "description": "Configuring Free Mobile notifications via YAML is deprecated and will be removed in a future release. Remove the YAML configuration and set up Free Mobile notifications via the user interface instead."
+    }
+  }
+}
