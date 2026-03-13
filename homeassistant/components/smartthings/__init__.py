@@ -496,13 +496,12 @@ def create_devices(
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
             if device.device.hub.hub_eui:
-                kwargs.setdefault(ATTR_CONNECTIONS, set()).update(
-                    {
-                        (
-                            dr.CONNECTION_ZIGBEE,
-                            format_zigbee_address(device.device.hub.hub_eui),
-                        )
-                    }
+                connections = kwargs.setdefault(ATTR_CONNECTIONS, set())
+                connections.add(
+                    (
+                        dr.CONNECTION_ZIGBEE,
+                        format_zigbee_address(device.device.hub.hub_eui),
+                    )
                 )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
