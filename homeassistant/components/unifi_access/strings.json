@@ -24,9 +24,6 @@
     }
   },
   "exceptions": {
-    "lock_not_supported": {
-      "message": "The UniFi Access API does not support locking doors."
-    },
     "unlock_failed": {
       "message": "Failed to unlock the door."
     }

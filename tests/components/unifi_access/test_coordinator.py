@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 import pytest
+from unifi_access_api import DoorLockRelayStatus
 from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
@@ -16,10 +17,12 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
-from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+FRONT_DOOR_ENTITY = "button.front_door"
+BACK_DOOR_ENTITY = "button.back_door"
 
 
 def _get_ws_handlers(
@@ -67,14 +70,14 @@ async def test_ws_disconnect_marks_entities_unavailable(
     mock_client: MagicMock,
 ) -> None:
     """Test WebSocket disconnect marks entities as unavailable."""
-    assert hass.states.get("lock.front_door").state == LockState.LOCKED
+    assert hass.states.get(FRONT_DOOR_ENTITY).state != "unavailable"
 
     on_disconnect = _get_on_disconnect(mock_client)
     on_disconnect()
     await hass.async_block_till_done()
 
-    assert hass.states.get("lock.front_door").state == "unavailable"
-    assert hass.states.get("lock.back_door").state == "unavailable"
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "unavailable"
+    assert hass.states.get(BACK_DOOR_ENTITY).state == "unavailable"
 
 
 async def test_ws_reconnect_restores_entities(
@@ -88,13 +91,13 @@ async def test_ws_reconnect_restores_entities(
 
     on_disconnect()
     await hass.async_block_till_done()
-    assert hass.states.get("lock.front_door").state == "unavailable"
+    assert hass.states.get(FRONT_DOOR_ENTITY).state == "unavailable"
 
     on_connect()
     await hass.async_block_till_done()
 
-    assert hass.states.get("lock.front_door").state == LockState.LOCKED
-    assert hass.states.get("lock.back_door").state == LockState.UNLOCKED
+    assert hass.states.get(FRONT_DOOR_ENTITY).state != "unavailable"
+    assert hass.states.get(BACK_DOOR_ENTITY).state != "unavailable"
 
 
 async def test_ws_connect_no_refresh_when_healthy(
@@ -119,28 +122,28 @@ async def test_ws_connect_no_refresh_when_healthy(
     ],
 )
 @pytest.mark.parametrize(
-    ("door_id", "entity_id", "lock_value", "expected_state"),
+    ("door_id", "lock_value", "expected_relay"),
     [
-        ("door-001", "lock.front_door", "unlocked", LockState.UNLOCKED),
-        ("door-002", "lock.back_door", "locked", LockState.LOCKED),
+        ("door-001", "unlocked", DoorLockRelayStatus.UNLOCK),
+        ("door-002", "locked", DoorLockRelayStatus.LOCK),
     ],
 )
-async def test_ws_update_changes_lock_state(
+async def test_ws_update_changes_door_state(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
     event: str,
     door_id: str,
-    entity_id: str,
     lock_value: str,
-    expected_state: str,
+    expected_relay: DoorLockRelayStatus,
 ) -> None:
-    """Test WebSocket message updates entity lock state."""
+    """Test WebSocket message updates coordinator door data."""
     handlers = _get_ws_handlers(mock_client)
     await handlers[event](_make_ws_message(event, door_id, lock_value))
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == expected_state
+    coordinator = init_integration.runtime_data
+    assert coordinator.data[door_id].door_lock_relay_status == expected_relay
 
 
 @pytest.mark.parametrize(
@@ -177,8 +180,11 @@ async def test_ws_update_ignored(
     message: LocationUpdateV2,
 ) -> None:
     """Test WebSocket update is ignored for unknown door or None state."""
+    coordinator = init_integration.runtime_data
+    original_data = dict(coordinator.data)
+
     handlers = _get_ws_handlers(mock_client)
     await handlers["access.data.device.location_update_v2"](message)
     await hass.async_block_till_done()
 
-    assert hass.states.get("lock.front_door").state == LockState.LOCKED
+    assert coordinator.data["door-001"] == original_data["door-001"]
