@@ -63,7 +63,7 @@ async def test_unlock_door_api_error(
     """Test unlocking a door raises on API error."""
     mock_client.unlock_door.side_effect = ApiError("unlock failed")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Failed to unlock the door"):
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
@@ -78,7 +78,7 @@ async def test_lock_not_supported(
     mock_client: MagicMock,
 ) -> None:
     """Test locking a door raises HomeAssistantError."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="does not support locking"):
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
