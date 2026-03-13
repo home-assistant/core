@@ -541,13 +541,10 @@ def create_devices(
                 device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
             ) is not None:
                 connections: set[tuple[str, str]] = set()
-                if wifi_mac := cast(
-                    dict[str, str], device_status[Attribute.STATUS].value
-                ).get("wifiMac"):
+                status = cast(dict[str, str], device_status[Attribute.STATUS].value)
+                if wifi_mac := status.get("wifiMac"):
                     connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
-                if bluetooth_address := cast(
-                    dict[str, str], device_status[Attribute.STATUS].value
-                ).get("btAddr"):
+                if bluetooth_address := status.get("btAddr"):
                     connections.add((dr.CONNECTION_BLUETOOTH, bluetooth_address))
                 if connections:
                     kwargs.setdefault(ATTR_CONNECTIONS, set()).update(connections)
