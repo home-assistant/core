@@ -77,6 +77,14 @@ def test_longitude_returns_none_when_lng_is_none() -> None:
     assert sensor.longitude is None
 
 
+def test_latitude_longitude_returns_zero_when_position_is_at_origin() -> None:
+    """Test that lat/lng return 0.0 (not None) when the device is at exactly (0.0, 0.0)."""
+    tp = make_trackpoint(device_id=1, lat=0.0, lng=0.0)
+    sensor = _make_sensor(1, positions={1: tp})
+    assert sensor.latitude == pytest.approx(0.0)
+    assert sensor.longitude == pytest.approx(0.0)
+
+
 def test_source_type_is_gps() -> None:
     """Test that the source type is reported as GPS."""
     sensor = _make_sensor(1)

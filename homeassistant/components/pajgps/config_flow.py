@@ -53,8 +53,6 @@ async def _validate_credentials(
 class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for PAJ GPS Tracker."""
 
-    data: dict[str, Any] | None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -62,17 +60,16 @@ class PajGPSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=CONFIG_SCHEMA)
 
-        self.data = user_input
         # Normalize email for duplicate protection and storage
-        normalized_email = self.data[CONF_EMAIL].strip().lower()
-        self.data[CONF_EMAIL] = normalized_email
+        normalized_email = user_input[CONF_EMAIL].strip().lower()
+        user_input[CONF_EMAIL] = normalized_email
         self._async_abort_entries_match({CONF_EMAIL: normalized_email})
         # Validate credentials by attempting a real login
         error = await _validate_credentials(
-            self.data[CONF_EMAIL], self.data[CONF_PASSWORD], self.hass
+            user_input[CONF_EMAIL], user_input[CONF_PASSWORD], self.hass
         )
         if error is not None:
             return self.async_show_form(
                 step_id="user", data_schema=CONFIG_SCHEMA, errors={"base": error}
             )
-        return self.async_create_entry(title=normalized_email, data=self.data)
+        return self.async_create_entry(title=normalized_email, data=user_input)
