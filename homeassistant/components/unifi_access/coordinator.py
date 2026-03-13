@@ -84,6 +84,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
     def _on_ws_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
         _LOGGER.debug("WebSocket disconnected from UniFi Access")
+        self.async_set_update_error(
+            UpdateFailed("WebSocket disconnected from UniFi Access")
+        )
 
     async def _handle_location_update(self, msg: WebsocketMessage) -> None:
         """Handle location_update_v2 messages."""
