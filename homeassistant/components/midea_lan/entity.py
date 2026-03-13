@@ -1,7 +1,7 @@
 """Base entity for Midea Lan."""
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from midealocal.device import MideaDevice
 
@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .devices import MIDEA_DEVICES
+from .device_catalog import MIDEA_DEVICE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,27 +24,10 @@ class MideaEntity(Entity):
         """Initialize Midea base entity."""
         self._device = device
         self._device.register_update(self.update_state)
-        self._config = cast(
-            "dict",
-            MIDEA_DEVICES[self._device.device_type]["entities"],
-        )[entity_key]
         self._entity_key = entity_key
         self._unique_id = f"{DOMAIN}.{self._device.device_id}_{entity_key}"
         self.entity_id = self._unique_id
         self._device_name = self._device.name
-
-        self._attr_translation_key = self._config.get("translation_key")
-        self._attr_has_entity_name = self._config.get("has_entity_name", False)
-        if self.has_entity_name:
-            if self._config.get("name") is None:
-                self._attr_name = None
-        else:
-            # old behavior
-            self._attr_name = (
-                f"{self._device_name} {self._config.get('name')}"
-                if "name" in self._config
-                else self._device_name
-            )
 
     @property
     def device(self) -> MideaDevice:
@@ -54,14 +37,14 @@ class MideaEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "manufacturer": "Midea",
-            "model": f"{MIDEA_DEVICES[self._device.device_type]['name']} "
-            f"{self._device.model}"
-            f" ({self._device.subtype})",
-            "identifiers": {(DOMAIN, str(self._device.device_id))},
-            "name": self._device_name,
-        }
+        return DeviceInfo(
+            manufacturer="Midea",
+            model=MIDEA_DEVICE_NAMES.get(self._device.device_type, "Unknown"),
+            identifiers={(DOMAIN, str(self._device.device_id))},
+            name=self._device_name,
+            model_id=str(self._device.device_type),
+            hw_version=str(self._device.subtype),
+        )
 
     @property
     def unique_id(self) -> str:
@@ -77,11 +60,6 @@ class MideaEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         return bool(self._device.available)
-
-    @property
-    def icon(self) -> str:
-        """Return entity icon."""
-        return cast("str", self._config.get("icon"))
 
     @callback
     def update_state(self, status: Any) -> None:

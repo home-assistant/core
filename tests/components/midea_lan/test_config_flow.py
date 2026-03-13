@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Self
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from midealocal.const import ProtocolVersion
+from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import AuthException
 from midealocal.exceptions import SocketException
 import pytest
@@ -19,12 +19,11 @@ from homeassistant.components.midea_lan.const import (
     CONF_ACCOUNT,
     CONF_KEY,
     CONF_MODEL,
-    CONF_REFRESH_INTERVAL,
     CONF_SERVER,
     CONF_SUBTYPE,
     DOMAIN,
 )
-from homeassistant.components.midea_lan.devices import MIDEA_DEVICES
+from homeassistant.components.midea_lan.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_CUSTOMIZE,
@@ -49,7 +48,7 @@ TEST_DEVICE_ID = 12345678
 TEST_IP_ADDRESS = "192.0.2.10"
 TEST_PORT = 6444
 TEST_PROTOCOL = ProtocolVersion.V3
-TEST_TYPE = next(iter(MIDEA_DEVICES))
+TEST_TYPE = next(iter(MIDEA_DEVICE_NAMES))
 TEST_MODEL = "MSAGBU-09HRFN8"
 TEST_SUBTYPE = 0
 TEST_NAME = "Bedroom AC"
@@ -831,7 +830,6 @@ async def test_options_flow(flow: MideaLanConfigFlow) -> None:
         domain=DOMAIN,
         data={CONF_TYPE: TEST_TYPE, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
         options={
-            CONF_REFRESH_INTERVAL: 30,
             CONF_SENSORS: [],
             CONF_SWITCHES: [],
             CONF_CUSTOMIZE: "",
@@ -856,20 +854,8 @@ def test_async_get_options_flow() -> None:
     assert isinstance(options_flow, MideaLanOptionsFlowHandler)
 
 
-async def test_options_flow_filters_and_schema_branches() -> None:
-    """Test options init filtering and schema extension branches."""
-    fake_devices = {
-        TEST_TYPE: {
-            "entities": {
-                "sensor_attr": {"type": "sensor", "name": "Sensor attr"},
-                "switch_attr": {
-                    "type": "switch",
-                    "name": "Switch attr",
-                    "default": False,
-                },
-            }
-        }
-    }
+async def test_options_flow_keeps_existing_entity_options() -> None:
+    """Test options flow does not filter entity options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_TYPE: TEST_TYPE},
@@ -879,23 +865,19 @@ async def test_options_flow_filters_and_schema_branches() -> None:
         },
     )
 
-    with patch(
-        "homeassistant.components.midea_lan.config_flow.MIDEA_DEVICES",
-        fake_devices,
-    ):
-        options_flow = MideaLanOptionsFlowHandler(entry)
-        assert "invalid_sensor" not in options_flow._config_entry.options[CONF_SENSORS]
-        assert "invalid_switch" not in options_flow._config_entry.options[CONF_SWITCHES]
+    options_flow = MideaLanOptionsFlowHandler(entry)
+    assert "invalid_sensor" in options_flow._config_entry.options[CONF_SENSORS]
+    assert "invalid_switch" in options_flow._config_entry.options[CONF_SWITCHES]
 
-        form_result = await options_flow.async_step_init()
+    form_result = await options_flow.async_step_init()
     assert form_result["type"] is FlowResultType.FORM
 
 
-def test_options_flow_type_defaults_to_0xac() -> None:
+def test_options_flow_type_defaults_to_device_type_ac() -> None:
     """Test options flow defaults type when missing from entry data."""
     entry = MockConfigEntry(domain=DOMAIN, data={})
     options_flow = MideaLanOptionsFlowHandler(entry)
-    assert options_flow._device_type == 0xAC
+    assert options_flow._device_type == DeviceType.AC
 
 
 def test_already_configured_helper(flow: MideaLanConfigFlow) -> None:

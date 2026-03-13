@@ -1,6 +1,7 @@
 """Midea Climate entries."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any, ClassVar, cast
 
@@ -30,6 +31,7 @@ from homeassistant.components.climate import (
     SWING_ON,
     SWING_VERTICAL,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -37,17 +39,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE_ID,
-    CONF_SWITCHES,
     PRECISION_HALVES,
     PRECISION_WHOLE,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEVICES, DOMAIN, FanSpeed
-from .devices import MIDEA_DEVICES
 from .entity import MideaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +63,45 @@ type MideaClimateDevice = (
 )
 
 
+@dataclass(kw_only=True, frozen=True)
+class MideaClimateEntityDescription(ClimateEntityDescription):
+    """Description for a Midea climate entity."""
+
+    model: list[int]
+    zone: int | None = None
+
+
+CLIMATE_ENTITIES: list[MideaClimateEntityDescription] = [
+    MideaClimateEntityDescription(
+        key="climate",
+        model=[DeviceType.AC, DeviceType.CC, DeviceType.CF, DeviceType.FB],
+        translation_key="climate_key",
+    ),
+    MideaClimateEntityDescription(
+        key="climate_zone1",
+        model=[DeviceType.C3],
+        translation_key="climate_zone1",
+        zone=0,
+    ),
+    MideaClimateEntityDescription(
+        key="climate_zone2",
+        model=[DeviceType.C3],
+        translation_key="climate_zone2",
+        zone=1,
+        entity_registry_enabled_default=False,
+    ),
+]
+
+
+def _get_climate_entities(
+    device_type: int,
+) -> dict[str, MideaClimateEntityDescription]:
+    """Return climate entity definitions for a device type."""
+    return {
+        entity.key: entity for entity in CLIMATE_ENTITIES if device_type in entity.model
+    }
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -72,7 +110,7 @@ async def async_setup_entry(
     """Set up climate entries."""
     device_id = config_entry.data.get(CONF_DEVICE_ID)
     device = hass.data[DOMAIN][DEVICES].get(device_id)
-    extra_switches = config_entry.options.get(CONF_SWITCHES, [])
+    descriptions = _get_climate_entities(device.device_type).values()
     devs: list[
         MideaACClimate
         | MideaCCClimate
@@ -80,24 +118,26 @@ async def async_setup_entry(
         | MideaC3Climate
         | MideaFBClimate
     ] = []
-    for entity_key, config in cast(
-        "dict",
-        MIDEA_DEVICES[device.device_type]["entities"],
-    ).items():
-        if config["type"] == Platform.CLIMATE and (
-            config.get("default") or entity_key in extra_switches
-        ):
-            if device.device_type == DeviceType.AC:
-                # add config_entry args to fix indoor_humidity error bug
-                devs.append(MideaACClimate(device, entity_key, config_entry))
-            elif device.device_type == DeviceType.CC:
-                devs.append(MideaCCClimate(device, entity_key))
-            elif device.device_type == DeviceType.CF:
-                devs.append(MideaCFClimate(device, entity_key))
-            elif device.device_type == DeviceType.C3:
-                devs.append(MideaC3Climate(device, entity_key, config["zone"]))
-            elif device.device_type == DeviceType.FB:
-                devs.append(MideaFBClimate(device, entity_key))
+
+    if device.device_type == DeviceType.AC:
+        devs = [
+            # AC entities need the config entry to honor optional humidity exposure.
+            MideaACClimate(device, description, config_entry)
+            for description in descriptions
+        ]
+    elif device.device_type == DeviceType.CC:
+        devs = [MideaCCClimate(device, description) for description in descriptions]
+    elif device.device_type == DeviceType.CF:
+        devs = [MideaCFClimate(device, description) for description in descriptions]
+    elif device.device_type == DeviceType.C3:
+        devs = [
+            MideaC3Climate(device, description, description.zone)
+            for description in descriptions
+            if description.zone is not None
+        ]
+    elif device.device_type == DeviceType.FB:
+        devs = [MideaFBClimate(device, description) for description in descriptions]
+
     async_add_entities(devs)
 
 
@@ -111,15 +151,24 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     _device: MideaClimateDevice
 
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:air-conditioner"
     _attr_max_temp: float = TEMPERATURE_MAX
     _attr_min_temp: float = TEMPERATURE_MIN
     _attr_target_temperature_high: float | None = TEMPERATURE_MAX
     _attr_target_temperature_low: float | None = TEMPERATURE_MIN
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
 
-    def __init__(self, device: MideaClimateDevice, entity_key: str) -> None:
+    def __init__(
+        self,
+        device: MideaClimateDevice,
+        description: MideaClimateEntityDescription,
+    ) -> None:
         """Midea Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description.key)
+
+        self._attr_translation_key = description.translation_key
+        self._attr_name = None
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -255,11 +304,11 @@ class MideaACClimate(MideaClimate):
     def __init__(
         self,
         device: MideaACDevice,
-        entity_key: str,
+        description: MideaClimateEntityDescription,
         config_entry: ConfigEntry,
     ) -> None:
         """Midea AC Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description)
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.AUTO,
@@ -332,15 +381,11 @@ class MideaACClimate(MideaClimate):
     @property
     def current_humidity(self) -> float | None:
         """Return the current indoor humidity, or None if unavailable."""
-        # fix error humidity, disable indoor_humidity in web UI
-        # https://github.com/wuwentao/midea_ac_lan/pull/641
         if not self._indoor_humidity_enabled:
             return None
         raw = self._device.get_attribute("indoor_humidity")
         if isinstance(raw, (int, float)) and raw not in {0, 0xFF}:
             return float(raw)
-        # indoor_humidity is 0 or 255, return None
-        # https://github.com/wuwentao/midea_ac_lan/pull/614
         return None
 
     @property
@@ -373,9 +418,13 @@ class MideaCCClimate(MideaClimate):
 
     _device: MideaCCDevice
 
-    def __init__(self, device: MideaCCDevice, entity_key: str) -> None:
+    def __init__(
+        self,
+        device: MideaCCDevice,
+        description: MideaClimateEntityDescription,
+    ) -> None:
         """Midea CC Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description)
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.FAN_ONLY,
@@ -431,9 +480,13 @@ class MideaCFClimate(MideaClimate):
 
     _attr_target_temperature_step: float | None = PRECISION_WHOLE
 
-    def __init__(self, device: MideaCFDevice, entity_key: str) -> None:
+    def __init__(
+        self,
+        device: MideaCFDevice,
+        description: MideaClimateEntityDescription,
+    ) -> None:
         """Midea CF Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description)
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.AUTO,
@@ -489,9 +542,14 @@ class MideaC3Climate(MideaClimate):
         C3Attributes.zone2_power,
     ]
 
-    def __init__(self, device: MideaC3Device, entity_key: str, zone: int) -> None:
+    def __init__(
+        self,
+        device: MideaC3Device,
+        description: MideaClimateEntityDescription,
+        zone: int,
+    ) -> None:
         """Midea C3 Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description)
         self._zone = zone
         self._attr_hvac_modes = [
             HVACMode.OFF,
@@ -639,9 +697,13 @@ class MideaFBClimate(MideaClimate):
     _attr_target_temperature_low: float | None = 5
     _attr_target_temperature_step: float | None = PRECISION_WHOLE
 
-    def __init__(self, device: MideaFBDevice, entity_key: str) -> None:
+    def __init__(
+        self,
+        device: MideaFBDevice,
+        description: MideaClimateEntityDescription,
+    ) -> None:
         """Midea FB Climate entity init."""
-        super().__init__(device, entity_key)
+        super().__init__(device, description)
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._attr_preset_modes: list[str] = self._device.modes
 

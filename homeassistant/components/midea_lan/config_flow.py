@@ -1,7 +1,7 @@
 """Config flow for Midea LAN."""
 
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import ClientSession
 from midealocal.cloud import (
@@ -10,7 +10,7 @@ from midealocal.cloud import (
     MideaCloud,
     get_midea_cloud,
 )
-from midealocal.const import ProtocolVersion
+from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import AuthException, MideaDevice
 from midealocal.discover import discover
 from midealocal.exceptions import SocketException
@@ -31,14 +31,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_TOKEN,
     CONF_TYPE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import save_json
 from homeassistant.util.json import load_json
 
@@ -47,14 +44,11 @@ from .const import (
     CONF_ACCOUNT,
     CONF_KEY,
     CONF_MODEL,
-    CONF_REFRESH_INTERVAL,
     CONF_SERVER,
     CONF_SUBTYPE,
     DOMAIN,
-    EXTRA_CONTROL,
-    EXTRA_SENSOR,
 )
-from .devices import MIDEA_DEVICES
+from .device_catalog import MIDEA_DEVICE_NAMES
 
 ADD_WAY = {
     "discovery": "Discover automatically",
@@ -91,8 +85,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         self.account: dict = {}
         self.cloud: MideaCloud | None = None
         self.session: ClientSession | None = None
-        for device_type, device_info in MIDEA_DEVICES.items():
-            self.unsorted[device_type] = device_info["name"]
+        for device_type, name in MIDEA_DEVICE_NAMES.items():
+            self.unsorted[device_type] = name
 
         sorted_device_names = sorted(self.unsorted.items(), key=lambda x: x[1])
         for item in sorted_device_names:
@@ -774,12 +768,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_TOKEN: user_input[CONF_TOKEN],
                         CONF_KEY: user_input[CONF_KEY],
                     }
-                    # save device json config when adding new device
+
                     self._save_device_config(data)
-                    # unique identifier
+
                     await self.async_set_unique_id(device_id)
                     self._abort_if_unique_id_configured()
-                    # finish add device entry
+
                     return self.async_create_entry(
                         title=f"{user_input[CONF_NAME]}",
                         data=data,
@@ -805,7 +799,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): int,
                     vol.Required(
                         CONF_TYPE,
-                        default=(self.found_device.get(CONF_TYPE) or 0xAC),
+                        default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
                     ): vol.In(self.supports),
                     vol.Required(
                         CONF_IP_ADDRESS,
@@ -863,15 +857,7 @@ class MideaLanOptionsFlowHandler(OptionsFlow):
         self._config_entry = config_entry
         self._device_type = config_entry.data.get(CONF_TYPE)
         if self._device_type is None:
-            self._device_type = 0xAC
-        if CONF_SENSORS in self._config_entry.options:
-            for key in self._config_entry.options[CONF_SENSORS]:
-                if key not in MIDEA_DEVICES[self._device_type]["entities"]:
-                    self._config_entry.options[CONF_SENSORS].remove(key)
-        if CONF_SWITCHES in self._config_entry.options:
-            for key in self._config_entry.options[CONF_SWITCHES]:
-                if key not in MIDEA_DEVICES[self._device_type]["entities"]:
-                    self._config_entry.options[CONF_SWITCHES].remove(key)
+            self._device_type = DeviceType.AC
 
     async def async_step_init(
         self,
@@ -888,57 +874,15 @@ class MideaLanOptionsFlowHandler(OptionsFlow):
             return self.async_abort(reason="account_option")
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-        sensors = {}
-        switches = {}
-        for attribute, attribute_config in cast(
-            "dict",
-            MIDEA_DEVICES[cast("int", self._device_type)]["entities"],
-        ).items():
-            attribute_name = (
-                attribute if isinstance(attribute, str) else attribute.value
-            )
-            if attribute_config.get("type") in EXTRA_SENSOR:
-                sensors[attribute_name] = attribute_config.get("name")
-            elif attribute_config.get(
-                "type",
-            ) in EXTRA_CONTROL and not attribute_config.get("default"):
-                switches[attribute_name] = attribute_config.get("name")
         ip_address = self._config_entry.options.get(CONF_IP_ADDRESS, None)
         if ip_address is None:
             ip_address = self._config_entry.data.get(CONF_IP_ADDRESS, None)
-        refresh_interval = self._config_entry.options.get(CONF_REFRESH_INTERVAL, 30)
-        extra_sensors = list(
-            set(sensors.keys()) & set(self._config_entry.options.get(CONF_SENSORS, [])),
-        )
-        extra_switches = list(
-            set(switches.keys())
-            & set(self._config_entry.options.get(CONF_SWITCHES, [])),
-        )
         customize = self._config_entry.options.get(CONF_CUSTOMIZE, "")
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_IP_ADDRESS, default=ip_address): str,
-                vol.Required(CONF_REFRESH_INTERVAL, default=refresh_interval): int,
             },
         )
-        if len(sensors) > 0:
-            data_schema = data_schema.extend(
-                {
-                    vol.Required(
-                        CONF_SENSORS,
-                        default=extra_sensors,
-                    ): cv.multi_select(sensors),
-                },
-            )
-        if len(switches) > 0:
-            data_schema = data_schema.extend(
-                {
-                    vol.Required(
-                        CONF_SWITCHES,
-                        default=extra_switches,
-                    ): cv.multi_select(switches),
-                },
-            )
         data_schema = data_schema.extend(
             {
                 vol.Optional(
