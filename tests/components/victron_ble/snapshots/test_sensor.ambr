@@ -81,7 +81,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_alarm',
   })
 # ---
 # name: test_sensors[battery_monitor][sensor.battery_monitor_battery-entry]
