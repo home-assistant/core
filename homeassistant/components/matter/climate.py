@@ -281,8 +281,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         # Optimistic update is required because Matter devices usually confirm
         # preset changes asynchronously via a later attribute subscription.
-        # Without this, HA can briefly keep showing the previous preset right
-        # after the service call returns, which causes UI flicker/inconsistency.
+        # Additionally, some devices based on connectedhomeip do not send a
+        # subscription report for ActivePresetHandle after SetActivePresetRequest
+        # because thermostat-server-presets.cpp/SetActivePreset() updates the
+        # value without notifying the reporting engine. Keep this optimistic
+        # update as a workaround for that SDK bug and for normal report delays.
+        # Reference: project-chip/connectedhomeip,
+        # src/app/clusters/thermostat-server/thermostat-server-presets.cpp.
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
