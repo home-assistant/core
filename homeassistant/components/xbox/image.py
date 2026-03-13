@@ -15,8 +15,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import XboxConfigEntry, XboxPresenceCoordinator
-from .entity import XboxBaseEntity, XboxBaseEntityDescription, profile_pic
+from .const import SUBENTRY_TYPE_FRIEND, SUBENTRY_TYPE_GAME
+from .coordinator import (
+    XboxConfigEntry,
+    XboxPresenceCoordinator,
+    XboxTitleHistoryCoordinator,
+)
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    XboxGameBaseEntity,
+    profile_pic,
+    to_https,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -27,6 +38,7 @@ class XboxImage(StrEnum):
     NOW_PLAYING = "now_playing"
     GAMERPIC = "gamerpic"
     AVATAR = "avatar"
+    TITLE_IMAGE = "title_image"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -82,10 +94,22 @@ async def async_setup_entry(
                 for description in IMAGE_DESCRIPTIONS
                 if subentry.unique_id
                 and subentry.unique_id in coordinator.data.presence
-                and subentry.subentry_type == "friend"
+                and subentry.subentry_type == SUBENTRY_TYPE_FRIEND
             ],
             config_subentry_id=subentry_id,
         )
+
+    title_history = config_entry.runtime_data.title_history
+    for subentry_id, subentry in config_entry.subentries.items():
+        if (
+            subentry.unique_id
+            and subentry.unique_id in title_history.data
+            and subentry.subentry_type == SUBENTRY_TYPE_GAME
+        ):
+            async_add_entities(
+                [XboxGameTitleImageEntity(hass, title_history, subentry.unique_id)],
+                config_subentry_id=subentry_id,
+            )
 
 
 class XboxImageEntity(XboxBaseEntity, ImageEntity):
@@ -121,3 +145,26 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
                 self._attr_image_last_updated = dt_util.utcnow()
 
         super()._handle_coordinator_update()
+
+
+class XboxGameTitleImageEntity(XboxGameBaseEntity, ImageEntity):
+    """An image entity."""
+
+    entity_description = ImageEntityDescription(
+        key=XboxImage.TITLE_IMAGE,
+        translation_key=XboxImage.TITLE_IMAGE,
+        name=None,
+    )
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: XboxTitleHistoryCoordinator,
+        title_id: str,
+    ) -> None:
+        """Initialize the image entity."""
+        super().__init__(coordinator, title_id, self.entity_description)
+        ImageEntity.__init__(self, hass)
+
+        self._attr_image_url = to_https(self.data.display_image)
+        self._attr_image_last_updated = dt_util.utcnow()

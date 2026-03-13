@@ -146,7 +146,35 @@
         "canHide": false
       },
       "titleRecord": null,
-      "detail": null,
+      "detail": {
+        "attributes": [],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "9X46VKQZ0WB4",
+            "Platforms": ["Xbox"],
+            "SkuId": "0001",
+            "ProductId": "C2HGK9J5367F"
+          }
+        ],
+        "capabilities": [],
+        "description": "Hironobu Sakaguchi, the Father of the Final Fantasy series, and Artoon present the world of Blue Dragon on Xbox 360. Featuring the character design of Akira Toriyama, the Father of \"Dragon Ball Z\", and music by Nobuo Uematsu, the composer for Final Fantasy, Blue Dragon is an epic role-playing game (RPG) centered on five youngsters who possess miraculous strength and magical power to control shadow creatures that mirror the actions of their masters.",
+        "developerName": "Mistwalker / Artoon",
+        "genres": ["Role Playing"],
+        "minAge": 13,
+        "publisherName": "Microsoft",
+        "releaseDate": "2016-12-14T09:00:00Z",
+        "shortDescription": "Hironobu Sakaguchi, the Father of the Final Fantasy series, and Artoon present the world of Blue Dragon on Xbox 360. Featuring the character design of Akira Toriyama, the Father of \"Dragon Ball Z\", and music by Nobuo Uematsu, the composer for Final Fantasy, Blue Dragon is an epic role-playing game (RPG) centered on five youngsters who possess miraculous strength and magical power to control shadow creatures that mirror the actions of their masters.",
+        "vuiDisplayName": "Blue Dragon",
+        "xboxLiveGoldRequired": false
+      },
       "friendsWhoPlayed": null,
       "alternateTitleIds": null,
       "contentBoards": null,

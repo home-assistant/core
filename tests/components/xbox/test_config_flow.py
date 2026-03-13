@@ -7,13 +7,17 @@ from unittest.mock import AsyncMock, Mock, patch
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import pytest
 from pythonxbox.api.provider.people.models import PeopleResponse
+from pythonxbox.api.provider.titlehub.models import TitleHubResponse
 
 from homeassistant import config_entries
 from homeassistant.components.xbox.const import (
+    CONF_TITLE_ID,
     CONF_XUID,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    SUBENTRY_TYPE_FRIEND,
+    SUBENTRY_TYPE_GAME,
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
@@ -273,7 +277,7 @@ async def test_form_already_configured_as_subentry(
         subentries_data=[
             ConfigSubentryData(
                 data={},
-                subentry_type="friend",
+                subentry_type=SUBENTRY_TYPE_FRIEND,
                 title="GSR Ae",
                 unique_id="271958441785640",
             ),
@@ -355,7 +359,7 @@ async def test_add_friend_flow(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
@@ -372,7 +376,7 @@ async def test_add_friend_flow(hass: HomeAssistant) -> None:
         subentry_id: ConfigSubentry(
             data={},
             subentry_id=subentry_id,
-            subentry_type="friend",
+            subentry_type=SUBENTRY_TYPE_FRIEND,
             title="erics273",
             unique_id="2533274913657542",
         )
@@ -405,7 +409,7 @@ async def test_add_friend_flow_already_configured(hass: HomeAssistant) -> None:
         subentries_data=[
             ConfigSubentryData(
                 data={},
-                subentry_type="friend",
+                subentry_type=SUBENTRY_TYPE_FRIEND,
                 title="erics273",
                 unique_id="2533274913657542",
             )
@@ -422,7 +426,7 @@ async def test_add_friend_flow_already_configured(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
@@ -492,7 +496,7 @@ async def test_add_friend_flow_already_configured_as_entry(hass: HomeAssistant) 
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
@@ -549,7 +553,7 @@ async def test_add_friend_flow_no_friends(
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
@@ -571,7 +575,7 @@ async def test_add_friend_flow_config_entry_not_loaded(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
@@ -633,7 +637,7 @@ async def test_unique_id_and_friends_migration(
     subentries = list(config_entry.subentries.values())
     assert subentries[0].unique_id == "2533274838782903"
     assert subentries[0].title == "Ikken Hissatsuu"
-    assert subentries[0].subentry_type == "friend"
+    assert subentries[0].subentry_type == SUBENTRY_TYPE_FRIEND
 
     ## Assert devices have been migrated
     assert (device_own := device_registry.async_get(device_own.id))
@@ -868,3 +872,116 @@ async def test_flow_reauth_unique_id_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
+async def test_add_game_flow(hass: HomeAssistant) -> None:
+    """Test add game subentry flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="GSR Ae",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id="271958441785640",
+        minor_version=3,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_GAME),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_TITLE_ID: "1297287135"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={},
+            subentry_id=subentry_id,
+            subentry_type=SUBENTRY_TYPE_GAME,
+            title="Blue Dragon",
+            unique_id="1297287135",
+        )
+    }
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
+async def test_add_game_flow_config_entry_not_loaded(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test game subentry flow aborts if config entry is not loaded."""
+
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_GAME),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_not_loaded"
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
+async def test_add_game_flow_no_game_titles(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    xbox_live_client: AsyncMock,
+) -> None:
+    """Test game subentry flow abort if history is empty."""
+    xbox_live_client.titlehub.get_title_history.return_value = (
+        TitleHubResponse.model_validate({"xuid": "2719584417856940", "titles": []})
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_GAME),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_game_titles"
