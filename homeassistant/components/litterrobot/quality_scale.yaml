@@ -42,7 +42,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: done
     comment: The integration is cloud-based
