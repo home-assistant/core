@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
     ignore_hostname: bool = entry.data[CONF_IGNORE_HOSTNAME]
-    ca_data: str = entry.data.get(CONF_CA_DATA, "")
+    ca_data: str | None = entry.data.get(CONF_CA_DATA)
 
     coordinator = CertExpiryDataUpdateCoordinator(
         hass, entry, host, port, ignore_hostname, ca_data
