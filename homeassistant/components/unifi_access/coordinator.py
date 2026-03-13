@@ -117,7 +117,9 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             return
 
         current_door = self.data[door_id]
-        updates: dict[str, object] = {"door_position_status": ws_state.dps}
+        updates: dict[str, object] = {}
+        if ws_state.dps is not None:
+            updates["door_position_status"] = ws_state.dps
         if ws_state.lock == "locked":
             updates["door_lock_relay_status"] = "lock"
         elif ws_state.lock == "unlocked":
