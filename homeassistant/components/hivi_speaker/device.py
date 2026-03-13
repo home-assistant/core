@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -12,9 +12,9 @@ class SyncGroupStatus(Enum):
     """Device type enumeration."""
 
     UNKNOWN = "unknown"
-    MASTER = "master"  # Master speaker
-    SLAVE = "slave"  # Slave speaker
-    STANDALONE = "standalone"  # Standalone speaker (can be master or slave)
+    MASTER = "master"
+    SLAVE = "slave"
+    STANDALONE = "standalone"
 
 
 class ConnectionStatus(Enum):
@@ -43,8 +43,7 @@ class SlaveDeviceInfo(BaseModel):
 class HIVIDevice(BaseModel):
     """HIVI speaker device base class."""
 
-    # Basic information
-    speaker_device_id: str = ""  # Use device UDN as ID
+    speaker_device_id: str = ""
     unique_id: str = ""
     friendly_name: str = ""
     model: str = ""
@@ -52,38 +51,30 @@ class HIVIDevice(BaseModel):
     ha_device_id: str = ""
     hardware: str = ""
 
-    # Network information
     ip_addr: str = ""
     mac_address: str = ""
     hostname: str = ""
 
-    # Device capabilities
     supports_dlna: bool = True
     supports_private_protocol: bool = True
     sync_group_status: SyncGroupStatus = SyncGroupStatus.STANDALONE
 
-    # Status information
     connection_status: ConnectionStatus = ConnectionStatus.ONLINE
-    last_seen: datetime = Field(default_factory=datetime.now)
+    last_seen: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
 
-    # Master-slave relationship
-    master_speaker_device_id: str | None = None  # Master speaker ID
+    master_speaker_device_id: str | None = None
     slave_device_num: int = 0
     slave_device_list: list[SlaveDeviceInfo] = Field(default_factory=list)
 
-    # DLNA information
     dlna_udn: str | None = None
     dlna_location: str | None = None
 
-    # Private protocol information
     private_protocol_version: str | None = None
     private_port: int = 9527
 
-    # Home Assistant integration
     entity_id: str | None = None
     config_entry_id: str | None = None
 
-    # other info
     wifi_channel: str = "0"
     ssid: str | None = None
     auth_mode: str | None = None
@@ -119,4 +110,4 @@ class HIVIDevice(BaseModel):
         return (
             self.sync_group_status == SyncGroupStatus.STANDALONE
             and self.connection_status == ConnectionStatus.ONLINE
-        )  # Speakers already set as master cannot be set as slave
+        )
