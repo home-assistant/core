@@ -1,7 +1,9 @@
 """Vera tests."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries
@@ -16,6 +18,15 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.vera.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_async_step_user_success(hass: HomeAssistant) -> None:
@@ -129,8 +140,7 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         }
 
 
-@patch("pyvera.VeraController")
-async def test_options(vera_controller_class_mock, hass: HomeAssistant) -> None:
+async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     base_url = "http://127.0.0.1/"
     entry = MockConfigEntry(
