@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
+from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient, AirtouchDevice
 from airtouch5py.discovery import AirtouchDiscovery
 
 from homeassistant.config_entries import ConfigEntry
