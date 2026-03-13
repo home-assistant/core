@@ -3,7 +3,6 @@
   "name": "Victron BLE",
   "bluetooth": [
     {
-      "connectable": false,
       "manufacturer_data_start": [16],
       "manufacturer_id": 737
     }
