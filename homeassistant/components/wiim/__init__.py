@@ -7,24 +7,15 @@ from urllib.parse import urlparse
 from wiim.controller import WiimController
 from wiim.discovery import async_create_wiim_device
 from wiim.exceptions import WiimDeviceException, WiimRequestException
-from wiim.wiim_device import WiimDevice
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import (
-    DATA_WIIM,
-    DOMAIN,
-    LOGGER,
-    PLATFORMS,
-    UPNP_PORT,
-    WiimConfigEntry,
-    WiimData,
-)
+from .const import DATA_WIIM, DOMAIN, LOGGER, PLATFORMS, UPNP_PORT, WiimConfigEntry
+from .models import WiimData
 
 DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 

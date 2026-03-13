@@ -5,7 +5,7 @@ from __future__ import annotations
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity, EntityPlatformState
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 

@@ -30,8 +30,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimConfigEntry, WiimData
+from .const import DATA_WIIM, LOGGER, WiimConfigEntry
 from .entity import WiimBaseEntity
+from .models import WiimData
 
 MEDIA_TYPE_WIIM_LIBRARY = "wiim_library"
 MEDIA_CONTENT_ID_ROOT = "library_root"
@@ -465,6 +466,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if await self._sync_follower_features(self._wiim_data, write_state=write_state):
             return
 
+        previous_features = self._attr_supported_features
         if (
             current_features := await self._async_get_supported_features_for_device(
                 self._device
@@ -478,7 +480,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     current_features,
                 )
 
-        if write_state:
+        if write_state and self._attr_supported_features != previous_features:
             self.async_write_ha_state()
 
     @callback

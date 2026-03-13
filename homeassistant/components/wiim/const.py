@@ -3,14 +3,14 @@
 import logging
 from typing import TYPE_CHECKING, Final
 
-from homeassistant.const import Platform
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from .models import WiimData
-
     from wiim import WiimDevice
+
+    from .models import WiimData
 
 type WiimConfigEntry = ConfigEntry[WiimDevice]
 

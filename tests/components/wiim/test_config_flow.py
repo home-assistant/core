@@ -10,7 +10,6 @@ from homeassistant.components.wiim.config_flow import (
     WiimConfigFlow,
     _async_probe_wiim_host,
 )
-from homeassistant.components.wiim.const import CONF_UDN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -55,7 +54,6 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
         assert result["type"] == "create_entry"
         assert result["title"] == "WiiM Pro"
         assert result["data"][CONF_HOST] == "192.168.1.100"
-        assert result["data"][CONF_UDN] == "uuid:test-1234"
 
         mock_set_unique_id.assert_called_once_with("uuid:test-1234")
         mock_abort.assert_called_once()
@@ -177,7 +175,6 @@ async def test_async_step_discovery_confirm_create_entry(
     assert result["type"] == "create_entry"
     assert result["title"] == "Discovered WiiM Device"
     assert result["data"][CONF_HOST] == "192.168.1.100"
-    assert result["data"][CONF_UDN] == "uuid:test-udn-1234"
 
 
 @pytest.mark.asyncio

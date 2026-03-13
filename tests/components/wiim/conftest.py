@@ -201,6 +201,7 @@ def mock_wiim_media_player_entity(
     """Fixture for a WiimMediaPlayerEntity instance."""
     entity = WiimMediaPlayerEntity(mock_wiim_device, mock_config_entry)
     entity._attr_unique_id = f"{mock_wiim_device.udn}-media_player"
+    entity.entity_id = "media_player.test_device"
     return entity
 
 

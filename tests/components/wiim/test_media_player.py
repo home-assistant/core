@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, WiimData
+from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN
 from homeassistant.components.wiim.media_player import (
     MEDIA_CONTENT_ID_FAVORITES,
     MEDIA_CONTENT_ID_PLAYLISTS,
@@ -38,6 +38,7 @@ from homeassistant.components.wiim.media_player import (
     async_process_play_media_url,
     async_setup_entry,
 )
+from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityPlatformState
