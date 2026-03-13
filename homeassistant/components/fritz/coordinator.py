@@ -394,19 +394,41 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
+    def _call_action_with_connection_handling(
+        self,
+        service: str,
+        action_name: str,
+        *,
+        log_context: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Call a Fritz service action with common connection error handling."""
+        try:
+            return self.connection.call_action(service, action_name, **kwargs)
+        except RequestsConnectionError as ex:
+            _LOGGER.warning(
+                "Connection aborted by %s during %s %s: %s",
+                self.host,
+                log_context,
+                action_name,
+                ex,
+            )
+            return {}
+
     async def _async_get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
         try:
             wan_access = await self.hass.async_add_executor_job(
                 partial(
-                    self.connection.call_action,
+                    self._call_action_with_connection_handling,
                     "X_AVM-DE_HostFilter:1",
                     "GetWANAccessByIP",
+                    log_context=f"X_AVM-DE_HostFilter:1 GetWANAccessByIP for {ip_address}",
                     NewIPv4Address=ip_address,
                 )
             )
             return not wan_access.get("NewDisallow")
-        except (*FRITZ_EXCEPTIONS, RequestsConnectionError) as ex:
+        except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
                 (
                     "could not get WAN access rule for client device with IP '%s',"
@@ -486,14 +508,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        try:
-            info = self.connection.call_action("UserInterface1", "GetInfo")
-        except RequestsConnectionError as ex:
-            _LOGGER.warning(
-                "Connection aborted by %s during device info update: %s",
-                self.host,
-                ex,
-            )
+        info = self._call_action_with_connection_handling(
+            "UserInterface1",
+            "GetInfo",
+            log_context="device info update",
+        )
+        if not info:
             return False, None, None
         version = info.get("NewX_AVM-DE_Version")
         release_url = info.get("NewX_AVM-DE_InfoURL")
@@ -507,19 +527,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self,
     ) -> dict[int, dict[str, Any]]:
         """Call GetDeflections action from X_AVM-DE_OnTel service."""
-        try:
-            raw_data = await self.hass.async_add_executor_job(
-                partial(
-                    self.connection.call_action, "X_AVM-DE_OnTel1", "GetDeflections"
-                )
+        raw_data = await self.hass.async_add_executor_job(
+            partial(
+                self._call_action_with_connection_handling,
+                "X_AVM-DE_OnTel1",
+                "GetDeflections",
+                log_context="call deflections update",
             )
-        except RequestsConnectionError as ex:
-            _LOGGER.warning(
-                "Connection aborted by %s during call deflections update: %s",
-                self.host,
-                ex,
-            )
-            return {}
+        )
         if not raw_data:
             return {}
 
@@ -758,9 +773,10 @@ class AvmWrapper(FritzBoxTools):
         try:
             result: dict = await self.hass.async_add_executor_job(
                 partial(
-                    self.connection.call_action,
+                    self._call_action_with_connection_handling,
                     f"{service_name}:{service_suffix}",
                     action_name,
+                    log_context=f"{service_name}/{service_suffix}",
                     **kwargs,
                 )
             )
@@ -775,16 +791,6 @@ class AvmWrapper(FritzBoxTools):
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
-            )
-            return {}
-        except RequestsConnectionError as ex:
-            _LOGGER.warning(
-                "Connection aborted by %s during %s/%s %s: %s",
-                self.host,
-                service_name,
-                service_suffix,
-                action_name,
-                ex,
             )
             return {}
 
