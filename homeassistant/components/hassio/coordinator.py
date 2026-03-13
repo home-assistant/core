@@ -39,8 +39,8 @@ from .const import (
     CONTAINER_STATS,
     CORE_CONTAINER,
     DATA_ADDONS_INFO,
+    DATA_ADDONS_LIST,
     DATA_ADDONS_STATS,
-    DATA_APPS_LIST,
     DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_CORE_STATS,
@@ -134,12 +134,12 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None] | N
 
 
 @callback
-def get_apps_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
-    """Return list of installed apps and subset of details for each.
+def get_addons_list(hass: HomeAssistant) -> list[dict[str, Any]] | None:
+    """Return list of installed addons and subset of details for each.
 
     Async friendly.
     """
-    return hass.data.get(DATA_APPS_LIST)
+    return hass.data.get(DATA_ADDONS_LIST)
 
 
 @callback
@@ -366,7 +366,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         addons_stats = get_addons_stats(self.hass)
         store_data = get_store(self.hass)
         mounts_info = await self.supervisor_client.mounts.info()
-        addons_list = get_apps_list(self.hass) or []
+        addons_list = get_addons_list(self.hass) or []
 
         if store_data:
             repositories = {
@@ -501,7 +501,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             data[key] = result.to_dict()
 
         installed_addons = cast(list[InstalledAddon], addons_list)
-        data[DATA_APPS_LIST] = [addon.to_dict() for addon in installed_addons]
+        data[DATA_ADDONS_LIST] = [addon.to_dict() for addon in installed_addons]
 
         # Deprecated 2026.4.0: Folding repositories and addons.list results into supervisor_info for compatibility
         # Can drop this after removal period

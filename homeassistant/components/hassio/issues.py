@@ -61,7 +61,7 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import HassioDataUpdateCoordinator, get_apps_list, get_host_info
+from .coordinator import HassioDataUpdateCoordinator, get_addons_list, get_host_info
 from .handler import HassIO, get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -267,7 +267,7 @@ class SupervisorIssues:
                     placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
                         f"/hassio/addon/{issue.reference}"
                     )
-                    addons_list = get_apps_list(self._hass) or []
+                    addons_list = get_addons_list(self._hass) or []
                     placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
                     for addon in addons_list:
                         if addon[ATTR_SLUG] == issue.reference:

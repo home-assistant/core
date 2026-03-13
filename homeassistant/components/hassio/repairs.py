@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from . import get_apps_list, get_issues_info
+from . import get_addons_list, get_issues_info
 from .const import (
     ATTR_SLUG,
     EXTRA_PLACEHOLDERS,
@@ -156,7 +156,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
         supervisor_issues = get_issues_info(self.hass)
         if supervisor_issues and self.issue:
-            addons_list = get_apps_list(self.hass) or []
+            addons_list = get_addons_list(self.hass) or []
             components: list[str] = []
             for issue in supervisor_issues.issues:
                 if issue.key == self.issue.key or issue.type != self.issue.type:
@@ -189,7 +189,7 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
         if self.issue and self.issue.reference:
-            addons_list = get_apps_list(self.hass) or []
+            addons_list = get_addons_list(self.hass) or []
             placeholders[PLACEHOLDER_KEY_ADDON] = self.issue.reference
             for addon in addons_list:
                 if addon[ATTR_SLUG] == self.issue.reference:

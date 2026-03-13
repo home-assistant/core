@@ -56,7 +56,7 @@ async def test_hassio_system_health(
             "version": "1.0.0",
         }
     }
-    hass.data["hassio_apps_list"] = [
+    hass.data["hassio_addons_list"] = [
         {
             "slug": "test",
             "name": "Awesome Addon",

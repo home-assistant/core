@@ -9,7 +9,7 @@ from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
 from .coordinator import (
-    get_apps_list,
+    get_addons_list,
     get_host_info,
     get_info,
     get_network_info,
@@ -36,7 +36,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
     network_info = get_network_info(hass) or {}
-    addons_list = get_apps_list(hass) or []
+    addons_list = get_addons_list(hass) or []
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
