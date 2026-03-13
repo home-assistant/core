@@ -18,9 +18,9 @@ from homeassistant.components.weather import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
-    EntityNumericalChangedTriggerBase,
-    EntityNumericalCrossedThresholdTriggerBase,
     Trigger,
+    make_entity_numerical_changed_trigger,
+    make_entity_numerical_crossed_threshold_trigger,
 )
 
 HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
@@ -38,22 +38,11 @@ HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
     ),
 }
 
-
-class HumidityChangedTrigger(EntityNumericalChangedTriggerBase):
-    """Trigger for humidity value changes across multiple domains."""
-
-    _domain_specs = HUMIDITY_DOMAIN_SPECS
-
-
-class HumidityCrossedThresholdTrigger(EntityNumericalCrossedThresholdTriggerBase):
-    """Trigger for humidity value crossing a threshold across multiple domains."""
-
-    _domain_specs = HUMIDITY_DOMAIN_SPECS
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": HumidityChangedTrigger,
-    "crossed_threshold": HumidityCrossedThresholdTrigger,
+    "changed": make_entity_numerical_changed_trigger(HUMIDITY_DOMAIN_SPECS),
+    "crossed_threshold": make_entity_numerical_crossed_threshold_trigger(
+        HUMIDITY_DOMAIN_SPECS
+    ),
 }
 
 

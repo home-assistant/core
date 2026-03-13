@@ -7,36 +7,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.trigger import (
-    EntityTargetTriggerBase,
-    EntityTriggerBase,
-    Trigger,
-)
+from homeassistant.helpers.trigger import Trigger, make_entity_target_trigger
 
-
-class _OccupancyBinaryTriggerBase(EntityTriggerBase):
-    """Base trigger for occupancy binary sensor state changes."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
-    }
-
-
-class OccupancyDetectedTrigger(_OccupancyBinaryTriggerBase, EntityTargetTriggerBase):
-    """Trigger for occupancy detected (binary sensor ON)."""
-
-    _to_states = {STATE_ON}
-
-
-class OccupancyClearedTrigger(_OccupancyBinaryTriggerBase, EntityTargetTriggerBase):
-    """Trigger for occupancy cleared (binary sensor OFF)."""
-
-    _to_states = {STATE_OFF}
-
+_OCCUPANCY_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
+}
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "detected": OccupancyDetectedTrigger,
-    "cleared": OccupancyClearedTrigger,
+    "detected": make_entity_target_trigger(_OCCUPANCY_DOMAIN_SPECS, STATE_ON),
+    "cleared": make_entity_target_trigger(_OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
 }
 
 

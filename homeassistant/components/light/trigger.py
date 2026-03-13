@@ -6,9 +6,9 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
-    EntityNumericalChangedTriggerBase,
-    EntityNumericalCrossedThresholdTriggerBase,
     Trigger,
+    make_entity_numerical_changed_trigger,
+    make_entity_numerical_crossed_threshold_trigger,
     make_entity_target_trigger,
 )
 
@@ -28,22 +28,13 @@ BRIGHTNESS_DOMAIN_SPECS = {
     ),
 }
 
-
-class BrightnessChangedTrigger(EntityNumericalChangedTriggerBase):
-    """Trigger for brightness changed."""
-
-    _domain_specs = BRIGHTNESS_DOMAIN_SPECS
-
-
-class BrightnessCrossedThresholdTrigger(EntityNumericalCrossedThresholdTriggerBase):
-    """Trigger for brightness crossed threshold."""
-
-    _domain_specs = BRIGHTNESS_DOMAIN_SPECS
-
-
 TRIGGERS: dict[str, type[Trigger]] = {
-    "brightness_changed": BrightnessChangedTrigger,
-    "brightness_crossed_threshold": BrightnessCrossedThresholdTrigger,
+    "brightness_changed": make_entity_numerical_changed_trigger(
+        BRIGHTNESS_DOMAIN_SPECS
+    ),
+    "brightness_crossed_threshold": make_entity_numerical_crossed_threshold_trigger(
+        BRIGHTNESS_DOMAIN_SPECS
+    ),
     "turned_off": make_entity_target_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_target_trigger(DOMAIN, STATE_ON),
 }
