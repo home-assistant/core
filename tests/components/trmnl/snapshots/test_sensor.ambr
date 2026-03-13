@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.joost_s_trmnl_battery-entry]
+# name: test_all_entities[sensor.test_trmnl_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.joost_s_trmnl_battery',
+    'entity_id': 'sensor.test_trmnl_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -37,23 +37,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.joost_s_trmnl_battery-state]
+# name: test_all_entities[sensor.test_trmnl_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': "Joost's TRMNL Battery",
+      'friendly_name': 'Test TRMNL Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.joost_s_trmnl_battery',
+    'entity_id': 'sensor.test_trmnl_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '72.5',
   })
 # ---
-# name: test_all_entities[sensor.joost_s_trmnl_signal_strength-entry]
+# name: test_all_entities[sensor.test_trmnl_signal_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -68,7 +68,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.joost_s_trmnl_signal_strength',
+    'entity_id': 'sensor.test_trmnl_signal_strength',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -91,16 +91,16 @@
     'unit_of_measurement': 'dBm',
   })
 # ---
-# name: test_all_entities[sensor.joost_s_trmnl_signal_strength-state]
+# name: test_all_entities[sensor.test_trmnl_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
-      'friendly_name': "Joost's TRMNL Signal strength",
+      'friendly_name': 'Test TRMNL Signal strength',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.joost_s_trmnl_signal_strength',
+    'entity_id': 'sensor.test_trmnl_signal_strength',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

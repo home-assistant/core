@@ -6,23 +6,23 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'b0:a6:04:02:eb:78',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
-      tuple(
-        'trmnl',
-        'B0:A6:04:02:EB:78',
-      ),
     }),
     'labels': set({
     }),
     'manufacturer': 'TRMNL',
-    'model': 'TRMNL',
+    'model': None,
     'model_id': None,
-    'name': "Joost's TRMNL",
+    'name': 'Test TRMNL',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

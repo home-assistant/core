@@ -1,10 +1,10 @@
 {
   "data": {
     "id": 30561,
-    "name": "Joost Lekkerkerker",
-    "email": "joostlek@outlook.com",
-    "first_name": "Joost",
-    "last_name": "Lekkerkerker",
+    "name": "Test",
+    "email": "test@outlook.com",
+    "first_name": "test",
+    "last_name": "test",
     "locale": "en",
     "time_zone": "Amsterdam",
     "time_zone_iana": "Europe/Amsterdam",

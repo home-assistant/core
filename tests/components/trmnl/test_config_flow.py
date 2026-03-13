@@ -28,7 +28,7 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Joost Lekkerkerker"
+    assert result["title"] == "Test"
     assert result["data"] == {CONF_API_KEY: "user_aaaaaaaaaa"}
     assert result["result"].unique_id == "30561"
     assert len(mock_setup_entry.mock_calls) == 1

@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.trmnl.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from . import setup_integration
 
@@ -40,7 +40,7 @@ async def test_device(
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "B0:A6:04:02:EB:78")}
+        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:02:EB:78")}
     )
     assert device
     assert device == snapshot
