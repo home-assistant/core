@@ -1,13 +1,17 @@
 """Audio enhancement for Assist."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import logging
-
-from pymicro_vad import MicroVad
-from pyspeex_noise import AudioProcessor
+from typing import TYPE_CHECKING
 
 from .const import BYTES_PER_CHUNK
+
+if TYPE_CHECKING:
+    from pymicro_vad import MicroVad
+    from pyspeex_noise import AudioProcessor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +64,9 @@ class MicroVadSpeexEnhancer(AudioEnhancer):
         self.auto_gain = auto_gain * 300
 
         if (self.auto_gain != 0) or (self.noise_suppression != 0):
+            # Lazy import to avoid loading native library at module import time
+            from pyspeex_noise import AudioProcessor  # noqa: PLC0415
+
             self.audio_processor = AudioProcessor(
                 self.auto_gain, self.noise_suppression
             )
@@ -72,6 +79,9 @@ class MicroVadSpeexEnhancer(AudioEnhancer):
         self.vad: MicroVad | None = None
 
         if self.is_vad_enabled:
+            # Lazy import to avoid loading native library at module import time
+            from pymicro_vad import MicroVad  # noqa: PLC0415
+
             self.vad = MicroVad()
             _LOGGER.debug("Initialized microVAD")
 
