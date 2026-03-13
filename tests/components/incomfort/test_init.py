@@ -2,14 +2,14 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
 
-from homeassistant.components.incomfort import DOMAIN
+from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -95,12 +95,12 @@ async def test_coordinator_updates(
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
     assert state.attributes["current_temperature"] == 21.4
-    mock_incomfort().mock_room_status["room_temp"] = 20.91
+    mock_incomfort.mock_room_status["room_temp"] = 20.91
 
     state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.86"
-    mock_incomfort().mock_heater_status["pressure"] = 1.84
+    mock_incomfort.mock_heater_status["pressure"] = 1.84
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
     async_fire_time_changed(hass)
@@ -156,9 +156,8 @@ async def test_coordinator_update_fails(
     assert state is not None
     assert state.state == "1.86"
 
-    with patch.object(
-        mock_incomfort().heaters.return_value[0], "update", side_effect=exc
-    ):
+    heaters = await mock_incomfort.heaters()
+    with patch.object(heaters[0], "update", side_effect=exc):
         freezer.tick(timedelta(seconds=UPDATE_INTERVAL + 5))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -215,11 +214,8 @@ async def test_entry_setup_fails(
     config_entry_state: ConfigEntryState,
 ) -> None:
     """Test the incomfort coordinator entry setup fails."""
-    with patch(
-        "homeassistant.components.incomfort.async_connect_gateway",
-        AsyncMock(side_effect=exc),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_incomfort.heaters.side_effect = exc
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("sensor.boiler_pressure")
     assert state is None
     assert mock_config_entry.state is config_entry_state
