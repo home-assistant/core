@@ -25,6 +25,11 @@ from .entity import PranaBaseEntity, PranaCoordinator, PranaEntityDescription, S
 
 PARALLEL_UPDATES = 1
 
+# The Prana device API expects fan speed values in scaled units (tenths of a speed step)
+# rather than the raw step value used internally by this integration. This factor is
+# applied when sending speeds to the API to match its expected units.
+PRANA_SPEED_MULTIPLIER = 10
+
 
 class PranaFanType(StrEnum):
     """Enumerates Prana fan types exposed by the device API."""
@@ -132,7 +137,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
                     percentage,
                 )
             )
-            * 10,
+            * PRANA_SPEED_MULTIPLIER,
             self._api_target_key,
         )
         await self.coordinator.async_refresh()

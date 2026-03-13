@@ -149,8 +149,12 @@ async def test_fans_set_percentage(
         {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    mock_prana_api.set_speed.assert_called()
-    assert mock_prana_api.set_speed.call_args[0][1] == expected_api_key
+    speed_range = fan_mock_state.speed_range
+    expected_speed = round(speed_range.min + (speed_range.max - speed_range.min) * 0.5)
+    mock_prana_api.set_speed.assert_called_once_with(
+        expected_speed,
+        expected_api_key,
+    )
     mock_prana_api.reset_mock()
 
     await hass.services.async_call(
