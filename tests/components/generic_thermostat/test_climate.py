@@ -43,7 +43,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1261,6 +1265,56 @@ async def test_default_cycle_cooldown_allows_immediate_restart(
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].service == SERVICE_TURN_ON
+
+
+async def test_cycle_cooldown_schedules_restart_after_cooldown(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that cooldown blocks restart and schedules a restart check."""
+    hass.config.temperature_unit = UnitOfTemperature.CELSIUS
+    now = datetime.datetime.now(dt_util.UTC)
+    freezer.move_to(now)
+
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 0.3,
+                "hot_tolerance": 0.3,
+                "target_temp": 25,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "min_cycle_duration": datetime.timedelta(minutes=0),
+                "cycle_cooldown": datetime.timedelta(minutes=15),
+                "initial_hvac_mode": HVACMode.HEAT,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Force the thermostat into cooldown by faking a recent toggle time.
+    thermostats = hass.data[entity_platform.DATA_DOMAIN_PLATFORM_ENTITIES][
+        (CLIMATE_DOMAIN, "generic_thermostat")
+    ]
+    thermostat = thermostats[ENTITY]
+    thermostat._last_toggled_time = now
+
+    # Ensure turning on is blocked while in cooldown
+    calls = _setup_switch(hass, False)
+    _setup_sensor(hass, 20)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Advance to end of cooldown and trigger the scheduled check
+    freezer.move_to(now + datetime.timedelta(minutes=15))
+    async_fire_time_changed(hass, now + datetime.timedelta(minutes=15))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].service == SERVICE_TURN_ON
 
 
 @pytest.fixture
