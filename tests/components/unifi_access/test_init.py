@@ -32,13 +32,13 @@ async def test_setup_entry_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test setup fails with auth error triggers reauth."""
+    """Test setup fails with auth error."""
     mock_client.authenticate.side_effect = ApiAuthError()
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_connection_error(
