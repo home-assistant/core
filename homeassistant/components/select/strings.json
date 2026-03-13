@@ -79,7 +79,7 @@
   "title": "Select",
   "triggers": {
     "selection_changed": {
-      "description": "Triggers after one or more selections change.",
+      "description": "Triggers after the selected option of one or more dropdowns changes.",
       "name": "Selection changed"
     }
   }
