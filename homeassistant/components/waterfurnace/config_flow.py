@@ -109,7 +109,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data={**reauth_entry.data, **user_input},
+                    data_updates={**reauth_entry.data, **user_input},
                 )
 
         return self.async_show_form(
