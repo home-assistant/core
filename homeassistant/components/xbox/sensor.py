@@ -73,6 +73,9 @@ class XboxSensor(StrEnum):
     FREE_STORAGE = "free_storage"
 
 
+PRESENCE_ACTIVE = "Active"
+
+
 @dataclass(kw_only=True, frozen=True)
 class XboxSensorEntityDescription(XboxBaseEntityDescription, SensorEntityDescription):
     """Xbox sensor description."""
@@ -104,32 +107,32 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
         "platform": None,
     }
 
-    if not title:
-        return attributes
-
     if person.presence_details:
         active_entry = next(
-            (d for d in person.presence_details if d.state == "Active" and d.is_game),
+            (
+                d
+                for d in person.presence_details
+                if d.state == PRESENCE_ACTIVE and d.is_game
+            ),
             None,
         ) or next(
-            (d for d in person.presence_details if d.state == "Active"),
+            (d for d in person.presence_details if d.state == PRESENCE_ACTIVE),
             None,
         )
 
         if active_entry:
-            if active_entry.device == "Scarlett" and title.devices:
+            platform = active_entry.device
+            if platform == "Scarlett" and title and title.devices:
                 if "Xbox360" in title.devices:
                     platform = "Xbox360"
                 elif "XboxOne" in title.devices:
                     platform = "XboxOne"
-                else:
-                    platform = "Scarlett"
-            else:
-                platform = active_entry.device
 
-            attributes["platform"] = MAP_PLATFORM_NAME.get(
-                platform, platform.capitalize()
-            )
+            attributes["platform"] = MAP_PLATFORM_NAME.get(platform, platform)
+
+    if not title:
+        return attributes
+
     if title.detail is not None:
         attributes.update(
             {

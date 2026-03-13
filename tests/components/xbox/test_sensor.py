@@ -103,4 +103,4 @@ async def test_platform_fallback(hass: HomeAssistant) -> None:
 
     attributes = now_playing_attributes(mock_person, mock_title)
 
-    assert attributes.get("platform") == "Playstation"
+    assert attributes.get("platform") == "playstation"
