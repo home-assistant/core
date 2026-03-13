@@ -74,6 +74,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def format_zigbee_address(address: str) -> str:
+    """Format a zigbee address to be more readable."""
+    return ":".join(address.lower()[i : i + 2] for i in range(0, 16, 2))
+
+
 @dataclass
 class SmartThingsData:
     """Define an object to hold SmartThings data."""
@@ -490,6 +495,15 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
+            if device.device.hub.hub_eui:
+                kwargs.setdefault(ATTR_CONNECTIONS, set()).update(
+                    {
+                        (
+                            dr.CONNECTION_ZIGBEE,
+                            format_zigbee_address(device.device.hub.hub_eui),
+                        )
+                    }
+                )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
@@ -513,6 +527,10 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (zigbee := device.device.zigbee) is not None:
+            kwargs[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
+            }
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {
