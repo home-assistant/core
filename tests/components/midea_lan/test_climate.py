@@ -30,14 +30,9 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.midea_lan import climate, entity as entity_module
+from homeassistant.components.midea_lan import climate
 from homeassistant.components.midea_lan.const import DEVICES, DOMAIN
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_DEVICE_ID,
-    CONF_SWITCHES,
-    Platform,
-)
+from homeassistant.const import ATTR_TEMPERATURE, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 
 
@@ -89,74 +84,54 @@ class DummyDevice:
         self.calls.append(("set_mode", zone, mode))
 
 
-def _device_map() -> dict:
-    """Return minimal MIDEA_DEVICES map used by climate tests."""
+def _climate_entities() -> list[climate.MideaClimateEntityDescription]:
+    """Return minimal CLIMATE_ENTITIES list used by climate tests."""
+    return [
+        climate.MideaClimateEntityDescription(
+            key="named",
+            model=[DeviceType.AC],
+            translation_key="named",
+        ),
+        climate.MideaClimateEntityDescription(
+            key="extra",
+            model=[DeviceType.AC],
+            translation_key="extra",
+            entity_registry_enabled_default=False,
+        ),
+        climate.MideaClimateEntityDescription(
+            key="named",
+            model=[DeviceType.CC],
+            translation_key="named",
+        ),
+        climate.MideaClimateEntityDescription(
+            key="named",
+            model=[DeviceType.CF],
+            translation_key="named",
+        ),
+        climate.MideaClimateEntityDescription(
+            key="named",
+            model=[DeviceType.C3],
+            translation_key="named",
+            zone=0,
+        ),
+        climate.MideaClimateEntityDescription(
+            key="named",
+            model=[DeviceType.FB],
+            translation_key="named",
+        ),
+    ]
+
+
+def _get_description(
+    device_type: int,
+    entity_key: str,
+) -> climate.MideaClimateEntityDescription:
+    """Return one climate description for a device type and entity key."""
     return {
-        DeviceType.AC: {
-            "name": "AC",
-            "entities": {
-                "named": {
-                    "type": Platform.CLIMATE,
-                    "name": None,
-                    "translation_key": "named",
-                    "has_entity_name": True,
-                    "icon": "mdi:air-conditioner",
-                    "default": True,
-                },
-                "extra": {
-                    "type": Platform.CLIMATE,
-                    "name": "Extra",
-                    "icon": "mdi:air-conditioner",
-                    "default": False,
-                },
-            },
-        },
-        DeviceType.CC: {
-            "name": "CC",
-            "entities": {
-                "named": {
-                    "type": Platform.CLIMATE,
-                    "name": "CC",
-                    "icon": "mdi:radiator",
-                    "default": True,
-                }
-            },
-        },
-        DeviceType.CF: {
-            "name": "CF",
-            "entities": {
-                "named": {
-                    "type": Platform.CLIMATE,
-                    "name": "CF",
-                    "icon": "mdi:radiator",
-                    "default": True,
-                }
-            },
-        },
-        DeviceType.C3: {
-            "name": "C3",
-            "entities": {
-                "named": {
-                    "type": Platform.CLIMATE,
-                    "name": "C3",
-                    "icon": "mdi:radiator",
-                    "default": True,
-                    "zone": 0,
-                }
-            },
-        },
-        DeviceType.FB: {
-            "name": "FB",
-            "entities": {
-                "named": {
-                    "type": Platform.CLIMATE,
-                    "name": "FB",
-                    "icon": "mdi:radiator",
-                    "default": True,
-                }
-            },
-        },
-    }
+        entity.key: entity
+        for entity in _climate_entities()
+        if device_type in entity.model
+    }[entity_key]
 
 
 def test_midea_climate_base_methods() -> None:
@@ -172,14 +147,16 @@ def test_midea_climate_base_methods() -> None:
         "sleep_mode": False,
         "frost_protect": False,
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         dev = DummyDevice(DeviceType.AC, attributes=attrs)
-        ent = climate.MideaACClimate(dev, "named", MagicMock(options={"sensors": []}))
+        ent = climate.MideaACClimate(
+            dev,
+            _get_description(DeviceType.AC, "named"),
+            MagicMock(options={"sensors": []}),
+        )
 
     assert ent.supported_features
+    assert ent._attr_name is None
     assert ent.hvac_mode == HVACMode.AUTO
     ent.device.attributes["power"] = False
     assert ent.hvac_mode == HVACMode.OFF
@@ -261,13 +238,10 @@ def test_midea_ac_specific() -> None:
         "indoor_humidity": 50,
         ACAttributes.outdoor_temperature: 10.5,
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         ent = climate.MideaACClimate(
             DummyDevice(DeviceType.AC, attributes=attrs),
-            "named",
+            _get_description(DeviceType.AC, "named"),
             MagicMock(options={"sensors": ["indoor_humidity"]}),
         )
     assert ent.fan_mode == FAN_AUTO
@@ -308,12 +282,10 @@ def test_midea_cc_specific() -> None:
         CCAttributes.temperature_precision: 0.5,
         CCAttributes.swing: True,
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         ent = climate.MideaCCClimate(
-            DummyDevice(DeviceType.CC, attributes=attrs), "named"
+            DummyDevice(DeviceType.CC, attributes=attrs),
+            _get_description(DeviceType.CC, "named"),
         )
     assert ent.fan_modes == ["low", "high"]
     assert ent.fan_mode == "high"
@@ -332,12 +304,10 @@ def test_midea_cf_specific() -> None:
         CFAttributes.max_temperature: 30,
         CFAttributes.current_temperature: 22,
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         ent = climate.MideaCFClimate(
-            DummyDevice(DeviceType.CF, attributes=attrs), "named"
+            DummyDevice(DeviceType.CF, attributes=attrs),
+            _get_description(DeviceType.CF, "named"),
         )
     assert ent.supported_features
     assert ent.min_temp == 16
@@ -357,12 +327,12 @@ def test_midea_c3_specific() -> None:
         C3Attributes.zone1_power: True,
         C3Attributes.target_temperature: [22, 23],
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
+        description = _get_description(DeviceType.C3, "named")
         ent = climate.MideaC3Climate(
-            DummyDevice(DeviceType.C3, attributes=attrs), "named", 0
+            DummyDevice(DeviceType.C3, attributes=attrs),
+            description,
+            0,
         )
 
     assert ent.supported_features
@@ -396,12 +366,10 @@ def test_midea_fb_specific() -> None:
         FBAttributes.power: True,
         FBAttributes.current_temperature: 20,
     }
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         ent = climate.MideaFBClimate(
-            DummyDevice(DeviceType.FB, attributes=attrs), "named"
+            DummyDevice(DeviceType.FB, attributes=attrs),
+            _get_description(DeviceType.FB, "named"),
         )
     assert ent.supported_features
     assert ent.preset_mode == "comfort"
@@ -421,15 +389,17 @@ def test_midea_fb_specific() -> None:
 async def test_climate_async_setup_entry(hass: HomeAssistant) -> None:
     """Test async_setup_entry creates entities for each supported device type."""
     add_entities = MagicMock()
-    config_entry = MagicMock(
-        data={CONF_DEVICE_ID: 123}, options={CONF_SWITCHES: ["extra"]}
-    )
+    config_entry = MagicMock(data={CONF_DEVICE_ID: 123}, options={})
 
-    with (
-        patch.object(entity_module, "MIDEA_DEVICES", _device_map()),
-        patch.object(climate, "MIDEA_DEVICES", _device_map()),
-    ):
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         hass.data[DOMAIN] = {DEVICES: {123: DummyDevice(DeviceType.AC)}}
+
+        # Ensure optional entities (default=False) are skipped unless explicitly enabled.
+        with patch.object(
+            climate, "MideaACClimate", side_effect=lambda *_: "ac"
+        ) as ac_ctor:
+            await climate.async_setup_entry(hass, config_entry, add_entities)
+        assert ac_ctor.call_count == 2
 
         with (
             patch.object(climate, "MideaACClimate", side_effect=lambda *_: "ac"),

@@ -49,5 +49,18 @@
         "title": "Set up Midea LAN"
       }
     }
+  },
+  "entity": {
+    "climate": {
+      "climate_key": {
+        "name": "Thermostat"
+      },
+      "climate_zone1": {
+        "name": "Zone 1 Thermostat"
+      },
+      "climate_zone2": {
+        "name": "Zone 2 Thermostat"
+      }
+    }
   }
 }
