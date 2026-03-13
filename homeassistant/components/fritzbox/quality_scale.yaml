@@ -1,0 +1,83 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: no actions/services are implemented
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow:
+    status: todo
+    comment: some data descriptions are missing
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: no actions/services are implemented
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: todo
+    comment: only set for sensors, yet
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: add exception handling to entity cations
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: has no options flow
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: not set at the moment, we use a coordinator
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices: done
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: the pyfritzhome lib is not async
+  inject-websession:
+    status: todo
+    comment: the pyfritzhome lib is not async
+  strict-typing:
+    status: todo
+    comment: |
+      Dependency is missing py.typed (and appears fully untyped)
