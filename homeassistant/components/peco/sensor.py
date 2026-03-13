@@ -16,13 +16,10 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PECOCoordinatorData
 from .const import ATTR_CONTENT, CONF_COUNTY, DOMAIN
+from .coordinator import PECOCoordinatorData, PecoOutageCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,9 +84,7 @@ async def async_setup_entry(
     )
 
 
-class PecoSensor(
-    CoordinatorEntity[DataUpdateCoordinator[PECOCoordinatorData]], SensorEntity
-):
+class PecoSensor(CoordinatorEntity[PecoOutageCoordinator], SensorEntity):
     """PECO outage counter sensor."""
 
     entity_description: PECOSensorEntityDescription
@@ -100,7 +95,7 @@ class PecoSensor(
         self,
         description: PECOSensorEntityDescription,
         county: str,
-        coordinator: DataUpdateCoordinator[PECOCoordinatorData],
+        coordinator: PecoOutageCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
