@@ -301,6 +301,11 @@ async def test_subentry_flow(
                 CONF_LATITUDE: 30.1,
                 CONF_LONGITUDE: 40.1,
             },
+            "custom_local_aqi_options": {
+                "country": "DE",
+                "custom_laqi": "deu_uba",
+                "enable_custom_laqi": False,
+            },
         },
     )
     await hass.async_block_till_done()
