@@ -80,6 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
             raise ConfigEntryAuthFailed from err
         if err.status_code >= 500 or err.status_code == 429:
             raise ConfigEntryNotReady(err) from err
+        # If the response is a 4xx error other than 401 or 403, it likely means the URL is valid but not an Ollama instance,
+        # so we raise ConfigEntryError to show an error in the UI, instead of ConfigEntryNotReady which would just keep retrying.
         raise ConfigEntryError(err) from err
     except (TimeoutError, httpx.ConnectError) as err:
         raise ConfigEntryNotReady(err) from err
