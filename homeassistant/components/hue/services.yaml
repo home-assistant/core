@@ -43,3 +43,57 @@ activate_scene:
         number:
           min: 1
           max: 255
+
+set_group_state:
+  target:
+    entity:
+      domain: light
+      integration: hue
+  fields:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    brightness:
+      selector:
+        number:
+          min: 1
+          max: 255
+    color_temp_kelvin:
+      selector:
+        color_temp:
+          unit: "kelvin"
+          min: 2000
+          max: 10000
+    power:
+      selector:
+        boolean:
+
+set_light_state:
+  target:
+    entity:
+      domain: light
+      integration: hue
+  fields:
+    transition:
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    brightness:
+      selector:
+        number:
+          min: 1
+          max: 255
+    color_temp_kelvin:
+      selector:
+        color_temp:
+          unit: "kelvin"
+          min: 2000
+          max: 10000
+    power:
+      selector:
+        boolean:

@@ -155,6 +155,7 @@
     "step": {
       "init": {
         "data": {
+          "all": "Select light groups that should only 'turn on' if all lights in the group are on",
           "allow_hue_groups": "Allow Hue groups",
           "allow_hue_scenes": "Allow Hue scenes",
           "allow_unreachable": "Allow unreachable bulbs to report their state correctly",
@@ -203,6 +204,50 @@
         }
       },
       "name": "Activate scene"
+    },
+    "set_group_state": {
+      "description": "Update the color/brightness of a group without requiring a power state to be communicated at the same time. Useful to adjust the state of a group that contains powered off entities without unintentionally powering them all on.",
+      "fields": {
+        "brightness": {
+          "description": "Set brightness for the light.",
+          "name": "Brightness"
+        },
+        "color_temp_kelvin": {
+          "description": "Set color temperature of the lights in the group.",
+          "name": "Color temperature (Kelvin)"
+        },
+        "power": {
+          "description": "Turn the light on or off. Leave out to keep the power as it is.",
+          "name": "Power"
+        },
+        "transition": {
+          "description": "Duration it takes to get to the final state.",
+          "name": "Transition"
+        }
+      },
+      "name": "Set Hue group state"
+    },
+    "set_light_state": {
+      "description": "Update the color/brightness of a light without requiring a power state to be communicated at the same time. Useful to 'pre-stage' the state of a light before it's turned on, eliminating initial color transition flicker.",
+      "fields": {
+        "brightness": {
+          "description": "Set brightness for the light.",
+          "name": "Brightness"
+        },
+        "color_temp_kelvin": {
+          "description": "Set color temperature of the light.",
+          "name": "Color temperature (Kelvin)"
+        },
+        "power": {
+          "description": "Turn the light on or off. Leave out to keep the power as it is.",
+          "name": "Power"
+        },
+        "transition": {
+          "description": "Duration it takes to get to the final state.",
+          "name": "Transition"
+        }
+      },
+      "name": "Set Hue light state"
     }
   }
 }

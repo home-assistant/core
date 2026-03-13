@@ -27,6 +27,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .bridge import HueConfigEntry
 from .const import (
+    CONF_ALL,
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
     CONF_IGNORE_AVAILABILITY,
@@ -396,6 +397,13 @@ class HueV2OptionsFlowHandler(OptionsFlow):
             for identifier in entry.identifiers
             if identifier[0] == DOMAIN
         }
+        room_ids = {
+            identifier[1]: entry.name
+            for entry in entries
+            if entry.entry_type == dr.DeviceEntryType.SERVICE
+            for identifier in entry.identifiers
+            if identifier[0] == DOMAIN
+        }
         # filter any non existing device id's from the list
         cur_ids = [
             item
@@ -411,6 +419,10 @@ class HueV2OptionsFlowHandler(OptionsFlow):
                         CONF_IGNORE_AVAILABILITY,
                         default=cur_ids,
                     ): cv.multi_select(dev_ids),
+                    vol.Optional(
+                        CONF_ALL,
+                        default=self.config_entry.options.get(CONF_ALL, []),
+                    ): cv.multi_select(room_ids),
                 }
             ),
         )
