@@ -1,4 +1,61 @@
 # serializer version: 1
+# name: test_sensors[ac_charger][sensor.smart_charger_ac_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_charger_ac_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'AC current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'AC current',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <Keys.AC_CURRENT: 'ac_current'>,
+    'unique_id': '01:02:03:04:05:12-ac_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[ac_charger][sensor.smart_charger_ac_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Smart Charger AC current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_charger_ac_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensors[ac_charger][sensor.smart_charger_charge_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -233,7 +290,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current-entry]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -248,7 +305,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_charger_current',
+    'entity_id': 'sensor.smart_charger_output_phase_1_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -256,7 +313,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current',
+    'object_id_base': 'Output phase 1 current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -264,7 +321,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Output phase 1 current',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -274,23 +331,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current-state]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Charger Current',
+      'friendly_name': 'Smart Charger Output phase 1 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_current',
+    'entity_id': 'sensor.smart_charger_output_phase_1_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.4',
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_2-entry]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_1_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -305,7 +362,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_charger_current_2',
+    'entity_id': 'sensor.smart_charger_output_phase_1_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -313,7 +370,64 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current',
+    'object_id_base': 'Output phase 1 voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Output phase 1 voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_phase_voltage',
+    'unique_id': '01:02:03:04:05:12-output_voltage_1',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_1_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Smart Charger Output phase 1 voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_charger_output_phase_1_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.49',
+  })
+# ---
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_2_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_charger_output_phase_2_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output phase 2 current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -321,7 +435,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Output phase 2 current',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -331,23 +445,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_2-state]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Charger Current',
+      'friendly_name': 'Smart Charger Output phase 2 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_current_2',
+    'entity_id': 'sensor.smart_charger_output_phase_2_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_3-entry]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_2_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -362,7 +476,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_charger_current_3',
+    'entity_id': 'sensor.smart_charger_output_phase_2_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -370,7 +484,64 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current',
+    'object_id_base': 'Output phase 2 voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Output phase 2 voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'output_phase_voltage',
+    'unique_id': '01:02:03:04:05:12-output_voltage_2',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_2_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Smart Charger Output phase 2 voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smart_charger_output_phase_2_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_3_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.smart_charger_output_phase_3_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Output phase 3 current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -378,7 +549,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Output phase 3 current',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -388,23 +559,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_3-state]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_3_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Charger Current',
+      'friendly_name': 'Smart Charger Output phase 3 current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_current_3',
+    'entity_id': 'sensor.smart_charger_output_phase_3_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_4-entry]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_3_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -419,7 +590,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_charger_current_4',
+    'entity_id': 'sensor.smart_charger_output_phase_3_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -427,34 +598,34 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Current',
+    'object_id_base': 'Output phase 3 voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Output phase 3 voltage',
     'platform': 'victron_ble',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': <Keys.AC_CURRENT: 'ac_current'>,
-    'unique_id': '01:02:03:04:05:12-ac_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'translation_key': 'output_phase_voltage',
+    'unique_id': '01:02:03:04:05:12-output_voltage_3',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[ac_charger][sensor.smart_charger_current_4-state]
+# name: test_sensors[ac_charger][sensor.smart_charger_output_phase_3_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Charger Current',
+      'device_class': 'voltage',
+      'friendly_name': 'Smart Charger Output phase 3 voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_current_4',
+    'entity_id': 'sensor.smart_charger_output_phase_3_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -570,177 +741,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21',
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_charger_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'victron_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'output_phase_voltage',
-    'unique_id': '01:02:03:04:05:12-output_voltage_1',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Charger Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13.49',
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_charger_voltage_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'victron_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'output_phase_voltage',
-    'unique_id': '01:02:03:04:05:12-output_voltage_2',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Charger Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_voltage_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.smart_charger_voltage_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'victron_ble',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'output_phase_voltage',
-    'unique_id': '01:02:03:04:05:12-output_voltage_3',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[ac_charger][sensor.smart_charger_voltage_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Charger Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_charger_voltage_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
   })
 # ---
 # name: test_sensors[battery_monitor][sensor.battery_monitor_alarm-entry]
