@@ -1,9 +1,6 @@
 {
   "entity": {
     "fan": {
-      "bounded": {
-        "default": "mdi:arrow-expand-horizontal"
-      },
       "extract": {
         "default": "mdi:arrow-expand-right"
       },
