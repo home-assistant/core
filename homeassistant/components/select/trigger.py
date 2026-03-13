@@ -1,5 +1,6 @@
 """Provides triggers for selects."""
 
+from homeassistant.components.input_select import DOMAIN as INPUT_SELECT_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
@@ -14,7 +15,7 @@ from .const import DOMAIN
 class SelectionChangedTrigger(EntityTriggerBase):
     """Trigger for select entity when its selection changes."""
 
-    _domains = {DOMAIN}
+    _domains = {DOMAIN, INPUT_SELECT_DOMAIN}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_state(self, state: State) -> bool:
