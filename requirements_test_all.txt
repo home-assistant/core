@@ -2817,7 +2817,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.0.1
+zha==1.0.2
 
 # homeassistant.components.zinvolt
 zinvolt==0.3.0
