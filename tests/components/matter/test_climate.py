@@ -658,12 +658,12 @@ async def test_eve_thermo_v5_presets(
         blocking=True,
     )
 
-    # Verify the command was sent with empty bytes to clear the preset
+    # Verify the command was sent with null value to clear the preset
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.Thermostat.Commands.SetActivePresetRequest(presetHandle=b""),
+        command=clusters.Thermostat.Commands.SetActivePresetRequest(presetHandle=None),
     )
     # Verify preset_mode is optimistically updated to PRESET_NONE
     state = hass.states.get(entity_id)
