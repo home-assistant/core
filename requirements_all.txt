@@ -3011,7 +3011,7 @@ stookwijzer==1.6.1
 streamlabswater==1.0.1
 
 # homeassistant.components.subaru
-subarulink==0.7.15
+subarulink==0.7.19
 
 # homeassistant.components.surepetcare
 surepy==0.9.0
