@@ -103,7 +103,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             # Treat no gwid as a connection failure
-            if not client.gwid:
+            if not errors and not client.gwid:
                 errors["base"] = "cannot_connect"
 
             if not errors:
