@@ -2,36 +2,41 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from unifi_access_api import ApiError
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_lock_entities_created(
+async def test_lock_entities(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test lock entities are created for each door."""
-    state = hass.states.get("lock.front_door")
-    assert state is not None
-    assert state.state == LockState.LOCKED
+    """Test lock entities are created with expected state."""
+    with patch("homeassistant.components.unifi_access.PLATFORMS", [Platform.LOCK]):
+        await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("lock.back_door")
-    assert state is not None
-    assert state.state == LockState.UNLOCKED
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_unlock_door(
