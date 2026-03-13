@@ -26,7 +26,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_json_array_fixture,
+    async_load_json_array_fixture,
     snapshot_platform,
 )
 
@@ -92,7 +92,9 @@ async def test_budget_sensor_updates_after_refresh(
     assert state is not None
     assert state.state == "123.45"
 
-    updated_budget_data = load_json_array_fixture("budgets.json", DOMAIN)
+    updated_budget_data = await async_load_json_array_fixture(
+        hass, "budgets.json", DOMAIN
+    )
     updated_budget = deepcopy(updated_budget_data[0])
     updated_budget["attributes"]["spent"][0]["sum"] = "999.99"
     mock_firefly_client.get_budgets.return_value = [Budget.from_dict(updated_budget)]
