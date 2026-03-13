@@ -22,6 +22,7 @@ from .const import (
     CONF_HEATING_DEVICE,
     CONF_INSTANCE_NAMES,
     DIAGNOSTIC_ADDRESSES,
+    DIAGNOSTIC_PARAMS,
     DOMAIN,
     HEATING_DEVICES,
     SW_VERSION_ADDRESSES,
@@ -85,7 +86,11 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{register.address}"
         self._attr_entity_registry_enabled_default = enabled_default
         self._attr_name = register.name
-        if register.address in DIAGNOSTIC_ADDRESSES:
+        if (
+            register.address in DIAGNOSTIC_ADDRESSES
+            or register.is_status
+            or register.param in DIAGNOSTIC_PARAMS
+        ):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         unit = register.unit
         if register.value_table:

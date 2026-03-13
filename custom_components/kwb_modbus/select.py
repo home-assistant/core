@@ -15,6 +15,7 @@ from .const import (
     CONF_EXPERT_MODE,
     CONF_HEATING_DEVICE,
     CONF_INSTANCE_NAMES,
+    CONFIG_SELECT_PARAMS,
     DOMAIN,
     EXPERT_SELECT_ADDRESSES,
     HEATING_DEVICES,
@@ -86,6 +87,9 @@ class KWBSelectEntity(CoordinatorEntity[KWBDataUpdateCoordinator], SelectEntity)
         if register.address in EXPERT_SELECT_ADDRESSES:
             self._attr_entity_category = EntityCategory.CONFIG
             self._attr_entity_registry_enabled_default = expert_mode
+        elif register.param in CONFIG_SELECT_PARAMS:
+            self._attr_entity_category = EntityCategory.CONFIG
+            self._attr_entity_registry_enabled_default = True
         elif register.index:
             # Indexed selects only reach here if explicitly selected during setup.
             # Still gate them behind expert mode.

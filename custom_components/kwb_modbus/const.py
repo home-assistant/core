@@ -83,6 +83,71 @@ DIAGNOSTIC_ADDRESSES = {
     24935,  # Modbus buffer temp bottom (status)
 }
 
+# Sensor params that should always be EntityCategory.DIAGNOSTIC.
+# These are technical/internal values not relevant for day-to-day use.
+# Used in addition to DIAGNOSTIC_ADDRESSES and register.is_status.
+DIAGNOSTIC_PARAMS: frozenset[str] = frozenset({
+    # Combustion technical
+    "KSM.i_flammtemp_ist", "KSM.O2Ist", "KSM.i_rauchgastemp_ist",
+    "KSM.AI_Feuerraum_Unterdruck", "KSM.Saugzugstufe", "KSM.i_drehzahl_saugzug",
+    "KSM.kesselpumpe_steuerstufe", "KSM.DO_Pelletssauger",
+    # External I/O and internal signals
+    "KSM.i_extern1", "KSM.i_extern2", "KSM.i_extern3",
+    "KSM.o_multifunktionsausgang_1", "KSM.o_multifunktionsausgang_2",
+    "KSM.o_multifunktionsausgang_3", "KSM.o_multifunktionsausgang_4",
+    "KSM.verbraucher_anforderung",
+    # Maintenance counters
+    "KSM.Betriebsminuten_Summe", "CF2.PM_Betriebsminuten_Summe",
+    "KSM.ServiceintervallReststunden",
+    # Boiler technical outputs
+    "AK.anforderung_bl_ursache", "AK.pl_geblaesestufe",
+    # MF2 combustion internals
+    "MF2.Glutbettniveau", "MF2.i_ausbrandtemp", "MF2.luftverschiebung_gesamt",
+    "MF2.AI_Fuellstand_Zwischenbehaelter", "MF2.SLGeblaesestufe",
+    # CF2 technical outputs
+    "CF2.i_pl_klappe_ist_promille", "CF2.i_sl_klappe_ist_promille",
+    "CF2.o_zuendung_heizung_sh",
+    # Fuel/conveyor system
+    "FS.o_motor_foerdersystem_1",
+    # KFS internal stats
+    "KFS.anzahl_kessel", "KFS.anzahl_angeforderte_kessel",
+    "KFS.o_anforderung_spitzenlastkessel", "KFS.o_stoerung_dauer",
+    "KFS.puffer_durchladegrad", "KFS.mittlere_durchladetemperatur",
+    # HC Modbus control internals
+    "HK.modbus_anforderung", "HK.modbus_temperatur",
+    # Solar technical
+    "SOL.status_ursache", "SOL.pumpe_1_steuerstufe", "SOL.pumpe_2_steuerstufe",
+    "SOL.o_umschaltventil",
+    # Module internal request signals
+    "PUF.anforderung", "PUF.o_umschaltventil",
+    "BOI.anforderung", "KFK.o_anforderung", "ZK.o_anforderung",
+    # System version
+    "SYSTEM.sw_revision", "SYSTEM.alarme_total",
+})
+
+# Select params that should be EntityCategory.CONFIG (settings, setpoints, limits).
+# These are infrequently changed calibration or configuration values.
+CONFIG_SELECT_PARAMS: frozenset[str] = frozenset({
+    # HC temperature setpoints
+    "HK.raum_temperatur_soll", "HK.raum_temperatur_soll_nacht",
+    "HK.raum_temperatur_soll_tag", "HK.vorlauf_temperatur_soll",
+    # Boiler limits
+    "KSM.RuecklauftempMin",
+    # Buffer/DHW limits
+    "PUF.brauchwassertemp_min", "PUF.temperatur_grenzen.min", "PUF.temperatur_grenzen.max",
+    "BOI.soll_temperatur", "BOI.temperatur_grenzen.min", "BOI.temperatur_grenzen.max",
+    # Boiler setpoints per device type
+    "CF2.kesseltemp_soll_1", "CF2.max_befuellgrad_anzeige",
+    "EF2.KesseltempSoll1", "EF2.KesseltempSoll2",
+    "MF2.KesseltempSoll1", "MF2.KesseltempSoll2",
+    # Calibration
+    "EF2.Brennstofffaktor", "MF2.Brennstofffaktor",
+    # KFS/buffer setpoints
+    "KFS.puffer_solltemperatur_sommer", "KFS.puffer_solltemperatur_winter",
+    # AK external setpoints
+    "AK.externe_brennerleistung", "AK.externe_kessel_solltemperatur",
+})
+
 # Select addresses that are only visible in expert mode
 EXPERT_SELECT_ADDRESSES = {
     24583,  # External specification
