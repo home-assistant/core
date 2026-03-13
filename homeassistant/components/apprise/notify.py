@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
-    ATTR_TITLE_DEFAULT,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -77,5 +76,10 @@ class AppriseNotificationService(BaseNotificationService):
         to the notification causing filtering (if set up that way).
         """
         targets = kwargs.get(ATTR_TARGET)
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        # Default to the empty string, not ATTR_TITLE_DEFAULT, because
+        # apprise allows empty titles. If we default to ATTR_TITLE_DEFAULT
+        # instead, there is no way to set an empty title. See PR #161985 for
+        # why the ability to set an empty title was not put elsewhere where it
+        # would affect all legacy notifiers.
+        title = kwargs.get(ATTR_TITLE, "")
         self.apprise.notify(body=message, title=title, tag=targets)
