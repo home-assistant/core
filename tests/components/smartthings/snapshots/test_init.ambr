@@ -106,6 +106,10 @@
         'mac',
         '68:3a:48:50:1a:75',
       ),
+      tuple(
+        'zigbee',
+        'd0:52:a8:13:a0:fe:00:01',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -137,6 +141,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '0c:ae:5f:ff:fe:ce:43:28',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -323,6 +331,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '00:0d:6f:00:03:c0:4b:c9',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -354,6 +366,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '00:0d:6f:00:05:76:f6:04',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -1656,6 +1672,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        'a4:c1:38:c5:24:a5:bc:8d',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -1749,6 +1769,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        'a4:c1:38:8b:31:01:7b:5f',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -1966,6 +1990,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '00:0d:6f:ff:fe:2a:d0:e7',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2059,6 +2087,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '98:32:68:ff:fe:38:2c:fb',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2183,6 +2215,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '00:15:8d:00:09:67:92:4a',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2245,6 +2281,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '24:fd:5b:00:01:0a:ed:6b',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2369,6 +2409,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        'f0:d1:b8:00:00:05:1e:05',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2710,6 +2754,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': 'https://account.smartthings.com',
     'connections': set({
+      tuple(
+        'zigbee',
+        '00:0d:6f:00:02:fb:6e:24',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -2744,6 +2792,10 @@
       tuple(
         'mac',
         'd0:52:a8:72:91:02',
+      ),
+      tuple(
+        'zigbee',
+        'd0:52:a8:72:94:7a:00:01',
       ),
     }),
     'disabled_by': None,
