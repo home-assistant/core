@@ -3819,7 +3819,7 @@ async def test_recorder_platform_with_statistics(
         hass, ANY, zero, zero + timedelta(minutes=5), {}
     )
     recorder_platform.async_custom_equivalent_units.assert_called_once()
-    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY, {})
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
 
@@ -3841,7 +3841,7 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.compile_statistics.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once()
     recorder_platform.update_statistics_issues.assert_called_once()
-    recorder_platform.validate_statistics.assert_called_once_with(hass)
+    recorder_platform.validate_statistics.assert_called_once_with(hass, {})
 
 
 async def test_recorder_platform_without_statistics(

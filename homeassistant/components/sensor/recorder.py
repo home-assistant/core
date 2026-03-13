@@ -863,6 +863,7 @@ def _update_issues(
     report_issue: Callable[[str, str, dict[str, Any]], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
+    custom_units_for_entities: dict[str, dict[str, str]],
 ) -> None:
     """Update repair issues."""
     for state in sensor_states:
@@ -889,8 +890,11 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
+                equivalent_units_for_entity = (
+                    EQUIVALENT_UNITS | custom_units_for_entities.get(entity_id, {})
+                )
                 if numeric and not _equivalent_units(
-                    {state_unit, metadata_unit}, EQUIVALENT_UNITS
+                    {state_unit, metadata_unit}, equivalent_units_for_entity
                 ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
@@ -943,6 +947,7 @@ def _update_issues(
 def update_statistics_issues(
     hass: HomeAssistant,
     session: Session,
+    custom_units_for_entities: dict[str, dict[str, str]],
 ) -> None:
     """Validate statistics."""
     instance = get_instance(hass)
@@ -996,6 +1001,7 @@ def update_statistics_issues(
         create_issue_registry_issue,
         sensor_states,
         metadatas,
+        custom_units_for_entities,
     )
     for issue_id in issues:
         hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
@@ -1003,6 +1009,7 @@ def update_statistics_issues(
 
 def validate_statistics(
     hass: HomeAssistant,
+    custom_units_for_entities: dict[str, dict[str, str]],
 ) -> dict[str, list[statistics.ValidationIssue]]:
     """Validate statistics."""
     validation_result = defaultdict(list)
@@ -1026,6 +1033,7 @@ def validate_statistics(
         create_statistic_validation_issue,
         sensor_states,
         metadatas,
+        custom_units_for_entities,
     )
 
     for state in sensor_states:

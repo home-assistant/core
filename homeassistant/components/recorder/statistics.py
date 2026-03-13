@@ -767,7 +767,9 @@ def _compile_statistics(
                 )
             ):
                 continue
-            platform_update_issues(instance.hass, session)
+            platform_update_issues(
+                instance.hass, session, custom_equivalent_units_per_entity
+            )
 
     if start.minute == 55:
         # A full hour is ready, summarize it
@@ -2663,23 +2665,64 @@ def _sorted_statistics_to_dict(
 
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
-    platform_validation: dict[str, list[ValidationIssue]] = {}
+    platform_validation_callables: list[Callable] = [
+        platform_validate_statistics
+        for platform in hass.data[DATA_RECORDER].recorder_platforms.values()
+        if (
+            platform_validate_statistics := getattr(
+                platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
+            )
+        )
+    ]
+
+    if not platform_validation_callables:
+        return {}
+
+    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
     for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
-        if platform_validate_statistics := getattr(
-            platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
+        if custom_equivalent_units := getattr(
+            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
         ):
-            platform_validation.update(platform_validate_statistics(hass))
+            custom_equivalent_units_per_entity |= run_callback_threadsafe(
+                hass.loop, custom_equivalent_units, hass
+            ).result()
+
+    platform_validation: dict[str, list[ValidationIssue]] = {}
+    for platform_validate_statistics in platform_validation_callables:
+        platform_validation.update(
+            platform_validate_statistics(hass, custom_equivalent_units_per_entity)
+        )
+
     return platform_validation
 
 
 def update_statistics_issues(hass: HomeAssistant) -> None:
     """Update statistics issues."""
     with session_scope(hass=hass, read_only=True) as session:
+        platform_update_statistics_issues_callables: list[Callable] = [
+            platform_update_statistics_issues
+            for platform in hass.data[DATA_RECORDER].recorder_platforms.values()
+            if (
+                platform_update_statistics_issues := getattr(
+                    platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+                )
+            )
+        ]
+
+        if not platform_update_statistics_issues_callables:
+            return
+
+        custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
         for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
-            if platform_update_statistics_issues := getattr(
-                platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
+            if custom_equivalent_units := getattr(
+                platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
             ):
-                platform_update_statistics_issues(hass, session)
+                custom_equivalent_units_per_entity |= run_callback_threadsafe(
+                    hass.loop, custom_equivalent_units, hass
+                ).result()
+
+        for platform_update_issues in platform_update_statistics_issues_callables:
+            platform_update_issues(hass, session, custom_equivalent_units_per_entity)
 
 
 def _statistics_exists(
