@@ -238,6 +238,9 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "power_on_level": {
+        "name": "Power-on level"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -322,11 +325,11 @@
         }
       },
       "startup_on_off": {
-        "name": "Power-on behavior on startup",
+        "name": "Power-on behavior",
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "previous": "Previous",
+          "previous": "Previous state",
           "toggle": "[%key:common::action::toggle%]"
         }
       },

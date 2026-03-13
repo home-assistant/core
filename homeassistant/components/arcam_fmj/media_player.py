@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from arcam.fmj import ConnectionFailed, SourceCodes
-from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -20,20 +19,13 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ArcamFmjConfigEntry
-from .const import (
-    DOMAIN,
-    EVENT_TURN_ON,
-    SIGNAL_CLIENT_DATA,
-    SIGNAL_CLIENT_STARTED,
-    SIGNAL_CLIENT_STOPPED,
-)
+from .const import EVENT_TURN_ON
+from .coordinator import ArcamFmjConfigEntry, ArcamFmjCoordinator
+from .entity import ArcamFmjEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,19 +36,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-
-    client = config_entry.runtime_data
+    coordinators = config_entry.runtime_data.coordinators
 
     async_add_entities(
-        [
-            ArcamFmj(
-                config_entry.title,
-                State(client, zone),
-                config_entry.unique_id or config_entry.entry_id,
-            )
-            for zone in (1, 2)
-        ],
-        True,
+        [ArcamFmj(coordinators[zone]) for zone in (1, 2)],
     )
 
 
@@ -77,21 +60,13 @@ def convert_exception[**_P, _R](
     return _convert_exception
 
 
-class ArcamFmj(MediaPlayerEntity):
+class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     """Representation of a media device."""
 
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        device_name: str,
-        state: State,
-        uuid: str,
-    ) -> None:
+    def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
         """Initialize device."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn}"
+        super().__init__(coordinator)
+        self._state = coordinator.state
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -102,18 +77,8 @@ class ArcamFmj(MediaPlayerEntity):
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.TURN_ON
         )
-        if state.zn == 1:
+        if self._state.zn == 1:
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        self._attr_unique_id = f"{uuid}-{state.zn}"
-        self._attr_entity_registry_enabled_default = state.zn == 1
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, uuid),
-            },
-            manufacturer="Arcam",
-            model="Arcam FMJ AVR",
-            name=device_name,
-        )
 
     @property
     def state(self) -> MediaPlayerState:
@@ -121,49 +86,6 @@ class ArcamFmj(MediaPlayerEntity):
         if self._state.get_power():
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
-
-    async def async_added_to_hass(self) -> None:
-        """Once registered, add listener for events."""
-        await self._state.start()
-        try:
-            await self._state.update()
-        except ConnectionFailed as connection:
-            _LOGGER.debug("Connection lost during addition: %s", connection)
-
-        @callback
-        def _data(host: str) -> None:
-            if host == self._state.client.host:
-                self.async_write_ha_state()
-
-        @callback
-        def _started(host: str) -> None:
-            if host == self._state.client.host:
-                self.async_schedule_update_ha_state(force_refresh=True)
-
-        @callback
-        def _stopped(host: str) -> None:
-            if host == self._state.client.host:
-                self.async_schedule_update_ha_state(force_refresh=True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_DATA, _data)
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STARTED, _started)
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_CLIENT_STOPPED, _stopped)
-        )
-
-    async def async_update(self) -> None:
-        """Force update of state."""
-        _LOGGER.debug("Update state %s", self.name)
-        try:
-            await self._state.update()
-        except ConnectionFailed as connection:
-            _LOGGER.debug("Connection lost during update: %s", connection)
 
     @convert_exception
     async def async_mute_volume(self, mute: bool) -> None:

@@ -933,7 +933,7 @@ async def test_start_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,

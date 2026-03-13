@@ -13,8 +13,8 @@ CONF_WEB_CLIENT_ID = "web_client_id"  # part of the cloud cookie
 CONF_AUTH_COOKIE = "auth_cookie"  # part of the cloud cookie
 
 CONF_SERIAL = "serial"
-CONF_READ_MODE = "cloud_read"
-CONF_CONTROL_MODE = "cloud_control"
+CONF_READ_MODE = "read_mode"
+CONF_CONTROL_MODE = "control_mode"
 
 
 API_MODE_LOCAL = "local"
