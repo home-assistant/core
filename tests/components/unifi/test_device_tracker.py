@@ -622,22 +622,21 @@ def _assert_tracker_state(
 async def _toggle_options_and_assert(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    initial_options: dict[str, Any],
     initial_expected: set[str],
-    disabled_options: dict[str, Any],
-    disabled_expected: set[str],
-    enabled_options: dict[str, Any],
-    enabled_expected: set[str],
+    updated_options: dict[str, Any],
+    updated_expected: set[str],
 ) -> None:
-    """Assert tracker state across initial, disabled, and re-enabled options."""
+    """Assert tracker state across initial, updated, and restored options."""
     _assert_tracker_state(hass, initial_expected)
 
-    hass.config_entries.async_update_entry(config_entry, options=disabled_options)
+    hass.config_entries.async_update_entry(config_entry, options=updated_options)
     await hass.async_block_till_done()
-    _assert_tracker_state(hass, disabled_expected)
+    _assert_tracker_state(hass, updated_expected)
 
-    hass.config_entries.async_update_entry(config_entry, options=enabled_options)
+    hass.config_entries.async_update_entry(config_entry, options=initial_options)
     await hass.async_block_till_done()
-    _assert_tracker_state(hass, enabled_expected)
+    _assert_tracker_state(hass, initial_expected)
 
 
 @pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: True}])
@@ -652,6 +651,7 @@ async def test_config_entry_option_track_clients(
     await _toggle_options_and_assert(
         hass,
         config_entry_setup,
+        {CONF_TRACK_CLIENTS: True},
         {
             "device_tracker.ws_client_1",
             "device_tracker.wd_client_1",
@@ -659,21 +659,20 @@ async def test_config_entry_option_track_clients(
         },
         {CONF_TRACK_CLIENTS: False},
         {"device_tracker.switch_1"},
-        {CONF_TRACK_CLIENTS: True},
-        {
-            "device_tracker.ws_client_1",
-            "device_tracker.wd_client_1",
-            "device_tracker.switch_1",
-        },
     )
 
 
 @pytest.mark.parametrize(
-    ("config_entry_options", "enabled_options", "initial_expected"),
+    ("config_entry_options", "updated_options", "initial_expected", "updated_expected"),
     [
         (
             {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: ["ssid"]},
-            {CONF_SSID_FILTER: ["ssid"]},
+            {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: []},
+            {
+                "device_tracker.ws_client_1",
+                "device_tracker.wd_client_1",
+                "device_tracker.switch_1",
+            },
             {
                 "device_tracker.ws_client_1",
                 "device_tracker.wd_client_1",
@@ -682,8 +681,13 @@ async def test_config_entry_option_track_clients(
         ),
         (
             {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: ["ssid-2"]},
-            {CONF_SSID_FILTER: ["ssid-2"]},
+            {CONF_TRACK_CLIENTS: True, CONF_SSID_FILTER: []},
             {"device_tracker.wd_client_1", "device_tracker.switch_1"},
+            {
+                "device_tracker.ws_client_1",
+                "device_tracker.wd_client_1",
+                "device_tracker.switch_1",
+            },
         ),
     ],
 )
@@ -693,33 +697,36 @@ async def test_config_entry_option_track_clients(
 async def test_config_entry_option_ssid_filter(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
-    enabled_options: dict[str, list[str]],
+    config_entry_options: dict[str, Any],
+    updated_options: dict[str, Any],
     initial_expected: set[str],
+    updated_expected: set[str],
 ) -> None:
     """Test toggling the SSID filter option."""
     await _toggle_options_and_assert(
         hass,
         config_entry_setup,
+        dict(config_entry_options),
         initial_expected,
-        {CONF_SSID_FILTER: []},
-        {"device_tracker.switch_1"},
-        enabled_options,
-        {"device_tracker.switch_1"},
+        updated_options,
+        updated_expected,
     )
 
 
 @pytest.mark.parametrize(
-    ("config_entry_options", "enabled_options", "initial_expected"),
+    ("config_entry_options", "updated_options", "initial_expected", "updated_expected"),
     [
         (
             {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
-            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
+            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: []},
             {"device_tracker.ws_client_1", "device_tracker.switch_1"},
+            {"device_tracker.switch_1"},
         ),
         (
             {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
-            {CONF_CLIENT_SOURCE: ["00:00:00:00:00:02"]},
+            {CONF_TRACK_CLIENTS: False, CONF_CLIENT_SOURCE: []},
             {"device_tracker.wd_client_1", "device_tracker.switch_1"},
+            {"device_tracker.switch_1"},
         ),
     ],
 )
@@ -729,18 +736,19 @@ async def test_config_entry_option_ssid_filter(
 async def test_config_entry_option_client_source(
     hass: HomeAssistant,
     config_entry_setup: MockConfigEntry,
-    enabled_options: dict[str, list[str]],
+    config_entry_options: dict[str, Any],
+    updated_options: dict[str, Any],
     initial_expected: set[str],
+    updated_expected: set[str],
 ) -> None:
     """Test toggling explicit client source tracking."""
     await _toggle_options_and_assert(
         hass,
         config_entry_setup,
+        dict(config_entry_options),
         initial_expected,
-        {CONF_CLIENT_SOURCE: []},
-        {"device_tracker.switch_1"},
-        enabled_options,
-        initial_expected,
+        updated_options,
+        updated_expected,
     )
 
 
@@ -759,15 +767,14 @@ async def test_config_entry_option_track_wired_clients(
     await _toggle_options_and_assert(
         hass,
         config_entry_setup,
+        {CONF_TRACK_CLIENTS: True, CONF_TRACK_WIRED_CLIENTS: True},
         {
             "device_tracker.ws_client_1",
             "device_tracker.wd_client_1",
             "device_tracker.switch_1",
         },
-        {CONF_TRACK_WIRED_CLIENTS: False},
-        {"device_tracker.switch_1"},
-        {CONF_TRACK_WIRED_CLIENTS: True},
-        {"device_tracker.switch_1"},
+        {CONF_TRACK_CLIENTS: True, CONF_TRACK_WIRED_CLIENTS: False},
+        {"device_tracker.ws_client_1", "device_tracker.switch_1"},
     )
 
 
@@ -786,13 +793,49 @@ async def test_config_entry_option_track_devices(
     await _toggle_options_and_assert(
         hass,
         config_entry_setup,
+        {CONF_TRACK_CLIENTS: True, CONF_TRACK_DEVICES: True},
         {
             "device_tracker.ws_client_1",
             "device_tracker.wd_client_1",
             "device_tracker.switch_1",
         },
-        {CONF_TRACK_DEVICES: False},
-        set(),
-        {CONF_TRACK_DEVICES: True},
-        {"device_tracker.switch_1"},
+        {CONF_TRACK_CLIENTS: True, CONF_TRACK_DEVICES: False},
+        {"device_tracker.ws_client_1", "device_tracker.wd_client_1"},
     )
+
+
+@pytest.mark.parametrize(
+    ("config_entry_options", "updated_options"),
+    [
+        (
+            {CONF_TRACK_CLIENTS: True},
+            {CONF_SSID_FILTER: ["ssid"]},
+        ),
+        (
+            {CONF_TRACK_CLIENTS: True, CONF_TRACK_WIRED_CLIENTS: True},
+            {CONF_TRACK_WIRED_CLIENTS: True},
+        ),
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRELESS_CLIENT_1, WIRED_CLIENT_1]])
+@pytest.mark.parametrize("device_payload", [[SWITCH_1]])
+@pytest.mark.usefixtures("mock_device_registry")
+async def test_partial_options_update_falls_back_to_track_clients_default(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    updated_options: dict[str, Any],
+) -> None:
+    """Test partial option updates fall back to the new client tracking default."""
+    _assert_tracker_state(
+        hass,
+        {
+            "device_tracker.ws_client_1",
+            "device_tracker.wd_client_1",
+            "device_tracker.switch_1",
+        },
+    )
+
+    hass.config_entries.async_update_entry(config_entry_setup, options=updated_options)
+    await hass.async_block_till_done()
+
+    _assert_tracker_state(hass, {"device_tracker.switch_1"})
