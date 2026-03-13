@@ -906,7 +906,6 @@ async def test_config_flow_thread_addon_already_installed(
     }
 
 
-@pytest.mark.usefixtures("addon_not_installed")
 async def test_options_flow_zigbee_to_thread(
     hass: HomeAssistant,
     install_addon: AsyncMock,

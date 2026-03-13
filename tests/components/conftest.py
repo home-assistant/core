@@ -13,6 +13,7 @@ import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohasupervisor import SupervisorNotFoundError
 from aiohasupervisor.models import (
     Discovery,
     GreenInfo,
@@ -313,6 +314,7 @@ def addon_not_installed_fixture(
     """Mock add-on not installed."""
     from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
+    addon_info.side_effect = SupervisorNotFoundError
     return mock_addon_not_installed(addon_store_info, addon_info)
 
 
