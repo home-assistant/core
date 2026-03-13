@@ -1,0 +1,22 @@
+{
+  "title": "End of Life Tracker",
+  "config": {
+    "step": {
+      "user": {
+        "description": "Track the latest release lifecycle of a product.",
+        "data": {
+          "input_device": "Product",
+          "custom_device_name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_device": "Selected product is invalid",
+      "no_products": "No products found"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "domain": "eol_tracker",
+  "name": "End of Life Tracker",
+  "codeowners": ["@joshsh02"],
+  "iot_class": "cloud_polling",
+  "integration_type": "service",
+  "documentation": "https://www.home-assistant.io/integrations/eol_tracker",
+  "requirements": ["endoflife-lib==0.1.2"],
+  "config_flow": true
+}
