@@ -200,6 +200,7 @@ FLOWS = {
         "eq3btsmart",
         "escea",
         "esphome",
+        "esphome_dashboard",
         "essent",
         "eufylife_ble",
         "evil_genius_labs",
