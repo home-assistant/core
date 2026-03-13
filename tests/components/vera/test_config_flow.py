@@ -129,7 +129,8 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         }
 
 
-async def test_options(hass: HomeAssistant) -> None:
+@patch("pyvera.VeraController")
+async def test_options(vera_controller_class_mock, hass: HomeAssistant) -> None:
     """Test updating options."""
     base_url = "http://127.0.0.1/"
     entry = MockConfigEntry(
