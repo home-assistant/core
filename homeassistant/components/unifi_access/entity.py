@@ -33,6 +33,11 @@ class UnifiAccessEntity(CoordinatorEntity[UnifiAccessCoordinator]):
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._door_id in self.coordinator.data
+
+    @property
     def _door(self) -> Door:
         """Return the current door state from coordinator data."""
         return self.coordinator.data[self._door_id]

@@ -48,14 +48,13 @@ async def test_update_data_auth_error(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test coordinator handles auth error by triggering reauth."""
+    """Test coordinator handles auth error as update failure."""
     mock_client.get_doors.side_effect = ApiAuthError()
 
     coordinator = init_integration.runtime_data
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_update_data_api_error(

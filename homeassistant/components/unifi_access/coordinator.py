@@ -24,7 +24,6 @@ from unifi_access_api.models.websocket import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -73,7 +72,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             async with asyncio.timeout(10):
                 doors = await self.client.get_doors()
         except ApiAuthError as err:
-            raise ConfigEntryAuthFailed from err
+            raise UpdateFailed(f"Authentication failed: {err}") from err
         except ApiConnectionError as err:
             raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
