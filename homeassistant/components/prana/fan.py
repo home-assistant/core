@@ -173,7 +173,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode (e.g., night or boost)."""
-        await self.coordinator.api_client.set_switch(preset_mode, value=True)
+        await self.coordinator.api_client.set_switch(preset_mode, True)
         await self.coordinator.async_refresh()
 
     @property
