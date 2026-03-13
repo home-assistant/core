@@ -289,16 +289,10 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
-        node_name = self._node_name
-        if node_name is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error_no_details",
-            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            node_name,
+            self._node_name,
             self.device_id,
         )
 
@@ -316,15 +310,9 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
-        node_name = self._node_name
-        if node_name is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error_no_details",
-            )
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            node_name,
+            self._node_name,
             self.device_id,
         )
