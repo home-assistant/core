@@ -35,6 +35,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import (
     ALL_DEVICE_NAMES,
     ENTITY_HUMIDIFIER,
+    ENTITY_HUMIDIFIER_600S,
+    ENTITY_HUMIDIFIER_600S_HUMIDITY,
+    ENTITY_HUMIDIFIER_600S_MIST_LEVEL,
+    ENTITY_HUMIDIFIER_600S_WARM_MIST_LEVEL,
     ENTITY_HUMIDIFIER_HUMIDITY,
     ENTITY_HUMIDIFIER_MIST_LEVEL,
     mock_devices_response,
@@ -101,6 +105,29 @@ async def test_humidifier_state_assert(
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     state = hass.states.get(ENTITY_HUMIDIFIER)
+
+    # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
+    assert state.attributes.get(ATTR_HUMIDITY) == 40
+
+
+async def test_humidifier_state_600s_assert(
+    hass: HomeAssistant, humidifier_600s_config_entry: MockConfigEntry
+) -> None:
+    """Test the resulting setup state is as expected for the platform."""
+
+    expected_entities = [
+        ENTITY_HUMIDIFIER_600S,
+        ENTITY_HUMIDIFIER_600S_HUMIDITY,
+        ENTITY_HUMIDIFIER_600S_MIST_LEVEL,
+        ENTITY_HUMIDIFIER_600S_WARM_MIST_LEVEL,
+    ]
+
+    assert humidifier_600s_config_entry.state is ConfigEntryState.LOADED
+
+    for entity_id in expected_entities:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    state = hass.states.get(ENTITY_HUMIDIFIER_600S)
 
     # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
     assert state.attributes.get(ATTR_HUMIDITY) == 40

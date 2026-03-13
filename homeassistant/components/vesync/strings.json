@@ -46,6 +46,11 @@
         "name": "Water tank lifted"
       }
     },
+    "button": {
+      "clear_timer": {
+        "name": "Clear timer"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
@@ -75,6 +80,12 @@
     "number": {
       "mist_level": {
         "name": "Mist level"
+      },
+      "timer_duration": {
+        "name": "Timer duration"
+      },
+      "warm_mist_level": {
+        "name": "Warm mist level"
       }
     },
     "select": {
@@ -137,6 +148,9 @@
       },
       "preheat_set_time": {
         "name": "Preheating set time"
+      },
+      "timer_remaining": {
+        "name": "Timer remaining"
       }
     },
     "switch": {
