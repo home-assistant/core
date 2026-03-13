@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
+from .const import CONF_EXCLUDE_NIGHTLY, CONF_KEEP_MAIN_LIGHT, DEFAULT_EXCLUDE_NIGHTLY, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 from .coordinator import WLEDConfigEntry, normalize_mac_address
 
 
@@ -180,6 +180,12 @@ class WLEDOptionsFlowHandler(OptionsFlowWithReload):
                         CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
                             CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_EXCLUDE_NIGHTLY,
+                        default=self.config_entry.options.get(
+                            CONF_EXCLUDE_NIGHTLY, DEFAULT_EXCLUDE_NIGHTLY
                         ),
                     ): bool,
                 }
