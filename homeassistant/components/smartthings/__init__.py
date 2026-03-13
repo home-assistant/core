@@ -547,7 +547,7 @@ def create_devices(
                     connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
                 if bluetooth_address := cast(
                     dict[str, str], device_status[Attribute.STATUS].value
-                ).get("bluetoothAddress"):
+                ).get("btAddr"):
                     connections.add((dr.CONNECTION_BLUETOOTH, bluetooth_address))
                 if connections:
                     kwargs.setdefault(ATTR_CONNECTIONS, set()).update(connections)
