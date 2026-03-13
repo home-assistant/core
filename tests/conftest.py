@@ -159,6 +159,11 @@ class _PipeSelfWakeup:
     Operation not permitted`, which breaks asyncio's cross-thread loop wakeups
     and can leave tests hanging in teardown. The issue is tracked upstream at
     https://github.com/openai/codex/issues/6352.
+
+    The implementation below mirrors the private selector-loop wakeup contract
+    in CPython asyncio. If a Python upgrade changes selector wakeup internals,
+    revisit `_install_pipe_self_wakeup()` together with `install()`,
+    `_read_from_self()`, `_write_to_self()`, and `_close_self_pipe()`.
     """
 
     class _FD:
@@ -189,17 +194,16 @@ class _PipeSelfWakeup:
     def install(self, loop: asyncio.AbstractEventLoop) -> None:
         """Replace the loop self-wakeup internals with the pipe-backed version."""
 
-        # Register the reader callback before mutating loop internals so that
-        # a failure in _add_reader does not leave the loop in a partially
-        # installed state or leak the pipe file descriptors.
+        # Register the reader before replacing any loop attributes. That keeps
+        # the original socketpair wakeup intact if selector registration fails.
         def _reader() -> None:
             self._read_from_self(loop)
 
         try:
             loop._add_reader(self._read_fd, _reader)
         except OSError:
-            # If we fail to register the reader, close the fds and mark them
-            # invalid to avoid leaks and partial installation.
+            # Undo the pipe allocation on partial install failure. The caller
+            # will leave the original socketpair wakeup in place.
             if self._read_fd != -1:
                 os.close(self._read_fd)
                 self._read_fd = -1
@@ -217,7 +221,7 @@ class _PipeSelfWakeup:
         loop._close_self_pipe = types.MethodType(self._close_self_pipe, loop)
 
     def _read_from_self(self, loop: asyncio.AbstractEventLoop) -> None:
-        """Drain the pipe-based self-wakeup reader."""
+        """Drain the wakeup pipe like CPython's selector-loop self reader."""
         while True:
             try:
                 data = os.read(self._read_fd, 4096)
@@ -244,7 +248,7 @@ class _PipeSelfWakeup:
                 )
 
     def _close_self_pipe(self, loop: asyncio.AbstractEventLoop) -> None:
-        """Close the pipe-based self-wakeup file descriptors."""
+        """Close the pipe-based wakeup and keep asyncio fd bookkeeping aligned."""
         loop._remove_reader(self._read_fd)
         loop._ssock.close()
         loop._ssock = None
@@ -258,6 +262,9 @@ def _install_pipe_self_wakeup(loop: asyncio.AbstractEventLoop) -> None:
     if getattr(loop, "_pipe_self_wakeup_installed", False):
         return
 
+    # These are the private selector-loop hooks this workaround replaces.
+    # If a future asyncio version changes this contract, skip installation
+    # rather than crashing test startup.
     required_attrs = (
         "_ssock",
         "_csock",
@@ -285,6 +292,8 @@ def _install_pipe_self_wakeup(loop: asyncio.AbstractEventLoop) -> None:
         )
         return
 
+    # The replacement is active at this point, so cleanup of the original
+    # socketpair only needs to be best-effort.
     try:
         loop._remove_reader(old_ssock.fileno())
     except OSError, RuntimeError, ValueError:
