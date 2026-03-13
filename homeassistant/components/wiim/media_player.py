@@ -467,9 +467,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @callback
     def _async_schedule_update_supported_features(self) -> None:
         """Update supported features based on current state."""
-        if not self.hass:
-            return
-
         # Avoid parallel MEDIA_INFO request.
         if self._supported_features_update_in_flight:
             return
