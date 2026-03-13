@@ -1,1076 +1,441 @@
-"""Group coordinator for HiVi Speaker multi-room sync."""
+"""Discovery scheduler for the HiVi Speaker integration."""
 
 from __future__ import annotations
 
 import asyncio
-import binascii
-from collections.abc import Awaitable, Callable
 import contextlib
-from datetime import datetime
+from datetime import datetime, timedelta
+from ipaddress import ip_address
 import logging
-from typing import Any
+import socket
+import time
+from urllib.parse import urlparse
 
-from hivico import HivicoClient
+import aiohttp
+from defusedxml import ElementTree as ET
 
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN
+from .const import SIGNAL_DEVICE_DISCOVERED
 
 _LOGGER = logging.getLogger(__name__)
 
-# Callback invoked with a single result dict; must be async (awaitable).
-OperationResultCallback = Callable[[dict[str, Any]], Awaitable[None]] | None
+SCAN_TOTAL_TIMEOUT = 5.0  # seconds
+SOCKET_TIMEOUT = 1.0  # seconds
+SEND_REPEAT = 3
+MCAST_ADDR = ("239.255.255.250", 1900)
 
 
-class HIVIGroupCoordinator:
-    """Group operation coordinator, handles master-slave setup status synchronization (improved version)."""
+class HIVIDiscoveryScheduler:
+    """Intelligent discovery scheduler."""
 
     def __init__(
-        self, hass: HomeAssistant, device_manager, discovery_scheduler
+        self,
+        hass: HomeAssistant,
+        config_entry,
+        device_manager,
+        base_interval: int = 300,
     ) -> None:
-        """Initialize the group coordinator."""
+        """Initialize the discovery scheduler."""
         self.hass = hass
+        self.config_entry = config_entry
         self.device_manager = device_manager
-        self.discovery_scheduler = discovery_scheduler
+        self.base_interval = base_interval
 
-        # Operation tracking
-        self._pending_operations: dict[str, dict] = {}  # operation_id -> operation_data
-        self._operation_timeout = 30  # Operation timeout (seconds)
-        self._poll_interval = 2  # Polling interval (seconds)
-        self._max_retries = 15  # Maximum retry count (30 seconds/2 seconds)
+        self.current_interval = base_interval
+        self.min_interval = 120
+        self.max_interval = 600
 
-        # Polling tasks
-        self._poll_tasks: dict[str, asyncio.Task] = {}  # operation_id -> polling task
-        self._coordinator_running = False
+        self._discovery_task: asyncio.Task | None = None
+        self._discovery_running = False
+        self._next_discovery: datetime | None = None
 
-        # Add lock and callback tracking
-        self._operation_lock = asyncio.Lock()
-        self._request_callbacks: dict[str, Callable] = {}  # operation_id -> callback
-
-        # Store cancellation functions
-        self._dispatcher_connections = []
-        self._unsub_operation_started = None
-        self._unsub_device_updated = None
+        self._operation_delays: dict[str, datetime] = {}
+        self._immediate_discovery_requested = False
+        self._discovery_lock = asyncio.Lock()
+        self._discovery_unsub = None
 
     async def async_start(self):
-        """Start coordinator."""
-        self._coordinator_running = True
+        """Start scheduler."""
 
-        # Listen for operation events
-        self._unsub_operation_started = self.hass.bus.async_listen(
-            f"{DOMAIN}_group_operation_started", self._handle_operation_started
-        )
+        _LOGGER.debug("Starting HIVI device discovery scheduler")
 
-        # Listen for device status changes
-        self._unsub_device_updated = self.hass.bus.async_listen(
-            f"{DOMAIN}_device_updated", self._handle_device_updated
-        )
+        if self._discovery_running:
+            return
 
-        @callback
-        def _handle_sync_group_operation(operation_data: dict, callback_func: Callable):
-            """Handle discovery signal."""
-            _LOGGER.debug(
-                "Received sync group operation request: type=%s, master=%s, slave=%s",
-                operation_data.get("type"),
-                operation_data.get("master"),
-                operation_data.get("slave"),
-            )
-            self.hass.async_create_task(
-                self.async_set_slave_speaker(operation_data, callback_func)
-            )
-
-        # Register signal handler (supports parameterized callbacks)
-        cancel_func = async_dispatcher_connect(
-            self.hass, f"{DOMAIN}_sync_group_operation", _handle_sync_group_operation
-        )
-        self._dispatcher_connections.append(cancel_func)
+        self._discovery_running = True
+        self._next_discovery = datetime.now()
+        await self._reschedule()
 
     async def async_stop(self):
-        """Stop coordinator."""
-        self._coordinator_running = False
+        """Stop scheduler."""
+        _LOGGER.debug("Stopping HIVI device discovery scheduler")
+        self._discovery_running = False
+        if self._discovery_unsub:
+            self._discovery_unsub()
+            self._discovery_unsub = None
 
-        # Cancel all polling tasks
-        for _operation_id, task in list(self._poll_tasks.items()):
-            if not task.done():
-                task.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await task
-
-        self._poll_tasks.clear()
-        self._pending_operations.clear()
-
-        # Cancel bus listeners
-        if self._unsub_operation_started is not None:
-            self._unsub_operation_started()
-            self._unsub_operation_started = None
-        if self._unsub_device_updated is not None:
-            self._unsub_device_updated()
-            self._unsub_device_updated = None
-
-        # Cancel all dispatcher signal listeners
-        for cancel_func in self._dispatcher_connections:
-            cancel_func()
-        self._dispatcher_connections.clear()
-
-        _LOGGER.debug("group coordinator stopped")
-
-    async def async_set_slave_speaker(
-        self,
-        operation_data: dict,
-        callback_func: OperationResultCallback = None,
-    ) -> dict[str, Any]:
-        """Set slave speaker (with full callback support)."""
-
-        # Use new request handling mechanism
-        result = await self.async_handle_discovery_request(
-            operation_data, callback_func
-        )
-
-        if not result.get("accepted", False):
-            return result
-
-        operation_id = result["operation_id"]
-
-        # Start processing task (includes polling)
-        self.hass.async_create_task(self.async_start_operation_processing(operation_id))
-
-        return result
-
-    async def async_remove_slave_speaker(
-        self,
-        master_speaker_device_id: str,
-        slave_speaker_device_id: str,
-        callback_func: OperationResultCallback = None,
-    ) -> dict[str, Any]:
-        """Remove slave speaker (with full callback support)."""
-        operation_data = {
-            "type": "remove_slave",
-            "master": master_speaker_device_id,
-            "slave": slave_speaker_device_id,
-            "expected_state": "standalone",
-        }
-
-        # Use new request handling mechanism
-        result = await self.async_handle_discovery_request(
-            operation_data, callback_func
-        )
-
-        if not result.get("accepted", False):
-            return result
-
-        operation_id = result["operation_id"]
-
-        # Start processing task (includes polling)
-        self.hass.async_create_task(self.async_start_operation_processing(operation_id))
-
-        return result
-
-    async def async_handle_discovery_request(
-        self,
-        operation_data: dict,
-        callback_func: OperationResultCallback = None,
-    ) -> dict[str, Any]:
-        """Handle discovery request, return result via callback_func."""
-        operation_id = self._generate_operation_id(operation_data)
-
-        async with self._operation_lock:
-            # Check if same operation already in progress
-            if operation_id in self._pending_operations:
-                operation = self._pending_operations[operation_id]
-                result = {
-                    "status": "rejected",
-                    "operation_id": operation_id,
-                    "extra": {
-                        "reason": "operation_already_exists",
-                        "existing_status": operation.get("status", "unknown"),
-                    },
-                }
-
-                if callback_func:
-                    await callback_func(result)
-                return result
-
-            # Check for conflicting operations
-            conflict_info = self._check_conflicting_operations(operation_data)
-            if conflict_info["has_conflict"]:
-                result = {
-                    "status": "rejected",
-                    "operation_id": operation_id,
-                    "extra": {
-                        "reason": "conflicting_operation",
-                        "conflicting_operation": conflict_info["conflicting_operation"],
-                    },
-                }
-
-                if callback_func:
-                    await callback_func(result)
-                return result
-
-            # Accept new operation
-            self._pending_operations[operation_id] = {
-                "type": operation_data.get("type"),
-                "master": operation_data.get("master"),
-                "slave": operation_data.get("slave"),
-                "start_time": datetime.now(),
-                "expected_state": operation_data.get("expected_state"),
-                "retry_count": 0,
-                "last_check": None,
-                "status": "pending",
-                "data": operation_data,
-                "request_callback": callback_func,  # Save callback function
-            }
-
-            # Save callback for subsequent notifications
-            if callback_func:
-                self._request_callbacks[operation_id] = callback_func
-
-            result = {
-                "accepted": True,
-                "operation_id": operation_id,
-                "reason": "accepted",
-            }
-
-            # Immediately return acceptance result via callback_func
-            if callback_func:
-                await callback_func(
-                    {
-                        "status": "accepted",
-                        "operation_id": operation_id,
-                        "extra": {
-                            "timestamp": datetime.now().isoformat(),
-                        },
-                    },
-                )
-
-            return result
-
-    def _generate_operation_id(self, operation_data: dict) -> str:  # noqa: PLR6301
-        """Generate unique operation ID."""
-        op_type = operation_data.get("type", "unknown")
-        master = operation_data.get("master", "unknown")
-        slave = operation_data.get("slave", "unknown")
-        return f"{op_type}_master_{master}_slave_{slave}"
-
-    def _check_conflicting_operations(self, new_operation: dict) -> dict[str, Any]:
-        """Check for conflicting operations.
-
-        Conflict rules:
-        1. If new operation's master is an existing operation's slave → conflict
-        2. If new operation's slave is a master or slave in any existing operation → conflict
-
-        Args:
-            new_operation: New operation data, contains master and slave device IDs
-
-        Returns:
-            dict: Conflict check result.
-
-        """
-        # Extract device IDs from new operation
-        new_master = new_operation.get("master")
-        new_slave = new_operation.get("slave")
-        new_type = new_operation.get("type")
-
-        _LOGGER.debug(
-            "Start checking operation conflicts - New operation: type=%s, master=%s, slave=%s",
-            new_type,
-            new_master,
-            new_slave,
-        )
-        _LOGGER.debug(
-            "Current pending operations count: %d", len(self._pending_operations)
-        )
-
-        # If no pending operations, return no conflict
-        if not self._pending_operations:
-            _LOGGER.debug("No pending operations, new operation has no conflict")
-            return {
-                "has_conflict": False,
-                "conflicting_operation": None,
-                "conflict_type": "no_conflict",
-                "conflict_reason": "No pending operations",
-            }
-
-        # Collect device usage from all existing operations
-        existing_masters = set()
-        existing_slaves = set()
-        all_used_devices = set()
-
-        for op_id, operation in self._pending_operations.items():
-            existing_master = operation.get("master")
-            existing_slave = operation.get("slave")
-
-            if existing_master:
-                existing_masters.add(existing_master)
-                all_used_devices.add(existing_master)
-            if existing_slave:
-                existing_slaves.add(existing_slave)
-                all_used_devices.add(existing_slave)
-
-            _LOGGER.debug(
-                "Existing operation: id=%s, master=%s, slave=%s, status=%s",
-                op_id,
-                existing_master,
-                existing_slave,
-                operation.get("status", "unknown"),
-            )
-
-        _LOGGER.debug(
-            "Device usage statistics - Existing master devices: %s, Existing slave devices: %s, All used devices: %s",
-            existing_masters,
-            existing_slaves,
-            all_used_devices,
-        )
-
-        # Rule 1: Check if new master is a slave in existing operations
-        if new_master and new_master in existing_slaves:
-            conflict_op = self._find_operation_by_slave(new_master)
+    async def _reschedule(self):
+        """Reschedule discovery task (safe version)."""
+        if not self._discovery_running or not self._next_discovery:
             _LOGGER.warning(
-                "Conflict! New operation's master device %s is a slave in existing operation",
-                new_master,
+                "_reschedule not running or no next_discovery, stopping scheduling"
             )
-            return {
-                "has_conflict": True,
-                "conflicting_operation": conflict_op,
-                "conflict_type": "master_is_existing_slave",
-                "conflict_reason": f"New operation's master device {new_master} is a slave device in existing operation",
-                "violated_rule": "Rule 1: master cannot be an existing operation's slave",
-            }
-
-        # Rule 2: Check if new slave is used in existing operations (either as master or slave)
-        if new_slave and new_slave in all_used_devices:
-            conflict_op = self._find_operation_by_device(new_slave)
-            conflict_type = "slave_in_use"
-
-            if new_slave in existing_masters:
-                conflict_reason = f"New operation's slave device {new_slave} is a master device in existing operation"
-                violated_rule = "Rule 2: slave cannot be an existing operation's master"
-            else:
-                conflict_reason = f"New operation's slave device {new_slave} is a slave device in existing operation"
-                violated_rule = "Rule 2: slave cannot be an existing operation's slave"
-
-            _LOGGER.warning("Conflict! %s", conflict_reason)
-            return {
-                "has_conflict": True,
-                "conflicting_operation": conflict_op,
-                "conflict_type": conflict_type,
-                "conflict_reason": conflict_reason,
-                "violated_rule": violated_rule,
-            }
-
-        # No conflict
-        _LOGGER.debug("New operation passed all conflict checks")
-        return {
-            "has_conflict": False,
-            "conflicting_operation": None,
-            "conflict_type": "no_conflict",
-            "conflict_reason": "Passed all conflict check rules",
-        }
-
-    def _find_operation_by_slave(self, slave_device_id: str) -> str | None:
-        """Find corresponding operation ID by slave device ID."""
-        for op_id, operation in self._pending_operations.items():
-            if operation.get("slave") == slave_device_id:
-                return op_id
-        return None
-
-    def _find_operation_by_device(self, device_id: str) -> str | None:
-        """Find corresponding operation ID by device ID (device could be master or slave)."""
-        for op_id, operation in self._pending_operations.items():
-            if (
-                operation.get("master") == device_id
-                or operation.get("slave") == device_id
-            ):
-                return op_id
-        return None
-
-    def _log_detailed_conflict_analysis(self, new_operation: dict):
-        """Record detailed conflict analysis (for debugging)."""
-        new_master = new_operation.get("master")
-        new_slave = new_operation.get("slave")
-
-        _LOGGER.debug("=== Detailed Conflict Analysis ===")
-        _LOGGER.debug("New operation: master=%s, slave=%s", new_master, new_slave)
-
-        # Analyze each existing operation
-        for op_id, operation in self._pending_operations.items():
-            existing_master = operation.get("master")
-            existing_slave = operation.get("slave")
-
-            master_conflict = new_master == existing_slave
-            slave_conflict_master = new_slave == existing_master
-            slave_conflict_slave = new_slave == existing_slave
-
-            conflicts = []
-            if master_conflict:
-                conflicts.append("New master is existing slave")
-            if slave_conflict_master:
-                conflicts.append("New slave is existing master")
-            if slave_conflict_slave:
-                conflicts.append("New slave is existing slave")
-
-            if conflicts:
-                _LOGGER.debug(
-                    "Conflict with operation %s: %s (Existing: master=%s, slave=%s)",
-                    op_id,
-                    " | ".join(conflicts),
-                    existing_master,
-                    existing_slave,
-                )
-            else:
-                _LOGGER.debug(
-                    "No conflict with operation %s (Existing: master=%s, slave=%s)",
-                    op_id,
-                    existing_master,
-                    existing_slave,
-                )
-
-        _LOGGER.debug("=== Analysis End ===")
-
-    async def async_start_operation_processing(self, operation_id: str):
-        """Start operation processing (includes polling status check)."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
             return
 
-        callback_func = operation.get("request_callback")
+        if self._discovery_unsub:
+            try:
+                _LOGGER.debug("_reschedule: canceling existing timer")
+                self._discovery_unsub()
+            except Exception:
+                _LOGGER.exception("Error canceling existing timer")
+            finally:
+                self._discovery_unsub = None
 
-        try:
-            # Notify operation start execution
-            if callback_func:
-                await callback_func(
-                    {
-                        "status": "executing",
-                        "operation_id": operation_id,
-                        "extra": {
-                            "timestamp": datetime.now().isoformat(),
-                        },
-                    },
-                )
+        now = datetime.now()
+        delay = (self._next_discovery - now).total_seconds()
 
-            # Execute actual operation
-            execution_success = await self._execute_operation(operation)
+        if delay <= 0:
+            _LOGGER.debug("_reschedule: scheduling discovery immediately")
+            try:
+                self.hass.async_create_task(self._run_discovery())
+            except Exception:
+                _LOGGER.exception("Error scheduling _run_discovery immediately")
+            return
 
-            if not execution_success:
-                # Execution failed, notify immediately
-                if callback_func:
-                    await callback_func(
-                        {
-                            "status": "execution_failed",
-                            "operation_id": operation_id,
-                            "extra": {
-                                "timestamp": datetime.now().isoformat(),
-                            },
-                        },
-                    )
-                await self._handle_operation_failed(operation_id, "execution_failed")
-                return
+        if delay < 0.1:
+            _LOGGER.debug("_reschedule: clamping delay %s to 0.1s", delay)
+            delay = 0.1
 
-            # Execution successful, start polling status check
-            if callback_func:
-                await callback_func(
-                    {
-                        "status": "verifying",
-                        "operation_id": operation_id,
-                        "extra": {
-                            "timestamp": datetime.now().isoformat(),
-                        },
-                    },
-                )
+        _LOGGER.debug("_reschedule next discovery in %s seconds", delay)
 
-            # Start polling task
-            self._poll_tasks[operation_id] = self.hass.async_create_task(
-                self._poll_operation_status_with_callback(operation_id)
+        def _callback(_now):
+            """Run discovery; callback may run off event loop, schedule on loop."""
+            self.hass.loop.call_soon_threadsafe(
+                lambda: self.hass.async_create_task(self._run_discovery())
             )
 
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.error("Operation processing exception: %s - %s", operation_id, e)
-
-            if callback_func:
-                await callback_func(
-                    {
-                        "status": "error",
-                        "operation_id": operation_id,
-                        "extra": {
-                            "error": str(e),
-                            "timestamp": datetime.now().isoformat(),
-                        },
-                    },
-                )
-
-            await self._handle_operation_failed(operation_id, f"exception: {e!s}")
-
-    async def _poll_operation_status_with_callback(self, operation_id: str):
-        """Poll operation status and notify progress via callback."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
-
-        callback_func = operation.get("request_callback")
-
-        _LOGGER.debug("start polling: %s", operation_id)
-
-        while operation_id in self._pending_operations:
+        try:
+            self._discovery_unsub = async_call_later(self.hass, delay, _callback)
+        except Exception:
+            _LOGGER.exception(
+                "Failed to register delayed callback, backing off 60s"
+            )
+            self._next_discovery = datetime.now() + timedelta(seconds=60)
             try:
-                # Check timeout
-                time_since_start = (
-                    datetime.now() - operation["start_time"]
-                ).total_seconds()
-                if time_since_start > self._operation_timeout:
-                    _LOGGER.warning(
-                        "Operation timeout: %s (duration: %.1f seconds)",
-                        operation_id,
-                        time_since_start,
-                    )
-
-                    if callback_func:
-                        await callback_func(
-                            {
-                                "status": "timeout",
-                                "operation_id": operation_id,
-                                "extra": {
-                                    "duration": time_since_start,
-                                    "timestamp": datetime.now().isoformat(),
-                                },
-                            },
-                        )
-
-                    await self._handle_operation_timeout(operation_id)
-                    break
-
-                # Check retry count
-                if operation["retry_count"] >= self._max_retries:
-                    _LOGGER.warning("Maximum retries reached: %s", operation_id)
-
-                    if callback_func:
-                        await callback_func(
-                            {
-                                "status": "max_retries_exceeded",
-                                "operation_id": operation_id,
-                                "extra": {
-                                    "retry_count": operation["retry_count"],
-                                    "timestamp": datetime.now().isoformat(),
-                                },
-                            },
-                        )
-
-                    await self._handle_operation_failed(operation_id, "max_retries")
-                    break
-
-                # Update status
-                operation["status"] = "verifying"
-                operation["retry_count"] += 1
-                operation["last_check"] = datetime.now()
-
-                _LOGGER.debug(
-                    "Polling operation %s (attempt %d/%d)",
-                    operation_id,
-                    operation["retry_count"],
-                    self._max_retries,
+                self._discovery_unsub = async_call_later(
+                    self.hass,
+                    60,
+                    lambda _now: self.hass.loop.call_soon_threadsafe(
+                        lambda: self.hass.async_create_task(self._run_discovery())
+                    ),
                 )
+            except Exception:
+                _LOGGER.exception("Failed to register backoff callback")
+                self._discovery_unsub = None
 
-                # Notify polling progress
-                if callback_func:
-                    await callback_func(
-                        {
-                            "status": "verifying",
-                            "operation_id": operation_id,
-                            "extra": {
-                                "retry_count": operation["retry_count"],
-                                "max_retries": self._max_retries,
-                                "timestamp": datetime.now().isoformat(),
-                            },
-                        },
-                    )
+    async def _run_discovery(self):
+        """Run discovery."""
+        try:
+            _LOGGER.debug("Performing discovery")
+            await self._perform_discovery()
 
-                # Verify operation status
-                is_success = await self._verify_operation_state(operation)
+            # update next discovery time
+            self._next_discovery = datetime.now() + timedelta(
+                seconds=self.current_interval
+            )
 
-                if is_success:
-                    # Operation successful
-                    _LOGGER.debug("verify ok for operation_id: %s", operation_id)
+            # adjust interval
+            await self._adjust_interval()
 
-                    oper_type = operation.get("type")
-                    if oper_type == "remove_slave":
-                        await asyncio.sleep(
-                            10
-                        )  # Wait longer after removing slave device to ensure status update
+        except Exception as e:  # noqa: BLE001
+            _LOGGER.error("Discovery failed: %s", e)
+            self._next_discovery = datetime.now() + timedelta(seconds=60)
+        finally:
+            await self._reschedule()
 
-                    if callback_func:
-                        await callback_func(
-                            {
-                                "status": "success",
-                                "operation_id": operation_id,
-                                "extra": {
-                                    "retry_count": operation["retry_count"],
-                                    "duration": time_since_start,
-                                    "timestamp": datetime.now().isoformat(),
-                                },
-                            },
-                        )
+    async def schedule_immediate_discovery(self, force: bool = False):
+        """Immediate discovery."""
+        if force:
+            _LOGGER.info("Forcing immediate discovery")
+            self.hass.async_create_task(self._run_discovery())
+        else:
+            _LOGGER.debug("Requesting immediate discovery")
+            immediate = datetime.now() + timedelta(milliseconds=100)
+            if not self._next_discovery or immediate < self._next_discovery:
+                self._next_discovery = immediate
+                await self._reschedule()
 
-                    await self._handle_operation_success(operation_id)
-                    break
+    async def postpone_discovery(self, delay_seconds: int = 300):
+        """Postpone discovery."""
 
-                # Wait for next polling round
-                await asyncio.sleep(self._poll_interval)
+        _LOGGER.debug("postpone_discovery")
 
-            except asyncio.CancelledError:
-                _LOGGER.debug("Polling task cancelled: %s", operation_id)
+        new_time = datetime.now() + timedelta(seconds=delay_seconds)
 
-                if callback_func:
-                    await callback_func(
-                        {
-                            "status": "cancelled",
-                            "operation_id": operation_id,
-                            "extra": {
-                                "timestamp": datetime.now().isoformat(),
-                            },
-                        },
-                    )
-                break
+        if not self._next_discovery or new_time > self._next_discovery:
+            self._next_discovery = new_time
+            _LOGGER.debug("Discovery postponed to: %s", self._next_discovery)
+            await self._reschedule()
+            return True
+        return False
 
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
-
-                if callback_func:
-                    await callback_func(
-                        {
-                            "status": "polling_error",
-                            "operation_id": operation_id,
-                            "extra": {
-                                "error": str(e),
-                                "timestamp": datetime.now().isoformat(),
-                            },
-                        },
-                    )
-
-                await asyncio.sleep(self._poll_interval)
-
-        # Clean up task
-        if operation_id in self._poll_tasks:
-            del self._poll_tasks[operation_id]
-
-    async def _execute_operation(self, operation: dict) -> bool:  # noqa: PLR6301
-        """Execute specific operation."""
-        op_type = operation.get("type")
-        operation_data = operation.get("data", {})
+    async def _perform_discovery(self):
+        """Perform device discovery."""
+        start_time = datetime.now()
 
         try:
-            if op_type == "set_slave":
-                try:
-                    params = operation_data.get("params", {})
-                    required_keys = (
-                        "slave_ip",
-                        "ssid",
-                        "wifi_channel",
-                        "auth",
-                        "encry",
-                        "psk",
-                        "master_ip",
-                        "uuid",
-                    )
-                    missing = [k for k in required_keys if k not in params]
-                    if missing:
-                        _LOGGER.error(
-                            "Missing required params for set_slave: %s", missing
-                        )
-                        return False
-                    slave_ip = params["slave_ip"]
-                    ssid = params["ssid"]
-                    wifi_channel = params["wifi_channel"]
-                    auth = params["auth"]
-                    encry = params["encry"]
-                    psk = params["psk"]
-                    master_ip = params["master_ip"]
-                    uuid = params["uuid"]
-                    ssid_hex = binascii.hexlify(ssid.encode()).decode()
-                    async with HivicoClient(timeout=5, debug=False) as client:
-                        await client.connect_slave_to_master(
-                            slave_ip=slave_ip,
-                            ssid=ssid_hex,
-                            wifi_channel=wifi_channel,
-                            auth=auth,
-                            encry=encry,
-                            psk=psk,
-                            master_ip=master_ip,
-                            uuid=uuid,
-                        )
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
-                    _LOGGER.error("Failed to set slave speaker operation: %s", e)
-                    return False
-            elif op_type == "remove_slave":
-                try:
-                    params = operation_data.get("params", {})
-                    required_keys = ("master_ip", "slave_ip_ra0")
-                    missing = [k for k in required_keys if k not in params]
-                    if missing:
-                        _LOGGER.error(
-                            "Missing required params for remove_slave: %s", missing
-                        )
-                        return False
-                    master_ip = params["master_ip"]
-                    slave_ip_ra0 = params["slave_ip_ra0"]
-                    async with HivicoClient(timeout=5, debug=False) as client:
-                        await client.remove_slave_from_group(master_ip, slave_ip_ra0)
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
-                    _LOGGER.error("Failed to set slave speaker operation: %s", e)
-                    return False
+            discovered_devices = await self._discover_all_devices()
+
+            if discovered_devices:
+                async_dispatcher_send(
+                    self.hass, SIGNAL_DEVICE_DISCOVERED, discovered_devices
+                )
+
+        except Exception as e:  # noqa: BLE001
+            _LOGGER.error("Device discovery failed: %s", e)
+
+        duration = (datetime.now() - start_time).total_seconds()
+        _LOGGER.debug("Device discovery completed, took %.2f seconds", duration)
+
+    async def _discover_all_devices(self) -> list[dict]:
+        """Discover all devices."""
+
+        results = await self._discover_private_devices()
+
+        flat_results = []
+        for r in results:
+            if isinstance(r, list):
+                flat_results.extend(r)
             else:
-                _LOGGER.error("Unknown operation type: %s", op_type)
-                return False
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.error("Operation execution exception: %s", e)
-            return False
+                flat_results.append(r)
 
-    # Modify original success/failure handling methods to include callback notifications
-    async def _handle_operation_success(self, operation_id: str):
-        """Handle operation success."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
+        discovered = []
+        for result in flat_results:
+            if not isinstance(result, dict):
+                continue
+            udn = result.get("UDN")
+            if udn:
+                discovered.append(result)
 
-        # Update operation status
-        operation["status"] = "success"
-        operation["end_time"] = datetime.now()
-        duration = (operation["end_time"] - operation["start_time"]).total_seconds()
+        return discovered
 
-        _LOGGER.debug(
-            "operation successfully: %s (time: %.1f seconds, try num: %d)",
-            operation_id,
-            duration,
-            operation["retry_count"],
+    async def _discover_private_devices(self) -> list[dict]:
+        """Put blocking scans in executor, then parse responses concurrently."""
+        discovered_devices: list[dict] = []
+        seen_keys = set()
+        lock = asyncio.Lock()
+
+        try:
+            raw_responses: list[
+                tuple[str, tuple[str, int]]
+            ] = await self.hass.async_add_executor_job(_scan_speaker_sync)
+        except Exception:
+            _LOGGER.exception("Private protocol scan (thread) failed")
+            return discovered_devices
+
+        if not raw_responses:
+            return discovered_devices
+
+        sem = asyncio.Semaphore(8)
+
+        session = async_get_clientsession(self.hass)
+
+        async def _parse_one(response_text: str, addr: tuple[str, int]):
+            async with sem:
+                try:
+                    dlna_info = await parse_ssdp_response(response_text, addr)
+                    location = dlna_info.get("location", "")
+                    device_info = await parse_local_url(session, location)
+                    if not device_info:
+                        return
+                    device_key = device_info.get("UDN")
+
+                    if not device_key:
+                        return
+
+                    async with lock:
+                        if device_key in seen_keys:
+                            return
+
+                        seen_keys.add(device_key)
+                        device_info["key"] = device_key
+                        device_info["ip_addr"] = addr[0]
+                        discovered_devices.append(device_info)
+
+                except Exception:
+                    _LOGGER.exception("Failed to parse single SSDP response")
+
+        tasks = [
+            asyncio.create_task(_parse_one(text, addr)) for text, addr in raw_responses
+        ]
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+        return discovered_devices
+
+    async def _adjust_interval(self):
+        """Dynamically adjust discovery interval."""
+
+        online_count = 0
+        offline_count = 0
+
+        try:
+            online_count, offline_count = (
+                self.device_manager.device_data_registry.get_connection_status_counts()
+            )
+        except Exception:
+            _LOGGER.exception(
+                "Error in calculating online/offline device count during discovery interval adjustment"
+            )
+
+        _LOGGER.debug("Current online device count: %d", online_count)
+        _LOGGER.debug("Current offline device count: %d", offline_count)
+
+        total_count = online_count + offline_count
+        if total_count > 0:
+            offline_ratio = offline_count / total_count
+
+            if offline_ratio > 0.8:  # 80% above offline
+                self.current_interval = min(
+                    self.current_interval * 1.3, self.max_interval
+                )
+            elif offline_ratio > 0.5:  # 50% above offline
+                self.current_interval = min(
+                    self.current_interval * 1.1, self.max_interval
+                )
+            elif offline_ratio == 0:  # no devices offline (all online)
+                self.current_interval = max(
+                    self.current_interval * 0.9, self.min_interval
+                )
+            else:  # Few offline, maintain or fine-tune
+                self.current_interval = max(
+                    self.current_interval * 0.95, self.min_interval
+                )
+
+                _LOGGER.debug(
+                    "Discovery interval adjusted to %d seconds", self.current_interval
+                )
+
+
+def _scan_speaker_sync() -> list[tuple[str, tuple[str, int]]]:
+    """Perform synchronous SSDP M-SEARCH to discover devices."""
+    discovered_raw = []
+    sock = None
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+        sock.settimeout(SOCKET_TIMEOUT)
+
+        msearch_message = (
+            b"M-SEARCH * HTTP/1.1\r\n"
+            b"HOST: 239.255.255.250:1900\r\n"
+            b'MAN: "ssdp:discover"\r\n'
+            b"MX: 3\r\n"
+            b"ST: ssdp:wiimudevice\r\n"
+            b"USER-AGENT: iOS UPnP/1.1\r\n"
+            b"\r\n"
         )
 
-        # Send operation success event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_succeeded",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "duration": duration,
-                "retry_count": operation["retry_count"],
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Trigger immediate discovery to ensure status synchronization
-        _LOGGER.debug("Trigger immediate discovery to synchronize status")
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
-
-    async def _handle_operation_timeout(self, operation_id: str):
-        """Handle operation timeout."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
-
-        # Update operation status
-        operation["status"] = "timeout"
-        operation["end_time"] = datetime.now()
-
-        _LOGGER.warning("Operation timeout: %s", operation_id)
-
-        # Send operation timeout event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_timeout",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "duration": self._operation_timeout,
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Even if timeout, trigger discovery to get current status
-        _LOGGER.debug("Operation timeout, trigger discovery to get current status")
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
-
-    async def _cleanup_operation(self, operation_id: str):
-        """Clean up operation (includes callback cleanup)."""
-        # Delay cleanup to give event handling time
-        await asyncio.sleep(1)
-
-        # Clean up callbacks
-        if operation_id in self._request_callbacks:
-            del self._request_callbacks[operation_id]
-
-        # Clean up operations and tasks
-        if operation_id in self._pending_operations:
-            del self._pending_operations[operation_id]
-
-        if operation_id in self._poll_tasks:
-            task = self._poll_tasks[operation_id]
-            if not task.done():
-                task.cancel()
-            del self._poll_tasks[operation_id]
-
-    async def _poll_operation_status(self, operation_id: str):
-        """Poll operation status (every 2 seconds)."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            _LOGGER.warning("Operation does not exist: %s", operation_id)
-            return
-
-        _LOGGER.info("Start polling operation status: %s", operation_id)
-
-        while operation_id in self._pending_operations:
+        for _ in range(SEND_REPEAT):
             try:
-                # Check timeout
-                time_since_start = (
-                    datetime.now() - operation["start_time"]
-                ).total_seconds()
-                if time_since_start > self._operation_timeout:
-                    _LOGGER.warning(
-                        "Operation timeout: %s (duration: %.1f seconds)",
-                        operation_id,
-                        time_since_start,
-                    )
-                    await self._handle_operation_timeout(operation_id)
-                    break
-
-                # Check retry count
-                if operation["retry_count"] >= self._max_retries:
-                    _LOGGER.warning("Maximum retries reached: %s", operation_id)
-                    await self._handle_operation_failed(operation_id, "max_retries")
-                    break
-
-                # Update status
-                operation["status"] = "verifying"
-                operation["retry_count"] += 1
-                operation["last_check"] = datetime.now()
-
-                _LOGGER.debug(
-                    "Polling operation %s (attempt %d/%d)",
-                    operation_id,
-                    operation["retry_count"],
-                    self._max_retries,
-                )
-
-                # Verify operation status
-                is_success = await self._verify_operation_state(operation)
-
-                if is_success:
-                    # Operation successful
-                    await self._handle_operation_success(operation_id)
-                    break
-
-                # Wait for next polling round
-                await asyncio.sleep(self._poll_interval)
-
-            except asyncio.CancelledError:
-                _LOGGER.debug("Polling task cancelled: %s", operation_id)
+                sock.sendto(msearch_message, MCAST_ADDR)
+            except Exception:  # noqa: BLE001
                 break
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
-                await asyncio.sleep(self._poll_interval)
 
-        # Clean up task
-        if operation_id in self._poll_tasks:
-            del self._poll_tasks[operation_id]
+        start = time.time()
+        while time.time() - start < SCAN_TOTAL_TIMEOUT:
+            try:
+                data, addr = sock.recvfrom(4096)
+                text = data.decode("utf-8", errors="ignore")
+                discovered_raw.append((text, addr))
+            except TimeoutError:
+                continue
+            except Exception:  # noqa: BLE001
+                break
 
-    async def _verify_operation_state(self, operation: dict) -> bool:  # noqa: PLR6301
-        """Verify operation status."""
-        slave_speaker_device_id = operation["slave"]
+    finally:
+        if sock is not None:
+            with contextlib.suppress(Exception):
+                sock.close()
 
-        try:
-            # Distinguish by type:
-            # set_slave: read slave list through master to verify target became slave
-            # remove_slave: query slave to verify it became independent
+    return discovered_raw
 
-            op_type = operation.get("type")
-            operation_data = operation.get("data", {})
-            params = operation_data.get("params", {})
-            master_ip = params.get("master_ip", None)
-            if master_ip is None:
-                _LOGGER.error("Master IP is None")
-                return False
-            if op_type == "set_slave":
-                try:
-                    slave_device_result = None
-                    async with HivicoClient(timeout=5, debug=False) as client:
-                        slave_device_result = await client.get_slave_devices(master_ip)
-                    if slave_device_result is None:
-                        _LOGGER.error("Slave device result is None")
-                        return False
-                    slave_list = slave_device_result.get("slave_list", [])
-                    if slave_list is None:
-                        _LOGGER.error("Slave list is None")
-                        return False
-                    for slave in slave_list:
-                        uuid = slave.get("uuid")
-                        _LOGGER.debug("check slave get UUID: %s", uuid)
-                        if uuid == slave_speaker_device_id:
-                            _LOGGER.debug("find match UUID: %s", uuid)
-                            return True
-                    return False  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
-                    _LOGGER.error("Failed to get slave speaker list: %s", e)
-                    return False
-            elif op_type == "remove_slave":
-                try:
-                    slave_device_result = None
-                    async with HivicoClient(timeout=5, debug=False) as client:
-                        slave_device_result = await client.get_slave_devices(master_ip)
-                    if slave_device_result is None:
-                        _LOGGER.error("Slave device result is None")
-                        return False
-                    slave_list = slave_device_result.get("slave_list", [])
-                    if slave_list is None:
-                        _LOGGER.error("Slave list is None")
-                        return False
-                    still_exists = False
-                    for slave in slave_list:
-                        uuid = slave.get("uuid")
-                        _LOGGER.debug("check slave get UUID: %s", uuid)
-                        if uuid == slave_speaker_device_id:
-                            _LOGGER.debug("find match UUID: %s", uuid)
-                            still_exists = True
-                            break
-                    if still_exists:
-                        return False
-                    return True  # noqa: TRY300
-                except Exception as e:  # noqa: BLE001
-                    _LOGGER.error("Failed to get slave speaker list: %s", e)
-                    return False
 
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.error("Exception verifying operation status: %s", e)
-            return False
+def _is_safe_location_url(url: str) -> bool:
+    """Validate that a LOCATION URL is http(s) and points to a private/local IP."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    try:
+        host = parsed.hostname or ""
+        addr = ip_address(host)
+        return addr.is_private or addr.is_link_local  # noqa: TRY300
+    except ValueError:
+        return False
 
-    async def _check_actual_state(  # noqa: PLR6301
-        self, master_client, slave_speaker_device_id: str
-    ) -> str:
-        """Check actual status."""
-        try:
-            # Get slave speaker list
-            slave_devices = await master_client.state.async_get_slave_devices(timeout=3)
-            if slave_devices is None:
-                return "unknown"
 
-            if slave_speaker_device_id in slave_devices:
-                return "slave"
-            return "standalone"  # noqa: TRY300
-
-        except TimeoutError:
-            _LOGGER.debug("Timeout getting slave speaker list")
-            return "unknown"
-        except Exception as e:  # noqa: BLE001
-            _LOGGER.debug("Exception getting slave speaker list: %s", e)
-            return "unknown"
-
-    async def _handle_operation_failed(self, operation_id: str, reason: str):
-        """Handle operation failure."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
-            return
-
-        # Update operation status
-        operation["status"] = "failed"
-        operation["end_time"] = datetime.now()
-        operation["failure_reason"] = reason
-
-        _LOGGER.error("Operation failed: %s (reason: %s)", operation_id, reason)
-
-        # Send operation failure event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_failed",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "reason": reason,
-                "retry_count": operation["retry_count"],
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
-
-    @callback
-    def _handle_operation_started(self, event):  # noqa: PLR6301
-        """Handle operation start event."""
-        operation_id = event.data.get("operation_id")
-        _LOGGER.debug("Group operation started: %s", operation_id)
-
-    @callback
-    def _handle_device_updated(self, event):
-        """Handle device update event."""
-        # When device status updates, check if it affects ongoing operations
-        speaker_device_id = event.data.get("speaker_device_id")
-
-        # Check all pending operations to see if related to this device
-        for operation_id, operation in list(self._pending_operations.items()):
-            if speaker_device_id in {operation["master"], operation["slave"]}:
-                _LOGGER.debug(
-                    "Related device status update: %s, operation: %s",
-                    speaker_device_id,
-                    operation_id,
-                )
-
-    async def get_operation_status(self, operation_id: str) -> dict | None:
-        """Get operation status."""
-        operation = self._pending_operations.get(operation_id)
-        if not operation:
+async def parse_local_url(session: aiohttp.ClientSession, url: str):
+    """Fetch and parse a UPnP device description XML."""
+    try:
+        if not _is_safe_location_url(url):
+            _LOGGER.debug("Rejecting non-local SSDP LOCATION URL: %s", url)
             return None
+        timeout = aiohttp.ClientTimeout(total=5)
+        async with session.get(url, timeout=timeout) as response:
+            response.raise_for_status()
+            xml_content = await response.text()
 
-        result = operation.copy()
+            root = ET.fromstring(xml_content)
 
-        # Calculate duration
-        if "start_time" in result:
-            start_time = result["start_time"]
-            end_time = result.get("end_time", datetime.now())
-            result["duration"] = (end_time - start_time).total_seconds()
+            ns = {
+                "device": "urn:schemas-upnp-org:device-1-0",
+                "dlna": "urn:schemas-dlna-org:device-1-0",
+            }
 
-        # Clean up unnecessary fields
-        result.pop("start_time", None)
-        result.pop("end_time", None)
-        result.pop("last_check", None)
+            device = root.find(".//device:device", ns)
+            if device is not None:
+                return {
+                    "manufacturer": device.findtext("device:manufacturer", "", ns),
+                    "friendly_name": device.findtext("device:friendlyName", "", ns),
+                    "model_name": device.findtext("device:modelName", "", ns),
+                    "UDN": device.findtext("device:UDN", "", ns),
+                }
+            return None
+    except Exception as e:  # noqa: BLE001
+        _LOGGER.debug("Error parsing DLNA description: %s", e)
+        return None
 
-        return result
 
-    async def get_all_operations(self) -> dict[str, dict]:
-        """Get all operation statuses."""
-        results = {}
+async def parse_ssdp_response(response_text, addr):
+    """Parse an SSDP response into a device info dictionary."""
+    device_info = {"ip": addr[0], "port": addr[1], "raw_response": response_text}
 
-        for operation_id in self._pending_operations:
-            results[operation_id] = await self.get_operation_status(operation_id)
+    lines = response_text.split("\r\n")
 
-        return results
+    if lines and lines[0].upper().startswith("HTTP/"):
+        device_info["connection_status"] = lines[0]
 
-    async def cancel_operation(self, operation_id: str) -> bool:
-        """Cancel operation."""
-        if operation_id not in self._pending_operations:
-            return False
-
-        operation = self._pending_operations[operation_id]
-
-        _LOGGER.info("Cancel operation: %s", operation_id)
-
-        # Send cancellation event
-        self.hass.bus.async_fire(
-            f"{DOMAIN}_group_operation_cancelled",
-            {
-                "operation_id": operation_id,
-                "master": operation["master"],
-                "slave": operation["slave"],
-                "action": operation["type"],
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
-
-        # Clean up operation
-        await self._cleanup_operation(operation_id)
-
-        return True
+    for line in lines[1:]:
+        if ":" in line:
+            try:
+                key, value = line.split(":", 1)
+                key = key.strip().lower()
+                value = value.strip()
+                if key in {
+                    "server",
+                    "location",
+                    "st",
+                    "usn",
+                    "cache-control",
+                    "ext",
+                    "date",
+                }:
+                    device_info[key] = value
+            except Exception:  # noqa: BLE001
+                continue
+    return device_info
