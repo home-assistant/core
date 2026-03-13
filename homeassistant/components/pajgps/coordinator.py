@@ -109,7 +109,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                 model = device_models[0].get("model") or None
 
             return DeviceInfo(
-                identifiers={(DOMAIN, f"{self._email}_{device_id}")},
+                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{device_id}")},
                 name=device.name or f"PAJ GPS {device_id}",
                 manufacturer="PAJ GPS",
                 model=model,

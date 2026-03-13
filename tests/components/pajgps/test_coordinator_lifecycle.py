@@ -14,13 +14,8 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from .test_common import make_coordinator, make_device, make_trackpoint
 
 
-class TestCoordinatorInit:
-    """Tests for coordinator initialisation state."""
-
-
 class TestAsyncUpdateData:
     """Tests for the _async_update_data method."""
-
     @pytest.mark.asyncio
     async def test_returns_pajgps_data_with_devices_and_positions(self):
         """Test that _async_update_data returns a fully populated PajGpsData."""
