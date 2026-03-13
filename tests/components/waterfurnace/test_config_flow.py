@@ -244,6 +244,7 @@ async def test_reauth_flow_success(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.title == "WaterFurnace new_user"
     assert mock_config_entry.data[CONF_USERNAME] == "new_user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
 

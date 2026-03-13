@@ -112,6 +112,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(
                     reauth_entry,
+                    title=f"WaterFurnace {username}",
                     data_updates={**reauth_entry.data, **user_input},
                 )
 
