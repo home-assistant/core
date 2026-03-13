@@ -138,20 +138,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
                 # Only process devices in your integration domain
                 if domain != DOMAIN:
                     continue
-
-                if domain == "airtouch5":
-                    if unique_id.startswith("zone_"):
-                        zone_number = unique_id.split("_")[1]
-                        new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
-                    elif unique_id.startswith("ac_"):
-                        new_unique_id = f"{airtouch_device.system_id}"
-                    else:
-                        continue
-                elif domain == "cover":
+                if unique_id.startswith("zone_"):
                     zone_number = unique_id.split("_")[1]
-                    new_unique_id = (
-                        f"{airtouch_device.system_id}_{zone_number}_open_percentage"
-                    )
+                    new_unique_id = f"{airtouch_device.system_id}_{zone_number}"
+                elif unique_id.startswith("ac_"):
+                    new_unique_id = f"{airtouch_device.system_id}"
                 else:
                     continue
 
