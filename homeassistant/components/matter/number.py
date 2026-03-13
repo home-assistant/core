@@ -417,7 +417,8 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterNumber,
         required_attributes=(
             clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
-            clusters.OccupancySensing.Attributes.HoldTime,  # This attribute is mandatory when the PIRUnoccupiedToOccupiedDelay is present
+            # This attribute is mandatory when the PIRUnoccupiedToOccupiedDelay is present
+            clusters.OccupancySensing.Attributes.HoldTime,
         ),
         featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
         allow_multi=True,
