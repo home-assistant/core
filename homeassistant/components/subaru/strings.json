@@ -42,7 +42,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
-        "title": "Subaru Starlink configuration"
+        "title": "MySubaru Connected Services configuration"
       }
     }
   },
@@ -95,7 +95,7 @@
           "update_enabled": "Enable vehicle polling"
         },
         "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
-        "title": "Subaru Starlink options"
+        "title": "MySubaru Connected Services options"
       }
     }
   },
