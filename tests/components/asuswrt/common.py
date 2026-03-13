@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from aioasuswrt.asuswrt import Device as LegacyDevice
+from aioasuswrt.structure import Device, DeviceData, Interface
 from asusrouter.modules.client import ConnectionState
 
 from homeassistant.components.asuswrt.const import (
@@ -76,8 +76,12 @@ def make_client(mac, ip, name, node):
     return client
 
 
-def new_device(protocol, mac, ip, name, node=None):
+def new_device(protocol: str, mac: str, ip: str, name: str, node: str | None = None):
     """Return a new device for specific protocol."""
     if protocol in [PROTOCOL_HTTP, PROTOCOL_HTTPS]:
         return make_client(mac, ip, name, node)
-    return LegacyDevice(mac, ip, name)
+    return Device(
+        mac,
+        device_data=DeviceData(ip=ip, name=name, status=None, rssi=None),
+        interface=Interface(id=node, name=None, mac=None),
+    )
