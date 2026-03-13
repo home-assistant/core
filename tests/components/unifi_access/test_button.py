@@ -42,7 +42,7 @@ async def test_unlock_door(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.front_door"},
+        {ATTR_ENTITY_ID: "button.front_door_unlock"},
         blocking=True,
     )
 
@@ -61,6 +61,6 @@ async def test_unlock_door_api_error(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.front_door"},
+            {ATTR_ENTITY_ID: "button.front_door_unlock"},
             blocking=True,
         )

@@ -31,7 +31,7 @@ async def async_setup_entry(
 class UnifiAccessUnlockButton(UnifiAccessEntity, ButtonEntity):
     """Representation of a UniFi Access door unlock button."""
 
-    _attr_name = None
+    _attr_translation_key = "unlock"
 
     def __init__(
         self,

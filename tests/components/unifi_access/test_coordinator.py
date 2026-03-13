@@ -21,8 +21,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-FRONT_DOOR_ENTITY = "button.front_door"
-BACK_DOOR_ENTITY = "button.back_door"
+FRONT_DOOR_ENTITY = "button.front_door_unlock"
+BACK_DOOR_ENTITY = "button.back_door_unlock"
 
 
 def _get_ws_handlers(

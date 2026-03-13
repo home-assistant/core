@@ -23,6 +23,13 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "unlock": {
+        "name": "Unlock"
+      }
+    }
+  },
   "exceptions": {
     "unlock_failed": {
       "message": "Failed to unlock the door."
