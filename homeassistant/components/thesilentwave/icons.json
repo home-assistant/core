@@ -1,0 +1,13 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "default": "mdi:power",
+        "state": {
+          "on": "mdi:power",
+          "off": "mdi:power-off"
+        }
+      }
+    }
+  }
+}
