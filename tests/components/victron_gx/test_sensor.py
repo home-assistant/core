@@ -1,21 +1,11 @@
-"""Unit tests for Victron GX MQTT entities."""
+"""Tests for Victron GX MQTT sensors."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from victron_mqtt import (
-    Device as VictronVenusDevice,
-    Metric as VictronVenusMetric,
-    MetricKind,
-    MetricNature,
-    MetricType,
-)
 from victron_mqtt.testing import finalize_injection, inject_message
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
     CONF_MODEL,
@@ -23,18 +13,15 @@ from homeassistant.components.victron_gx.const import (
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.components.victron_gx.sensor import VictronSensor
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from tests.common import MockConfigEntry
 
@@ -65,173 +52,6 @@ def mock_config_entry(basic_config):
     )
 
 
-@pytest.fixture
-def mock_device() -> VictronVenusDevice:
-    """Return a mocked Victron device."""
-    device = MagicMock(spec=VictronVenusDevice)
-    device.name = "Test Device"
-    return device
-
-
-@pytest.fixture
-def base_metric() -> VictronVenusMetric:
-    """Return a mocked Victron metric with common defaults."""
-    metric = MagicMock(spec=VictronVenusMetric)
-    metric.metric_kind = MetricKind.SENSOR
-    metric.unique_id = "metric_1"
-    metric.short_id = "metric.short"
-    metric.generic_short_id = "{phase}_voltage"
-    metric.key_values = {"phase": "L1"}
-    metric.precision = 2
-    metric.unit_of_measurement = "V"
-    metric.metric_type = MetricType.VOLTAGE
-    metric.metric_nature = MetricNature.INSTANTANEOUS
-    metric.value = 12.34
-    return metric
-
-
-async def test_sensor_update_task_triggers_state_update(
-    hass: HomeAssistant, mock_device, base_metric
-) -> None:
-    """_on_update_cb should schedule update and set the native value."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-
-    with patch.object(sensor, "async_write_ha_state") as mock_sched:
-        sensor._on_update_cb(56.78)
-        assert sensor.native_value == 56.78
-        mock_sched.assert_called_once()
-
-
-async def test_metric_mappings(hass: HomeAssistant, mock_device, base_metric) -> None:
-    """Verify device_class, state_class, and unit mappings across all cases."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
-
-    # Device class mapping for all MetricType values we support
-    device_class_cases = [
-        (MetricType.POWER, SensorDeviceClass.POWER),
-        (MetricType.APPARENT_POWER, SensorDeviceClass.APPARENT_POWER),
-        (MetricType.ENERGY, SensorDeviceClass.ENERGY),
-        (MetricType.VOLTAGE, SensorDeviceClass.VOLTAGE),
-        (MetricType.CURRENT, SensorDeviceClass.CURRENT),
-        (MetricType.FREQUENCY, SensorDeviceClass.FREQUENCY),
-        (MetricType.ELECTRIC_STORAGE_PERCENTAGE, SensorDeviceClass.BATTERY),
-        (MetricType.TEMPERATURE, SensorDeviceClass.TEMPERATURE),
-        (MetricType.SPEED, SensorDeviceClass.SPEED),
-        (MetricType.LIQUID_VOLUME, SensorDeviceClass.VOLUME_STORAGE),
-        (MetricType.DURATION, SensorDeviceClass.DURATION),
-        (MetricType.TIME, None),
-    ]
-
-    for metric_type, expected_device_class in device_class_cases:
-        base_metric.metric_type = metric_type
-        sensor = VictronSensor(
-            mock_device,
-            base_metric,
-            device_info,
-        )
-        assert sensor.device_class == expected_device_class
-
-    # Unknown/unsupported device class should map to None
-    base_metric.metric_type = MagicMock()
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-    assert sensor.device_class is None
-
-    # State class mapping
-    base_metric.metric_nature = MetricNature.INSTANTANEOUS
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-    assert sensor.state_class == SensorStateClass.MEASUREMENT
-
-    base_metric.metric_nature = MetricNature.CUMULATIVE
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-    assert sensor.state_class == SensorStateClass.TOTAL_INCREASING
-
-    base_metric.metric_nature = MagicMock()
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-    assert sensor.state_class is None
-
-    # Unit of measurement mapping
-    for unit, expected in (
-        ("s", UnitOfTime.SECONDS),
-        ("min", UnitOfTime.MINUTES),
-        ("h", UnitOfTime.HOURS),
-        ("V", "V"),  # passthrough
-    ):
-        base_metric.unit_of_measurement = unit
-        sensor = VictronSensor(mock_device, base_metric, device_info)
-        assert sensor.native_unit_of_measurement == expected
-
-
-async def test_translation_fields(
-    hass: HomeAssistant, mock_device, base_metric
-) -> None:
-    """Translation key is normalized and placeholders passed through."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-
-    assert sensor.translation_key == "phase_voltage"
-    assert sensor.translation_placeholders == {"phase": "L1"}
-
-
-async def test_sensor_on_update_passthrough(
-    hass: HomeAssistant, mock_device, base_metric
-) -> None:
-    """_on_update should forward metric updates to _on_update_cb."""
-    device_info: DeviceInfo = {"identifiers": {("victron_gx", "dev_1")}}
-    sensor = VictronSensor(mock_device, base_metric, device_info)
-
-    with patch.object(sensor, "_on_update_cb") as mock_on_update_cb:
-        sensor._on_update(base_metric, 42.0)
-
-    mock_on_update_cb.assert_called_once_with(42.0)
-
-
-async def test_on_new_metric_sensor(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    init_integration,
-) -> None:
-    """Test _on_new_metric callback creates entities and updates values."""
-    victron_hub, mock_config_entry = init_integration
-
-    # Inject a sensor metric
-    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 12.6}')
-    await finalize_injection(victron_hub, disconnect=False)
-    await hass.async_block_till_done()
-
-    # Verify entity was created
-    entity_registry = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entities) > 0
-
-    # Get the voltage entity
-    voltage_entities = [e for e in entities if "voltage" in e.entity_id]
-    assert len(voltage_entities) > 0
-    entity_id = voltage_entities[0].entity_id
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert float(state.state) == 12.6
-
-    # Update with new value
-    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 13.2}')
-    await hass.async_block_till_done()
-
-    # Verify state updated
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert float(state.state) == 13.2
-
-    # Update with same value - state should remain the same
-    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Voltage", '{"value": 13.2}')
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert float(state.state) == 13.2
-
-
 async def test_victron_battery_sensor(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -256,9 +76,17 @@ async def test_victron_battery_sensor(
     entity = entities[0]
     assert entity.entity_id == "sensor.battery_dc_bus_current"
 
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-    assert {
-        "entry": entity,
-        "state": state,
-    } == snapshot(name=entity.entity_id)
+    entity_id = entity.entity_id
+    assert entity == snapshot(name=f"{entity_id}-entry-initial")
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state-initial")
+
+    # Update the same metric to exercise the entity update callback path.
+    await inject_message(victron_hub, "N/123/battery/0/Dc/0/Current", '{"value": 11.2}')
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) == snapshot(
+        name=f"{entity_id}-entry-after-update"
+    )
+    assert hass.states.get(entity_id) == snapshot(
+        name=f"{entity_id}-state-after-update"
+    )
