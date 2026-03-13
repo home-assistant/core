@@ -406,7 +406,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
             )
             return not wan_access.get("NewDisallow")
-        except FRITZ_EXCEPTIONS as ex:
+        except (FRITZ_EXCEPTIONS, RequestsConnectionError) as ex:
             _LOGGER.debug(
                 (
                     "could not get WAN access rule for client device with IP '%s',"
@@ -486,7 +486,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        info = self.connection.call_action("UserInterface1", "GetInfo")
+        try:
+            info = self.connection.call_action("UserInterface1", "GetInfo")
+        except RequestsConnectionError as ex:
+            _LOGGER.warning(
+                "Connection aborted by %s during device info update: %s",
+                self.host,
+                ex,
+            )
+            return False, None, None
         version = info.get("NewX_AVM-DE_Version")
         release_url = info.get("NewX_AVM-DE_InfoURL")
         return bool(version), version, release_url
@@ -499,9 +507,19 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self,
     ) -> dict[int, dict[str, Any]]:
         """Call GetDeflections action from X_AVM-DE_OnTel service."""
-        raw_data = await self.hass.async_add_executor_job(
-            partial(self.connection.call_action, "X_AVM-DE_OnTel1", "GetDeflections")
-        )
+        try:
+            raw_data = await self.hass.async_add_executor_job(
+                partial(
+                    self.connection.call_action, "X_AVM-DE_OnTel1", "GetDeflections"
+                )
+            )
+        except RequestsConnectionError as ex:
+            _LOGGER.warning(
+                "Connection aborted by %s during call deflections update: %s",
+                self.host,
+                ex,
+            )
+            return {}
         if not raw_data:
             return {}
 
