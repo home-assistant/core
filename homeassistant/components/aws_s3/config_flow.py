@@ -31,26 +31,24 @@ from .const import (
     DOMAIN,
 )
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+CREDS_FIELDS = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): cv.string,
         vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
+    }
+)
+
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        **CREDS_FIELDS.schema,
         vol.Required(CONF_BUCKET): cv.string,
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
         vol.Optional(CONF_PREFIX, default=""): cv.string,
-    }
-)
-
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ACCESS_KEY_ID): cv.string,
-        vol.Required(CONF_SECRET_ACCESS_KEY): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
-        ),
     }
 )
 
@@ -126,7 +124,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
         return await self.async_step_reauth_confirm()
@@ -150,6 +148,9 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.head_bucket(Bucket=reauth_entry.data[CONF_BUCKET])
             except ClientError:
                 errors["base"] = "invalid_credentials"
+            except ParamValidationError as err:
+                if "Invalid bucket name" in str(err):
+                    errors["base"] = "invalid_bucket_name"
             except ConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -163,9 +164,7 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_REAUTH_DATA_SCHEMA, user_input
-            ),
+            data_schema=self.add_suggested_values_to_schema(CREDS_FIELDS, user_input),
             errors=errors,
             description_placeholders={
                 "bucket": self._get_reauth_entry().data[CONF_BUCKET],

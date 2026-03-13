@@ -34,7 +34,7 @@ REAUTH_INPUT = {
 async def _async_start_flow(
     hass: HomeAssistant,
     user_input: dict[str, str] | None = None,
-) -> FlowResultType:
+) -> config_entries.ConfigFlowResult:
     """Initialize the config flow."""
     if user_input is None:
         user_input = USER_INPUT
@@ -54,7 +54,7 @@ async def _async_start_flow_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, str] | None = None,
-) -> FlowResultType:
+) -> config_entries.ConfigFlowResult:
     """Initialize the reauth flow."""
     if user_input is None:
         user_input = REAUTH_INPUT
@@ -130,10 +130,24 @@ async def test_flow(
             },
         ),
         (
-            "aiobotocore.session.AioSession.create_client.return_value.head_bucket",
+            "aiobotocore.session.AioSession.create_client",
             EndpointConnectionError(endpoint_url="http://example.com"),
             {CONF_ENDPOINT_URL: "cannot_connect"},
         ),
+        (
+            "aiobotocore.session.AioSession.create_client.return_value.head_bucket",
+            ClientError(
+                error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+                operation_name="head_bucket",
+            ),
+            {"base": "invalid_credentials"},
+        ),
+    ],
+    ids=[
+        "invalid_bucket_name",
+        "invalid_endpoint_url",
+        "cannot_connect",
+        "invalid_credentials",
     ],
 )
 async def test_flow_create_client_errors(
@@ -266,6 +280,11 @@ async def test_reauth_success(
     ("mock_target", "exception", "errors"),
     [
         (
+            "aiobotocore.session.AioSession.create_client.return_value.head_bucket",
+            ParamValidationError(report="Invalid bucket name"),
+            {"base": "invalid_bucket_name"},
+        ),
+        (
             "aiobotocore.session.AioSession.create_client",
             EndpointConnectionError(endpoint_url="http://example.com"),
             {"base": "cannot_connect"},
@@ -280,11 +299,12 @@ async def test_reauth_success(
         ),
     ],
     ids=[
+        "invalid_bucket_name",
         "cannot_connect",
         "invalid_credentials",
     ],
 )
-async def test_reauth_invalid_credentials(
+async def test_reauth_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
