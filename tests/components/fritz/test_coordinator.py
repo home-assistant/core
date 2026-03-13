@@ -163,11 +163,9 @@ async def test_async_service_call_connection_reset(
     coordinator: AvmWrapper = entry.runtime_data
 
     caplog.clear()
-    fc_instance = fc_class_mock.return_value
-    fc_instance.call_action = MagicMock(
+    fc_class_mock.return_value.call_action_side_effect(
         side_effect=RequestsConnectionError("Connection reset by peer")
     )
-    fc_instance.services = {"WLANConfiguration1": MagicMock()}
 
     result = await coordinator._async_service_call("WLANConfiguration", "1", "GetInfo")
 
