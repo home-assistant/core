@@ -20,14 +20,8 @@ DEVICE_CLASSES_DOOR: dict[str, str] = {
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "opened": make_cover_opened_trigger(
-        device_classes=DEVICE_CLASSES_DOOR,
-        domains={BINARY_SENSOR_DOMAIN, COVER_DOMAIN},
-    ),
-    "closed": make_cover_closed_trigger(
-        device_classes=DEVICE_CLASSES_DOOR,
-        domains={BINARY_SENSOR_DOMAIN, COVER_DOMAIN},
-    ),
+    "opened": make_cover_opened_trigger(device_classes=DEVICE_CLASSES_DOOR),
+    "closed": make_cover_closed_trigger(device_classes=DEVICE_CLASSES_DOOR),
 }
 
 

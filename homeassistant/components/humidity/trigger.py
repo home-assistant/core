@@ -15,49 +15,42 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     EntityNumericalStateAttributeChangedTriggerBase,
     EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    EntityTriggerBase,
     Trigger,
-    get_device_class_or_undefined,
 )
 
-
-class _HumidityTriggerMixin(EntityTriggerBase):
-    """Mixin for humidity triggers providing entity filtering and value extraction."""
-
-    _attributes = {
-        CLIMATE_DOMAIN: CLIMATE_ATTR_CURRENT_HUMIDITY,
-        HUMIDIFIER_DOMAIN: HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
-        SENSOR_DOMAIN: None,  # Use state.state
-        WEATHER_DOMAIN: ATTR_WEATHER_HUMIDITY,
-    }
-    _domains = {SENSOR_DOMAIN, CLIMATE_DOMAIN, HUMIDIFIER_DOMAIN, WEATHER_DOMAIN}
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities: all climate/humidifier/weather, sensor only with device_class humidity."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] != SENSOR_DOMAIN
-            or get_device_class_or_undefined(self._hass, entity_id)
-            == SensorDeviceClass.HUMIDITY
-        }
+HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
+    CLIMATE_DOMAIN: NumericalDomainSpec(
+        value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
+    ),
+    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
+        value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+    ),
+    SENSOR_DOMAIN: NumericalDomainSpec(
+        device_class=SensorDeviceClass.HUMIDITY,
+    ),
+    WEATHER_DOMAIN: NumericalDomainSpec(
+        value_source=ATTR_WEATHER_HUMIDITY,
+    ),
+}
 
 
-class HumidityChangedTrigger(
-    _HumidityTriggerMixin, EntityNumericalStateAttributeChangedTriggerBase
-):
+class HumidityChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     """Trigger for humidity value changes across multiple domains."""
+
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
 
 
 class HumidityCrossedThresholdTrigger(
-    _HumidityTriggerMixin, EntityNumericalStateAttributeCrossedThresholdTriggerBase
+    EntityNumericalStateAttributeCrossedThresholdTriggerBase
 ):
     """Trigger for humidity value crossing a threshold across multiple domains."""
+
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
