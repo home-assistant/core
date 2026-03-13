@@ -93,7 +93,7 @@ async def test_attribute_select_entities(
     assert state.attributes["options"] == ["on", "off", "toggle", "previous"]
     assert (
         state.attributes["friendly_name"]
-        == "Mock Dimmable Light Power-on behavior on startup"
+        == "Mock Dimmable Light Power-on behavior"
     )
     set_node_attribute(matter_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
