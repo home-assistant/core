@@ -109,7 +109,12 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             if err.status_code in (401, 403):
                 errors["base"] = "invalid_auth"
             else:
-                _LOGGER.exception("Unexpected Ollama response error")
+                _LOGGER.warning(
+                    "Error response from Ollama server at %s: status %s, detail: %s",
+                    url,
+                    err.status_code,
+                    str(err),
+                )
                 errors["base"] = "unknown"
         except TimeoutError, httpx.ConnectError:
             errors["base"] = "cannot_connect"
