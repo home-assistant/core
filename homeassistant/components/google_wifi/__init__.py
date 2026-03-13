@@ -13,13 +13,21 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (DOMAIN, ENDPOINT, MIN_TIME_BETWEEN_UPDATES, ATTR_CURRENT_VERSION, ATTR_NEW_VERSION, ATTR_UPTIME, 
+from .const import (DOMAIN, ENDPOINT, MIN_TIME_BETWEEN_UPDATES, ATTR_CURRENT_VERSION, ATTR_NEW_VERSION, ATTR_UPTIME,
     ATTR_LAST_RESTART, ATTR_LOCAL_IP, ATTR_STATUS)
 
 _LOGGER = logging.getLogger(__name__)
 
 # Load the sensor.py file
 PLATFORMS = [Platform.SENSOR]
+
+# Define the type for entry.runtime_data
+type GoogleWifiConfigEntry = ConfigEntry[GoogleWifiData]
+
+@dataclass
+class GoogleWifiData:
+    """Runtime data for Google Wifi."""
+    api: GoogleWifiAPI
 
 class GoogleWifiAPI:
     """Get the latest data and update the states."""
@@ -102,24 +110,30 @@ class GoogleWifiAPI:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Wifi from a config entry."""
     host = entry.data[CONF_IP_ADDRESS]
-    
-    conditions = [
-        ATTR_CURRENT_VERSION, ATTR_NEW_VERSION, ATTR_UPTIME, 
-        ATTR_LAST_RESTART, ATTR_LOCAL_IP, ATTR_STATUS
-    ]
-    
-    # Initialize the API Coordinator
-    api = GoogleWifiAPI(hass, host, conditions)
-    
-    # Do an initial update
-    await api.async_update()
-    
-    # Store the API object so sensors can find it
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
+    conditions = [
+        ATTR_CURRENT_VERSION,
+        ATTR_NEW_VERSION,
+        ATTR_UPTIME,
+        ATTR_LAST_RESTART,
+        ATTR_LOCAL_IP,
+        ATTR_STATUS
+    ]
+
+    # Initialize the API in the executor because its __init__ calls self.update()
+    api = await hass.async_add_executor_job(GoogleWifiAPI, host, conditions)
+
+    # Store the API instance in runtime_data
+    entry.runtime_data = GoogleWifiData(api=api)
+
+    # Setup the platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register listener for updates
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
-    
+
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
