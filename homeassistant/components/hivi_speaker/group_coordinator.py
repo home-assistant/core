@@ -34,21 +34,17 @@ class HIVIGroupCoordinator:
         self.device_manager = device_manager
         self.discovery_scheduler = discovery_scheduler
 
-        # Operation tracking
         self._pending_operations: dict[str, dict] = {}  # operation_id -> operation_data
         self._operation_timeout = 30  # Operation timeout (seconds)
         self._poll_interval = 2  # Polling interval (seconds)
         self._max_retries = 15  # Maximum retry count (30 seconds/2 seconds)
 
-        # Polling tasks
         self._poll_tasks: dict[str, asyncio.Task] = {}  # operation_id -> polling task
         self._coordinator_running = False
 
-        # Add lock and callback tracking
         self._operation_lock = asyncio.Lock()
         self._request_callbacks: dict[str, Callable] = {}  # operation_id -> callback
 
-        # Store cancellation functions
         self._dispatcher_connections = []
         self._unsub_operation_started = None
         self._unsub_device_updated = None
@@ -57,12 +53,10 @@ class HIVIGroupCoordinator:
         """Start coordinator."""
         self._coordinator_running = True
 
-        # Listen for operation events
         self._unsub_operation_started = self.hass.bus.async_listen(
             f"{DOMAIN}_group_operation_started", self._handle_operation_started
         )
 
-        # Listen for device status changes
         self._unsub_device_updated = self.hass.bus.async_listen(
             f"{DOMAIN}_device_updated", self._handle_device_updated
         )
@@ -80,7 +74,6 @@ class HIVIGroupCoordinator:
                 self.async_set_slave_speaker(operation_data, callback_func)
             )
 
-        # Register signal handler (supports parameterized callbacks)
         cancel_func = async_dispatcher_connect(
             self.hass, f"{DOMAIN}_sync_group_operation", _handle_sync_group_operation
         )
@@ -90,7 +83,6 @@ class HIVIGroupCoordinator:
         """Stop coordinator."""
         self._coordinator_running = False
 
-        # Cancel all polling tasks
         for _operation_id, task in list(self._poll_tasks.items()):
             if not task.done():
                 task.cancel()
@@ -100,7 +92,6 @@ class HIVIGroupCoordinator:
         self._poll_tasks.clear()
         self._pending_operations.clear()
 
-        # Cancel bus listeners
         if self._unsub_operation_started is not None:
             self._unsub_operation_started()
             self._unsub_operation_started = None
@@ -108,7 +99,6 @@ class HIVIGroupCoordinator:
             self._unsub_device_updated()
             self._unsub_device_updated = None
 
-        # Cancel all dispatcher signal listeners
         for cancel_func in self._dispatcher_connections:
             cancel_func()
         self._dispatcher_connections.clear()
@@ -122,7 +112,6 @@ class HIVIGroupCoordinator:
     ) -> dict[str, Any]:
         """Set slave speaker (with full callback support)."""
 
-        # Use new request handling mechanism
         result = await self.async_handle_discovery_request(
             operation_data, callback_func
         )
@@ -132,7 +121,6 @@ class HIVIGroupCoordinator:
 
         operation_id = result["operation_id"]
 
-        # Start processing task (includes polling)
         self.hass.async_create_task(self.async_start_operation_processing(operation_id))
 
         return result
@@ -151,7 +139,6 @@ class HIVIGroupCoordinator:
             "expected_state": "standalone",
         }
 
-        # Use new request handling mechanism
         result = await self.async_handle_discovery_request(
             operation_data, callback_func
         )
@@ -161,7 +148,6 @@ class HIVIGroupCoordinator:
 
         operation_id = result["operation_id"]
 
-        # Start processing task (includes polling)
         self.hass.async_create_task(self.async_start_operation_processing(operation_id))
 
         return result
@@ -175,7 +161,6 @@ class HIVIGroupCoordinator:
         operation_id = self._generate_operation_id(operation_data)
 
         async with self._operation_lock:
-            # Check if same operation already in progress
             if operation_id in self._pending_operations:
                 operation = self._pending_operations[operation_id]
                 result = {
@@ -191,7 +176,6 @@ class HIVIGroupCoordinator:
                     await callback_func(result)
                 return result
 
-            # Check for conflicting operations
             conflict_info = self._check_conflicting_operations(operation_data)
             if conflict_info["has_conflict"]:
                 result = {
@@ -207,7 +191,6 @@ class HIVIGroupCoordinator:
                     await callback_func(result)
                 return result
 
-            # Accept new operation
             self._pending_operations[operation_id] = {
                 "type": operation_data.get("type"),
                 "master": operation_data.get("master"),
@@ -221,7 +204,6 @@ class HIVIGroupCoordinator:
                 "request_callback": callback_func,  # Save callback function
             }
 
-            # Save callback for subsequent notifications
             if callback_func:
                 self._request_callbacks[operation_id] = callback_func
 
@@ -231,7 +213,6 @@ class HIVIGroupCoordinator:
                 "reason": "accepted",
             }
 
-            # Immediately return acceptance result via callback_func
             if callback_func:
                 await callback_func(
                     {
@@ -266,7 +247,6 @@ class HIVIGroupCoordinator:
             dict: Conflict check result.
 
         """
-        # Extract device IDs from new operation
         new_master = new_operation.get("master")
         new_slave = new_operation.get("slave")
         new_type = new_operation.get("type")
@@ -281,7 +261,6 @@ class HIVIGroupCoordinator:
             "Current pending operations count: %d", len(self._pending_operations)
         )
 
-        # If no pending operations, return no conflict
         if not self._pending_operations:
             _LOGGER.debug("No pending operations, new operation has no conflict")
             return {
@@ -291,7 +270,6 @@ class HIVIGroupCoordinator:
                 "conflict_reason": "No pending operations",
             }
 
-        # Collect device usage from all existing operations
         existing_masters = set()
         existing_slaves = set()
         all_used_devices = set()
@@ -358,7 +336,6 @@ class HIVIGroupCoordinator:
                 "violated_rule": violated_rule,
             }
 
-        # No conflict
         _LOGGER.debug("New operation passed all conflict checks")
         return {
             "has_conflict": False,
@@ -392,7 +369,6 @@ class HIVIGroupCoordinator:
         _LOGGER.debug("=== Detailed Conflict Analysis ===")
         _LOGGER.debug("New operation: master=%s, slave=%s", new_master, new_slave)
 
-        # Analyze each existing operation
         for op_id, operation in self._pending_operations.items():
             existing_master = operation.get("master")
             existing_slave = operation.get("slave")
@@ -436,7 +412,6 @@ class HIVIGroupCoordinator:
         callback_func = operation.get("request_callback")
 
         try:
-            # Notify operation start execution
             if callback_func:
                 await callback_func(
                     {
@@ -448,11 +423,9 @@ class HIVIGroupCoordinator:
                     },
                 )
 
-            # Execute actual operation
             execution_success = await self._execute_operation(operation)
 
             if not execution_success:
-                # Execution failed, notify immediately
                 if callback_func:
                     await callback_func(
                         {
@@ -466,7 +439,6 @@ class HIVIGroupCoordinator:
                 await self._handle_operation_failed(operation_id, "execution_failed")
                 return
 
-            # Execution successful, start polling status check
             if callback_func:
                 await callback_func(
                     {
@@ -478,7 +450,6 @@ class HIVIGroupCoordinator:
                     },
                 )
 
-            # Start polling task
             self._poll_tasks[operation_id] = self.hass.async_create_task(
                 self._poll_operation_status_with_callback(operation_id)
             )
@@ -512,7 +483,6 @@ class HIVIGroupCoordinator:
 
         while operation_id in self._pending_operations:
             try:
-                # Check timeout
                 time_since_start = (
                     datetime.now() - operation["start_time"]
                 ).total_seconds()
@@ -538,7 +508,6 @@ class HIVIGroupCoordinator:
                     await self._handle_operation_timeout(operation_id)
                     break
 
-                # Check retry count
                 if operation["retry_count"] >= self._max_retries:
                     _LOGGER.warning("Maximum retries reached: %s", operation_id)
 
@@ -557,7 +526,6 @@ class HIVIGroupCoordinator:
                     await self._handle_operation_failed(operation_id, "max_retries")
                     break
 
-                # Update status
                 operation["status"] = "verifying"
                 operation["retry_count"] += 1
                 operation["last_check"] = datetime.now()
@@ -569,7 +537,6 @@ class HIVIGroupCoordinator:
                     self._max_retries,
                 )
 
-                # Notify polling progress
                 if callback_func:
                     await callback_func(
                         {
@@ -583,11 +550,9 @@ class HIVIGroupCoordinator:
                         },
                     )
 
-                # Verify operation status
                 is_success = await self._verify_operation_state(operation)
 
                 if is_success:
-                    # Operation successful
                     _LOGGER.debug("verify ok for operation_id: %s", operation_id)
 
                     oper_type = operation.get("type")
@@ -612,7 +577,6 @@ class HIVIGroupCoordinator:
                     await self._handle_operation_success(operation_id)
                     break
 
-                # Wait for next polling round
                 await asyncio.sleep(self._poll_interval)
 
             except asyncio.CancelledError:
@@ -647,7 +611,6 @@ class HIVIGroupCoordinator:
 
                 await asyncio.sleep(self._poll_interval)
 
-        # Clean up task
         if operation_id in self._poll_tasks:
             del self._poll_tasks[operation_id]
 
@@ -716,7 +679,7 @@ class HIVIGroupCoordinator:
                         await client.remove_slave_from_group(master_ip, slave_ip_ra0)
                     return True  # noqa: TRY300
                 except Exception as e:  # noqa: BLE001
-                    _LOGGER.error("Failed to set slave speaker operation: %s", e)
+                    _LOGGER.error("Failed to remove slave speaker operation: %s", e)
                     return False
             else:
                 _LOGGER.error("Unknown operation type: %s", op_type)
@@ -725,14 +688,12 @@ class HIVIGroupCoordinator:
             _LOGGER.error("Operation execution exception: %s", e)
             return False
 
-    # Modify original success/failure handling methods to include callback notifications
     async def _handle_operation_success(self, operation_id: str):
         """Handle operation success."""
         operation = self._pending_operations.get(operation_id)
         if not operation:
             return
 
-        # Update operation status
         operation["status"] = "success"
         operation["end_time"] = datetime.now()
         duration = (operation["end_time"] - operation["start_time"]).total_seconds()
@@ -744,7 +705,6 @@ class HIVIGroupCoordinator:
             operation["retry_count"],
         )
 
-        # Send operation success event
         self.hass.bus.async_fire(
             f"{DOMAIN}_group_operation_succeeded",
             {
@@ -758,10 +718,8 @@ class HIVIGroupCoordinator:
             },
         )
 
-        # Trigger immediate discovery to ensure status synchronization
         _LOGGER.debug("Trigger immediate discovery to synchronize status")
 
-        # Clean up operation
         await self._cleanup_operation(operation_id)
 
     async def _handle_operation_timeout(self, operation_id: str):
@@ -770,13 +728,11 @@ class HIVIGroupCoordinator:
         if not operation:
             return
 
-        # Update operation status
         operation["status"] = "timeout"
         operation["end_time"] = datetime.now()
 
         _LOGGER.warning("Operation timeout: %s", operation_id)
 
-        # Send operation timeout event
         self.hass.bus.async_fire(
             f"{DOMAIN}_group_operation_timeout",
             {
@@ -789,22 +745,17 @@ class HIVIGroupCoordinator:
             },
         )
 
-        # Even if timeout, trigger discovery to get current status
         _LOGGER.debug("Operation timeout, trigger discovery to get current status")
 
-        # Clean up operation
         await self._cleanup_operation(operation_id)
 
     async def _cleanup_operation(self, operation_id: str):
         """Clean up operation (includes callback cleanup)."""
-        # Delay cleanup to give event handling time
         await asyncio.sleep(1)
 
-        # Clean up callbacks
         if operation_id in self._request_callbacks:
             del self._request_callbacks[operation_id]
 
-        # Clean up operations and tasks
         if operation_id in self._pending_operations:
             del self._pending_operations[operation_id]
 
@@ -825,7 +776,6 @@ class HIVIGroupCoordinator:
 
         while operation_id in self._pending_operations:
             try:
-                # Check timeout
                 time_since_start = (
                     datetime.now() - operation["start_time"]
                 ).total_seconds()
@@ -838,13 +788,11 @@ class HIVIGroupCoordinator:
                     await self._handle_operation_timeout(operation_id)
                     break
 
-                # Check retry count
                 if operation["retry_count"] >= self._max_retries:
                     _LOGGER.warning("Maximum retries reached: %s", operation_id)
                     await self._handle_operation_failed(operation_id, "max_retries")
                     break
 
-                # Update status
                 operation["status"] = "verifying"
                 operation["retry_count"] += 1
                 operation["last_check"] = datetime.now()
@@ -856,15 +804,12 @@ class HIVIGroupCoordinator:
                     self._max_retries,
                 )
 
-                # Verify operation status
                 is_success = await self._verify_operation_state(operation)
 
                 if is_success:
-                    # Operation successful
                     await self._handle_operation_success(operation_id)
                     break
 
-                # Wait for next polling round
                 await asyncio.sleep(self._poll_interval)
 
             except asyncio.CancelledError:
@@ -874,7 +819,6 @@ class HIVIGroupCoordinator:
                 _LOGGER.error("Polling operation exception: %s - %s", operation_id, e)
                 await asyncio.sleep(self._poll_interval)
 
-        # Clean up task
         if operation_id in self._poll_tasks:
             del self._poll_tasks[operation_id]
 
@@ -883,10 +827,6 @@ class HIVIGroupCoordinator:
         slave_speaker_device_id = operation["slave"]
 
         try:
-            # Distinguish by type:
-            # set_slave: read slave list through master to verify target became slave
-            # remove_slave: query slave to verify it became independent
-
             op_type = operation.get("type")
             operation_data = operation.get("data", {})
             params = operation_data.get("params", {})
@@ -952,7 +892,6 @@ class HIVIGroupCoordinator:
     ) -> str:
         """Check actual status."""
         try:
-            # Get slave speaker list
             slave_devices = await master_client.state.async_get_slave_devices(timeout=3)
             if slave_devices is None:
                 return "unknown"
@@ -974,14 +913,12 @@ class HIVIGroupCoordinator:
         if not operation:
             return
 
-        # Update operation status
         operation["status"] = "failed"
         operation["end_time"] = datetime.now()
         operation["failure_reason"] = reason
 
         _LOGGER.error("Operation failed: %s (reason: %s)", operation_id, reason)
 
-        # Send operation failure event
         self.hass.bus.async_fire(
             f"{DOMAIN}_group_operation_failed",
             {
@@ -995,7 +932,6 @@ class HIVIGroupCoordinator:
             },
         )
 
-        # Clean up operation
         await self._cleanup_operation(operation_id)
 
     @callback
@@ -1007,10 +943,8 @@ class HIVIGroupCoordinator:
     @callback
     def _handle_device_updated(self, event):
         """Handle device update event."""
-        # When device status updates, check if it affects ongoing operations
         speaker_device_id = event.data.get("speaker_device_id")
 
-        # Check all pending operations to see if related to this device
         for operation_id, operation in list(self._pending_operations.items()):
             if speaker_device_id in {operation["master"], operation["slave"]}:
                 _LOGGER.debug(
@@ -1027,13 +961,11 @@ class HIVIGroupCoordinator:
 
         result = operation.copy()
 
-        # Calculate duration
         if "start_time" in result:
             start_time = result["start_time"]
             end_time = result.get("end_time", datetime.now())
             result["duration"] = (end_time - start_time).total_seconds()
 
-        # Clean up unnecessary fields
         result.pop("start_time", None)
         result.pop("end_time", None)
         result.pop("last_check", None)
@@ -1058,7 +990,6 @@ class HIVIGroupCoordinator:
 
         _LOGGER.info("Cancel operation: %s", operation_id)
 
-        # Send cancellation event
         self.hass.bus.async_fire(
             f"{DOMAIN}_group_operation_cancelled",
             {
@@ -1070,7 +1001,6 @@ class HIVIGroupCoordinator:
             },
         )
 
-        # Clean up operation
         await self._cleanup_operation(operation_id)
 
         return True
