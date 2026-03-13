@@ -28,7 +28,7 @@ class HIVISpeakerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         """Get options flow."""
-        return HIVISpeakerOptionsFlow(config_entry)
+        return HIVISpeakerOptionsFlow()
 
 
 class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
@@ -45,18 +45,13 @@ class HIVISpeakerOptionsFlow(config_entries.OptionsFlow):
         self.open_num = 0
         if user_input is not None:
             if user_input.get("confirm_refresh"):
-                # Trigger refresh
                 await self.hass.services.async_call(
                     DOMAIN, "refresh_discovery", {}, blocking=False
                 )
-
-                # Show success page
                 return await self.async_step_success()
 
-            # User canceled, return
             return self.async_create_entry(title="", data={})
 
-        # Show confirmation dialog
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
