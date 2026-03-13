@@ -138,3 +138,10 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.info("Player %s is available again", self.name)
             if self._remove_dispatcher:
                 self._remove_dispatcher()
+
+    @callback
+    def async_shutdown_dispatcher(self) -> None:
+        """Close down the dispatcher."""
+        if self._remove_dispatcher:
+            self._remove_dispatcher()
+            self._remove_dispatcher = None

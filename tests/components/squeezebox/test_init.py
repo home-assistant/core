@@ -6,10 +6,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.squeezebox import async_remove_config_entry_device
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import TEST_MAC
@@ -130,3 +133,38 @@ async def test_device_registry_server_merged(
     reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
     assert reg_device is not None
     assert reg_device == snapshot
+
+
+@pytest.mark.parametrize(
+    ("is_service", "is_online", "expected_error"),
+    [
+        (True, False, "Please delete the associated config entry"),
+        (False, True, "is currently online"),
+    ],
+)
+async def test_remove_device_blocked(
+    hass: HomeAssistant,
+    setup_squeezebox: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    is_service: bool,
+    is_online: bool,
+    expected_error: str,
+) -> None:
+    """Test that removal is blocked for server or online players."""
+    entry = setup_squeezebox
+    device: dr.DeviceEntry | None
+
+    if is_service:
+        device = next(
+            d
+            for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+            if d.entry_type is dr.DeviceEntryType.SERVICE
+        )
+    else:
+        player_id = TEST_MAC[0]
+        entry.runtime_data.player_coordinators[player_id].available = is_online
+        device = device_registry.async_get_device(identifiers={(DOMAIN, player_id)})
+
+    assert device is not None
+    with pytest.raises(HomeAssistantError, match=expected_error):
+        await async_remove_config_entry_device(hass, entry, device)
