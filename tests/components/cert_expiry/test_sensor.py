@@ -94,6 +94,7 @@ async def test_async_setup_entry_passes_tls_options(hass: HomeAssistant) -> None
             CONF_CA_DATA: pem,
         },
         unique_id=f"{HOST}:{PORT}",
+        version=2,
     )
 
     timestamp = future_timestamp(100)
