@@ -77,12 +77,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: Airtouch5ConfigEntry) 
             AirtouchDiscovery_instance = AirtouchDiscovery()
             await AirtouchDiscovery_instance.establish_server()
             airtouch_device = await AirtouchDiscovery_instance.discover_by_ip(host)
+            _LOGGER.info("Finished waiting for airtouch device")
             assert airtouch_device is not None, "Device not found during migration"
             # If for some reason the device is not found during migration, it will fail and will retry next time. This could leave a persistent error if the device cannout route UDP.
         except TimeoutError as exception:
             _LOGGER.error("Error while migrating: %s", exception)
             return False
-
+        finally:
+            await AirtouchDiscovery_instance.close()
         # looking for climate entities
         entity_registry = er.async_get(hass)
         for entity in entity_registry.entities.values():
