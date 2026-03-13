@@ -92,14 +92,16 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Handle updated data from the coordinator.
 
         If the coordinator has updated the map, we can update the image.
+        Note: We intentionally do not call super() to avoid triggering
+        state changes for every map update, which would spam the activity log.
         """
         if (map_content := self._map_content) is None:
             return
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
-
-        super()._handle_coordinator_update()
+            # Only update the image data, not the entity state
+            # This prevents spamming the activity log with map updates
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
