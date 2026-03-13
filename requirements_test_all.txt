@@ -1840,6 +1840,9 @@ pyialarm==2.2.0
 # homeassistant.components.icloud
 pyicloud==2.4.1
 
+# homeassistant.components.imou
+pyimouapi==1.2.3
+
 # homeassistant.components.insteon
 pyinsteon==1.6.4
 
