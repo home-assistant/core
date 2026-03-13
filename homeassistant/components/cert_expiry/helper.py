@@ -40,7 +40,9 @@ async def async_get_cert(
                 )
             )
         else:
-            context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+            context = await hass.async_add_executor_job(
+                functools.partial(ssl.create_default_context, ssl.Purpose.SERVER_AUTH)
+            )
         context.check_hostname = not ignore_hostname
         transport, _ = await hass.loop.create_connection(
             asyncio.Protocol,

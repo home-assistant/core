@@ -108,7 +108,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            ignore_hostname = user_input[CONF_IGNORE_HOSTNAME]
+            ignore_hostname = user_input.get(CONF_IGNORE_HOSTNAME, False)
             ca_data = user_input[CONF_CA_DATA] or None
 
             await self.async_set_unique_id(f"{host}:{port}")
