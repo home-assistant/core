@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.proxmoxve.coordinator import ProxmoxNodeData
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -27,9 +27,9 @@ async def test_vm_migration_updates_entity(
 
     state = hass.states.get("sensor.vm_web_status")
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "running"
 
-    # Simulate migration: VM 100 moves from pve1 to pve2
+    # VM 100 moves from pve1 to pve2
     new_data = {
         "pve1": ProxmoxNodeData(
             node={
@@ -127,7 +127,7 @@ async def test_vm_migration_updates_entity(
 
     state = hass.states.get("sensor.vm_web_status")
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "running"
 
 
 async def test_container_migration_updates_entity(
@@ -144,9 +144,9 @@ async def test_container_migration_updates_entity(
 
     state = hass.states.get("sensor.ct_nginx_status")
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "running"
 
-    # Simulate migration: container 200 moves from pve1 to pve2
+    # Container 200 moves from pve1 to pve2
     new_data = {
         "pve1": ProxmoxNodeData(
             node={
@@ -244,4 +244,4 @@ async def test_container_migration_updates_entity(
 
     state = hass.states.get("sensor.ct_nginx_status")
     assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "running"
