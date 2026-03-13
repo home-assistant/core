@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "end_time_before_start_time": {
+      "message": "End time must be greater or equal to start time"
+    },
+    "start_time_before_now": {
+      "message": "Start time must be in the past"
+    }
+  },
   "issues": {
     "backup_failed_out_of_resources": {
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
@@ -17,6 +25,25 @@
     "enable": {
       "description": "Starts the recording of events and state changes.",
       "name": "[%key:common::action::enable%]"
+    },
+    "get_history": {
+      "description": "Retrieves history data for entities within a specific time period.",
+      "fields": {
+        "end_time": {
+          "description": "The end time for the history query. If omitted, returns all history from start time onward.",
+          "name": "End time"
+        },
+
+        "history_ids": {
+          "description": "The entity IDs or history IDs to return history for.",
+          "name": "History IDs"
+        },
+        "start_time": {
+          "description": "The start time for the history query.",
+          "name": "Start time"
+        }
+      },
+      "name": "Get history"
     },
     "get_statistics": {
       "description": "Retrieves statistics data for entities within a specific time period.",
