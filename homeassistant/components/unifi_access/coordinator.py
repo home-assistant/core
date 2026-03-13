@@ -8,6 +8,7 @@ from typing import cast
 
 from unifi_access_api import (
     ApiAuthError,
+    ApiConnectionError,
     ApiError,
     Door,
     UnifiAccessApiClient,
@@ -73,6 +74,8 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
                 doors = await self.client.get_doors()
         except ApiAuthError as err:
             raise ConfigEntryAuthFailed from err
+        except ApiConnectionError as err:
+            raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         return {door.id: door for door in doors}

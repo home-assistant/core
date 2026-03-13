@@ -5,7 +5,12 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
-from unifi_access_api import ApiAuthError, ApiError, DoorLockRelayStatus
+from unifi_access_api import (
+    ApiAuthError,
+    ApiConnectionError,
+    ApiError,
+    DoorLockRelayStatus,
+)
 from unifi_access_api.models.websocket import (
     LocationUpdateData,
     LocationUpdateState,
@@ -60,6 +65,20 @@ async def test_update_data_api_error(
 ) -> None:
     """Test coordinator handles API error as update failure."""
     mock_client.get_doors.side_effect = ApiError("API error")
+
+    coordinator = init_integration.runtime_data
+    await coordinator.async_refresh()
+
+    assert coordinator.last_update_success is False
+
+
+async def test_update_data_connection_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test coordinator handles connection error as update failure."""
+    mock_client.get_doors.side_effect = ApiConnectionError("Connection failed")
 
     coordinator = init_integration.runtime_data
     await coordinator.async_refresh()
