@@ -17,6 +17,7 @@ ATTR_SOUND_OUTPUT = "sound_output"
 
 CONF_ON_ACTION = "turn_on_action"
 CONF_SOURCES = "sources"
+CONF_USE_ABSOLUTE_VOLUME = "use_absolute_volume"
 
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 

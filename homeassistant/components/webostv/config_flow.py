@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -25,7 +25,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from . import WebOsTvConfigEntry
-from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import CONF_SOURCES, CONF_USE_ABSOLUTE_VOLUME, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
 from .helpers import get_sources
 
 DATA_SCHEMA = vol.Schema(
@@ -215,7 +215,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         """Manage the options."""
         errors = {}
         if user_input is not None:
-            options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
+            options_input = {
+                CONF_SOURCES: user_input[CONF_SOURCES],
+                CONF_USE_ABSOLUTE_VOLUME: user_input[CONF_USE_ABSOLUTE_VOLUME],
+            }
             return self.async_create_entry(title="", data=options_input)
         # Get sources
         sources_list = []
@@ -238,6 +241,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     CONF_SOURCES,
                     description={"suggested_value": sources},
                 ): cv.multi_select({source: source for source in sources_list}),
+                vol.Optional(
+                    CONF_USE_ABSOLUTE_VOLUME,
+                    default=self.config_entry.options.get(
+                        CONF_USE_ABSOLUTE_VOLUME, True
+                    ),
+                ): selector.BooleanSelector(),
             }
         )
 

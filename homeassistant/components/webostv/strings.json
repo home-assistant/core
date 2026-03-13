@@ -82,10 +82,12 @@
     "step": {
       "init": {
         "data": {
-          "sources": "Sources list"
+          "sources": "Sources list",
+          "use_absolute_volume": "Enable absolute volume control"
         },
         "data_description": {
-          "sources": "List of sources to enable"
+          "sources": "List of sources to enable",
+          "use_absolute_volume": "Enable setting the exact volume level. Disable if your TV reports support for this but does not work correctly (common on some models using ARC)."
         },
         "description": "Select enabled sources",
         "title": "Options for LG webOS TV"

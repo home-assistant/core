@@ -34,6 +34,7 @@ from .const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
+    CONF_USE_ABSOLUTE_VOLUME,
     DOMAIN,
     LIVE_TV_APP_ID,
     WEBOSTV_EXCEPTIONS,
@@ -211,11 +212,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if tv_state.sound_output == "external_speaker":
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
             elif tv_state.sound_output != "lineout":
-                supported = (
-                    supported
-                    | SUPPORT_WEBOSTV_VOLUME
-                    | MediaPlayerEntityFeature.VOLUME_SET
-                )
+                supported = supported | SUPPORT_WEBOSTV_VOLUME
+                if self._entry.options.get(CONF_USE_ABSOLUTE_VOLUME, True):
+                    supported = supported | MediaPlayerEntityFeature.VOLUME_SET
 
             self._supported_features = supported
 
