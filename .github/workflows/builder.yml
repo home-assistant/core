@@ -72,7 +72,7 @@ jobs:
       - name: Download Translations
         run: python3 -m script.translations download
         env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
 
       - name: Archive translations
         shell: bash
