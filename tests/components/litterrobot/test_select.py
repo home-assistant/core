@@ -120,7 +120,7 @@ async def test_select_command_exception(
     """Test that LitterRobotException is wrapped in HomeAssistantError."""
     await setup_integration(hass, mock_account_with_side_effects, SELECT_DOMAIN)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

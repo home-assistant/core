@@ -52,7 +52,7 @@ async def test_button_command_exception(
     """Test that LitterRobotException is wrapped in HomeAssistantError."""
     await setup_integration(hass, mock_account_with_side_effects, BUTTON_DOMAIN)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

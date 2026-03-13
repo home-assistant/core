@@ -144,7 +144,7 @@ async def test_switch_command_exception(
     """Test that LitterRobotException is wrapped in HomeAssistantError."""
     await setup_integration(hass, mock_account_with_side_effects, SWITCH_DOMAIN)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
