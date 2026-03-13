@@ -29,6 +29,7 @@ METHODS = ["POST", "GET"]
 
 XML_MIME_TYPES = (
     "application/rss+xml",
+    "application/x-javascript",
     "application/xhtml+xml",
     "application/xml",
     "text/xml",
