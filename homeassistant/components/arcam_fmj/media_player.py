@@ -81,7 +81,6 @@ class ArcamFmj(CoordinatorEntity[ArcamFmjCoordinator], MediaPlayerEntity):
         """Initialize device."""
         super().__init__(coordinator)
         self._state = coordinator.state
-        self._attr_name = f"Zone {self._state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
