@@ -2112,6 +2112,7 @@ NO_QUALITY_SCALE = [
     "file_upload",
     "frontend",
     "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -2136,7 +2137,9 @@ NO_QUALITY_SCALE = [
     "logger",
     "lovelace",
     "media_source",
+    "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "proxy",
@@ -2156,6 +2159,7 @@ NO_QUALITY_SCALE = [
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
