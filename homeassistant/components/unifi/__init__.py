@@ -78,7 +78,7 @@ async def async_remove_config_entry_device(
     return not any(
         identifier
         for _, identifier in device_entry.connections
-        if identifier in hub.api.clients or identifier in hub.api.devices
+        if identifier in hub.api.devices
     )
 
 
