@@ -129,6 +129,18 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Light"
 
+SCRIPT_FIELDS = (
+    CONF_EFFECT_ACTION,
+    CONF_HS_ACTION,
+    CONF_LEVEL_ACTION,
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_RGB_ACTION,
+    CONF_RGBW_ACTION,
+    CONF_RGBWW_ACTION,
+    CONF_TEMPERATURE_ACTION,
+)
+
 LIGHT_COMMON_SCHEMA = vol.Schema(
     {
         vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
@@ -140,8 +152,6 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_LEVEL): cv.template,
         vol.Optional(CONF_MAX_MIREDS): cv.template,
         vol.Optional(CONF_MIN_MIREDS): cv.template,
-        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
@@ -226,6 +236,7 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_LIGHTS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -242,6 +253,7 @@ async def async_setup_entry(
         StateLightEntity,
         LIGHT_CONFIG_ENTRY_SCHEMA,
         True,
+        script_options=SCRIPT_FIELDS,
     )
 
 

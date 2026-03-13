@@ -64,6 +64,13 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+SCRIPT_FIELDS = (
+    CONF_LOCK,
+    CONF_OPEN,
+    CONF_UNLOCK,
+)
+
+
 LOCK_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_CODE_FORMAT): cv.template,
@@ -112,6 +119,7 @@ async def async_setup_platform(
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -127,6 +135,7 @@ async def async_setup_entry(
         async_add_entities,
         StateLockEntity,
         LOCK_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
