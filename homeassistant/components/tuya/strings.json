@@ -1084,6 +1084,11 @@
         "name": "Wide dynamic range"
       }
     },
+    "text": {
+      "meal_plan": {
+        "name": "Meal plan"
+      }
+    },
     "valve": {
       "indexed_valve": {
         "name": "Valve {index}"
