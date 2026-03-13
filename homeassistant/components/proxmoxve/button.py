@@ -291,9 +291,9 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
             )
         # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
-            self.entity_description.press_action,
+            self.entity_description.press_action,  # type: ignore[arg-type]
             self.coordinator,
-            self._node_name,  # type: ignore[arg-type]
+            self._node_name,
             self.device_id,
         )
 
@@ -313,8 +313,8 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
             )
         # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
-            self.entity_description.press_action,
+            self.entity_description.press_action,  # type: ignore[arg-type]
             self.coordinator,
-            self._node_name,  # type: ignore[arg-type]
+            self._node_name,
             self.device_id,
         )
