@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -71,6 +73,7 @@ class LitterRobotButtonEntity(LitterRobotEntity[_WhiskerEntityT], ButtonEntity):
 
     entity_description: RobotButtonEntityDescription[_WhiskerEntityT]
 
+    @whisker_command
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)

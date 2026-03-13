@@ -17,6 +17,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .common import DOMAIN, VACUUM_ENTITY_ID
@@ -156,3 +157,18 @@ async def test_commands(
     getattr(mock_account.robots[0], command).assert_called_once()
 
     assert set(issue_registry.issues.keys()) == issues
+
+
+async def test_vacuum_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
+) -> None:
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, VACUUM_DOMAIN)
+
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_START,
+            {ATTR_ENTITY_ID: VACUUM_ENTITY_ID},
+            blocking=True,
+        )

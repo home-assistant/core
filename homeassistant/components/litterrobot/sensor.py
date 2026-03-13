@@ -23,6 +23,8 @@ from homeassistant.util import dt as dt_util
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
 
+PARALLEL_UPDATES = 0
+
 
 def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
     """Return a gauge icon valid identifier."""

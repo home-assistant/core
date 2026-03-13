@@ -16,7 +16,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,6 +76,7 @@ class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
         """Return the value reported by the time."""
         return self.entity_description.value_fn(self.robot)
 
+    @whisker_command
     async def async_set_value(self, value: time) -> None:
         """Update the current value."""
         await self.entity_description.set_fn(self.robot, value)
