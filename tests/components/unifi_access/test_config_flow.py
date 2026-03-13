@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
 
 from homeassistant.components.unifi_access.const import DOMAIN
@@ -49,17 +50,30 @@ async def test_user_flow(
     mock_client.authenticate.assert_awaited_once()
 
 
-async def test_user_flow_cannot_connect(
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (ApiConnectionError("Connection failed"), "cannot_connect"),
+        (ApiAuthError(), "invalid_auth"),
+        (RuntimeError("boom"), "unknown"),
+    ],
+)
+async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
+    exception: Exception,
+    error: str,
 ) -> None:
-    """Test user config flow with connection error."""
-    mock_client.authenticate.side_effect = ApiConnectionError("Connection failed")
-
+    """Test user config flow errors and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_client.authenticate.side_effect = exception
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -70,20 +84,10 @@ async def test_user_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
+    mock_client.authenticate.side_effect = None
 
-async def test_user_flow_invalid_auth(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-) -> None:
-    """Test user config flow with invalid authentication."""
-    mock_client.authenticate.side_effect = ApiAuthError()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -93,32 +97,7 @@ async def test_user_flow_invalid_auth(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_flow_unknown_error(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-) -> None:
-    """Test user config flow with unexpected error."""
-    mock_client.authenticate.side_effect = RuntimeError("boom")
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: MOCK_HOST,
-            CONF_API_TOKEN: MOCK_API_TOKEN,
-            CONF_VERIFY_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
