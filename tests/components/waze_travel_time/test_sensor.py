@@ -130,6 +130,45 @@ async def test_incl_filter(hass: HomeAssistant) -> None:
                 CONF_AVOID_SUBSCRIPTION_ROADS: True,
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: [""],
+                CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: {"minutes": 0},
+            },
+        ),
+        (
+            MOCK_CONFIG,
+            {
+                CONF_UNITS: METRIC_UNITS,
+                CONF_REALTIME: True,
+                CONF_VEHICLE_TYPE: "car",
+                CONF_AVOID_TOLL_ROADS: True,
+                CONF_AVOID_SUBSCRIPTION_ROADS: True,
+                CONF_AVOID_FERRIES: True,
+                CONF_INCL_FILTER: ["IncludeThis"],
+                CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: {"minutes": 0},
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_update_0min", "mock_config")
+async def test_0min_route(hass: HomeAssistant) -> None:
+    """Test that 0 minute routes work and filters handle the empty street names list."""
+    assert hass.states.get("sensor.waze_travel_time").attributes["duration"] == 0
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [
+        (
+            MOCK_CONFIG,
+            {
+                CONF_UNITS: METRIC_UNITS,
+                CONF_REALTIME: True,
+                CONF_VEHICLE_TYPE: "car",
+                CONF_AVOID_TOLL_ROADS: True,
+                CONF_AVOID_SUBSCRIPTION_ROADS: True,
+                CONF_AVOID_FERRIES: True,
+                CONF_INCL_FILTER: [""],
                 CONF_EXCL_FILTER: ["ExcludeThis"],
                 CONF_TIME_DELTA: {"minutes": 0},
             },
