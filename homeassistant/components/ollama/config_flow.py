@@ -89,10 +89,6 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 3
     MINOR_VERSION = 3
 
-    def __init__(self) -> None:
-        """Initialize config flow."""
-        self.url: str | None = None
-
     async def _async_validate_connection(
         self, url: str, api_key: str | None
     ) -> dict[str, str]:
