@@ -32,9 +32,11 @@
     }),
     'device': dict({
       'capabilities': dict({
+        'deviceio': False,
         'events': False,
         'imaging': True,
         'ptz': True,
+        'relay_outputs': 0,
         'snapshot': False,
       }),
       'info': dict({
