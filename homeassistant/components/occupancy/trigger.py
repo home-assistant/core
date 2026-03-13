@@ -6,11 +6,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import get_device_class_or_undefined
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
     EntityTriggerBase,
     Trigger,
-    get_device_class_or_undefined,
 )
 
 
