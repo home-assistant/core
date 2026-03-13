@@ -7,11 +7,11 @@ from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginExcepti
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .common import ACCOUNT_USER_ID, CONF_USERNAME, CONFIG, DOMAIN
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
 from tests.common import MockConfigEntry
 
