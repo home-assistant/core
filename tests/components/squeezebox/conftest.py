@@ -143,43 +143,30 @@ def mock_server():
 
 
 @pytest.fixture
-def mock_discover_success():
-    """Fixture to simulate successful async_discover."""
+def mock_discover():
+    """Fixture to mock async_discover with a default success state."""
 
-    async def _mock_discover(callback):
+    async def _mock_discover_success(callback):
         class DummyServer:
             host = "1.1.1.1"
             port = 9000
-            uuid = SERVER_UUIDS[0]  # Ensure UUID is defined or imported
+            uuid = SERVER_UUIDS[0]
+            name = "Test Server"
 
         callback(DummyServer())
         return [DummyServer()]
 
-    return _mock_discover
-
-
-@pytest.fixture
-def mock_discover_failure():
-    """Simulate failed discovery without raising unhandled exceptions."""
-
-    async def _failed_discover(callback):
-        # Simulate no servers found, no callback triggered
-        return []
-
-    return _failed_discover
-
-
-@pytest.fixture
-def patch_discover():
-    """Patch the async_discover function to prevent actual network calls."""
-
-    async def _mock_discover(callback):
-        return []
-
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
-        side_effect=_mock_discover,
-    ):
+        side_effect=_mock_discover_success,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture(autouse=True)
+def mock_discover_timeout():
+    """Mock the discovery timeout so tests run fast."""
+    with patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0):
         yield
 
 
