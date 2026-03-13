@@ -9,6 +9,13 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "meter_select": {
+        "data": {
+          "hardware_address": "Meter"
+        },
+        "description": "This gateway has connected to {meter_count} different smart meters in its lifetime, each with a unique hardware address. Please select the hardware address corresponding to the meter you want to monitor.",
+        "title": "Select meter"
+      },
       "user": {
         "data": {
           "cloud_id": "Cloud ID",
