@@ -9,8 +9,6 @@ Covers:
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 from homeassistant.components.pajgps.coordinator import PajGpsData
 
 from .test_common import make_coordinator, make_device
@@ -78,19 +76,3 @@ class TestGetDeviceInfoModel:
         info = coord.get_device_info(1)
 
         assert info["model"] == "First Model"
-
-
-# ---------------------------------------------------------------------------
-# Helpers shared by switch + binary_sensor setup tests
-# ---------------------------------------------------------------------------
-
-
-def _make_hass_and_config_entry(coordinator):
-    """Return a fake hass and config_entry wired to the given coordinator."""
-    config_entry = MagicMock()
-    config_entry.entry_id = "test_entry_id"
-    config_entry.runtime_data = coordinator
-
-    hass = MagicMock()
-
-    return hass, config_entry
