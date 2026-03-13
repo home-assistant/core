@@ -15,7 +15,7 @@ from aioairzone.const import (
 )
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, CONF_USE_HTTPS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
@@ -84,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_ID],
+        verify_ssl=False,  # Airzone devices typically use self-signed certificates
+        use_https=entry.data.get(CONF_USE_HTTPS, False),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
