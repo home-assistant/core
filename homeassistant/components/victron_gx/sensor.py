@@ -1,11 +1,9 @@
 """Support for Victron GX sensors."""
 
-import logging
 from typing import Any
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
-    FormulaMetric as VictronFormulaMetric,
     Metric as VictronVenusMetric,
     MetricKind,
     MetricNature,
@@ -13,8 +11,8 @@ from victron_mqtt import (
 )
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTime
@@ -26,8 +24,6 @@ from .entity import VictronBaseEntity
 from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
-
-_LOGGER = logging.getLogger(__name__)
 
 METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, SensorDeviceClass] = {
     MetricType.POWER: SensorDeviceClass.POWER,
@@ -82,10 +78,8 @@ async def async_setup_entry(
     hub.register_new_metric_callback(MetricKind.SENSOR, on_new_metric)
 
 
-class VictronSensor(VictronBaseEntity, RestoreSensor):
+class VictronSensor(VictronBaseEntity, SensorEntity):
     """Implementation of a Victron GX sensor."""
-
-    _baseline: float | None = None
 
     def __init__(
         self,
@@ -101,60 +95,9 @@ class VictronSensor(VictronBaseEntity, RestoreSensor):
         self._attr_native_unit_of_measurement = (
             UNIT_MAPPING.get(unit, unit) if unit is not None else None
         )
+        self._attr_native_value = metric.value
 
     @callback
     def _on_update_cb(self, value: Any) -> None:
-        if self._baseline is not None:
-            if not isinstance(value, (int, float)):
-                _LOGGER.warning(
-                    "Received non-numeric value '%s' for %s, cannot apply baseline",
-                    value,
-                    self.entity_id,
-                )
-                return
-            value += self._baseline
-        if self._attr_native_value == value:
-            return
         self._attr_native_value = value
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Restore persistent state for FormulaMetric energy sensors."""
-
-        # Only restore if both are true:
-        # 1. Total increasing sensors (like cumulative energy)
-        # 2. FormulaMetrics (calculated values)
-        should_restore = self.state_class in [
-            SensorStateClass.TOTAL_INCREASING,
-            SensorStateClass.TOTAL,
-        ] and isinstance(self._metric, VictronFormulaMetric)
-        self._attr_native_value = self._metric.value
-        if not should_restore:
-            # Call parent to register update callbacks
-            await super().async_added_to_hass()
-            return
-
-        if not isinstance(self._attr_native_value, (int, float)):
-            _LOGGER.warning(
-                "Cannot restore baseline for %s: current value is not numeric",
-                self.entity_id,
-            )
-            await super().async_added_to_hass()
-            return
-
-        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            restored_native_value = last_sensor_data.native_value
-            if isinstance(restored_native_value, (int, float)):
-                self._baseline = float(restored_native_value)
-                self._attr_native_value += self._baseline
-                _LOGGER.debug(
-                    "Restored baseline of %.3f for %s", self._baseline, self.entity_id
-                )
-            else:
-                _LOGGER.warning(
-                    "Could not restore state for %s: invalid value '%s'",
-                    self.entity_id,
-                    restored_native_value,
-                )
-        # Call parent to register update callbacks
-        await super().async_added_to_hass()
