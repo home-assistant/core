@@ -205,9 +205,9 @@ class _PresetWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status."""
-        if (raw := self._read_dpcode_value(device)) in TUYA_HVAC_TO_HA:
-            return None
-        return raw
+        if (raw := self._read_dpcode_value(device)) in self.options:
+            return raw
+        return None
 
 
 @dataclass(frozen=True, kw_only=True)
