@@ -158,7 +158,11 @@ class DenonDevice(MediaPlayerEntity):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends `command`."""
-        telnet = telnetlib.Telnet(self._host)
+        try:
+            telnet = telnetlib.Telnet(self._host)
+        except OSError:
+            _LOGGER.warning("Denon receiver at %s is not available", self._host)
+            return
         _LOGGER.debug("Sending: %s", command)
         telnet.write(command.encode("ASCII") + b"\r")
         telnet.read_very_eager()  # skip response
