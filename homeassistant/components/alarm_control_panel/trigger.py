@@ -5,9 +5,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    EntityTargetStateTriggerBase,
+    EntityTargetTriggerBase,
     Trigger,
-    make_entity_target_state_trigger,
+    make_entity_target_trigger,
     make_entity_transition_trigger,
 )
 
@@ -22,7 +22,7 @@ def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool
         return False
 
 
-class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
+class EntityStateTriggerRequiredFeatures(EntityTargetTriggerBase):
     """Trigger for entity state changes."""
 
     _required_features: int
@@ -39,7 +39,7 @@ class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
 
 def make_entity_state_trigger_required_features(
     domain: str, to_state: str, required_features: int
-) -> type[EntityTargetStateTriggerBase]:
+) -> type[EntityTargetTriggerBase]:
     """Create an entity state trigger class with required feature filtering."""
 
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
@@ -90,12 +90,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
         AlarmControlPanelState.ARMED_VACATION,
         AlarmControlPanelEntityFeature.ARM_VACATION,
     ),
-    "disarmed": make_entity_target_state_trigger(
-        DOMAIN, AlarmControlPanelState.DISARMED
-    ),
-    "triggered": make_entity_target_state_trigger(
-        DOMAIN, AlarmControlPanelState.TRIGGERED
-    ),
+    "disarmed": make_entity_target_trigger(DOMAIN, AlarmControlPanelState.DISARMED),
+    "triggered": make_entity_target_trigger(DOMAIN, AlarmControlPanelState.TRIGGERED),
 }
 
 

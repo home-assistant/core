@@ -8,7 +8,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    EntityTargetStateTriggerBase,
+    EntityTargetTriggerBase,
     EntityTriggerBase,
     Trigger,
 )
@@ -22,17 +22,13 @@ class _OccupancyBinaryTriggerBase(EntityTriggerBase):
     }
 
 
-class OccupancyDetectedTrigger(
-    _OccupancyBinaryTriggerBase, EntityTargetStateTriggerBase
-):
+class OccupancyDetectedTrigger(_OccupancyBinaryTriggerBase, EntityTargetTriggerBase):
     """Trigger for occupancy detected (binary sensor ON)."""
 
     _to_states = {STATE_ON}
 
 
-class OccupancyClearedTrigger(
-    _OccupancyBinaryTriggerBase, EntityTargetStateTriggerBase
-):
+class OccupancyClearedTrigger(_OccupancyBinaryTriggerBase, EntityTargetTriggerBase):
     """Trigger for occupancy cleared (binary sensor OFF)."""
 
     _to_states = {STATE_OFF}

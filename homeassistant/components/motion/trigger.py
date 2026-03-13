@@ -8,7 +8,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    EntityTargetStateTriggerBase,
+    EntityTargetTriggerBase,
     EntityTriggerBase,
     Trigger,
 )
@@ -22,13 +22,13 @@ class _MotionBinaryTriggerBase(EntityTriggerBase):
     }
 
 
-class MotionDetectedTrigger(_MotionBinaryTriggerBase, EntityTargetStateTriggerBase):
+class MotionDetectedTrigger(_MotionBinaryTriggerBase, EntityTargetTriggerBase):
     """Trigger for motion detected (binary sensor ON)."""
 
     _to_states = {STATE_ON}
 
 
-class MotionClearedTrigger(_MotionBinaryTriggerBase, EntityTargetStateTriggerBase):
+class MotionClearedTrigger(_MotionBinaryTriggerBase, EntityTargetTriggerBase):
     """Trigger for motion cleared (binary sensor OFF)."""
 
     _to_states = {STATE_OFF}

@@ -54,8 +54,8 @@ from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
-    make_entity_numerical_state_changed_trigger,
-    make_entity_numerical_state_crossed_threshold_trigger,
+    make_entity_numerical_changed_trigger,
+    make_entity_numerical_crossed_threshold_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -1251,7 +1251,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_state_changed_trigger(
+            "test_trigger": make_entity_numerical_changed_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
@@ -1279,7 +1279,7 @@ async def test_numerical_state_attribute_changed_error_handling(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "attribute_changed": make_entity_numerical_state_changed_trigger(
+            "attribute_changed": make_entity_numerical_changed_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
@@ -1561,7 +1561,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
+            "test_trigger": make_entity_numerical_crossed_threshold_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
