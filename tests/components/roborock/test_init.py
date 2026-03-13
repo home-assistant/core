@@ -19,7 +19,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.roborock.const import DOMAIN
+from homeassistant.components.roborock.const import CONF_USER_DATA, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -92,6 +92,26 @@ async def test_reauth_started(
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_reauth_started_when_stored_user_data_invalid(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow starts when stored user data cannot be parsed."""
+    invalid_data = dict(mock_roborock_entry.data)
+    invalid_data[CONF_USER_DATA] = dict(mock_roborock_entry.data[CONF_USER_DATA])
+    del invalid_data[CONF_USER_DATA]["rriot"]
+    hass.config_entries.async_update_entry(mock_roborock_entry, data=invalid_data)
+
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert mock_roborock_entry.state is ConfigEntryState.SETUP_ERROR
+
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
