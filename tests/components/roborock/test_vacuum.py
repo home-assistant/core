@@ -1,7 +1,7 @@
 """Tests for Roborock vacuums."""
 
 from typing import Any
-from unittest.mock import Mock, call
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
 from roborock import RoborockException
@@ -182,6 +182,68 @@ async def test_failed_user_command(
             data,
             blocking=True,
         )
+
+
+async def test_v1_refreshes_status_after_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test v1 commands refresh status before coordinator refresh request."""
+    assert fake_vacuum.v1_properties is not None
+    coordinator = setup_entry.runtime_data.v1[0]
+
+    # Patch async_request_refresh to check ordering
+    ordering = []
+
+    async def status_refresh_side_effect(*args, **kwargs):
+        ordering.append("status_refresh")
+
+    fake_vacuum.v1_properties.status.refresh = AsyncMock(
+        side_effect=status_refresh_side_effect
+    )
+
+    async def async_request_refresh_side_effect(*args, **kwargs):
+        ordering.append("async_request_refresh")
+
+    coordinator.async_request_refresh = AsyncMock(
+        side_effect=async_request_refresh_side_effect
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert ordering == ["status_refresh", "async_request_refresh"], (
+        f"Ordering was {ordering}"
+    )
+    assert coordinator.async_request_refresh.call_count == 1
+    assert fake_vacuum.v1_properties.status.refresh.call_count == 1
+
+
+async def test_v1_status_refresh_failure_still_requests_coordinator_refresh(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test v1 command flow continues when status refresh fails."""
+    assert fake_vacuum.v1_properties is not None
+    coordinator = setup_entry.runtime_data.v1[0]
+
+    fake_vacuum.v1_properties.status.refresh.side_effect = RoborockException()
+    coordinator.async_request_refresh = AsyncMock()
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_START,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    assert coordinator.async_request_refresh.call_count == 1
 
 
 async def test_get_maps(
