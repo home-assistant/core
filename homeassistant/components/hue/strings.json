@@ -203,6 +203,25 @@
         }
       },
       "name": "Activate scene"
+    },
+    "capture_group_scene": {
+      "name": "Capture Hue group scene",
+      "description": "Capture metadata about the currently active Hue scene (regular or smart) applied to one or more Hue grouped lights. Valid targets are entities and devices that represent Hue rooms/zones. Use the output of this service to restore the scene later using the restore_group_scene service."
+    },
+    "restore_group_scene": {
+      "name": "Restore Hue group scene",
+      "description": "Restore previously captured Hue group scenes using the 'groups' mapping returned by capture_group_scene.",
+      "fields": {
+        "groups": {
+          "name": "Groups mapping",
+          "description": "Mapping exactly as returned under the 'groups' key from capture_group_scene."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_scene_to_restore": {
+      "message": "There is no scene information to restore."
     }
   }
 }
