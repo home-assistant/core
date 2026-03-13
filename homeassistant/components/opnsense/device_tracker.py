@@ -8,7 +8,7 @@ from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, OPNSENSE_DATA
+from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
 
 DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
@@ -18,10 +18,13 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> DeviceScanner | None:
     """Configure the OPNsense device_tracker."""
-    return OPNsenseDeviceScanner(
-        hass.data[OPNSENSE_DATA][CONF_INTERFACE_CLIENT],
-        hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACES],
+
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    scanner = OPNsenseDeviceScanner(
+        config_entry.runtime_data[CONF_INTERFACE_CLIENT],
+        config_entry.runtime_data.get(CONF_TRACKER_INTERFACES, []),
     )
+    return scanner if scanner.success_init else None
 
 
 class OPNsenseDeviceScanner(DeviceScanner):
@@ -34,6 +37,7 @@ class OPNsenseDeviceScanner(DeviceScanner):
         self.last_results: dict[str, Any] = {}
         self.client = client
         self.interfaces = interfaces
+        self.success_init = self.update_info()
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC | dict:
         """Create dict with mac address keys from list of devices."""
