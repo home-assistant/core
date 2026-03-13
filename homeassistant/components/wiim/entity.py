@@ -5,7 +5,7 @@ from __future__ import annotations
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity, EntityPlatformState
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
@@ -31,11 +31,6 @@ class WiimBaseEntity(Entity):
             )
         elif self._device.http_api_url:
             self._attr_device_info["configuration_url"] = self._device.http_api_url
-
-    @property
-    def _added_to_hass(self) -> bool:
-        """Return True when the entity has been fully added to Home Assistant."""
-        return self._platform_state is EntityPlatformState.ADDED
 
     @property
     def available(self) -> bool:

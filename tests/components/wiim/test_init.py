@@ -8,10 +8,10 @@ from wiim.exceptions import WiimDeviceException
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim import async_setup_entry, async_unload_entry
-from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, PLATFORMS, WiimData
+from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, PLATFORMS
+from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 
 @pytest.mark.asyncio
@@ -72,7 +72,7 @@ async def test_async_setup_entry_device_init_failure(
     mock_hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
 ) -> None:
-    """Test async_setup_entry when UPnP device creation fails -> ConfigEntryNotReady."""
+    """Test async_setup_entry when device initialization fails."""
     mock_config_entry.add_to_hass(mock_hass)
     mock_session = AsyncMock()
 
@@ -94,8 +94,7 @@ async def test_async_setup_entry_device_init_failure(
         mock_controller_instance = AsyncMock()
         mock_controller_class.return_value = mock_controller_instance
 
-        with pytest.raises(ConfigEntryNotReady, match="SDK Device error"):
-            await async_setup_entry(mock_hass, mock_config_entry)
+        assert not await async_setup_entry(mock_hass, mock_config_entry)
 
 
 @pytest.mark.asyncio

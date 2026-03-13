@@ -26,7 +26,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, WiimData
+from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN
 from homeassistant.components.wiim.media_player import (
     MEDIA_CONTENT_ID_FAVORITES,
     MEDIA_CONTENT_ID_PLAYLISTS,
@@ -38,6 +38,7 @@ from homeassistant.components.wiim.media_player import (
     async_process_play_media_url,
     async_setup_entry,
 )
+from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityPlatformState
@@ -89,7 +90,7 @@ async def test_media_player_attributes(
         "identifiers": {(DOMAIN, mock_wiim_device.udn)},
         "name": mock_wiim_device.name,
     }
-    entity._attr_supported_features = SUPPORT_WIIM_BASE
+    entity._transport_capabilities = None
     entity._attr_device_class = MediaPlayerDeviceClass.SPEAKER
     entity._attr_state = SDK_TO_HA_STATE.get(mock_wiim_device.playing_status)
     entity._attr_volume_level = mock_wiim_device.volume / 100
@@ -239,18 +240,28 @@ async def test_media_player_async_added_to_hass_refreshes_supported_features(
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
         ) as mock_update_state,
-        patch.object(entity, "async_write_ha_state", new=MagicMock()) as mock_write_state,
+        patch.object(
+            entity, "async_write_ha_state", new=MagicMock()
+        ) as mock_write_state,
     ):
         await entity.async_added_to_hass()
 
-    assert entity._device.general_event_callback == entity._handle_sdk_general_device_update
-    assert entity._device.av_transport_event_callback == entity._handle_sdk_av_transport_event
+    assert (
+        entity._device.general_event_callback
+        == entity._handle_sdk_general_device_update
+    )
+    assert (
+        entity._device.av_transport_event_callback
+        == entity._handle_sdk_av_transport_event
+    )
     assert (
         entity._device.rendering_control_event_callback
         == entity._handle_sdk_refresh_event
     )
     assert entity._device.play_queue_event_callback == entity._handle_sdk_refresh_event
-    assert entity._wiim_data.entity_id_to_udn_map[entity.entity_id] == entity._device.udn
+    assert (
+        entity._wiim_data.entity_id_to_udn_map[entity.entity_id] == entity._device.udn
+    )
     mock_refresh_supported_features.assert_awaited_once_with(write_state=False)
     mock_update_state.assert_called_once_with(
         write_state=False, update_supported_features=False
@@ -312,10 +323,7 @@ async def test_media_player_update_supported_features_can_skip_state_write(
         WiimTransportCapabilities(can_next=True, can_previous=False)
     )
 
-    expected_features = (
-        SUPPORT_WIIM_BASE
-        | MediaPlayerEntityFeature.NEXT_TRACK
-    )
+    expected_features = SUPPORT_WIIM_BASE | MediaPlayerEntityFeature.NEXT_TRACK
 
     with patch.object(entity, "async_write_ha_state", new=MagicMock()) as mock_write:
         await entity._from_device_update_supported_features(write_state=False)
@@ -377,8 +385,8 @@ async def test_media_player_update_supported_features_skips_write_when_unchanged
     entity._platform_state = EntityPlatformState.ADDED
     _set_wiim_data(mock_hass)
 
-    mock_wiim_device.async_get_transport_capabilities.side_effect = WiimRequestException(
-        "boom"
+    mock_wiim_device.async_get_transport_capabilities.side_effect = (
+        WiimRequestException("boom")
     )
 
     with patch.object(entity, "async_write_ha_state", new=MagicMock()) as mock_write:
@@ -403,7 +411,9 @@ async def test_media_player_handle_invalid_transport_state_event(
     original_status = mock_wiim_device.playing_status
 
     with (
-        patch.object(mock_hass, "async_create_task", new=MagicMock()) as mock_create_task,
+        patch.object(
+            mock_hass, "async_create_task", new=MagicMock()
+        ) as mock_create_task,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
         ) as mock_update_state,
@@ -436,7 +446,9 @@ async def test_media_player_handle_playing_transport_state_event(
             "sync_device_duration_and_position",
             new=MagicMock(return_value=sync_task),
         ),
-        patch.object(mock_hass, "async_create_task", new=MagicMock()) as mock_create_task,
+        patch.object(
+            mock_hass, "async_create_task", new=MagicMock()
+        ) as mock_create_task,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
         ) as mock_update_state,
@@ -870,9 +882,7 @@ async def test_media_player_browse_media_source_requires_http_api(
         ),
         pytest.raises(BrowseError, match="Media sources are not supported"),
     ):
-        await entity.async_browse_media(
-            media_content_id="media-source://some-source"
-        )
+        await entity.async_browse_media(media_content_id="media-source://some-source")
 
 
 @pytest.mark.asyncio

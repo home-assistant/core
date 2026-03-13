@@ -8,14 +8,14 @@ import voluptuous as vol
 from wiim.discovery import async_probe_wiim_device
 from wiim.models import WiimProbeResult
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_UDN, DOMAIN, LOGGER, UPNP_PORT
+from .const import DOMAIN, LOGGER, UPNP_PORT
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -62,12 +62,13 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.udn)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: device_info.host})
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: device_info.host}
+                )
                 return self.async_create_entry(
                     title=device_info.name,
                     data={
                         CONF_HOST: device_info.host,
-                        CONF_UDN: device_info.udn,
                     },
                 )
 
@@ -80,7 +81,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
         LOGGER.debug(
@@ -119,7 +120,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=discovered_info.name,
                 data={
                     CONF_HOST: discovered_info.host,
-                    CONF_UDN: discovered_info.udn,
                 },
             )
 

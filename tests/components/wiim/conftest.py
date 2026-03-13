@@ -141,7 +141,9 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.async_get_queue_snapshot = AsyncMock(
         return_value=WiimQueueSnapshot(items=())
     )
-    wiim_device.build_loop_mode = MagicMock(return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE)
+    wiim_device.build_loop_mode = MagicMock(
+        return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
+    )
 
     return wiim_device
 
@@ -186,6 +188,7 @@ def mock_wiim_api_endpoint():
     )
     return api_endpoint
 
+
 @pytest.fixture
 def mock_wiim_controller():
     """Mock a WiimController instance."""
@@ -201,6 +204,7 @@ def mock_wiim_media_player_entity(
     """Fixture for a WiimMediaPlayerEntity instance."""
     entity = WiimMediaPlayerEntity(mock_wiim_device, mock_config_entry)
     entity._attr_unique_id = f"{mock_wiim_device.udn}-media_player"
+    entity.entity_id = "media_player.test_device"
     return entity
 
 

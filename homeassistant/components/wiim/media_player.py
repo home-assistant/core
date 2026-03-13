@@ -9,7 +9,12 @@ from typing import Any, Concatenate
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import AudioOutputHwMode, PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
-from wiim.models import WiimGroupRole, WiimGroupSnapshot, WiimRepeatMode
+from wiim.models import (
+    WiimGroupRole,
+    WiimGroupSnapshot,
+    WiimRepeatMode,
+    WiimTransportCapabilities,
+)
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components import media_source
@@ -25,14 +30,14 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimData
+from .const import DATA_WIIM, LOGGER, WiimConfigEntry
 from .entity import WiimBaseEntity
+from .models import WiimData
 
 MEDIA_TYPE_WIIM_LIBRARY = "wiim_library"
 MEDIA_CONTENT_ID_ROOT = "library_root"
@@ -114,12 +119,12 @@ def media_player_exception_wrap[
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiimConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiiM media player from a config entry."""
 
-    device: WiimDevice = entry.runtime_data
+    device = entry.runtime_data
 
     # Create and add the media player entity
     entity = WiimMediaPlayerEntity(device, entry)
@@ -136,7 +141,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     # Added to track if the current entity is a leader
     _is_group_leader: bool = False
 
-    def __init__(self, device: WiimDevice, entry: ConfigEntry) -> None:
+    def __init__(self, device: WiimDevice, entry: WiimConfigEntry) -> None:
         """Initialize the WiiM entity."""
         super().__init__(device)
         self._entry = entry
@@ -150,7 +155,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_shuffle: bool = False
         self._attr_repeat: RepeatMode | str = RepeatMode.OFF
         self._attr_sound_mode_list = list(device.supported_output_modes) or None
-        self._attr_supported_features = SUPPORT_WIIM_BASE
+        self._transport_capabilities: WiimTransportCapabilities | None = None
         self._supported_features_update_in_flight = False
 
     @property
@@ -158,6 +163,23 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Return shared WiiM domain data."""
         return self.hass.data[DATA_WIIM]
 
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the features supported by the current device state."""
+        features = SUPPORT_WIIM_BASE
+        if self._transport_capabilities is None:
+            return features
+
+        if self._transport_capabilities.can_next:
+            features |= MediaPlayerEntityFeature.NEXT_TRACK
+        if self._transport_capabilities.can_previous:
+            features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+        if self._transport_capabilities.can_repeat:
+            features |= MediaPlayerEntityFeature.REPEAT_SET
+        if self._transport_capabilities.can_shuffle:
+            features |= MediaPlayerEntityFeature.SHUFFLE_SET
+
+        return features
     @callback
     def _get_entity_id_for_udn(self, udn: str) -> str | None:
         """Helper to get a WiimMediaPlayerEntity ID by UDN from shared data."""
@@ -242,8 +264,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_position_updated_at = None
             self._attr_source = None
             self._attr_sound_mode = None
-            self._attr_supported_features = SUPPORT_WIIM_BASE
-            if write_state and self._added_to_hass:
+            self._transport_capabilities = None
+            if write_state:
                 self.async_write_ha_state()
             return
 
@@ -301,14 +323,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             for udn in group_snapshot.member_udns
             if (entity_id := self._get_entity_id_for_udn(udn)) is not None
         ]
-        self._attr_group_members = group_members or (
-            [self.entity_id] if self._added_to_hass else None
-        )
+        self._attr_group_members = group_members or ([self.entity_id])
 
         if update_supported_features:
-            self._async_schedule_update_supported_features(write_state=write_state)
+            self._async_schedule_update_supported_features()
 
-        if write_state and self._added_to_hass:
+        if write_state:
             self.async_write_ha_state()
 
     async def _update_output_mode(self) -> None:
@@ -392,71 +412,26 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
         self._update_ha_state_from_sdk_cache()
 
-    async def _sync_follower_features(
-        self, wiim_data: WiimData, *, write_state: bool = True
-    ) -> bool:
-        """Synchronize features if this device is a follower."""
-        group_snapshot = wiim_data.controller.get_group_snapshot(self._device.udn)
-        if group_snapshot.role != WiimGroupRole.FOLLOWER:
-            return False
-
-        leader_device = wiim_data.controller.get_device(group_snapshot.leader_udn)
-
-        if leader_features := await self._async_get_supported_features_for_device(
-            leader_device
-        ):
-            if self._attr_supported_features != leader_features:
-                self._attr_supported_features = leader_features
-                if write_state and self._added_to_hass:
-                    self.async_write_ha_state()
-            LOGGER.debug(
-                "Device %s: Follower features synchronized from leader %s",
-                self.entity_id,
-                leader_device.udn,
-            )
-            return True
-
-        # fallback to base features
-        if self._attr_supported_features != SUPPORT_WIIM_BASE:
-            self._attr_supported_features = SUPPORT_WIIM_BASE
-            if write_state and self._added_to_hass:
-                self.async_write_ha_state()
-        LOGGER.debug("Device %s: Follower set to base features", self.entity_id)
-        return True
-
-    async def _async_get_supported_features_for_device(
+    async def _async_get_transport_capabilities_for_device(
         self, device: WiimDevice
-    ) -> MediaPlayerEntityFeature | None:
-        """Return the supported media player features for a device."""
+    ) -> WiimTransportCapabilities | None:
+        """Return transport capabilities for a device."""
         try:
-            capabilities = await device.async_get_transport_capabilities()
+            return await device.async_get_transport_capabilities()
         except WiimRequestException as err:
             LOGGER.warning(
-                "Device %s: Failed to fetch transport capabilities for supported features: %s",
+                "Device %s: Failed to fetch transport capabilities: %s",
                 device.udn,
                 err,
             )
             return None
         except RuntimeError as err:
             LOGGER.error(
-                "Device %s: Unexpected error in supported feature detection: %s",
+                "Device %s: Unexpected error in transport capability detection: %s",
                 device.udn,
                 err,
             )
             return None
-
-        current_features = SUPPORT_WIIM_BASE
-
-        if capabilities.can_next:
-            current_features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if capabilities.can_previous:
-            current_features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-        if capabilities.can_repeat:
-            current_features |= MediaPlayerEntityFeature.REPEAT_SET
-        if capabilities.can_shuffle:
-            current_features |= MediaPlayerEntityFeature.SHUFFLE_SET
-
-        return current_features
 
     async def _from_device_update_supported_features(
         self, *, write_state: bool = True
@@ -465,33 +440,33 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         This method is asynchronous and makes a network call.
         """
-        if await self._sync_follower_features(self._wiim_data, write_state=write_state):
-            return
-
+        metadata_device = self._metadata_device
+        previous_capabilities = self._transport_capabilities
         if (
-            current_features := await self._async_get_supported_features_for_device(
-                self._device
+            transport_capabilities := await self._async_get_transport_capabilities_for_device(
+                metadata_device
             )
         ) is not None:
-            if self._attr_supported_features != current_features:
-                self._attr_supported_features = current_features
+            if self._transport_capabilities != transport_capabilities:
+                self._transport_capabilities = transport_capabilities
                 LOGGER.debug(
-                    "Device %s: Updated supported features to %s",
+                    "Device %s: Updated transport capabilities to %s",
                     self.entity_id,
-                    current_features,
+                    transport_capabilities,
                 )
+        elif metadata_device is not self._device and self._transport_capabilities is not None:
+            self._transport_capabilities = None
+            LOGGER.debug(
+                "Device %s: Follower transport capabilities unavailable, using base features",
+                self.entity_id,
+            )
 
-        if write_state and self._added_to_hass:
+        if write_state and self._transport_capabilities != previous_capabilities:
             self.async_write_ha_state()
 
     @callback
-    def _async_schedule_update_supported_features(
-        self, *, write_state: bool = True
-    ) -> None:
+    def _async_schedule_update_supported_features(self) -> None:
         """Update supported features based on current state."""
-        if not self.hass:
-            return
-
         # Avoid parallel MEDIA_INFO request.
         if self._supported_features_update_in_flight:
             return
@@ -500,9 +475,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         async def _refresh_supported_features() -> None:
             try:
-                await self._from_device_update_supported_features(
-                    write_state=write_state
-                )
+                await self._from_device_update_supported_features()
             finally:
                 self._supported_features_update_in_flight = False
 
@@ -511,15 +484,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        self._device.general_event_callback = self._handle_sdk_general_device_update
-        self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
-        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
-        self._device.play_queue_event_callback = self._handle_sdk_refresh_event
-        LOGGER.debug(
-            "Entity %s registered callbacks with WiimDevice %s",
-            self.entity_id,
-            self._device.name,
-        )
         if self._device.supports_http_api:
             await self._update_output_mode()
 
@@ -533,6 +497,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await self._from_device_update_supported_features(write_state=False)
         self._update_ha_state_from_sdk_cache(
             write_state=False, update_supported_features=False
+        )
+        self._device.general_event_callback = self._handle_sdk_general_device_update
+        self._device.av_transport_event_callback = self._handle_sdk_av_transport_event
+        self._device.rendering_control_event_callback = self._handle_sdk_refresh_event
+        self._device.play_queue_event_callback = self._handle_sdk_refresh_event
+        LOGGER.debug(
+            "Entity %s registered callbacks with WiimDevice %s",
+            self.entity_id,
+            self._device.name,
         )
 
     async def async_will_remove_from_hass(self) -> None:
