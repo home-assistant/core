@@ -26,17 +26,6 @@
   },
   "entity": {
     "fan": {
-      "bounded": {
-        "name": "Bounded Air Flow",
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "boost": "Boost",
-              "night": "Night"
-            }
-          }
-        }
-      },
       "extract": {
         "name": "Extract Air Flow",
         "state_attributes": {
@@ -53,8 +42,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "boost": "Boost",
-              "night": "Night"
+              "boost": "[%key:component::prana::entity::fan::extract::state_attributes::preset_mode::state::boost%]",
+              "night": "[%key:component::prana::entity::fan::extract::state_attributes::preset_mode::state::night%]"
             }
           }
         }

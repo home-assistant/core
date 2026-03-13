@@ -46,20 +46,28 @@ ENTITIES: tuple[PranaEntityDescription, ...] = (
     PranaFanEntityDescription(
         key=PranaFanType.SUPPLY,
         translation_key="supply",
-        value_fn=lambda coord: coord.data.supply,
-        speed_range=lambda coord: (1, coord.data.supply.max_speed),
+        value_fn=lambda coord: (
+            coord.data.supply if not coord.data.bound else coord.data.bounded
+        ),
+        speed_range=lambda coord: (
+            1,
+            coord.data.supply.max_speed
+            if not coord.data.bound
+            else coord.data.bounded.max_speed,
+        ),
     ),
     PranaFanEntityDescription(
         key=PranaFanType.EXTRACT,
         translation_key="extract",
-        value_fn=lambda coord: coord.data.extract,
-        speed_range=lambda coord: (1, coord.data.extract.max_speed),
-    ),
-    PranaFanEntityDescription(
-        key=PranaFanType.BOUNDED,
-        translation_key="bounded",
-        value_fn=lambda coord: coord.data.bounded,
-        speed_range=lambda coord: (1, coord.data.bounded.max_speed),
+        value_fn=lambda coord: (
+            coord.data.extract if not coord.data.bound else coord.data.bounded
+        ),
+        speed_range=lambda coord: (
+            1,
+            coord.data.extract.max_speed
+            if not coord.data.bound
+            else coord.data.bounded.max_speed,
+        ),
     ),
 )
 
@@ -89,6 +97,15 @@ class PranaFan(PranaBaseEntity, FanEntity):
     )
 
     @property
+    def _api_target_key(self) -> str:
+        """Return the correct target key for API commands based on bounded state."""
+        # If the device is in bound mode, both supply and extract fans control the same bounded fan speeds.
+        if self.coordinator.data.bound:
+            return PranaFanType.BOUNDED
+        # Otherwise, return the specific fan type (supply or extract) for API commands.
+        return self.entity_description.key
+
+    @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(
@@ -116,7 +133,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
                 )
             )
             * 10,
-            self.entity_description.key,
+            self._api_target_key,
         )
         await self.coordinator.async_refresh()
 
@@ -132,9 +149,11 @@ class PranaFan(PranaBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the fan on and optionally set speed or preset mode."""
-        await self.coordinator.api_client.set_speed_is_on(
-            True, self.entity_description.key
-        )
+        if percentage == 0:
+            await self.async_turn_off()
+            return
+
+        await self.coordinator.api_client.set_speed_is_on(True, self._api_target_key)
         if percentage is not None:
             await self.async_set_percentage(percentage)
         if preset_mode is not None:
@@ -144,9 +163,7 @@ class PranaFan(PranaBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.coordinator.api_client.set_speed_is_on(
-            False, self.entity_description.key
-        )
+        await self.coordinator.api_client.set_speed_is_on(False, self._api_target_key)
         await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -162,18 +179,3 @@ class PranaFan(PranaBaseEntity, FanEntity):
         if self.coordinator.data.boost:
             return "boost"
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return entity availability based on coordinator success and device state."""
-        # Make bounded fan available only when device is in bound mode since it doesn't function otherwise
-        if (
-            self.coordinator.data.bound
-            and self.entity_description.key == PranaFanType.BOUNDED
-        ) or (
-            not self.coordinator.data.bound
-            and self.entity_description.key
-            in [PranaFanType.SUPPLY, PranaFanType.EXTRACT]
-        ):
-            return super().available
-        return False
