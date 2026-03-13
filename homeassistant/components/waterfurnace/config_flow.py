@@ -94,10 +94,6 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(client.login)
-
-                # Treat no gwid as a connection failure
-                if not client.gwid:
-                    errors["base"] = "cannot_connect"
             except WFCredentialError:
                 errors["base"] = "invalid_auth"
             except WFException:
@@ -105,6 +101,10 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected error during reauthentication")
                 errors["base"] = "unknown"
+
+            # Treat no gwid as a connection failure
+            if not client.gwid:
+                errors["base"] = "cannot_connect"
 
             if not errors:
                 return self.async_update_reload_and_abort(
