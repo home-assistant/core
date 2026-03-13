@@ -106,6 +106,9 @@
       },
       "previous_image": {
         "name": "Previous image"
+      },
+      "sync_datetime": {
+        "name": "Sync date and time"
       }
     },
     "climate": {
@@ -262,6 +265,15 @@
               "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
             }
           }
+        }
+      }
+    },
+    "select": {
+      "time_format": {
+        "name": "Time format",
+        "state": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour"
         }
       }
     },

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_valves[mock_valve][valve.mock_valve-entry]
+# name: test_valves[mock_valve][mock_valve][valve.mock_valve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -32,11 +32,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'valve',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-MatterValve-129-4',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-MatterValve-129-4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_valves[mock_valve][valve.mock_valve-state]
+# name: test_valves[mock_valve][mock_valve][valve.mock_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',

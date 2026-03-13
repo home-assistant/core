@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_get_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'nodes': list([
+          dict({
+            'containers': list([
+              200,
+              201,
+            ]),
+            'node': 'pve1',
+            'vms': list([
+              100,
+              101,
+            ]),
+          }),
+        ]),
+        'password': '**REDACTED**',
+        'port': 8006,
+        'realm': 'pam',
+        'username': '**REDACTED**',
+        'verify_ssl': True,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'proxmoxve',
+      'entry_id': '1234',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'ProxmoxVE test',
+      'unique_id': None,
+      'version': 2,
+    }),
+    'devices': dict({
+      'pve1': dict({
+        'containers': dict({
+          '200': dict({
+            'cpu': 0.05,
+            'cpus': 1,
+            'disk': 1125899906,
+            'maxdisk': 21474836480,
+            'maxmem': 1073741824,
+            'mem': 536870912,
+            'name': 'ct-nginx',
+            'status': 'running',
+            'uptime': 43200,
+            'vmid': 200,
+          }),
+          '201': dict({
+            'cpu': 0.05,
+            'cpus': 1,
+            'disk': 1125899906,
+            'maxdisk': 21474836480,
+            'maxmem': 1073741824,
+            'mem': 536870912,
+            'name': 'ct-backup',
+            'status': 'stopped',
+            'uptime': 43200,
+            'vmid': 201,
+          }),
+        }),
+        'node': dict({
+          'cpu': 0.12,
+          'disk': 100000000000,
+          'id': 'node/pve1',
+          'level': '',
+          'maxcpu': 8,
+          'maxdisk': 500000000000,
+          'maxmem': 34359738368,
+          'mem': 12884901888,
+          'node': 'pve1',
+          'ssl_fingerprint': '5C:D2:AB:...:D9',
+          'status': 'online',
+          'type': 'node',
+          'uptime': 86400,
+        }),
+        'vms': dict({
+          '100': dict({
+            'cpu': 0.15,
+            'cpus': 2,
+            'disk': 1234567890,
+            'maxdisk': 34359738368,
+            'maxmem': 2147483648,
+            'mem': 1073741824,
+            'name': 'vm-web',
+            'status': 'running',
+            'uptime': 86400,
+            'vmid': 100,
+          }),
+          '101': dict({
+            'cpu': 0.15,
+            'cpus': 2,
+            'disk': 1234567890,
+            'maxdisk': 34359738368,
+            'maxmem': 2147483648,
+            'mem': 1073741824,
+            'name': 'vm-db',
+            'status': 'stopped',
+            'uptime': 86400,
+            'vmid': 101,
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

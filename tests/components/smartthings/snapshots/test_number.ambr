@@ -180,7 +180,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][number.refrigerator_freezer_temperature-entry]
+# name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -199,7 +199,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.refrigerator_freezer_temperature',
+    'entity_id': 'number.refrigerator_1_freezer_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -222,11 +222,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][number.refrigerator_freezer_temperature-state]
+# name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_freezer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Refrigerator Freezer temperature',
+      'friendly_name': 'Refrigerator 1 Freezer temperature',
       'max': -15.0,
       'min': -23.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -234,14 +234,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.refrigerator_freezer_temperature',
+    'entity_id': 'number.refrigerator_1_freezer_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-18.0',
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][number.refrigerator_fridge_temperature-entry]
+# name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -260,7 +260,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.refrigerator_fridge_temperature',
+    'entity_id': 'number.refrigerator_1_fridge_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -283,11 +283,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[da_ref_normal_01001][number.refrigerator_fridge_temperature-state]
+# name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_fridge_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Refrigerator Fridge temperature',
+      'friendly_name': 'Refrigerator 1 Fridge temperature',
       'max': 7.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -295,7 +295,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.refrigerator_fridge_temperature',
+    'entity_id': 'number.refrigerator_1_fridge_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

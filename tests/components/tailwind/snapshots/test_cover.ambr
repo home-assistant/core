@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 1',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -87,6 +88,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Door 2',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,

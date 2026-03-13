@@ -6,6 +6,13 @@ import collections
 from dataclasses import dataclass
 from typing import Any, Self
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -33,13 +40,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -54,18 +54,18 @@ TUYA_HVAC_TO_HA = {
 }
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(value)
 
 
 @dataclass(kw_only=True)
-class _SwingModeWrapper(DeviceWrapper):
+class _SwingModeWrapper(DeviceWrapper[str]):
     """Wrapper for managing climate swing mode operations across multiple DPCodes."""
 
     on_off: DPCodeBooleanWrapper | None = None
@@ -158,7 +158,7 @@ def _filter_hvac_mode_mappings(tuya_range: list[str]) -> dict[str, HVACMode | No
     return modes_in_range
 
 
-class _HvacModeWrapper(DPCodeEnumWrapper):
+class _HvacModeWrapper(DPCodeEnumWrapper[HVACMode]):
     """Wrapper for managing climate HVACMode."""
 
     # Modes that do not map to HVAC modes are ignored (they are handled by PresetWrapper)
@@ -173,12 +173,14 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> HVACMode | None:
         """Read the device status."""
-        if (raw := super().read_device_status(device)) not in TUYA_HVAC_TO_HA:
+        if (raw := self._read_dpcode_value(device)) not in TUYA_HVAC_TO_HA:
             return None
         return TUYA_HVAC_TO_HA[raw]
 
     def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: HVACMode
+        self,
+        device: CustomerDevice,
+        value: HVACMode,
     ) -> Any:
         """Convert value to raw value."""
         return next(
@@ -203,7 +205,7 @@ class _PresetWrapper(DPCodeEnumWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> str | None:
         """Read the device status."""
-        if (raw := super().read_device_status(device)) in TUYA_HVAC_TO_HA:
+        if (raw := self._read_dpcode_value(device)) in TUYA_HVAC_TO_HA:
             return None
         return raw
 

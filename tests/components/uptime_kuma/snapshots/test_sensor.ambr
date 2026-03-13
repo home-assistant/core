@@ -228,7 +228,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -267,6 +269,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 1 Response time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -283,7 +286,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -325,6 +330,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 1 Response time Ø (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -341,7 +347,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -383,6 +391,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 1 Response time Ø (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -399,7 +408,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -441,6 +452,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 1 Response time Ø (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -515,13 +527,69 @@
     'state': 'up',
   })
 # ---
-# name: test_setup[sensor.monitor_1_uptime_1_day-entry]
+# name: test_setup[sensor.monitor_1_tags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_1_tags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tags',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tags',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TAGS: 'tags'>,
+    'unique_id': '123456789_1_tags',
+    'unit_of_measurement': 'tags',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_tags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 1 Tags',
+      'tags': list([
+        'tag1',
+        'tag2:value',
+      ]),
+      'unit_of_measurement': 'tags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_tags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_uptime_1_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -559,6 +627,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 1 Uptime (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -575,7 +644,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -613,6 +684,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 1 Uptime (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -629,7 +701,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -667,6 +741,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 1 Uptime (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -901,7 +976,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -940,6 +1017,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 2 Response time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -956,7 +1034,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -998,6 +1078,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 2 Response time Ø (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1014,7 +1095,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1056,6 +1139,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 2 Response time Ø (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1072,7 +1156,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1114,6 +1200,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 2 Response time Ø (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1188,13 +1275,69 @@
     'state': 'up',
   })
 # ---
-# name: test_setup[sensor.monitor_2_uptime_1_day-entry]
+# name: test_setup[sensor.monitor_2_tags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_2_tags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tags',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tags',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TAGS: 'tags'>,
+    'unique_id': '123456789_2_tags',
+    'unit_of_measurement': 'tags',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_tags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 2 Tags',
+      'tags': list([
+        'tag1',
+        'tag2:value',
+      ]),
+      'unit_of_measurement': 'tags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_tags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_uptime_1_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1232,6 +1375,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 2 Uptime (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1248,7 +1392,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1286,6 +1432,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 2 Uptime (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1302,7 +1449,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1340,6 +1489,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 2 Uptime (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1579,7 +1729,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1618,6 +1770,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 3 Response time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1634,7 +1787,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1676,6 +1831,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 3 Response time Ø (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1692,7 +1848,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1734,6 +1892,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 3 Response time Ø (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1750,7 +1909,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1792,6 +1953,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Monitor 3 Response time Ø (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -1866,13 +2028,66 @@
     'state': 'down',
   })
 # ---
-# name: test_setup[sensor.monitor_3_uptime_1_day-entry]
+# name: test_setup[sensor.monitor_3_tags-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_3_tags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Tags',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tags',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TAGS: 'tags'>,
+    'unique_id': '123456789_3_tags',
+    'unit_of_measurement': 'tags',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_tags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 3 Tags',
+      'tags': None,
+      'unit_of_measurement': 'tags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_tags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_uptime_1_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1910,6 +2125,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 3 Uptime (1 day)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1926,7 +2142,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1964,6 +2182,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 3 Uptime (30 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1980,7 +2199,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2018,6 +2239,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Monitor 3 Uptime (365 days)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,

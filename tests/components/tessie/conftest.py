@@ -15,8 +15,8 @@ from .common import (
     SCOPES,
     SITE_INFO,
     TEST_STATE_OF_ALL_VEHICLES,
+    TEST_VEHICLE_BATTERY,
     TEST_VEHICLE_STATE_ONLINE,
-    TEST_VEHICLE_STATUS_AWAKE,
 )
 
 # Tessie
@@ -33,13 +33,19 @@ def mock_get_state():
 
 
 @pytest.fixture(autouse=True)
-def mock_get_status():
-    """Mock get_status function."""
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_status",
-        return_value=TEST_VEHICLE_STATUS_AWAKE,
-    ) as mock_get_status:
-        yield mock_get_status
+def mock_get_battery():
+    """Mock get_battery function."""
+    with (
+        patch(
+            "homeassistant.components.tessie.get_battery",
+            return_value=TEST_VEHICLE_BATTERY,
+        ) as mock_get_battery,
+        patch(
+            "homeassistant.components.tessie.coordinator.get_battery",
+            new=mock_get_battery,
+        ),
+    ):
+        yield mock_get_battery
 
 
 @pytest.fixture(autouse=True)

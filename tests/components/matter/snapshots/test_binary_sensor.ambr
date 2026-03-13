@@ -235,7 +235,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ContactSensor-69-0',
+    'unique_id': '00000000000004D2-0000000000000009-MatterNodeDevice-1-ContactSensor-69-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -793,7 +793,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_alert',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmBatteryAlertSensor-92-3',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmBatteryAlertSensor-92-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -844,7 +844,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'end_of_service',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmEndfOfServiceSensor-92-7',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmEndfOfServiceSensor-92-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -895,7 +895,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'hardware_fault',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmHardwareFaultAlertSensor-92-6',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmHardwareFaultAlertSensor-92-6',
     'unit_of_measurement': None,
   })
 # ---
@@ -946,7 +946,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'muted',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmDeviceMutedSensor-92-4',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmDeviceMutedSensor-92-4',
     'unit_of_measurement': None,
   })
 # ---
@@ -996,7 +996,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmSmokeStateSensor-92-1',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmSmokeStateSensor-92-1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1047,7 +1047,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'test_in_progress',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SmokeCoAlarmTestInProgressSensor-92-5',
+    'unique_id': '00000000000004D2-000000000000000B-MatterNodeDevice-1-SmokeCoAlarmTestInProgressSensor-92-5',
     'unit_of_measurement': None,
   })
 # ---
@@ -1149,7 +1149,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1199,7 +1199,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-BatteryChargeLevel-47-14',
+    'unique_id': '00000000000004D2-0000000000000010-MatterNodeDevice-1-BatteryChargeLevel-47-14',
     'unit_of_measurement': None,
   })
 # ---
@@ -1250,7 +1250,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1300,7 +1300,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-BatteryChargeLevel-47-14',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-BatteryChargeLevel-47-14',
     'unit_of_measurement': None,
   })
 # ---
@@ -1351,7 +1351,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LockDoorStateSensor-257-3',
+    'unique_id': '00000000000004D2-000000000000000F-MatterNodeDevice-1-LockDoorStateSensor-257-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -1605,7 +1605,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unique_id': '00000000000004D2-0000000000000018-MatterNodeDevice-1-OccupancySensor-1030-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1656,7 +1656,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unique_id': '00000000000004D2-000000000000001B-MatterNodeDevice-1-OccupancySensor-1030-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1707,7 +1707,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-OccupancySensor-1030-0',
+    'unique_id': '00000000000004D2-000000000000001C-MatterNodeDevice-1-OccupancySensor-1030-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -1758,7 +1758,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_fault',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpFault-512-16',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpFault-512-16',
     'unit_of_measurement': None,
   })
 # ---
@@ -1809,7 +1809,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_running',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpStatusRunning-512-16',
+    'unique_id': '00000000000004D2-000000000000002C-MatterNodeDevice-1-PumpStatusRunning-512-16',
     'unit_of_measurement': None,
   })
 # ---
@@ -2010,7 +2010,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_fault_general_fault',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_GeneralFault-129-9',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_GeneralFault-129-9',
     'unit_of_measurement': None,
   })
 # ---
@@ -2061,7 +2061,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_fault_blocked',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_Blocked-129-9',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_Blocked-129-9',
     'unit_of_measurement': None,
   })
 # ---
@@ -2112,7 +2112,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'valve_fault_leaking',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_Leaking-129-9',
+    'unique_id': '00000000000004D2-000000000000003C-MatterNodeDevice-1-ValveConfigurationAndControlValveFault_Leaking-129-9',
     'unit_of_measurement': None,
   })
 # ---
@@ -2214,7 +2214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'config_status_operational',
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unique_id': '00000000000004D2-0000000000000033-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -2265,7 +2265,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'config_status_operational',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unique_id': '00000000000004D2-0000000000000027-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -2316,7 +2316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'config_status_operational',
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unique_id': '00000000000004D2-0000000000000034-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -2367,7 +2367,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'config_status_operational',
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
+    'unique_id': '00000000000004D2-0000000000000035-MatterNodeDevice-1-WindowCoveringConfigStatusOperational-258-7',
     'unit_of_measurement': None,
   })
 # ---
@@ -2418,7 +2418,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'actuator',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
+    'unique_id': '00000000000004D2-000000000000002A-MatterNodeDevice-1-LockActuatorEnabledSensor-257-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -2774,7 +2774,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'boost_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementBoostStateSensor-148-5',
+    'unique_id': '00000000000004D2-0000000000000039-MatterNodeDevice-2-WaterHeaterManagementBoostStateSensor-148-5',
     'unit_of_measurement': None,
   })
 # ---

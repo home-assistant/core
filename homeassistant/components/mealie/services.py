@@ -12,6 +12,7 @@ from aiomealie import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
@@ -63,6 +64,8 @@ SERVICE_GET_RECIPES_SCHEMA = vol.Schema(
         vol.Optional(ATTR_RESULT_LIMIT): int,
     }
 )
+
+SERVICE_GET_SHOPPING_LIST_ITEMS = "get_shopping_list_items"
 
 SERVICE_IMPORT_RECIPE = "import_recipe"
 SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
@@ -320,4 +323,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _async_set_mealplan,
         schema=SERVICE_SET_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_SHOPPING_LIST_ITEMS,
+        entity_domain=TODO_DOMAIN,
+        schema=None,
+        func="async_get_shopping_list_items",
+        supports_response=SupportsResponse.ONLY,
     )

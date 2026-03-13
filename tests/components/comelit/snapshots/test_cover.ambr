@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'shutter',
       'friendly_name': 'Cover0',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

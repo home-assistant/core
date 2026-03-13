@@ -43,6 +43,7 @@
       'current_tilt_position': 75,
       'device_class': 'blind',
       'friendly_name': 'Test Blind',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
@@ -96,10 +97,170 @@
       'current_position': 70,
       'device_class': 'awning',
       'friendly_name': 'Test Awning',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_awning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_dualrollershutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'serial_DualRollerShutter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 70,
+      'device_class': 'shutter',
+      'friendly_name': 'Test DualRollerShutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_dualrollershutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_lower_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_dualrollershutter_lower_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lower shutter',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Lower shutter',
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'dual_roller_shutter_lower',
+    'unique_id': 'serial_DualRollerShutter_lower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_lower_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 70,
+      'device_class': 'shutter',
+      'friendly_name': 'Test DualRollerShutter Lower shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_dualrollershutter_lower_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_upper_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.test_dualrollershutter_upper_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper shutter',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Upper shutter',
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'dual_roller_shutter_upper',
+    'unique_id': 'serial_DualRollerShutter_upper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entity_setup[mock_cover_type-DualRollerShutter][cover.test_dualrollershutter_upper_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 70,
+      'device_class': 'shutter',
+      'friendly_name': 'Test DualRollerShutter Upper shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_dualrollershutter_upper_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -149,6 +310,7 @@
       'current_position': 70,
       'device_class': 'garage',
       'friendly_name': 'Test GarageDoor',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -202,6 +364,7 @@
       'current_position': 70,
       'device_class': 'gate',
       'friendly_name': 'Test Gate',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -255,6 +418,7 @@
       'current_position': 70,
       'device_class': 'shutter',
       'friendly_name': 'Test RollerShutter',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -308,6 +472,7 @@
       'current_position': 70,
       'device_class': 'window',
       'friendly_name': 'Test Window',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

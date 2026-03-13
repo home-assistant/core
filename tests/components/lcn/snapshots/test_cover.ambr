@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Outputs',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -93,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -145,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_BS4',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -197,6 +200,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'TestModule Cover_Relays_Module',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

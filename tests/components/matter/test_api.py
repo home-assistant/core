@@ -200,7 +200,7 @@ async def test_node_diagnostics(
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -269,7 +269,7 @@ async def test_ping_node(
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -324,7 +324,7 @@ async def test_open_commissioning_window(
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -385,7 +385,7 @@ async def test_remove_matter_fabric(
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -402,7 +402,7 @@ async def test_remove_matter_fabric(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    matter_client.remove_matter_fabric.assert_called_once_with(1, 3)
+    matter_client.remove_matter_fabric.assert_called_once_with(30, 3)
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(
@@ -436,7 +436,7 @@ async def test_interview_node(
     # get the device registry entry for the mocked node
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001E-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -447,7 +447,7 @@ async def test_interview_node(
     )
     msg = await ws_client.receive_json()
     assert msg["success"]
-    matter_client.interview_node.assert_called_once_with(1)
+    matter_client.interview_node.assert_called_once_with(30)
 
     # repeat test with a device id that does not have a node attached
     new_entry = device_registry.async_get_or_create(

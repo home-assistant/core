@@ -41,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -93,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -145,6 +147,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -197,6 +200,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -249,6 +253,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Vent windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,

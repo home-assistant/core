@@ -142,14 +142,20 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "climate",
     "cover",
     "device_tracker",
+    "door",
     "fan",
+    "garage_door",
     "humidifier",
+    "humidity",
+    "input_boolean",
     "lawn_mower",
     "light",
     "lock",
     "media_player",
     "person",
+    "remote",
     "scene",
+    "schedule",
     "siren",
     "switch",
     "text",
@@ -363,8 +369,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
         await async_get_blueprints(hass).async_reset_cache()
-        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
-            return
+        conf = await component.async_prepare_reload(skip_reset=True)
         if automation_id := service_call.data.get(CONF_ID):
             await _async_process_single_config(hass, conf, component, automation_id)
         else:
