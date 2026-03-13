@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to add {name} to Home Assistant?"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of your iNet Radio."
+        },
+        "title": "Enter radio IP address"
+      },
+      "user": {
+        "data": {
+          "device": "Radio"
+        },
+        "data_description": {
+          "device": "Select a discovered radio from the list or choose manual entry."
+        },
+        "description": "Select a discovered radio or choose to enter an IP address manually.",
+        "title": "Select iNet Radio"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the radio."
+    },
+    "invalid_source": {
+      "message": "The source \"{source}\" is not available on this radio."
+    }
+  }
+}
