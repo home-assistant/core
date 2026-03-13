@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from unifi_access_api import ApiAuthError, ApiConnectionError
+import pytest
+from unifi_access_api import ApiAuthError, ApiConnectionError, ApiError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -27,27 +28,45 @@ async def test_setup_entry(
     mock_client.get_doors.assert_awaited_once()
 
 
-async def test_setup_entry_auth_error(
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (ApiAuthError(), ConfigEntryState.SETUP_RETRY),
+        (ApiConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_entry_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup fails with auth error."""
-    mock_client.authenticate.side_effect = ApiAuthError()
+    """Test setup handles errors correctly."""
+    mock_client.authenticate.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
-async def test_setup_entry_connection_error(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ApiAuthError(),
+        ApiConnectionError("Connection failed"),
+        ApiError("API error"),
+    ],
+)
+async def test_coordinator_update_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
+    exception: Exception,
 ) -> None:
-    """Test setup retries on connection error."""
-    mock_client.authenticate.side_effect = ApiConnectionError("Connection failed")
+    """Test coordinator handles update errors from get_doors."""
+    mock_client.get_doors.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
