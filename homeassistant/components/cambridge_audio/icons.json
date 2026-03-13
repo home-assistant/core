@@ -3,6 +3,9 @@
     "number": {
       "room_correction_intensity": {
         "default": "mdi:home-sound-out"
+      },
+      "volume_limit": {
+        "default": "mdi:octagon-outline"
       }
     },
     "select": {

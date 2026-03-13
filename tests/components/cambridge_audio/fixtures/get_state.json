@@ -1,7 +1,7 @@
 {
   "source": "AIRPLAY",
   "power": true,
-  "pre_amp_mode": false,
+  "pre_amp_mode": true,
   "pre_amp_state": "disabled_user",
   "cbus": "off"
 }
