@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 import logging
 
 from hivico import HivicoClient
@@ -41,15 +41,11 @@ class HIVIDeviceManager:
 
         self.hass = hass
         self.config_entry = config_entry
-        # Core components
-        self.device_data_registry = DeviceDataRegistry(
-            hass=hass
-        )  # Assigned after external initialization
+        self.device_data_registry = DeviceDataRegistry(hass=hass)
         self.hivi_slave_control_switch_hub = HIVISlaveControlSwitchHub(
             hass=hass, entry=config_entry
         )
 
-        # New components
         self.discovery_scheduler = HIVIDiscoveryScheduler(
             hass=hass,
             config_entry=config_entry,
@@ -60,7 +56,6 @@ class HIVIDeviceManager:
             hass=hass, device_manager=self, discovery_scheduler=self.discovery_scheduler
         )
 
-        # Store callbacks for each platform
         self._add_entities_callbacks = {}
 
         self._unsub_discovery = None
@@ -75,21 +70,15 @@ class HIVIDeviceManager:
 
     async def async_setup(self):
         """Initialize setup."""
-
-        # Load device data
         await self.device_data_registry.async_load()
 
-        # Register dispatcher callbacks
-        # Subscribe first, then start scheduler to prevent missing discovery events
         self._unsub_discovery = async_dispatcher_connect(
             self.hass, SIGNAL_DEVICE_DISCOVERED, self._discovery_enqueue
         )
 
-        # Start components
         await self.discovery_scheduler.async_start()
         await self.group_coordinator.async_start()
 
-    # Changed to coroutine callback
     async def _discovery_enqueue(self, discovered_devices: dict):
         await self._discovery_queue.put(discovered_devices)
 
@@ -107,15 +96,7 @@ class HIVIDeviceManager:
         """Handle discovered devices."""
         _LOGGER.debug("discovered devices: %s", discovered_devices)
 
-        # 1. Incremental saving of discovered devices
-        # 2. Device status information update via HTTP getStatusEx
-        # 3. Add or remove switches based on latest device count
-        # 4. Update status of switches based on device association
-        # 5. Mark devices as unavailable if offline beyond threshold
-
-        # Incremental saving
         await self._save_discovered_devices(discovered_devices)
-        # Device status information update
         await self._update_all_device_statuses()
         await self._add_or_remove_switches()
         await self._update_device_entity_states()
@@ -161,7 +142,6 @@ class HIVIDeviceManager:
                     device_obj.manufacturer = device_info.get(
                         "manufacturer", device_obj.manufacturer
                     )
-                    # Update existing device information
                     device_dict_new = device_obj.model_dump(mode="json")
                     self.device_data_registry.set_device_dict_by_ha_device_id(
                         ha_device_id, device_dict_new
@@ -172,11 +152,9 @@ class HIVIDeviceManager:
                 _LOGGER.debug(
                     "not yet exist, will add：speaker_device_id = %s", speaker_device_id
                 )
-                # Create device object
                 device_obj = self._create_device_obj_from_discovered_device_info(
                     device_info
                 )
-                # add new device
                 ha_device_id = await self.async_register_device(device_obj)
                 if ha_device_id:
                     device_obj.ha_device_id = ha_device_id
@@ -196,9 +174,8 @@ class HIVIDeviceManager:
 
         ha_device_list = await self._get_devices_for_device()
 
-        # Prepare coroutines for batch fetching device status
         device_status_tasks = []
-        device_info_list = []  # Save correspondence between devices and related information
+        device_info_list = []
 
         for ha_device in ha_device_list:
             ha_device_id = ha_device.id
@@ -214,7 +191,6 @@ class HIVIDeviceManager:
 
             device_obj = HIVIDevice(**device_dict)
 
-            # Create asynchronous tasks for each device
             device_info_list.append(
                 {
                     "ha_device": ha_device,
@@ -224,15 +200,12 @@ class HIVIDeviceManager:
                 }
             )
 
-            # Create asynchronous tasks but do not execute immediately
             device_status_tasks.append(self._fetch_device_status(device_obj))
 
-        # Execute all device status fetching requests in parallel in batches
         device_statuses = await asyncio.gather(
             *device_status_tasks, return_exceptions=True
         )
 
-        # Process return results of all devices
         for device_info, device_status_or_exc in zip(
             device_info_list, device_statuses, strict=False
         ):
@@ -250,8 +223,7 @@ class HIVIDeviceManager:
                 device_status = device_status_or_exc
 
             if device_status:
-                # Update device status
-                device_obj.last_seen = datetime.now()
+                device_obj.last_seen = datetime.now(tz=UTC)
                 device_obj.connection_status = ConnectionStatus.ONLINE
                 device_obj.wifi_channel = device_status.get("WifiChannel")
                 device_obj.ssid = device_status.get("ssid")
@@ -266,7 +238,6 @@ class HIVIDeviceManager:
                     device_obj.sync_group_status = SyncGroupStatus.SLAVE
                 else:
                     try:
-                        # Get slave device list
                         slave_device_result = await self._fetch_slave_device(device_obj)
                     except Exception as e:  # noqa: BLE001
                         _LOGGER.error(
@@ -276,7 +247,6 @@ class HIVIDeviceManager:
                         )
                         slave_device_result = None
 
-                    # Update more device attributes based on slave_device_result
                     slave_device_obj_list = []
                     if slave_device_result:
                         slave_device_num = slave_device_result.get("slaves", 0)
@@ -284,14 +254,12 @@ class HIVIDeviceManager:
                             "slave_list", []
                         )
                         for slave_device_dict in slave_device_dict_list:
-                            slave_device_dict["friendly_name"] = slave_device_dict.get(
+                            slave_device_dict["friendly_name"] = slave_device_dict.pop(
                                 "name", ""
                             )
-                            slave_device_dict["ip_addr"] = slave_device_dict.get(
+                            slave_device_dict["ip_addr"] = slave_device_dict.pop(
                                 "ip", ""
                             )
-                            del slave_device_dict["name"]
-                            del slave_device_dict["ip"]
                             slave_device_obj = SlaveDeviceInfo(**slave_device_dict)
                             slave_device_obj_list.append(slave_device_obj)
 
@@ -316,11 +284,8 @@ class HIVIDeviceManager:
             else:
                 can_not_fetch_status_devices.add(ha_device_id)
 
-        # Delete slave devices
         for ha_device in ha_device_list:
             ha_device_id = ha_device.id
-
-            # Get device identifiers
             target_unique_id = None
             for domain, unique_id in ha_device.identifiers:
                 if domain == DOMAIN:
@@ -456,12 +421,10 @@ class HIVIDeviceManager:
                 "slave_speaker_device_id_to_entity_entry_dict.keys() = %s", keys
             )
 
-            # Delete switches that no longer exist for corresponding devices
             entity_registry = er.async_get(self.hass)
             for entity_id in should_remove_entity_id_set:
                 entity_registry.async_remove(entity_id)
 
-            # Get all controllable speakers
             available_slave_dict_list = (
                 self.device_data_registry.get_available_slave_device_dict_list(
                     device_obj.speaker_device_id
@@ -473,7 +436,6 @@ class HIVIDeviceManager:
                 len(available_slave_dict_list),
             )
             switches = []
-            # Add based on other device existence
             for slave_candidate_dict in available_slave_dict_list:
                 slave_candidate_obj = HIVIDevice(**slave_candidate_dict)
                 _LOGGER.debug(
@@ -481,15 +443,12 @@ class HIVIDeviceManager:
                     device_obj.friendly_name,
                     slave_candidate_obj.friendly_name,
                 )
-                # Master speaker's hardware
                 hardware_1 = device_obj.hardware.lower() if device_obj.hardware else ""
-                # Slave speaker's hardware
                 hardware_2 = (
                     slave_candidate_obj.hardware.lower()
                     if slave_candidate_obj.hardware
                     else ""
                 )
-                # Check hardware compatibility
                 if hardware_1 and hardware_2:
                     if hardware_1.startswith("swan"):
                         _LOGGER.debug("master is swan type")
@@ -521,7 +480,6 @@ class HIVIDeviceManager:
                     slave_speaker_device_id
                     in slave_speaker_device_id_to_entity_entry_dict
                 ):
-                    # This device already has a switch
                     entity_entry = slave_speaker_device_id_to_entity_entry_dict[
                         slave_speaker_device_id
                     ]
@@ -539,11 +497,9 @@ class HIVIDeviceManager:
                         _LOGGER.debug("entity %s state is available", entity_id)
                         need_to_add_switch_flg = False
                 else:
-                    # This device does not yet have a switch
                     need_to_add_switch_flg = True
 
                 if need_to_add_switch_flg:
-                    # Create control switch
                     switch = HIVISlaveControlSwitch(
                         hass=self.hass,
                         hub=self.hivi_slave_control_switch_hub,
@@ -558,7 +514,6 @@ class HIVIDeviceManager:
                         slave_candidate_obj.friendly_name,
                     )
                     switches.append(switch)
-            # Add based on slave device situation
             slave_device_list = device_obj.slave_device_list
             for slave_device in slave_device_list:
                 slave_uuid = slave_device.uuid
@@ -601,7 +556,6 @@ class HIVIDeviceManager:
                     need_to_add_switch_flg = True
 
                 if need_to_add_switch_flg:
-                    # Create control switch
                     switch = HIVISlaveControlSwitch(
                         hass=self.hass,
                         hub=self.hivi_slave_control_switch_hub,
@@ -616,7 +570,6 @@ class HIVIDeviceManager:
                         slave_device.friendly_name,
                     )
                     switches.append(switch)
-            # Add
             if switches:
                 switch_cb = self._add_entities_callbacks.get("switch")
                 if switch_cb:
@@ -711,8 +664,11 @@ class HIVIDeviceManager:
                 continue
 
             device_obj = HIVIDevice(**device_dict)
+            last_seen = device_obj.last_seen
+            if last_seen.tzinfo is None:
+                last_seen = last_seen.replace(tzinfo=UTC)
             time_since_last_seen = (
-                datetime.now() - device_obj.last_seen
+                datetime.now(tz=UTC) - last_seen
             ).total_seconds()
             _LOGGER.debug(
                 "device %s time_since_last_seen: %.2f seconds",
@@ -728,7 +684,6 @@ class HIVIDeviceManager:
                 )
                 device_obj.connection_status = ConnectionStatus.OFFLINE
                 device_dict_new = device_obj.model_dump(mode="json")
-                # Save to device data registry
                 self.device_data_registry.set_device_dict_by_ha_device_id(
                     ha_device.id,
                     device_dict_new,
@@ -741,9 +696,6 @@ class HIVIDeviceManager:
 
     async def async_manual_discovery(self):
         """Manually trigger device discovery."""
-        _LOGGER.debug("manually trigger discovery")
-
-        # Execute discovery immediately
         await self.discovery_scheduler.schedule_immediate_discovery(force=False)
 
     async def async_cleanup(self):
@@ -751,11 +703,9 @@ class HIVIDeviceManager:
         _LOGGER.debug("cleanup device manager resources")
         await self.discovery_scheduler.async_stop()
         await self.group_coordinator.async_stop()
-        # Unsubscribe when unloading
-        if hasattr(self, "_unsub_discovery") and self._unsub_discovery:
+        if self._unsub_discovery:
             self._unsub_discovery()
 
-        # Cancel and wait for background task to finish
         if self._handle_discovery_worker:
             self._handle_discovery_worker.cancel()
             try:
@@ -780,7 +730,6 @@ class HIVIDeviceManager:
     async def async_register_device(self, device_obj: HIVIDevice) -> str:
         """Register device in Home Assistant."""
         device_registry = dr.async_get(self.hass)
-        # Create device
         device_entry = device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, device_obj.speaker_device_id)},
@@ -829,7 +778,7 @@ class HIVIDeviceManager:
             supports_private_protocol=True,
             sync_group_status=SyncGroupStatus.STANDALONE,
             connection_status=ConnectionStatus.ONLINE,
-            last_seen=datetime.now(),
+            last_seen=datetime.now(tz=UTC),
             master_speaker_device_id="",
             slave_device_num=0,
             slave_device_list=[],
@@ -854,10 +803,7 @@ class HIVIDeviceManager:
         hass = self.hass
 
         try:
-            # Get registries
             ent_reg = er.async_get(hass)
-
-            # Traverse all entities to find entities associated with specified speaker device ID
             entities_to_remove = [
                 entity_entry.entity_id
                 for entity_entry in ent_reg.entities.values()
@@ -871,7 +817,6 @@ class HIVIDeviceManager:
                 )
                 return
 
-            # Delete found entities
             for entity_id in entities_to_remove:
                 ent_reg.async_remove(entity_id)
                 _LOGGER.debug(
