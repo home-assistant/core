@@ -560,8 +560,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "stop_event": stop_event,
     }
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        stop_event.set()
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        raise
     return True
 
 
