@@ -1,6 +1,6 @@
 """Defines a base Alexa Devices entity."""
 
-from aioamazondevices.const.devices import SPEAKER_GROUP_DEVICE_TYPE
+from aioamazondevices.const.devices import DEVICE_TYPE_SPEAKER_GROUP
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,19 +26,20 @@ class AmazonEntity(CoordinatorEntity[AmazonDevicesCoordinator]):
         super().__init__(coordinator)
         self._serial_num = serial_num
         model = self.device.model
+        model_id = self.device.device_type
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial_num)},
             name=self.device.account_name,
             model=model,
-            model_id=self.device.device_type,
+            model_id=model_id,
             manufacturer=self.device.manufacturer or "Amazon",
             hw_version=self.device.hardware_version,
             sw_version=(
                 self.device.software_version
-                if model != SPEAKER_GROUP_DEVICE_TYPE
+                if model_id != DEVICE_TYPE_SPEAKER_GROUP
                 else None
             ),
-            serial_number=serial_num if model != SPEAKER_GROUP_DEVICE_TYPE else None,
+            serial_number=serial_num if model_id != DEVICE_TYPE_SPEAKER_GROUP else None,
         )
         self.entity_description = description
         self._attr_unique_id = f"{serial_num}-{description.key}"
