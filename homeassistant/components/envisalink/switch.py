@@ -67,6 +67,7 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
         self._zone_number = zone_number
 
         super().__init__(zone_name, info, controller)
+        self._attr_unique_id = f"zone_{zone_number}_switch"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
