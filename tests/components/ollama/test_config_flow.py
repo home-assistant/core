@@ -434,6 +434,46 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     assert result2["errors"] == {"base": error}
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ConnectError(message=""), "cannot_connect"),
+        (RuntimeError(), "unknown"),
+    ],
+)
+async def test_form_errors_recovery(hass: HomeAssistant, side_effect, error) -> None:
+    """Test that the user flow recovers after an error and completes successfully."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # First attempt fails
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Second attempt succeeds
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {ollama.CONF_URL: "http://localhost:11434"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {ollama.CONF_URL: "http://localhost:11434"}
+
+
 async def test_form_invalid_url(hass: HomeAssistant) -> None:
     """Test we handle invalid URL."""
     result = await hass.config_entries.flow.async_init(
