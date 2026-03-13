@@ -9,7 +9,7 @@
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "Device PIN (without leading zeros)",
+          "pin": "Device PIN",
           "retry_count": "Number of retries",
           "timeout": "Connection timeout in seconds"
         },

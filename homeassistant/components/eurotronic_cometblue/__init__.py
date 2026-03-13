@@ -64,6 +64,10 @@ def _async_migrate_options_if_missing(hass: HomeAssistant, entry: ConfigEntry) -
 
         hass.config_entries.async_update_entry(entry, data=data)
 
+    if CONF_PIN in entry.data and isinstance(entry.data[CONF_PIN], int):
+        data[CONF_PIN] = f"{entry.data[CONF_PIN]:06d}"
+        hass.config_entries.async_update_entry(entry, data=data)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
     """Set up Eurotronic Comet Blue from a config entry."""
@@ -81,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     cometblue_device = AsyncCometBlue(
         device=ble_device,
-        pin=entry.data[CONF_PIN],
+        pin=int(entry.data[CONF_PIN]),
         timeout=entry.data[CONF_TIMEOUT],
         retries=entry.data[CONF_RETRY_COUNT],
     )

@@ -16,7 +16,13 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, CONF_TIMEOUT
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import NumberSelector, NumberSelectorConfig
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import (
     CONF_RETRY_COUNT,
@@ -27,13 +33,14 @@ from .const import (
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PIN): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=99999999)
+        vol.Required(CONF_PIN, default="000000"): vol.All(
+            TextSelector(TextSelectorConfig(type=TextSelectorType.NUMBER)),
+            vol.Length(min=6, max=6),
         ),
-        vol.Optional(CONF_TIMEOUT): NumberSelector(
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT_SECONDS): NumberSelector(
             NumberSelectorConfig(min=10, max=60, step=5)
         ),
-        vol.Optional(CONF_RETRY_COUNT): NumberSelector(
+        vol.Optional(CONF_RETRY_COUNT, default=DEFAULT_RETRY_COUNT): NumberSelector(
             NumberSelectorConfig(min=1, max=5, step=1)
         ),
     }
@@ -63,7 +70,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _create_entry(
         self,
-        pin: int,
+        pin: str,
         timeout: int = DEFAULT_TIMEOUT_SECONDS,
         retry_count: int = DEFAULT_RETRY_COUNT,
     ) -> ConfigFlowResult:
@@ -103,12 +110,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
-            {
-                CONF_PIN: 0,
-                CONF_TIMEOUT: DEFAULT_TIMEOUT_SECONDS,
-                CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            }
-            | self._existing_entry_data,
+            self._existing_entry_data,
         )
 
         return self.async_show_form(
