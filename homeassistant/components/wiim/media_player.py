@@ -468,7 +468,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if await self._sync_follower_features(self._wiim_data, write_state=write_state):
             return
 
-        previous_features = self._attr_supported_features
         if (
             current_features := await self._async_get_supported_features_for_device(
                 self._device
@@ -482,11 +481,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     current_features,
                 )
 
-        if (
-            write_state
-            and self._added_to_hass
-            and self._attr_supported_features != previous_features
-        ):
+        if write_state and self._added_to_hass:
             self.async_write_ha_state()
 
     @callback
