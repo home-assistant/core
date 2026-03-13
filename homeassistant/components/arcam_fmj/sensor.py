@@ -166,13 +166,7 @@ class ArcamFmjSensorEntity(ArcamFmjEntity, SensorEntity):
         description: ArcamFmjSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
-            f"-{coordinator.state.zn}-{description.key}"
-        )
-        self._attr_entity_registry_enabled_default = coordinator.state.zn == 1
+        super().__init__(coordinator, description)
 
     @property
     def native_value(self) -> int | float | str | None:

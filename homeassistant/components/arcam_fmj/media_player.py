@@ -39,14 +39,7 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data.coordinators
 
     async_add_entities(
-        [
-            ArcamFmj(
-                config_entry.title,
-                coordinators[zone],
-                config_entry.unique_id or config_entry.entry_id,
-            )
-            for zone in (1, 2)
-        ],
+        [ArcamFmj(coordinators[zone]) for zone in (1, 2)],
     )
 
 
@@ -70,16 +63,10 @@ def convert_exception[**_P, _R](
 class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
     """Representation of a media device."""
 
-    def __init__(
-        self,
-        device_name: str,
-        coordinator: ArcamFmjCoordinator,
-        uuid: str,
-    ) -> None:
+    def __init__(self, coordinator: ArcamFmjCoordinator) -> None:
         """Initialize device."""
         super().__init__(coordinator)
         self._state = coordinator.state
-        self._attr_name = f"Zone {self._state.zn}"
         self._attr_supported_features = (
             MediaPlayerEntityFeature.SELECT_SOURCE
             | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -92,8 +79,6 @@ class ArcamFmj(ArcamFmjEntity, MediaPlayerEntity):
         )
         if self._state.zn == 1:
             self._attr_supported_features |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        self._attr_unique_id = f"{uuid}-{self._state.zn}"
-        self._attr_entity_registry_enabled_default = self._state.zn == 1
 
     @property
     def state(self) -> MediaPlayerState:
