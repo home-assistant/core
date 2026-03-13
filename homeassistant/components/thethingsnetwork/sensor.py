@@ -1,6 +1,7 @@
 """The Things Network's integration sensors."""
 
 import logging
+from typing import Any
 
 from ttn_client import TTNSensorValue
 
@@ -56,4 +57,36 @@ class TtnDataSensor(TTNEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        return self._ttn_value.value
+        # The value type can be list at runtime despite type hints
+        value: Any = self._ttn_value.value
+        # For array values (like Wi-Fi scan data), return count
+        if isinstance(value, list):
+            return len(value)
+        return value  # type: ignore[no-any-return]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes for array values."""
+        # The value type can be list at runtime despite type hints
+        value: Any = self._ttn_value.value
+        if isinstance(value, list) and value:
+            attrs: dict[str, Any] = {"items_count": len(value)}
+
+            # Check if this is Wi-Fi scan data (list of dicts with mac/rssi)
+            if all(isinstance(item, dict) and "mac" in item for item in value):
+                # Create attributes for each access point
+                for idx, ap in enumerate(value, 1):
+                    attrs[f"ap_{idx}_mac"] = ap.get("mac")
+                    attrs[f"ap_{idx}_rssi"] = ap.get("rssi")
+            # Handle other dict-based arrays generically
+            elif all(isinstance(item, dict) for item in value):
+                # Store each item as a JSON string for easy access
+                for idx, item in enumerate(value, 1):
+                    attrs[f"item_{idx}"] = item
+            # Handle simple value arrays (strings, numbers, etc.)
+            else:
+                for idx, item in enumerate(value, 1):
+                    attrs[f"item_{idx}"] = item
+
+            return attrs
+        return None
