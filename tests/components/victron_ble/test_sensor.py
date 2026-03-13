@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .fixtures import (
+    VICTRON_AC_CHARGER_SERVICE_INFO,
+    VICTRON_AC_CHARGER_TOKEN,
     VICTRON_BATTERY_MONITOR_SERVICE_INFO,
     VICTRON_BATTERY_MONITOR_TOKEN,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
@@ -29,12 +31,13 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         "access_token",
     ),
     [
+        (VICTRON_AC_CHARGER_SERVICE_INFO, VICTRON_AC_CHARGER_TOKEN),
         (VICTRON_BATTERY_MONITOR_SERVICE_INFO, VICTRON_BATTERY_MONITOR_TOKEN),
         (VICTRON_DC_ENERGY_METER_SERVICE_INFO, VICTRON_DC_ENERGY_METER_TOKEN),
         (VICTRON_SOLAR_CHARGER_SERVICE_INFO, VICTRON_SOLAR_CHARGER_TOKEN),
         (VICTRON_VEBUS_SERVICE_INFO, VICTRON_VEBUS_TOKEN),
     ],
-    ids=["battery_monitor", "dc_energy_meter", "solar_charger", "vebus"],
+    ids=["ac_charger", "battery_monitor", "dc_energy_meter", "solar_charger", "vebus"],
 )
 async def test_sensors(
     hass: HomeAssistant,

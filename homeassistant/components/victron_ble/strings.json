@@ -252,6 +252,15 @@
       },
       "yield_today": {
         "name": "Yield today"
+      },
+      "ac_current": {
+        "name": "AC current"
+      },
+      "output_phase_voltage": {
+        "name": "Output phase {phase} voltage"
+      },
+      "output_phase_current": {
+        "name": "Output phase {phase} current"
       }
     }
   }
