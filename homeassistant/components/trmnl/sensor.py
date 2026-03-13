@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import TRMNLConfigEntry
 from .coordinator import TRMNLCoordinator
@@ -33,7 +32,7 @@ PARALLEL_UPDATES = 0
 class TRMNLSensorEntityDescription(SensorEntityDescription):
     """Describes a TRMNL sensor entity."""
 
-    value_fn: Callable[[Device], StateType]
+    value_fn: Callable[[Device], int | float | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[TRMNLSensorEntityDescription, ...] = (
@@ -88,6 +87,6 @@ class TRMNLSensor(TRMNLEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
