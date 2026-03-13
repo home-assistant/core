@@ -138,6 +138,7 @@ class FeedReaderCoordinator(
         if TYPE_CHECKING:
             assert isinstance(self._feed.entries, list)
 
+        self._sort_entries()
         self._filter_entries()
         self._publish_new_entries()
 
@@ -147,6 +148,29 @@ class FeedReaderCoordinator(
             self._storage.async_put_timestamp(self._feed_id, self._last_entry_timestamp)
 
         return self._feed.entries
+
+    @staticmethod
+    def entry_ts(entry: feedparser.FeedParserDict) -> struct_time | None:
+        """Get entry parsed timestamp."""
+        ts: struct_time | None = entry.get("updated_parsed") or entry.get(
+            "published_parsed"
+        )
+        return ts
+
+    @callback
+    def _sort_entries(self) -> None:
+        """Sort entries based on their published time."""
+
+        def sort_key(
+            entry: feedparser.FeedParserDict,
+        ) -> tuple[int, struct_time | None]:
+            ts = self.entry_ts(entry)
+            # no date → first; with date → ordered by date
+            return (0, None) if ts is None else (1, ts)
+
+        assert self._feed is not None
+
+        self._feed.entries = sorted(self._feed.entries, key=sort_key)
 
     @callback
     def _filter_entries(self) -> None:
@@ -158,14 +182,14 @@ class FeedReaderCoordinator(
                 self._max_entries,
                 self.url,
             )
-            self._feed.entries = self._feed.entries[0 : self._max_entries]
+            self._feed.entries = self._feed.entries[-self._max_entries :]
 
     @callback
     def _update_and_fire_entry(self, entry: feedparser.FeedParserDict) -> None:
         """Update last_entry_timestamp and fire entry."""
         # Check if the entry has a updated or published date.
         # Start from a updated date because generally `updated` > `published`.
-        if time_stamp := entry.get("updated_parsed") or entry.get("published_parsed"):
+        if time_stamp := self.entry_ts(entry):
             self._last_entry_timestamp = time_stamp
         else:
             _LOGGER.debug(
@@ -191,10 +215,7 @@ class FeedReaderCoordinator(
         last_entry_timestamp = self._last_entry_timestamp
         for entry in self._feed.entries:
             if firstrun or (
-                (
-                    time_stamp := entry.get("updated_parsed")
-                    or entry.get("published_parsed")
-                )
+                (time_stamp := self.entry_ts(entry))
                 and time_stamp > last_entry_timestamp
             ):
                 self._update_and_fire_entry(entry)
