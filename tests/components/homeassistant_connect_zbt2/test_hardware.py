@@ -21,6 +21,36 @@ CONFIG_ENTRY_DATA = {
 }
 
 
+async def test_hardware_info_ignored_entry_missing_usb_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
+) -> None:
+    """Test ignored discovery entries without VID/PID are skipped."""
+    assert await async_setup_component(hass, USB_DOMAIN, {})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
+    ignored_entry = MockConfigEntry(
+        data={"device": CONFIG_ENTRY_DATA["device"]},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Connect ZBT-2",
+        unique_id="unique_ignored",
+        source="ignore",
+        version=1,
+        minor_version=1,
+    )
+    ignored_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(ignored_entry.entry_id)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "hardware/info"})
+    msg = await client.receive_json()
+
+    assert msg["id"] == 1
+    assert msg["success"]
+    assert msg["result"] == {"hardware": []}
+
+
 async def test_hardware_info(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, addon_store_info
 ) -> None:
