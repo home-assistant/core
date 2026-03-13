@@ -289,10 +289,11 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
+        # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self._node_name,
+            self._node_name,  # type: ignore[arg-type]
             self.device_id,
         )
 
@@ -310,9 +311,10 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
+        # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
             self.entity_description.press_action,
             self.coordinator,
-            self._node_name,
+            self._node_name,  # type: ignore[arg-type]
             self.device_id,
         )
