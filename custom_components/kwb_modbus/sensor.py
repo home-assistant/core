@@ -81,13 +81,10 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         self._register = register
         self._entry = entry
+        self._instance_names = instance_names or {}
         self._attr_unique_id = f"{entry.entry_id}_{register.address}"
         self._attr_entity_registry_enabled_default = enabled_default
-        if register.index:
-            display_index = (instance_names or {}).get(register.index, register.index)
-            self._attr_name = f"{display_index} {register.name}"
-        else:
-            self._attr_name = register.name
+        self._attr_name = register.name
         if register.address in DIAGNOSTIC_ADDRESSES:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         unit = register.unit
@@ -130,8 +127,23 @@ class KWBSensor(CoordinatorEntity[KWBDataUpdateCoordinator], SensorEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device information."""
+        """Return device information.
+
+        Indexed entities (HC, BUF, SOL, ...) are attached to a per-instance
+        sub-device that is linked to the main KWB boiler device via via_device.
+        Non-indexed entities live directly on the main device.
+        """
         host = self._entry.data.get(CONF_HOST, "unknown")
+        if self._register.index:
+            friendly_name = self._instance_names.get(
+                self._register.index, self._register.index
+            )
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"{self._entry.entry_id}_{self._register.index}")},
+                name=friendly_name,
+                via_device=(DOMAIN, self._entry.entry_id),
+                manufacturer="KWB",
+            )
         model = HEATING_DEVICES.get(self._entry.data.get(CONF_HEATING_DEVICE, ""), "KWB Heating")
         data = self.coordinator.data or {}
         major, minor, patch = data.get(8192), data.get(8193), data.get(8194)
