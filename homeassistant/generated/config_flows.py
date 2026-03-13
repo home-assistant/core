@@ -655,6 +655,7 @@ FLOWS = {
         "smarty",
         "smhi",
         "smlight",
+        "smn_argentina",
         "snapcast",
         "snoo",
         "snooz",
