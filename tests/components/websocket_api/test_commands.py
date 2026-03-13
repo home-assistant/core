@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
+from homeassistant.components.http import DOMAIN as HTTP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
 from homeassistant.components.websocket_api import const
@@ -641,8 +642,8 @@ async def test_call_service_child_not_found(
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
     assert (
-        msg["error"]["message"] == "Service non.existing called service "
-        "domain_test.test_service which was not found."
+        msg["error"]["message"]
+        == "Service non.existing called service domain_test.test_service which was not found."
     )
     assert msg["error"]["translation_placeholders"] == {
         "domain": "domain_test",
@@ -876,16 +877,27 @@ async def test_get_services(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
+
     assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
-    assert msg == {"id": 1, "result": {}, "success": True, "type": "result"}
+    assert msg == {
+        "id": 1,
+        "result": {HTTP_DOMAIN: ANY},
+        "success": True,
+        "type": "result",
+    }
 
     # Check cache is reused
     old_cache = hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE]
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
-    assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
+    assert msg == {
+        "id": 2,
+        "result": {HTTP_DOMAIN: ANY},
+        "success": True,
+        "type": "result",
+    }
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration that has services and check cache is updated
@@ -894,7 +906,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {GROUP_DOMAIN: ANY},
+        "result": {GROUP_DOMAIN: ANY, HTTP_DOMAIN: ANY},
         "success": True,
         "type": "result",
     }
@@ -908,7 +920,7 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {GROUP_DOMAIN: group_services},
+        "result": {GROUP_DOMAIN: group_services, HTTP_DOMAIN: ANY},
         "success": True,
         "type": "result",
     }
@@ -961,6 +973,7 @@ async def test_get_services(
         "result": {
             LOGGER_DOMAIN: ANY,
             GROUP_DOMAIN: group_services,
+            HTTP_DOMAIN: ANY,
         },
         "success": True,
         "type": "result",
@@ -4237,6 +4250,9 @@ async def test_get_services_for_target_caching(
         assert mock_get_components.call_count == 1
         first_flat_descriptions = mock_get_components.call_args_list[0][0][4]
         assert first_flat_descriptions == {
+            "http.unban": {
+                "fields": {},
+            },
             "light.turn_on": {
                 "fields": {},
                 "target": {"entity": [{"domain": ["light"]}]},

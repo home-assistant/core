@@ -2,6 +2,15 @@
 # name: test_api_get_services
   list([
     dict({
+      'domain': 'http',
+      'services': dict({
+        'unban': dict({
+          'fields': dict({
+          }),
+        }),
+      }),
+    }),
+    dict({
       'domain': 'group',
       'services': dict({
         'reload': dict({
