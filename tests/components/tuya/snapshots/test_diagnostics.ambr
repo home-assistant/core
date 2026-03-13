@@ -502,7 +502,7 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Framboisiers Power on behavior',
+              'friendly_name': 'Framboisiers Power-on behavior',
               'options': list([
                 '0',
                 '1',

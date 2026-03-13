@@ -17,8 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, whisker_command
+
+PARALLEL_UPDATES = 1
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -80,11 +83,15 @@ class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
                 latest_version = self.robot.firmware
             self._attr_latest_version = latest_version
 
+    @whisker_command
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
         if await self.robot.has_firmware_update(True):
             if not await self.robot.update_firmware():
-                message = f"Unable to start firmware update on {self.robot.name}"
-                raise HomeAssistantError(message)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="firmware_update_failed",
+                    translation_placeholders={"name": self.robot.name},
+                )
