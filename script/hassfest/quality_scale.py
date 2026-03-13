@@ -11,7 +11,12 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, ScaledQualityScaleTiers
+from .model import (
+    Config,
+    Integration,
+    ScaledQualityScaleTiers,
+    get_strict_typing_components,
+)
 from .quality_scale_validation import (
     RuleValidationProtocol,
     action_setup,
@@ -2316,5 +2321,20 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Handle YAML files inside integrations."""
+    strict_typing_file = config.root / ".strict-typing"
+    strict_typing_components = get_strict_typing_components(strict_typing_file)
+
     for integration in integrations.values():
+        if not integration.core:
+            continue
+
+        # Check if internal integrations have strict typing
+        if integration.quality_scale == "internal":
+            if integration.domain not in strict_typing_components:
+                integration.add_error(
+                    "quality_scale",
+                    f"Integration '{integration.domain}' has quality_scale 'internal' "
+                    "but is not in .strict-typing. Internal integrations must have strict typing enabled.",
+                )
+
         validate_iqs_file(config, integration)
