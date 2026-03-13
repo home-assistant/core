@@ -421,8 +421,8 @@ async def test_services_appliance_not_found(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    service_call = service_call.copy()
-    service_call["service_data"] = dict(service_call.get("service_data", {}))
+    service_call = service_call.copy()  # To avoid mutating the original test data
+    service_call.setdefault("service_data", {})
 
     service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
 
