@@ -2482,7 +2482,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.6.0
+pysmartthings==3.7.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -3130,7 +3130,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.11
+tuya-device-handlers==0.0.12
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -3356,7 +3356,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.0.1
+zha==1.0.2
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
