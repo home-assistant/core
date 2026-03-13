@@ -84,6 +84,15 @@
       }
     },
     "button": {
+      "dock_empty": {
+        "name": "Empty"
+      },
+      "dock_stop_drying": {
+        "name": "Stop drying"
+      },
+      "dock_wash_mop": {
+        "name": "Wash mop"
+      },
       "pause": {
         "name": "Pause"
       },
