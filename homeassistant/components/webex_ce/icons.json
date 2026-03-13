@@ -1,0 +1,37 @@
+{
+  "services": {
+    "camera_position_set": {
+      "service": "mdi:camera-control"
+    },
+    "camera_preset_activate": {
+      "service": "mdi:camera-iris"
+    },
+    "camera_preset_store": {
+      "service": "mdi:content-save"
+    },
+    "camera_ramp": {
+      "service": "mdi:pan"
+    },
+    "camera_ramp_stop": {
+      "service": "mdi:stop"
+    },
+    "clear_message": {
+      "service": "mdi:message-off"
+    },
+    "close_webview": {
+      "service": "mdi:close"
+    },
+    "dial": {
+      "service": "mdi:phone-dial"
+    },
+    "display_message": {
+      "service": "mdi:message-text"
+    },
+    "display_webview": {
+      "service": "mdi:web"
+    },
+    "send_dtmf": {
+      "service": "mdi:dialpad"
+    }
+  }
+}

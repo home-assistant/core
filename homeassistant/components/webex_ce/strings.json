@@ -1,0 +1,247 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "accept_call": {
+        "name": "Accept call"
+      },
+      "disconnect_call": {
+        "name": "Disconnect call"
+      },
+      "reject_call": {
+        "name": "Reject call"
+      }
+    },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "select": {
+      "camera_preset": {
+        "name": "Camera preset"
+      },
+      "presentation_source": {
+        "name": "Presentation source"
+      },
+      "standby": {
+        "name": "Standby",
+        "state": {
+          "awake": "Awake",
+          "halfwake": "Halfwake",
+          "sleep": "Sleep"
+        }
+      }
+    },
+    "sensor": {
+      "ambient_noise": {
+        "name": "Ambient noise"
+      },
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      },
+      "call_status": {
+        "name": "Call status",
+        "state": {
+          "connected": "Connected",
+          "connecting": "Connecting",
+          "disconnecting": "Disconnecting",
+          "idle": "Idle",
+          "on_hold": "On hold",
+          "ringing": "Ringing"
+        }
+      },
+      "current_meeting": {
+        "name": "Current meeting"
+      },
+      "network_status": {
+        "name": "Network status"
+      },
+      "next_meeting": {
+        "name": "Next meeting"
+      },
+      "recording": {
+        "name": "Recording"
+      },
+      "relative_humidity": {
+        "name": "Relative humidity"
+      },
+      "room_occupancy": {
+        "name": "Room occupancy"
+      },
+      "sound_level": {
+        "name": "Sound level"
+      },
+      "streaming": {
+        "name": "Streaming"
+      },
+      "system_uptime": {
+        "name": "System uptime"
+      }
+    },
+    "switch": {
+      "microphone_mute": {
+        "name": "Microphone mute"
+      },
+      "presentation": {
+        "name": "Presentation"
+      },
+      "self_view": {
+        "name": "Self view"
+      },
+      "video_mute": {
+        "name": "Video mute"
+      }
+    }
+  },
+  "services": {
+    "camera_position_set": {
+      "description": "Set camera pan, tilt, and zoom position",
+      "fields": {
+        "camera_id": {
+          "description": "Camera ID (1 for main camera)",
+          "name": "Camera ID"
+        },
+        "pan": {
+          "description": "Pan position (-65535 to 65535, 0 is center)",
+          "name": "Pan"
+        },
+        "tilt": {
+          "description": "Tilt position (-65535 to 65535, 0 is center)",
+          "name": "Tilt"
+        },
+        "zoom": {
+          "description": "Zoom level (0 to 65535)",
+          "name": "Zoom"
+        }
+      },
+      "name": "Set camera position"
+    },
+    "camera_preset_activate": {
+      "description": "Activate a stored camera preset",
+      "fields": {
+        "preset_id": {
+          "description": "Camera preset ID (1-35)",
+          "name": "Preset ID"
+        }
+      },
+      "name": "Activate camera preset"
+    },
+    "camera_preset_store": {
+      "description": "Store current camera position as a preset",
+      "fields": {
+        "preset_id": {
+          "description": "Camera preset ID (1-35)",
+          "name": "Preset ID"
+        }
+      },
+      "name": "Store camera preset"
+    },
+    "camera_ramp": {
+      "description": "Move camera in a direction",
+      "fields": {
+        "camera_id": {
+          "description": "Camera ID (1 for main camera)",
+          "name": "Camera ID"
+        },
+        "direction": {
+          "description": "Direction to move camera",
+          "name": "Direction"
+        },
+        "speed": {
+          "description": "Movement speed (1-15)",
+          "name": "Speed"
+        }
+      },
+      "name": "Move camera"
+    },
+    "camera_ramp_stop": {
+      "description": "Stop camera from moving",
+      "fields": {
+        "camera_id": {
+          "description": "Camera ID (1 for main camera)",
+          "name": "Camera ID"
+        }
+      },
+      "name": "Stop camera movement"
+    },
+    "clear_message": {
+      "description": "Clear displayed message from device screen",
+      "name": "Clear message"
+    },
+    "close_webview": {
+      "description": "Close the displayed web view",
+      "name": "Close web view"
+    },
+    "dial": {
+      "description": "Dial a phone number or SIP URI",
+      "fields": {
+        "number": {
+          "description": "Phone number or SIP URI to dial",
+          "name": "Number"
+        }
+      },
+      "name": "Dial number"
+    },
+    "display_message": {
+      "description": "Display a message on the device screen",
+      "fields": {
+        "duration": {
+          "description": "How long to display the message (seconds, 0 for indefinite)",
+          "name": "Duration"
+        },
+        "text": {
+          "description": "Message text to display",
+          "name": "Text"
+        }
+      },
+      "name": "Display message"
+    },
+    "display_webview": {
+      "description": "Display a web page on the device",
+      "fields": {
+        "mode": {
+          "description": "Display mode",
+          "name": "Mode"
+        },
+        "title": {
+          "description": "Title for the web view",
+          "name": "Title"
+        },
+        "url": {
+          "description": "URL to display",
+          "name": "URL"
+        }
+      },
+      "name": "Display web view"
+    },
+    "send_dtmf": {
+      "description": "Send DTMF tones during a call",
+      "fields": {
+        "dtmf": {
+          "description": "DTMF digits to send",
+          "name": "DTMF string"
+        }
+      },
+      "name": "Send DTMF"
+    }
+  }
+}
