@@ -427,6 +427,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     NewIPv4Address=ip_address,
                 )
             )
+            if not wan_access:
+                return None
             return not wan_access.get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
