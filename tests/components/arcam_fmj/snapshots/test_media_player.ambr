@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[media_player.arcam_fmj_127_0_0_1-entry]
+# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.arcam_fmj_127_0_0_1',
+    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Zone 1',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Zone 1',
     'platform': 'arcam_fmj',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,22 +36,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[media_player.arcam_fmj_127_0_0_1-state]
+# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1)',
+      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 1',
       'supported_features': <MediaPlayerEntityFeature: 200588>,
       'volume_level': 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.arcam_fmj_127_0_0_1',
+    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_2-entry]
+# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_2_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -65,7 +65,7 @@
     'disabled_by': None,
     'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_2',
+    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_2_zone_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,12 +73,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Zone 2',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Zone 2',
     'platform': 'arcam_fmj',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -88,15 +88,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_2-state]
+# name: test_setup[media_player.arcam_fmj_127_0_0_1_zone_2_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2',
+      'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2 Zone 2',
       'supported_features': <MediaPlayerEntityFeature: 135052>,
       'volume_level': 0.0,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_2',
+    'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_2_zone_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
