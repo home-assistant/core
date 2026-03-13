@@ -71,8 +71,6 @@
           ]),
           'success': list([
           ]),
-          'targets': list([
-          ]),
         }),
         'response_type': 'action_done',
         'speech': dict({
@@ -197,7 +195,7 @@
     }),
     dict({
       'call_id': 'mock-tool-call-id',
-      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"targets":[],"success":[],"failed":[]}}',
+      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}}',
       'type': 'function_call_output',
     }),
     dict({
