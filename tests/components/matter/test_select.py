@@ -86,7 +86,7 @@ async def test_attribute_select_entities(
     matter_node: MatterNode,
 ) -> None:
     """Test select entities are created for attribute based discovery schema(s)."""
-    entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
+    entity_id = "select.mock_dimmable_light_power_on_behavior"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "previous"
