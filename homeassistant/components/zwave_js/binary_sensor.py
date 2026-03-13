@@ -440,12 +440,7 @@ def _async_check_legacy_entity_repair(
             return
 
         items = [
-            (
-                f"- [{item.name or item.original_name or eid}]"
-                f"(/config/{domain}/edit/{item.unique_id})"
-                if item.unique_id
-                else f"- {item.name or item.original_name or eid}"
-            )
+            f"- [{item.name or item.original_name or eid}](/config/{domain}/edit/{item.unique_id})"
             for domain, entity_ids in (
                 ("automation", entity_automations),
                 ("script", entity_scripts),
