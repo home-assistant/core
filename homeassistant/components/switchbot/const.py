@@ -66,6 +66,7 @@ class SupportedModels(StrEnum):
     ART_FRAME = "art_frame"
     KEYPAD_VISION = "keypad_vision"
     KEYPAD_VISION_PRO = "keypad_vision_pro"
+    WEATHER_STATION = "weather_station"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -126,6 +127,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.WEATHER_STATION: SupportedModels.WEATHER_STATION,
 }
 
 SUPPORTED_MODEL_TYPES = (
