@@ -395,6 +395,20 @@
     }
   },
   "selector": {
+    "service_param_command": {
+      "options": {
+        "climatization_start": "Start climatization",
+        "climatization_stop": "Stop climatization",
+        "engine_start": "Start engine",
+        "engine_stop": "Stop engine",
+        "flash": "Flash",
+        "honk": "Honk",
+        "honk_flash": "Honk & flash",
+        "lock": "Lock",
+        "lock_reduced_guard": "Lock with reduced guard",
+        "unlock": "Unlock"
+      }
+    },
     "service_param_image": {
       "options": {
         "exterior_back": "Exterior back",
@@ -410,6 +424,24 @@
     }
   },
   "services": {
+    "execute_command": {
+      "description": "Send a command to your vehicle.",
+      "fields": {
+        "command": {
+          "description": "The command to execute.",
+          "name": "Command"
+        },
+        "engine_runtime": {
+          "description": "Engine runtime in minutes. Only applicable to engine_start.",
+          "name": "Engine runtime"
+        },
+        "entry": {
+          "description": "The entry to retrieve the vehicle images for.",
+          "name": "Entry"
+        }
+      },
+      "name": "Execute a command"
+    },
     "get_image_url": {
       "description": "Retrieves the URL for one or more vehicle-specific images.",
       "fields": {

@@ -1,3 +1,34 @@
+execute_command:
+  fields:
+    entry:
+      required: true
+      selector:
+        config_entry:
+          integration: volvo
+    command:
+      required: true
+      selector:
+        select:
+          translation_key: service_param_command
+          multiple: false
+          sort: true
+          options:
+            - climatization_start
+            - climatization_stop
+            - engine_start
+            - engine_stop
+            - flash
+            - honk
+            - honk_flash
+            - lock
+            - lock_reduced_guard
+            - unlock
+    engine_runtime:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 15
 get_image_url:
   fields:
     entry:

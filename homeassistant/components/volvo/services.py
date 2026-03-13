@@ -7,20 +7,34 @@ from urllib import parse
 
 from httpx import AsyncClient, HTTPError, HTTPStatusError
 import voluptuous as vol
+from volvocarsapi.models import VolvoApiException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 from .coordinator import VolvoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_COMMAND = "command"
 CONF_CONFIG_ENTRY_ID = "entry"
 CONF_IMAGE_TYPES = "images"
+CONF_ENGINE_RUNTIME = "engine_runtime"
+
+SERVICE_EXECUTE_COMMAND = "execute_command"
+SERVICE_EXECUTE_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CONFIG_ENTRY_ID): str,
+        vol.Required(CONF_COMMAND): str,
+        vol.Required(CONF_ENGINE_RUNTIME): int,
+    }
+)
+
 SERVICE_GET_IMAGE_URL = "get_image_url"
 SERVICE_GET_IMAGE_URL_SCHEMA = vol.Schema(
     {
@@ -29,11 +43,23 @@ SERVICE_GET_IMAGE_URL_SCHEMA = vol.Schema(
     }
 )
 
+_PARAM_COMMAND_MAP = {
+    "climatization_start": ("CLIMATIZATION_START", "climatization-start"),
+    "climatization_stop": ("CLIMATIZATION_STOP", "climatization-stop"),
+    "engine_start": ("ENGINE_START", "engine-start"),
+    "engine_stop": ("ENGINE_STOP", "engine-stop"),
+    "flash": ("FLASH", "flash"),
+    "honk": ("HONK", "honk"),
+    "honk_flash": ("HONK_AND_FLASH", "honk-flash"),
+    "lock": ("LOCK", "lock"),
+    "lock_reduced_guard": ("LOCK_REDUCED_GUARD", "lock-reduced-guard"),
+    "unlock": ("LOCK", "unlock"),
+}
+
 _HEADERS = {
     "Accept-Language": "en-GB",
     "Sec-Fetch-User": "?1",
 }
-
 _PARAM_IMAGE_ANGLE_MAP = {
     "exterior_back": "6",
     "exterior_back_left": "5",
@@ -59,11 +85,53 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        _execute_command,
+        schema=SERVICE_EXECUTE_COMMAND_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
         SERVICE_GET_IMAGE_URL,
         _get_image_url,
         schema=SERVICE_GET_IMAGE_URL_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
+
+
+async def _execute_command(call: ServiceCall) -> dict[str, JsonValueType]:
+    entry_id = call.data.get(CONF_CONFIG_ENTRY_ID, "")
+    command = call.data.get(CONF_COMMAND, "")
+    runtime = call.data.get(CONF_ENGINE_RUNTIME, 15)
+
+    entry = _async_get_config_entry(call.hass, entry_id)
+    context = entry.runtime_data.context
+
+    command_key = _PARAM_COMMAND_MAP[command][0]
+    command_request = _PARAM_COMMAND_MAP[command][1]
+
+    if command_key not in context.supported_commands:
+        return {"command": command, "error": "Command not supported for your vehicle"}
+
+    data = {"runtimeMinutes": runtime} if command == "engine_start" else None
+
+    try:
+        result = await context.api.async_execute_command(command_request, data)
+    except VolvoApiException as ex:
+        _LOGGER.debug("Command '%s' error", command_request)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_failure",
+            translation_placeholders={
+                "command": command_request,
+                "status": "",
+                "message": ex.message,
+            },
+        ) from ex
+
+    status = result.invoke_status if result else ""
+    return {"command": command, "result": status}
 
 
 async def _get_image_url(call: ServiceCall) -> dict[str, Any]:

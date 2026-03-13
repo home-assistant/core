@@ -386,6 +386,9 @@
     }
   },
   "services": {
+    "execute_command": {
+      "service": "mdi:restart"
+    },
     "get_image_url": {
       "service": "mdi:image-multiple-outline"
     }

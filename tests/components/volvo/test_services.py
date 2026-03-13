@@ -5,11 +5,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
+from volvocarsapi.api import VolvoCarsApi
+from volvocarsapi.models import VolvoApiException
 
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.services import (
+    CONF_COMMAND,
     CONF_CONFIG_ENTRY_ID,
+    CONF_ENGINE_RUNTIME,
     CONF_IMAGE_TYPES,
+    SERVICE_EXECUTE_COMMAND,
     SERVICE_GET_IMAGE_URL,
     _async_image_exists,
     _parse_exterior_image_url,
@@ -31,6 +36,147 @@ async def test_setup_services(
     services = hass.services.async_services_for_domain(DOMAIN)
     assert services
     assert SERVICE_GET_IMAGE_URL in services
+    assert SERVICE_EXECUTE_COMMAND in services
+
+
+@pytest.mark.usefixtures("mock_api", "full_model")
+@pytest.mark.parametrize(
+    ("full_model", "command", "expected_api_command"),
+    [
+        ("xc90_petrol_2019", "climatization_start", "climatization-start"),
+        ("xc90_petrol_2019", "climatization_stop", "climatization-stop"),
+        ("xc90_petrol_2019", "engine_stop", "engine-stop"),
+        ("xc90_petrol_2019", "flash", "flash"),
+        ("xc90_petrol_2019", "honk", "honk"),
+        ("xc90_petrol_2019", "honk_flash", "honk-flash"),
+        ("xc90_petrol_2019", "lock", "lock"),
+        ("xc90_petrol_2019", "lock_reduced_guard", "lock-reduced-guard"),
+        ("xc90_petrol_2019", "unlock", "unlock"),
+    ],
+)
+async def test_execute_command_success(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_config_entry: MockConfigEntry,
+    mock_api: VolvoCarsApi,
+    command: str,
+    expected_api_command: str,
+) -> None:
+    """Test execute_command service success response."""
+    assert await setup_integration()
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_COMMAND: command,
+            CONF_ENGINE_RUNTIME: 0,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {"command": command, "result": "COMPLETED"}
+    mock_api.async_execute_command.assert_called_once_with(expected_api_command, None)
+
+
+@pytest.mark.usefixtures("mock_api", "full_model")
+@pytest.mark.parametrize(
+    "full_model",
+    ["xc90_petrol_2019"],
+)
+async def test_execute_engine_start_command_success(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_config_entry: MockConfigEntry,
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test execute_command service success response for engine_start."""
+    assert await setup_integration()
+
+    command = "engine_start"
+    runtime = 7
+    expected_api_command = "engine-start"
+    expected_data = {"runtimeMinutes": 7}
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_COMMAND: command,
+            CONF_ENGINE_RUNTIME: runtime,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {"command": command, "result": "COMPLETED"}
+    mock_api.async_execute_command.assert_called_once_with(
+        expected_api_command, expected_data
+    )
+
+
+@pytest.mark.usefixtures("mock_api")
+async def test_execute_command_not_supported(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_config_entry: MockConfigEntry,
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test execute_command service response for unsupported commands."""
+    assert await setup_integration()
+
+    if "ENGINE_START" in mock_config_entry.runtime_data.context.supported_commands:
+        mock_config_entry.runtime_data.context.supported_commands.remove("ENGINE_START")
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EXECUTE_COMMAND,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_COMMAND: "engine_start",
+            CONF_ENGINE_RUNTIME: 15,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "command": "engine_start",
+        "error": "Command not supported for your vehicle",
+    }
+    mock_api.async_execute_command.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_api")
+async def test_execute_command_error(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_config_entry: MockConfigEntry,
+    mock_api: VolvoCarsApi,
+) -> None:
+    """Test execute_command service error response."""
+    assert await setup_integration()
+
+    mock_api.async_execute_command.side_effect = VolvoApiException("boom")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EXECUTE_COMMAND,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_COMMAND: "climatization_start",
+                CONF_ENGINE_RUNTIME: 0,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failure"
 
 
 @pytest.mark.usefixtures("mock_api")
