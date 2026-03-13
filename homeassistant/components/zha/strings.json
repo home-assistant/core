@@ -1259,7 +1259,15 @@
         "name": "Phase control"
       },
       "pilot_wire_mode": {
-        "name": "Pilot wire mode"
+        "name": "Pilot wire mode",
+        "state": {
+          "off": "Off",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "frost_protection": "Frost protection",
+          "comfort_minus_1": "Comfort -1",
+          "comfort_minus_2": "Comfort -2"
+        }
       },
       "power_on_state": {
         "name": "Power on state"
