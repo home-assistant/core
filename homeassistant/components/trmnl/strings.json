@@ -19,6 +19,16 @@
       }
     }
   },
+  "entity": {
+    "time": {
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      }
+    }
+  },
   "exceptions": {
     "authentication_error": {
       "message": "Authentication failed. Please check your API key."
