@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from victron_mqtt import Device as VictronDevice, Metric as VictronMetric, MetricKind
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -25,6 +27,7 @@ from .coordinator import (
     VictronRemoteMonitoringDataUpdateCoordinator,
     VRMForecastStore,
 )
+from .entity import VRMMqttBaseEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -257,6 +260,18 @@ async def async_setup_entry(
         for entity_description in SENSORS
     )
 
+    mqtt_hub = coordinator.mqtt_hub
+
+    def on_new_metric(
+        device: VictronDevice,
+        metric: VictronMetric,
+        device_info: DeviceInfo,
+        site_id: int,
+    ) -> None:
+        async_add_entities([VRMMqttSensor(device, metric, device_info, site_id)])
+
+    mqtt_hub.register_new_metric_callback(MetricKind.SENSOR, on_new_metric)
+
 
 class VRMForecastsSensorEntity(
     CoordinatorEntity[VictronRemoteMonitoringDataUpdateCoordinator], SensorEntity
@@ -292,3 +307,25 @@ class VRMForecastsSensorEntity(
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class VRMMqttSensor(VRMMqttBaseEntity, SensorEntity):
+    """Sensor entity backed by Victron MQTT metrics."""
+
+    def __init__(
+        self,
+        device: VictronDevice,
+        metric: VictronMetric,
+        device_info: DeviceInfo,
+        site_id: int,
+    ) -> None:
+        """Initialize the sensor."""
+        self._attr_native_value = metric.value
+        super().__init__(device, metric, device_info, site_id)
+
+    @callback
+    def _on_update_task(self, value: StateType) -> None:
+        if self._attr_native_value == value:
+            return
+        self._attr_native_value = value
+        self.async_write_ha_state()
