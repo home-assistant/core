@@ -26,6 +26,7 @@ from homeassistant.helpers.service_info.ssdp import (
 
 from .const import (
     CONFIG_ENTRY_FORCE_POLL,
+    CONFIG_ENTRY_ROLLOVER_DELTAS,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
@@ -33,6 +34,7 @@ from .const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_CONFIG_ENTRY_FORCE_POLL,
+    DEFAULT_CONFIG_ENTRY_ROLLOVER_DELTAS,
     DOMAIN,
     DOMAIN_DISCOVERIES,
     LOGGER,
@@ -272,6 +274,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         options = {
             CONFIG_ENTRY_FORCE_POLL: False,
+            CONFIG_ENTRY_ROLLOVER_DELTAS: False,
         }
 
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
@@ -301,6 +304,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         options = {
             CONFIG_ENTRY_FORCE_POLL: False,
+            CONFIG_ENTRY_ROLLOVER_DELTAS: False,
         }
         return self.async_create_entry(title=title, data=data, options=options)
 
@@ -321,6 +325,13 @@ class UpnpOptionsFlowHandler(OptionsFlow):
                     CONFIG_ENTRY_FORCE_POLL,
                     default=self.config_entry.options.get(
                         CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL
+                    ),
+                ): bool,
+                vol.Optional(
+                    CONFIG_ENTRY_ROLLOVER_DELTAS,
+                    default=self.config_entry.options.get(
+                        CONFIG_ENTRY_ROLLOVER_DELTAS,
+                        DEFAULT_CONFIG_ENTRY_ROLLOVER_DELTAS,
                     ),
                 ): bool,
             }
