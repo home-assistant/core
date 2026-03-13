@@ -870,7 +870,6 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "0000cee0-0000-1000-8000-00805f9b34fb",
     },
     {
-        "connectable": False,
         "domain": "victron_ble",
         "manufacturer_data_start": [
             16,
