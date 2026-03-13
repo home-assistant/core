@@ -517,12 +517,11 @@ def compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
-    custom_units_for_entities: dict[str, dict[str, str]] | None = None,
+    custom_units_for_entities: dict[str, dict[str, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
 
-    custom_units_for_entities = custom_units_for_entities or {}
     sensor_states = _get_sensor_states(hass)
     wanted_statistics = _wanted_statistics(sensor_states)
     # Get history between start and end
