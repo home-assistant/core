@@ -5,7 +5,8 @@
       "cannot_connect": "Please verify your credentials.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "Unexpected error, please try again."
+      "unknown": "Unexpected error, please try again.",
+      "wrong_account": "You must reauthenticate with the same WaterFurnace account that was originally configured."
     },
     "error": {
       "cannot_connect": "Failed to connect to WaterFurnace service",

@@ -290,6 +290,28 @@ async def test_reauth_flow_exceptions(
     assert result["reason"] == "reauth_successful"
 
 
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth flow aborts when a different account is used."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_waterfurnace_client.gwid = "DIFFERENT_GWID"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other_user", CONF_PASSWORD: "other_password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_account"
+
+
 async def test_reauth_flow_no_gwid(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
