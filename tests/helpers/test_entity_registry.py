@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -1976,6 +1976,7 @@ async def test_restore_states(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test restoring states."""
+    entity_sources = entity.entity_sources(hass)
     hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
@@ -1992,17 +1993,22 @@ async def test_restore_states(
         suggested_object_id="disabled",
         disabled_by=er.RegistryEntryDisabler.HASS,
     )
+    config_entry = MockConfigEntry(domain="hue")
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         "light",
         "hue",
         "9012",
         suggested_object_id="all_info_set",
         capabilities={"max": 100},
+        config_entry=config_entry,
         supported_features=5,
         original_device_class="mock-device-class",
         original_name="Mock Original Name",
         original_icon="hass:original-icon",
     )
+
+    assert entity_sources == {}
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
@@ -2027,6 +2033,16 @@ async def test_restore_states(
         "icon": "hass:original-icon",
     }
 
+    assert entity_sources == {
+        "light.all_info_set": {
+            "config_entry": config_entry.entry_id,
+            "domain": "hue",
+        },
+        "light.simple": {
+            "domain": "hue",
+        },
+    }
+
     entity_registry.async_remove("light.disabled")
     entity_registry.async_remove("light.simple")
     entity_registry.async_remove("light.all_info_set")
@@ -2036,6 +2052,8 @@ async def test_restore_states(
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+
+    assert entity_sources == {}
 
 
 async def test_remove_device_removes_entities(

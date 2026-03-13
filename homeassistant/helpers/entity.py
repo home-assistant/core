@@ -1475,6 +1475,10 @@ class Entity(
             # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
+            # The check for self.platform guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2026.8
+            if self.platform:
+                del entity_sources(self.hass)[self.entity_id]
             self.hass.states.async_remove(self.entity_id, context=self._context)
 
     async def async_added_to_hass(self) -> None:
@@ -1545,10 +1549,6 @@ class Entity(
 
         Not to be extended by integrations.
         """
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2026.8
-        if self.platform:
-            del entity_sources(self.hass)[self.entity_id]
 
         if self.__group is not None:
             self.__group.async_will_remove_from_hass()
