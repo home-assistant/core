@@ -2139,6 +2139,7 @@ NO_QUALITY_SCALE = [
     "media_source",
     "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "proxy",

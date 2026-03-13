@@ -104,6 +104,7 @@ NO_IOT_CLASS = [
     "media_source",
     "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "plant",
