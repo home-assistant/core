@@ -1,39 +1,77 @@
-.target_selector: &target_selector
-  entity:
-    domain: climate
-    integration: eurotronic_cometblue
-
-.day_field: &day_field
-  example: |
-    start1: 07:00:00
-    end1: 09:00:00
-    start2: 10:00:00
-    end2: 12:00:00
-    start3: 13:00:00
-    end3: 17:00:00
-    start4: 20:00:00
-    end4: 23:00:00
-  required: false
-  selector:
-    object:
-
 set_datetime:
-  target: *target_selector
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
   fields:
     datetime:
       selector:
         datetime:
 
 get_schedule:
-  target: *target_selector
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
 
 set_schedule:
-  target: *target_selector
+  target:
+    entity:
+      domain: climate
+      integration: eurotronic_cometblue
   fields:
-    monday: *day_field
-    tuesday: *day_field
-    wednesday: *day_field
-    thursday: *day_field
+    monday:
+      example: |
+        start1: 07:00:00
+        end1: 09:00:00
+        start2: 10:00:00
+        end2: 12:00:00
+        start3: 13:00:00
+        end3: 17:00:00
+        start4: 20:00:00
+        end4: 23:00:00
+      required: false
+      selector:
+        object:
+    tuesday:
+      example: |
+        start1: 07:00:00
+        end1: 09:00:00
+        start2: 10:00:00
+        end2: 12:00:00
+        start3: 13:00:00
+        end3: 17:00:00
+        start4: 20:00:00
+        end4: 23:00:00
+      required: false
+      selector:
+        object:
+    wednesday:
+      example: |
+        start1: 07:00:00
+        end1: 09:00:00
+        start2: 10:00:00
+        end2: 12:00:00
+        start3: 13:00:00
+        end3: 17:00:00
+        start4: 20:00:00
+        end4: 23:00:00
+      required: false
+      selector:
+        object:
+    thursday:
+      example: |
+        start1: 07:00:00
+        end1: 09:00:00
+        start2: 10:00:00
+        end2: 12:00:00
+        start3: 13:00:00
+        end3: 17:00:00
+        start4: 20:00:00
+        end4: 23:00:00
+      required: false
+      selector:
+        object:
     friday:
       example: "{}"
       required: false
@@ -48,7 +86,19 @@ set_schedule:
       required: false
       selector:
         object:
-    sunday: *day_field
+    sunday:
+      example: |
+        start1: 07:00:00
+        end1: 09:00:00
+        start2: 10:00:00
+        end2: 12:00:00
+        start3: 13:00:00
+        end3: 17:00:00
+        start4: 20:00:00
+        end4: 23:00:00
+      required: false
+      selector:
+        object:
 
 set_holiday:
   target:
