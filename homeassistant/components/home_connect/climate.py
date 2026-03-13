@@ -96,9 +96,8 @@ async def async_setup_entry(
 class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     """Representation of a Home Connect climate entity."""
 
-    # Air Conditioner does not report / support temperature yet
-    # Whenever it does, this should be updated
-    # but by the moment this is required to make it work
+    # Note: The base class requires this to be set even though this
+    # class doesn't support any temperature related functionality.
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
