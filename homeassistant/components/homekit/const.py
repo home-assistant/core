@@ -123,6 +123,7 @@ MANUFACTURER = "Home Assistant"
 # #### Switch Types ####
 TYPE_FAUCET = "faucet"
 TYPE_OUTLET = "outlet"
+TYPE_POWER_STRIP = "power_strip"
 TYPE_SHOWER = "shower"
 TYPE_SPRINKLER = "sprinkler"
 TYPE_SWITCH = "switch"
