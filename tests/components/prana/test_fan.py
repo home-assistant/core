@@ -1,5 +1,6 @@
 """Integration-style tests for Prana fans."""
 
+import math
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -15,9 +16,11 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.components.prana.fan import PRANA_SPEED_MULTIPLIER
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.percentage import percentage_to_ranged_value
 
 from . import async_init_integration
 
@@ -149,8 +152,10 @@ async def test_fans_set_percentage(
         {ATTR_ENTITY_ID: target, ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    speed_range = fan_mock_state.speed_range
-    expected_speed = round(speed_range.min + (speed_range.max - speed_range.min) * 0.5)
+    expected_speed = (
+        math.ceil(percentage_to_ranged_value((1, fan_mock_state.max_speed), 50))
+        * PRANA_SPEED_MULTIPLIER
+    )
     mock_prana_api.set_speed.assert_called_once_with(
         expected_speed,
         expected_api_key,
