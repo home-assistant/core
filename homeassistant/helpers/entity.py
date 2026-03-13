@@ -169,6 +169,16 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     return entry.device_class or entry.original_device_class
 
 
+def get_device_class_or_undefined(
+    hass: HomeAssistant, entity_id: str
+) -> str | None | UndefinedType:
+    """Get the device class of an entity or UNDEFINED if not found."""
+    try:
+        return get_device_class(hass, entity_id)
+    except HomeAssistantError:
+        return UNDEFINED
+
+
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     """Get supported features for an entity.
 
