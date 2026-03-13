@@ -119,9 +119,9 @@ async def test_select_option_in_auto_mode_defaults_speed_to_sleep(
     mock_cloud_interface: AsyncMock,
     single_eco_device,
 ) -> None:
-    """When speed_set is FanSpeed.auto (auto preset), selecting an option defaults to sleep speed."""
+    """When speed_set is FanSpeed.auto_get (auto preset), selecting an option defaults to sleep speed."""
     eco = list(single_eco_device.ecocomfort2_devices.values())[0]
-    eco.speed_set = FanSpeed.auto
+    eco.speed_set = FanSpeed.auto_get
     eco.mode_set = FanMode.sensor
 
     await hass.services.async_call(
