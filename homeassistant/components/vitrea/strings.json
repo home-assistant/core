@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Vitrea device. Please check the host and port.",
+      "invalid_host": "Please enter a valid host address.",
+      "invalid_port": "Please enter a valid port number.",
+      "timeout_connect": "Timeout connecting to the Vitrea device. Please check if the device is online.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:component::vitrea::config::step::user::data::host%]",
+          "port": "[%key:component::vitrea::config::step::user::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::vitrea::config::step::user::data_description::host%]",
+          "port": "[%key:component::vitrea::config::step::user::data_description::port%]"
+        },
+        "description": "Update the connection details for your Vitrea device.",
+        "title": "Reconfigure Vitrea"
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of the Vitrea device",
+          "port": "Port number of the Vitrea device"
+        },
+        "description": "Enter the connection details for your Vitrea device.",
+        "title": "Connect to Vitrea"
+      }
+    }
+  },
+  "entity": {
+    "cover": {
+      "blind": {
+        "name": "Blind"
+      }
+    },
+    "number": {
+      "timer_minutes": {
+        "name": "Timer"
+      }
+    },
+    "switch": {
+      "switch_with_timer": {
+        "name": "Switch with timer (boiler)"
+      }
+    }
+  },
+  "issues": {
+    "outdated_firmware": {
+      "description": "Your Vitrea device firmware version {current_version} is below the minimum required version {min_version}. To fix this issue:\n1. Open the Vitrea mobile app.\n1. Navigate to device settings.\n1. Select 'Update Firmware'.\n1. Wait for the update to complete.\n1. Restart Home Assistant.",
+      "title": "Device firmware is outdated"
+    }
+  },
+  "services": {
+    "set_timer": {
+      "description": "Sets the timer value for a switch with timer functionality.",
+      "fields": {
+        "entity_id": {
+          "description": "Timer switch entity to control.",
+          "name": "Entity"
+        },
+        "minutes": {
+          "description": "Timer duration in minutes (0-120).",
+          "name": "Minutes"
+        }
+      },
+      "name": "Set timer"
+    }
+  },
+  "title": "Vitrea integration"
+}
