@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "cleared": {
+      "trigger": "mdi:motion-sensor-off"
+    },
+    "detected": {
+      "trigger": "mdi:motion-sensor"
+    }
+  }
+}
