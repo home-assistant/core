@@ -4165,7 +4165,7 @@ async def test_compile_hourly_statistics_custom_equivalent_units(
 
     recorder_platform = Mock(
         compile_statistics=None,
-        custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
         list_statistic_ids=None,
         update_statistics_issues=None,
         validate_statistics=None,

@@ -40,6 +40,7 @@ from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
@@ -711,7 +712,9 @@ def _compile_statistics(
         if custom_equivalent_units := getattr(
             platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
         ):
-            custom_equivalent_units_per_entity |= custom_equivalent_units(instance.hass)
+            custom_equivalent_units_per_entity |= run_callback_threadsafe(
+                instance.hass.loop, custom_equivalent_units, instance.hass
+            ).result()
 
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
