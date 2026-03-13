@@ -1,6 +1,7 @@
 {
   "domain": "zeroconf",
   "name": "Zero-configuration networking (zeroconf)",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@bdraco"],
   "dependencies": ["network", "api"],
   "documentation": "https://www.home-assistant.io/integrations/zeroconf",
