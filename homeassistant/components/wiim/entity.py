@@ -33,11 +33,6 @@ class WiimBaseEntity(Entity):
             self._attr_device_info["configuration_url"] = self._device.http_api_url
 
     @property
-    def _added_to_hass(self) -> bool:
-        """Return True when the entity has been fully added to Home Assistant."""
-        return self._platform_state is EntityPlatformState.ADDED
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.available

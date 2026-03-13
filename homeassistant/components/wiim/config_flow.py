@@ -62,7 +62,9 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.udn)
-                self._abort_if_unique_id_configured(updates={CONF_HOST: device_info.host})
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: device_info.host}
+                )
                 return self.async_create_entry(
                     title=device_info.name,
                     data={

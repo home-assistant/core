@@ -125,9 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
     """Unload a config entry."""
-    LOGGER.info(
-        "Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.unique_id
-    )
+    LOGGER.info("Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.unique_id)
 
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False

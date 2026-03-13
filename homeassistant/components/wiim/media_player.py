@@ -242,7 +242,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_source = None
             self._attr_sound_mode = None
             self._attr_supported_features = SUPPORT_WIIM_BASE
-            if write_state and self._added_to_hass:
+            if write_state:
                 self.async_write_ha_state()
             return
 
@@ -300,14 +300,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             for udn in group_snapshot.member_udns
             if (entity_id := self._get_entity_id_for_udn(udn)) is not None
         ]
-        self._attr_group_members = group_members or (
-            [self.entity_id] if self._added_to_hass else None
-        )
+        self._attr_group_members = group_members or ([self.entity_id])
 
         if update_supported_features:
             self._async_schedule_update_supported_features(write_state=write_state)
 
-        if write_state and self._added_to_hass:
+        if write_state:
             self.async_write_ha_state()
 
     async def _update_output_mode(self) -> None:
@@ -406,7 +404,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         ):
             if self._attr_supported_features != leader_features:
                 self._attr_supported_features = leader_features
-                if write_state and self._added_to_hass:
+                if write_state:
                     self.async_write_ha_state()
             LOGGER.debug(
                 "Device %s: Follower features synchronized from leader %s",
@@ -418,7 +416,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         # fallback to base features
         if self._attr_supported_features != SUPPORT_WIIM_BASE:
             self._attr_supported_features = SUPPORT_WIIM_BASE
-            if write_state and self._added_to_hass:
+            if write_state:
                 self.async_write_ha_state()
         LOGGER.debug("Device %s: Follower set to base features", self.entity_id)
         return True
@@ -480,7 +478,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     current_features,
                 )
 
-        if write_state and self._added_to_hass:
+        if write_state:
             self.async_write_ha_state()
 
     @callback
