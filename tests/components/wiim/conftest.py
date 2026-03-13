@@ -141,7 +141,9 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.async_get_queue_snapshot = AsyncMock(
         return_value=WiimQueueSnapshot(items=())
     )
-    wiim_device.build_loop_mode = MagicMock(return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE)
+    wiim_device.build_loop_mode = MagicMock(
+        return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
+    )
 
     return wiim_device
 
@@ -185,6 +187,7 @@ def mock_wiim_api_endpoint():
         }
     )
     return api_endpoint
+
 
 @pytest.fixture
 def mock_wiim_controller():
