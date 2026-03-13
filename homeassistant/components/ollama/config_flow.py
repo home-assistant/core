@@ -74,6 +74,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     },
 )
 
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_API_KEY): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
 
 class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
@@ -84,6 +92,36 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         self.url: str | None = None
+
+    async def _async_validate_connection(
+        self, url: str, api_key: str | None
+    ) -> dict[str, str]:
+        """Validate connection and credentials against the Ollama server."""
+        errors: dict[str, str] = {}
+
+        try:
+            client = ollama.AsyncClient(
+                host=url,
+                headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
+                verify=get_default_context(),
+            )
+
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
+                await client.list()
+
+        except ollama.ResponseError as err:
+            if err.status_code in (401, 403):
+                errors["base"] = "invalid_auth"
+            else:
+                _LOGGER.exception("Unexpected Ollama response error")
+                errors["base"] = "unknown"
+        except TimeoutError, httpx.ConnectError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        return errors
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -113,28 +151,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._async_abort_entries_match({CONF_URL: url})
-
-        try:
-            client = ollama.AsyncClient(
-                host=url,
-                headers={"Authorization": f"Bearer {api_key}"} if api_key else None,
-                verify=get_default_context(),
-            )
-
-            async with asyncio.timeout(DEFAULT_TIMEOUT):
-                await client.list()
-
-        except ollama.ResponseError as err:
-            if err.status_code in (401, 403):
-                errors["base"] = "invalid_auth"
-            else:
-                _LOGGER.exception("Unexpected Ollama response error")
-                errors["base"] = "unknown"
-        except TimeoutError, httpx.ConnectError:
-            errors["base"] = "cannot_connect"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+        errors = await self._async_validate_connection(url, api_key)
 
         if errors:
             return self.async_show_form(
@@ -150,6 +167,61 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
             entry_data[CONF_API_KEY] = api_key
 
         return self.async_create_entry(title=url, data=entry_data)
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when existing credentials are invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+            )
+
+        api_key = user_input.get(CONF_API_KEY)
+        if api_key:
+            api_key = api_key.strip()
+
+        errors = await self._async_validate_connection(
+            reauth_entry.data[CONF_URL], api_key
+        )
+        if errors:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=self.add_suggested_values_to_schema(
+                    STEP_REAUTH_DATA_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        updated_data = {
+            **reauth_entry.data,
+            CONF_URL: reauth_entry.data[CONF_URL],
+        }
+        if api_key:
+            updated_data[CONF_API_KEY] = api_key
+        else:
+            updated_data.pop(CONF_API_KEY, None)
+
+        updated_options = {
+            key: value
+            for key, value in reauth_entry.options.items()
+            if key != CONF_API_KEY
+        }
+
+        return self.async_update_reload_and_abort(
+            reauth_entry,
+            data=updated_data,
+            options=updated_options,
+        )
 
     @classmethod
     @callback
