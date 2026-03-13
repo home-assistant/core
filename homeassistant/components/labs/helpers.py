@@ -52,7 +52,17 @@ def async_subscribe_preview_feature(
 
     Returns:
         Callable to unsubscribe from the listener
+
+    Raises:
+        ValueError: If the preview feature does not exist (when labs is initialized)
     """
+    if LABS_DATA in hass.data:
+        labs_data = hass.data[LABS_DATA]
+
+        preview_feature_id = f"{domain}.{preview_feature}"
+
+        if preview_feature_id not in labs_data.preview_features:
+            raise ValueError(f"Preview feature {preview_feature_id} not found")
 
     @callback
     def _async_event_filter(event_data: EventLabsUpdatedData) -> bool:
