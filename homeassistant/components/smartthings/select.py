@@ -32,6 +32,13 @@ DRIVING_MODE_TO_HA = {
     "quickCleaningZigzagPattern": "quick_clean_zigzag_pattern",
 }
 
+CLEANING_TYPE_TO_HA = {
+    "vacuum": "vacuum",
+    "mop": "mop",
+    "vacuumAndMopTogether": "vacuum_and_mop_together",
+    "mopAfterVacuum": "mop_after_vacuum",
+}
+
 WASHER_SOIL_LEVEL_TO_HA = {
     "none": "none",
     "heavy": "heavy",
@@ -236,6 +243,15 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         command=Command.SET_ALARM_THRESHOLD,
         entity_category=EntityCategory.CONFIG,
         value_is_integer=True,
+    ),
+    Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_ROBOT_CLEANER_CLEANING_TYPE,
+        translation_key="robot_cleaner_cleaning_type",
+        options_attribute=Attribute.SUPPORTED_CLEANING_TYPES,
+        status_attribute=Attribute.CLEANING_TYPE,
+        command=Command.SET_CLEANING_TYPE,
+        options_map=CLEANING_TYPE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SELECT: dict[
