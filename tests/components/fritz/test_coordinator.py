@@ -161,7 +161,7 @@ async def test_async_service_call_connection_reset(
     assert entry.state is ConfigEntryState.LOADED
 
     coordinator: AvmWrapper = entry.runtime_data
-    
+
     caplog.clear()
     fc_class_mock.return_value.call_action.side_effect = RequestsConnectionError(
         "Connection reset by peer"
