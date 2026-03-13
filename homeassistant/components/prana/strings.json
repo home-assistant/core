@@ -27,7 +27,7 @@
   "entity": {
     "fan": {
       "extract": {
-        "name": "Extract Fan",
+        "name": "Extract fan",
         "state_attributes": {
           "preset_mode": {
             "state": {
@@ -38,7 +38,7 @@
         }
       },
       "supply": {
-        "name": "Supply Fan",
+        "name": "Supply fan",
         "state_attributes": {
           "preset_mode": {
             "state": {
