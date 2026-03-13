@@ -418,6 +418,7 @@ for i in range(1, 9):
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"cell": str(i)},
     )
 
 
