@@ -111,6 +111,7 @@ def make_coordinator(
         hass = MagicMock(spec=HomeAssistant)
         hass.async_create_task = asyncio.ensure_future
     config_entry = MagicMock()
+    config_entry.entry_id = "test_entry_id"
     config_entry.data = make_entry_data(**entry_kwargs)
     with patch(
         "homeassistant.components.pajgps.coordinator.async_get_clientsession",

@@ -64,7 +64,7 @@ class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
         """Initialize the GPS position tracker entity."""
         super().__init__(pajgps_coordinator)
         self._device_id = device_id
-        self._attr_unique_id = f"{pajgps_coordinator.email}_{device_id}"
+        self._attr_unique_id = f"{pajgps_coordinator.config_entry.entry_id}_{device_id}"
 
     @property
     def available(self) -> bool:
