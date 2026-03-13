@@ -244,6 +244,9 @@
       "on_transition_time": {
         "name": "On transition time"
       },
+      "power_on_level": {
+        "name": "Power-on level"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
