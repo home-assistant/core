@@ -209,7 +209,7 @@
       ]),
       'max_temp': 70.0,
       'min_temp': 1.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'holiday',
         'auto',
@@ -502,7 +502,7 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
@@ -578,7 +578,7 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
@@ -1152,7 +1152,7 @@
       ]),
       'max_temp': 5.9,
       'min_temp': 0.1,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
@@ -1229,7 +1229,7 @@
       ]),
       'max_temp': 90.0,
       'min_temp': 5.0,
-      'preset_mode': None,
+      'preset_mode': 'manual',
       'preset_modes': list([
         'auto',
         'manual',
