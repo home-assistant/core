@@ -17,7 +17,4 @@ class ArcamFmjEntity(CoordinatorEntity[ArcamFmjCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
         self._attr_entity_registry_enabled_default = coordinator.state.zn == 1
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id or coordinator.config_entry.entry_id}"
-            f"-{coordinator.state.zn}"
-        )
+        self._attr_unique_id = coordinator.zone_unique_id
