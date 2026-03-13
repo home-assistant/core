@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -20,6 +19,6 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
-    entry = await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    entry = await setup_integration(hass, mock_account)
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert diag == snapshot
