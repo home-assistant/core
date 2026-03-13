@@ -1517,11 +1517,7 @@ class StateSelector(Selector[StateSelectorConfig]):
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
+            vol.Optional("attribute"): str,
             vol.Optional("multiple", default=False): cv.boolean,
         }
     )

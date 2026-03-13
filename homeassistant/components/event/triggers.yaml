@@ -9,6 +9,7 @@ received:
       required: true
       selector:
         state:
+          attribute: event_type
           hide_states:
             - unavailable
             - unknown
