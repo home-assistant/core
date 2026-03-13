@@ -104,7 +104,7 @@
     'connections': set({
       tuple(
         'bluetooth',
-        '68:3A:48:50:1A:77',
+        '68:3a:48:50:1a:77',
       ),
       tuple(
         'mac',

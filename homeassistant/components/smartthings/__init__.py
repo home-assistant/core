@@ -545,7 +545,9 @@ def create_devices(
                 if wifi_mac := status.get("wifiMac"):
                     connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
                 if bluetooth_address := status.get("btAddr"):
-                    connections.add((dr.CONNECTION_BLUETOOTH, bluetooth_address))
+                    connections.add(
+                        (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
+                    )
                 if connections:
                     kwargs.setdefault(ATTR_CONNECTIONS, set()).update(connections)
         if (
