@@ -184,6 +184,52 @@ class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
 
 
+class MatchFailedError(IntentError):
+    """Error when target matching fails."""
+
+    def __init__(
+        self,
+        result: MatchTargetsResult,
+        constraints: MatchTargetsConstraints,
+        preferences: MatchTargetsPreferences | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.result = result
+        self.constraints = constraints
+        self.preferences = preferences
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
+
+
+class NoStatesMatchedError(MatchFailedError):
+    """Error when no states match the intent's constraints."""
+
+    def __init__(
+        self,
+        reason: MatchFailedReason,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            result=MatchTargetsResult(False, reason),
+            constraints=MatchTargetsConstraints(
+                name=name,
+                area_name=area,
+                floor_name=floor,
+                domains=domains,
+                device_classes=device_classes,
+            ),
+        )
+
+
 class MatchFailedReason(Enum):
     """Possible reasons for match failure in async_match_targets."""
 
@@ -230,6 +276,29 @@ class MatchFailedReason(Enum):
             MatchFailedReason.INVALID_FLOOR,
             MatchFailedReason.DUPLICATE_NAME,
         )
+
+
+@dataclass
+class MatchTargetsResult:
+    """Result from async_match_targets."""
+
+    is_match: bool
+    """True if one or more entities matched."""
+
+    no_match_reason: MatchFailedReason | None = None
+    """Reason for failed match when is_match = False."""
+
+    states: list[State] = field(default_factory=list)
+    """List of matched entity states."""
+
+    no_match_name: str | None = None
+    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
+
+    areas: list[ar.AreaEntry] = field(default_factory=list)
+    """Areas that were targeted."""
+
+    floors: list[fr.FloorEntry] = field(default_factory=list)
+    """Floors that were targeted."""
 
 
 @dataclass
@@ -290,75 +359,6 @@ class MatchTargetsPreferences:
 
     floor_id: str | None = None
     """Id of floor to use when deduplicating names."""
-
-
-@dataclass
-class MatchTargetsResult:
-    """Result from async_match_targets."""
-
-    is_match: bool
-    """True if one or more entities matched."""
-
-    no_match_reason: MatchFailedReason | None = None
-    """Reason for failed match when is_match = False."""
-
-    states: list[State] = field(default_factory=list)
-    """List of matched entity states."""
-
-    no_match_name: str | None = None
-    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
-
-    areas: list[ar.AreaEntry] = field(default_factory=list)
-    """Areas that were targeted."""
-
-    floors: list[fr.FloorEntry] = field(default_factory=list)
-    """Floors that were targeted."""
-
-
-class MatchFailedError(IntentError):
-    """Error when target matching fails."""
-
-    def __init__(
-        self,
-        result: MatchTargetsResult,
-        constraints: MatchTargetsConstraints,
-        preferences: MatchTargetsPreferences | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__()
-
-        self.result = result
-        self.constraints = constraints
-        self.preferences = preferences
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
-
-
-class NoStatesMatchedError(MatchFailedError):
-    """Error when no states match the intent's constraints."""
-
-    def __init__(
-        self,
-        reason: MatchFailedReason,
-        name: str | None = None,
-        area: str | None = None,
-        floor: str | None = None,
-        domains: set[str] | None = None,
-        device_classes: set[str] | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__(
-            result=MatchTargetsResult(False, reason),
-            constraints=MatchTargetsConstraints(
-                name=name,
-                area_name=area,
-                floor_name=floor,
-                domains=domains,
-                device_classes=device_classes,
-            ),
-        )
 
 
 @dataclass
