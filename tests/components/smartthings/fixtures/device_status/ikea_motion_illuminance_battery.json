@@ -1,13 +1,20 @@
 {
   "components": {
     "main": {
-      "waterSensor": {
-        "water": {
-          "value": "dry",
-          "timestamp": "2026-03-12T17:12:40.554Z"
+      "refresh": {},
+      "motionSensor": {
+        "motion": {
+          "value": "inactive",
+          "timestamp": "2026-03-13T14:37:59.536Z"
         }
       },
-      "refresh": {},
+      "illuminanceMeasurement": {
+        "illuminance": {
+          "value": 16,
+          "unit": "lux",
+          "timestamp": "2026-03-13T14:48:36.080Z"
+        }
+      },
       "battery": {
         "quantity": {
           "value": null
@@ -15,7 +22,7 @@
         "battery": {
           "value": 100,
           "unit": "%",
-          "timestamp": "2026-03-07T14:37:09.813Z"
+          "timestamp": "2026-03-13T01:26:14.860Z"
         },
         "type": {
           "value": null
@@ -29,34 +36,32 @@
           "value": null
         },
         "availableVersion": {
-          "value": "1.0.11 (16777227)",
-          "timestamp": "2026-03-02T14:59:51.992Z"
+          "value": "1.0.7 (16777223)",
+          "timestamp": "2026-03-02T17:05:13.014Z"
         },
         "lastUpdateStatus": {
-          "value": "updateSucceeded",
-          "timestamp": "2026-03-02T15:06:29.116Z"
+          "value": null
         },
         "supportedCommands": {
           "value": null
         },
         "state": {
           "value": "normalOperation",
-          "timestamp": "2026-03-02T15:06:29.154Z"
+          "timestamp": "2026-03-02T17:05:13.011Z"
         },
         "estimatedTimeRemaining": {
           "value": null
         },
         "updateAvailable": {
           "value": false,
-          "timestamp": "2026-03-02T15:06:35.716Z"
+          "timestamp": "2026-03-02T17:05:12.989Z"
         },
         "currentVersion": {
-          "value": "1.0.11 (16777227)",
-          "timestamp": "2026-03-02T15:06:35.745Z"
+          "value": "1.0.7 (16777223)",
+          "timestamp": "2026-03-02T17:05:13.013Z"
         },
         "lastUpdateTime": {
-          "value": "2026-03-02T15:06:28Z",
-          "timestamp": "2026-03-02T15:06:29.153Z"
+          "value": null
         },
         "supportsProgressReports": {
           "value": null

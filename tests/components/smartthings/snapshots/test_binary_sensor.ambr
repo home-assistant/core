@@ -3860,7 +3860,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_moisture-entry]
+# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3873,7 +3873,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_moisture',
+    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3881,29 +3881,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Moisture',
+    'object_id_base': 'Motion',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Moisture',
+    'original_name': 'Motion',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '6f730725-d8c9-4d06-bac6-7dd96a3c75d8_main_waterSensor_water_water',
+    'unique_id': '6f730725-d8c9-4d06-bac6-7dd96a3c75d8_main_motionSensor_motion_motion',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_moisture-state]
+# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Gaderobe Bewegungsmelder Moisture',
+      'device_class': 'motion',
+      'friendly_name': 'Gaderobe Bewegungsmelder Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_moisture',
+    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
