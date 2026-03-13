@@ -30,6 +30,7 @@ from google.genai.types import (
     SafetySetting,
     Schema,
     ThinkingConfig,
+    ThinkingLevel,
     Tool,
     ToolListUnion,
 )
@@ -51,6 +52,8 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -61,6 +64,8 @@ from .const import (
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
@@ -91,6 +96,73 @@ SUPPORTED_SCHEMA_KEYS = {
     "required",
     "items",
 }
+
+
+def _is_thinking_model(model: str) -> bool:
+    """Check if the model supports thinking configuration."""
+    name = model.removeprefix("models/")
+    # Exclude non-text models (TTS, image generation)
+    if name.endswith(("tts", "image", "image-preview")):
+        return False
+    return name.startswith(("gemini-2.5", "gemini-3"))
+
+
+def _is_gemini_3_model(model: str) -> bool:
+    """Check if the model is a Gemini 3 series model."""
+    name = model.removeprefix("models/")
+    return name.startswith("gemini-3")
+
+
+def _create_thinking_config(
+    model: str,
+    thinking_budget: int,
+    thinking_level: str | None = None,
+) -> ThinkingConfig | None:
+    """Create a ThinkingConfig based on the model and user configuration.
+
+    Args:
+        model: The model name (e.g., "models/gemini-2.5-flash").
+        thinking_budget: The user-configured thinking budget:
+            -1 = automatic (default behavior),
+            0 = disable thinking,
+            >0 = custom token budget (Gemini 2.5 only).
+        thinking_level: The user-configured thinking level for Gemini 3 models:
+            "auto" = automatic (default), "low", "medium", "high".
+
+    """
+    if not _is_thinking_model(model):
+        return None
+
+    if _is_gemini_3_model(model):
+        # Gemini 3 models use ThinkingLevel enum, not integer budgets.
+        level_map: dict[str, ThinkingLevel] = {
+            "low": ThinkingLevel.LOW,
+            "medium": ThinkingLevel.MEDIUM,
+            "high": ThinkingLevel.HIGH,
+        }
+        if thinking_level and thinking_level in level_map:
+            return ThinkingConfig(
+                include_thoughts=True,
+                thinking_level=level_map[thinking_level],
+            )
+        # "auto" or unset: let the API decide
+        return ThinkingConfig(include_thoughts=True)
+
+    # Gemini 2.5 models use integer thinking_budget
+    if thinking_budget == -1:
+        return ThinkingConfig(include_thoughts=True)
+
+    name = model.removeprefix("models/")
+    if name.startswith("gemini-2.5-pro"):
+        # gemini-2.5-pro minimum thinking budget is 128
+        if thinking_budget < 128:
+            return ThinkingConfig(include_thoughts=True, thinking_budget=128)
+        return ThinkingConfig(include_thoughts=True, thinking_budget=thinking_budget)
+
+    if thinking_budget == 0:
+        return ThinkingConfig(include_thoughts=False, thinking_budget=0)
+
+    return ThinkingConfig(include_thoughts=True, thinking_budget=thinking_budget)
 
 
 def _camel_to_snake(name: str) -> str:
@@ -639,11 +711,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
         model = options.get(CONF_CHAT_MODEL, self.default_model)
-        thinking_config: ThinkingConfig | None = None
-        if model.startswith("models/gemini-2.5") and not model.endswith(
-            ("tts", "image", "image-preview")
-        ):
-            thinking_config = ThinkingConfig(include_thoughts=True)
+        thinking_config = _create_thinking_config(
+            model,
+            int(options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)),
+            options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL),
+        )
 
         return GenerateContentConfig(
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),

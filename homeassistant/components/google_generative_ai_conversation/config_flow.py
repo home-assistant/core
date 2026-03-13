@@ -44,6 +44,8 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -62,6 +64,8 @@ from .const import (
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_THINKING_LEVEL,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
@@ -449,6 +453,43 @@ async def google_generative_ai_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
+        }
+    )
+
+    if subentry_type != "tts":
+        thinking_level_options: list[SelectOptionDict] = [
+            SelectOptionDict(label="Auto", value="auto"),
+            SelectOptionDict(label="Low", value="low"),
+            SelectOptionDict(label="Medium", value="medium"),
+            SelectOptionDict(label="High", value="high"),
+        ]
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_THINKING_BUDGET,
+                    description={"suggested_value": options.get(CONF_THINKING_BUDGET)},
+                    default=RECOMMENDED_THINKING_BUDGET,
+                ): vol.All(
+                    NumberSelector(
+                        NumberSelectorConfig(min=-1, max=24576, step=1, mode="box")
+                    ),
+                    vol.Coerce(int),
+                ),
+                vol.Optional(
+                    CONF_THINKING_LEVEL,
+                    description={"suggested_value": options.get(CONF_THINKING_LEVEL)},
+                    default=RECOMMENDED_THINKING_LEVEL,
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        mode=SelectSelectorMode.DROPDOWN,
+                        options=thinking_level_options,
+                    )
+                ),
+            }
+        )
+
+    schema.update(
+        {
             vol.Optional(
                 CONF_HARASSMENT_BLOCK_THRESHOLD,
                 description={
