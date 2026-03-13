@@ -205,15 +205,11 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
 
 
 def _equivalent_units(
-    units: set[str | None], custom_units_for_entity: dict[str, str] | None = None
+    units: set[str | None], all_equivalent_units: dict[str, str]
 ) -> bool:
     """Return True if the units are equivalent."""
     if len(units) == 1:
         return True
-
-    all_equivalent_units = EQUIVALENT_UNITS
-    if custom_units_for_entity:
-        all_equivalent_units = {**EQUIVALENT_UNITS, **custom_units_for_entity}
 
     units = {
         all_equivalent_units[unit] if unit in all_equivalent_units else unit  # noqa: SIM401
@@ -282,7 +278,7 @@ def _normalize_states(
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
-    custom_units_for_entities: dict[str, dict[str, str]],
+    custom_units_for_entity: dict[str, str],
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     state_unit: str | None = None
@@ -290,6 +286,7 @@ def _normalize_states(
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
+    equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
@@ -314,7 +311,7 @@ def _normalize_states(
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
-        if not _equivalent_units(all_units, custom_units_for_entities.get(entity_id)):
+        if not _equivalent_units(all_units, equivalent_units_for_entity):
             if WARN_UNSTABLE_UNIT not in hass.data:
                 hass.data[WARN_UNSTABLE_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
@@ -354,10 +351,7 @@ def _normalize_states(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if state_unit and state_unit not in valid_units:
-            state_unit = (
-                custom_units_for_entities.get(entity_id, {}).get(state_unit)
-                or state_unit
-            )
+            state_unit = custom_units_for_entity.get(state_unit, state_unit)
 
         # Exclude states with unsupported unit from statistics
         if state_unit not in valid_units:
@@ -592,12 +586,13 @@ def compile_statistics(  # noqa: C901
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
             continue
+        custom_units_for_entity = custom_units_for_entities.get(entity_id, {})
         unit_class, statistics_unit, valid_float_states = _normalize_states(
             hass,
             old_metadatas,
             maybe_float_states,
             entity_id,
-            custom_units_for_entities,
+            custom_units_for_entity,
         )
         if not valid_float_states:
             continue
@@ -624,9 +619,12 @@ def compile_statistics(  # noqa: C901
 
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
+            equivalent_units_for_entity = (
+                EQUIVALENT_UNITS | custom_units_for_entities.get(entity_id, {})
+            )
             if not _equivalent_units(
                 {old_metadata[1]["unit_of_measurement"], statistics_unit},
-                custom_units_for_entities.get(entity_id),
+                equivalent_units_for_entity,
             ):
                 if WARN_UNSTABLE_UNIT not in hass.data:
                     hass.data[WARN_UNSTABLE_UNIT] = set()
@@ -892,7 +890,9 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if numeric and not _equivalent_units({state_unit, metadata_unit}):
+                if numeric and not _equivalent_units(
+                    {state_unit, metadata_unit}, EQUIVALENT_UNITS
+                ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
                         UNITS_CHANGED_ISSUE,
