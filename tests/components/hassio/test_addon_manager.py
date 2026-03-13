@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 from unittest.mock import AsyncMock, call
 from uuid import uuid4
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import (
+    AddonNotSupportedArchitectureError,
+    AddonNotSupportedHomeAssistantVersionError,
+    AddonNotSupportedMachineTypeError,
+    SupervisorError,
+)
 from aiohasupervisor.models import AddonsOptions, Discovery, PartialBackupOptions
 import pytest
 
@@ -20,10 +24,8 @@ from homeassistant.components.hassio.addon_manager import (
 from homeassistant.core import HomeAssistant
 
 
-async def test_not_installed_raises_exception(
-    addon_manager: AddonManager,
-    addon_not_installed: dict[str, Any],
-) -> None:
+@pytest.mark.usefixtures("addon_not_installed")
+async def test_not_installed_raises_exception(addon_manager: AddonManager) -> None:
     """Test addon not installed raises exception."""
     addon_config = {"test_key": "test"}
 
@@ -38,24 +40,40 @@ async def test_not_installed_raises_exception(
     assert str(err.value) == "Test app is not installed"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        AddonNotSupportedArchitectureError(
+            "Add-on test not supported on this platform, supported architectures: test"
+        ),
+        AddonNotSupportedHomeAssistantVersionError(
+            "Add-on test not supported on this system, requires Home Assistant version 2026.1.0 or greater"
+        ),
+        AddonNotSupportedMachineTypeError(
+            "Add-on test not supported on this machine, supported machine types: test"
+        ),
+    ],
+)
 async def test_not_available_raises_exception(
     addon_manager: AddonManager,
-    addon_store_info: AsyncMock,
+    supervisor_client: AsyncMock,
     addon_info: AsyncMock,
+    exception: SupervisorError,
 ) -> None:
     """Test addon not available raises exception."""
-    addon_store_info.return_value.available = False
-    addon_info.return_value.available = False
+    supervisor_client.store.addon_availability.side_effect = exception
+    supervisor_client.store.install_addon.side_effect = exception
+    addon_info.return_value.update_available = True
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
 
-    assert str(err.value) == "Test app is not available"
+    assert str(err.value) == f"Test app is not available: {exception!s}"
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
 
-    assert str(err.value) == "Test app is not available"
+    assert str(err.value) == f"Test app is not available: {exception!s}"
 
 
 async def test_get_addon_discovery_info(
@@ -496,11 +514,10 @@ async def test_stop_addon_error(
     assert stop_addon.call_count == 1
 
 
+@pytest.mark.usefixtures("hass", "addon_installed")
 async def test_update_addon(
-    hass: HomeAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
-    addon_installed: AsyncMock,
     create_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
@@ -509,7 +526,7 @@ async def test_update_addon(
 
     await addon_manager.async_update_addon()
 
-    assert addon_info.call_count == 2
+    assert addon_info.call_count == 1
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
@@ -517,10 +534,10 @@ async def test_update_addon(
     assert update_addon.call_count == 1
 
 
+@pytest.mark.usefixtures("addon_installed")
 async def test_update_addon_no_update(
     addon_manager: AddonManager,
     addon_info: AsyncMock,
-    addon_installed: AsyncMock,
     create_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
@@ -534,11 +551,10 @@ async def test_update_addon_no_update(
     assert update_addon.call_count == 0
 
 
+@pytest.mark.usefixtures("hass", "addon_installed")
 async def test_update_addon_error(
-    hass: HomeAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
-    addon_installed: AsyncMock,
     create_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
@@ -551,7 +567,7 @@ async def test_update_addon_error(
 
     assert str(err.value) == "Failed to update the Test app: Boom"
 
-    assert addon_info.call_count == 2
+    assert addon_info.call_count == 1
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
@@ -559,11 +575,10 @@ async def test_update_addon_error(
     assert update_addon.call_count == 1
 
 
+@pytest.mark.usefixtures("hass", "addon_installed")
 async def test_schedule_update_addon(
-    hass: HomeAssistant,
     addon_manager: AddonManager,
     addon_info: AsyncMock,
-    addon_installed: AsyncMock,
     create_backup: AsyncMock,
     update_addon: AsyncMock,
 ) -> None:
@@ -589,7 +604,7 @@ async def test_schedule_update_addon(
     await asyncio.gather(update_task, update_task_two)
 
     assert addon_manager.task_in_progress() is False
-    assert addon_info.call_count == 3
+    assert addon_info.call_count == 2
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})

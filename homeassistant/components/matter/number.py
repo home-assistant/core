@@ -190,6 +190,27 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
+            key="power_on_level",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_level",
+            native_max_value=255,
+            native_min_value=0,
+            mode=NumberMode.BOX,
+            # use 255 to indicate that the value should revert to the default
+            device_to_ha=lambda x: 255 if x is None else x,
+            ha_to_device=lambda x: None if x == 255 else int(x),
+            native_step=1,
+            native_unit_of_measurement=None,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
+        not_device_type=(device_types.Speaker,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
             key="on_transition_time",
             entity_category=EntityCategory.CONFIG,
             translation_key="on_transition_time",
