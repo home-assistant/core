@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_UDN, DOMAIN, LOGGER, UPNP_PORT
+from .const import DOMAIN, LOGGER, UPNP_PORT
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -67,7 +67,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=device_info.name,
                     data={
                         CONF_HOST: device_info.host,
-                        CONF_UDN: device_info.udn,
                     },
                 )
 
@@ -119,7 +118,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=discovered_info.name,
                 data={
                     CONF_HOST: discovered_info.host,
-                    CONF_UDN: discovered_info.udn,
                 },
             )
 

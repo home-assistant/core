@@ -17,17 +17,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import (
-    CONF_UDN,
     DATA_WIIM,
-    DEFAULT_AVAILABILITY_POLLING_INTERVAL,
     DOMAIN,
     LOGGER,
     PLATFORMS,
     UPNP_PORT,
+    WiimConfigEntry,
     WiimData,
 )
 
-type WiimConfigEntry = ConfigEntry[WiimDevice]
+DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
@@ -35,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     LOGGER.debug(
         "Setting up WiiM entry: %s (UDN: %s, Source: %s)",
         entry.title,
-        entry.data.get(CONF_UDN),
+        entry.unique_id,
         entry.source,
     )
 
@@ -61,16 +60,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
     try:
         base_url = get_url(hass, prefer_external=False)
-        local_host = urlparse(base_url).hostname
-    except (NoURLAvailableError, ValueError, TypeError) as err:
+    except NoURLAvailableError as err:
         raise ConfigEntryNotReady(
             "Failed to determine Home Assistant URL for WiiM event subscriptions"
         ) from err
 
-    if local_host is None:
-        raise ConfigEntryNotReady(
-            "Home Assistant URL does not include a hostname for WiiM event subscriptions"
-        )
+    local_host = urlparse(base_url).hostname
+    assert local_host is not None
 
     try:
         wiim_device = await async_create_wiim_device(
@@ -85,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         raise ConfigEntryNotReady(f"HTTP API request failed for {host}: {err}") from err
     except WiimDeviceException as err:
         LOGGER.error("SDK Device Exception during setup for %s: %s", host, err)
-        raise ConfigEntryNotReady(f"SDK Device error for {host}: {err}") from err
+        return False
 
     await controller.add_device(wiim_device)
 
@@ -130,13 +126,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
     """Unload a config entry."""
     LOGGER.info(
-        "Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.data.get(CONF_UDN)
+        "Unloading WiiM entry: %s (UDN: %s)", entry.title, entry.unique_id
     )
 
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
-        hass.data.pop(DATA_WIIM, None)
+        hass.data.pop(DATA_WIIM)
         LOGGER.info("Last WiiM entry unloaded, cleaning up domain data")
     return True

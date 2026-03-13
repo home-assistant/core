@@ -25,13 +25,12 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_WIIM, LOGGER, WiimData
+from .const import DATA_WIIM, LOGGER, WiimConfigEntry, WiimData
 from .entity import WiimBaseEntity
 
 MEDIA_TYPE_WIIM_LIBRARY = "wiim_library"
@@ -114,12 +113,12 @@ def media_player_exception_wrap[
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiimConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiiM media player from a config entry."""
 
-    device: WiimDevice = entry.runtime_data
+    device = entry.runtime_data
 
     # Create and add the media player entity
     entity = WiimMediaPlayerEntity(device, entry)
@@ -136,7 +135,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     # Added to track if the current entity is a leader
     _is_group_leader: bool = False
 
-    def __init__(self, device: WiimDevice, entry: ConfigEntry) -> None:
+    def __init__(self, device: WiimDevice, entry: WiimConfigEntry) -> None:
         """Initialize the WiiM entity."""
         super().__init__(device)
         self._entry = entry
