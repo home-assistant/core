@@ -1186,6 +1186,8 @@ build.json @home-assistant/supervisor
 /tests/components/nzbget/ @chriscla
 /homeassistant/components/obihai/ @dshokouhi @ejpenney
 /tests/components/obihai/ @dshokouhi @ejpenney
+/homeassistant/components/occupancy/ @home-assistant/core
+/tests/components/occupancy/ @home-assistant/core
 /homeassistant/components/octoprint/ @rfleming71
 /tests/components/octoprint/ @rfleming71
 /homeassistant/components/ohmconnect/ @robbiet480

@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "cleared": {
+      "trigger": "mdi:home-outline"
+    },
+    "detected": {
+      "trigger": "mdi:home-account"
+    }
+  }
+}
