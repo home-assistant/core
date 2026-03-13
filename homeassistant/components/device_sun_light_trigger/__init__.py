@@ -1,8 +1,10 @@
 """Support to turn on lights based on the states."""
 
-from datetime import timedelta
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 from functools import partial
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -76,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     light_profile = conf[CONF_LIGHT_PROFILE]
     device_group = conf.get(CONF_DEVICE_GROUP)
 
-    async def activate_on_start(_):
+    async def activate_on_start(event: Event | None) -> None:
         """Activate automation."""
         await activate_automation(
             hass, device_group, light_group, light_profile, disable_turn_off
@@ -90,9 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def activate_automation(  # noqa: C901
-    hass, device_group, light_group, light_profile, disable_turn_off
-):
+async def activate_automation(
+    hass: HomeAssistant,
+    device_group: str | None,
+    light_group: str | None,
+    light_profile: str,
+    disable_turn_off: bool,
+) -> None:
     """Activate the automation."""
     logger = logging.getLogger(__name__)
 
@@ -121,28 +127,24 @@ async def activate_automation(  # noqa: C901
         return
 
     @callback
-    def anyone_home():
+    def anyone_home() -> bool:
         """Test if anyone is home."""
         return any(device_tracker_is_on(hass, dt_id) for dt_id in device_entity_ids)
 
     @callback
-    def any_light_on():
+    def any_light_on() -> bool:
         """Test if any light on."""
         return any(light_is_on(hass, light_id) for light_id in light_ids)
 
-    def calc_time_for_light_when_sunset():
+    def calc_time_for_light_when_sunset() -> datetime:
         """Calculate the time when to start fading lights in when sun sets.
-
-        Returns None if no next_setting data available.
 
         Async friendly.
         """
         next_setting = get_astral_event_next(hass, SUN_EVENT_SUNSET)
-        if not next_setting:
-            return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
-    async def async_turn_on_before_sunset(light_id):
+    async def async_turn_on_before_sunset(light_id: str) -> None:
         """Turn on lights."""
         if not anyone_home() or light_is_on(hass, light_id):
             return
@@ -157,10 +159,12 @@ async def activate_automation(  # noqa: C901
         )
 
     @callback
-    def async_turn_on_factory(light_id):
+    def async_turn_on_factory(
+        light_id: str,
+    ) -> Callable[[datetime], Coroutine[Any, Any, None]]:
         """Generate turn on callbacks as factory."""
 
-        async def async_turn_on_light(now):
+        async def async_turn_on_light(now: datetime) -> None:
             """Turn on specific light."""
             await async_turn_on_before_sunset(light_id)
 
@@ -169,15 +173,13 @@ async def activate_automation(  # noqa: C901
     # Track every time sun rises so we can schedule a time-based
     # pre-sun set event
     @callback
-    def schedule_light_turn_on(now):
+    def schedule_light_turn_on(now: datetime | None) -> None:
         """Turn on all the lights at the moment sun sets.
 
         We will schedule to have each light start after one another
         and slowly transition in.
         """
         start_point = calc_time_for_light_when_sunset()
-        if not start_point:
-            return
 
         for index, light_id in enumerate(light_ids):
             async_track_point_in_utc_time(
@@ -260,7 +262,9 @@ async def activate_automation(  # noqa: C901
         return
 
     @callback
-    def turn_off_lights_when_all_leave(entity, old_state, new_state):
+    def turn_off_lights_when_all_leave(
+        from_state: str, to_state: str, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle device group state change."""
         # Make sure there is not someone home
         if anyone_home():

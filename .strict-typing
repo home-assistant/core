@@ -161,6 +161,7 @@ homeassistant.components.default_config.*
 homeassistant.components.demo.*
 homeassistant.components.derivative.*
 homeassistant.components.device_automation.*
+homeassistant.components.device_sun_light_trigger.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
 homeassistant.components.devolo_home_network.*
