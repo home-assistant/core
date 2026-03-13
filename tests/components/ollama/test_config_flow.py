@@ -309,14 +309,43 @@ async def test_subentry_download_error(
     assert result["reason"] == "download_failed"
 
 
-async def test_reauth_flow_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("init_data", "input_data", "expected_data"),
+    [
+        (
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "old-api-key",
+            },
+            {
+                CONF_API_KEY: "new-api-key",
+            },
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "new-api-key",
+            },
+        ),
+        (
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "old-api-key",
+            },
+            {
+                # Reconfigure without api_key to test that it gets removed from data
+            },
+            {
+                CONF_URL: "http://localhost:11434",
+            },
+        ),
+    ],
+)
+async def test_reauth_flow_success(
+    hass: HomeAssistant, init_data, input_data, expected_data
+) -> None:
     """Test successful reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_URL: "http://localhost:11434",
-            CONF_API_KEY: "old-api-key",
-        },
+        data=init_data,
         options={CONF_API_KEY: "stale-options-api-key"},
         version=3,
         minor_version=3,
@@ -333,19 +362,14 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_API_KEY: "new-api-key",
-            },
+            input_data,
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert entry.data == {
-        CONF_URL: "http://localhost:11434",
-        CONF_API_KEY: "new-api-key",
-    }
+    assert entry.data == expected_data
     assert entry.options == {}
 
 
@@ -754,10 +778,20 @@ async def test_user_step_async_client_headers(
 
 
 @pytest.mark.parametrize(
-    ("status_code", "error_message", "user_input"),
+    ("status_code", "error", "error_message", "user_input"),
     [
         (
+            400,
+            "unknown",
+            "Bad Request",
+            {
+                CONF_URL: "http://localhost:11434",
+                CONF_API_KEY: "my-secret-token",
+            },
+        ),
+        (
             401,
+            "invalid_auth",
             "Unauthorized",
             {
                 CONF_URL: "http://localhost:11434",
@@ -766,6 +800,7 @@ async def test_user_step_async_client_headers(
         ),
         (
             403,
+            "invalid_auth",
             "Unauthorized",
             {
                 CONF_URL: "http://localhost:11434",
@@ -774,6 +809,7 @@ async def test_user_step_async_client_headers(
         ),
         (
             403,
+            "invalid_auth",
             "Forbidden",
             {
                 CONF_URL: "http://localhost:11434",
@@ -781,13 +817,14 @@ async def test_user_step_async_client_headers(
         ),
     ],
 )
-async def test_user_step_invalid_auth(
+async def test_user_step_errors(
     hass: HomeAssistant,
     status_code: int,
+    error: str,
     error_message: str,
     user_input: dict[str, str],
 ) -> None:
-    """Test invalid_auth error when ollama returns HTTP 401/403."""
+    """Test error handling when ollama returns HTTP 4xx."""
     with patch(
         "homeassistant.components.ollama.config_flow.ollama.AsyncClient"
     ) as mock_async_client:
@@ -810,7 +847,7 @@ async def test_user_step_invalid_auth(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_auth"}
+    assert result.get("errors") == {"base": error}
 
 
 async def test_user_step_trim_url(hass: HomeAssistant) -> None:
