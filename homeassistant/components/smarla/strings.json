@@ -50,6 +50,16 @@
       "period": {
         "name": "Period"
       },
+      "spring_status": {
+        "name": "Spring status",
+        "state": {
+          "constellation_critical_too_high": "Critically too strong",
+          "constellation_critical_too_low": "Critically too weak",
+          "constellation_too_high": "Too strong",
+          "constellation_too_low": "Too weak",
+          "normal": "Normal"
+        }
+      },
       "swing_count": {
         "name": "Swing count",
         "unit_of_measurement": "swings"

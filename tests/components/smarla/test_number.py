@@ -67,7 +67,6 @@ async def test_number_action(
 
     entity_id = entity_info["entity_id"]
 
-    # Turn on
     await hass.services.async_call(
         NUMBER_DOMAIN,
         service,
