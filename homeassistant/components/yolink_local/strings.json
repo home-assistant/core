@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "client_id": "Client ID",
+          "client_secret": "Client Secret",
+          "host": "[%key:common::config_flow::data::host%]",
+          "net_id": "Sub-Net ID"
+        },
+        "data_description": {
+          "client_id": "[%key:component::yolink_local::config::step::user::data::client_id%]",
+          "client_secret": "[%key:component::yolink_local::config::step::user::data::client_secret%]",
+          "host": "The hostname or IP address of your Local Hub.",
+          "net_id": "The sub-net id of your Local Hub."
+        }
+      }
+    }
+  }
+}
