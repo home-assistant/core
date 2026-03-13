@@ -176,9 +176,8 @@ async def test_fan_turn_on_defaulting_behavior(
     hass: HomeAssistant,
     mock_cloud_interface: AsyncMock,
     service_data: dict,
-    expected_mode: str,
-expected_mode: FanMode,
-expected_speed: FanSpeed,
+    expected_mode: FanMode,
+    expected_speed: FanSpeed,
 ) -> None:
     """turn_on defaults percentage/preset as expected."""
     data = {ATTR_ENTITY_ID: FAN_ENTITY_ID} | service_data
