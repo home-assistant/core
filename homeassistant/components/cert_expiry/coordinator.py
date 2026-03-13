@@ -30,7 +30,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         host: str,
         port: int,
         ignore_hostname: bool,
-        ca_data: str,
+        ca_data: str | None,
     ) -> None:
         """Initialize global Cert Expiry data updater."""
         self.host = host

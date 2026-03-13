@@ -26,6 +26,34 @@ from .helper import get_cert_expiry_timestamp
 _LOGGER = logging.getLogger(__name__)
 
 
+def _iter_pem_certs(pem_data: str) -> list[str]:
+    """Split the string into individual certificate blocks."""
+
+    pem_data = pem_data.strip()
+    if not pem_data:
+        return []
+    begin_marker = "-----BEGIN CERTIFICATE-----"
+    end_marker = "-----END CERTIFICATE-----"
+    certs: list[str] = []
+    pos = 0
+    while True:
+        start = pem_data.find(begin_marker, pos)
+        if start == -1:
+            break
+        end = pem_data.find(end_marker, start)
+        if end == -1:
+            # BEGIN without matching END -> malformed PEM
+            raise ValueError("Missing END CERTIFICATE marker")
+        end += len(end_marker)
+        certs.append(pem_data[start:end])
+        pos = end
+    # If no separate BEGIN/END markers were found but data is present,
+    # fall back to treating the whole content as a single PEM block.
+    if not certs and pem_data:
+        certs.append(pem_data)
+    return certs
+
+
 class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -43,7 +71,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         ca_data = user_input.get(CONF_CA_DATA)
         if ca_data:
             try:
-                ssl.PEM_cert_to_DER_cert(ca_data)
+                for pem_block in _iter_pem_certs(ca_data):
+                    ssl.PEM_cert_to_DER_cert(pem_block)
             except ValueError:
                 self._errors[CONF_CA_DATA] = "invalid_pem"
                 return False
@@ -53,8 +82,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
-                user_input[CONF_IGNORE_HOSTNAME],
-                user_input.get(CONF_CA_DATA),
+                user_input.get(CONF_IGNORE_HOSTNAME, False),
+                user_input.get(CONF_CA_DATA) or None,
             )
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"
@@ -115,10 +144,11 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
                     vol.Required(
-                        CONF_IGNORE_HOSTNAME, default=user_input[CONF_IGNORE_HOSTNAME]
+                        CONF_IGNORE_HOSTNAME,
+                        default=user_input.get(CONF_IGNORE_HOSTNAME, False),
                     ): bool,
                     vol.Optional(
-                        CONF_CA_DATA, default=user_input[CONF_CA_DATA]
+                        CONF_CA_DATA, default=user_input.get(CONF_CA_DATA)
                     ): selector.TextSelector(
                         selector.TextSelectorConfig(multiline=True)
                     ),
