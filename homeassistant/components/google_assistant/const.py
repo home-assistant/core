@@ -45,6 +45,16 @@ CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
 CONF_SERVICE_ACCOUNT = "service_account"
 
+# Filter configuration constants
+CONF_FILTER = "filter"
+CONF_INCLUDE_ENTITIES = "include_entities"
+CONF_INCLUDE_DOMAINS = "include_domains"
+CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"
+CONF_EXCLUDE_ENTITIES = "exclude_entities"
+CONF_EXCLUDE_DOMAINS = "exclude_domains"
+CONF_EXCLUDE_ENTITY_GLOBS = "exclude_entity_globs"
+
+
 DATA_CONFIG = "config"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
