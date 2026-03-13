@@ -132,21 +132,6 @@ async def test_no_entities_added_and_warning_logged_when_no_devices() -> None:
     assert len(added) == 0
 
 
-async def test_devices_with_none_id_are_skipped() -> None:
-    """Test that devices with a None ID are skipped during setup."""
-    coord = make_coordinator()
-    coord.data = PajGpsData(devices={}, positions={})
-    hass, config_entry = _make_hass_and_config_entry(coord)
-
-    added = []
-    with patch("homeassistant.components.pajgps.device_tracker._LOGGER"):
-        await dt_module.async_setup_entry(
-            hass, config_entry, lambda e, **kw: added.extend(e)
-        )
-
-    assert len(added) == 0
-
-
 async def test_new_device_added_on_coordinator_update() -> None:
     """Entities for devices discovered after setup must be added dynamically."""
     coord = make_coordinator()
