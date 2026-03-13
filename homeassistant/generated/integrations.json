@@ -1129,12 +1129,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "compensation": {
-      "name": "Compensation",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
-    },
     "compit": {
       "name": "Compit",
       "integration_type": "hub",
@@ -8111,6 +8105,12 @@
     }
   },
   "helper": {
+    "compensation": {
+      "name": "Compensation",
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
