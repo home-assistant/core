@@ -1,0 +1,66 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_device_ip": "Could not find a supported device at this IP address",
+      "invalid_token": "Token and key must be valid hexadecimal strings",
+      "login_failed": "Could not log in to the selected cloud server",
+      "no_devices": "No devices found"
+    },
+    "step": {
+      "manually": {
+        "data": {
+          "device_id": "Device ID",
+          "ip_address": "IP address",
+          "key": "Key",
+          "model": "Model",
+          "name": "Name",
+          "port": "Port",
+          "protocol": "Protocol",
+          "subtype": "Subtype",
+          "token": "Token",
+          "type": "Type"
+        },
+        "data_description": {
+          "device_id": "The device ID of your Midea appliance",
+          "ip_address": "The local IP address of your Midea appliance",
+          "key": "The key of your Midea appliance (hexadecimal string)",
+          "model": "The model of your Midea appliance",
+          "name": "A name for this device in Home Assistant",
+          "port": "The local port used by your Midea appliance",
+          "protocol": "The protocol used by your Midea appliance",
+          "subtype": "The subtype of your Midea appliance",
+          "token": "The token of your Midea appliance (hexadecimal string)",
+          "type": "The type of your Midea appliance"
+        },
+        "title": "Configure manually"
+      },
+      "user": {
+        "data": {
+          "action": "Action"
+        },
+        "data_description": {
+          "action": "Choose how you want to add your Midea appliance"
+        },
+        "title": "Set up Midea LAN"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate_key": {
+        "name": "Thermostat"
+      },
+      "climate_zone1": {
+        "name": "Zone 1 Thermostat"
+      },
+      "climate_zone2": {
+        "name": "Zone 2 Thermostat"
+      }
+    }
+  }
+}
