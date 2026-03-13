@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmarlaapi import AuthToken
 from pysmarlaapi.federwiege.services.classes import Property, Service
-from pysmarlaapi.federwiege.services.types import UpdateStatus
+from pysmarlaapi.federwiege.services.types import SpringStatus, UpdateStatus
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -86,7 +86,7 @@ def _mock_analyser_service() -> MagicMock:
     mock_analyser_service.props["oscillation"].get.return_value = [0, 0]
     mock_analyser_service.props["activity"].get.return_value = 0
     mock_analyser_service.props["swing_count"].get.return_value = 0
-    mock_analyser_service.props["spring_status"].get.return_value = 0
+    mock_analyser_service.props["spring_status"].get.return_value = SpringStatus.UNKNOWN
 
     return mock_analyser_service
 

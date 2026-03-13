@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+from pysmarlaapi.federwiege.services.types import SpringStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -55,7 +56,7 @@ SENSOR_ENTITIES = [
         "service": "analyser",
         "property": "spring_status",
         "initial_state": STATE_UNKNOWN,
-        "test": (1, "normal"),
+        "test": (SpringStatus.NORMAL, "normal"),
     },
 ]
 
