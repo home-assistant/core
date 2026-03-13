@@ -86,10 +86,10 @@ async def test_select_option_keeps_current_speed(
         {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: option},
         blocking=True,
     )
-    # Device starts with speed_set="3" (from single_eco_device in conftest),
+    # Device starts with speed_set=FanSpeed.medium (from single_eco_device in conftest),
     # mode is not off and not auto, so current speed is preserved.
     mock_cloud_interface.ecocomfort.set_mode_speed.assert_awaited_once_with(
-        "11223344", expected_mode, "3"
+        "11223344", expected_mode, FanSpeed.medium
     )
 
 
