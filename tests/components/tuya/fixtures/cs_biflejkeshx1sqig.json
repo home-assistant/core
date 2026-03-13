@@ -21,13 +21,13 @@
     "dehumidify_set_enum": {
       "type": "Enum",
       "value": {
-        "range": ["40", "50"]
+        "range": ["40", "45", "50"]
       }
     },
     "fan_speed_enum": {
       "type": "Enum",
       "value": {
-        "range": ["low", "mid", "high"]
+        "range": ["low", "mid", "high", "auto"]
       }
     },
     "swing": {
@@ -53,13 +53,13 @@
     "dehumidify_set_enum": {
       "type": "Enum",
       "value": {
-        "range": ["40", "50"]
+        "range": ["40", "45", "50"]
       }
     },
     "fan_speed_enum": {
       "type": "Enum",
       "value": {
-        "range": ["low", "mid", "high"]
+        "range": ["low", "mid", "high", "auto"]
       }
     },
     "humidity_indoor": {
