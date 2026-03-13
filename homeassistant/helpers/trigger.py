@@ -601,16 +601,16 @@ class EntityNumericalStateBase(EntityTriggerBase[NumericalDomainSpec]):
 
     def _get_tracked_value(self, state: State) -> Any:
         """Get the tracked numerical value from a state."""
-        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
-        if vs.value_source is None:
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is None:
             return state.state
-        return state.attributes.get(vs.value_source)
+        return state.attributes.get(domain_spec.value_source)
 
     def _get_converter(self, state: State) -> Callable[[Any], float]:
         """Get the value converter for an entity."""
-        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
-        if vs.value_converter is not None:
-            return vs.value_converter
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_converter is not None:
+            return domain_spec.value_converter
         return float
 
 

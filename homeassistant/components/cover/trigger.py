@@ -16,10 +16,10 @@ class CoverTriggerBase(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the state matches the target cover state."""
-        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
-        if vs.value_source is not None:
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is not None:
             return (
-                state.attributes.get(vs.value_source)
+                state.attributes.get(domain_spec.value_source)
                 == self._cover_is_closed_target_value
             )
         return state.state == self._binary_sensor_target_state
@@ -28,11 +28,13 @@ class CoverTriggerBase(EntityTriggerBase):
         """Check if the transition is valid for a cover state change."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
-        vs = self._domain_specs[split_entity_id(from_state.entity_id)[0]]
-        if vs.value_source is not None:
-            if (from_is_closed := from_state.attributes.get(vs.value_source)) is None:
+        domain_spec = self._domain_specs[split_entity_id(from_state.entity_id)[0]]
+        if domain_spec.value_source is not None:
+            if (
+                from_is_closed := from_state.attributes.get(domain_spec.value_source)
+            ) is None:
                 return False
-            return from_is_closed != to_state.attributes.get(vs.value_source)  # type: ignore[no-any-return]
+            return from_is_closed != to_state.attributes.get(domain_spec.value_source)  # type: ignore[no-any-return]
         return from_state.state != to_state.state
 
 

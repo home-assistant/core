@@ -53,12 +53,14 @@ class DomainSpecFilterMixin[DomainSpecT: DomainSpec = DomainSpec]:
         """Filter entities matching any of the domain specs."""
         result: set[str] = set()
         for entity_id in entities:
-            if not (vs := self._domain_specs.get(split_entity_id(entity_id)[0])):
+            if not (
+                domain_spec := self._domain_specs.get(split_entity_id(entity_id)[0])
+            ):
                 continue
             if (
-                vs.device_class is not ANY_DEVICE_CLASS
+                domain_spec.device_class is not ANY_DEVICE_CLASS
                 and get_device_class_or_undefined(self._hass, entity_id)
-                != vs.device_class
+                != domain_spec.device_class
             ):
                 continue
             result.add(entity_id)
