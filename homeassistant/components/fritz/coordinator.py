@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+import requests
 import re
 from typing import Any, TypedDict, cast
 
@@ -758,6 +759,8 @@ class AvmWrapper(FritzBoxTools):
                 action_name,
             )
             return {}
+        except requests.exceptions.ConnectionError as ex:
+            raise UpdateFailed(f"Connection aborted by FritzBox: {ex}") from ex
         return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
