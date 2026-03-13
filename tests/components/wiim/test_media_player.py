@@ -90,7 +90,7 @@ async def test_media_player_attributes(
         "identifiers": {(DOMAIN, mock_wiim_device.udn)},
         "name": mock_wiim_device.name,
     }
-    entity._attr_supported_features = SUPPORT_WIIM_BASE
+    entity._transport_capabilities = None
     entity._attr_device_class = MediaPlayerDeviceClass.SPEAKER
     entity._attr_state = SDK_TO_HA_STATE.get(mock_wiim_device.playing_status)
     entity._attr_volume_level = mock_wiim_device.volume / 100
