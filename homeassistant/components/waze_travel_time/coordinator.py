@@ -88,7 +88,7 @@ async def async_get_travel_times(
         incl_routes: list[CalcRoutesResponse] = []
 
         def should_include_route(route: CalcRoutesResponse) -> bool:
-            if len(incl_filters) < 1:
+            if len(incl_filters) < 1 or len(route.street_names) < 1:
                 return True
             should_include = any(
                 street_name in incl_filters or "" in incl_filters
