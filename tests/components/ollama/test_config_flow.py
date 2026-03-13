@@ -388,6 +388,26 @@ async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> No
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
+    with patch(
+        "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+        return_value={"models": [{"model": TEST_MODEL}]},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "new-api-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert entry.data == {
+        CONF_URL: "http://localhost:11434",
+        CONF_API_KEY: "new-api-key",
+    }
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
