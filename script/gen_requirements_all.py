@@ -224,7 +224,7 @@ aiomqtt>=2.5.0
 auth0-python<5.0
 
 # Setuptools >=82.0.0 doesn't contain pkg_resources anymore
-setuptools<82.0.0
+setuptools>=82.0.0
 """
 
 GENERATED_MESSAGE = (

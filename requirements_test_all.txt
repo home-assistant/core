@@ -1532,9 +1532,6 @@ pescea==1.0.12
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
 
-# homeassistant.components.pilight
-pilight==0.1.1
-
 # homeassistant.components.plex
 plexauth==0.0.6
 
@@ -1706,9 +1703,6 @@ pyblackbird==0.6
 
 # homeassistant.components.bluesound
 pyblu==2.0.5
-
-# homeassistant.components.neato
-pybotvac==0.0.28
 
 # homeassistant.components.braviatv
 pybravia==0.4.1
