@@ -4138,9 +4138,10 @@ async def test_compile_hourly_statistics_equivalent_units_2(
     ("device_class", "state_unit", "state_unit2", "unit_class", "mean", "min", "max"),
     [
         (None, "KB/s", "kB/s", None, 13.333333, -10, 30),
-        (None, "kB/s", "KB/s", "data_rate", 13.333333, -10, 30),
         (SensorDeviceClass.DATA_RATE, "KB/s", "kB/s", None, 13.333333, -10, 30),
-        (SensorDeviceClass.DATA_RATE, "kB/s", "KB/s", "data_rate", 13.333333, -10, 30),
+        # Can't downgrade from "KB/s" to "kB/s"
+        (None, "kB/s", "KB/s", "data_rate", 30, 30, 30),
+        (SensorDeviceClass.DATA_RATE, "kB/s", "KB/s", "data_rate", 30, 30, 30),
     ],
 )
 async def test_compile_hourly_statistics_custom_equivalent_units(
