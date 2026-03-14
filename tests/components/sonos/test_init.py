@@ -596,11 +596,10 @@ async def test_remove_active_config_entry_device(
     config_dr.async_setup(hass)
 
     assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
-
     device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
     assert device is not None
-    ws_client = await hass_ws_client(hass)
 
+    ws_client = await hass_ws_client(hass)
     response = await ws_client.remove_device(device.id, config_entry.entry_id)
     assert not response["success"]
     assert response["error"]["code"] == "home_assistant_error"
@@ -630,10 +629,8 @@ async def test_remove_offline_config_entry_device(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Speaker is still in CONF_KNOWN_SPEAKERS until explicitly removed via the UI
+    # Device still exists until explicitly removed via the UI
     assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
-
-    # Device entry persists across reloads
     device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
     assert device is not None
 
