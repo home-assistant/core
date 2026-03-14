@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of your myLeviton account.",
+          "username": "The email address of your myLeviton account."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Importing the YAML configuration for {integration_title} failed because the myLeviton service could not be reached. Please check your network connectivity and then remove the `decora_wifi` YAML configuration from your `configuration.yaml` file and set up the integration again using the UI.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Importing the YAML configuration for {integration_title} failed because the provided credentials are invalid. Please remove the `decora_wifi` YAML configuration from your `configuration.yaml` file and set up the integration again using the UI with correct credentials.",
+      "title": "The {integration_title} YAML configuration import failed"
+    }
+  }
+}
