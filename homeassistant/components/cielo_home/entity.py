@@ -58,10 +58,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if the device is available and online."""
-        if not (
-            super().available
-            and self._device_id in self.coordinator.data.parsed
-        ):
+        if not (super().available and self._device_id in self.coordinator.data.parsed):
             return False
 
         dev = self.device_data
