@@ -1,0 +1,78 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device_config': dict({
+      'binary_inputs': list([
+      ]),
+      'data_buses': list([
+      ]),
+      'displays': list([
+        dict({
+          'active_height_mm': 29,
+          'active_width_mm': 67,
+          'busy_pin': 255,
+          'clk_pin': 0,
+          'color_scheme': 1,
+          'cs_pin': 255,
+          'data_pin': 0,
+          'dc_pin': 255,
+          'display_technology': 0,
+          'full_update_mC': 0,
+          'instance_number': 0,
+          'panel_ic_type': 0,
+          'partial_update_support': 0,
+          'pixel_height': 128,
+          'pixel_width': 296,
+          'reserved': '000000000000000000000000000000000000000000000000000000000000000000',
+          'reserved_pins': '00000000000000',
+          'reset_pin': 255,
+          'rotation': 0,
+          'tag_type': 0,
+          'transmission_modes': 1,
+        }),
+      ]),
+      'leds': list([
+      ]),
+      'loaded': False,
+      'manufacturer': dict({
+        'board_revision': 0,
+        'board_type': 1,
+        'manufacturer_id': 1,
+        'reserved': '000000000000000000000000000000000000',
+      }),
+      'minor_version': 0,
+      'power': dict({
+        'battery_capacity_mah': '000000',
+        'battery_sense_enable_pin': 255,
+        'battery_sense_flags': 0,
+        'battery_sense_pin': 255,
+        'capacity_estimator': 0,
+        'deep_sleep_current_ua': 0,
+        'deep_sleep_time_seconds': 0,
+        'power_mode': 0,
+        'reserved': '000000000000000000000000',
+        'sleep_flags': 0,
+        'sleep_timeout_ms': 0,
+        'tx_power': 0,
+        'voltage_scaling_factor': 0,
+      }),
+      'sensors': list([
+      ]),
+      'system': dict({
+        'communication_modes': 0,
+        'device_flags': 0,
+        'ic_type': 0,
+        'pwr_pin': 255,
+        'reserved': '0000000000000000000000000000000000',
+      }),
+      'version': 0,
+      'wifi_config': None,
+    }),
+    'firmware': dict({
+      'major': 1,
+      'minor': 2,
+      'sha': 'abc123',
+    }),
+    'is_flex': True,
+  })
+# ---
