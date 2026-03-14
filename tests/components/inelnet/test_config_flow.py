@@ -45,11 +45,11 @@ class TestParseChannels:
             parse_channels("1,a,3")
 
     def test_out_of_range_raises(self) -> None:
-        """Channel < 1 or > 16 raises ValueError."""
+        """Channel < 1 raises ValueError."""
         with pytest.raises(ValueError):
             parse_channels("0")
         with pytest.raises(ValueError):
-            parse_channels("17")
+            parse_channels("-1")
 
     def test_duplicate_raises(self) -> None:
         """Duplicate channel raises ValueError."""

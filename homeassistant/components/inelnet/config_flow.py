@@ -17,7 +17,7 @@ from .const import CONF_CHANNELS, DOMAIN
 
 
 def parse_channels(value: str) -> list[int]:
-    """Parse comma-separated channel string to list of ints 1-16."""
+    """Parse comma-separated channel string to list of positive ints."""
     if not value or not value.strip():
         raise ValueError("empty")
     parts = [p.strip() for p in value.split(",") if p.strip()]
@@ -27,7 +27,7 @@ def parse_channels(value: str) -> list[int]:
             ch = int(p)
         except ValueError as err:
             raise ValueError("invalid") from err
-        if ch < 1 or ch > 16:
+        if ch < 1:
             raise ValueError("out_of_range")
         if ch in channels:
             raise ValueError("duplicate")

@@ -5,7 +5,7 @@
     },
     "error": {
       "cannot_connect": "Cannot connect to the controller. Check IP and network.",
-      "invalid_channels": "Invalid channels. Enter numbers 1-16 comma-separated.",
+      "invalid_channels": "Invalid channels. Enter positive channel numbers comma-separated.",
       "invalid_host": "Invalid IP address or hostname."
     },
     "step": {
@@ -15,7 +15,7 @@
           "host": "IP address"
         },
         "data_description": {
-          "channels": "Channel numbers comma-separated (1-16).",
+          "channels": "Channel numbers comma-separated (positive integers).",
           "host": "e.g. 192.168.1.67"
         },
         "description": "Define all channels in this step. Enter the controller IP address and all channel numbers as a comma-separated list (e.g. 1 or 1,2,3). One device with cover and action buttons will be created per channel.",
