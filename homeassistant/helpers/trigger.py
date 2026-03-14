@@ -455,7 +455,7 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
 
 
 class EntityTargetTriggerBase(EntityTriggerBase):
-    """Trigger for entity value changes to a specific target value.
+    """Trigger for entity state changes to a specific state.
 
     Uses _get_tracked_value to extract the value, so it works for both
     state-based and attribute-based triggers depending on the DomainSpec.
@@ -464,7 +464,7 @@ class EntityTargetTriggerBase(EntityTriggerBase):
     _to_states: set[str]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the value has changed."""
+        """Check if the origin state is valid and the state has changed."""
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
@@ -475,7 +475,7 @@ class EntityTargetTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the current value matches the expected target."""
+        """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
 
 
@@ -486,31 +486,31 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
     _to_states: set[str]
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin value matches the expected ones."""
+        """Check if the origin state matches the expected ones."""
         if not super().is_valid_transition(from_state, to_state):
             return False
 
         return self._get_tracked_value(from_state) in self._from_states
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the current value matches the expected targets."""
+        """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
 
 
 class EntityOriginTriggerBase(EntityTriggerBase):
-    """Trigger for entity state changes from a specific value."""
+    """Trigger for entity state changes from a specific state."""
 
     _from_state: str
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin value matches the expected one and that the value changed."""
+        """Check if the origin state matches the expected one and that the state changed."""
         return bool(
             self._get_tracked_value(from_state) == self._from_state
             and self._get_tracked_value(to_state) != self._from_state
         )
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the current value is not the same as the expected origin."""
+        """Check if the new state is not the same as the expected origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
 
 
@@ -794,7 +794,7 @@ def make_entity_target_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     to_states: str | set[str],
 ) -> type[EntityTargetTriggerBase]:
-    """Create a trigger for entity value changes to specific target(s).
+    """Create a trigger for entity state changes to specific state(s).
 
     domain_specs can be a string (domain name) for simple state-based triggers,
     or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
@@ -807,7 +807,7 @@ def make_entity_target_trigger(
         to_states_set = to_states
 
     class CustomTrigger(EntityTargetTriggerBase):
-        """Trigger for entity value changes."""
+        """Trigger for entity state changes."""
 
         _domain_specs = specs
         _to_states = to_states_set
@@ -821,11 +821,15 @@ def make_entity_transition_trigger(
     from_states: set[str],
     to_states: set[str],
 ) -> type[EntityTransitionTriggerBase]:
-    """Create a trigger for entity value transitions between specific values."""
+    """Create a trigger for entity state changes between specific states.
+
+    domain_specs can be a string (domain name) for simple state-based triggers,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
+    """
     specs = _normalize_domain_specs(domain_specs)
 
     class CustomTrigger(EntityTransitionTriggerBase):
-        """Trigger for conditional entity value changes."""
+        """Trigger for conditional entity state changes."""
 
         _domain_specs = specs
         _from_states = from_states
@@ -839,11 +843,15 @@ def make_entity_origin_trigger(
     *,
     from_state: str,
 ) -> type[EntityOriginTriggerBase]:
-    """Create a trigger for entity value changes from a specific value."""
+    """Create a trigger for entity state changes from a specific state.
+
+    domain_specs can be a string (domain name) for simple state-based triggers,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
+    """
     specs = _normalize_domain_specs(domain_specs)
 
     class CustomTrigger(EntityOriginTriggerBase):
-        """Trigger for entity "from value" changes."""
+        """Trigger for entity "from state" changes."""
 
         _domain_specs = specs
         _from_state = from_state
@@ -854,10 +862,10 @@ def make_entity_origin_trigger(
 def make_entity_numerical_changed_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalChangedTriggerBase]:
-    """Create a trigger for numerical value change."""
+    """Create a trigger for numerical state value change."""
 
     class CustomTrigger(EntityNumericalChangedTriggerBase):
-        """Trigger for numerical value changes."""
+        """Trigger for numerical state value changes."""
 
         _domain_specs = domain_specs
 
@@ -867,10 +875,10 @@ def make_entity_numerical_changed_trigger(
 def make_entity_numerical_crossed_threshold_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalCrossedThresholdTriggerBase]:
-    """Create a trigger for numerical value crossing a threshold."""
+    """Create a trigger for numerical state value crossing a threshold."""
 
     class CustomTrigger(EntityNumericalCrossedThresholdTriggerBase):
-        """Trigger for numerical value crossing a threshold."""
+        """Trigger for numerical state value crossing a threshold."""
 
         _domain_specs = domain_specs
 
