@@ -1646,6 +1646,9 @@ pyDuotecno==2024.10.1
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
 
+# homeassistant.components.emby
+pyEmby==1.10
+
 # homeassistant.components.hikvision
 pyHik==0.4.2
 
