@@ -51,4 +51,6 @@ def test_device_info_is_none_when_device_absent() -> None:
 def test_device_info_cached_object_is_stable() -> None:
     """The same DeviceInfo object must be returned on repeated access (no re-build)."""
     entity = _make_entity(1)
-    assert entity._attr_device_info is entity._attr_device_info
+    first_device_info = entity._attr_device_info
+    second_device_info = entity._attr_device_info
+    assert first_device_info is second_device_info
