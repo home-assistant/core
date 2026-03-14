@@ -41,6 +41,7 @@ from tests.common import MockConfigEntry
 
 VOLUME_STEP = 10
 BROWSE_LIMIT = 10
+LMS_TIMEOUT = 5
 
 TEST_USE_HTTPS = False
 

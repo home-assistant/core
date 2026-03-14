@@ -33,8 +33,10 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from .const import (
     CONF_BROWSE_LIMIT,
     CONF_HTTPS,
+    CONF_LMS_TIMEOUT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
+    DEFAULT_LMS_TIMEOUT,
     DEFAULT_PORT,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
@@ -267,6 +269,12 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
             vol.Coerce(int),
         ),
+        vol.Required(CONF_LMS_TIMEOUT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=60, mode=NumberSelectorMode.SLIDER)
+            ),
+            vol.Coerce(float),
+        ),
     }
 )
 
@@ -292,6 +300,9 @@ class OptionsFlowHandler(OptionsFlow):
                     ),
                     CONF_VOLUME_STEP: self.config_entry.options.get(
                         CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                    ),
+                    CONF_LMS_TIMEOUT: self.config_entry.options.get(
+                        CONF_LMS_TIMEOUT, DEFAULT_LMS_TIMEOUT
                     ),
                 },
             ),
