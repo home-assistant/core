@@ -208,12 +208,12 @@ async def test_insights_no_door_id_ignored(
 
 
 @pytest.mark.parametrize(
-    ("result", "expected_event_type"),
+    ("result", "expected_event_type", "expected_result_attr"),
     [
-        ("ACCESS", "access_granted"),
-        ("BLOCKED", "access_denied"),
-        ("TIMEOUT", "access_denied"),
-        ("", "access_denied"),
+        ("ACCESS", "access_granted", "ACCESS"),
+        ("BLOCKED", "access_denied", "BLOCKED"),
+        ("TIMEOUT", "access_denied", "TIMEOUT"),
+        ("", "access_denied", None),
     ],
 )
 @pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
@@ -223,6 +223,7 @@ async def test_access_event_result_mapping(
     mock_client: MagicMock,
     result: str,
     expected_event_type: str,
+    expected_result_attr: str | None,
 ) -> None:
     """Test result-to-event-type mapping with minimal attributes."""
     handlers = _get_ws_handlers(mock_client)
@@ -249,10 +250,7 @@ async def test_access_event_result_mapping(
     assert state.attributes["event_type"] == expected_event_type
     assert "actor" not in state.attributes
     assert "authentication" not in state.attributes
-    if result:
-        assert state.attributes["result"] == result
-    else:
-        assert "result" not in state.attributes
+    assert state.attributes.get("result") == expected_result_attr
     assert state.state == "2025-01-01T00:00:00.000+00:00"
 
 
