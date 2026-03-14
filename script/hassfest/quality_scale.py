@@ -938,7 +938,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "telnet",
     "temper",
     "template",
-    "tesla_fleet",
     "tesla_wall_connector",
     "thermobeacon",
     "thermopro",
