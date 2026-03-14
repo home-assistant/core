@@ -10,7 +10,11 @@ from inelnet_api import InelnetChannel
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -38,9 +42,18 @@ def parse_channels(value: str) -> list[int]:
 
 def _is_valid_hostname(host: str) -> bool:
     """Validate hostname (not IP). Rejects dotted-quad that failed as IP (e.g. 256.1.1.1)."""
-    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+    if re.fullmatch(r"\d{1,3}(?:\.\d{1,3}){3}", host):
         return False
-    return bool(re.match(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}$", host))
+    if len(host) > 253:
+        return False
+    label_re = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+    labels = host.split(".")
+    if not labels or any(not lb for lb in labels):
+        return False
+    for label in labels:
+        if len(label) > 63 or not label_re.fullmatch(label):
+            return False
+    return True
 
 
 def is_valid_host(host: str) -> bool:
@@ -85,8 +98,8 @@ class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     client = InelnetChannel(host, channels[0])
                     try:
                         if await client.ping(session=session):
-                            unique_id = f"{host}-{','.join(str(c) for c in channels)}"
-                            await self.async_set_unique_id(unique_id)
+                            self._async_abort_entries_match({CONF_HOST: host})
+                            await self.async_set_unique_id(host)
                             self._abort_if_unique_id_configured()
 
                             return self.async_create_entry(
@@ -98,13 +111,19 @@ class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 },
                             )
                         errors["base"] = "cannot_connect"
-                    except Exception:  # noqa: BLE001
+                    except TimeoutError, OSError:
                         errors["base"] = "cannot_connect"
 
+        host_default = ""
+        channels_default = "1"
+        if user_input is not None:
+            host_default = (user_input.get(CONF_HOST) or "").strip()
+            ch_in = (user_input.get(CONF_CHANNELS) or "").strip()
+            channels_default = ch_in or "1"
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default="192.168.1.67"): str,
-                vol.Required(CONF_CHANNELS, default="1"): str,
+                vol.Required(CONF_HOST, default=host_default): str,
+                vol.Required(CONF_CHANNELS, default=channels_default): str,
             }
         )
 
@@ -112,4 +131,59 @@ class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
+        )
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> InelnetOptionsFlowHandler:
+        """Return options flow handler for editing channels."""
+        return InelnetOptionsFlowHandler()
+
+
+class InelnetOptionsFlowHandler(OptionsFlowWithReload):
+    """Options flow to add or remove channels for an INELNET controller."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit channels for this controller."""
+        if user_input is not None:
+            try:
+                channels = parse_channels(user_input[CONF_CHANNELS])
+            except ValueError:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_CHANNELS,
+                                default=",".join(
+                                    str(c)
+                                    for c in self.config_entry.data.get(
+                                        CONF_CHANNELS, [1]
+                                    )
+                                ),
+                            ): str,
+                        }
+                    ),
+                    errors={"base": "invalid_channels"},
+                )
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_CHANNELS: channels},
+            )
+            return self.async_create_entry(title="", data={})
+
+        current = self.config_entry.data.get(CONF_CHANNELS, [1])
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CHANNELS,
+                        default=",".join(str(c) for c in current),
+                    ): str,
+                }
+            ),
         )

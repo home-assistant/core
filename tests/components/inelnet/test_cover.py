@@ -22,7 +22,7 @@ def cover_config_entry() -> MockConfigEntry:
         title="INELNET test",
         data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1, 2]},
         entry_id="test-cover-entry",
-        unique_id="192.168.1.67-1,2",
+        unique_id="192.168.1.67",
     )
 
 

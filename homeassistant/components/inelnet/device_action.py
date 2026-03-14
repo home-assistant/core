@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from inelnet_api import InelnetChannel
 import voluptuous as vol
@@ -13,6 +13,7 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from . import InelnetConfigEntry
 from .const import ACTION_DOWN_SHORT, ACTION_PROGRAM, ACTION_UP_SHORT, DOMAIN, Action
 
 ACTION_TYPES = {
@@ -39,7 +40,7 @@ def _action_code(action_type: str) -> Action:
 
 def _device_to_client_and_channel(
     hass: HomeAssistant, device_id: str
-) -> tuple[Any, int] | tuple[None, None]:
+) -> tuple[InelnetChannel, int] | tuple[None, None]:
     """Resolve device_id to (client, channel). Returns (None, None) if not our device."""
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get(device_id)
@@ -57,15 +58,13 @@ def _device_to_client_and_channel(
             entry = hass.config_entries.async_get_entry(entry_id)
             if not entry or entry.domain != DOMAIN:
                 continue
-            if not getattr(entry, "runtime_data", None):
+            if not hasattr(entry, "runtime_data") or entry.runtime_data is None:
                 continue
-            data = entry.runtime_data
-            clients = getattr(data, "clients", None)
-            if clients and channel in clients:
-                return clients[channel], channel
-            host = getattr(data, "host", None)
-            if host:
-                return InelnetChannel(host, channel), channel
+            data = cast(InelnetConfigEntry, entry).runtime_data
+            if data.clients and channel in data.clients:
+                return data.clients[channel], channel
+            if data.host and data.channels and channel in data.channels:
+                return InelnetChannel(data.host, channel), channel
     return None, None
 
 

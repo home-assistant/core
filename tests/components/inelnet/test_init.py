@@ -26,37 +26,41 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="INELNET 192.168.1.67 (ch 1,2)",
         data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: [1, 2]},
-        unique_id="192.168.1.67-1,2",
+        unique_id="192.168.1.67",
     )
 
 
 async def test_setup_entry_stores_runtime_data(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test async_setup_entry sets entry.runtime_data with clients and forwards to platforms."""
+    """Test async_setup_entry sets entry.runtime_data with one client per channel."""
+
+    def _make_client(host: str, channel: int) -> MagicMock:
+        client = MagicMock()
+        client.ping = AsyncMock(return_value=True)
+        return client
+
     with (
         patch(
             "homeassistant.components.inelnet.InelnetChannel",
+            side_effect=_make_client,
         ) as MockChannel,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
             new_callable=AsyncMock,
         ),
     ):
-        mock_client = MagicMock()
-        mock_client.ping = AsyncMock(return_value=True)
-        MockChannel.return_value = mock_client
-
         result = await async_setup_entry(hass, mock_config_entry)
 
     assert result is True
     assert mock_config_entry.runtime_data is not None
     assert mock_config_entry.runtime_data.host == "192.168.1.67"
     assert mock_config_entry.runtime_data.channels == [1, 2]
-    assert mock_config_entry.runtime_data.clients == {
-        1: mock_client,
-        2: mock_client,
-    }
+    clients = mock_config_entry.runtime_data.clients
+    assert len(clients) == 2
+    assert clients[1] is not clients[2]
+    MockChannel.assert_any_call("192.168.1.67", 1)
+    MockChannel.assert_any_call("192.168.1.67", 2)
 
 
 async def test_setup_entry_raises_config_entry_error_when_channels_empty(
@@ -67,7 +71,7 @@ async def test_setup_entry_raises_config_entry_error_when_channels_empty(
         domain=DOMAIN,
         title="INELNET empty",
         data={CONF_HOST: "192.168.1.67", CONF_CHANNELS: []},
-        unique_id="192.168.1.67-",
+        unique_id="192.168.1.67",
     )
     entry.add_to_hass(hass)
     with pytest.raises(ConfigEntryError, match="No channels"):
