@@ -3837,6 +3837,215 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.validate_statistics.assert_called_once_with(hass)
 
 
+async def test_bad_platform_does_not_block_other_platforms(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a crashing platform callback doesn't block other platforms.
+
+    Without per-platform error isolation the exception from bad_domain would
+    propagate up and prevent good_domain from recording any statistics.
+    """
+    good_meta = {
+        "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "name": None,
+        "statistic_id": "good_domain:good_entity",
+        "unit_class": None,
+        "unit_of_measurement": "dogs",
+    }
+
+    zero = get_start_time(dt_util.utcnow())
+
+    def _good_compile_statistics(
+        _hass: Any, session: Any, start: Any, _end: Any
+    ) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics(
+            [{"meta": good_meta, "stat": {"start": start}}],
+            get_metadata_with_session(
+                recorder.get_instance(_hass),
+                session,
+                statistic_ids={"good_domain:good_entity"},
+            ),
+        )
+
+    def _bad_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        raise RuntimeError("Simulated integration crash")
+
+    good_platform = Mock(
+        compile_statistics=Mock(wraps=_good_compile_statistics),
+    )
+    bad_platform = Mock(
+        compile_statistics=Mock(wraps=_bad_compile_statistics),
+    )
+
+    mock_platform(hass, "bad_domain.recorder", bad_platform)
+    assert await async_setup_component(hass, "bad_domain", {})
+    mock_platform(hass, "good_domain.recorder", good_platform)
+    assert await async_setup_component(hass, "good_domain", {})
+    await async_recorder_block_till_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # The good platform should still have recorded statistics
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "good_domain:good_entity" in stats
+
+    # The bad platform should have been caught and logged
+    assert "Error compiling statistics for platform bad_domain; skipping" in caplog.text
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+async def test_bad_entity_does_not_block_other_entities(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a bad entity in the stats loop doesn't block other entities.
+
+    Without per-entity error isolation, a single bad entity would crash
+    the entire statistics insertion loop, losing data for every entity.
+    We simulate this by making _insert_statistics raise for one entity.
+    """
+    zero = get_start_time(dt_util.utcnow())
+
+    good_meta = {
+        "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "name": None,
+        "statistic_id": "some_domain:good_entity",
+        "unit_class": None,
+        "unit_of_measurement": "dogs",
+    }
+    bad_meta = {
+        "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "name": None,
+        "statistic_id": "some_domain:bad_entity",
+        "unit_class": None,
+        "unit_of_measurement": "cats",
+    }
+
+    def _mock_compile_statistics(
+        _hass: Any, session: Any, start: Any, _end: Any
+    ) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics(
+            [
+                {"meta": bad_meta, "stat": {"start": start}},
+                {"meta": good_meta, "stat": {"start": start}},
+            ],
+            get_metadata_with_session(
+                recorder.get_instance(_hass),
+                session,
+                statistic_ids={
+                    "some_domain:good_entity",
+                    "some_domain:bad_entity",
+                },
+            ),
+        )
+
+    mock_compile_platform = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+    )
+
+    mock_platform(hass, "some_domain.recorder", mock_compile_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    await async_recorder_block_till_done(hass)
+
+    real_insert = statistics._insert_statistics
+    call_count = 0
+
+    def _insert_statistics_that_fails_for_first(
+        session, table, metadata_id, stat, now_timestamp
+    ):
+        nonlocal call_count
+        call_count += 1
+        # The bad entity is first in the platform_stats list, so fail on first call
+        if call_count == 1:
+            raise ValueError("Simulated bad entity data")
+        return real_insert(session, table, metadata_id, stat, now_timestamp)
+
+    with patch(
+        "homeassistant.components.recorder.statistics._insert_statistics",
+        side_effect=_insert_statistics_that_fails_for_first,
+    ):
+        do_adhoc_statistics(hass, start=zero)
+        await async_wait_recording_done(hass)
+
+    # The good entity should still have statistics recorded
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "some_domain:good_entity" in stats
+
+    # The bad entity should have been caught per-entity
+    assert (
+        "Error while processing statistics for some_domain:bad_entity; skipping"
+        in caplog.text
+    )
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+async def test_bad_update_issues_does_not_crash_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a crashing update_statistics_issues callback doesn't crash the pipeline.
+
+    Without error isolation, a platform whose update_statistics_issues raises
+    would crash the entire _compile_statistics call at minute=50.
+    """
+    good_meta = {
+        "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
+        "name": None,
+        "statistic_id": "good_domain:good_entity",
+        "unit_class": None,
+        "unit_of_measurement": "dogs",
+    }
+
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50)
+
+    def _good_compile_statistics(
+        _hass: Any, session: Any, start: Any, _end: Any
+    ) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics(
+            [{"meta": good_meta, "stat": {"start": start}}],
+            get_metadata_with_session(
+                recorder.get_instance(_hass),
+                session,
+                statistic_ids={"good_domain:good_entity"},
+            ),
+        )
+
+    def _bad_update_issues(*args: Any) -> None:
+        raise RuntimeError("Simulated update_issues crash")
+
+    good_platform = Mock(
+        compile_statistics=Mock(wraps=_good_compile_statistics),
+        update_statistics_issues=Mock(wraps=_bad_update_issues),
+    )
+
+    mock_platform(hass, "good_domain.recorder", good_platform)
+    assert await async_setup_component(hass, "good_domain", {})
+    await async_recorder_block_till_done(hass)
+
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # Statistics should still have been recorded despite update_issues crash
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert "good_domain:good_entity" in stats
+
+    # The crash should have been caught and logged
+    assert (
+        "Error updating statistics issues for platform good_domain; skipping"
+        in caplog.text
+    )
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
 async def test_recorder_platform_without_statistics(
     hass: HomeAssistant,
     setup_recorder: None,
