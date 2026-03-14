@@ -47,6 +47,7 @@ from .entity import (
     TessieEntity,
     TessieWallConnectorEntity,
 )
+from .helpers import charge_state_to_option
 from .models import TessieEnergyData, TessieVehicleData
 
 
@@ -71,7 +72,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         options=list(TessieChargeStates.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda value: TessieChargeStates[cast(str, value)],
+        value_fn=charge_state_to_option,
     ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
