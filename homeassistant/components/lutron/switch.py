@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pylutron import Button, Keypad, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import LutronConfigEntry
+from .const import DOMAIN
 from .entity import LutronDevice, LutronKeypad
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -33,9 +38,29 @@ async def async_setup_entry(
         entities.append(LutronSwitch(area_name, device, entry_data.client))
 
     # Add the indicator LEDs for scenes (keypad buttons)
+    led_switches = []
     for area_name, keypad, scene, led in entry_data.scenes:
         if led is not None:
-            entities.append(LutronLed(area_name, keypad, scene, led, entry_data.client))
+            led_switches.append(
+                LutronLed(area_name, keypad, scene, led, entry_data.client)
+            )
+
+    if led_switches:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_led_switch",
+            breaks_in_ha_version="2026.9.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_led_switch",
+        )
+        _LOGGER.warning(
+            "The Lutron Keypad LED switch entity is deprecated and will be removed in "
+            "Home Assistant 2026.9.0. Please use the new select entity instead"
+        )
+        entities.extend(led_switches)
+
     async_add_entities(entities, True)
 
 
@@ -71,6 +96,7 @@ class LutronLed(LutronKeypad, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
     _lutron_device: Led
+    _attr_entity_registry_visible_default = False
 
     def __init__(
         self,
@@ -87,11 +113,11 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""
-        self._lutron_device.state = True
+        self._lutron_device.state = Led.LED_ON
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the LED off."""
-        self._lutron_device.state = False
+        self._lutron_device.state = Led.LED_OFF
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -108,4 +134,4 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def _update_attrs(self) -> None:
         """Update the state attributes."""
-        self._attr_is_on = self._lutron_device.last_state
+        self._attr_is_on = self._lutron_device.last_state != Led.LED_OFF

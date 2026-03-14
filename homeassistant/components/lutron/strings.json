@@ -34,6 +34,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_led_switch": {
+      "description": "The switch entity for Lutron Keypad LEDs is deprecated and will be removed in Home Assistant 2026.9.0.\n\nPlease update your automations and dashboards to use the new `select` entity for Keypad LEDs, which supports multiple states like flashing, and remove the switch entity.",
+      "title": "Lutron Keypad LED Switch is deprecated"
+    }
+  },
   "options": {
     "step": {
       "init": {

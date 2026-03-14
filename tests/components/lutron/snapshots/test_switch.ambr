@@ -14,7 +14,7 @@
     'entity_category': None,
     'entity_id': 'switch.test_keypad_test_button',
     'has_entity_name': True,
-    'hidden_by': None,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
     'icon': None,
     'id': <ANY>,
     'labels': set({
