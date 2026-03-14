@@ -933,6 +933,83 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
         await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
 
 
+async def test_timer_manipulate_by_id(hass: HomeAssistant, init_components) -> None:
+    """Test pausing and unpausing a running timer."""
+    device_id = "test_device"
+
+    started_event = asyncio.Event()
+    updated_event = asyncio.Event()
+
+    expected_active = True
+
+    @callback
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        if event_type == TimerEventType.STARTED:
+            started_event.set()
+        elif event_type == TimerEventType.UPDATED:
+            assert timer.is_active == expected_active
+            updated_event.set()
+
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"minutes": {"value": 5}},
+        device_id=device_id,
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await started_event.wait()
+
+    # Get the timer ID
+    timer_manager = hass.data["intent.timer"]
+    timers = list(timer_manager.timers.keys())
+    assert len(timers) == 1
+    timer_id = timers[0]
+
+    # Pausing will fail with wrong id
+    with pytest.raises(TimerNotFoundError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_PAUSE_TIMER, {"id": {"value": "wrong-id"}}
+        )
+
+    # Pause the timer
+    expected_active = False
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {"id": {"value": timer_id}}
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+
+    # Unpause the timer
+    updated_event.clear()
+    expected_active = True
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_UNPAUSE_TIMER, {"id": {"value": timer_id}}
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    async with asyncio.timeout(1):
+        await updated_event.wait()
+
+    # Unpausing again will fail because there are no paused timers
+    with pytest.raises(TimerNotFoundError):
+        await intent.async_handle(
+            hass, "test", intent.INTENT_UNPAUSE_TIMER, {"id": {"value": timer_id}}
+        )
+
+    # Cancel the timer by id
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_CANCEL_TIMER, {"id": {"value": timer_id}}
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+
 async def test_timer_not_found(hass: HomeAssistant) -> None:
     """Test invalid timer ids raise TimerNotFoundError."""
     timer_manager = TimerManager(hass)
