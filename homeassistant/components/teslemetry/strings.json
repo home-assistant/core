@@ -273,6 +273,9 @@
       }
     },
     "calendar": {
+      "charge_schedule_data_charge_schedules": {
+        "name": "Charging schedule"
+      },
       "tariff_content_v2": {
         "name": "Buy tariff"
       },

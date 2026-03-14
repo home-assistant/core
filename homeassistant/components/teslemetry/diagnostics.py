@@ -22,6 +22,8 @@ VEHICLE_REDACT = [
     "drive_state_longitude",
     "drive_state_native_latitude",
     "drive_state_native_longitude",
+    "latitude",
+    "longitude",
 ]
 
 ENERGY_LIVE_REDACT = ["vin"]

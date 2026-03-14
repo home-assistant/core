@@ -21,10 +21,16 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import assert_entities, setup_platform
-from .const import SITE_INFO, SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
+from .const import (
+    SITE_INFO,
+    SITE_INFO_MULTI_SEASON,
+    SITE_INFO_WEEK_CROSSING,
+    VEHICLE_DATA,
+)
 
 ENTITY_BUY = "calendar.energy_site_buy_tariff"
 ENTITY_SELL = "calendar.energy_site_sell_tariff"
+ENTITY_CHARGE = "calendar.test_charging_schedule"
 
 
 @pytest.fixture
@@ -102,7 +108,7 @@ async def test_calendar(
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
 ) -> None:
-    """Tests that the calendar entity is correct."""
+    """Test that the calendar entity is correct."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
@@ -133,7 +139,7 @@ async def test_calendar_events(
     entity_id: str,
     time_tuple: tuple,
 ) -> None:
-    """Tests that the energy tariff calendar entity events are correct."""
+    """Test that the energy tariff calendar entity events are correct."""
     tz = dt_util.get_default_time_zone()
     freezer.move_to(datetime(*time_tuple, tzinfo=tz))
 
@@ -399,3 +405,194 @@ async def test_calendar_invalid_price(
     assert state
     assert state.state == "on"
     assert "Unknown Price" in state.attributes["message"]
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "calendar.test_charging_schedule",
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_events(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    entity_id: str,
+) -> None:
+    """Test that the charge schedule calendar events are correct."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert result == snapshot()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_no_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test charge schedule with no charge_schedule_data returns empty."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    vehicle_data = deepcopy(VEHICLE_DATA)
+    del vehicle_data["response"]["charge_schedule_data"]
+    mock_vehicle_data.return_value = vehicle_data
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_CHARGE)
+    assert state
+    assert state.state == "off"
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_CHARGE],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert result[ENTITY_CHARGE]["events"] == []
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_days_of_week_zero(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test charge schedule skips schedules with days_of_week=0."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    vehicle_data = deepcopy(VEHICLE_DATA)
+    vehicle_data["response"]["charge_schedule_data"]["charge_schedules"] = [
+        {
+            "id": 1,
+            "name": "",
+            "days_of_week": 0,
+            "start_enabled": True,
+            "start_time": 540,
+            "end_enabled": True,
+            "end_time": 960,
+            "one_time": False,
+            "enabled": True,
+            "latitude": 0,
+            "longitude": 0,
+        }
+    ]
+    mock_vehicle_data.return_value = vehicle_data
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_CHARGE)
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_custom_name(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test charge schedule uses custom name when provided."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    vehicle_data = deepcopy(VEHICLE_DATA)
+    vehicle_data["response"]["charge_schedule_data"]["charge_schedules"] = [
+        {
+            "id": 1,
+            "name": "Morning Charge",
+            "days_of_week": 127,
+            "start_enabled": True,
+            "start_time": 540,
+            "end_enabled": True,
+            "end_time": 960,
+            "one_time": False,
+            "enabled": True,
+            "latitude": 0,
+            "longitude": 0,
+        }
+    ]
+    mock_vehicle_data.return_value = vehicle_data
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_CHARGE)
+    assert state
+    assert state.state == "on"
+    assert state.attributes["message"] == "Morning Charge"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_charge_schedule_missing_id(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test charge schedule handles missing id field gracefully."""
+    tz = dt_util.get_default_time_zone()
+    freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
+
+    vehicle_data = deepcopy(VEHICLE_DATA)
+    vehicle_data["response"]["charge_schedule_data"]["charge_schedules"] = [
+        {
+            "name": "",
+            "days_of_week": 127,
+            "start_enabled": True,
+            "start_time": 540,
+            "end_enabled": True,
+            "end_time": 960,
+            "one_time": False,
+            "enabled": True,
+            "latitude": 0,
+            "longitude": 0,
+        }
+    ]
+    mock_vehicle_data.return_value = vehicle_data
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_CHARGE)
+    assert state
+    assert state.state == "on"
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_CHARGE],
+            EVENT_START_DATETIME: dt_util.parse_datetime("2024-01-01T00:00:00Z"),
+            EVENT_END_DATETIME: dt_util.parse_datetime("2024-01-07T00:00:00Z"),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[ENTITY_CHARGE]["events"]
+    assert len(events) > 0
