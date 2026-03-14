@@ -55,10 +55,10 @@ from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
-    make_entity_numerical_changed_trigger,
-    make_entity_numerical_crossed_threshold_trigger,
-    make_entity_origin_trigger,
-    make_entity_target_trigger,
+    make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_crossed_threshold_trigger,
+    make_entity_origin_state_trigger,
+    make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -1255,7 +1255,7 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_changed_trigger(
+            "test_trigger": make_entity_numerical_state_changed_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
@@ -1283,7 +1283,7 @@ async def test_numerical_state_attribute_changed_error_handling(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "attribute_changed": make_entity_numerical_changed_trigger(
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
@@ -1565,7 +1565,7 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_crossed_threshold_trigger(
+            "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
                 {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
@@ -1736,7 +1736,7 @@ async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_make_entity_target_trigger(
+async def test_make_entity_target_state_trigger(
     hass: HomeAssistant,
     domain_specs: Mapping[str, DomainSpec],
     to_states: set[str],
@@ -1744,8 +1744,8 @@ async def test_make_entity_target_trigger(
     to_state: State,
     wrong_value_state: State,
 ) -> None:
-    """Test make_entity_target_trigger with state and attribute-based DomainSpec."""
-    trigger_cls = make_entity_target_trigger(domain_specs, to_states=to_states)
+    """Test make_entity_target_state_trigger with state and attribute-based DomainSpec."""
+    trigger_cls = make_entity_target_state_trigger(domain_specs, to_states=to_states)
 
     config = TriggerConfig(key="light.turned_on", target={"entity_id": "light.bed"})
     trig = trigger_cls(hass, config)
@@ -1841,15 +1841,15 @@ async def test_make_entity_transition_trigger(
         ),
     ],
 )
-async def test_make_entity_origin_trigger(
+async def test_make_entity_origin_state_trigger(
     hass: HomeAssistant,
     domain_specs: Mapping[str, DomainSpec],
     from_state: State,
     to_state: State,
     wrong_from: State,
 ) -> None:
-    """Test make_entity_origin_trigger with state and attribute-based DomainSpec."""
-    trigger_cls = make_entity_origin_trigger(domain_specs, from_state="idle")
+    """Test make_entity_origin_state_trigger with state and attribute-based DomainSpec."""
+    trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state="idle")
 
     config = TriggerConfig(
         key="climate.started_heating", target={"entity_id": "climate.living"}

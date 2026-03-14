@@ -6,7 +6,7 @@ from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     EntityTransitionTriggerBase,
     Trigger,
-    make_entity_target_trigger,
+    make_entity_target_state_trigger,
 )
 
 from .const import ATTR_NEXT_EVENT, DOMAIN
@@ -34,7 +34,7 @@ class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "turned_on": ScheduleBackToBackTrigger,
-    "turned_off": make_entity_target_trigger(DOMAIN, STATE_OFF),
+    "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
 }
 
 

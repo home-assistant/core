@@ -19,8 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     Trigger,
-    make_entity_numerical_changed_trigger,
-    make_entity_numerical_crossed_threshold_trigger,
+    make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_crossed_threshold_trigger,
 )
 
 HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
@@ -39,8 +39,8 @@ HUMIDITY_DOMAIN_SPECS: dict[str, NumericalDomainSpec] = {
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "changed": make_entity_numerical_changed_trigger(HUMIDITY_DOMAIN_SPECS),
-    "crossed_threshold": make_entity_numerical_crossed_threshold_trigger(
+    "changed": make_entity_numerical_state_changed_trigger(HUMIDITY_DOMAIN_SPECS),
+    "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
         HUMIDITY_DOMAIN_SPECS
     ),
 }

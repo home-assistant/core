@@ -451,7 +451,7 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
         )
 
 
-class EntityTargetTriggerBase(EntityTriggerBase):
+class EntityTargetStateTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes to a specific state.
 
     Uses _get_tracked_value to extract the value, so it works for both
@@ -498,7 +498,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
         return self._get_tracked_value(state) in self._to_states
 
 
-class EntityOriginTriggerBase(EntityTriggerBase):
+class EntityOriginStateTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes from a specific state."""
 
     _from_state: str
@@ -593,7 +593,7 @@ def _get_numerical_value(
     return entity_or_float
 
 
-class EntityNumericalTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_tracked_value(self, state: State) -> Any:
@@ -611,7 +611,7 @@ class EntityNumericalTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
         return float
 
 
-class EntityNumericalChangedTriggerBase(EntityNumericalTriggerBase):
+class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes."""
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
@@ -715,7 +715,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 )
 
 
-class EntityNumericalCrossedThresholdTriggerBase(EntityNumericalTriggerBase):
+class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
@@ -791,10 +791,10 @@ def _normalize_domain_specs(
     return domain_specs
 
 
-def make_entity_target_trigger(
+def make_entity_target_state_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     to_states: str | set[str],
-) -> type[EntityTargetTriggerBase]:
+) -> type[EntityTargetStateTriggerBase]:
     """Create a trigger for entity state changes to specific state(s).
 
     domain_specs can be a string (domain name) for simple state-based triggers,
@@ -807,7 +807,7 @@ def make_entity_target_trigger(
     else:
         to_states_set = to_states
 
-    class CustomTrigger(EntityTargetTriggerBase):
+    class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
         _domain_specs = specs
@@ -839,11 +839,11 @@ def make_entity_transition_trigger(
     return CustomTrigger
 
 
-def make_entity_origin_trigger(
+def make_entity_origin_state_trigger(
     domain_specs: Mapping[str, DomainSpec] | str,
     *,
     from_state: str,
-) -> type[EntityOriginTriggerBase]:
+) -> type[EntityOriginStateTriggerBase]:
     """Create a trigger for entity state changes from a specific state.
 
     domain_specs can be a string (domain name) for simple state-based triggers,
@@ -851,7 +851,7 @@ def make_entity_origin_trigger(
     """
     specs = _normalize_domain_specs(domain_specs)
 
-    class CustomTrigger(EntityOriginTriggerBase):
+    class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
         _domain_specs = specs
@@ -860,12 +860,12 @@ def make_entity_origin_trigger(
     return CustomTrigger
 
 
-def make_entity_numerical_changed_trigger(
+def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
-) -> type[EntityNumericalChangedTriggerBase]:
+) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
-    class CustomTrigger(EntityNumericalChangedTriggerBase):
+    class CustomTrigger(EntityNumericalStateChangedTriggerBase):
         """Trigger for numerical state value changes."""
 
         _domain_specs = domain_specs
@@ -873,12 +873,12 @@ def make_entity_numerical_changed_trigger(
     return CustomTrigger
 
 
-def make_entity_numerical_crossed_threshold_trigger(
+def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
-) -> type[EntityNumericalCrossedThresholdTriggerBase]:
+) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
-    class CustomTrigger(EntityNumericalCrossedThresholdTriggerBase):
+    class CustomTrigger(EntityNumericalStateCrossedThresholdTriggerBase):
         """Trigger for numerical state value crossing a threshold."""
 
         _domain_specs = domain_specs
