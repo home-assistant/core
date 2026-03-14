@@ -447,8 +447,37 @@ async def test_function_exception(
         ),
     )
 
+async def test_assist_timer_schema_sanitized_before_anthropic_call(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test timer tool schema is sanitized before sending to Anthropic."""
+    assert await async_setup_component(hass, "intent", {})
 
-async def test_assist_api_tools_conversion(
+    mock_create_stream.return_value = [create_content_block(0, ["ok"])]
+
+    await conversation.async_converse(
+        hass,
+        "set a timer for 10 minutes",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    tools = mock_create_stream.mock_calls[0][2]["tools"]
+    timer_tool = next(
+        (tool for tool in tools if tool.get("name") == "HassStartTimer"),
+        None,
+    )
+    assert timer_tool is not None
+    schema = timer_tool["input_schema"]
+    assert "anyOf" not in schema
+    assert schema["type"] == "object"
+
+
+async def test_assist_api_tools_conversion
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,

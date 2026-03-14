@@ -435,8 +435,39 @@ async def test_function_call_invalid(
             agent_id="conversation.openai_conversation",
         )
 
+async def test_assist_timer_schema_sanitized_before_openai_call(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream,
+) -> None:
+    """Test timer tool schema is sanitized before sending to OpenAI."""
+    assert await async_setup_component(hass, "intent", {})
 
-async def test_assist_api_tools_conversion(
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text="ok", output_index=0)
+    ]
+
+    await conversation.async_converse(
+        hass,
+        "set a timer for 10 minutes",
+        None,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    tools = mock_create_stream.mock_calls[0][2]["tools"]
+    timer_tool = next(
+        (tool for tool in tools if tool.get("name") == "HassStartTimer"),
+        None,
+    )
+    assert timer_tool is not None
+    schema = timer_tool["parameters"]
+    assert "anyOf" not in schema
+    assert schema["type"] == "object"
+
+
+async def test_assist_api_tools_conversion
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,

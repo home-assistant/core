@@ -64,8 +64,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.llm import sanitize_tool_schema
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
+
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -157,7 +159,9 @@ def _format_tool(
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=sanitize_tool_schema(
+            convert(tool.parameters, custom_serializer=custom_serializer)
+        ),
         description=tool.description,
         strict=False,
     )
