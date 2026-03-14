@@ -6539,6 +6539,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "specialized_turbo": {
+      "name": "Specialized Turbo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "speedtestdotnet": {
       "name": "Speedtest.net",
       "integration_type": "service",

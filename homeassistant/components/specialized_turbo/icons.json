@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_health": {
+        "default": "mdi:battery-heart-variant"
+      },
+      "battery_charge_cycles": {
+        "default": "mdi:battery-sync"
+      },
+      "rider_power": {
+        "default": "mdi:bike"
+      },
+      "motor_power": {
+        "default": "mdi:engine"
+      },
+      "cadence": {
+        "default": "mdi:rotate-right"
+      },
+      "odometer": {
+        "default": "mdi:counter"
+      },
+      "assist_level": {
+        "default": "mdi:lightning-bolt"
+      },
+      "assist_eco_pct": {
+        "default": "mdi:leaf"
+      },
+      "assist_trail_pct": {
+        "default": "mdi:pine-tree"
+      },
+      "assist_turbo_pct": {
+        "default": "mdi:rocket-launch"
+      }
+    }
+  }
+}
