@@ -70,7 +70,6 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/GClunies/noaa_coops/pull/69
         "noaa-coops": {"pandas"}
     },
-    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "smarty": {
         # Current has an upper bound on major >=3.11.0,<4.0.0
         "pysmarty2": {"pymodbus"}
@@ -79,6 +78,7 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },
