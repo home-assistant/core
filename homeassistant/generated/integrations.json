@@ -647,6 +647,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "autoskope": {
+      "name": "Autoskope",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "avion": {
       "name": "Avi-on",
       "integration_type": "hub",
@@ -7244,6 +7250,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "trmnl": {
+      "name": "TRMNL",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "tuya": {
       "name": "Tuya",
       "integration_type": "hub",
@@ -7324,6 +7336,12 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "UniFi Network"
+        },
+        "unifi_access": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "UniFi Access"
         },
         "unifi_direct": {
           "integration_type": "hub",
