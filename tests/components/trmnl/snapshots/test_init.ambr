@@ -8,7 +8,7 @@
     'connections': set({
       tuple(
         'mac',
-        'b0:a6:04:02:eb:78',
+        'b0:a6:04:aa:bb:cc',
       ),
     }),
     'disabled_by': None,
