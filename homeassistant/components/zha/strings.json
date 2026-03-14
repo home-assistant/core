@@ -1298,7 +1298,7 @@
         "name": "Speed"
       },
       "start_up_on_off": {
-        "name": "Start-up behavior"
+        "name": "Power-on behavior"
       },
       "status_indication": {
         "name": "Status indication"
