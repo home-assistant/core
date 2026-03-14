@@ -824,6 +824,9 @@ discogs-client==2.3.0
 # homeassistant.components.steamist
 discovery30303==0.3.3
 
+# homeassistant.components.disneyland_paris
+dlpwait==1.0.1
+
 # homeassistant.components.dremel_3d_printer
 dremel3dpy==2.1.1
 

@@ -1,0 +1,12 @@
+{
+  "domain": "disneyland_paris",
+  "name": "Disneyland Paris",
+  "codeowners": ["@glenndehaan"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/disneyland_paris",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["dlpwait==1.0.1"],
+  "single_config_entry": true
+}
