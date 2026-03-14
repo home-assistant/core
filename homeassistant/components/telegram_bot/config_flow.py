@@ -645,7 +645,7 @@ async def _get_most_recent_chat(
 ) -> tuple[int, str] | None:
     """Get the most recent chat ID and name.
 
-    For broadcast bot, this is retrieved using get_updates() to find the most recent message receivedd.
+    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
     For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
     """
 

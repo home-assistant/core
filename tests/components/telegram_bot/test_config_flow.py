@@ -647,7 +647,7 @@ async def test_subentry_flow_polling_bot(
     mock_polling_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test subentry flow with webhook bot."""
+    """Test subentry flow with polling bot."""
 
     mock_polling_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
@@ -673,7 +673,7 @@ async def test_subentry_flow_broadcast_no_update(
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
 ) -> None:
-    """Test subentry flow where broadcast bot has did not receive any messages."""
+    """Test subentry flow where broadcast bot did not receive any messages."""
 
     mock_broadcast_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
