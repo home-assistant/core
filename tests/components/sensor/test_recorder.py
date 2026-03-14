@@ -6318,6 +6318,88 @@ async def test_validate_statistics_unit_change_equivalent_units_2(
     await assert_validation_result(hass, client, expected, {UNITS_CHANGED_ISSUE})
 
 
+@pytest.mark.parametrize(
+    ("attributes", "unit1", "unit2"),
+    [
+        (NONE_SENSOR_ATTRIBUTES, "KB/s", "kB/s"),
+        (NONE_SENSOR_ATTRIBUTES, "KW", "kW"),
+    ],
+)
+async def test_validate_statistics_unit_change_custom_equivalent_units(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    attributes: dict,
+    unit1: str,
+    unit2: str,
+) -> None:
+    """Test validate_statistics.
+
+    This tests no validation issue is created when a sensor's unit changes to a custom
+    equivalent unit provided by an integration's recorder platform.
+    """
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Add a recorder platform that provides custom equivalent units
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
+        return {"sensor.test": {unit1: unit2}}
+
+    recorder_platform = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain.recorder", recorder_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    # Wait for the some_domain recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(hass, client, {}, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=attributes | {"unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit1}]
+    )
+
+    # Units changed to a custom equivalent unit - empty response
+    hass.states.async_set(
+        "sensor.test",
+        12,
+        attributes=attributes | {"unit_of_measurement": unit2},
+        timestamp=now.timestamp() + 1,
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+    # Run statistics one hour later, metadata will be updated
+    await async_recorder_block_till_done(hass)
+    do_adhoc_statistics(hass, start=now + timedelta(hours=1))
+    await async_recorder_block_till_done(hass)
+    await assert_statistic_ids(
+        hass, [{"statistic_id": "sensor.test", "unit_of_measurement": unit2}]
+    )
+    await assert_validation_result(hass, client, {}, {})
+
+
 async def test_validate_statistics_other_domain(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -6353,16 +6435,15 @@ async def test_validate_statistics_other_domain(
 
 
 @pytest.mark.parametrize(
-    ("units", "attributes", "unit"),
+    ("units", "attributes"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES),
     ],
 )
 async def test_update_statistics_issues(
     hass: HomeAssistant,
     units,
     attributes,
-    unit,
 ) -> None:
     """Test update_statistics_issues."""
 
@@ -6410,6 +6491,81 @@ async def test_update_statistics_issues(
         }
     }
     assert_issues(hass, expected)
+
+
+@pytest.mark.parametrize(
+    ("attributes", "unit1", "unit2"),
+    [
+        (NONE_SENSOR_ATTRIBUTES, "KB/s", "kB/s"),
+        (NONE_SENSOR_ATTRIBUTES, "KW", "kW"),
+    ],
+)
+async def test_update_statistics_issues_with_custom_equivalent_units(
+    hass: HomeAssistant,
+    attributes: dict,
+    unit1: str,
+    unit2: str,
+) -> None:
+    """Test update_statistics_issues when custom equivalent units are provided."""
+
+    async def one_hour_stats(start: datetime) -> datetime:
+        """Generate 5-minute statistics for one hour."""
+        for _ in range(12):
+            do_adhoc_statistics(hass, start=start)
+            await async_wait_recording_done(hass)
+            start += timedelta(minutes=5)
+        return start
+
+    now = get_start_time(dt_util.utcnow())
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    # Add a recorder platform that provides custom equivalent units
+    def _mock_custom_equivalent_units(*args: Any) -> dict:
+        return {"sensor.test": {unit1: unit2}}
+
+    recorder_platform = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain.recorder", recorder_platform)
+    assert await async_setup_component(hass, "some_domain", {})
+    # Wait for the some_domain recorder platform to be added
+    await async_recorder_block_till_done(hass)
+
+    # No statistics, no state - no issues
+    now = await one_hour_stats(now)
+    assert_issues(hass, {})
+
+    # Statistics, valid state - no issues
+    hass.states.async_set(
+        "sensor.test",
+        10,
+        attributes=attributes | {"unit_of_measurement": unit1},
+        timestamp=now.timestamp(),
+    )
+    await hass.async_block_till_done()
+    now = await one_hour_stats(now)
+    assert_issues(hass, {})
+
+    # State update with unsupported unit, statistics did not run again
+    hass.states.async_set(
+        "sensor.test",
+        12,
+        attributes=attributes | {"unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await hass.async_block_till_done()
+    assert_issues(hass, {})
+
+    # Let statistics run for one hour, expect no issues
+    now = await one_hour_stats(now)
+    assert_issues(hass, {})
 
 
 async def async_record_meter_states(
