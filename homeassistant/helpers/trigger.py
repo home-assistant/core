@@ -364,10 +364,10 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
 
     def _get_tracked_value(self, state: State) -> Any:
         """Get the tracked value from a state based on the DomainSpec."""
-        vs = self._domain_specs[split_entity_id(state.entity_id)[0]]
-        if vs.value_source is None:
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is None:
             return state.state
-        return state.attributes.get(vs.value_source)
+        return state.attributes.get(domain_spec.value_source)
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""

@@ -1695,11 +1695,13 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
 async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
     """Test NumericalDomainSpec stores converter correctly."""
     converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
-    nvs = NumericalDomainSpec(value_source="brightness", value_converter=converter)
-    assert nvs.value_source == "brightness"
-    assert nvs.value_converter is converter
-    assert nvs.device_class is ANY_DEVICE_CLASS
+    num_domain_spec = NumericalDomainSpec(
+        value_source="brightness", value_converter=converter
+    )
+    assert num_domain_spec.value_source == "brightness"
+    assert num_domain_spec.value_converter is converter
+    assert num_domain_spec.device_class is ANY_DEVICE_CLASS
 
     # Plain DomainSpec has no converter
-    vs = DomainSpec(value_source="brightness")
-    assert not isinstance(vs, NumericalDomainSpec)
+    domain_spec = DomainSpec(value_source="brightness")
+    assert not isinstance(domain_spec, NumericalDomainSpec)
