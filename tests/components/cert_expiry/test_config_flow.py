@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.cert_expiry.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CA_DATA, CONF_HOST, CONF_IGNORE_HOSTNAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,6 +37,9 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_IGNORE_HOSTNAME] is False
+    assert result["data"][CONF_CA_DATA] is None
+
     assert result["result"].unique_id == f"{HOST}:{PORT}"
 
 
@@ -60,7 +63,72 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_IGNORE_HOSTNAME] is False
+    assert result["data"][CONF_CA_DATA] is None
     assert result["result"].unique_id == f"{HOST}:{PORT}"
+
+
+async def test_user_with_ignore_hostname_and_ca_data(hass: HomeAssistant) -> None:
+    """Test user config with ignore_hostname and custom CA data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    pem = "-----BEGIN CERTIFICATE-----\nZmFrZQ==\n-----END CERTIFICATE-----"
+    with (
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.ssl.PEM_cert_to_DER_cert"
+        ),
+        patch(
+            "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
+        ) as mock_get_cert_expiry_timestamp,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_IGNORE_HOSTNAME: True,
+                CONF_CA_DATA: pem,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_IGNORE_HOSTNAME] is True
+    assert result["data"][CONF_CA_DATA] == pem
+    assert result["result"].unique_id == f"{HOST}:{PORT}"
+    mock_get_cert_expiry_timestamp.assert_awaited_once_with(hass, HOST, PORT, True, pem)
+
+
+async def test_user_with_invalid_ca_data(hass: HomeAssistant) -> None:
+    """Test user config with invalid CA data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.cert_expiry.config_flow.ssl.PEM_cert_to_DER_cert",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_IGNORE_HOSTNAME: False,
+                CONF_CA_DATA: "invalid",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_CA_DATA: "invalid_pem"}
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
