@@ -619,6 +619,9 @@ b2sdk==2.10.1
 # homeassistant.components.holiday
 babel==2.15.0
 
+# homeassistant.components.bacnet
+bacpypes3==0.0.102
+
 # homeassistant.components.baidu
 baidu-aip==1.6.6
 

@@ -1,0 +1,119 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "device_added": "The BACnet device has been added successfully.",
+      "hub_not_ready": "The BACnet hub is not ready.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "already_in_use": "This interface is already used by another BACnet hub.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_ip": "The IP address is not valid.",
+      "no_interfaces": "No network interfaces were found on this system.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name} ({address})",
+    "initiate_flow": {
+      "user": "Add BACnet client"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "A BACnet device **{name}** was discovered at `{address}`.\n\nVendor: {vendor}\n\nModel: {model}",
+        "title": "Add BACnet device"
+      },
+      "reconfigure": {
+        "data": {
+          "interface": "Network interface"
+        },
+        "data_description": {
+          "interface": "The network interface to bind the BACnet client to."
+        },
+        "description": "Select the network interface for the BACnet client.",
+        "title": "Reconfigure BACnet hub"
+      },
+      "reconfigure_manual": {
+        "data": {
+          "interface": "IP address"
+        },
+        "data_description": {
+          "interface": "The IP address to bind the BACnet client to (for example, `192.168.1.50`)."
+        },
+        "description": "Enter the IP address of the network interface for the BACnet client.",
+        "title": "Enter IP address manually"
+      },
+      "user": {
+        "data": {
+          "interface": "Network interface"
+        },
+        "data_description": {
+          "interface": "The network interface to bind the BACnet client to."
+        },
+        "description": "Select the network interface for the BACnet client. Only BACnet devices on the selected subnet will be automatically discovered and added.",
+        "title": "Add BACnet client"
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+        "device_added": "The BACnet device has been added successfully.",
+        "device_not_found_at_address": "No BACnet device was found at this address.",
+        "hub_not_ready": "The BACnet hub is not ready."
+      },
+      "entry_type": "Device",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "device_not_found_at_address": "No BACnet device was found at this address.",
+        "invalid_ip": "The IP address is not valid."
+      },
+      "initiate_flow": {
+        "user": "Add device"
+      },
+      "step": {
+        "manual": {
+          "data": {
+            "device_address": "IP address",
+            "port": "Port"
+          },
+          "data_description": {
+            "device_address": "The IP address of the BACnet device (for example, `192.168.1.100`).",
+            "port": "The BACnet/IP port number (default: 47808)."
+          },
+          "description": "Adding a device to **{hub_name}**. Enter the IP address of the BACnet device. The device ID will be discovered automatically.",
+          "title": "Add BACnet device"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the BACnet network: {error}"
+    },
+    "device_not_found": {
+      "message": "BACnet device {device_id} was not found on the network: {error}"
+    },
+    "device_offline": {
+      "message": "BACnet device {device_id} is offline"
+    },
+    "hub_not_ready": {
+      "message": "BACnet hub {hub_id} is not ready"
+    },
+    "invalid_option": {
+      "message": "Invalid option `{option}` for BACnet object `{object}`"
+    },
+    "no_data": {
+      "message": "No data available from BACnet device"
+    },
+    "object_list_error": {
+      "message": "Could not read object list from BACnet device: {error}"
+    },
+    "read_error": {
+      "message": "Could not read BACnet object `{object}`: {error}"
+    },
+    "write_error": {
+      "message": "Could not write to BACnet object `{object}`: {error}"
+    }
+  }
+}

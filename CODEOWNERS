@@ -208,6 +208,8 @@ build.json @home-assistant/supervisor
 /tests/components/backblaze_b2/ @hugo-vrijswijk @ElCruncharino
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
+/homeassistant/components/bacnet/ @fishloa
+/tests/components/bacnet/ @fishloa
 /homeassistant/components/baf/ @bdraco @jfroy
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer

@@ -91,6 +91,7 @@ FLOWS = {
         "azure_event_hub",
         "azure_storage",
         "backblaze_b2",
+        "bacnet",
         "baf",
         "balboa",
         "bang_olufsen",
