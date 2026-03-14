@@ -1,5 +1,7 @@
 """Consts for Kaiterra integration."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.const import (
@@ -12,8 +14,10 @@ from homeassistant.const import (
 )
 
 DOMAIN = "kaiterra"
+DEFAULT_TITLE = "Kaiterra"
 
 DISPATCHER_KAITERRA = "kaiterra_update"
+SUBENTRY_TYPE_DEVICE = "device"
 
 AQI_SCALE = {
     "cn": [0, 50, 100, 150, 200, 300, 400, 500],
@@ -71,5 +75,6 @@ CONF_PREFERRED_UNITS = "preferred_units"
 DEFAULT_AQI_STANDARD = "us"
 DEFAULT_PREFERRED_UNIT: list[str] = []
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL_SECONDS = int(DEFAULT_SCAN_INTERVAL.total_seconds())
 
 PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]

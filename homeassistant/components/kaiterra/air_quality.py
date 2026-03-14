@@ -1,4 +1,4 @@
-"""Support for Kaiterra Air Quality Sensors."""
+"""Support for Kaiterra air quality sensors."""
 
 from __future__ import annotations
 
@@ -8,37 +8,39 @@ from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import KaiterraConfigEntry
 from .const import (
     ATTR_AQI_LEVEL,
     ATTR_AQI_POLLUTANT,
     ATTR_VOC,
     DISPATCHER_KAITERRA,
-    DOMAIN,
+    SUBENTRY_TYPE_DEVICE,
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KaiterraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the air_quality kaiterra sensor."""
-    if discovery_info is None:
-        return
+    """Set up the Kaiterra air quality sensor."""
+    api = entry.runtime_data
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
+            continue
 
-    api = hass.data[DOMAIN]
-    name = discovery_info[CONF_NAME]
-    device_id = discovery_info[CONF_DEVICE_ID]
-
-    async_add_entities([KaiterraAirQuality(api, name, device_id)])
+        name = subentry.data.get(CONF_NAME) or subentry.title
+        device_id = subentry.data[CONF_DEVICE_ID]
+        async_add_entities(
+            [KaiterraAirQuality(api, name, device_id)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class KaiterraAirQuality(AirQualityEntity):
-    """Implementation of a Kaittera air quality sensor."""
+    """Implementation of a Kaiterra air quality sensor."""
 
     _attr_should_poll = False
 
@@ -58,7 +60,7 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def available(self):
         """Return the availability of the sensor."""
-        return self._api.data.get(self._device_id) is not None
+        return bool(self._api.data.get(self._device_id))
 
     @property
     def name(self):

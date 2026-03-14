@@ -1,4 +1,4 @@
-"""Support for Kaiterra Temperature ahn Humidity Sensors."""
+"""Support for Kaiterra temperature and humidity sensors."""
 
 from __future__ import annotations
 
@@ -12,15 +12,15 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCHER_KAITERRA, DOMAIN
+from . import KaiterraConfigEntry
+from .const import DISPATCHER_KAITERRA, SUBENTRY_TYPE_DEVICE
 
 
 @dataclass(frozen=True, kw_only=True)
 class KaiterraSensorEntityDescription(SensorEntityDescription):
-    """Class describing Renault sensor entities."""
+    """Class describing Kaiterra sensor entities."""
 
     suffix: str
 
@@ -39,27 +39,31 @@ SENSORS = [
 ]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KaiterraConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the kaiterra temperature and humidity sensor."""
-    if discovery_info is None:
-        return
+    """Set up the Kaiterra temperature and humidity sensors."""
+    api = entry.runtime_data
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != SUBENTRY_TYPE_DEVICE:
+            continue
 
-    api = hass.data[DOMAIN]
-    name = discovery_info[CONF_NAME]
-    device_id = discovery_info[CONF_DEVICE_ID]
+        name = subentry.data.get(CONF_NAME) or subentry.title
+        device_id = subentry.data[CONF_DEVICE_ID]
 
-    async_add_entities(
-        [KaiterraSensor(api, name, device_id, description) for description in SENSORS]
-    )
+        async_add_entities(
+            [
+                KaiterraSensor(api, name, device_id, description)
+                for description in SENSORS
+            ],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class KaiterraSensor(SensorEntity):
-    """Implementation of a Kaittera sensor."""
+    """Implementation of a Kaiterra sensor."""
 
     _attr_should_poll = False
 
@@ -83,7 +87,7 @@ class KaiterraSensor(SensorEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the sensor."""
-        return self._api.data.get(self._device_id) is not None
+        return bool(self._api.data.get(self._device_id))
 
     @property
     def native_value(self):
@@ -93,10 +97,12 @@ class KaiterraSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if not self._sensor.get("units"):
+        value = self._sensor.get("units")
+        if not value:
             return None
 
-        value = self._sensor["units"].value
+        if hasattr(value, "value"):
+            value = value.value
 
         if value == "F":
             return UnitOfTemperature.FAHRENHEIT
