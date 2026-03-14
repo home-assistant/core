@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-import aiohttp
+from inelnet_api import InelnetChannel
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -40,7 +40,6 @@ def is_valid_host(host: str) -> bool:
     host = host.strip()
     if not host:
         return False
-    # Allow IPv4, simple hostname
     if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
         return True
     if re.match(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}$", host):
@@ -72,30 +71,24 @@ class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except ValueError:
                     errors["base"] = "invalid_channels"
                 else:
-                    # Test connection to controller before creating entry
                     session = async_get_clientsession(self.hass)
-                    url = f"http://{host}/msg.htm"
+                    client = InelnetChannel(host, channels[0])
                     try:
-                        async with session.get(
-                            url, timeout=aiohttp.ClientTimeout(total=10)
-                        ) as resp:
-                            if resp.status >= 400:
-                                errors["base"] = "cannot_connect"
-                            else:
-                                unique_id = (
-                                    f"{host}-{','.join(str(c) for c in channels)}"
-                                )
-                                await self.async_set_unique_id(unique_id)
-                                self._abort_if_unique_id_configured()
+                        if await client.ping(session=session):
+                            unique_id = f"{host}-{','.join(str(c) for c in channels)}"
+                            await self.async_set_unique_id(unique_id)
+                            self._abort_if_unique_id_configured()
 
-                                return self.async_create_entry(
-                                    title=f"INELNET {host} (ch {','.join(str(c) for c in channels)})",
-                                    data={
-                                        CONF_HOST: host,
-                                        CONF_CHANNELS: channels,
-                                    },
-                                )
-                    except (aiohttp.ClientError, OSError):
+                            return self.async_create_entry(
+                                title=f"INELNET {host} (ch "
+                                f"{','.join(str(c) for c in channels)})",
+                                data={
+                                    CONF_HOST: host,
+                                    CONF_CHANNELS: channels,
+                                },
+                            )
+                        errors["base"] = "cannot_connect"
+                    except Exception:  # noqa: BLE001
                         errors["base"] = "cannot_connect"
 
         data_schema = vol.Schema(

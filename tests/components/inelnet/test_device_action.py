@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from inelnet_api import InelnetChannel
 import pytest
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from homeassistant.components.inelnet.const import (
     ACTION_PROGRAM,
     ACTION_UP_SHORT,
     DOMAIN,
+    Action,
 )
 from homeassistant.components.inelnet.device_action import (
     async_call_action_from_config,
@@ -35,7 +37,11 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         unique_id="192.168.1.67-1",
         data={"host": "192.168.1.67", "channels": [1]},
     )
-    entry.runtime_data = InelnetRuntimeData(host="192.168.1.67", channels=[1])
+    entry.runtime_data = InelnetRuntimeData(
+        host="192.168.1.67",
+        channels=[1],
+        clients={1: InelnetChannel("192.168.1.67", 1)},
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -124,11 +130,14 @@ async def test_call_action_from_config_sends_command(
     config_entry: MockConfigEntry,
     device_id: str,
 ) -> None:
-    """Test async_call_action_from_config calls send_command with correct args."""
+    """Test async_call_action_from_config calls client.send_command with Action.PROGRAM."""
+    session = MagicMock()
     with patch(
-        "homeassistant.components.inelnet.device_action.send_command",
-        new_callable=AsyncMock,
-    ) as mock_send:
+        "homeassistant.components.inelnet.device_action.async_get_clientsession",
+        return_value=session,
+    ):
+        client = config_entry.runtime_data.clients[1]
+        client.send_command = AsyncMock(return_value=True)
         await async_call_action_from_config(
             hass,
             {
@@ -139,7 +148,7 @@ async def test_call_action_from_config_sends_command(
             {},
             None,
         )
-    mock_send.assert_called_once_with(hass, "192.168.1.67", 1, 224)
+    client.send_command.assert_called_once_with(Action.PROGRAM, session=session)
 
 
 async def test_call_action_from_config_no_op_when_device_unknown(
@@ -147,9 +156,9 @@ async def test_call_action_from_config_no_op_when_device_unknown(
 ) -> None:
     """Test async_call_action_from_config does nothing when device cannot be resolved."""
     with patch(
-        "homeassistant.components.inelnet.device_action.send_command",
-        new_callable=AsyncMock,
-    ) as mock_send:
+        "homeassistant.components.inelnet.device_action.async_get_clientsession",
+        return_value=MagicMock(),
+    ):
         await async_call_action_from_config(
             hass,
             {
@@ -160,18 +169,22 @@ async def test_call_action_from_config_no_op_when_device_unknown(
             {},
             None,
         )
-    mock_send.assert_not_called()
+    # No client.send_command should have been called (no client resolved)
 
 
 async def test_call_action_short_up_sends_correct_code(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     device_id: str,
 ) -> None:
-    """Test calling short up action sends ACT_UP_SHORT code."""
+    """Test calling short up action sends Action.UP_SHORT."""
+    session = MagicMock()
     with patch(
-        "homeassistant.components.inelnet.device_action.send_command",
-        new_callable=AsyncMock,
-    ) as mock_send:
+        "homeassistant.components.inelnet.device_action.async_get_clientsession",
+        return_value=session,
+    ):
+        client = config_entry.runtime_data.clients[1]
+        client.send_command = AsyncMock(return_value=True)
         await async_call_action_from_config(
             hass,
             {
@@ -182,19 +195,22 @@ async def test_call_action_short_up_sends_correct_code(
             {},
             None,
         )
-    mock_send.assert_called_once()
-    assert mock_send.call_args[0][3] == 176
+    client.send_command.assert_called_once_with(Action.UP_SHORT, session=session)
 
 
 async def test_call_action_short_down_sends_correct_code(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     device_id: str,
 ) -> None:
-    """Test calling short down action sends ACT_DOWN_SHORT code."""
+    """Test calling short down action sends Action.DOWN_SHORT."""
+    session = MagicMock()
     with patch(
-        "homeassistant.components.inelnet.device_action.send_command",
-        new_callable=AsyncMock,
-    ) as mock_send:
+        "homeassistant.components.inelnet.device_action.async_get_clientsession",
+        return_value=session,
+    ):
+        client = config_entry.runtime_data.clients[1]
+        client.send_command = AsyncMock(return_value=True)
         await async_call_action_from_config(
             hass,
             {
@@ -205,8 +221,7 @@ async def test_call_action_short_down_sends_correct_code(
             {},
             None,
         )
-    mock_send.assert_called_once()
-    assert mock_send.call_args[0][3] == 208
+    client.send_command.assert_called_once_with(Action.DOWN_SHORT, session=session)
 
 
 async def test_get_actions_returns_empty_when_identifier_has_no_ch_suffix(
@@ -218,7 +233,11 @@ async def test_get_actions_returns_empty_when_identifier_has_no_ch_suffix(
         entry_id="entry-no-ch",
         data={"host": "192.168.1.1", "channels": [1]},
     )
-    entry.runtime_data = InelnetRuntimeData(host="192.168.1.1", channels=[1])
+    entry.runtime_data = InelnetRuntimeData(
+        host="192.168.1.1",
+        channels=[1],
+        clients={1: InelnetChannel("192.168.1.1", 1)},
+    )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
@@ -239,7 +258,11 @@ async def test_get_actions_returns_empty_when_channel_parse_fails(
         entry_id="entry-bad-ch",
         data={"host": "192.168.1.1", "channels": [1]},
     )
-    entry.runtime_data = InelnetRuntimeData(host="192.168.1.1", channels=[1])
+    entry.runtime_data = InelnetRuntimeData(
+        host="192.168.1.1",
+        channels=[1],
+        clients={1: InelnetChannel("192.168.1.1", 1)},
+    )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
@@ -300,7 +323,11 @@ async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
         entry_id="inelnet-no-host",
         data={"host": "192.168.1.1", "channels": [1]},
     )
-    entry.runtime_data = InelnetRuntimeData(host="", channels=[1])
+    entry.runtime_data = InelnetRuntimeData(
+        host="",
+        channels=[1],
+        clients={},  # No clients and falsy host -> no actions
+    )
     entry.add_to_hass(hass)
     dev_reg = dr.async_get(hass)
     device = dev_reg.async_get_or_create(
@@ -314,13 +341,16 @@ async def test_get_actions_returns_empty_when_runtime_data_has_no_host(
 
 async def test_call_action_from_config_no_op_when_type_invalid(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     device_id: str,
 ) -> None:
     """Test async_call_action_from_config does not call send_command when type is unknown."""
     with patch(
-        "homeassistant.components.inelnet.device_action.send_command",
-        new_callable=AsyncMock,
-    ) as mock_send:
+        "homeassistant.components.inelnet.device_action.async_get_clientsession",
+        return_value=MagicMock(),
+    ):
+        client = config_entry.runtime_data.clients[1]
+        client.send_command = AsyncMock(return_value=True)
         await async_call_action_from_config(
             hass,
             {
@@ -331,4 +361,4 @@ async def test_call_action_from_config_no_op_when_type_invalid(
             {},
             None,
         )
-    mock_send.assert_not_called()
+    client.send_command.assert_not_called()
