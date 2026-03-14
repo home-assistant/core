@@ -618,6 +618,7 @@ async def test_remove_offline_config_entry_device(
     config_dr.async_setup(hass)
     identifiers = {(sonos.DOMAIN, soco.uid)}
 
+    # Reload the integration making the device unreachable.
     soco.zoneGroupTopology.subscribe = AsyncMock(side_effect=OSError("unreachable"))
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
