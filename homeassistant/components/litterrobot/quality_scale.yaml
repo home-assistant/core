@@ -29,9 +29,9 @@ rules:
     status: done
     comment: No options to configure
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage:
@@ -42,7 +42,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: done
     comment: The integration is cloud-based

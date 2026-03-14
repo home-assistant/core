@@ -2,6 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     EntityStateConditionBase,
@@ -43,7 +44,7 @@ def make_entity_state_required_features_condition(
     class CustomCondition(EntityStateRequiredFeaturesCondition):
         """Condition for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _states = {to_state}
         _required_features = required_features
 
