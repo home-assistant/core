@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The Whisker account does not match the previously configured account. Please re-authenticate using the same account, or remove this integration and set it up again if you want to use a different account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -192,6 +193,14 @@
       "litter_box": {
         "name": "Litter box"
       }
+    }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "An error occurred while communicating with the device: {error}"
+    },
+    "firmware_update_failed": {
+      "message": "Unable to start firmware update on {name}"
     }
   },
   "issues": {

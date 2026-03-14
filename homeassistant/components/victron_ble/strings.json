@@ -248,7 +248,24 @@
         "name": "[%key:component::victron_ble::common::starter_voltage%]"
       },
       "warning": {
-        "name": "Warning"
+        "name": "Warning",
+        "state": {
+          "bms_lockout": "[%key:component::victron_ble::entity::sensor::alarm::state::bms_lockout%]",
+          "dc_ripple": "[%key:component::victron_ble::entity::sensor::alarm::state::dc_ripple%]",
+          "high_starter_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::high_starter_voltage%]",
+          "high_temperature": "[%key:component::victron_ble::entity::sensor::alarm::state::high_temperature%]",
+          "high_v_ac_out": "[%key:component::victron_ble::entity::sensor::alarm::state::high_v_ac_out%]",
+          "high_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::high_voltage%]",
+          "low_soc": "[%key:component::victron_ble::entity::sensor::alarm::state::low_soc%]",
+          "low_starter_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::low_starter_voltage%]",
+          "low_temperature": "[%key:component::victron_ble::entity::sensor::alarm::state::low_temperature%]",
+          "low_v_ac_out": "[%key:component::victron_ble::entity::sensor::alarm::state::low_v_ac_out%]",
+          "low_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::low_voltage%]",
+          "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "no_alarm": "[%key:component::victron_ble::entity::sensor::alarm::state::no_alarm%]",
+          "overload": "[%key:component::victron_ble::entity::sensor::alarm::state::overload%]",
+          "short_circuit": "[%key:component::victron_ble::entity::sensor::alarm::state::short_circuit%]"
+        }
       },
       "yield_today": {
         "name": "Yield today"
