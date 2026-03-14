@@ -20,6 +20,8 @@ DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DEFAULT_SIGNAL_REPETITIONS = 1
 
+DOMAIN = "rflink"
+
 EVENT_KEY_COMMAND = "command"
 EVENT_KEY_ID = "id"
 EVENT_KEY_SENSOR = "sensor"

@@ -50,7 +50,7 @@ class RflinkDevice(Entity):
         nogroup_aliases=None,
         fire_event=False,
         signal_repetitions=DEFAULT_SIGNAL_REPETITIONS,
-    ):
+    ) -> None:
         """Initialize the device."""
         # Rflink specific attributes for every component type
         self._initial_event = initial_event

@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
@@ -35,7 +36,11 @@ from .const import (
     EVENT_KEY_ID,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import brightness_to_rflink, rflink_to_brightness
+from .utils import (
+    brightness_to_rflink,
+    create_issue_yaml_migration,
+    rflink_to_brightness,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,35 +51,37 @@ TYPE_SWITCHABLE = "switchable"
 TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
-PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
-        ): DEVICE_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE): vol.Any(
-                        TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
-                    ),
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                }
-            )
-        },
+RFLINK_PLATFORM = {
+    vol.Optional(
+        CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+    ): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema(
+            {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_TYPE): vol.Any(
+                    TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
+                ),
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
+                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+            }
+        )
     },
+}
+
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
+    RFLINK_PLATFORM,
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -157,7 +164,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink light platform."""
-    async_add_entities(devices_from_config(config))
 
     async def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
@@ -166,12 +172,27 @@ async def async_setup_platform(
         entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
-        device_config = config[CONF_DEVICE_DEFAULTS]
         device = entity_class(device_id, initial_event=event, **device_config)
         async_add_entities([device])
 
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+    def automatic_add_config(
+        hass: HomeAssistant,
+        platform_config: ConfigType | DiscoveryInfoType,
+    ):
+        """Enables the 'add_new_device' function if configured."""
+        if platform_config[CONF_AUTOMATIC_ADD]:
+            _LOGGER.debug("enabling 'light' automatic add function")
+            hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+
+    if discovery_info is None:
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
+        device_config = config[CONF_DEVICE_DEFAULTS]
+        async_add_entities(devices_from_config(config))
+        automatic_add_config(hass, config)
+    else:
+        device_config = discovery_info[CONF_DEVICE_DEFAULTS]
+        async_add_entities(devices_from_config(discovery_info))
+        automatic_add_config(hass, discovery_info)
 
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):

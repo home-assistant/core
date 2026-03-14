@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.cover import (
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverState,
@@ -30,6 +31,7 @@ from .const import (
     DEVICE_DEFAULTS_SCHEMA,
 )
 from .entity import RflinkCommand
+from .utils import create_issue_yaml_migration
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,32 +40,35 @@ PARALLEL_UPDATES = 0
 TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
-        ): DEVICE_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_DEVICES, default={}): vol.Schema(
-            {
-                cv.string: {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                }
+RFLINK_PLATFORM = {
+    vol.Optional(
+        CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+    ): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+        {
+            cv.string: {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                vol.Optional(CONF_GROUP, default=True): cv.boolean,
             }
-        ),
-    }
+        }
+    ),
+}
+
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
+    RFLINK_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -124,7 +129,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink cover platform."""
-    async_add_entities(devices_from_config(config))
+    if discovery_info is None:
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
+        async_add_entities(devices_from_config(config))
+    else:
+        async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):

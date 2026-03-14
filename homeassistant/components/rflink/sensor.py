@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -53,6 +55,9 @@ from .const import (
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
+from .utils import create_issue_yaml_migration
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = (
     # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
@@ -265,22 +270,24 @@ SENSOR_TYPES = (
 
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Required(CONF_SENSOR_TYPE): cv.string,
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                }
-            )
-        },
+RFLINK_PLATFORM = {
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema(
+            {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Required(CONF_SENSOR_TYPE): cv.string,
+                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
     },
+}
+
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    RFLINK_PLATFORM,
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -312,7 +319,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(config))
 
     async def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
@@ -327,8 +333,22 @@ async def async_setup_platform(
         # Add device entity
         async_add_entities([device])
 
-    if config[CONF_AUTOMATIC_ADD]:
-        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
+    def automatic_add_config(
+        hass: HomeAssistant,
+        platform_config: ConfigType | DiscoveryInfoType,
+    ):
+        """Enables the 'add_new_device' function if configured."""
+        if platform_config[CONF_AUTOMATIC_ADD]:
+            _LOGGER.debug("enabling 'sensor' automatic add function")
+            hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
+
+    if discovery_info is None:
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
+        async_add_entities(devices_from_config(config))
+        automatic_add_config(hass, config)
+    else:
+        async_add_entities(devices_from_config(discovery_info))
+        automatic_add_config(hass, discovery_info)
 
 
 class RflinkSensor(RflinkDevice, SensorEntity):
