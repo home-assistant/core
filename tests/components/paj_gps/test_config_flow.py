@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pajgps_api.pajgps_api_error import AuthenticationError, TokenRefreshError
 import pytest
 
-from homeassistant.components.pajgps.config_flow import (
+from homeassistant.components.paj_gps.config_flow import (
     PajGPSConfigFlow,
     _validate_credentials,
 )
@@ -58,7 +58,7 @@ class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
         flow = _make_flow()
 
         with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
+            "homeassistant.components.paj_gps.config_flow._validate_credentials",
             new=AsyncMock(return_value=None),
         ):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
@@ -75,7 +75,7 @@ class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
         flow = _make_flow()
 
         with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
+            "homeassistant.components.paj_gps.config_flow._validate_credentials",
             new=AsyncMock(return_value=None),
         ):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
@@ -105,7 +105,7 @@ class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(flow, "_async_abort_entries_match") as mock_abort_match,
             patch(
-                "homeassistant.components.pajgps.config_flow._validate_credentials",
+                "homeassistant.components.paj_gps.config_flow._validate_credentials",
                 new=AsyncMock(return_value=None),
             ),
         ):
@@ -127,7 +127,7 @@ class TestCustomFlowCredentialValidation(unittest.IsolatedAsyncioTestCase):
         flow = _make_flow()
 
         with patch(
-            "homeassistant.components.pajgps.config_flow._validate_credentials",
+            "homeassistant.components.paj_gps.config_flow._validate_credentials",
             new=AsyncMock(return_value=None),
         ):
             result = await flow.async_step_user(user_input=dict(VALID_USER_INPUT))
@@ -148,9 +148,9 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
         hass = MagicMock()
         with (
             patch(
-                "homeassistant.components.pajgps.config_flow.async_get_clientsession"
+                "homeassistant.components.paj_gps.config_flow.async_get_clientsession"
             ),
-            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch("homeassistant.components.paj_gps.config_flow.PajGpsApi") as MockApi,
         ):
             MockApi.return_value.login = AsyncMock()
             result = await _validate_credentials("user@example.com", "secret", hass)
@@ -162,9 +162,9 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
         hass = MagicMock()
         with (
             patch(
-                "homeassistant.components.pajgps.config_flow.async_get_clientsession"
+                "homeassistant.components.paj_gps.config_flow.async_get_clientsession"
             ),
-            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch("homeassistant.components.paj_gps.config_flow.PajGpsApi") as MockApi,
         ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=AuthenticationError("bad creds")
@@ -178,9 +178,9 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
         hass = MagicMock()
         with (
             patch(
-                "homeassistant.components.pajgps.config_flow.async_get_clientsession"
+                "homeassistant.components.paj_gps.config_flow.async_get_clientsession"
             ),
-            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch("homeassistant.components.paj_gps.config_flow.PajGpsApi") as MockApi,
         ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=TokenRefreshError("refresh failed")
@@ -194,9 +194,9 @@ class TestValidateCredentials(unittest.IsolatedAsyncioTestCase):
         hass = MagicMock()
         with (
             patch(
-                "homeassistant.components.pajgps.config_flow.async_get_clientsession"
+                "homeassistant.components.paj_gps.config_flow.async_get_clientsession"
             ),
-            patch("homeassistant.components.pajgps.config_flow.PajGpsApi") as MockApi,
+            patch("homeassistant.components.paj_gps.config_flow.PajGpsApi") as MockApi,
         ):
             MockApi.return_value.login = AsyncMock(
                 side_effect=ConnectionError("timeout")

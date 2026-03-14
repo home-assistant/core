@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pajgps_api.models.device import Device
 from pajgps_api.models.trackpoint import TrackPoint
 
-from homeassistant.components.pajgps.coordinator import PajGpsCoordinator
+from homeassistant.components.paj_gps.coordinator import PajGpsCoordinator
 from homeassistant.core import HomeAssistant
 
 
@@ -114,7 +114,7 @@ def make_coordinator(
     config_entry.entry_id = "test_entry_id"
     config_entry.data = make_entry_data(**entry_kwargs)
     with patch(
-        "homeassistant.components.pajgps.coordinator.async_get_clientsession",
+        "homeassistant.components.paj_gps.coordinator.async_get_clientsession",
         return_value=MagicMock(),
     ):
         coord = PajGpsCoordinator(hass, config_entry)

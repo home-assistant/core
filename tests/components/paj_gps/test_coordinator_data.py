@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import unittest
 
-from homeassistant.components.pajgps.coordinator import PajGpsData
+from homeassistant.components.paj_gps.coordinator import PajGpsData
 
 from .test_common import make_device, make_trackpoint
 

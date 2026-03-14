@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from homeassistant.components.pajgps.coordinator import PajGpsData
-from homeassistant.components.pajgps.entity import PajGpsEntity
+from homeassistant.components.paj_gps.coordinator import PajGpsData
+from homeassistant.components.paj_gps.entity import PajGpsEntity
 
 from .test_common import make_coordinator, make_device
 

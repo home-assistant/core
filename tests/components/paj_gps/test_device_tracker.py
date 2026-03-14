@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.pajgps import device_tracker as dt_module
-from homeassistant.components.pajgps.coordinator import PajGpsData
-from homeassistant.components.pajgps.device_tracker import PajGPSDeviceTracker
+from homeassistant.components.paj_gps import device_tracker as dt_module
+from homeassistant.components.paj_gps.coordinator import PajGpsData
+from homeassistant.components.paj_gps.device_tracker import PajGPSDeviceTracker
 
 from .test_common import make_coordinator, make_device, make_trackpoint
 
@@ -122,7 +122,7 @@ async def test_no_entities_added_and_warning_logged_when_no_devices() -> None:
     hass, config_entry = _make_hass_and_config_entry(coord)
 
     added = []
-    with patch("homeassistant.components.pajgps.device_tracker._LOGGER") as mock_log:
+    with patch("homeassistant.components.paj_gps.device_tracker._LOGGER") as mock_log:
         await dt_module.async_setup_entry(
             hass, config_entry, lambda e, **kw: added.extend(e)
         )

@@ -5073,7 +5073,7 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "pajgps": {
+    "paj_gps": {
       "name": "PAJ GPS",
       "integration_type": "hub",
       "config_flow": true,

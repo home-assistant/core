@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 from pajgps_api.pajgps_api_error import AuthenticationError, PajGpsApiError
 import pytest
 
-from homeassistant.components.pajgps.coordinator import PajGpsData
+from homeassistant.components.paj_gps.coordinator import PajGpsData
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
