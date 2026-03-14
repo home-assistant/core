@@ -6,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.webostv.const import (
     CONF_SOURCES,
+    CONF_USE_ABSOLUTE_VOLUME,
     DEFAULT_NAME,
     DOMAIN,
     LIVE_TV_APP_ID,
@@ -19,6 +20,8 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
+
+from tests.common import MockConfigEntry
 
 from . import setup_webostv
 from .const import (
@@ -447,3 +450,84 @@ async def test_reconfigure_wrong_device(hass: HomeAssistant, client) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_device"
+
+
+@pytest.mark.parametrize(
+    ("use_absolute_volume", "expected"),
+    [
+        (True, True),
+        (False, False),
+    ],
+)
+async def test_options_flow_absolute_volume(
+    hass: HomeAssistant,
+    client,
+    use_absolute_volume: bool,
+    expected: bool,
+) -> None:
+    """Test use_absolute_volume option is saved correctly in options flow."""
+    entry = await setup_webostv(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: [], CONF_USE_ABSOLUTE_VOLUME: use_absolute_volume},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USE_ABSOLUTE_VOLUME] is expected
+
+
+async def test_options_flow_absolute_volume_default(
+    hass: HomeAssistant,
+    client,
+) -> None:
+    """Test use_absolute_volume defaults to True when not explicitly provided."""
+    entry = await setup_webostv(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Submit without CONF_USE_ABSOLUTE_VOLUME — schema default (True) should apply
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: []},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USE_ABSOLUTE_VOLUME] is True
+
+
+async def test_options_flow_absolute_volume_preserved(
+    hass: HomeAssistant,
+    client,
+) -> None:
+    """Test that an existing use_absolute_volume=False option is preserved across flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_CLIENT_SECRET: CLIENT_KEY},
+        options={CONF_USE_ABSOLUTE_VOLUME: False},
+        title=TV_NAME,
+        unique_id=FAKE_UUID,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SOURCES: [], CONF_USE_ABSOLUTE_VOLUME: False},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USE_ABSOLUTE_VOLUME] is False

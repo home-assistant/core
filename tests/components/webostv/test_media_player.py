@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.webostv.const import (
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
+    CONF_USE_ABSOLUTE_VOLUME,
     DOMAIN,
     LIVE_TV_APP_ID,
     WebOsTvCommandError,
@@ -48,6 +49,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_CLIENT_SECRET,
+    CONF_HOST,
     ENTITY_MATCH_NONE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -69,9 +71,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_webostv
-from .const import CHANNEL_2, ENTITY_ID, TV_NAME
+from .const import CHANNEL_2, CLIENT_KEY, ENTITY_ID, FAKE_UUID, HOST, TV_NAME
 
-from tests.common import async_fire_time_changed, mock_restore_cache
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_restore_cache
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -972,3 +974,80 @@ async def test_availability(
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
     available_log = f"LG webOS TV entity {ENTITY_ID} is back online"
     assert available_log in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("sound_output", "use_absolute_volume", "expected_features"),
+    [
+        # use_absolute_volume=True (default): VOLUME_SET present for regular output
+        (
+            "speaker",
+            True,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET,
+        ),
+        # use_absolute_volume=False: VOLUME_SET absent even for regular output
+        (
+            "speaker",
+            False,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+        ),
+        # use_absolute_volume=True: VOLUME_SET present for external_arc
+        (
+            "external_arc",
+            True,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET,
+        ),
+        # use_absolute_volume=False: VOLUME_SET absent for external_arc (the ARC bug case)
+        (
+            "external_arc",
+            False,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+        ),
+        # external_speaker: option has no effect — always step/mute only, never VOLUME_SET
+        (
+            "external_speaker",
+            True,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+        ),
+        (
+            "external_speaker",
+            False,
+            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME,
+        ),
+        # lineout: option has no effect — always no volume support
+        (
+            "lineout",
+            True,
+            SUPPORT_WEBOSTV,
+        ),
+        (
+            "lineout",
+            False,
+            SUPPORT_WEBOSTV,
+        ),
+    ],
+)
+async def test_supported_features_absolute_volume(
+    hass: HomeAssistant,
+    client: MockConfigEntry,
+    sound_output: str,
+    use_absolute_volume: bool,
+    expected_features: MediaPlayerEntityFeature,
+) -> None:
+    """Test VOLUME_SET feature is controlled by the use_absolute_volume option."""
+    client.tv_state.sound_output = sound_output
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_CLIENT_SECRET: CLIENT_KEY},
+        options={CONF_USE_ABSOLUTE_VOLUME: use_absolute_volume},
+        title=TV_NAME,
+        unique_id=FAKE_UUID,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await client.mock_state_update()
+
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs[ATTR_SUPPORTED_FEATURES] == expected_features
