@@ -76,7 +76,7 @@ def fakeimg_gif(fakeimgbytes_gif: bytes) -> Generator[None]:
 
 
 @pytest.fixture(name="mock_create_stream")
-def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
+def mock_create_stream(hass: HomeAssistant) -> Generator[MagicMock]:
     """Mock create stream."""
     mock_stream = MagicMock()
     mock_stream.hass = hass

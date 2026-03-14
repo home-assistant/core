@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "unlock": {
+        "default": "mdi:lock-open"
+      }
+    }
+  }
+}

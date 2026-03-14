@@ -1,0 +1,169 @@
+{
+  "items": [
+    {
+      "deviceId": "c02e8cfa-94ba-86f3-59a0-04a280950f2b",
+      "name": "[air purifier] Samsung",
+      "label": "Air purifier",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-AC-AIR-000001",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "0ab793d8-ef93-4c27-b1c5-602c5a90ba6a",
+      "ownerId": "862a9721-9b24-59f0-aac2-d56c6d76eaf2",
+      "roomId": "32fe7236-bed2-469b-8fc3-9ed30bb47050",
+      "deviceTypeName": "Samsung OCF Air Purifier",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "airQualitySensor",
+              "version": 1
+            },
+            {
+              "id": "odorSensor",
+              "version": 1
+            },
+            {
+              "id": "dustSensor",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "dustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "fineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "veryFineDustHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "airConditionerFanMode",
+              "version": 1
+            },
+            {
+              "id": "custom.airQualityMaxLevel",
+              "version": 1
+            },
+            {
+              "id": "custom.welcomeCareMode",
+              "version": 1
+            },
+            {
+              "id": "custom.airPurifierOperationMode",
+              "version": 1
+            },
+            {
+              "id": "custom.filterUsageTime",
+              "version": 1
+            },
+            {
+              "id": "custom.lowerDevicePower",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceDependencyStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.deviceReportStateConfiguration",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "custom.virusDoctorMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.airQualityHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.dongleSoftwareInstallation",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirPurifier",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2022-11-10T22:51:33.462Z",
+      "profile": {
+        "id": "a38afb02-0fa5-353e-948e-2dda14030cef"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.airpurifier",
+        "name": "[air purifier] Samsung",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "ARTIK051_TVTL_18K|10244541|7000035A001111C40100000000000000",
+        "platformVersion": "BEAPP9AT507146H",
+        "platformOS": "TizenRT2.0",
+        "hwVersion": "1.0",
+        "firmwareVersion": "ARTIK051_TVTL_18K_12200115",
+        "vendorId": "DA-AC-AIR-000001",
+        "lastSignupTime": "2022-11-10T22:51:22.368610Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}
