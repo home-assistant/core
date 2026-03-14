@@ -97,8 +97,8 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="emergency_failed",
             ) from err
-        # Optimistically update state; the WebSocket will confirm via
-        # access.data.setting.update, but may arrive with a delay.
+        # Optimistically update state; the WebSocket confirmation via
+        # access.data.setting.update typically arrives ~200ms later.
         self.coordinator.async_set_updated_data(
             UnifiAccessData(
                 doors=self.coordinator.data.doors,

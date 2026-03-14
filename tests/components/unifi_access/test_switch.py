@@ -250,3 +250,40 @@ async def test_ws_setting_update(
 
     assert hass.states.get(EVACUATION_ENTITY).state == "on"
     assert hass.states.get(LOCKDOWN_ENTITY).state == "on"
+
+
+async def test_optimistic_update_before_ws_confirmation(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test state is optimistically set immediately, then corrected by WS confirmation.
+
+    Verifies that the optimistic update happens synchronously after the API
+    call, without waiting for the WebSocket confirmation message.
+    If the WS returns a different value (e.g. hardware rejected the command),
+    the state is corrected accordingly.
+    """
+    assert hass.states.get(EVACUATION_ENTITY).state == "off"
+
+    # Turn on evacuation — state should be optimistically "on" immediately
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(EVACUATION_ENTITY).state == "on"
+
+    # Simulate WS confirmation arriving — hardware reported evacuation stayed off
+    # (e.g. rejected by the controller), so state should be corrected
+    handlers = _get_ws_handlers(mock_client)
+    await handlers["access.data.setting.update"](
+        SettingUpdate(
+            event="access.data.setting.update",
+            data=SettingUpdateData(evacuation=False, lockdown=False),
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(EVACUATION_ENTITY).state == "off"
