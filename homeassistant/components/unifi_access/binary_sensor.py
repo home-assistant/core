@@ -32,7 +32,7 @@ class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity)
     """Representation of a UniFi Access door position binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.DOOR
-    _attr_translation_key = "access_door_dps"
+    _attr_translation_key = "open"
 
     def __init__(
         self,
@@ -41,7 +41,6 @@ class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity)
     ) -> None:
         """Initialize the binary sensor entity."""
         super().__init__(coordinator, door, "access_door_dps")
-        self._attr_name = "Position"
 
     @property
     def is_on(self) -> bool:

@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "access_door_dps": {
+      "open": {
         "default": "mdi:door"
       }
     },
