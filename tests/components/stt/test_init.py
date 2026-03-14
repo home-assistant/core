@@ -3,6 +3,7 @@
 from collections.abc import Generator, Iterable
 from contextlib import ExitStack
 from http import HTTPStatus
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock
 
@@ -554,3 +555,59 @@ async def test_get_engine_entity(
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
 
     assert async_get_speech_to_text_engine(hass, "stt.test") is mock_provider_entity
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_speech_options_header(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test that X-Speech-Options header is passed to SpeechMetadata."""
+    client = await hass_client()
+    options = {"key1": "value1", "key2": 123, "nested": {"a": "b"}}
+    response = await client.post(
+        f"/api/stt/{setup.url_path}",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            ),
+            "X-Speech-Options": json.dumps(
+                options,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ),
+        },
+    )
+    assert response.status == HTTPStatus.OK
+    assert len(setup.calls) == 1
+    metadata, _ = setup.calls[0]
+    assert metadata.options == options
+
+
+@pytest.mark.parametrize(
+    "setup", ["mock_setup", "mock_config_entry_setup"], indirect=True
+)
+async def test_speech_options_header_not_present(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup: MockSTTProvider | MockSTTProviderEntity,
+) -> None:
+    """Test that options are None when X-Speech-Options header is not present."""
+    client = await hass_client()
+    response = await client.post(
+        f"/api/stt/{setup.url_path}",
+        headers={
+            "X-Speech-Content": (
+                "format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1;"
+                " language=en"
+            ),
+        },
+    )
+    assert response.status == HTTPStatus.OK
+    assert len(setup.calls) == 1
+    metadata, _ = setup.calls[0]
+    assert metadata.options is None

@@ -1,6 +1,7 @@
 """Speech-to-text data models."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from .const import (
     AudioBitRates,
@@ -22,6 +23,7 @@ class SpeechMetadata:
     bit_rate: AudioBitRates
     sample_rate: AudioSampleRates
     channel: AudioChannels
+    options: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         """Finish initializing the metadata."""

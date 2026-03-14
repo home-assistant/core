@@ -28,6 +28,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util.json import json_loads_object
 
 from .const import (
     DATA_COMPONENT,
@@ -269,6 +270,7 @@ class SpeechToTextView(HomeAssistantView):
         # Get metadata
         try:
             metadata = _metadata_from_header(request)
+            metadata.options = _options_from_header(request)
         except ValueError as err:
             raise HTTPBadRequest(text=str(err)) from err
 
@@ -403,6 +405,22 @@ def _metadata_from_header(request: web.Request) -> SpeechMetadata:
             sample_rate=args["sample_rate"],
             channel=args["channel"],
         )
+    except ValueError as err:
+        raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err
+
+
+def _options_from_header(request: web.Request) -> dict[str, Any] | None:
+    """Extract options from STT options header.
+
+    X-Speech-Options:
+        {"key":"value", ...}
+    """
+    data = request.headers.get(istr("X-Speech-Options"))
+    if not data:
+        return None
+
+    try:
+        return json_loads_object(data)
     except ValueError as err:
         raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err
 
