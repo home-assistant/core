@@ -81,6 +81,19 @@ def mock_ipp(mock_printer: Printer) -> Generator[MagicMock]:
     ) as ipp_mock:
         client = ipp_mock.return_value
         client.printer.return_value = mock_printer
+        client.execute.return_value = {
+            "printers": [
+                {
+                    "printer-pages-completed": 1234,
+                    "printer-impressions-completed": 2468,
+                    "printer-media-sheets-completed": 1234,
+                    "printer-impressions-completed-col": {
+                        "monochrome": 1500,
+                        "full-color": 968,
+                    },
+                }
+            ],
+        }
         yield client
 
 
