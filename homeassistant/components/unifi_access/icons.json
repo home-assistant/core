@@ -4,6 +4,11 @@
       "unlock": {
         "default": "mdi:lock-open"
       }
+    },
+    "event": {
+      "access": {
+        "default": "mdi:door"
+      }
     }
   }
 }

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import Any, cast
 
 from unifi_access_api import (
     ApiAuthError,
@@ -15,6 +17,8 @@ from unifi_access_api import (
     WsMessageHandler,
 )
 from unifi_access_api.models.websocket import (
+    HwDoorbell,
+    InsightsAdd,
     LocationUpdateState,
     LocationUpdateV2,
     V2LocationState,
@@ -23,7 +27,7 @@ from unifi_access_api.models.websocket import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -31,6 +35,16 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
+
+
+@dataclass(frozen=True)
+class DoorEvent:
+    """Represent a door event from WebSocket."""
+
+    door_id: str
+    category: str
+    event_type: str
+    event_data: dict[str, Any]
 
 
 class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
@@ -53,12 +67,28 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             update_interval=None,
         )
         self.client = client
+        self._event_listeners: list[Callable[[DoorEvent], None]] = []
+
+    @callback
+    def async_subscribe_door_events(
+        self,
+        event_callback: Callable[[DoorEvent], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to door events (doorbell, access)."""
+
+        def _unsubscribe() -> None:
+            self._event_listeners.remove(event_callback)
+
+        self._event_listeners.append(event_callback)
+        return _unsubscribe
 
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
         handlers: dict[str, WsMessageHandler] = {
             "access.data.device.location_update_v2": self._handle_location_update,
             "access.data.v2.location.update": self._handle_v2_location_update,
+            "access.hw.door_bell": self._handle_doorbell,
+            "access.logs.insights.add": self._handle_insights_add,
         }
         self.client.start_websocket(
             handlers,
@@ -126,3 +156,44 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             updates["door_lock_relay_status"] = "unlock"
         updated_door = current_door.with_updates(**updates)
         self.async_set_updated_data({**self.data, door_id: updated_door})
+
+    async def _handle_doorbell(self, msg: WebsocketMessage) -> None:
+        """Handle doorbell press events."""
+        doorbell = cast(HwDoorbell, msg)
+        self._dispatch_door_event(
+            doorbell.data.door_id,
+            "doorbell",
+            "ring",
+            {},
+        )
+
+    async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
+        """Handle access insights events (entry/exit)."""
+        insights = cast(InsightsAdd, msg)
+        door = insights.data.metadata.door
+        if not door.id:
+            return
+        event_type = (
+            "access_granted" if insights.data.result == "ACCESS" else "access_denied"
+        )
+        attrs: dict[str, Any] = {}
+        if insights.data.metadata.actor.display_name:
+            attrs["actor"] = insights.data.metadata.actor.display_name
+        if insights.data.metadata.authentication.display_name:
+            attrs["authentication"] = insights.data.metadata.authentication.display_name
+        if insights.data.result:
+            attrs["result"] = insights.data.result
+        self._dispatch_door_event(door.id, "access", event_type, attrs)
+
+    @callback
+    def _dispatch_door_event(
+        self,
+        door_id: str,
+        category: str,
+        event_type: str,
+        event_data: dict[str, Any],
+    ) -> None:
+        """Dispatch a door event to all subscribed listeners."""
+        event = DoorEvent(door_id, category, event_type, event_data)
+        for listener in self._event_listeners:
+            listener(event)
