@@ -30,7 +30,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import SpecializedTurboConfigEntry
 from .const import DOMAIN
@@ -209,7 +210,7 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SpecializedTurboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Specialized Turbo sensors from a config entry."""
     coordinator = entry.runtime_data
@@ -247,7 +248,7 @@ class SpecializedTurboSensor(
         )
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the sensor value from the coordinator's snapshot."""
         return self.entity_description.value_fn(self.coordinator.snapshot)
 
