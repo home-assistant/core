@@ -1,5 +1,6 @@
 """The tests for the trigger helper."""
 
+from collections.abc import Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import io
 from typing import Any
@@ -15,6 +16,7 @@ from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAI
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     CONF_ABOVE,
     CONF_BELOW,
     CONF_ENTITY_ID,
@@ -33,20 +35,27 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, trigger
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.automation import (
+    ANY_DEVICE_CLASS,
+    DomainSpec,
+    NumericalDomainSpec,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.trigger import (
     CONF_LOWER_LIMIT,
     CONF_THRESHOLD_TYPE,
     CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
+    EntityTriggerBase,
     PluggableAction,
     Trigger,
     TriggerActionRunner,
+    TriggerConfig,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
-    make_entity_numerical_state_attribute_changed_trigger,
-    make_entity_numerical_state_attribute_crossed_threshold_trigger,
+    make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_crossed_threshold_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -1242,8 +1251,8 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
-                {"test"}, {"test": "test_attribute"}
+            "test_trigger": make_entity_numerical_state_changed_trigger(
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1270,8 +1279,8 @@ async def test_numerical_state_attribute_changed_error_handling(
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "attribute_changed": make_entity_numerical_state_attribute_changed_trigger(
-                {"test"}, {"test": "test_attribute"}
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1552,8 +1561,8 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
-            "test_trigger": make_entity_numerical_state_attribute_crossed_threshold_trigger(
-                {"test"}, {"test": "test_attribute"}
+            "test_trigger": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": NumericalDomainSpec(value_source="test_attribute")}
             ),
         }
 
@@ -1571,3 +1580,126 @@ async def test_numerical_state_attribute_crossed_threshold_trigger_config_valida
                 }
             ],
         )
+
+
+def _make_trigger(
+    hass: HomeAssistant, domain_specs: Mapping[str, DomainSpec]
+) -> EntityTriggerBase:
+    """Create a minimal EntityTriggerBase subclass with the given domain specs."""
+
+    class _SimpleTrigger(EntityTriggerBase):
+        """Minimal concrete trigger for testing entity_filter."""
+
+        _domain_specs = domain_specs
+
+        def is_valid_state(self, state):
+            """Accept any state."""
+            return True
+
+    config = TriggerConfig(key="test.test_trigger", target={CONF_ENTITY_ID: []})
+    return _SimpleTrigger(hass, config)
+
+
+async def test_entity_filter_by_domain_only(hass: HomeAssistant) -> None:
+    """Test entity_filter includes entities matching domain, excludes others."""
+    trig = _make_trigger(hass, {"sensor": DomainSpec(), "switch": DomainSpec()})
+
+    entities = {
+        "sensor.temp",
+        "sensor.humidity",
+        "switch.light",
+        "light.bedroom",
+        "cover.garage",
+    }
+    result = trig.entity_filter(entities)
+    assert result == {"sensor.temp", "sensor.humidity", "switch.light"}
+
+
+async def test_entity_filter_by_device_class(hass: HomeAssistant) -> None:
+    """Test entity_filter filters by device_class when specified."""
+    trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    # Set states with device_class attributes
+    hass.states.async_set("sensor.humidity_1", "50", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature_1", "22", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("sensor.no_class", "10", {})
+
+    entities = {"sensor.humidity_1", "sensor.temperature_1", "sensor.no_class"}
+    result = trig.entity_filter(entities)
+    assert result == {"sensor.humidity_1"}
+
+
+async def test_entity_filter_device_class_unknown_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter excludes entities not in state machine or registry."""
+    trig = _make_trigger(hass, {"sensor": DomainSpec(device_class="humidity")})
+
+    # Entity not in state machine and not in entity registry -> UNDEFINED
+    entities = {"sensor.nonexistent"}
+    result = trig.entity_filter(entities)
+    assert result == set()
+
+
+async def test_entity_filter_multiple_domains_with_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test entity_filter with multiple domains, some with device_class filtering."""
+    trig = _make_trigger(
+        hass,
+        {
+            "climate": DomainSpec(value_source="current_humidity"),
+            "sensor": DomainSpec(device_class="humidity"),
+            "weather": DomainSpec(value_source="humidity"),
+        },
+    )
+
+    hass.states.async_set("sensor.humidity", "60", {ATTR_DEVICE_CLASS: "humidity"})
+    hass.states.async_set(
+        "sensor.temperature", "20", {ATTR_DEVICE_CLASS: "temperature"}
+    )
+    hass.states.async_set("climate.hvac", "heat", {})
+    hass.states.async_set("weather.home", "sunny", {})
+    hass.states.async_set("light.bedroom", "on", {})
+
+    entities = {
+        "sensor.humidity",
+        "sensor.temperature",
+        "climate.hvac",
+        "weather.home",
+        "light.bedroom",
+    }
+    result = trig.entity_filter(entities)
+    # sensor.temperature excluded (wrong device_class)
+    # light.bedroom excluded (no matching domain)
+    assert result == {"sensor.humidity", "climate.hvac", "weather.home"}
+
+
+async def test_entity_filter_no_device_class_means_match_all_in_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test that DomainSpec without device_class matches all entities in the domain."""
+    trig = _make_trigger(hass, {"cover": DomainSpec()})
+
+    hass.states.async_set("cover.door", "open", {ATTR_DEVICE_CLASS: "door"})
+    hass.states.async_set("cover.garage", "closed", {ATTR_DEVICE_CLASS: "garage"})
+    hass.states.async_set("cover.plain", "open", {})
+
+    entities = {"cover.door", "cover.garage", "cover.plain"}
+    result = trig.entity_filter(entities)
+    assert result == entities
+
+
+async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
+    """Test NumericalDomainSpec stores converter correctly."""
+    converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
+    nvs = NumericalDomainSpec(value_source="brightness", value_converter=converter)
+    assert nvs.value_source == "brightness"
+    assert nvs.value_converter is converter
+    assert nvs.device_class is ANY_DEVICE_CLASS
+
+    # Plain DomainSpec has no converter
+    vs = DomainSpec(value_source="brightness")
+    assert not isinstance(vs, NumericalDomainSpec)

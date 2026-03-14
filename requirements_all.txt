@@ -579,6 +579,9 @@ autarco==3.2.0
 # homeassistant.components.husqvarna_automower_ble
 automower-ble==0.2.8
 
+# homeassistant.components.autoskope
+autoskope_client==1.4.1
+
 # homeassistant.components.generic
 # homeassistant.components.stream
 av==16.0.1
@@ -1119,7 +1122,7 @@ gotailwind==0.3.0
 govee-ble==1.2.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.3.0
+govee-local-api==2.4.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1879,6 +1882,9 @@ py-sucks==0.9.11
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.7.3
 
+# homeassistant.components.unifi_access
+py-unifi-access==1.0.0
+
 # homeassistant.components.atome
 pyAtome==0.1.1
 
@@ -2155,7 +2161,7 @@ pyicloud==2.4.1
 pyinsteon==1.6.4
 
 # homeassistant.components.intelliclima
-pyintelliclima==0.2.2
+pyintelliclima==0.3.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2479,10 +2485,10 @@ pysma==1.1.0
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==1.0.1
+pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.6.0
+pysmartthings==3.7.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -3130,7 +3136,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.11
+tuya-device-handlers==0.0.12
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -3356,7 +3362,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.0.1
+zha==1.0.2
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
