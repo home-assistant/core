@@ -55,6 +55,7 @@ MISSING_INTEGRATION_TYPE = {
     "ness_alarm",
     "nmap_tracker",
     "otp",
+    "orvibo",
     "profiler",
     "proximity",
     "rhasspy",
@@ -72,8 +73,6 @@ MISSING_INTEGRATION_TYPE = {
     "version",
     "volvooncall",
     "wemo",
-    "wiffi",
-    "zerproc",
     "zodiac",
 }
 
@@ -88,7 +87,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
             if integration.domain in MISSING_INTEGRATION_TYPE:
                 integration.add_error(
                     "integration_type",
-                    "Integration has an `integration_type` in the manifest but is not listed in MISSING_INTEGRATION_TYPE",
+                    "Integration has an `integration_type` in the manifest but is still listed in MISSING_INTEGRATION_TYPE",
                 )
             continue
 
