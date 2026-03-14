@@ -95,7 +95,7 @@ class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                         CONF_CHANNELS: channels,
                                     },
                                 )
-                    except aiohttp.ClientError, OSError:
+                    except (aiohttp.ClientError, OSError):
                         errors["base"] = "cannot_connect"
 
         data_schema = vol.Schema(
