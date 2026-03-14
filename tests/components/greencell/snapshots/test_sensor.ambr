@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_sensor_states_and_snapshots
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Greencell Device EVGC021A2275XXXXXXXXXX Current phase L1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.greencell_device_evgc021a2275xxxxxxxxxx_current_phase_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.5',
+  })
+# ---
