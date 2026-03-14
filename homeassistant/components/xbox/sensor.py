@@ -44,6 +44,16 @@ MAP_JOIN_RESTRICTIONS = {
     "followed": "joinable",
 }
 
+MAP_PLATFORM_NAME = {
+    "Android": "Android",
+    "iOS": "iOS",
+    "Nintendo": "Nintendo Switch",
+    "Scarlett": "Xbox Series X|S",
+    "WindowsOneCore": "Windows",
+    "Xbox360": "Xbox 360",
+    "XboxOne": "Xbox One",
+}
+
 
 class XboxSensor(StrEnum):
     """Xbox sensor."""
@@ -63,6 +73,9 @@ class XboxSensor(StrEnum):
     FREE_STORAGE = "free_storage"
 
 
+PRESENCE_ACTIVE = "Active"
+
+
 @dataclass(kw_only=True, frozen=True)
 class XboxSensorEntityDescription(XboxBaseEntityDescription, SensorEntityDescription):
     """Xbox sensor description."""
@@ -79,7 +92,7 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -91,9 +104,35 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
         "achievements": None,
         "gamerscore": None,
         "progress": None,
+        "platform": None,
     }
+
+    if person.presence_details:
+        active_entry = next(
+            (
+                d
+                for d in person.presence_details
+                if d.state == PRESENCE_ACTIVE and d.is_game
+            ),
+            None,
+        ) or next(
+            (d for d in person.presence_details if d.state == PRESENCE_ACTIVE),
+            None,
+        )
+
+        if active_entry:
+            platform = active_entry.device
+            if platform == "Scarlett" and title and title.devices:
+                if "Xbox360" in title.devices:
+                    platform = "Xbox360"
+                elif "XboxOne" in title.devices:
+                    platform = "XboxOne"
+
+            attributes["platform"] = MAP_PLATFORM_NAME.get(platform, platform)
+
     if not title:
         return attributes
+
     if title.detail is not None:
         attributes.update(
             {
