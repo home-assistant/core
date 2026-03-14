@@ -48,7 +48,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="offset",
         cometblue_key="tempOffset",
-        translation_key="temperature_offset",
+        translation_key="offset",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -60,7 +60,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="target_temp_low",
         cometblue_key="targetTempLow",
-        translation_key="target_temperature_low",
+        translation_key="target_temp_low",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -72,7 +72,7 @@ DESCRIPTIONS = [
     CometBlueNumberEntityDescription(
         key="target_temp_high",
         cometblue_key="targetTempHigh",
-        translation_key="target_temperature_high",
+        translation_key="target_temp_high",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
