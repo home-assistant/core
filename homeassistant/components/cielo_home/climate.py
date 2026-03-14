@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
-from cieloconnectapi import AuthenticationError
+from cieloconnectapi.exceptions import AuthenticationError
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -67,7 +67,7 @@ def async_handle_api_call(
         except CIELO_ERRORS as err:
             if isinstance(err, TimeoutError):
                 raise HomeAssistantError("API call timed out") from err
-            raise HomeAssistantError from err
+            raise HomeAssistantError(str(err)) from err
 
         LOGGER.debug(
             "API call result for entity %s: type=%s keys=%s",
@@ -154,21 +154,46 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode.
 
-        The backend already maps device HVAC states to Home Assistant HVACMode
-        values, ensuring consistency with HA climate expectations and UI icons.
+        The backend may return either a Home Assistant HVACMode value or an
+        integration-specific string. In both cases we normalize to HVACMode
+        for consistency with HA climate expectations and UI icons.
         """
-        return self.client.hvac_mode()
+        mode = self.client.hvac_mode()
+
+        if isinstance(mode, HVACMode) or mode is None:
+            return mode
+
+        if isinstance(mode, str):
+            return CIELO_TO_HA_HVAC.get(mode)
+
+        return None
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes.
 
-        Device HVAC modes are provided by the backend and translated to
-        Home Assistant HVACMode values using the CIELO_TO_HA_HVAC mapping.
-        This ensures the entity exposes only HA-compatible HVAC modes.
+        Device HVAC modes may be provided by the backend either as
+        HVACMode values or as integration-specific strings. We normalize
+        them to Home Assistant HVACMode values using the CIELO_TO_HA_HVAC
+        mapping when needed to ensure the entity exposes only HA-compatible
+        HVAC modes.
         """
         modes = self.client.hvac_modes()
-        return [CIELO_TO_HA_HVAC[m] for m in modes if m in CIELO_TO_HA_HVAC]
+
+        if not modes:
+            return []
+
+        # If the backend already returns HVACMode values, expose them
+        # directly without additional mapping.
+        first_mode = modes[0]
+        if isinstance(first_mode, HVACMode):
+            return list(modes)
+
+        return [
+            CIELO_TO_HA_HVAC[m]
+            for m in modes
+            if isinstance(m, str) and m in CIELO_TO_HA_HVAC
+        ]
 
     @property
     def current_temperature(self) -> float | None:

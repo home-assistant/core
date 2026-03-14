@@ -4,6 +4,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from unittest.mock import MagicMock
 
 from tests.common import MockConfigEntry
 
@@ -11,7 +12,7 @@ DOMAIN = "cielo_home"
 
 
 async def test_async_setup_and_unload_entry(
-    hass: HomeAssistant, mock_cielo_client
+    hass: HomeAssistant, mock_cielo_client: MagicMock
 ) -> None:
     """Test setting up and unloading the integration."""
     entry = MockConfigEntry(

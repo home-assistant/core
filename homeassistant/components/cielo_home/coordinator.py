@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from copy import copy
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, Final
 
 from aiohttp import ClientError
@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
@@ -59,7 +58,6 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self._cancel_delayed_refresh: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
@@ -105,23 +103,8 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         new_parsed[device_id] = dev
         self.async_set_updated_data(CieloData(raw=self.data.raw, parsed=new_parsed))
 
-        if self._cancel_delayed_refresh is not None:
-            self._cancel_delayed_refresh()
-            self._cancel_delayed_refresh = None
-
-        async def _refresh_later(_now: datetime) -> None:
-            """Schedule a refresh after the backend has had time to update."""
-            self._cancel_delayed_refresh = None
-            self.hass.async_create_task(self.async_request_refresh())
-
-        self._cancel_delayed_refresh = async_call_later(self.hass, 2.0, _refresh_later)
-
-    async def async_shutdown(self) -> None:
-        """Cancel pending callbacks when the coordinator shuts down."""
-        if self._cancel_delayed_refresh is not None:
-            self._cancel_delayed_refresh()
-            self._cancel_delayed_refresh = None
-        await super().async_shutdown()
+        # Request a debounced refresh to reconcile with the backend state.
+        await self.async_request_refresh()
 
 
 # Define the ConfigEntry type here to avoid circular imports

@@ -12,7 +12,7 @@ DOMAIN = "cielo_home"
 
 
 async def test_climate_set_temperature_calls_library(
-    hass: HomeAssistant, mock_cielo_client
+    hass: HomeAssistant, mock_cielo_client: MagicMock
 ) -> None:
     """Test setting temperature calls into the library client/device API."""
     entry = MockConfigEntry(

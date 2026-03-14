@@ -51,18 +51,21 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return self._device_api
 
     @property
-    def device_data(self) -> CieloDevice:
+    def device_data(self) -> CieloDevice | None:
         """Return the device data from the coordinator."""
         return self.coordinator.data.parsed.get(self._device_id)
 
     @property
     def available(self) -> bool:
         """Return if the device is available and online."""
-        return (
+        if not (
             super().available
             and self._device_id in self.coordinator.data.parsed
-            and bool(self.device_data.device_status)
-        )
+        ):
+            return False
+
+        dev = self.device_data
+        return bool(dev and dev.device_status)
 
 
 class CieloDeviceBaseEntity(CieloBaseEntity):
