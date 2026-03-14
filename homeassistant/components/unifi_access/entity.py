@@ -56,8 +56,3 @@ class UnifiAccessHubEntity(CoordinatorEntity[UnifiAccessCoordinator]):
             name="UniFi Access",
             manufacturer="Ubiquiti",
         )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available
