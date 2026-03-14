@@ -2,11 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.const.devices import (
-    DEVICE_HARDCODED_DATA,
-    DEVICE_TYPE_SPEAKER_GROUP,
-    SPEAKER_GROUP_FAMILY,
-)
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 import pytest
 
@@ -118,7 +114,7 @@ async def test_alexa_dnd_group_removal(
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Amazon",
-        model=DEVICE_HARDCODED_DATA[DEVICE_TYPE_SPEAKER_GROUP]["model"],
+        model="Speaker Group",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
@@ -157,7 +153,7 @@ async def test_alexa_unsupported_notification_sensor_removal(
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Amazon",
-        model=DEVICE_HARDCODED_DATA[DEVICE_TYPE_SPEAKER_GROUP]["model"],
+        model="Speaker Group",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
