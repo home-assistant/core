@@ -7,8 +7,7 @@ from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
-
-DOMAIN = "cielo_home"
+from homeassistant.components.cielo_home.const import DOMAIN
 
 
 async def test_async_setup_and_unload_entry(

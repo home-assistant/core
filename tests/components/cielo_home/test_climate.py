@@ -3,12 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.cielo_home.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-DOMAIN = "cielo_home"
 
 
 async def test_climate_set_temperature_calls_library(
