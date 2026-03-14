@@ -1,0 +1,197 @@
+# serializer version: 1
+# name: test_setup[aqua_contour][select.mock_title_active_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'position_1',
+        'position_2',
+        'position_3',
+        'position_4',
+        'position_5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_title_active_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Active position',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_position',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0132-0b0e-421a-84e5-ddbf75dc6de4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][select.mock_title_active_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Active position',
+      'options': list([
+        'position_1',
+        'position_2',
+        'position_3',
+        'position_4',
+        'position_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_title_active_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[aqua_contour][select.mock_title_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'active',
+        'manual_mode',
+        'pre_winter',
+        'deep_sleep',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_title_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0a17-0b0e-421a-84e5-ddbf75dc6de4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][select.mock_title_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Operation mode',
+      'options': list([
+        'active',
+        'manual_mode',
+        'pre_winter',
+        'deep_sleep',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_title_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[aqua_contour][select.mock_title_watering-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'preview',
+        'setup_mode',
+        'rest',
+        'contour_1',
+        'contour_2',
+        'contour_3',
+        'contour_4',
+        'contour_5',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.mock_title_watering',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Watering',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Watering',
+    'platform': 'gardena_bluetooth',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'watering_active',
+    'unique_id': '00000000-0000-0000-0000-000000000003-98bd0d11-0b0e-421a-84e5-ddbf75dc6de4:1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[aqua_contour][select.mock_title_watering-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Watering',
+      'options': list([
+        'preview',
+        'setup_mode',
+        'rest',
+        'contour_1',
+        'contour_2',
+        'contour_3',
+        'contour_4',
+        'contour_5',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.mock_title_watering',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rest',
+  })
+# ---
