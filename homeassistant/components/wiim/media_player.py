@@ -180,6 +180,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.SHUFFLE_SET
 
         return features
+
     @callback
     def _get_entity_id_for_udn(self, udn: str) -> str | None:
         """Helper to get a WiimMediaPlayerEntity ID by UDN from shared data."""
@@ -350,6 +351,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         async def _wrapped() -> None:
             if self._device.supports_http_api:
+                await self._device.ensure_subscriptions()
                 await self._update_output_mode()
             self._update_ha_state_from_sdk_cache()
 
@@ -443,9 +445,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         metadata_device = self._metadata_device
         previous_capabilities = self._transport_capabilities
         if (
-            transport_capabilities := await self._async_get_transport_capabilities_for_device(
-                metadata_device
-            )
+            transport_capabilities
+            := await self._async_get_transport_capabilities_for_device(metadata_device)
         ) is not None:
             if self._transport_capabilities != transport_capabilities:
                 self._transport_capabilities = transport_capabilities
@@ -454,7 +455,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.entity_id,
                     transport_capabilities,
                 )
-        elif metadata_device is not self._device and self._transport_capabilities is not None:
+        elif (
+            metadata_device is not self._device
+            and self._transport_capabilities is not None
+        ):
             self._transport_capabilities = None
             LOGGER.debug(
                 "Device %s: Follower transport capabilities unavailable, using base features",
@@ -534,9 +538,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.entity_id,
             e,
         )
-
-        if not self._device.available:
-            return
 
         LOGGER.info(
             "Device %s is now considered offline. Disconnecting UPnP subscriptions",
