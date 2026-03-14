@@ -17,11 +17,19 @@
           "region": "Server region",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "The password for your Growatt account.",
+          "region": "The server region that matches your Growatt account location.",
+          "username": "The email address or username for your Growatt account."
+        },
         "title": "Enter your Growatt login credentials"
       },
       "plant": {
         "data": {
           "plant_id": "Plant"
+        },
+        "data_description": {
+          "plant_id": "The Growatt plant (solar installation) to integrate."
         },
         "title": "Select your plant"
       },
@@ -32,6 +40,12 @@
           "token": "[%key:component::growatt_server::config::step::token_auth::data::token%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::growatt_server::config::step::password_auth::data_description::password%]",
+          "region": "[%key:component::growatt_server::config::step::password_auth::data_description::region%]",
+          "token": "[%key:component::growatt_server::config::step::token_auth::data_description::token%]",
+          "username": "[%key:component::growatt_server::config::step::password_auth::data_description::username%]"
+        },
         "description": "Re-enter your credentials to continue using this integration.",
         "title": "Re-authenticate with Growatt"
       },
@@ -39,6 +53,10 @@
         "data": {
           "region": "[%key:component::growatt_server::config::step::password_auth::data::region%]",
           "token": "API token"
+        },
+        "data_description": {
+          "region": "[%key:component::growatt_server::config::step::password_auth::data_description::region%]",
+          "token": "The API token for your Growatt account. You can generate one via the Growatt web portal or ShinePhone app."
         },
         "description": "Token authentication is only supported for MIN/SPH devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
