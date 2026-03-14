@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: Brand submission will be handled in a separate PR to home-assistant/brands.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description:
+    status: exempt
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+  docs-installation-instructions:
+    status: exempt
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+  docs-removal-instructions:
+    status: exempt
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: BLE devices may not be in range at startup; the integration registers a Bluetooth callback for deferred connection.
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Documentation for this new integration is handled outside core and is not yet published on home-assistant.io.
+  docs-installation-parameters:
+    status: exempt
+    comment: Pairing uses discovery and does not require user-supplied setup parameters.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Bluetooth pairing cannot be reauthenticated; requires physical re-pairing via discovery flow.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Single device per config entry, no network address to update.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Single fixed BLE device per config entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: No user-configurable data fields to reconfigure; push-twist mode is handled via options flow.
+  repair-issues:
+    status: exempt
+    comment: No actionable repair scenarios; BLE connection issues are transient and handled by reconnection logic.
+  stale-devices:
+    status: exempt
+    comment: Single device per config entry, cannot become stale.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: Event-only platform makes no external HTTP calls.
+  strict-typing: done

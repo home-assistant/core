@@ -1,0 +1,150 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Flic device is already configured.",
+      "cannot_connect": "Failed to connect to device at address {address}.",
+      "device_not_found": "Device not found. Make sure it is in range and powered on.",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device. Make sure it is in range and try again.",
+      "invalid_signature": "Invalid device signature during pairing.",
+      "pairing_failed": "Pairing failed. Please ensure the device is in pairing mode (LED flashing) and try again.",
+      "unknown": "An unexpected error occurred during pairing."
+    },
+    "progress": {
+      "wait_for_discovery": "Push and hold your Flic until it connects. This should take no longer than 10 seconds\u2026"
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Set up {name}?",
+        "title": "Discovered Flic device"
+      },
+      "pair": {
+        "description": "Push and hold your Flic until it connects. This should take no longer than 10 seconds. Then submit this form to complete pairing with {name}.",
+        "title": "Pair with Flic device"
+      },
+      "user": {
+        "title": "Pair with Flic device"
+      }
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "up": "Up"
+            }
+          }
+        }
+      },
+      "button_big": {
+        "name": "Big button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right",
+              "swipe_up": "Swipe up",
+              "up": "Up"
+            }
+          }
+        }
+      },
+      "button_small": {
+        "name": "Small button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right",
+              "swipe_up": "Swipe up",
+              "up": "Up"
+            }
+          }
+        }
+      },
+      "button_twist": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "selector_changed": "Selector changed",
+              "up": "Up"
+            }
+          }
+        }
+      },
+      "button_twist_default": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single push",
+              "double_click": "Double push",
+              "down": "Down",
+              "hold": "Hold",
+              "push_twist_decrement": "Push-twist decremented",
+              "push_twist_increment": "Push-twist incremented",
+              "twist_decrement": "Twist decremented",
+              "twist_increment": "Twist incremented",
+              "up": "Up"
+            }
+          }
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "not_twist_device": "Options are only available for Flic Twist devices."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "push_twist_mode": "Push twist mode"
+        },
+        "data_description": {
+          "push_twist_mode": "Controls the behavior when holding the button and twisting. Default mode fires increment and decrement events that clamp at boundaries. Continuous mode is like default but wraps around instead of clamping. Selector mode fires rotation and selector changed events."
+        },
+        "title": "Flic Twist options"
+      }
+    }
+  },
+  "selector": {
+    "push_twist_mode": {
+      "options": {
+        "continuous": "Continuous",
+        "default": "Default",
+        "selector": "Selector mode"
+      }
+    }
+  }
+}

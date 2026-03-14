@@ -2095,6 +2095,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "flic_button": {
+      "name": "Flic",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "flipr": {
       "name": "Flipr",
       "integration_type": "hub",
