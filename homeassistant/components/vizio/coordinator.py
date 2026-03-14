@@ -84,19 +84,19 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
 
     async def _async_setup(self) -> None:
         """Fetch device info and update device registry."""
-        if not self.config_entry.unique_id:
-            return
+        model = await self.device.get_model_name(log_api_exception=False)
+        version = await self.device.get_version(log_api_exception=False)
+
+        assert self.config_entry.unique_id
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get_or_create(
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, self.config_entry.unique_id)},
             manufacturer="VIZIO",
             name=self.config_entry.data[CONF_NAME],
+            model=model,
+            sw_version=version,
         )
-        if model := await self.device.get_model_name(log_api_exception=False):
-            device_registry.async_update_device(device.id, model=model)
-        if version := await self.device.get_version(log_api_exception=False):
-            device_registry.async_update_device(device.id, sw_version=version)
 
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
