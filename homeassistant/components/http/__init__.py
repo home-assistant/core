@@ -7,7 +7,14 @@ from collections.abc import Collection
 from dataclasses import dataclass
 import datetime
 from functools import partial
-from ipaddress import IPv4Network, IPv6Network, ip_network
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import logging
 import os
 import socket
@@ -84,6 +91,8 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_NAMESERVERS: Final = "nameservers"
+CONF_CARES_INIT_FLAGS: Final = "cares_init_flags"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -133,6 +142,8 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            vol.Optional(CONF_NAMESERVERS): vol.All(cv.ensure_list, [ip_address]),
+            vol.Optional(CONF_CARES_INIT_FLAGS): cv.positive_int,
         }
     ),
 )
@@ -171,6 +182,8 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    nameservers: list[IPv4Address | IPv6Address]
+    cares_init_flags: int
 
 
 @bind_hass
@@ -207,6 +220,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if conf is None:
         conf = cast(ConfData, HTTP_SCHEMA({}))
+
+    hass.data[DOMAIN] = conf
 
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
