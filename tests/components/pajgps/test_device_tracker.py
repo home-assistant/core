@@ -91,12 +91,11 @@ def test_source_type_is_gps() -> None:
     assert sensor.source_type == "gps"
 
 
-def test_device_info_returned_from_coordinator() -> None:
-    """Test that device info is returned and contains identifiers."""
+def test_device_info_populated_at_construction() -> None:
+    """Test that device info is populated immediately after entity construction."""
     sensor = _make_sensor(1)
-    info = sensor.device_info
-    assert info is not None
-    assert "identifiers" in info
+    assert sensor._attr_device_info is not None
+    assert "identifiers" in sensor._attr_device_info
 
 
 async def test_entities_added_for_each_device() -> None:

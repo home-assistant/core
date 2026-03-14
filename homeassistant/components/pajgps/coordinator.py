@@ -20,7 +20,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -105,20 +104,3 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                 raise UpdateFailed(f"Failed to fetch positions: {exc}") from exc
 
         return PajGpsData(devices=devices, positions=positions)
-
-    def get_device_info(self, device_id: int) -> DeviceInfo | None:
-        """Return the HA DeviceInfo dict for the given device_id."""
-        device = self.data.devices.get(device_id)
-        if device and device.id == device_id:
-            model = None
-            device_models = getattr(device, "device_models", None)
-            if device_models and isinstance(device_models[0], dict):
-                model = device_models[0].get("model") or None
-
-            return DeviceInfo(
-                identifiers={(DOMAIN, f"{self.user_id}_{device_id}")},
-                name=device.name or f"PAJ GPS {device_id}",
-                manufacturer="PAJ GPS",
-                model=model,
-            )
-        return None

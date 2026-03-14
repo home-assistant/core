@@ -1,66 +1,58 @@
-"""Tests for device model resolution in get_device_info and related helpers.
+"""Tests for device model resolution in PajGpsEntity._build_device_info.
 
 Covers:
-- get_device_info reads model from device.device_models[0]["model"]
-- get_device_info falls back to None when device_models is empty or None
-- get_device_info falls back to None when the model entry is None
-- the helper used to build a hass/config_entry pair around a coordinator
+- _build_device_info reads model from device.device_models[0]["model"]
+- _build_device_info falls back to None when device_models is empty or None
+- _build_device_info falls back to None when the model entry is None
 """
 
 from __future__ import annotations
 
 from homeassistant.components.pajgps.coordinator import PajGpsData
+from homeassistant.components.pajgps.entity import PajGpsEntity
 
 from .test_common import make_coordinator, make_device
 
 # ---------------------------------------------------------------------------
-# get_device_info — device model resolution
+# PajGpsEntity._build_device_info — device model resolution
 # ---------------------------------------------------------------------------
 
 
 class TestGetDeviceInfoModel:
-    """Verify that get_device_info reads the model from device.device_models."""
+    """Verify that _build_device_info reads the model from device.device_models."""
 
-    def _make_coord_with_device(self, device):
+    def _make_entity_with_device(self, device) -> PajGpsEntity:
         coord = make_coordinator()
         coord.data = PajGpsData(devices={device.id: device}, positions={})
-        return coord
+        return PajGpsEntity(coord, device.id)
 
     def test_model_read_from_device_models_first_entry(self):
         """Model should come from device_models[0]['model']."""
         device = make_device(1, device_models=[{"model": "PAJ ALLROUND Finder 4G"}])
-        coord = self._make_coord_with_device(device)
+        entity = self._make_entity_with_device(device)
 
-        info = coord.get_device_info(1)
-
-        assert info["model"] == "PAJ ALLROUND Finder 4G"
+        assert entity._attr_device_info["model"] == "PAJ ALLROUND Finder 4G"
 
     def test_model_falls_back_to_none_when_device_models_is_empty_list(self):
         """When device_models is an empty list there is no model entry — fall back to None."""
         device = make_device(1, device_models=[])
-        coord = self._make_coord_with_device(device)
+        entity = self._make_entity_with_device(device)
 
-        info = coord.get_device_info(1)
-
-        assert info["model"] is None
+        assert entity._attr_device_info["model"] is None
 
     def test_model_falls_back_to_none_when_device_models_is_none(self):
         """When device_models is None fall back to None."""
         device = make_device(1, device_models=None)
-        coord = self._make_coord_with_device(device)
+        entity = self._make_entity_with_device(device)
 
-        info = coord.get_device_info(1)
-
-        assert info["model"] is None
+        assert entity._attr_device_info["model"] is None
 
     def test_model_falls_back_to_none_when_model_key_is_none(self):
         """When device_models[0]['model'] is None fall back to None."""
         device = make_device(1, device_models=[{"model": None}])
-        coord = self._make_coord_with_device(device)
+        entity = self._make_entity_with_device(device)
 
-        info = coord.get_device_info(1)
-
-        assert info["model"] is None
+        assert entity._attr_device_info["model"] is None
 
     def test_model_uses_first_entry_when_multiple_models_present(self):
         """Only the first entry in device_models should be used."""
@@ -71,8 +63,6 @@ class TestGetDeviceInfoModel:
                 {"model": "Second Model"},
             ],
         )
-        coord = self._make_coord_with_device(device)
+        entity = self._make_entity_with_device(device)
 
-        info = coord.get_device_info(1)
-
-        assert info["model"] == "First Model"
+        assert entity._attr_device_info["model"] == "First Model"

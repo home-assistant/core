@@ -1,4 +1,4 @@
-"""Tests for PajGpsCoordinator lifecycle: initialisation, update behaviour, get_device_info helper, and shutdown."""
+"""Tests for PajGpsCoordinator lifecycle: initialisation, update behaviour, and shutdown."""
 
 from __future__ import annotations
 
@@ -86,26 +86,3 @@ class TestAsyncSetup:
 
         with pytest.raises(ConfigEntryNotReady):
             await coord._async_setup()
-
-
-class TestGetDeviceInfo:
-    """Tests for the get_device_info helper method."""
-
-    def test_returns_dict_for_known_device(self):
-        """Test that get_device_info returns a populated dict for a known device."""
-        coord = make_coordinator()
-        coord.data = PajGpsData(devices={1: make_device(1)}, positions={})
-        info = coord.get_device_info(1)
-
-        assert info is not None
-        assert "identifiers" in info
-        assert "name" in info
-        assert info["manufacturer"] == "PAJ GPS"
-        assert "model" in info
-
-    def test_returns_none_for_unknown_device(self):
-        """Test that get_device_info returns None for an unknown device ID."""
-        coord = make_coordinator()
-        coord.data = PajGpsData(devices={}, positions={})
-
-        assert coord.get_device_info(999) is None

@@ -10,15 +10,13 @@ import logging
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PajGpsConfigEntry
 from .coordinator import PajGpsCoordinator
+from .entity import PajGpsEntity
 
 _LOGGER = logging.getLogger(__name__)
-
 PARALLEL_UPDATES = 0
 
 
@@ -53,28 +51,21 @@ async def async_setup_entry(
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
 
 
-class PajGPSDeviceTracker(CoordinatorEntity[PajGpsCoordinator], TrackerEntity):
+class PajGPSDeviceTracker(PajGpsEntity, TrackerEntity):
     """Tracker entity that reads position from the coordinator snapshot."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_icon = "mdi:map-marker"
 
     def __init__(self, pajgps_coordinator: PajGpsCoordinator, device_id: int) -> None:
         """Initialize the GPS position tracker entity."""
-        super().__init__(pajgps_coordinator)
-        self._device_id = device_id
+        super().__init__(pajgps_coordinator, device_id)
         self._attr_unique_id = f"{pajgps_coordinator.user_id}_{device_id}"
 
     @property
     def available(self) -> bool:
         """Return False when the device has been removed from the account."""
         return super().available and self._device_id in self.coordinator.data.devices
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information for this tracker."""
-        return self.coordinator.get_device_info(self._device_id)
 
     @property
     def latitude(self) -> float | None:
