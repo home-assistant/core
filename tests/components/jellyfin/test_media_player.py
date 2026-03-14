@@ -162,6 +162,7 @@ async def test_services(
     assert mock_api.remote_play_media.mock_calls[0].args == (
         "SESSION-UUID",
         ["ITEM-UUID"],
+        "PlayNow",
     )
 
     await hass.services.async_call(
@@ -251,6 +252,73 @@ async def test_services(
         blocking=True,
     )
     assert len(mock_api.remote_unmute.mock_calls) == 1
+
+
+async def test_services_enqueue(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin play_media enqueue mapping."""
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+
+    cases = [
+        ("add", "PlayLast"),
+        ("next", "PlayNext"),
+        ("play", "PlayNow"),
+        ("replace", "PlayNow"),
+    ]
+
+    for enqueue_val, expected_command in cases:
+        mock_api.remote_play_media.reset_mock()
+        await hass.services.async_call(
+            MP_DOMAIN,
+            "play_media",
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                "media_content_type": "",
+                "media_content_id": "ITEM-UUID",
+                "enqueue": enqueue_val,
+            },
+            blocking=True,
+        )
+        assert len(mock_api.remote_play_media.mock_calls) == 1, (
+            f"failed for enqueue={enqueue_val}"
+        )
+        assert mock_api.remote_play_media.mock_calls[0].args == (
+            "SESSION-UUID",
+            ["ITEM-UUID"],
+            expected_command,
+        ), f"wrong command for enqueue={enqueue_val}"
+
+
+async def test_services_shuffle(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test Jellyfin play_media shuffle."""
+    state = hass.states.get("media_player.jellyfin_device")
+    assert state
+
+    await hass.services.async_call(
+        DOMAIN,
+        "play_media_shuffle",
+        {
+            ATTR_ENTITY_ID: state.entity_id,
+            "media_content_type": "",
+            "media_content_id": "ITEM-UUID",
+        },
+        blocking=True,
+    )
+    assert mock_api.remote_play_media.mock_calls[0].args == (
+        "SESSION-UUID",
+        ["ITEM-UUID"],
+        "PlayShuffle",
+    )
 
 
 async def test_browse_media(
@@ -371,7 +439,7 @@ async def test_search_media(
     mock_jellyfin: MagicMock,
     mock_api: MagicMock,
 ) -> None:
-    """Test Jellyfin browse media."""
+    """Test Jellyfin search media."""
     client = await hass_ws_client()
 
     # browse root folder
@@ -454,6 +522,7 @@ async def test_supports_media_control_fallback(
     assert features & MediaPlayerEntityFeature.SEEK
     assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
     assert features & MediaPlayerEntityFeature.PLAY_MEDIA
+    assert features & MediaPlayerEntityFeature.MEDIA_ENQUEUE
 
     # Should also have volume controls since it has VolumeSet, Mute, and Unmute
     assert features & MediaPlayerEntityFeature.VOLUME_SET

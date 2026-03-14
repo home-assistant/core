@@ -38,6 +38,8 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.EPISODE,
     MediaType.MOVIE,
     MediaType.MUSIC,
+    MediaType.SEASON,
+    MediaType.TVSHOW,
 ]
 
 
