@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "This bike is already configured.",
-      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled."
+      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Could not connect to the bike. Make sure it is powered on and in Bluetooth range."
