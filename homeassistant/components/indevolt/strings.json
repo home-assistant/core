@@ -35,6 +35,11 @@
     }
   },
   "entity": {
+    "button": {
+      "stop": {
+        "name": "Enable standby mode"
+      }
+    },
     "number": {
       "discharge_limit": {
         "name": "Discharge limit"
@@ -288,6 +293,20 @@
       "light": {
         "name": "LED indicator"
       }
+    }
+  },
+  "exceptions": {
+    "energy_mode_change_unavailable_outdoor_portable": {
+      "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
+    },
+    "failed_to_execute_realtime_action": {
+      "message": "Failed to execute real-time action"
+    },
+    "failed_to_retrieve_current_energy_mode": {
+      "message": "Failed to retrieve current energy mode"
+    },
+    "failed_to_switch_energy_mode": {
+      "message": "Failed to switch to requested energy mode"
     }
   }
 }
