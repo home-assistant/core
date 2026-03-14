@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -107,8 +108,21 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
     @property
     def temperature_unit(self) -> str:
-        """Return the unit of temperature."""
-        return self.client.temperature_unit()
+        """Return the unit of temperature in Home Assistant format."""
+        unit = self.client.temperature_unit()
+
+        if not unit:
+            return UnitOfTemperature.CELSIUS
+
+        normalized = unit.strip().lower()
+
+        if normalized in {"c", "°c", "celsius", "celcius"}:
+            return UnitOfTemperature.CELSIUS
+        if normalized in {"f", "°f", "fahrenheit"}:
+            return UnitOfTemperature.FAHRENHEIT
+
+        # Fallback to Celsius if the unit is unrecognized
+        return UnitOfTemperature.CELSIUS
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -276,8 +290,15 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        filtered_kwargs = {key: value for key, value in kwargs.items() if key != "entity_id"}
-        return await self.client.async_set_temperature(self.temperature_unit, **filtered_kwargs)
+        filtered_kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key != "entity_id"
+        }
+        return await self.client.async_set_temperature(
+            self.temperature_unit,
+            **filtered_kwargs,
+        )
 
     @async_handle_api_call
     async def async_set_fan_mode(self, fan_mode: str) -> None:
