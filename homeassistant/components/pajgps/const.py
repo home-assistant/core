@@ -1,4 +1,4 @@
 """Constants for the PajGPS integration."""
 
-DOMAIN = "pajgps"
+DOMAIN = "paj_gps"
 UPDATE_INTERVAL = 30

@@ -42,9 +42,7 @@ async def _validate_credentials(
     except AuthenticationError, TokenRefreshError:
         return "invalid_auth"
     except Exception:
-        _LOGGER.exception(
-            "Unexpected error validating PAJ GPS credentials for %s", email
-        )
+        _LOGGER.exception("Unexpected error validating PAJ GPS credentials")
         return "unknown"
 
     return None
