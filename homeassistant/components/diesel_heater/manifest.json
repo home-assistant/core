@@ -1,0 +1,26 @@
+{
+  "domain": "diesel_heater",
+  "name": "Diesel Heater",
+  "codeowners": ["@Spettacolo83"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "documentation": "https://www.home-assistant.io/integrations/diesel_heater",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["diesel_heater_ble"],
+  "requirements": ["diesel-heater-ble==0.3.0"],
+  "bluetooth": [
+    {
+      "connectable": true,
+      "manufacturer_id": 65535
+    },
+    {
+      "connectable": true,
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": true,
+      "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb"
+    }
+  ]
+}

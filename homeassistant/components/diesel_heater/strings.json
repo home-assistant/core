@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name}?",
+        "data": {
+          "pin": "PIN code"
+        },
+        "data_description": {
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. If you changed the PIN in the heater app, enter your custom PIN here."
+        }
+      },
+      "user": {
+        "data": {
+          "address": "Device",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
+        },
+        "description": "Select your diesel heater from the list.",
+        "data_description": {
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
+        }
+      },
+      "manual": {
+        "data": {
+          "address": "Bluetooth MAC address",
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]"
+        },
+        "description": "Enter the Bluetooth MAC address of your heater (e.g., A4:C1:37:24:B8:64). You can find this in the Bluetooth logs or using a BLE scanner app.",
+        "data_description": {
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data_description::pin%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_mac": "Invalid MAC address format. Please use format AA:BB:CC:DD:EE:FF"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "pin": "[%key:component::diesel_heater::config::step::confirm::data::pin%]",
+          "preset_away_temp": "Away preset temperature (\u00b0C)",
+          "preset_comfort_temp": "Comfort preset temperature (\u00b0C)"
+        },
+        "data_description": {
+          "pin": "4-digit PIN for heater authentication. Factory default is 1234. Changes require integration reload.",
+          "preset_away_temp": "Temperature for Away preset (anti-freeze protection). Default: 8\u00b0C.",
+          "preset_comfort_temp": "Temperature for Comfort preset (normal heating). Default: 21\u00b0C."
+        }
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate": {
+        "name": "Heater"
+      }
+    }
+  }
+}
