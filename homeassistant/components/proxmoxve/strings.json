@@ -10,7 +10,8 @@
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_nodes_found": "No active nodes found",
-      "ssl_error": "SSL check failed. Check the SSL settings"
+      "ssl_error": "SSL check failed. Check the SSL settings",
+      "update_failed": "Failed performing dist-upgrade on Proxmox VE"
     },
     "step": {
       "reauth_confirm": {
@@ -172,6 +173,11 @@
           "suspended": "Suspended"
         }
       }
+    },
+    "update": {
+      "node_update": {
+        "name": "Update"
+      }
     }
   },
   "exceptions": {
@@ -213,6 +219,9 @@
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
+    },
+    "update_failed": {
+      "message": "Failed to perform dist-upgrade on the Proxmox VE node."
     }
   },
   "issues": {

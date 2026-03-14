@@ -85,6 +85,8 @@ def mock_proxmox_client():
 
         node_mock.qemu.get.return_value = qemu_list
         node_mock.lxc.get.return_value = lxc_list
+        node_mock.version.get.return_value = {"version": "8.3.5", "repoid": "abc123"}
+        node_mock.apt.update.get.return_value = []
 
         qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}
         lxc_by_vmid = {vm["vmid"]: vm for vm in lxc_list}

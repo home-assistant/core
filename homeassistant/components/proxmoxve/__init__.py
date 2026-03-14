@@ -41,6 +41,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 
