@@ -1,0 +1,44 @@
+{
+  "entity": {
+    "sensor": {
+      "import_total": {
+        "default": "mdi:meter-electric"
+      },
+      "export_total": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "import_tariff_1": {
+        "default": "mdi:meter-electric"
+      },
+      "import_tariff_2": {
+        "default": "mdi:meter-electric"
+      },
+      "export_tariff_1": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "export_tariff_2": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      },
+      "wifi_ssid": {
+        "default": "mdi:wifi-settings"
+      },
+      "ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      },
+      "mdns_name": {
+        "default": "mdi:dns"
+      }
+    },
+    "update": {
+      "firmware": {
+        "default": "mdi:update"
+      }
+    }
+  }
+}

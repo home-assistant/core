@@ -7678,6 +7678,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "wattwaechter": {
+      "name": "WattWächter Plus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "watts": {
       "name": "Watts Vision +",
       "integration_type": "hub",

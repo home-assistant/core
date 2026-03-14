@@ -1,0 +1,16 @@
+{
+  "domain": "wattwaechter",
+  "name": "WattWächter Plus",
+  "codeowners": ["@smartcircuits"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://www.home-assistant.io/integrations/wattwaechter",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": ["aio-wattwaechter==1.0.0"],
+  "zeroconf": [
+    {
+      "type": "_wattwaechter._tcp.local."
+    }
+  ]
+}
