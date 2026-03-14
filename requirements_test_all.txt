@@ -574,6 +574,9 @@ base36==0.1.1
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
+# homeassistant.components.bitvis
+bitvis-protobuf==0.1.2
+
 # homeassistant.components.esphome
 bleak-esphome==3.7.1
 

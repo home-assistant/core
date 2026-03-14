@@ -219,6 +219,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
+/homeassistant/components/bitvis/ @MandusBorjesson @simontegelid
+/tests/components/bitvis/ @MandusBorjesson @simontegelid
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm
 /tests/components/blebox/ @bbx-a @swistakm

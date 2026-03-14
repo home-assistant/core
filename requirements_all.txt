@@ -634,6 +634,9 @@ beautifulsoup4==4.13.3
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
 
+# homeassistant.components.bitvis
+bitvis-protobuf==0.1.2
+
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
