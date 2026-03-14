@@ -1100,6 +1100,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "collection_image": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
@@ -8262,6 +8267,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "collection_image",
     "counter",
     "cpuspeed",
     "demo",

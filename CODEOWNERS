@@ -298,6 +298,8 @@ build.json @home-assistant/supervisor
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
+/homeassistant/components/collection_image/ @karwosts
+/tests/components/collection_image/ @karwosts
 /homeassistant/components/color_extractor/ @GenericStudent
 /tests/components/color_extractor/ @GenericStudent
 /homeassistant/components/comelit/ @chemelli74
