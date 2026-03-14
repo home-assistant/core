@@ -4,10 +4,12 @@ from collections.abc import AsyncIterator, Generator
 from json import dumps
 from unittest.mock import AsyncMock, patch
 
+from aiowebdav2.models import QuotaInfo
 import pytest
 
 from homeassistant.components.webdav.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from .const import BACKUP_METADATA, MOCK_LIST_FILES
 
@@ -64,4 +66,20 @@ def mock_webdav_client() -> Generator[AsyncMock]:
         mock.upload_iter.return_value = None
         mock.clean.return_value = None
         mock.move.return_value = None
+        mock.quota.return_value = QuotaInfo(
+            available_bytes=1073741824, used_bytes=536870912
+        )
         yield mock
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    webdav_client: AsyncMock,
+) -> MockConfigEntry:
+    """Set up the WebDAV integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry
