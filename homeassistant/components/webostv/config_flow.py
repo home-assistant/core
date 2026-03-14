@@ -25,7 +25,13 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 
 from . import WebOsTvConfigEntry
-from .const import CONF_SOURCES, CONF_USE_ABSOLUTE_VOLUME, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import (
+    CONF_SOURCES,
+    CONF_USE_ABSOLUTE_VOLUME,
+    DEFAULT_NAME,
+    DOMAIN,
+    WEBOSTV_EXCEPTIONS,
+)
 from .helpers import get_sources
 
 DATA_SCHEMA = vol.Schema(

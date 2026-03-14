@@ -983,7 +983,9 @@ async def test_availability(
         (
             "speaker",
             True,
-            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET,
+            SUPPORT_WEBOSTV
+            | SUPPORT_WEBOSTV_VOLUME
+            | MediaPlayerEntityFeature.VOLUME_SET,
         ),
         # use_absolute_volume=False: VOLUME_SET absent even for regular output
         (
@@ -995,7 +997,9 @@ async def test_availability(
         (
             "external_arc",
             True,
-            SUPPORT_WEBOSTV | SUPPORT_WEBOSTV_VOLUME | MediaPlayerEntityFeature.VOLUME_SET,
+            SUPPORT_WEBOSTV
+            | SUPPORT_WEBOSTV_VOLUME
+            | MediaPlayerEntityFeature.VOLUME_SET,
         ),
         # use_absolute_volume=False: VOLUME_SET absent for external_arc (the ARC bug case)
         (
