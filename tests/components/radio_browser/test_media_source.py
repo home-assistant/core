@@ -71,3 +71,153 @@ async def test_browsing_local(
     assert other_browse is not None
     assert other_browse.title == "My Radios"
     assert len(other_browse.children) == 0
+
+
+async def test_search_stations(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test server-side search for radio stations by name."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/rock"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="rock",
+        hide_broken=True,
+        limit=100,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    assert item is not None
+    assert item.children is not None
+    assert len(item.children) > 0
+
+
+async def test_search_stations_url_encoded_query(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that URL-encoded queries are decoded correctly (e.g. AC%2FDC, Radio%20Bob%21)."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    # "AC%2FDC" must be decoded to "AC/DC" before being sent to the API,
+    # so the "/" does not get misinterpreted as the codec path separator.
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/AC%2FDC"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="AC/DC",
+        hide_broken=True,
+        limit=100,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    assert item is not None
+
+
+async def test_search_stations_with_codec_filter(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test server-side search filtered by codec (e.g. AAC for Apple TV)."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    # The mock stations all have codec "MP3", so filtering for AAC returns nothing
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/rock/AAC"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="rock",
+        hide_broken=True,
+        limit=500,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    # Mock stations are all MP3, so AAC filter yields empty result
+    assert item is not None
+    assert item.children == []
+
+
+async def test_search_stations_with_codec_filter_case_insensitive(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that codec filter is case-insensitive."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    # Mock stations are all MP3 — search with lowercase "mp3" should still match
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/rock/mp3"
+    )
+
+    assert item is not None
+    assert item.children is not None
+    assert len(item.children) > 0
+
+
+async def test_search_stations_with_url_encoded_codec(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that a URL-encoded codec segment is decoded correctly (e.g. AAC%2B → AAC+)."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    class AacPlusStation:
+        """Mock station with AAC+ codec."""
+
+        country_code = "US"
+        latitude = None
+        longitude = None
+        uuid = "aac-plus-1"
+        name = "AAC+ Station"
+        codec = "AAC+"
+        favicon = "fake.png"
+
+    source.radios.stations = AsyncMock(return_value=[AacPlusStation()])
+
+    # "AAC%2B" must be URL-decoded to "AAC+" before the codec filter is applied
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/station/AAC%2B"
+    )
+
+    source.radios.stations.assert_awaited_with(
+        filter_by=FilterBy.NAME,
+        filter_term="station",
+        hide_broken=True,
+        limit=500,
+        order=Order.CLICK_COUNT,
+        reverse=True,
+    )
+
+    assert item is not None
+    assert item.children is not None
+    assert len(item.children) == 1
+    assert item.children[0].title == "AAC+ Station"
+
+
+async def test_search_stations_empty_query(
+    hass: HomeAssistant, init_integration: AsyncMock, patch_radios
+) -> None:
+    """Test that an empty search query returns no results without calling the API."""
+    source = await async_get_media_source(hass)
+    patch_radios(source)
+
+    item = await media_source.async_browse_media(
+        hass, f"{media_source.URI_SCHEME}{DOMAIN}/search/"
+    )
+
+    source.radios.stations.assert_not_awaited()
+
+    assert item is not None
+    assert item.children == []

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
+from urllib.parse import unquote
 
 import pycountry
 from radios import FilterBy, Order, RadioBrowser, Station
@@ -20,6 +21,8 @@ from homeassistant.util.location import vincenty
 
 from . import RadioBrowserConfigEntry
 from .const import DOMAIN
+
+SEARCH_PREFIX = "search/"
 
 CODEC_TO_MIMETYPE = {
     "MP3": "audio/mpeg",
@@ -91,6 +94,7 @@ class RadioMediaSource(MediaSource):
                 *await self._async_build_by_language(radios, item),
                 *await self._async_build_local(radios, item),
                 *await self._async_build_by_country(radios, item),
+                *await self._async_build_search(radios, item),
             ],
         )
 
@@ -354,3 +358,47 @@ class RadioMediaSource(MediaSource):
             ]
 
         return []
+
+    async def _async_build_search(
+        self, radios: RadioBrowser, item: MediaSourceItem
+    ) -> list[BrowseMediaSource]:
+        """Handle searching radio stations by name and optional codec filter.
+
+        Identifier format:
+          search/<encoded_query>          - search by name only
+          search/<encoded_query>/<codec>  - search by name, then filter by codec (e.g. AAC)
+
+        The query portion must be URL-encoded by the caller (e.g. "AC%2FDC", "Radio%20Bob%21")
+        so that slashes and other special characters do not conflict with the path separator.
+        """
+        identifier = item.identifier or ""
+        if not identifier.startswith(SEARCH_PREFIX):
+            return []
+
+        remainder = identifier[len(SEARCH_PREFIX) :]
+        if not remainder:
+            return []
+
+        # Split optional codec suffix: "rock%20pop/AAC" → query="rock pop", codec="AAC"
+        encoded_query, _, raw_codec = remainder.partition("/")
+        codec = unquote(raw_codec).upper() if raw_codec else ""
+        query = unquote(encoded_query)
+
+        if not query:
+            return []
+
+        # When a codec filter is active, fetch more stations so post-filter
+        # results aren't truncated (the Radio Browser API has no codec filter).
+        stations = await radios.stations(
+            filter_by=FilterBy.NAME,
+            filter_term=query,
+            hide_broken=True,
+            limit=100 if not codec else 500,
+            order=Order.CLICK_COUNT,
+            reverse=True,
+        )
+
+        if codec:
+            stations = [s for s in stations if s.codec.upper() == codec]
+
+        return self._async_build_stations(radios, stations)
