@@ -1,0 +1,27 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "The UK region to monitor for weather warnings."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "warnings": {
+        "name": "Weather warnings"
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Met Office Weather Warnings - South West England</title>
+    <link>https://weather.metoffice.gov.uk</link>
+    <description>Met Office Weather Warnings for South West England</description>
+    <pubDate>Wed, 12 Mar 2026 08:00:00 GMT</pubDate>
+    <item>
+      <title>Yellow warning of Rain affecting South West England</title>
+      <link>https://weather.metoffice.gov.uk/warnings/123</link>
+      <description>Heavy rain expected, valid from 0800 Wed 12 Mar to 2000 Wed 12 Mar</description>
+    </item>
+    <item>
+      <title>Amber warning of Wind affecting South West England</title>
+      <link>https://weather.metoffice.gov.uk/warnings/124</link>
+      <description>Strong winds expected, valid from 1200 Thu 13 Mar to 0600 Fri 14 Mar</description>
+    </item>
+    <item>
+      <title>Red warning of Snow affecting South West England</title>
+      <link>https://weather.metoffice.gov.uk/warnings/125</link>
+      <description>Heavy snow expected, valid from 0000 Fri 14 Mar to 1200 Fri 14 Mar</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Met Office Weather Warnings - South West England</title>
+    <link>https://weather.metoffice.gov.uk</link>
+    <description>Met Office Weather Warnings for South West England</description>
+    <pubDate>Wed, 12 Mar 2026 08:00:00 GMT</pubDate>
+  </channel>
+</rss>

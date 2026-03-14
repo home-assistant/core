@@ -696,6 +696,7 @@ debugpy==1.8.17
 deebot-client==18.0.0
 
 # homeassistant.components.ihc
+# homeassistant.components.metoffice_warnings
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos
 defusedxml==0.7.1

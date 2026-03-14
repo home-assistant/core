@@ -1,0 +1,10 @@
+{
+  "domain": "metoffice_warnings",
+  "name": "Met Office Weather Warnings",
+  "codeowners": ["@ianByrne"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/metoffice_warnings",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["defusedxml==0.7.1"]
+}

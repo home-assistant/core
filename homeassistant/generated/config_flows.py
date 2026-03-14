@@ -425,6 +425,7 @@ FLOWS = {
         "meteo_lt",
         "meteoclimatic",
         "metoffice",
+        "metoffice_warnings",
         "microbees",
         "miele",
         "mikrotik",
