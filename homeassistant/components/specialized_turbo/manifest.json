@@ -4,8 +4,8 @@
   "bluetooth": [
     {
       "connectable": true,
-      "manufacturer_id": 89,
-      "manufacturer_data_start": [84, 85, 82, 66, 79, 72, 77, 73]
+      "manufacturer_data_start": [84, 85, 82, 66, 79, 72, 77, 73],
+      "manufacturer_id": 89
     }
   ],
   "codeowners": ["@JamieMagee"],
