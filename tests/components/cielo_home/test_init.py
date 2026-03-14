@@ -1,11 +1,11 @@
 """Common tests for the Cielo Home."""
 
+from unittest.mock import MagicMock
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from unittest.mock import MagicMock
-
 from tests.common import MockConfigEntry
 
 DOMAIN = "cielo_home"

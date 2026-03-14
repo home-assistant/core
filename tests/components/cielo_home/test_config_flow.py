@@ -55,13 +55,14 @@ async def test_full_config_flow_success(hass: HomeAssistant) -> None:
 
 async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) -> None:
     """Test the flow aborts when the account is already configured."""
-    with (
-        patch(MOCK_AUTH_PATH, new=AsyncMock(return_value=MOCK_TOKEN)),
-        patch(
-            MOCK_DEVICES_PATH,
-            new=AsyncMock(return_value=_devices_payload({"dev1": MagicMock()})),
-        ),
-    ):
+    mock_client = MagicMock()
+    mock_client.username = "test-user"
+    mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
+    mock_client.get_devices_data = AsyncMock(
+        return_value=_devices_payload({"dev1": MagicMock()})
+    )
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=mock_client):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -102,10 +103,12 @@ async def test_form_error_mapping(
     These errors may occur from either token retrieval or device fetch
     (your flow does both in validation).
     """
-    with (
-        patch(MOCK_AUTH_PATH, new=AsyncMock(return_value=MOCK_TOKEN)),
-        patch(MOCK_DEVICES_PATH, new=AsyncMock(side_effect=api_error)),
-    ):
+    mock_client = MagicMock()
+    mock_client.username = "test-user"
+    mock_client.get_or_refresh_token = AsyncMock(return_value=MOCK_TOKEN)
+    mock_client.get_devices_data = AsyncMock(side_effect=api_error)
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=mock_client):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -123,13 +126,14 @@ async def test_form_error_mapping(
 async def test_form_error_mapping_invalid_auth(hass: HomeAssistant) -> None:
     """Test AuthenticationError maps to invalid_auth."""
 
-    with (
-        patch(MOCK_AUTH_PATH, new=AsyncMock(side_effect=AuthenticationError)),
-        patch(
-            MOCK_DEVICES_PATH,
-            new=AsyncMock(return_value=_devices_payload({"dev1": MagicMock()})),
-        ),
-    ):
+    mock_client = MagicMock()
+    mock_client.username = "test-user"
+    mock_client.get_or_refresh_token = AsyncMock(side_effect=AuthenticationError)
+    mock_client.get_devices_data = AsyncMock(
+        return_value=_devices_payload({"dev1": MagicMock()})
+    )
+
+    with patch(MOCK_CIELO_CLIENT_CTOR, return_value=mock_client):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
