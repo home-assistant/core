@@ -60,12 +60,10 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: Make sure all translated states are in sentence case
-  exception-translations: todo
+  entity-translations: done
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: done
     comment: |
