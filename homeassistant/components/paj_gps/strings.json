@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
+      "already_configured": "An account with this email address is already configured.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "already_configured": "An account with this email address is already configured.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -26,7 +26,6 @@
   },
   "options": {
     "error": {
-      "already_configured": "An account with this email address is already configured.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
