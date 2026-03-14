@@ -61,6 +61,33 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow request."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        self.username = reconfigure_entry.data[CONF_USERNAME]
+
+        self._async_abort_entries_match({CONF_USERNAME: self.username})
+
+        errors: dict[str, str] = {}
+        if user_input:
+            user_input = user_input | {CONF_USERNAME: self.username}
+            if not (error := await self._async_validate_input(user_input)):
+                await self.async_set_unique_id(self._account_user_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+            errors["base"] = error
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:

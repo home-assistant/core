@@ -65,7 +65,7 @@ rules:
     comment: Make sure all translated states are in sentence case
   exception-translations: todo
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: done
     comment: |
