@@ -1,0 +1,75 @@
+{
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted battery devices.",
+    "condition_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_charging": {
+      "description": "Tests if one or more batteries are charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is charging"
+    },
+    "is_low": {
+      "description": "Tests if one or more batteries are low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is low"
+    },
+    "is_not_charging": {
+      "description": "Tests if one or more batteries are not charging.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not charging"
+    },
+    "is_not_low": {
+      "description": "Tests if one or more batteries are not low.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Battery is not low"
+    },
+    "percentage": {
+      "description": "Tests if the battery percentage of one or more devices is above a threshold, below a threshold, or in a range of values.",
+      "fields": {
+        "above": {
+          "description": "The minimum battery percentage threshold.",
+          "name": "Above"
+        },
+        "behavior": {
+          "description": "[%key:component::battery::common::condition_behavior_description%]",
+          "name": "[%key:component::battery::common::condition_behavior_name%]"
+        },
+        "below": {
+          "description": "The maximum battery percentage threshold.",
+          "name": "Below"
+        }
+      },
+      "name": "Battery percentage"
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    }
+  },
+  "title": "Battery"
+}

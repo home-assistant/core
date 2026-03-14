@@ -2098,6 +2098,7 @@ NO_QUALITY_SCALE = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
     "brands",
     "config",

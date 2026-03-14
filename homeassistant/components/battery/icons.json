@@ -1,0 +1,19 @@
+{
+  "conditions": {
+    "is_charging": {
+      "condition": "mdi:battery-charging"
+    },
+    "is_low": {
+      "condition": "mdi:battery-low"
+    },
+    "is_not_charging": {
+      "condition": "mdi:battery-off"
+    },
+    "is_not_low": {
+      "condition": "mdi:battery-high"
+    },
+    "percentage": {
+      "condition": "mdi:battery-unknown"
+    }
+  }
+}
