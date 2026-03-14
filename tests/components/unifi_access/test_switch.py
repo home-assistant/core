@@ -287,3 +287,32 @@ async def test_optimistic_update_before_ws_confirmation(
     await hass.async_block_till_done()
 
     assert hass.states.get(EVACUATION_ENTITY).state == "off"
+
+
+async def test_no_optimistic_update_when_ws_disconnected(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test that optimistic update is skipped when WebSocket is disconnected.
+
+    Prevents async_set_updated_data from flipping last_update_success back
+    to True while the coordinator is unavailable due to WS disconnection.
+    """
+    on_disconnect = _get_on_disconnect(mock_client)
+    on_disconnect()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(EVACUATION_ENTITY).state == "unavailable"
+
+    # API call succeeds but optimistic update must NOT restore availability
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: EVACUATION_ENTITY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(EVACUATION_ENTITY).state == "unavailable"
+    assert hass.states.get(LOCKDOWN_ENTITY).state == "unavailable"

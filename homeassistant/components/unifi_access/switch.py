@@ -99,9 +99,12 @@ class UnifiAccessEmergencySwitch(UnifiAccessHubEntity, SwitchEntity):
             ) from err
         # Optimistically update state; the WebSocket confirmation via
         # access.data.setting.update typically arrives ~200ms later.
-        self.coordinator.async_set_updated_data(
-            UnifiAccessData(
-                doors=self.coordinator.data.doors,
-                emergency=new_status,
+        # Guard against flipping coordinator.last_update_success back to True
+        # while the WebSocket is disconnected and all entities are unavailable.
+        if self.coordinator.last_update_success:
+            self.coordinator.async_set_updated_data(
+                UnifiAccessData(
+                    doors=self.coordinator.data.doors,
+                    emergency=new_status,
+                )
             )
-        )
