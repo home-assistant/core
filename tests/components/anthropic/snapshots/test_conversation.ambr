@@ -1510,3 +1510,284 @@
     }),
   ])
 # ---
+# name: test_web_search_dynamic_filtering
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Who won the Nobel for Chemistry in 2025?',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': None,
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': 'Let me search for this information.',
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT',
+          'tool_args': dict({
+            'code': '''
+              
+              import json
+              result = await web_search({"query": "Nobel Prize chemistry 2025 winner"})
+              parsed = json.loads(result)
+              for r in parsed[:3]:
+                  print(r.get("title", ""))
+                  print(r.get("content", "")[:300])
+                  print("---")
+  
+            ''',
+          }),
+          'tool_name': 'code_execution',
+        }),
+        dict({
+          'external': True,
+          'id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
+          'tool_args': dict({
+          }),
+          'tool_name': 'web_search',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
+      'tool_name': 'web_search',
+      'tool_result': dict({
+        'content': list([
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': None,
+            'title': 'Press release: Nobel Prize in Chemistry 2025 - Example.com',
+            'type': 'web_search_result',
+            'url': 'https://www.example.com/prizes/chemistry/2025/press-release/',
+          }),
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': None,
+            'title': 'Nobel Prize in Chemistry 2025 - NewsSite.com',
+            'type': 'web_search_result',
+            'url': 'https://www.newssite.com/prizes/chemistry/2025/summary/',
+          }),
+        ]),
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT',
+      'tool_name': 'code_execution',
+      'tool_result': dict({
+        'content': list([
+        ]),
+        'encrypted_stdout': 'EuQJCioIDRgCIiRj',
+        'return_code': 0,
+        'stderr': '',
+        'type': 'encrypted_code_execution_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'The 2025 Nobel Prize in Chemistry was awarded jointly to **Susumu Kitagawa**, **Richard Robson**, and **Omar M. Yaghi** "for the development of metal–organic frameworks."',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_web_search_dynamic_filtering.1
+  list([
+    dict({
+      'content': 'Who won the Nobel for Chemistry in 2025?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': 'Let me search for this information.',
+          'type': 'thinking',
+        }),
+        dict({
+          'id': 'srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT',
+          'input': dict({
+            'code': '''
+              
+              import json
+              result = await web_search({"query": "Nobel Prize chemistry 2025 winner"})
+              parsed = json.loads(result)
+              for r in parsed[:3]:
+                  print(r.get("title", ""))
+                  print(r.get("content", "")[:300])
+                  print("---")
+  
+            ''',
+          }),
+          'name': 'code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
+          'input': dict({
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': list([
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Press release: Nobel Prize in Chemistry 2025 - Example.com',
+              'type': 'web_search_result',
+              'url': 'https://www.example.com/prizes/chemistry/2025/press-release/',
+            }),
+            dict({
+              'encrypted_content': 'ABCDEFG',
+              'page_age': None,
+              'title': 'Nobel Prize in Chemistry 2025 - NewsSite.com',
+              'type': 'web_search_result',
+              'url': 'https://www.newssite.com/prizes/chemistry/2025/summary/',
+            }),
+          ]),
+          'tool_use_id': 'srvtoolu_016vjte6G4Lj6yzLc2ak1vY4',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'encrypted_stdout': 'EuQJCioIDRgCIiRj',
+            'return_code': 0,
+            'stderr': '',
+            'type': 'encrypted_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_01Qh4oTgPkNfRxjJA3N6jgzT',
+          'type': 'code_execution_tool_result',
+        }),
+        dict({
+          'text': 'The 2025 Nobel Prize in Chemistry was awarded jointly to **Susumu Kitagawa**, **Richard Robson**, and **Omar M. Yaghi** "for the development of metal–organic frameworks."',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_web_search_error
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's on the news today?",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "To get today's news, I'll perform a web search",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': None,
+        'redacted_thinking': None,
+        'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+      }),
+      'role': 'assistant',
+      'thinking_content': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'query': "today's news",
+          }),
+          'tool_name': 'web_search',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'web_search',
+      'tool_result': dict({
+        'error_code': 'too_many_requests',
+        'type': 'web_search_tool_result_error',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'I am unable to perform the web search at this time.',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_web_search_error.1
+  list([
+    dict({
+      'content': "What's on the news today?",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
+          'thinking': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+          'type': 'thinking',
+        }),
+        dict({
+          'text': "To get today's news, I'll perform a web search",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'query': "today's news",
+          }),
+          'name': 'web_search',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'error_code': 'too_many_requests',
+            'type': 'web_search_tool_result_error',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'web_search_tool_result',
+        }),
+        dict({
+          'text': 'I am unable to perform the web search at this time.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
