@@ -288,6 +288,29 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         key="drive_state_active_route_destination",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieSensorEntityDescription(
+        key="charge_state_scheduled_charging_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "start_at", "depart_by"],
+        value_fn=lambda x: {
+            "Off": "off",
+            "StartAt": "start_at",
+            "DepartBy": "depart_by",
+        }[cast(str, x)],
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_off_peak_charging_times",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=["all_week", "weekdays"],
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_preconditioning_times",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=["all_week", "weekdays"],
+    ),
 )
 
 
