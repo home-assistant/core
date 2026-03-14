@@ -72,7 +72,7 @@ def mock_resolution_info(
         if suggestions_by_issue
         else [],
         checks=[
-            Check(enabled=True, slug=CheckType.SUPERVISOR_TRUST),
+            Check(enabled=True, slug=CheckType.DOCKER_CONFIG),
             Check(enabled=True, slug=CheckType.FREE_SPACE),
         ],
     )
@@ -197,7 +197,7 @@ async def test_unsupported_issues(
     """Test issues added for unsupported systems."""
     mock_resolution_info(
         supervisor_client,
-        unsupported=[UnsupportedReason.CONTENT_TRUST, UnsupportedReason.OS],
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK, UnsupportedReason.OS],
     )
 
     result = await async_setup_component(hass, "hassio", {})
@@ -210,7 +210,7 @@ async def test_unsupported_issues(
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
 
@@ -502,7 +502,7 @@ async def test_reasons_added_and_removed(
 
     mock_resolution_info(
         supervisor_client,
-        unsupported=[UnsupportedReason.CONTENT_TRUST],
+        unsupported=[UnsupportedReason.CONNECTIVITY_CHECK],
         unhealthy=[UnhealthyReason.SETUP],
     )
     await client.send_json(
@@ -526,7 +526,7 @@ async def test_reasons_added_and_removed(
     assert len(msg["result"]["issues"]) == 2
     assert_repair_in_list(msg["result"]["issues"], unhealthy=True, reason="setup")
     assert_repair_in_list(
-        msg["result"]["issues"], unhealthy=False, reason="content_trust"
+        msg["result"]["issues"], unhealthy=False, reason="connectivity_check"
     )
 
 
