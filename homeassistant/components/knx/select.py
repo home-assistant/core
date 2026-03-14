@@ -65,9 +65,12 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX select."""
+        self._device = _create_raw_value(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_raw_value(knx_module.xknx, config),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._option_payloads: dict[str, int] = {
             option[SelectSchema.CONF_OPTION]: option[CONF_PAYLOAD]
@@ -75,8 +78,6 @@ class KNXSelect(KnxYamlEntity, SelectEntity, RestoreEntity):
         }
         self._attr_options = list(self._option_payloads)
         self._attr_current_option = None
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
