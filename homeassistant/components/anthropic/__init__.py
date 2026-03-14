@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
+
 import anthropic
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -14,10 +17,13 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AVAILABILITY_CHECK_PERIOD,
     CONF_CHAT_MODEL,
     DEFAULT_CONVERSATION_NAME,
     DEPRECATED_MODELS,
@@ -28,7 +34,72 @@ from .const import (
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
+
+@dataclass(slots=True)
+class AnthropicRuntimeData:
+    """Config entry runtime data for Anthropic integration."""
+
+    _hass: HomeAssistant
+    _entry: AnthropicConfigEntry
+    client: anthropic.AsyncClient
+    is_available: bool = True
+
+    async def _check_availability(self, time: datetime) -> None:
+        """Check if the API is still unavailable."""
+        if self.is_available:
+            return
+
+        try:
+            await self.client.models.list(timeout=10.0)
+        except anthropic.APIConnectionError:
+            # Schedule another check
+            self._entry.async_on_unload(
+                async_call_later(
+                    self._hass, AVAILABILITY_CHECK_PERIOD, self._check_availability
+                )
+            )
+            return
+        except anthropic.AuthenticationError:
+            # Leave unavailable until the entry is reloaded after reauth, no schedule
+            self._entry.async_start_reauth(self._hass)
+            return
+        except anthropic.AnthropicError as err:
+            # Any other error means the API is available,
+            # everything else is not availability issue
+            LOGGER.debug("Error while checking Claude API availability: %s", err)
+
+        self.mark_available()
+
+    @callback
+    def mark_unavailable(self, check_later: bool = True) -> None:
+        """Mark the config entry entities as unavailable."""
+        if not self.is_available:
+            return
+        LOGGER.info("Claude API is unavailable")
+        self.is_available = False
+        async_dispatcher_send(
+            self._hass, f"{DOMAIN}_availability_{self._entry.entry_id}"
+        )
+        if check_later:
+            self._entry.async_on_unload(
+                async_call_later(
+                    self._hass, AVAILABILITY_CHECK_PERIOD, self._check_availability
+                )
+            )
+
+    @callback
+    def mark_available(self) -> None:
+        """Mark the config entry entities as available."""
+        if self.is_available:
+            return
+        LOGGER.info("Claude API is back online")
+        self.is_available = True
+        async_dispatcher_send(
+            self._hass, f"{DOMAIN}_availability_{self._entry.entry_id}"
+        )
+
+
+type AnthropicConfigEntry = ConfigEntry[AnthropicRuntimeData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -49,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
     except anthropic.AnthropicError as err:
         raise ConfigEntryNotReady(err) from err
 
-    entry.runtime_data = client
+    entry.runtime_data = AnthropicRuntimeData(hass, entry, client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

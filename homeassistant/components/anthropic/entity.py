@@ -76,9 +76,10 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
@@ -652,6 +653,27 @@ class AnthropicBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Register availability dispatcher listener."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_availability_{self.entry.entry_id}",
+                self._handle_availability_update,
+            )
+        )
+
+    @callback
+    def _handle_availability_update(self) -> None:
+        """Handle availability update from dispatcher."""
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.entry.runtime_data.is_available
+
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
@@ -835,7 +857,7 @@ class AnthropicBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
 
-        client = self.entry.runtime_data
+        client = self.entry.runtime_data.client
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -858,13 +880,22 @@ class AnthropicBaseLLMEntity(Entity):
                 messages.extend(new_messages)
             except anthropic.AuthenticationError as err:
                 self.entry.async_start_reauth(self.hass)
+                self.entry.runtime_data.mark_unavailable(False)
                 raise HomeAssistantError(
                     "Authentication error with Anthropic API, reauthentication required"
                 ) from err
+            except anthropic.APIConnectionError as err:
+                self.entry.runtime_data.mark_unavailable()
+                raise HomeAssistantError(
+                    f"Connection error while talking to Anthropic: {err}"
+                ) from err
             except anthropic.AnthropicError as err:
+                self.entry.runtime_data.mark_available()
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
+            else:
+                self.entry.runtime_data.mark_available()
 
             if not chat_log.unresponded_tool_results:
                 break
