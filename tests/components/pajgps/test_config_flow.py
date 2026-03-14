@@ -49,6 +49,15 @@ VALID_USER_INPUT = {
 class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
     """Tests for PajGPSConfigFlow.async_step_user."""
 
+    async def test_no_input_returns_form(self):
+        """Calling async_step_user() with no input (initial GET) must return a form result with step_id 'user'."""
+        flow = _make_flow()
+
+        result = await flow.async_step_user(user_input=None)
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+
     async def test_valid_input_creates_entry(self):
         """Valid full input must create an entry with correct title and all data fields."""
         flow = _make_flow()
