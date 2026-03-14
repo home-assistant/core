@@ -26,3 +26,31 @@ async def test_sensor_values(
     state = hass.states.get(entity_name)
     assert state
     assert state.state == str(expected_value)
+
+
+async def test_alert_sensor(hass: HomeAssistant) -> None:
+    """Test that the weather alert sensor returns the correct count and attributes."""
+    with mock_weather_response():
+        await init_integration(hass)
+
+    state = hass.states.get("sensor.home_weather_alerts")
+    assert state
+    assert state.state == "2"
+
+    assert state.attributes["alert_1"] == "Flood Watch"
+    assert state.attributes["alert_severity_1"] == "moderate"
+    assert state.attributes["alert_source_1"] == "National Weather Service"
+    assert state.attributes["alert_time_1"] == "2023-09-08T18:00:00Z"
+    assert state.attributes["alert_expiry_1"] == "2023-09-09T06:00:00Z"
+
+    assert state.attributes["alert_2"] == "Wind Advisory"
+    assert state.attributes["alert_severity_2"] == "minor"
+
+
+async def test_alert_sensor_no_alerts(hass: HomeAssistant) -> None:
+    """Test the weather alert sensor when alerts are not available."""
+    with mock_weather_response(has_weather_alerts=False):
+        await init_integration(hass)
+
+    state = hass.states.get("sensor.home_weather_alerts")
+    assert state is None

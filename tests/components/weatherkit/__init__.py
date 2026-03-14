@@ -32,6 +32,7 @@ def mock_weather_response(
     is_night_time: bool = False,
     has_hourly_forecast: bool = True,
     has_daily_forecast: bool = True,
+    has_weather_alerts: bool = True,
 ):
     """Mock a successful WeatherKit API response."""
     weather_response = load_json_object_fixture("weatherkit/weather_response.json")
@@ -51,6 +52,11 @@ def mock_weather_response(
         del weather_response["forecastHourly"]
     else:
         available_data_sets.append(DataSetType.HOURLY_FORECAST)
+
+    if not has_weather_alerts:
+        del weather_response["weatherAlerts"]
+    else:
+        available_data_sets.append(DataSetType.WEATHER_ALERTS)
 
     with (
         patch(

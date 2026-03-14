@@ -3,6 +3,9 @@
     "sensor": {
       "pressure_trend": {
         "default": "mdi:gauge"
+      },
+      "weather_alerts": {
+        "default": "mdi:weather-cloudy-alert"
       }
     }
   }
