@@ -1,0 +1,110 @@
+{
+  "creationTime": 1665238624000,
+  "lastUpdateTime": 1665238624000,
+  "id": "SETUP-****-****-6867",
+  "location": {
+    "creationTime": 1665238624000,
+    "lastUpdateTime": 1667054735000,
+    "city": "** **",
+    "country": "**",
+    "postalCode": "** **",
+    "addressLine1": "** **",
+    "addressLine2": "*",
+    "timezone": "Europe/Amsterdam",
+    "longitude": "**",
+    "latitude": "**",
+    "twilightMode": 2,
+    "twilightAngle": "SOLAR",
+    "twilightCity": "amsterdam",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "NL"
+  },
+  "gateways": [
+    {
+      "gatewayId": "****-****-6867",
+      "type": 98,
+      "subType": 1,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "autoUpdateEnabled": true,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2023.4.4"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1667840384000,
+      "lastUpdateTime": 1667840384000,
+      "label": "Venetian Blind",
+      "deviceURL": "io://****-****-6867/12345678",
+      "shortcut": false,
+      "controllableName": "io:ExteriorVenetianBlindIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setClosureAndOrientation",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": 1,
+            "name": "core:ClosureState",
+            "value": "0"
+          },
+          {
+            "type": 1,
+            "name": "core:SlateOrientationState",
+            "value": "0"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "ExteriorVenetianBlind",
+        "uiProfiles": ["ExteriorVenetianBlind"],
+        "uiClass": "ExteriorVenetianBlind",
+        "qualifiedName": "io:ExteriorVenetianBlindIOComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
+      "type": 1,
+      "widget": "ExteriorVenetianBlind",
+      "oid": "1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8",
+      "uiClass": "ExteriorVenetianBlind"
+    }
+  ]
+}

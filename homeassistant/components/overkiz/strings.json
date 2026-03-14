@@ -179,5 +179,21 @@
         }
       }
     }
+  },
+  "services": {
+    "set_cover_position_and_tilt_position": {
+      "description": "Moves the cover and tilt to a specific position.",
+      "fields": {
+        "position": {
+          "description": "The target position of the cover.",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "The target tilt position of the cover.",
+          "name": "Tilt position"
+        }
+      },
+      "name": "Set cover position and tilt position"
+    }
   }
 }

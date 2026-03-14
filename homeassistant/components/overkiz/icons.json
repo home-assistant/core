@@ -42,5 +42,10 @@
         }
       }
     }
+  },
+  "services": {
+    "set_cover_position_and_tilt_position": {
+      "service": "mdi:window-shutter"
+    }
   }
 }
