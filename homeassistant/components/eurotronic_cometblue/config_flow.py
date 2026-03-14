@@ -74,7 +74,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             ble_device = async_ble_device_from_address(self.hass, device_address)
             LOGGER.info("Testing connection for device at address %s", device_address)
             if not ble_device:
-                return {"base": "device_not_found"}
+                return {"base": "cannot_connect"}
 
             cometblue_device = AsyncCometBlue(
                 device=ble_device,
@@ -84,7 +84,6 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             async with cometblue_device:
                 try:
                     # Device only returns battery level if PIN is correct
-                    # Device only returns battery level if PIN is correct
                     await cometblue_device.get_battery_async()
                 except Exception:
                     # need to use broad exception as different exceptions are raised
@@ -93,11 +92,14 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
                         "Failed to read battery level, likely due to incorrect PIN"
                     )
                     return {"base": "invalid_pin"}
+        except TimeoutError:
+            LOGGER.exception("Connection to device timed out")
+            return {"base": "timeout_connect"}
         except Exception:
             # need to use broad exception as different exceptions are raised
             # based on the underlying OS and backend
             LOGGER.exception("Failed to connect to device")
-            return {"base": "connection_failed"}
+            return {"base": "cannot_connect"}
         return {}
 
     def _create_entry(

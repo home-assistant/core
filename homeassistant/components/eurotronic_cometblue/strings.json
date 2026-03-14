@@ -5,6 +5,11 @@
       "no_devices_found": "No Comet Blue Bluetooth TRVs discovered.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_pin": "Invalid device PIN",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
+    },
     "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
