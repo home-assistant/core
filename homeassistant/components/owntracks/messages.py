@@ -85,6 +85,8 @@ def _parse_see_args(message, subscribe_topic):
             kwargs["source_type"] = SourceType.GPS
         if message["t"] == "b":
             kwargs["source_type"] = SourceType.BLUETOOTH_LE
+    if "tst" in message:
+        kwargs["attributes"]["update_timestamp"] = message["tst"]
 
     return dev_id, kwargs
 
