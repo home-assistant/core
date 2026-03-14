@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import logging
+from dataclasses import dataclass, field
 
 from lojack_api import ApiError, AuthenticationError, LoJackClient
 
@@ -10,23 +10,34 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import LoJackCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
-type LoJackConfigEntry = ConfigEntry[list[LoJackCoordinator]]
+
+@dataclass
+class LoJackData:
+    """Runtime data for a LoJack config entry."""
+
+    client: LoJackClient
+    coordinators: list[LoJackCoordinator] = field(default_factory=list)
+
+
+type LoJackConfigEntry = ConfigEntry[LoJackData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
     """Set up LoJack from a config entry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
+    session = async_get_clientsession(hass)
 
     try:
-        client = await LoJackClient.create(username, password)
+        client = await LoJackClient.create(
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+            session=session,
+        )
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
     except ApiError as err:
@@ -35,26 +46,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
     try:
         vehicles = await client.list_devices()
     except AuthenticationError as err:
-        await client.close()
         raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
     except ApiError as err:
-        await client.close()
         raise ConfigEntryNotReady(f"API error during setup: {err}") from err
 
-    coordinators: list[LoJackCoordinator] = []
+    data = LoJackData(client=client)
+    entry.runtime_data = data
+
     for vehicle in vehicles or []:
         coordinator = LoJackCoordinator(hass, client, entry, vehicle)
-        try:
-            await coordinator.async_config_entry_first_refresh()
-        except Exception:  # noqa: BLE001
-            await client.close()
-            raise
-        coordinators.append(coordinator)
-
-    if not coordinators:
-        await client.close()
-
-    entry.runtime_data = coordinators
+        await coordinator.async_config_entry_first_refresh()
+        data.coordinators.append(coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -64,12 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok and entry.runtime_data:
-        # All coordinators share the same client; close it once via the first coordinator
-        try:
-            await entry.runtime_data[0].client.close()
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.debug("Error closing LoJack client: %s", err)
-
+    if unload_ok:
+        await entry.runtime_data.client.close()
     return unload_ok

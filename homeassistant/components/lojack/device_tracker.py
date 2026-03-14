@@ -9,8 +9,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry
-from .coordinator import LoJackCoordinator, get_device_name
 from .const import DOMAIN
+from .coordinator import LoJackCoordinator, get_device_name
 
 PARALLEL_UPDATES = 0
 
@@ -22,7 +22,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up LoJack device tracker from a config entry."""
     async_add_entities(
-        LoJackDeviceTracker(coordinator) for coordinator in entry.runtime_data
+        LoJackDeviceTracker(coordinator)
+        for coordinator in entry.runtime_data.coordinators
     )
 
 
@@ -35,12 +36,12 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     def __init__(self, coordinator: LoJackCoordinator) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator)
-        vehicle = coordinator.data
-        self._attr_unique_id = vehicle.device_id
+        vehicle = coordinator.vehicle
+        self._attr_unique_id = vehicle.id
         device_name = get_device_name(vehicle)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, vehicle.device_id)},
+            identifiers={(DOMAIN, vehicle.id)},
             name=device_name,
             manufacturer="Spireon LoJack",
             model=vehicle.model,

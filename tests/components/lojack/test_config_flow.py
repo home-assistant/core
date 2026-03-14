@@ -2,13 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
+from lojack_api import ApiError, AuthenticationError
+import pytest
+
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MockApiError, MockAuthenticationError
 from .const import TEST_PASSWORD, TEST_USER_ID, TEST_USERNAME
 
 from tests.common import MockConfigEntry
@@ -43,89 +45,30 @@ async def test_full_user_flow(
     assert result["result"].unique_id == TEST_USER_ID
 
 
-
-async def test_user_flow_invalid_auth(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (AuthenticationError("Invalid credentials"), "invalid_auth"),
+        (ApiError("Connection failed"), "cannot_connect"),
+        (Exception("Unknown error"), "unknown"),
+    ],
+)
+async def test_user_flow_errors(
     hass: HomeAssistant,
+    mock_lojack_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
 ) -> None:
-    """Test handling of invalid authentication."""
+    """Test error handling and recovery in the user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with (
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            side_effect=MockAuthenticationError("Invalid credentials"),
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.AuthenticationError",
-            MockAuthenticationError,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: "wrongpassword",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test handling of connection errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with (
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            side_effect=MockApiError("Connection failed"),
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.ApiError",
-            MockApiError,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_flow_unknown_error(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test handling of unknown errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.lojack.config_flow.LoJackClient.create",
-        side_effect=Exception("Unknown error"),
+        side_effect=side_effect,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -137,7 +80,17 @@ async def test_user_flow_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error}
+
+    # Verify flow recovers after error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
@@ -164,47 +117,3 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_user_flow_recovery_after_error(
-    hass: HomeAssistant,
-    mock_lojack_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test that user can recover after an error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    # First attempt fails
-    with (
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            side_effect=MockAuthenticationError("Invalid credentials"),
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.AuthenticationError",
-            MockAuthenticationError,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: "wrongpassword",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Second attempt succeeds
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY

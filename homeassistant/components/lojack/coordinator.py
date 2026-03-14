@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from lojack_api import ApiError, AuthenticationError, LoJackClient
@@ -21,25 +20,7 @@ if TYPE_CHECKING:
     from . import LoJackConfigEntry
 
 
-@dataclass
-class LoJackVehicleData:
-    """Data class for vehicle data."""
-
-    device_id: str
-    name: str | None
-    vin: str | None
-    make: str | None
-    model: str | None
-    year: int | None
-    latitude: float | None
-    longitude: float | None
-    accuracy: float | None
-    address: str | None
-    heading: float | None
-    timestamp: datetime | None
-
-
-def get_device_name(vehicle: LoJackVehicleData) -> str:
+def get_device_name(vehicle: Vehicle) -> str:
     """Get a human-readable name for a vehicle."""
     parts = [
         str(vehicle.year) if vehicle.year else None,
@@ -50,7 +31,7 @@ def get_device_name(vehicle: LoJackVehicleData) -> str:
     return name or vehicle.name or "Vehicle"
 
 
-class LoJackCoordinator(DataUpdateCoordinator[LoJackVehicleData]):
+class LoJackCoordinator(DataUpdateCoordinator[Location]):
     """Class to manage fetching LoJack data for a single vehicle."""
 
     config_entry: LoJackConfigEntry
@@ -74,10 +55,10 @@ class LoJackCoordinator(DataUpdateCoordinator[LoJackVehicleData]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> LoJackVehicleData:
+    async def _async_update_data(self) -> Location:
         """Fetch location data for this vehicle."""
         try:
-            location: Location | None = await self.vehicle.get_location(force=True)
+            location = await self.vehicle.get_location(force=True)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 f"Authentication failed: {err}"
@@ -85,17 +66,4 @@ class LoJackCoordinator(DataUpdateCoordinator[LoJackVehicleData]):
         except ApiError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
 
-        return LoJackVehicleData(
-            device_id=self.vehicle.id,
-            name=self.vehicle.name,
-            vin=self.vehicle.vin,
-            make=self.vehicle.make,
-            model=self.vehicle.model,
-            year=self.vehicle.year,
-            latitude=location.latitude if location else None,
-            longitude=location.longitude if location else None,
-            accuracy=location.accuracy if location else None,
-            address=location.address if location else None,
-            heading=location.heading if location else None,
-            timestamp=location.timestamp if location else None,
-        )
+        return location

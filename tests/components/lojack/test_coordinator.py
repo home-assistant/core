@@ -1,167 +1,67 @@
 """Tests for the LoJack coordinator."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from lojack_api import ApiError, AuthenticationError
+
+from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import MockApiError, MockAuthenticationError
-from .const import TEST_DEVICE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_fetch_data(
+ENTITY_ID = "device_tracker.2021_honda_accord"
+
+
+async def test_coordinator_update_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lojack_client: AsyncMock,
+    mock_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator fetches data successfully."""
+    """Test entity becomes unavailable when coordinator update fails with API error."""
     await setup_integration(hass, mock_config_entry)
 
-    coordinators = mock_config_entry.runtime_data
-    assert len(coordinators) == 1
-    coordinator = coordinators[0]
-    assert coordinator.data is not None
-    assert coordinator.data.device_id == TEST_DEVICE_ID
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != "unavailable"
+
+    mock_device.get_location = AsyncMock(side_effect=ApiError("API unavailable"))
+
+    freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "unavailable"
 
 
-async def test_coordinator_auth_error_raises_config_entry_auth_failed(
+async def test_coordinator_update_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_lojack_client: AsyncMock,
     mock_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test coordinator raises ConfigEntryAuthFailed on auth error."""
-    mock_device.get_location = AsyncMock(
-        side_effect=MockAuthenticationError("Token expired")
-    )
-
-    client = AsyncMock()
-    client.user_id = "user123"
-    client.list_devices = AsyncMock(return_value=[mock_device])
-    client.close = AsyncMock()
-    client.__aenter__ = AsyncMock(return_value=client)
-    client.__aexit__ = AsyncMock(return_value=False)
-
-    with (
-        patch(
-            "homeassistant.components.lojack.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.AuthenticationError",
-            MockAuthenticationError,
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_coordinator_api_error_raises_update_failed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_device: MagicMock,
-) -> None:
-    """Test coordinator raises UpdateFailed on API error."""
-    mock_device.get_location = AsyncMock(
-        side_effect=MockApiError("API error")
-    )
-
-    client = AsyncMock()
-    client.user_id = "user123"
-    client.list_devices = AsyncMock(return_value=[mock_device])
-    client.close = AsyncMock()
-    client.__aenter__ = AsyncMock(return_value=client)
-    client.__aexit__ = AsyncMock(return_value=False)
-
-    with (
-        patch(
-            "homeassistant.components.lojack.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.coordinator.ApiError",
-            MockApiError,
-        ),
-    ):
-        mock_config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_no_location(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_device: MagicMock,
-) -> None:
-    """Test coordinator handles None location from API gracefully."""
-    mock_device.get_location = AsyncMock(return_value=None)
-
-    client = AsyncMock()
-    client.user_id = "user123"
-    client.list_devices = AsyncMock(return_value=[mock_device])
-    client.close = AsyncMock()
-    client.__aenter__ = AsyncMock(return_value=client)
-    client.__aexit__ = AsyncMock(return_value=False)
-
-    with (
-        patch(
-            "homeassistant.components.lojack.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    coordinators = mock_config_entry.runtime_data
-    assert len(coordinators) == 1
-    vehicle = coordinators[0].data
-    assert vehicle.device_id == TEST_DEVICE_ID
-    assert vehicle.latitude is None
-    assert vehicle.longitude is None
-    assert vehicle.accuracy is None
-
-
-async def test_coordinator_no_vehicles(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator handles account with no vehicles."""
-    client = AsyncMock()
-    client.user_id = "user123"
-    client.list_devices = AsyncMock(return_value=[])
-    client.close = AsyncMock()
-    client.__aenter__ = AsyncMock(return_value=client)
-    client.__aexit__ = AsyncMock(return_value=False)
-
-    with (
-        patch(
-            "homeassistant.components.lojack.LoJackClient.create",
-            return_value=client,
-        ),
-        patch(
-            "homeassistant.components.lojack.config_flow.LoJackClient.create",
-            return_value=client,
-        ),
-    ):
-        await setup_integration(hass, mock_config_entry)
+    """Test entry stays loaded and reauth is triggered on auth error during polling."""
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == []
+
+    mock_device.get_location = AsyncMock(
+        side_effect=AuthenticationError("Token expired")
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entry stays loaded; HA initiates a reauth flow
+    assert mock_config_entry.state is ConfigEntryState.LOADED

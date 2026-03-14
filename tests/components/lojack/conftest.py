@@ -1,9 +1,13 @@
 """Test fixtures for the LoJack integration."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
+
+from lojack_api import LoJackClient
+from lojack_api.device import Vehicle
+from lojack_api.models import Location
 
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -29,14 +33,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-class MockAuthenticationError(Exception):
-    """Mock AuthenticationError from lojack_api."""
-
-
-class MockApiError(Exception):
-    """Mock ApiError from lojack_api."""
-
-
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
@@ -52,43 +48,40 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_device() -> MagicMock:
+def mock_location() -> Location:
+    """Return a mock LoJack location."""
+    return Location(
+        latitude=TEST_LATITUDE,
+        longitude=TEST_LONGITUDE,
+        accuracy=TEST_ACCURACY,
+        heading=TEST_HEADING,
+        address=TEST_ADDRESS,
+        timestamp=TEST_TIMESTAMP,
+    )
+
+
+@pytest.fixture
+def mock_device(mock_location: Location) -> MagicMock:
     """Return a mock LoJack device."""
-    device = MagicMock()
+    device = create_autospec(Vehicle, instance=True)
     device.id = TEST_DEVICE_ID
     device.name = TEST_DEVICE_NAME
     device.vin = TEST_VIN
     device.make = TEST_MAKE
     device.model = TEST_MODEL
     device.year = TEST_YEAR
+    device.get_location = AsyncMock(return_value=mock_location)
     return device
 
 
 @pytest.fixture
-def mock_location() -> MagicMock:
-    """Return a mock LoJack location."""
-    location = MagicMock()
-    location.latitude = TEST_LATITUDE
-    location.longitude = TEST_LONGITUDE
-    location.accuracy = TEST_ACCURACY
-    location.heading = TEST_HEADING
-    location.address = TEST_ADDRESS
-    location.timestamp = TEST_TIMESTAMP
-    return location
-
-
-@pytest.fixture
 def mock_lojack_client(
-    mock_device: MagicMock, mock_location: MagicMock
-) -> Generator[AsyncMock]:
+    mock_device: MagicMock,
+) -> Generator[MagicMock]:
     """Return a mock LoJack client."""
-    mock_device.get_location = AsyncMock(return_value=mock_location)
-
-    client = AsyncMock()
+    client = create_autospec(LoJackClient, instance=True)
     client.user_id = TEST_USER_ID
     client.list_devices = AsyncMock(return_value=[mock_device])
-    client.close = AsyncMock()
-    # Support async context manager usage in config_flow.validate_input
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
 
@@ -113,15 +106,3 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock:
         yield mock
-
-
-@pytest.fixture
-def mock_authentication_error() -> type[Exception]:
-    """Return mock AuthenticationError class."""
-    return MockAuthenticationError
-
-
-@pytest.fixture
-def mock_api_error() -> type[Exception]:
-    """Return mock ApiError class."""
-    return MockApiError
