@@ -752,6 +752,7 @@ FLOWS = {
         "uhoo",
         "ukraine_alarm",
         "unifi",
+        "unifi_access",
         "unifiprotect",
         "upb",
         "upcloud",
