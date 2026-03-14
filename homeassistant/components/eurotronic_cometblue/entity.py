@@ -8,6 +8,7 @@ from propcache.api import cached_property
 from homeassistant.components import bluetooth
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import MAX_RETRIES
 from .coordinator import CometBlueDataUpdateCoordinator
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -29,7 +30,7 @@ class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            self.coordinator.failed_update_count < self.coordinator.retry_count
+            self.coordinator.failed_update_count < MAX_RETRIES
             and bluetooth.async_address_present(
                 self.hass, self.coordinator.address, True
             )

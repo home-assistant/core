@@ -3,7 +3,7 @@
 from typing import Final
 
 DOMAIN: Final = "eurotronic_cometblue"
-DEFAULT_NAME: Final = "Eurotronic CometBlue"
+DEFAULT_NAME: Final = "Eurotronic Comet Blue"
 
 CONF_DATETIME: Final = "datetime"
 CONF_SCHEDULE: Final = "schedule"
@@ -42,5 +42,4 @@ CONF_ALL_TEMPERATURES: Final = {
     "windowOpenMinutes",
 }
 
-DEFAULT_TIMEOUT_SECONDS: Final = 20
-DEFAULT_RETRY_COUNT: Final = 3
+MAX_RETRIES: Final = 3

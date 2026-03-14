@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from uuid import UUID
 
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PIN, CONF_TIMEOUT, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -24,13 +23,7 @@ from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ALL_DAYS,
-    CONF_RETRY_COUNT,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_TIMEOUT_SECONDS,
-    DOMAIN,
-)
+from .const import CONF_ALL_DAYS, DOMAIN
 from .coordinator import CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 from .utils import (
@@ -39,10 +32,6 @@ from .utils import (
     SERVICE_SCHEDULE_SCHEMA,
 )
 
-DEFAULT_OPTIONS = {
-    CONF_TIMEOUT: DEFAULT_TIMEOUT_SECONDS,
-    CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-}
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
@@ -58,14 +47,17 @@ type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 def _async_migrate_options_if_missing(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data = dict(entry.data)
 
-    if CONF_TIMEOUT not in entry.data or CONF_RETRY_COUNT not in entry.data:
-        data[CONF_TIMEOUT] = entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT_SECONDS)
-        data[CONF_RETRY_COUNT] = entry.data.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT)
+    changed = False
 
-        hass.config_entries.async_update_entry(entry, data=data)
-
+    for k in entry.data:
+        if k not in {CONF_ADDRESS, CONF_PIN}:
+            _ = data.pop(k, None)
+            changed = True
     if CONF_PIN in entry.data and isinstance(entry.data[CONF_PIN], int):
         data[CONF_PIN] = f"{entry.data[CONF_PIN]:06d}"
+        changed = True
+
+    if changed:
         hass.config_entries.async_update_entry(entry, data=data)
 
 
@@ -86,29 +78,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
     cometblue_device = AsyncCometBlue(
         device=ble_device,
         pin=int(entry.data[CONF_PIN]),
-        timeout=entry.data[CONF_TIMEOUT],
-        retries=entry.data[CONF_RETRY_COUNT],
     )
     try:
         async with cometblue_device:
-            if not cometblue_device.connected:
-                raise ConfigEntryNotReady(
-                    f"Failed to connect to '{cometblue_device.device.address}'"
-                )
+            ble_device_info = await cometblue_device.get_device_info_async()
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, address)},
-                name=f"{cometblue_device.device.name} {cometblue_device.device.address}",
-                sw_version=bytes(
-                    await cometblue_device.client.read_gatt_char(
-                        UUID("00002a28-0000-1000-8000-00805f9b34fb")
-                    )
-                ).decode(),
-                manufacturer=bytes(
-                    await cometblue_device.client.read_gatt_char(
-                        UUID("00002a29-0000-1000-8000-00805f9b34fb")
-                    )
-                ).decode(),
-                model="Comet Blue",
+                name=f"{ble_device_info['model']} {cometblue_device.device.address}",
+                sw_version=ble_device_info["firmware"],
+                hw_version=ble_device_info["version"],
+                manufacturer=ble_device_info["manufacturer"],
+                model=ble_device_info["model"],
             )
     except BleakError as ex:
         raise ConfigEntryNotReady(
@@ -120,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
         entry,
         cometblue_device,
         device_info,
-        retry_count=entry.data[CONF_RETRY_COUNT],
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

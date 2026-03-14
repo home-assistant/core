@@ -20,7 +20,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ALL_TEMPERATURES, DEFAULT_RETRY_COUNT
+from .const import CONF_ALL_TEMPERATURES, MAX_RETRIES
 
 SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         entry: ConfigEntry,
         cometblue: AsyncCometBlue,
         device_info: DeviceInfo,
-        retry_count: int = DEFAULT_RETRY_COUNT,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
@@ -57,7 +56,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self.address = cometblue.client.address
         self.data: dict[str, Any] = {}
         self.device_info = device_info
-        self.retry_count = retry_count
 
     async def send_command(
         self, function: str, payload: dict[str, Any], caller_entity_id: str
@@ -66,7 +64,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         LOGGER.debug("Updating device with '%s' from '%s'", caller_entity_id, payload)
         retry_count = 0
-        while retry_count < self.retry_count:
+        while retry_count < MAX_RETRIES:
             try:
                 async with self.device:
                     if not self.device.connected:
@@ -76,7 +74,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                     return await getattr(self.device, function)(**payload)
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                 retry_count += 1
-                if retry_count >= self.retry_count:
+                if retry_count >= MAX_RETRIES:
                     raise HomeAssistantError(
                         f"Error sending command '{payload}' to '{caller_entity_id}': {ex}"
                     ) from ex
@@ -104,7 +102,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         holiday: dict | None = None
 
         while (
-            retry_count < self.retry_count
+            retry_count < MAX_RETRIES
             and not retrieved_temperatures
             and battery is None
             and holiday is None
@@ -134,7 +132,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                         )
                 except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                     retry_count += 1
-                    if retry_count >= self.retry_count:
+                    if retry_count >= MAX_RETRIES:
                         self.failed_update_count += 1
                         raise UpdateFailed(
                             f"Error retrieving data: {ex}", retry_after=30

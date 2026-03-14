@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from eurotronic_cometblue_ha.const import SERVICE
@@ -14,34 +15,24 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PIN, CONF_TIMEOUT
+from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
-    NumberSelector,
-    NumberSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import (
-    CONF_RETRY_COUNT,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_TIMEOUT_SECONDS,
-    DOMAIN,
-)
+from .const import DOMAIN
+
+LOGGER = logging.getLogger(__name__)
+
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PIN, default="000000"): vol.All(
             TextSelector(TextSelectorConfig(type=TextSelectorType.NUMBER)),
             vol.Length(min=6, max=6),
-        ),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT_SECONDS): NumberSelector(
-            NumberSelectorConfig(min=10, max=60, step=5)
-        ),
-        vol.Optional(CONF_RETRY_COUNT, default=DEFAULT_RETRY_COUNT): NumberSelector(
-            NumberSelectorConfig(min=1, max=5, step=1)
         ),
     }
 )
@@ -71,8 +62,6 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     def _create_entry(
         self,
         pin: str,
-        timeout: int = DEFAULT_TIMEOUT_SECONDS,
-        retry_count: int = DEFAULT_RETRY_COUNT,
     ) -> ConfigFlowResult:
         """Create an entry for a discovered device."""
 
@@ -81,8 +70,6 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._discovery_info
             else None,
             CONF_PIN: pin,
-            CONF_TIMEOUT: timeout,
-            CONF_RETRY_COUNT: retry_count,
         }
 
         if self.source == SOURCE_RECONFIGURE:
@@ -101,12 +88,10 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered device."""
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return self._create_entry(
-                user_input[CONF_PIN],
-                timeout=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT_SECONDS),
-                retry_count=user_input.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT),
-            )
+            return self._create_entry(user_input[CONF_PIN])
 
         schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
@@ -119,6 +104,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "name": name_from_discovery(self._discovery_info)
             },
+            errors=errors,
         )
 
     async def async_step_bluetooth(
