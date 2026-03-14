@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -21,12 +22,12 @@ async def test_load_unload_entry(
     """Test loading and unloading a config entry."""
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state.value == "loaded"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state.value == "not_loaded"
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_device(
@@ -40,7 +41,7 @@ async def test_device(
     await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:02:EB:78")}
+        connections={(CONNECTION_NETWORK_MAC, "B0:A6:04:AA:BB:CC")}
     )
     assert device
     assert device == snapshot

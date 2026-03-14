@@ -37,7 +37,7 @@ def mock_trmnl_client() -> Generator[AsyncMock]:
     """Mock TRMNL client."""
     with (
         patch(
-            "homeassistant.components.trmnl.TRMNLClient",
+            "homeassistant.components.trmnl.coordinator.TRMNLClient",
             autospec=True,
         ) as mock_client,
         patch(

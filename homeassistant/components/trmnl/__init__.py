@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from trmnl import TRMNLClient
-
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import TRMNLConfigEntry, TRMNLCoordinator
 
@@ -15,12 +12,8 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> bool:
     """Set up TRMNL from a config entry."""
-    client = TRMNLClient(
-        token=entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
-    )
 
-    coordinator = TRMNLCoordinator(hass, entry, client)
+    coordinator = TRMNLCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
