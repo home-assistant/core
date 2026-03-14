@@ -5,13 +5,22 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Final, Protocol, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    override,
+)
 
 import voluptuous as vol
 
@@ -20,13 +29,17 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_DEVICE_ID,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
     CONF_TARGET,
     CONF_VARIABLES,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -41,6 +54,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     is_callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import (
@@ -55,6 +69,9 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
 from .automation import (
+    DomainSpec,
+    NumericalDomainSpec,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -135,14 +152,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -318,10 +336,10 @@ ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
-class EntityTriggerBase(Trigger):
+class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
     """Trigger for entity state changes."""
 
-    _domain: str
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
 
     @override
@@ -339,6 +357,10 @@ class EntityTriggerBase(Trigger):
             assert config.target is not None
         self._options = config.options or {}
         self._target = config.target
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
@@ -369,14 +391,6 @@ class EntityTriggerBase(Trigger):
             )
             == 1
         )
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
-        }
 
     @override
     async def async_attach_runner(
@@ -537,7 +551,7 @@ def _validate_range[_T: dict[str, Any]](
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
         vol.Optional("entity"): cv.entity_id,
         vol.Optional("number"): vol.Coerce(float),
     }
@@ -548,7 +562,7 @@ def _validate_number_or_entity(value: dict | float | str) -> float | str:
     """Validate number or entity selector result."""
     if isinstance(value, dict):
         _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
     return value
 
 
@@ -558,7 +572,7 @@ _number_or_entity = vol.All(
 
 NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
+        vol.Required(CONF_OPTIONS, default={}): vol.All(
             {
                 vol.Optional(CONF_ABOVE): _number_or_entity,
                 vol.Optional(CONF_BELOW): _number_or_entity,
@@ -579,16 +593,33 @@ def _get_numerical_value(
             return None
         try:
             return float(state.state)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             # Entity state is not a valid number
             return None
     return entity_or_float
 
 
-class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state attribute changes."""
+class EntityNumericalStateBase(EntityTriggerBase[NumericalDomainSpec]):
+    """Base class for numerical state and state attribute triggers."""
 
-    _attribute: str
+    def _get_tracked_value(self, state: State) -> Any:
+        """Get the tracked numerical value from a state."""
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return state.state
+        return state.attributes.get(domain_spec.value_source)
+
+    def _get_converter(self, state: State) -> Callable[[Any], float]:
+        """Get the value converter for an entity."""
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_converter is not None:
+            return domain_spec.value_converter
+        return float
+
+
+class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
+    """Trigger for numerical state and state attribute changes."""
+
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
     _above: None | float | str
@@ -605,20 +636,18 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
-        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
-            self._attribute
-        )
+        return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)  # type: ignore[no-any-return]
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        # Handle missing or None attribute case first to avoid expensive exceptions
-        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+        """Check if the new state or state attribute matches the expected one."""
+        # Handle missing or None value case first to avoid expensive exceptions
+        if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
-            # Attribute is not a valid number, don't trigger
+            current_value = self._get_converter(state)(_attribute_value)
+        except TypeError, ValueError:
+            # Value is not a valid number, don't trigger
             return False
 
         if self._above is not None:
@@ -683,7 +712,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 ),
                 vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
                 vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): ThresholdType,
+                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
             _validate_limits_for_threshold_type,
@@ -692,14 +721,15 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 )
 
 
-class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase):
-    """Trigger for numerical state attribute changes.
+class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
+    EntityNumericalStateBase
+):
+    """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
     the defined threshold.
     """
 
-    _attribute: str
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
     _lower_limit: float | str | None = None
@@ -736,14 +766,14 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
                 # Entity not found or invalid number, don't trigger
                 return False
 
-        # Handle missing or None attribute case first to avoid expensive exceptions
-        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+        # Handle missing or None value case first to avoid expensive exceptions
+        if (_attribute_value := self._get_tracked_value(state)) is None:
             return False
 
         try:
-            current_value = float(_attribute_value)
-        except (TypeError, ValueError):
-            # Attribute is not a valid number, don't trigger
+            current_value = self._get_converter(state)(_attribute_value)
+        except TypeError, ValueError:
+            # Value is not a valid number, don't trigger
             return False
 
         # Note: We do not need to check for lower_limit/upper_limit being None here
@@ -773,7 +803,7 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _to_states = to_states_set
 
     return CustomTrigger
@@ -787,7 +817,7 @@ def make_entity_transition_trigger(
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _from_states = from_states
         _to_states = to_states
 
@@ -802,36 +832,34 @@ def make_entity_origin_state_trigger(
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _from_state = from_state
 
     return CustomTrigger
 
 
-def make_entity_numerical_state_attribute_changed_trigger(
-    domain: str, attribute: str
+def make_entity_numerical_state_changed_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
-    """Create a trigger for numerical state attribute change."""
+    """Create a trigger for numerical state value change."""
 
     class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
-        """Trigger for numerical state attribute changes."""
+        """Trigger for numerical state value changes."""
 
-        _domain = domain
-        _attribute = attribute
+        _domain_specs = domain_specs
 
     return CustomTrigger
 
 
-def make_entity_numerical_state_attribute_crossed_threshold_trigger(
-    domain: str, attribute: str
+def make_entity_numerical_state_crossed_threshold_trigger(
+    domain_specs: Mapping[str, NumericalDomainSpec],
 ) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
-    """Create a trigger for numerical state attribute change."""
+    """Create a trigger for numerical state value crossing a threshold."""
 
     class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
-        """Trigger for numerical state attribute changes."""
+        """Trigger for numerical state value crossing a threshold."""
 
-        _domain = domain
-        _attribute = attribute
+        _domain_specs = domain_specs
 
     return CustomTrigger
 
@@ -844,7 +872,7 @@ def make_entity_target_state_attribute_trigger(
     class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _attribute = attribute
         _attribute_to_state = to_state
 
@@ -1436,3 +1464,73 @@ async def async_get_all_descriptions(
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
+
+
+@callback
+def async_extract_devices(trigger_conf: dict) -> list[str]:
+    """Extract devices from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] == "device":
+        return [trigger_conf[CONF_DEVICE_ID]]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
+        return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
+
+    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+        return target_devices
+
+    return []
+
+
+@callback
+def async_extract_entities(trigger_conf: dict) -> list[str]:
+    """Extract entities from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
+        return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "calendar":
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "zone":
+        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "geo_location":
+        return [trigger_conf[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] == "sun":
+        return ["sun.sun"]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
+        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
+
+    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+        return target_entities
+
+    return []
+
+
+@callback
+def async_extract_targets(
+    config: dict,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets

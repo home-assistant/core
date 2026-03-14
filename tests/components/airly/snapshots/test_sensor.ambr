@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Common air quality index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -136,6 +138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -193,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nitrogen dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ozone',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -311,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -368,6 +374,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -427,6 +434,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -486,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -543,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sulphur dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -602,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

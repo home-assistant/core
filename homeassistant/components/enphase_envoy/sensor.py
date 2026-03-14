@@ -206,7 +206,7 @@ class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy production sensor entity."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
-    on_phase: str | None
+    on_phase: str | None = None
 
 
 PRODUCTION_SENSORS = (
@@ -219,7 +219,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="daily_production",
@@ -230,7 +229,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -240,7 +238,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=attrgetter("watt_hours_last_7_days"),
-        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
@@ -251,7 +248,6 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -277,7 +273,7 @@ class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy consumption sensor entity."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
-    on_phase: str | None
+    on_phase: str | None = None
 
 
 CONSUMPTION_SENSORS = (
@@ -290,7 +286,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
@@ -301,7 +296,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=attrgetter("watt_hours_today"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -311,7 +305,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=attrgetter("watt_hours_last_7_days"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
@@ -322,7 +315,6 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -354,7 +346,6 @@ NET_CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=attrgetter("watts_now"),
-        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_balanced_net_consumption",
@@ -366,7 +357,6 @@ NET_CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=attrgetter("watt_hours_lifetime"),
-        on_phase=None,
     ),
 )
 
@@ -395,7 +385,7 @@ class EnvoyCTSensorEntityDescription(SensorEntityDescription):
         [EnvoyMeterData],
         int | float | str | CtType | CtMeterStatus | CtStatusFlags | CtState | None,
     ]
-    on_phase: str | None
+    on_phase: str | None = None
     cttype: str | None = None
 
 
@@ -411,13 +401,17 @@ CT_SENSORS = (
             suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
             suggested_display_precision=3,
             value_fn=attrgetter("energy_delivered"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_consumption"),
-            # Production CT energy_delivered is not used
+            (CtType.PRODUCTION, "production_ct_energy_delivered"),
             (CtType.STORAGE, "lifetime_battery_discharged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_delivered"),
+            (CtType.BACKFEED, "backfeed_ct_energy_delivered"),
+            (CtType.LOAD, "load_ct_energy_delivered"),
+            (CtType.EVSE, "evse_ct_energy_delivered"),
+            (CtType.PV3P, "pv3p_ct_energy_delivered"),
         )
     ]
     + [
@@ -430,13 +424,17 @@ CT_SENSORS = (
             suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
             suggested_display_precision=3,
             value_fn=attrgetter("energy_received"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_production"),
-            # Production CT energy_received is not used
+            (CtType.PRODUCTION, "production_ct_energy_received"),
             (CtType.STORAGE, "lifetime_battery_charged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_received"),
+            (CtType.BACKFEED, "backfeed_ct_energy_received"),
+            (CtType.LOAD, "load_ct_energy_received"),
+            (CtType.EVSE, "evse_ct_energy_received"),
+            (CtType.PV3P, "pv3p_ct_energy_received"),
         )
     ]
     + [
@@ -449,13 +447,17 @@ CT_SENSORS = (
             suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
             suggested_display_precision=3,
             value_fn=attrgetter("active_power"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "net_consumption"),
-            # Production CT active_power is not used
+            (CtType.PRODUCTION, "production_ct_power"),
             (CtType.STORAGE, "battery_discharge"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_power"),
+            (CtType.BACKFEED, "backfeed_ct_power"),
+            (CtType.LOAD, "load_ct_power"),
+            (CtType.EVSE, "evse_ct_power"),
+            (CtType.PV3P, "pv3p_ct_power"),
         )
     ]
     + [
@@ -468,13 +470,17 @@ CT_SENSORS = (
             suggested_display_precision=1,
             entity_registry_enabled_default=False,
             value_fn=attrgetter("frequency"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key, translation_key in (
             (CtType.NET_CONSUMPTION, "frequency", "net_ct_frequency"),
             (CtType.PRODUCTION, "production_ct_frequency", ""),
             (CtType.STORAGE, "storage_ct_frequency", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_frequency", ""),
+            (CtType.BACKFEED, "backfeed_ct_frequency", ""),
+            (CtType.LOAD, "load_ct_frequency", ""),
+            (CtType.EVSE, "evse_ct_frequency", ""),
+            (CtType.PV3P, "pv3p_ct_frequency", ""),
         )
     ]
     + [
@@ -488,13 +494,17 @@ CT_SENSORS = (
             suggested_display_precision=1,
             entity_registry_enabled_default=False,
             value_fn=attrgetter("voltage"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key, translation_key in (
             (CtType.NET_CONSUMPTION, "voltage", "net_ct_voltage"),
             (CtType.PRODUCTION, "production_ct_voltage", ""),
             (CtType.STORAGE, "storage_voltage", "storage_ct_voltage"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_voltage", ""),
+            (CtType.BACKFEED, "backfeed_ct_voltage", ""),
+            (CtType.LOAD, "load_ct_voltage", ""),
+            (CtType.EVSE, "evse_ct_voltage", ""),
+            (CtType.PV3P, "pv3p_ct_voltage", ""),
         )
     ]
     + [
@@ -508,13 +518,17 @@ CT_SENSORS = (
             suggested_display_precision=3,
             entity_registry_enabled_default=False,
             value_fn=attrgetter("current"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "net_ct_current"),
             (CtType.PRODUCTION, "production_ct_current"),
             (CtType.STORAGE, "storage_ct_current"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_current"),
+            (CtType.BACKFEED, "backfeed_ct_current"),
+            (CtType.LOAD, "load_ct_current"),
+            (CtType.EVSE, "evse_ct_current"),
+            (CtType.PV3P, "pv3p_ct_current"),
         )
     ]
     + [
@@ -526,13 +540,17 @@ CT_SENSORS = (
             suggested_display_precision=2,
             entity_registry_enabled_default=False,
             value_fn=attrgetter("power_factor"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "net_ct_powerfactor"),
             (CtType.PRODUCTION, "production_ct_powerfactor"),
             (CtType.STORAGE, "storage_ct_powerfactor"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_powerfactor"),
+            (CtType.BACKFEED, "backfeed_ct_powerfactor"),
+            (CtType.LOAD, "load_ct_powerfactor"),
+            (CtType.EVSE, "evse_ct_powerfactor"),
+            (CtType.PV3P, "pv3p_ct_powerfactor"),
         )
     ]
     + [
@@ -544,7 +562,6 @@ CT_SENSORS = (
             options=list(CtMeterStatus),
             entity_registry_enabled_default=False,
             value_fn=attrgetter("metering_status"),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key, translation_key in (
@@ -555,6 +572,11 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_metering_status", ""),
             (CtType.STORAGE, "storage_ct_metering_status", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_metering_status", ""),
+            (CtType.BACKFEED, "backfeed_ct_metering_status", ""),
+            (CtType.LOAD, "load_ct_metering_status", ""),
+            (CtType.EVSE, "evse_ct_metering_status", ""),
+            (CtType.PV3P, "pv3p_ct_metering_status", ""),
         )
     ]
     + [
@@ -565,7 +587,6 @@ CT_SENSORS = (
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
-            on_phase=None,
             cttype=cttype,
         )
         for cttype, key, translation_key in (
@@ -576,6 +597,11 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_status_flags", ""),
             (CtType.STORAGE, "storage_ct_status_flags", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_status_flags", ""),
+            (CtType.BACKFEED, "backfeed_ct_status_flags", ""),
+            (CtType.LOAD, "load_ct_status_flags", ""),
+            (CtType.EVSE, "evse_ct_status_flags", ""),
+            (CtType.PV3P, "pv3p_ct_status_flags", ""),
         )
     ]
 )
@@ -783,7 +809,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
         translation_key="available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("available_energy"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
@@ -791,14 +817,14 @@ ENCHARGE_AGGREGATE_SENSORS = (
         translation_key="reserve_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("backup_reserve"),
     ),
     EnvoyEnchargeAggregateSensorEntityDescription(
         key="max_capacity",
         translation_key="max_capacity",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("max_available_capacity"),
     ),
 )

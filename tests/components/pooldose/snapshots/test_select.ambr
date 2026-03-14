@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing method',
     'options': dict({
     }),
     'original_device_class': None,
@@ -86,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing set',
     'options': dict({
     }),
     'original_device_class': None,
@@ -143,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate unit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing method',
     'options': dict({
     }),
     'original_device_class': None,
@@ -261,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing set',
     'options': dict({
     }),
     'original_device_class': None,
@@ -320,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing method',
     'options': dict({
     }),
     'original_device_class': None,
@@ -379,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing set',
     'options': dict({
     }),
     'original_device_class': None,
@@ -436,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water meter unit',
     'options': dict({
     }),
     'original_device_class': None,

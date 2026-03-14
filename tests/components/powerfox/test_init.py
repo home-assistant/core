@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from powerfox import PowerfoxAuthenticationError, PowerfoxConnectionError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -45,16 +46,20 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_exception(
+@pytest.mark.parametrize("method", ["all_devices", "device"])
+async def test_config_entry_auth_failed(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    method: str,
 ) -> None:
-    """Test ConfigEntryNotReady when API raises an exception during entry setup."""
+    """Test ConfigEntryAuthFailed when authentication fails."""
+    getattr(mock_powerfox_client, method).side_effect = PowerfoxAuthenticationError
     mock_config_entry.add_to_hass(hass)
-    mock_powerfox_client.device.side_effect = PowerfoxAuthenticationError
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()

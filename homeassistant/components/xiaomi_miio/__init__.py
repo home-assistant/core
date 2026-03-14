@@ -38,7 +38,12 @@ from miio.gateway.gateway import GatewayException
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -72,10 +77,12 @@ from .const import (
     SetupException,
 )
 from .gateway import ConnectXiaomiGateway
+from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 POLLING_TIMEOUT_SEC = 10
 UPDATE_INTERVAL = timedelta(seconds=15)
 
@@ -121,6 +128,12 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: XiaomiMiioConfigEntry) -> bool:

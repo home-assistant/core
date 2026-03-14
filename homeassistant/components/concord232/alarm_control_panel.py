@@ -49,11 +49,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Concord232 alarm control panel platform."""
-    name = config[CONF_NAME]
-    code = config.get(CONF_CODE)
-    mode = config[CONF_MODE]
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    name: str = config[CONF_NAME]
+    code: str | None = config.get(CONF_CODE)
+    mode: str = config[CONF_MODE]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
 
     url = f"http://{host}:{port}"
 
@@ -72,7 +72,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, url, name, code, mode):
+    def __init__(self, url: str, name: str, code: str | None, mode: str) -> None:
         """Initialize the Concord232 alarm panel."""
 
         self._attr_name = name
@@ -125,7 +125,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
             return
         self._alarm.arm("away")
 
-    def _validate_code(self, code, state):
+    def _validate_code(self, code: str | None, state: AlarmControlPanelState) -> bool:
         """Validate given code."""
         if self._code is None:
             return True

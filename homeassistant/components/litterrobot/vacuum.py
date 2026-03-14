@@ -7,7 +7,6 @@ from typing import Any
 
 from pylitterbot import LitterRobot
 from pylitterbot.enums import LitterBoxStatus
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -16,14 +15,13 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, whisker_command
 
-SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
+PARALLEL_UPDATES = 1
 
 LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
@@ -57,16 +55,6 @@ async def async_setup_entry(
         for robot in coordinator.litter_robots()
     )
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_SLEEP_MODE,
-        {
-            vol.Required("enabled"): cv.boolean,
-            vol.Optional("start_time"): cv.time,
-        },
-        "async_set_sleep_mode",
-    )
-
 
 class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     """Litter-Robot "Vacuum" Cleaner."""
@@ -80,15 +68,18 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         """Return the state of the cleaner."""
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
+    @whisker_command
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
 
+    @whisker_command
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.robot.set_power_status(False)
 
+    @whisker_command
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
     ) -> None:

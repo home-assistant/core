@@ -26,7 +26,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -933,7 +933,7 @@ async def test_start_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1320,7 +1320,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    assert "Failed to stop the Z-Wave JS app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1342,7 +1342,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    assert "Failed to create a backup of the Z-Wave JS app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1365,7 +1365,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
+    assert "Failed to uninstall the Z-Wave JS app" in caplog.text
 
 
 @pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
@@ -1917,11 +1917,12 @@ async def test_disabled_node_status_entity_on_node_replaced(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zp3111: Node,
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that when entity primary values are removed the entity is removed."""
+    """Test that when entity primary values are removed the entity becomes unavailable."""
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -2039,6 +2040,155 @@ async def test_remove_entity_on_value_removed(
         == new_unavailable_entities
     )
 
+    # Entities should still be in the entity registry (not fully removed)
+    assert entity_registry.async_get(battery_level_entity) is not None
+    assert entity_registry.async_get(binary_cover_entity) is not None
+    assert entity_registry.async_get(idle_cover_status_button_entity) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_removed_and_readded(
+    hass: HomeAssistant,
+    zp3111: Node,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity recovers when primary value is removed and re-added."""
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "0.0"
+
+    # Remove the battery level value
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "prevValue": 100,
+                "propertyName": "level",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Re-add the battery level value with a new reading
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 80,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "80.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_never_populated_then_added(
+    hass: HomeAssistant,
+    zp3111_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity updates when value metadata exists but value is None, then added."""
+    # Modify the battery level value to have value=None (metadata exists but no data)
+    node_state = deepcopy(zp3111_state)
+    for value in node_state["values"]:
+        if value["commandClass"] == 128 and value["property"] == "level":
+            value["value"] = None
+            break
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    # The entity should exist but have unknown state (value is None)
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    # Now send "value added" event with actual value
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 75,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "75.0"
+
 
 async def test_identify_event(
     hass: HomeAssistant,
@@ -2077,18 +2227,18 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     client.driver.controller.receive_event(event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_server_logging(
@@ -2241,13 +2391,13 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     add_event = Event(
         type="node added",
         data={
@@ -2264,7 +2414,7 @@ async def test_factory_reset_node(
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_entity_available_when_node_dead(

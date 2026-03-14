@@ -31,10 +31,10 @@ TTS_SUPPORTED_LANGUAGES = [
 ]
 
 
-BACKEND_MODELS = ["s1", "speech-1.5", "speech-1.6"]
+BACKEND_MODELS = ["s2-pro", "s1", "speech-1.5", "speech-1.6"]
 SORT_BY_OPTIONS = ["task_count", "score", "created_at"]
 LATENCY_OPTIONS = ["normal", "balanced"]
 
-SIGNUP_URL = "https://fish.audio/?fpr=homeassistant"  # codespell:ignore fpr
+SIGNUP_URL = "https://fish.audio/"
 BILLING_URL = "https://fish.audio/app/billing/"
 API_KEYS_URL = "https://fish.audio/app/api-keys/"

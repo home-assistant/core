@@ -22,9 +22,8 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizToggleEntity
-from .models import WizData
 
 RGB_WHITE_CHANNELS_COLOR_MODE = {1: ColorMode.RGBW, 2: ColorMode.RGBWW}
 
@@ -80,6 +79,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             color_modes.add(RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels])
         if features.color_tmp:
             color_modes.add(ColorMode.COLOR_TEMP)
+            kelvin = bulb_type.kelvin_range
+            self._attr_max_color_temp_kelvin = kelvin.max
+            self._attr_min_color_temp_kelvin = kelvin.min
         if features.brightness:
             color_modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
@@ -87,10 +89,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             # If the light supports only a single color mode, set it now
             self._attr_color_mode = next(iter(self._attr_supported_color_modes))
         self._attr_effect_list = wiz_data.scenes
-        if bulb_type.bulb_type != BulbClass.DW:
-            kelvin = bulb_type.kelvin_range
-            self._attr_max_color_temp_kelvin = kelvin.max
-            self._attr_min_color_temp_kelvin = kelvin.min
         if bulb_type.features.effect:
             self._attr_supported_features = LightEntityFeature.EFFECT
         self._async_update_attrs()

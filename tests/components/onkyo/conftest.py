@@ -14,6 +14,15 @@ from . import RECEIVER_INFO, RECEIVER_INFO_2, mock_discovery
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def ignore_missing_translations() -> str | list[str]:
+    """Ignore specific missing translations.
+
+    Legacy onkyo service uses media_player domain
+    """
+    return ["component.media_player.services.onkyo_select_hdmi_output."]
+
+
 @pytest.fixture(autouse=True)
 def mock_default_discovery() -> Generator[None]:
     """Mock the discovery functions with default info."""

@@ -42,6 +42,7 @@ from homeassistant.loader import (
     async_get_loaded_integration,
 )
 from homeassistant.util.location import async_detect_location_info
+from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
@@ -515,6 +516,8 @@ class DownloadSupportPackageView(HomeAssistantView):
         hass_info: dict[str, Any],
         domains_info: dict[str, dict[str, str]],
     ) -> str:
+        cloud = hass.data[DATA_CLOUD]
+
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -570,6 +573,34 @@ class DownloadSupportPackageView(HomeAssistantView):
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        # Add stored latency response if available
+        if locations := cloud.remote.latency_by_location:
+            markdown += "## Latency by location\n\n"
+            markdown += "Location | Latency (ms)\n"
+            markdown += "--- | ---\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
+            markdown += "\n"
+
+        # Add installed packages section
+        try:
+            installed_packages = await async_get_installed_packages()
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Installed packages\n\n"
+            markdown += "Unable to collect installed packages information\n\n"
+        else:
+            if installed_packages:
+                markdown += "## Installed packages\n\n"
+                markdown += (
+                    "<details><summary>Installed packages</summary>\n\n"
+                    "Package | Version\n"
+                    "--- | ---\n"
+                )
+                for pkg in sorted(installed_packages, key=lambda p: p["name"].lower()):
+                    markdown += f"{pkg['name']} | {pkg['version']}\n"
+                markdown += "\n</details>\n\n"
 
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
         logs = "\n".join(await log_handler.get_logs(hass))
@@ -759,7 +790,7 @@ async def websocket_update_prefs(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
             connection.send_error(
                 msg["id"],
                 "alexa_relink",

@@ -1,4 +1,4 @@
-"""Support for BSB-Lan services."""
+"""Support for BSB-LAN services."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
+from .helpers import async_sync_device_time
 
 if TYPE_CHECKING:
     from . import BSBLanConfigEntry
@@ -29,9 +30,6 @@ ATTR_THURSDAY_SLOTS = "thursday_slots"
 ATTR_FRIDAY_SLOTS = "friday_slots"
 ATTR_SATURDAY_SLOTS = "saturday_slots"
 ATTR_SUNDAY_SLOTS = "sunday_slots"
-
-# Service name
-SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
 
 # Schema for a single time slot
@@ -190,7 +188,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     )
 
     try:
-        # Call the BSB-Lan API to set the schedule
+        # Call the BSB-LAN API to set the schedule
         await client.set_hot_water_schedule(dhw_schedule)
     except BSBLANError as err:
         raise HomeAssistantError(
@@ -203,12 +201,69 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     await entry.runtime_data.slow_coordinator.async_request_refresh()
 
 
+async def async_sync_time(service_call: ServiceCall) -> None:
+    """Synchronize BSB-LAN device time with Home Assistant."""
+    device_id: str = service_call.data[ATTR_DEVICE_ID]
+
+    # Get the device and config entry
+    device_registry = dr.async_get(service_call.hass)
+    device_entry = device_registry.async_get(device_id)
+
+    if device_entry is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
+        )
+
+    # Find the config entry for this device
+    matching_entries: list[BSBLanConfigEntry] = [
+        entry
+        for entry in service_call.hass.config_entries.async_entries(DOMAIN)
+        if entry.entry_id in device_entry.config_entries
+    ]
+
+    if not matching_entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry_for_device",
+            translation_placeholders={"device_id": device_entry.name or device_id},
+        )
+
+    entry = matching_entries[0]
+
+    # Verify the config entry is loaded
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_loaded",
+            translation_placeholders={"device_name": device_entry.name or device_id},
+        )
+
+    client = entry.runtime_data.client
+    await async_sync_device_time(client, device_entry.name or device_id)
+
+
+SYNC_TIME_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+    }
+)
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register the BSB-Lan services."""
+    """Register the BSB-LAN services."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_SET_HOT_WATER_SCHEDULE,
+        "set_hot_water_schedule",
         set_hot_water_schedule,
         schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "sync_time",
+        async_sync_time,
+        schema=SYNC_TIME_SCHEMA,
     )

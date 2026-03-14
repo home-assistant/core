@@ -117,7 +117,7 @@ class HassIODiscovery(HomeAssistantView):
         try:
             addon_info = await self._supervisor_client.addons.addon_info(data.addon)
         except SupervisorError as err:
-            _LOGGER.error("Can't read add-on info: %s", err)
+            _LOGGER.error("Can't read app info: %s", err)
             return
 
         data.config[ATTR_ADDON] = addon_info.name

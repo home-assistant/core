@@ -58,6 +58,8 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Return the default color mode."""
         if not self.supported_color_modes:
             return ColorMode.UNKNOWN
+        if ColorMode.BRIGHTNESS in self.supported_color_modes:
+            return ColorMode.BRIGHTNESS
         if ColorMode.RGB in self.supported_color_modes:
             return ColorMode.RGB
         if ColorMode.COLOR_TEMP in self.supported_color_modes:
@@ -79,9 +81,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         self._attr_rgb_color: tuple | None = (
             (tuple(int(i) for i in color.split(":"))) if color else None
         )
-        self._attr_color_temp_kelvin: int | None = (
-            color_temperature if color_temperature else None
-        )
+        self._attr_color_temp_kelvin: int | None = color_temperature or None
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -132,19 +132,54 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         )
 
 
+class SwitchBotCloudCandleWarmerLamp(SwitchBotCloudLight):
+    """Representation of a SwitchBotCloud CandleWarmerLamp."""
+
+    # Brightness adjustment
+
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+
+
 class SwitchBotCloudStripLight(SwitchBotCloudLight):
     """Representation of a SwitchBot Strip Light."""
 
+    # Brightness adjustment
+    # RGB color control
+
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+
+
+class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
+    """Representation of a SwitchBotCloudRGBICLight."""
+
+    # Brightness adjustment
+    # RGB color control
+
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+
+    async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
+        """Send an RGB command."""
+        await self.send_api_command(
+            RGBWLightCommands.SET_COLOR,
+            parameters=f"{rgb_color[0]}:{rgb_color[1]}:{rgb_color[2]}",
+        )
 
 
 class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
     """Representation of SwitchBot |Strip Light|Floor Lamp|Color Bulb."""
 
+    # Brightness adjustment
+    # RGB color control
+    # Color temperature control
+
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.RGB
 
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
@@ -164,10 +199,14 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
 class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
     """Representation of SwitchBot Ceiling Light."""
 
+    # Brightness adjustment
+    # Color temperature control
+
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
 
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
@@ -187,10 +226,14 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight | SwitchBotCloudCeilingLight:
+) -> SwitchBotCloudLight:
     """Make a SwitchBotCloudLight."""
     if device.device_type == "Strip Light":
         return SwitchBotCloudStripLight(api, device, coordinator)
     if device.device_type in ["Ceiling Light", "Ceiling Light Pro"]:
         return SwitchBotCloudCeilingLight(api, device, coordinator)
+    if device.device_type == "Candle Warmer Lamp":
+        return SwitchBotCloudCandleWarmerLamp(api, device, coordinator)
+    if device.device_type in ["RGBIC Neon Rope Light", "RGBIC Neon Wire Rope Light"]:
+        return SwitchBotCloudRGBICLight(api, device, coordinator)
     return SwitchBotCloudRGBWWLight(api, device, coordinator)

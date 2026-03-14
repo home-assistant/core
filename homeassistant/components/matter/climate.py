@@ -124,6 +124,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
     (0x1209, 0x8002),
@@ -154,6 +155,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8027),
     (0x1209, 0x8028),
     (0x1209, 0x8029),
+    (0x131A, 0x1000),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum

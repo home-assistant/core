@@ -113,34 +113,14 @@ class NetdataSensor(SensorEntity):
     def __init__(self, netdata, name, sensor, sensor_name, element, icon, unit, invert):
         """Initialize the Netdata sensor."""
         self.netdata = netdata
-        self._state = None
         self._sensor = sensor
         self._element = element
-        self._sensor_name = self._sensor if sensor_name is None else sensor_name
-        self._name = name
-        self._icon = icon
-        self._unit_of_measurement = unit
+        if sensor_name is None:
+            sensor_name = self._sensor
+        self._attr_name = f"{name} {sensor_name}"
+        self._attr_icon = icon
+        self._attr_native_unit_of_measurement = unit
         self._invert = invert
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} {self._sensor_name}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        return self._state
 
     @property
     def available(self) -> bool:
@@ -151,9 +131,9 @@ class NetdataSensor(SensorEntity):
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
-        self._state = round(resource_data["dimensions"][self._element]["value"], 2) * (
-            -1 if self._invert else 1
-        )
+        self._attr_native_value = round(
+            resource_data["dimensions"][self._element]["value"], 2
+        ) * (-1 if self._invert else 1)
 
 
 class NetdataAlarms(SensorEntity):
@@ -162,29 +142,18 @@ class NetdataAlarms(SensorEntity):
     def __init__(self, netdata, name, host, port):
         """Initialize the Netdata alarm sensor."""
         self.netdata = netdata
-        self._state = None
-        self._name = name
+        self._attr_name = f"{name} Alarms"
         self._host = host
         self._port = port
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._name} Alarms"
-
-    @property
-    def native_value(self):
-        """Return the state of the resources."""
-        return self._state
-
-    @property
-    def icon(self):
+    def icon(self) -> str:
         """Status symbol if type is symbol."""
-        if self._state == "ok":
+        if self._attr_native_value == "ok":
             return "mdi:check"
-        if self._state == "warning":
+        if self._attr_native_value == "warning":
             return "mdi:alert-outline"
-        if self._state == "critical":
+        if self._attr_native_value == "critical":
             return "mdi:alert"
         return "mdi:crosshairs-question"
 
@@ -197,7 +166,7 @@ class NetdataAlarms(SensorEntity):
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
         alarms = self.netdata.api.alarms["alarms"]
-        self._state = None
+        self._attr_native_value = None
         number_of_alarms = len(alarms)
         number_of_relevant_alarms = number_of_alarms
 
@@ -211,9 +180,9 @@ class NetdataAlarms(SensorEntity):
             ):
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
-                self._state = "critical"
+                self._attr_native_value = "critical"
                 return
-        self._state = "ok" if number_of_relevant_alarms == 0 else "warning"
+        self._attr_native_value = "ok" if number_of_relevant_alarms == 0 else "warning"
 
 
 class NetdataData:

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
@@ -40,6 +41,7 @@
       'current_position': 100,
       'device_class': 'blind',
       'friendly_name': 'fake_name',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

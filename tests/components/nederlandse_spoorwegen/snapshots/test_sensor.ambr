@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -119,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -168,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -218,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -289,6 +294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -339,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -388,6 +395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -438,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -487,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -537,6 +547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -591,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -645,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -694,6 +707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -743,6 +757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -793,6 +808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -842,6 +858,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -892,6 +909,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -963,6 +981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1013,6 +1032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1062,6 +1082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1112,6 +1133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1161,6 +1183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1211,6 +1234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1265,6 +1289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1319,6 +1344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1368,6 +1394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1417,6 +1444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1467,6 +1495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1516,6 +1545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1566,6 +1596,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1637,6 +1668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1687,6 +1719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1736,6 +1769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1786,6 +1820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1835,6 +1870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1885,6 +1921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1939,6 +1976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1993,6 +2031,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2042,6 +2081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2091,6 +2131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2141,6 +2182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2190,6 +2232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Actual departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2240,6 +2283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2311,6 +2355,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next departure',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2361,6 +2406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2410,6 +2456,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned arrival time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2460,6 +2507,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure platform',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2509,6 +2557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Planned departure time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2559,6 +2608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2613,6 +2663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2667,6 +2718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Transfers',
     'options': dict({
     }),
     'original_device_class': None,

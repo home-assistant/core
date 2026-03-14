@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import http
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 from gspread.exceptions import APIError
@@ -13,6 +13,7 @@ from requests.models import Response
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -28,7 +29,12 @@ from homeassistant.components.google_sheets.services import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+    ServiceValidationError,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -76,7 +82,7 @@ async def mock_setup_integration(
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -196,6 +202,64 @@ async def test_expired_token_refresh_failure(
     # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is expected_state
+
+
+async def test_setup_oauth_reauth_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a token refresh reauth error puts the config entry in setup error state."""
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("client-id", "client-secret"),
+        DOMAIN,
+    )
+
+    with (
+        patch.object(config_entry, "async_start_reauth") as mock_async_start_reauth,
+        patch(
+            "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestReauthError(
+                domain=DOMAIN, request_info=Mock()
+            ),
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_async_start_reauth.assert_called_once_with(hass)
+
+
+async def test_setup_oauth_transient_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test a token refresh transient error sets the config entry to retry setup."""
+    config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("client-id", "client-secret"),
+        DOMAIN,
+    )
+
+    with patch(
+        "homeassistant.components.google_sheets.OAuth2Session.async_ensure_token_valid",
+        side_effect=OAuth2TokenRequestTransientError(
+            domain=DOMAIN, request_info=Mock()
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -368,7 +432,7 @@ async def test_append_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -379,13 +443,14 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -396,6 +461,7 @@ async def test_append_sheet_invalid_config_entry(
             },
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_get_sheet_invalid_config_entry(
@@ -427,7 +493,7 @@ async def test_get_sheet_invalid_config_entry(
     assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHEET,
@@ -439,6 +505,7 @@ async def test_get_sheet_invalid_config_entry(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     # Unload the config entry invoke the service on the unloaded entry id
     await hass.config_entries.async_unload(config_entry2.entry_id)

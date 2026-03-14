@@ -183,7 +183,7 @@ FAKE_DIMMABLE_FAN = BulbType(
     features=Features(
         color=False,
         color_tmp=False,
-        effect=True,
+        effect=False,
         brightness=True,
         dual_head=False,
         fan=True,
@@ -191,9 +191,28 @@ FAKE_DIMMABLE_FAN = BulbType(
         fan_reverse=True,
     ),
     kelvin_range=KelvinRange(max=2700, min=2700),
-    fw_version="1.31.32",
+    fw_version="1.34.1",
     white_channels=1,
     white_to_color_ratio=20,
+    fan_speed_range=6,
+)
+FAKE_DIMMABLE_FAN_2 = BulbType(
+    bulb_type=BulbClass.FANDIM,
+    name="ESP20_FANDIMS_31",
+    features=Features(
+        color=False,
+        color_tmp=False,
+        effect=False,
+        brightness=True,
+        dual_head=False,
+        fan=True,
+        fan_breeze_mode=True,
+        fan_reverse=True,
+    ),
+    kelvin_range=None,
+    fw_version="1.34.0",
+    white_channels=None,
+    white_to_color_ratio=None,
     fan_speed_range=6,
 )
 
