@@ -212,6 +212,9 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
     )
     entry.add_to_hass(hass)
 
+    original_password = entry.data[CONF_PASSWORD]
+    new_password = f"{original_password}_new"
+
     result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
@@ -223,11 +226,12 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
+            user_input={CONF_PASSWORD: new_password},
         )
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
+        assert entry.data[CONF_PASSWORD] == original_password
 
     with (
         patch(
@@ -246,9 +250,10 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
+            user_input={CONF_PASSWORD: new_password},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
         assert entry.unique_id == ACCOUNT_USER_ID
+        assert entry.data[CONF_PASSWORD] == new_password
         assert len(mock_setup_entry.mock_calls) == 1
