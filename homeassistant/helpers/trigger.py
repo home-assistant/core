@@ -369,12 +369,9 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
             return state.state
         return state.attributes.get(domain_spec.value_source)
 
+    @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
-        return from_state.state != to_state.state
 
     @abc.abstractmethod
     def is_valid_state(self, state: State) -> bool:
@@ -487,10 +484,14 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
-        if not super().is_valid_transition(from_state, to_state):
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
-        return self._get_tracked_value(from_state) in self._from_states
+        from_value = self._get_tracked_value(from_state)
+        return (
+            from_value != self._get_tracked_value(to_state)
+            and from_value in self._from_states
+        )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected states."""
