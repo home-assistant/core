@@ -453,7 +453,7 @@ class HassImportsFormatChecker(BaseChecker):
             self.add_message(
                 "hass-avoid-datetime-now",
                 node=node,
-                args=(f"{expr.attrname}.{node.func.attrname}()", replacement),
+                args=(f"{expr.as_string()}.{node.func.attrname}()", replacement),
             )
 
 
