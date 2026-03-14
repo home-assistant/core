@@ -271,6 +271,7 @@ FLOWS = {
         "google_translate",
         "google_travel_time",
         "google_weather",
+        "google_wifi",
         "govee_ble",
         "govee_light_local",
         "gpsd",
