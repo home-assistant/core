@@ -30,12 +30,7 @@ async def test_platform_setup_and_discovery(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(
-        hass,
-        mock_manager,
-        mock_config_entry,
-        mock_devices,
-    )
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
