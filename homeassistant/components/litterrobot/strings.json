@@ -205,11 +205,17 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to fetch data from the Whisker API: {error}"
+    },
     "command_failed": {
       "message": "An error occurred while communicating with the device: {error}"
     },
     "firmware_update_failed": {
       "message": "Unable to start firmware update on {name}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials. Please check your username and password, then try again"
     }
   },
   "issues": {
