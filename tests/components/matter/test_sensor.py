@@ -310,6 +310,19 @@ async def test_air_quality_sensor(
     assert state
     assert state.state == "789.0"
 
+    # Nitrogen Dioxide
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["device_class"] == "nitrogen_dioxide"
+
+    set_node_attribute(matter_node, 1, 1043, 0, 12.5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide")
+    assert state
+    assert state.state == "12.5"
+
     # PM1
     state = hass.states.get("sensor.lightfi_aq1_air_quality_sensor_pm1")
     assert state
@@ -810,4 +823,19 @@ async def test_valve(
 
     state = hass.states.get("sensor.mock_valve_auto_close_time")
     assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
+async def test_aqara_thermostat_w500_entity_exists_and_unknown(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Ensure the Aqara W500 entity is created and its state is unknown.
+
+    This test helps prevent regressions if allow_none_value=True is removed.
+    """
+    state = hass.states.get("sensor.floor_heating_thermostat_active_current")
+    assert state is not None
     assert state.state == "unknown"

@@ -206,6 +206,12 @@
       "core_temperature": {
         "name": "Core temperature"
       },
+      "degreasing_counter": {
+        "name": "Degreasing cycles"
+      },
+      "descaling_counter": {
+        "name": "Descaling cycles"
+      },
       "drying_step": {
         "name": "Drying step",
         "state": {
@@ -230,6 +236,9 @@
       },
       "finish": {
         "name": "Finish"
+      },
+      "milk_cleaning_counter": {
+        "name": "Milk pipework cleaning cycles"
       },
       "plate": {
         "name": "Plate {plate_no}",
@@ -465,6 +474,7 @@
           "drain_spin": "Drain/spin",
           "drop_cookies_1_tray": "Drop cookies (1 tray)",
           "drop_cookies_2_trays": "Drop cookies (2 trays)",
+          "drying": "Drying",
           "duck": "Duck",
           "dutch_hash": "Dutch hash",
           "easy_care": "Easy care",
@@ -996,6 +1006,7 @@
           "heating_up_phase": "Heating up phase",
           "hot_milk": "Hot milk",
           "hygiene": "Hygiene",
+          "hygiene_drying": "Hygiene drying",
           "interim_rinse": "Interim rinse",
           "keep_warm": "Keep warm",
           "keeping_warm": "Keeping warm",

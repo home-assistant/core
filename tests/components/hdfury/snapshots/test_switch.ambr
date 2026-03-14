@@ -755,12 +755,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX0 force +5v',
+    'object_id_base': 'TX0 force +5V',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX0 force +5v',
+    'original_name': 'TX0 force +5V',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -773,7 +773,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_tx0_force_5v-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 TX0 force +5v',
+      'friendly_name': 'HDFury VRROOM-02 TX0 force +5V',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_tx0_force_5v',
@@ -804,12 +804,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'TX1 force +5v',
+    'object_id_base': 'TX1 force +5V',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TX1 force +5v',
+    'original_name': 'TX1 force +5V',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -822,7 +822,7 @@
 # name: test_switch_entities[switch.hdfury_vrroom_02_tx1_force_5v-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 TX1 force +5v',
+      'friendly_name': 'HDFury VRROOM-02 TX1 force +5V',
     }),
     'context': <ANY>,
     'entity_id': 'switch.hdfury_vrroom_02_tx1_force_5v',

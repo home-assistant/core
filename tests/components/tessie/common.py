@@ -8,7 +8,7 @@ from aiohttp.client import RequestInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tessie import PLATFORMS
-from homeassistant.components.tessie.const import DOMAIN, TessieStatus
+from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -19,9 +19,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 # Tessie library
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
-TEST_VEHICLE_STATUS_AWAKE = {"status": TessieStatus.AWAKE}
-TEST_VEHICLE_STATUS_ASLEEP = {"status": TessieStatus.ASLEEP}
-
+TEST_VEHICLE_BATTERY = load_json_object_fixture("battery.json", DOMAIN)
 TEST_RESPONSE = {"result": True}
 TEST_RESPONSE_ERROR = {"result": False, "reason": "reason_why"}
 

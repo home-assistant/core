@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from onedrive_personal_sdk.const import DriveState, DriveType
 from onedrive_personal_sdk.models.items import (
-    AppRoot,
     Drive,
     DriveQuota,
     File,
@@ -100,27 +99,6 @@ def mock_onedrive_client_init() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_approot() -> AppRoot:
-    """Return a mocked approot."""
-    return AppRoot(
-        id="id",
-        child_count=0,
-        size=0,
-        name="name",
-        parent_reference=ItemParentReference(
-            drive_id="mock_drive_id", id="id", path="path"
-        ),
-        created_by=IdentitySet(
-            user=User(
-                display_name="John Doe",
-                id="id",
-                email="john@doe.com",
-            )
-        ),
-    )
-
-
-@pytest.fixture
 def mock_drive() -> Drive:
     """Return a mocked drive."""
     return Drive(
@@ -199,7 +177,6 @@ def mock_metadata_file() -> File:
 @pytest.fixture(autouse=True)
 def mock_onedrive_client(
     mock_onedrive_client_init: MagicMock,
-    mock_approot: AppRoot,
     mock_drive: Drive,
     mock_folder: Folder,
     mock_backup_file: File,
@@ -207,7 +184,6 @@ def mock_onedrive_client(
 ) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     client = mock_onedrive_client_init.return_value
-    client.get_approot.return_value = mock_approot
     client.create_folder.return_value = mock_folder
     client.list_drive_items.return_value = [mock_backup_file, mock_metadata_file]
     client.get_drive_item.return_value = mock_folder

@@ -44,6 +44,7 @@ AC_IN_OPTIONS = [
 ]
 
 ALARM_OPTIONS = [
+    "no_alarm",
     "low_voltage",
     "high_voltage",
     "low_soc",
@@ -336,6 +337,7 @@ SENSOR_DESCRIPTIONS = {
             "switched_off_register",
             "remote_input",
             "protection_active",
+            "load_output_disabled",
             "pay_as_you_go_out_of_credit",
             "bms",
             "engine_shutdown",
@@ -396,7 +398,7 @@ SENSOR_DESCRIPTIONS = {
     Keys.WARNING: VictronBLESensorEntityDescription(
         key=Keys.WARNING,
         device_class=SensorDeviceClass.ENUM,
-        translation_key="alarm",
+        translation_key="warning",
         options=ALARM_OPTIONS,
     ),
     Keys.YIELD_TODAY: VictronBLESensorEntityDescription(

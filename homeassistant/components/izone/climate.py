@@ -603,7 +603,7 @@ class ZoneDevice(ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if on."""
         return self._zone.mode != Zone.Mode.CLOSE
 

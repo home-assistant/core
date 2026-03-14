@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, MANUFACTURER, PARAMETERS, STATES
+from .coordinator import WolfLinkCoordinator
 
 
 def get_listitem_resolve_state(wolf_object, state):
@@ -150,16 +151,16 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WolfLinkSensor(CoordinatorEntity, SensorEntity):
+class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
     """Base class for all Wolf entities."""
 
     entity_description: WolflinkSensorEntityDescription
 
     def __init__(
         self,
-        coordinator,
+        coordinator: WolfLinkCoordinator,
         wolf_object: Parameter,
-        device_id: str,
+        device_id: int,
         description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -168,7 +169,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         self.wolf_object = wolf_object
         self._attr_name = wolf_object.name
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
-        self._state = None
+        self._state: str | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
             configuration_url="https://www.wolf-smartset.com/",
