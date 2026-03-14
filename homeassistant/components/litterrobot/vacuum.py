@@ -19,7 +19,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity
+from .entity import LitterRobotEntity, whisker_command
+
+PARALLEL_UPDATES = 1
 
 LITTER_BOX_STATUS_STATE_MAP = {
     LitterBoxStatus.CLEAN_CYCLE: VacuumActivity.CLEANING,
@@ -66,15 +68,18 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         """Return the state of the cleaner."""
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
+    @whisker_command
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
 
+    @whisker_command
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.robot.set_power_status(False)
 
+    @whisker_command
     async def async_set_sleep_mode(
         self, enabled: bool, start_time: str | None = None
     ) -> None:

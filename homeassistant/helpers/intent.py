@@ -184,6 +184,52 @@ class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
 
 
+class MatchFailedError(IntentError):
+    """Error when target matching fails."""
+
+    def __init__(
+        self,
+        result: MatchTargetsResult,
+        constraints: MatchTargetsConstraints,
+        preferences: MatchTargetsPreferences | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.result = result
+        self.constraints = constraints
+        self.preferences = preferences
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
+
+
+class NoStatesMatchedError(MatchFailedError):
+    """Error when no states match the intent's constraints."""
+
+    def __init__(
+        self,
+        reason: MatchFailedReason,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            result=MatchTargetsResult(False, reason),
+            constraints=MatchTargetsConstraints(
+                name=name,
+                area_name=area,
+                floor_name=floor,
+                domains=domains,
+                device_classes=device_classes,
+            ),
+        )
+
+
 class MatchFailedReason(Enum):
     """Possible reasons for match failure in async_match_targets."""
 
@@ -230,6 +276,29 @@ class MatchFailedReason(Enum):
             MatchFailedReason.INVALID_FLOOR,
             MatchFailedReason.DUPLICATE_NAME,
         )
+
+
+@dataclass
+class MatchTargetsResult:
+    """Result from async_match_targets."""
+
+    is_match: bool
+    """True if one or more entities matched."""
+
+    no_match_reason: MatchFailedReason | None = None
+    """Reason for failed match when is_match = False."""
+
+    states: list[State] = field(default_factory=list)
+    """List of matched entity states."""
+
+    no_match_name: str | None = None
+    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
+
+    areas: list[ar.AreaEntry] = field(default_factory=list)
+    """Areas that were targeted."""
+
+    floors: list[fr.FloorEntry] = field(default_factory=list)
+    """Floors that were targeted."""
 
 
 @dataclass
@@ -290,75 +359,6 @@ class MatchTargetsPreferences:
 
     floor_id: str | None = None
     """Id of floor to use when deduplicating names."""
-
-
-@dataclass
-class MatchTargetsResult:
-    """Result from async_match_targets."""
-
-    is_match: bool
-    """True if one or more entities matched."""
-
-    no_match_reason: MatchFailedReason | None = None
-    """Reason for failed match when is_match = False."""
-
-    states: list[State] = field(default_factory=list)
-    """List of matched entity states."""
-
-    no_match_name: str | None = None
-    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
-
-    areas: list[ar.AreaEntry] = field(default_factory=list)
-    """Areas that were targeted."""
-
-    floors: list[fr.FloorEntry] = field(default_factory=list)
-    """Floors that were targeted."""
-
-
-class MatchFailedError(IntentError):
-    """Error when target matching fails."""
-
-    def __init__(
-        self,
-        result: MatchTargetsResult,
-        constraints: MatchTargetsConstraints,
-        preferences: MatchTargetsPreferences | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__()
-
-        self.result = result
-        self.constraints = constraints
-        self.preferences = preferences
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
-
-
-class NoStatesMatchedError(MatchFailedError):
-    """Error when no states match the intent's constraints."""
-
-    def __init__(
-        self,
-        reason: MatchFailedReason,
-        name: str | None = None,
-        area: str | None = None,
-        floor: str | None = None,
-        domains: set[str] | None = None,
-        device_classes: set[str] | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__(
-            result=MatchTargetsResult(False, reason),
-            constraints=MatchTargetsConstraints(
-                name=name,
-                area_name=area,
-                floor_name=floor,
-                domains=domains,
-                device_classes=device_classes,
-            ),
-        )
 
 
 @dataclass
@@ -915,7 +915,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def __init__(
         self,
         intent_type: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -927,7 +927,6 @@ class DynamicServiceIntentHandler(IntentHandler):
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
-        self.speech = speech
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
@@ -1114,7 +1113,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for floor in match_result.floors
             )
-            speech_name = match_result.floors[0].name
         elif match_result.areas:
             success_results.extend(
                 IntentResponseTarget(
@@ -1122,9 +1120,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for area in match_result.areas
             )
-            speech_name = match_result.areas[0].name
-        else:
-            speech_name = states[0].name
 
         service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
@@ -1165,9 +1160,6 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update all states
         states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
-
-        if self.speech is not None:
-            response.async_set_speech(self.speech.format(speech_name))
 
         return response
 
@@ -1231,7 +1223,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         intent_type: str,
         domain: str,
         service: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -1244,7 +1236,6 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         """Create service handler."""
         super().__init__(
             intent_type,
-            speech=speech,
             required_slots=required_slots,
             optional_slots=optional_slots,
             required_domains=required_domains,
