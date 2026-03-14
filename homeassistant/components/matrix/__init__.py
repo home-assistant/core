@@ -31,17 +31,13 @@ import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    EVENT_HOMEASSISTANT_START,
-)
-from homeassistant.core import Event as HassEvent, HomeAssistant, ServiceCall
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import save_json
+from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
 
@@ -137,37 +133,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     config = config[DOMAIN]
 
-    existing_entries = [
-        entry
+    if any(
+        entry.data.get(CONF_USERNAME) == config[CONF_USERNAME]
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.data.get(CONF_USERNAME) == config[CONF_USERNAME]
-    ]
+    ):
+        return True
 
-    if not existing_entries:
-        commands: list[dict[str, Any]] = []
-        for command in config[CONF_COMMANDS]:
-            serialized_command = dict(command)
-            if (
-                expression := serialized_command.get(CONF_EXPRESSION)
-            ) is not None and isinstance(expression, re.Pattern):
-                serialized_command[CONF_EXPRESSION] = expression.pattern
-            commands.append(serialized_command)
-        _LOGGER.debug(
-            "Starting Matrix YAML configuration import for user %s",
-            config[CONF_USERNAME],
-        )
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_HOMESERVER: config[CONF_HOMESERVER],
-                CONF_USERNAME: config[CONF_USERNAME],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
-                CONF_ROOMS: list(config[CONF_ROOMS]),
-                CONF_COMMANDS: commands,
-            },
-        )
+    commands: list[dict[str, Any]] = []
+    for command in config[CONF_COMMANDS]:
+        serialized_command = dict(command)
+        if (
+            expression := serialized_command.get(CONF_EXPRESSION)
+        ) is not None and isinstance(expression, re.Pattern):
+            serialized_command[CONF_EXPRESSION] = expression.pattern
+        commands.append(serialized_command)
+    _LOGGER.debug(
+        "Starting Matrix YAML configuration import for user %s",
+        config[CONF_USERNAME],
+    )
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOMESERVER: config[CONF_HOMESERVER],
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+            CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+            CONF_ROOMS: list(config[CONF_ROOMS]),
+            CONF_COMMANDS: commands,
+        },
+    )
 
     return True
 
@@ -193,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
         _LOGGER.warning("Invalid rooms in config entry %s: %s", entry.entry_id, err)
         rooms = []
 
-    matrix_storage_dir = os.path.join(hass.config.path(), ".storage", "matrix")
+    matrix_storage_dir = hass.config.path(STORAGE_DIR, "matrix")
     await hass.async_add_executor_job(
         partial(os.makedirs, matrix_storage_dir, exist_ok=True)
     )
@@ -213,26 +208,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
     entry.runtime_data = matrix_bot
     entry.async_on_unload(matrix_bot.async_close)
 
-    async def _async_start_bot() -> None:
-        try:
-            await matrix_bot.async_start()
-        except ConfigEntryAuthFailed:
-            entry.async_start_reauth(hass)
+    @callback
+    def _async_start_bot(_hass: HomeAssistant) -> None:
+        async def _do_start() -> None:
+            try:
+                await matrix_bot.async_start()
+            except ConfigEntryAuthFailed:
+                entry.async_start_reauth(hass)
 
-    if hass.is_running:
         entry.async_create_background_task(
             hass,
-            _async_start_bot(),
+            _do_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{entry.unique_id}'",
         )
-    else:
 
-        async def _async_startup(_: HassEvent) -> None:
-            await _async_start_bot()
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
-        )
+    entry.async_on_unload(async_at_start(hass, _async_start_bot))
 
     return True
 
@@ -334,27 +324,10 @@ class MatrixBot:
         )
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
-        # Build a lookup that accepts both the original alias/ID keys *and* the
-        # resolved room IDs as keys, so commands can reference listening rooms by
-        # either form (e.g. "#alias:server" or "!resolvedid:server").
-        room_lookup: dict[RoomAnyID, RoomID] = {
-            **self._listening_rooms,
-            **{v: v for v in self._listening_rooms.values()},
-        }
-
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
             if rooms := command.get(CONF_ROOMS):
-                resolved: list[RoomID] = []
-                for room in rooms:
-                    if (room_id := room_lookup.get(room)) is not None:
-                        resolved.append(room_id)
-                    else:
-                        _LOGGER.warning(
-                            "Command room '%s' is not in the listening rooms list, skipping",
-                            room,
-                        )
-                command[CONF_ROOMS] = resolved
+                command[CONF_ROOMS] = [self._listening_rooms[room] for room in rooms]
             else:
                 command[CONF_ROOMS] = list(self._listening_rooms.values())
 

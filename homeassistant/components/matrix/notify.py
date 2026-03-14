@@ -25,7 +25,7 @@ CONF_DEFAULT_ROOM = "default_room"
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEFAULT_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
-        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
     }
 )
 
@@ -37,14 +37,14 @@ def get_service(
 ) -> MatrixNotificationService:
     """Get the Matrix notification service."""
     return MatrixNotificationService(
-        config[CONF_DEFAULT_ROOM], config.get(CONF_CONFIG_ENTRY_ID)
+        config[CONF_DEFAULT_ROOM], config[CONF_CONFIG_ENTRY_ID]
     )
 
 
 class MatrixNotificationService(BaseNotificationService):
     """Send notifications to a Matrix room."""
 
-    def __init__(self, default_room: RoomAnyID, config_entry_id: str | None) -> None:
+    def __init__(self, default_room: RoomAnyID, config_entry_id: str) -> None:
         """Set up the Matrix notification service."""
         self._default_room = default_room
         self._config_entry_id = config_entry_id
@@ -52,9 +52,11 @@ class MatrixNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
         target_rooms: list[RoomAnyID] = kwargs.get(ATTR_TARGET) or [self._default_room]
-        service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
-        if self._config_entry_id:
-            service_data[CONF_CONFIG_ENTRY_ID] = self._config_entry_id
+        service_data = {
+            ATTR_TARGET: target_rooms,
+            ATTR_MESSAGE: message,
+            CONF_CONFIG_ENTRY_ID: self._config_entry_id,
+        }
         if (data := kwargs.get(ATTR_DATA)) is not None:
             service_data[ATTR_DATA] = data
         self.hass.services.call(DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)

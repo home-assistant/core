@@ -39,7 +39,7 @@ from homeassistant.components.matrix import (
     RoomAnyID,
     RoomID,
 )
-from homeassistant.components.matrix.const import DOMAIN
+from homeassistant.components.matrix.const import CONF_CONFIG_ENTRY_ID, DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
@@ -321,7 +321,13 @@ async def matrix_bot(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
+    notify_config = {
+        NOTIFY_DOMAIN: {
+            **MOCK_CONFIG_DATA[NOTIFY_DOMAIN],
+            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+        }
+    }
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, notify_config)
     await hass.async_block_till_done()
 
     assert isinstance(matrix_bot := config_entry.runtime_data, MatrixBot)
