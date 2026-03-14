@@ -9,8 +9,10 @@ from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 from trmnl.models import Device
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -23,12 +25,7 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
 
     config_entry: TRMNLConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: TRMNLConfigEntry,
-        client: TRMNLClient,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TRMNLConfigEntry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -37,7 +34,10 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
             name=DOMAIN,
             update_interval=timedelta(hours=1),
         )
-        self.client = client
+        self.client = TRMNLClient(
+            token=config_entry.data[CONF_API_KEY],
+            session=async_get_clientsession(hass),
+        )
 
     async def _async_update_data(self) -> dict[int, Device]:
         """Fetch data from TRMNL."""
