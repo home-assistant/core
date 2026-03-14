@@ -56,11 +56,11 @@
     }
   },
   "exceptions": {
-    "invalid_auth": {
-      "message": "Error while authenticating with the device: {error}"
+    "auth_failed": {
+      "message": "Authentication with the Poweropti device at {host} failed. Please check your API key."
     },
-    "update_failed": {
-      "message": "Error while updating the device: {error}"
+    "connection_error": {
+      "message": "Could not connect to the Poweropti device at {host}. Please check if the device is online and reachable."
     }
   }
 }

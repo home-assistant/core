@@ -6,7 +6,7 @@ import respx
 
 from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -326,3 +326,249 @@ async def test_duplicate_url(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+@respx.mock
+async def test_form_unauthorized_basic_auth(
+    hass: HomeAssistant, ics_content: str
+) -> None:
+    """Test 401 with WWW-Authenticate: Basic triggers auth step and succeeds."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=401,
+            headers={"www-authenticate": 'Basic realm="test"'},
+        )
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == CALENDAR_NAME
+    assert result3["data"] == {
+        CONF_CALENDAR_NAME: CALENDAR_NAME,
+        CONF_URL: CALENDER_URL,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: "user",
+        CONF_PASSWORD: "pass",
+    }
+
+
+@respx.mock
+async def test_form_auth_invalid_credentials(
+    hass: HomeAssistant, ics_content: str
+) -> None:
+    """Test wrong credentials in auth step shows invalid_auth error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=401,
+            headers={"www-authenticate": 'Basic realm="test"'},
+        )
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    # Wrong credentials - server still returns 401
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "wrong",
+            CONF_PASSWORD: "wrong",
+        },
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "auth"
+    assert result3["errors"] == {"base": "invalid_auth"}
+
+    # Correct credentials
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result4 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+    assert result4["title"] == CALENDAR_NAME
+
+
+@respx.mock
+async def test_form_auth_forbidden_aborts(hass: HomeAssistant) -> None:
+    """Test 403 in auth step aborts the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=401,
+            headers={"www-authenticate": 'Basic realm="test"'},
+        )
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    respx.get(CALENDER_URL).mock(return_value=Response(status_code=403))
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "forbidden"
+
+
+@respx.mock
+async def test_form_auth_invalid_ics_aborts(hass: HomeAssistant) -> None:
+    """Test invalid ICS in auth step aborts the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=401,
+            headers={"www-authenticate": 'Basic realm="test"'},
+        )
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text="not valid ics",
+        )
+    )
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "invalid_ics_file"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "base_error"),
+    [
+        (TimeoutException("Connection timed out"), "timeout_connect"),
+        (HTTPError("Connection failed"), "cannot_connect"),
+    ],
+)
+@respx.mock
+async def test_form_auth_connection_errors(
+    hass: HomeAssistant,
+    side_effect: Exception,
+    ics_content: str,
+    base_error: str,
+) -> None:
+    """Test connection errors in auth step show retryable errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=401,
+            headers={"www-authenticate": 'Basic realm="test"'},
+        )
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    # Connection error during auth
+    respx.get(CALENDER_URL).mock(side_effect=side_effect)
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "auth"
+    assert result3["errors"] == {"base": base_error}
+
+    # Retry with success
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    result4 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY

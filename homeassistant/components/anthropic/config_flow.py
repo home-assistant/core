@@ -43,7 +43,9 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
+    CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_RECOMMENDED,
@@ -414,6 +416,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         else:
             self.options.pop(CONF_THINKING_EFFORT, None)
+
+        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
+            step_schema[
+                vol.Optional(
+                    CONF_CODE_EXECUTION,
+                    default=DEFAULT[CONF_CODE_EXECUTION],
+                )
+            ] = bool
+        else:
+            self.options.pop(CONF_CODE_EXECUTION, None)
 
         if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
             step_schema.update(

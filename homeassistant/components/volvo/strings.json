@@ -411,7 +411,7 @@
   },
   "services": {
     "get_image_url": {
-      "description": "Get the URL for one or more vehicle-specific images.",
+      "description": "Retrieves the URL for one or more vehicle-specific images.",
       "fields": {
         "entry": {
           "description": "The entry to retrieve the vehicle images for.",

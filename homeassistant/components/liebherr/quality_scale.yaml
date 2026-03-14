@@ -47,7 +47,7 @@ rules:
     comment: Cloud API does not require updating entry data from network discovery.
   discovery: done
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done

@@ -1,6 +1,6 @@
 {
   "domain": "overseerr",
-  "name": "Overseerr",
+  "name": "Seerr",
   "after_dependencies": ["cloud"],
   "codeowners": ["@joostlek", "@AmGarera"],
   "config_flow": true,

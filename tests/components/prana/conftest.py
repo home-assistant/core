@@ -4,6 +4,8 @@ from collections.abc import Generator
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
+from prana_local_api_client.models.prana_state import PranaState
 import pytest
 
 from homeassistant.components.prana.const import DOMAIN
@@ -44,8 +46,8 @@ def mock_prana_api() -> Generator[AsyncMock]:
         device_info_data = load_json_object_fixture("device_info.json", DOMAIN)
         state_data = load_json_object_fixture("state.json", DOMAIN)
 
-        device_info_obj = SimpleNamespace(**device_info_data)
-        state_obj = SimpleNamespace(**state_data)
+        device_info_obj = PranaDeviceInfo.from_dict(device_info_data)
+        state_obj = PranaState.from_dict(state_data)
 
         mock_api_class.return_value.get_device_info = AsyncMock(
             return_value=device_info_obj

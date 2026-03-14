@@ -23,15 +23,15 @@ from homeassistant.helpers.device_registry import DeviceEntry
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import API_MAX_RETRIES, DOMAIN
 from .coordinator import PortainerCoordinator
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.BUTTON,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         session=async_create_clientsession(
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
+        max_retries=API_MAX_RETRIES,
     )
 
     coordinator = PortainerCoordinator(hass, entry, client)
