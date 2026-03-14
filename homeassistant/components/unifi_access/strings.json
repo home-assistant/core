@@ -28,9 +28,43 @@
       "unlock": {
         "name": "Unlock"
       }
+    },
+    "event": {
+      "access": {
+        "name": "Access",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "access_denied": "Access denied",
+              "access_granted": "Access granted"
+            }
+          }
+        }
+      },
+      "doorbell": {
+        "name": "Doorbell",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
+        }
+      }
+    },
+    "switch": {
+      "evacuation": {
+        "name": "Evacuation"
+      },
+      "lockdown": {
+        "name": "Lockdown"
+      }
     }
   },
   "exceptions": {
+    "emergency_failed": {
+      "message": "Failed to set emergency status."
+    },
     "unlock_failed": {
       "message": "Failed to unlock the door."
     }
