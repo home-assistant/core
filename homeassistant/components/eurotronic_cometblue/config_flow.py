@@ -5,10 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from eurotronic_cometblue_ha import AsyncCometBlue
 from eurotronic_cometblue_ha.const import SERVICE
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_discovered_service_info,
+)
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -59,6 +63,43 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_addresses: list[str] = []
 
+    async def _try_connect(self, user_input: dict[str, Any]) -> dict[str, str]:
+        """Verify connection to the device with the provided PIN and read initial data."""
+        device_address = (
+            self._discovery_info.address
+            if self._discovery_info
+            else self._existing_entry_data[CONF_ADDRESS]
+        )
+        try:
+            ble_device = async_ble_device_from_address(self.hass, device_address)
+            LOGGER.info("Testing connection for device at address %s", device_address)
+            if not ble_device:
+                return {"base": "device_not_found"}
+
+            cometblue_device = AsyncCometBlue(
+                device=ble_device,
+                pin=int(user_input[CONF_PIN]),
+            )
+
+            async with cometblue_device:
+                try:
+                    # Device only returns battery level if PIN is correct
+                    # Device only returns battery level if PIN is correct
+                    await cometblue_device.get_battery_async()
+                except Exception:
+                    # need to use broad exception as different exceptions are raised
+                    # based on the underlying OS and backend
+                    LOGGER.exception(
+                        "Failed to read battery level, likely due to incorrect PIN"
+                    )
+                    return {"base": "invalid_pin"}
+        except Exception:
+            # need to use broad exception as different exceptions are raised
+            # based on the underlying OS and backend
+            LOGGER.exception("Failed to connect to device")
+            return {"base": "connection_failed"}
+        return {}
+
     def _create_entry(
         self,
         pin: str,
@@ -91,7 +132,9 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            return self._create_entry(user_input[CONF_PIN])
+            errors = await self._try_connect(user_input)
+            if not errors:
+                return self._create_entry(user_input[CONF_PIN])
 
         schema = self.add_suggested_values_to_schema(
             DATA_SCHEMA,
