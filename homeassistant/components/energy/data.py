@@ -151,6 +151,16 @@ class SolarSourceType(TypedDict):
     config_entry_solar_forecast: list[str] | None
 
 
+class WindSourceType(TypedDict):
+    """Dictionary holding the source of wind energy production."""
+
+    type: Literal["wind"]
+
+    stat_energy_from: str
+    stat_rate: NotRequired[str]
+    config_entry_wind_forecast: list[str] | None
+
+
 class BatterySourceType(TypedDict):
     """Dictionary holding the source of battery storage."""
 
@@ -209,6 +219,7 @@ class WaterSourceType(TypedDict):
 type SourceType = (
     GridSourceType
     | SolarSourceType
+    | WindSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
@@ -431,6 +442,14 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
+WIND_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "wind",
+        vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
+        vol.Optional("config_entry_wind_forecast"): vol.Any([str], None),
+    }
+)
 BATTERY_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "battery",
@@ -520,6 +539,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                 {
                     "grid": GRID_SOURCE_SCHEMA,
                     "solar": SOLAR_SOURCE_SCHEMA,
+                    "wind": WIND_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,

@@ -30,7 +30,13 @@ from .data import (
     EnergyPreferencesUpdate,
     async_get_manager,
 )
-from .types import EnergyPlatform, GetSolarForecastType, SolarForecastType
+from .types import (
+    EnergyPlatform,
+    GetSolarForecastType,
+    GetWindForecastType,
+    SolarForecastType,
+    WindForecastType,
+)
 from .validate import async_validate
 
 type EnergyWebSocketCommandHandler = Callable[
@@ -51,6 +57,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_validate)
     websocket_api.async_register_command(hass, ws_solar_forecast)
+    websocket_api.async_register_command(hass, ws_wind_forecast)
     websocket_api.async_register_command(hass, ws_get_fossil_energy_consumption)
 
 
@@ -72,6 +79,32 @@ async def async_get_energy_platforms(
             return
 
         platforms[domain] = platform.async_get_solar_forecast
+
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_energy_platform, wait_for_platforms=True
+    )
+
+    return platforms
+
+
+@singleton("energy_wind_platforms")
+async def async_get_wind_energy_platforms(
+    hass: HomeAssistant,
+) -> dict[str, GetWindForecastType]:
+    """Get wind energy platforms."""
+    platforms: dict[str, GetWindForecastType] = {}
+
+    @callback
+    def _process_energy_platform(
+        hass: HomeAssistant,
+        domain: str,
+        platform: EnergyPlatform,
+    ) -> None:
+        """Process energy platforms."""
+        if not hasattr(platform, "async_get_wind_forecast"):
+            return
+
+        platforms[domain] = platform.async_get_wind_forecast
 
     await async_process_integration_platforms(
         hass, DOMAIN, _process_energy_platform, wait_for_platforms=True
@@ -160,11 +193,13 @@ async def ws_info(
 ) -> None:
     """Handle get info command."""
     forecast_platforms = await async_get_energy_platforms(hass)
+    wind_forecast_platforms = await async_get_wind_energy_platforms(hass)
     connection.send_result(
         msg["id"],
         {
             "cost_sensors": hass.data[DOMAIN]["cost_sensors"],
             "solar_forecast_domains": list(forecast_platforms),
+            "wind_forecast_domains": list(wind_forecast_platforms),
         },
     )
 
@@ -221,6 +256,59 @@ async def ws_solar_forecast(
     forecasts: dict[str, SolarForecastType] = {}
 
     forecast_platforms = await async_get_energy_platforms(hass)
+
+    for config_entry_id in config_entries:
+        config_entry = hass.config_entries.async_get_entry(config_entry_id)
+        # Filter out non-existing config entries or unsupported domains
+
+        if config_entry is None or config_entry.domain not in forecast_platforms:
+            continue
+
+        forecast = await forecast_platforms[config_entry.domain](hass, config_entry_id)
+
+        if forecast is not None:
+            forecasts[config_entry_id] = forecast
+
+    connection.send_result(msg["id"], forecasts)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "energy/wind_forecast",
+    }
+)
+@websocket_api.async_response
+@_ws_with_manager
+async def ws_wind_forecast(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+    manager: EnergyManager,
+) -> None:
+    """Handle wind forecast command."""
+    if manager.data is None:
+        connection.send_result(msg["id"], {})
+        return
+
+    config_entries: dict[str, str | None] = {}
+
+    for source in manager.data["energy_sources"]:
+        if (
+            source["type"] != "wind"
+            or (wind_forecast := source.get("config_entry_wind_forecast")) is None
+        ):
+            continue
+
+        for entry in wind_forecast:
+            config_entries[entry] = None
+
+    if not config_entries:
+        connection.send_result(msg["id"], {})
+        return
+
+    forecasts: dict[str, WindForecastType] = {}
+
+    forecast_platforms = await async_get_wind_energy_platforms(hass)
 
     for config_entry_id in config_entries:
         config_entry = hass.config_entries.async_get_entry(config_entry_id)
