@@ -9,6 +9,21 @@
       },
       "uptime": {
         "default": "mdi:clock-outline"
+      },
+      "pages_completed": {
+        "default": "mdi:file-document-outline"
+      },
+      "impressions_completed": {
+        "default": "mdi:file-document-outline"
+      },
+      "media_sheets_completed": {
+        "default": "mdi:file-document-outline"
+      },
+      "impressions_completed_monochrome": {
+        "default": "mdi:file-document-outline"
+      },
+      "impressions_completed_full_color": {
+        "default": "mdi:file-document-outline"
       }
     }
   }

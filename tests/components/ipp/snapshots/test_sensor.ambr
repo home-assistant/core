@@ -123,6 +123,58 @@
     'state': '58',
   })
 # ---
+# name: test_sensors[sensor.test_ha_1000_series_color_impressions_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_color_impressions_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Color impressions completed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Color impressions completed',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'impressions_completed_full_color',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed_full_color',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_color_impressions_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Color impressions completed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_color_impressions_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '968',
+  })
+# ---
 # name: test_sensors[sensor.test_ha_1000_series_cyan_ink-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -179,6 +231,58 @@
     'state': '91',
   })
 # ---
+# name: test_sensors[sensor.test_ha_1000_series_impressions_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_impressions_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Impressions completed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Impressions completed',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'impressions_completed',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_impressions_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Impressions completed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_impressions_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2468',
+  })
+# ---
 # name: test_sensors[sensor.test_ha_1000_series_magenta_ink-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -233,6 +337,162 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '73',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_media_sheets_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_media_sheets_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Media sheets completed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Media sheets completed',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'media_sheets_completed',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_media_sheets_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_media_sheets_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Media sheets completed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_media_sheets_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_monochrome_impressions_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_monochrome_impressions_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Monochrome impressions completed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monochrome impressions completed',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'impressions_completed_monochrome',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_impressions_completed_monochrome',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_monochrome_impressions_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Monochrome impressions completed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_monochrome_impressions_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1500',
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_pages_completed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_ha_1000_series_pages_completed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pages completed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pages completed',
+    'platform': 'ipp',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pages_completed',
+    'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251_pages_completed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ha_1000_series_pages_completed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test HA-1000 Series Pages completed',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ha_1000_series_pages_completed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1234',
   })
 # ---
 # name: test_sensors[sensor.test_ha_1000_series_photo_black_ink-entry]
