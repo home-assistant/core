@@ -43,6 +43,21 @@
       },
       "uptime": {
         "name": "Uptime"
+      },
+      "pages_completed": {
+        "name": "Pages completed"
+      },
+      "impressions_completed": {
+        "name": "Impressions completed"
+      },
+      "media_sheets_completed": {
+        "name": "Media sheets completed"
+      },
+      "impressions_completed_monochrome": {
+        "name": "Monochrome impressions completed"
+      },
+      "impressions_completed_full_color": {
+        "name": "Color impressions completed"
       }
     }
   }
