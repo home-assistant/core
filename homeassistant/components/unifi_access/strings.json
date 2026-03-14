@@ -51,9 +51,20 @@
           }
         }
       }
+    },
+    "switch": {
+      "evacuation": {
+        "name": "Evacuation"
+      },
+      "lockdown": {
+        "name": "Lockdown"
+      }
     }
   },
   "exceptions": {
+    "emergency_failed": {
+      "message": "Failed to set emergency status."
+    },
     "unlock_failed": {
       "message": "Failed to unlock the door."
     }
