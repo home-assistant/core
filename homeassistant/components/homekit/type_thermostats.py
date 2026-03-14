@@ -757,12 +757,19 @@ class WaterHeater(HomeAccessory):
         self.char_current_heat_cool = serv_thermostat.configure_char(
             CHAR_CURRENT_HEATING_COOLING, value=1
         )
+        # Must set the value first as setting
+        # valid_values happens before setting
+        # the value and if 0 is not a valid
+        # value this will throw
         self.char_target_heat_cool = serv_thermostat.configure_char(
             CHAR_TARGET_HEATING_COOLING,
             value=1,
             setter_callback=self.set_heat_cool,
-            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER,
         )
+        self.char_target_heat_cool.override_properties(
+            valid_values=HC_HOMEKIT_VALID_MODES_WATER_HEATER
+        )
+        self.char_target_heat_cool.allow_invalid_client_values = True
 
         self.char_current_temp = serv_thermostat.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=50.0
