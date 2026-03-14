@@ -616,27 +616,19 @@ async def test_remove_offline_config_entry_device(
 ) -> None:
     """Test that removing an offline speaker cleans up config entry data."""
     config_dr.async_setup(hass)
+    identifiers = {(sonos.DOMAIN, soco.uid)}
 
-    # Validate initial state, speaker is in known speakers and device registry
-    assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
-    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
-    assert device is not None
-
-    # Simulate speaker going offline — subscribe will fail on reload
     soco.zoneGroupTopology.subscribe = AsyncMock(side_effect=OSError("unreachable"))
-
-    # Reload the integration — speaker fails to reconnect, so not in discovered
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Device still exists until explicitly removed via the UI
-    assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
-    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
+    # Speaker remains in config entry data and device registry while offline
+    assert soco.uid in config_entry.data[CONF_KNOWN_SPEAKERS]
+    device = device_registry.async_get_device(identifiers=identifiers)
     assert device is not None
 
     ws_client = await hass_ws_client(hass)
     response = await ws_client.remove_device(device.id, config_entry.entry_id)
     assert response["success"]
-    assert soco.uid not in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
-    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
-    assert device is None
+    assert soco.uid not in config_entry.data[CONF_KNOWN_SPEAKERS]
+    assert device_registry.async_get_device(identifiers=identifiers) is None
