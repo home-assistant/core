@@ -1,6 +1,6 @@
 """Tests for the LoJack config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from lojack_api import ApiError, AuthenticationError
 import pytest
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow(
     hass: HomeAssistant,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user configuration flow."""
@@ -55,7 +55,7 @@ async def test_full_user_flow(
 )
 async def test_user_flow_errors(
     hass: HomeAssistant,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
@@ -95,7 +95,7 @@ async def test_user_flow_errors(
 
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that duplicate accounts are rejected."""

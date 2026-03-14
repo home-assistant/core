@@ -1,6 +1,6 @@
 """Tests for the LoJack integration setup."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from lojack_api import ApiError, AuthenticationError
 import pytest
@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
+from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry
 
@@ -19,7 +20,7 @@ from tests.common import MockConfigEntry
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
 ) -> None:
     """Test successful setup of the integration."""
     await setup_integration(hass, mock_config_entry)
@@ -63,7 +64,7 @@ async def test_setup_entry_create_errors(
 async def test_setup_entry_list_devices_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
@@ -80,7 +81,7 @@ async def test_setup_entry_list_devices_errors(
 async def test_setup_entry_no_vehicles(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
 ) -> None:
     """Test integration loads successfully with no vehicles."""
     mock_lojack_client.list_devices = AsyncMock(return_value=[])
@@ -94,7 +95,7 @@ async def test_setup_entry_no_vehicles(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
 ) -> None:
     """Test successful unload of the integration."""
     await setup_integration(hass, mock_config_entry)
@@ -110,7 +111,7 @@ async def test_unload_entry(
 async def test_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
 ) -> None:
     """Test integration reloads successfully."""
     await setup_integration(hass, mock_config_entry)
@@ -126,14 +127,12 @@ async def test_reload(
 async def test_device_info(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device registry entry is created."""
     await setup_integration(hass, mock_config_entry)
-
-    from .const import TEST_DEVICE_ID
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, TEST_DEVICE_ID)}

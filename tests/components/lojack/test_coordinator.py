@@ -21,7 +21,7 @@ ENTITY_ID = "device_tracker.2021_honda_accord"
 async def test_coordinator_update_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     mock_device: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -46,7 +46,7 @@ async def test_coordinator_update_api_error(
 async def test_coordinator_update_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
+    mock_lojack_client: MagicMock,
     mock_device: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
