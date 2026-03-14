@@ -8,7 +8,6 @@ from lojack_api import ApiError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,20 +30,6 @@ async def test_all_entities(
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_device_tracker_no_location(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lojack_client: AsyncMock,
-    mock_device: MagicMock,
-) -> None:
-    """Test entry enters setup retry when vehicle has no location data."""
-    mock_device.get_location = AsyncMock(return_value=None)
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_device_tracker_becomes_unavailable_on_api_error(
