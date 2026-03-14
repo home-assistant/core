@@ -6,9 +6,10 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from . import load_setup_fixture
+from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry
@@ -37,21 +38,44 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def init_integration(
+def setup_overkiz_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+):
+    """Return a helper to set up the Overkiz integration from a chosen fixture."""
+
+    async def _setup(
+        *,
+        fixture: str = DEFAULT_SETUP_FIXTURE,
+        platforms: list[Platform] | None = None,
+    ) -> MockConfigEntry:
+        mock_config_entry.add_to_hass(hass)
+
+        setup_context = patch.multiple(
+            "pyoverkiz.client.OverkizClient",
+            login=AsyncMock(return_value=True),
+            get_setup=AsyncMock(return_value=load_setup_fixture(fixture)),
+            get_scenarios=AsyncMock(return_value=[]),
+            fetch_events=AsyncMock(return_value=[]),
+        )
+
+        with setup_context:
+            if platforms is None:
+                await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            else:
+                with patch("homeassistant.components.overkiz.PLATFORMS", platforms):
+                    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+            await hass.async_block_till_done()
+
+        return mock_config_entry
+
+    return _setup
+
+
+@pytest.fixture
+async def init_integration(
+    setup_overkiz_integration,
 ) -> MockConfigEntry:
     """Set up the Overkiz integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch.multiple(
-        "pyoverkiz.client.OverkizClient",
-        login=AsyncMock(return_value=True),
-        get_setup=AsyncMock(return_value=load_setup_fixture()),
-        get_scenarios=AsyncMock(return_value=[]),
-        fetch_events=AsyncMock(return_value=[]),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
+    return await setup_overkiz_integration()
