@@ -23,13 +23,15 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-def _try_login(email: str, password: str) -> DecoraWiFiSession | None:
-    """Attempt to log in and return the session, or None on auth failure."""
+def _try_login(email: str, password: str) -> str | None:
+    """Attempt to log in, return the user ID, or None on auth failure."""
     session = DecoraWiFiSession()
-    success = session.login(email, password)
-    if success is None:
+    if session.login(email, password) is None:
         return None
-    return session
+    user_id = str(session.user._id)  # noqa: SLF001
+    with contextlib.suppress(ValueError):
+        Person.logout(session)
+    return user_id
 
 
 class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -46,7 +48,7 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                session = await self.hass.async_add_executor_job(
+                user_id = await self.hass.async_add_executor_job(
                     _try_login,
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
@@ -54,13 +56,9 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["base"] = "cannot_connect"
             else:
-                if session is None:
+                if user_id is None:
                     errors["base"] = "invalid_auth"
                 else:
-                    user_id = str(session.user._id)  # noqa: SLF001
-                    with contextlib.suppress(ValueError):
-                        await self.hass.async_add_executor_job(Person.logout, session)
-
                     await self.async_set_unique_id(user_id)
                     self._abort_if_unique_id_configured()
 
@@ -80,7 +78,7 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_USERNAME: import_data[CONF_USERNAME]})
 
         try:
-            session = await self.hass.async_add_executor_job(
+            user_id = await self.hass.async_add_executor_job(
                 _try_login,
                 import_data[CONF_USERNAME],
                 import_data[CONF_PASSWORD],
@@ -88,12 +86,8 @@ class DecoraWifiConfigFlow(ConfigFlow, domain=DOMAIN):
         except ValueError:
             return self.async_abort(reason="cannot_connect")
 
-        if session is None:
+        if user_id is None:
             return self.async_abort(reason="invalid_auth")
-
-        user_id = str(session.user._id)  # noqa: SLF001
-        with contextlib.suppress(ValueError):
-            await self.hass.async_add_executor_job(Person.logout, session)
 
         await self.async_set_unique_id(user_id)
         self._abort_if_unique_id_configured()
