@@ -1,7 +1,9 @@
 """Test the IntelliFire config flow."""
 
+import inspect
 from unittest.mock import AsyncMock, patch
 
+from intellifire4py import UnifiedFireplace
 from intellifire4py.const import IntelliFireApiMode
 
 from homeassistant.components.intellifire import CONF_USER_ID
@@ -342,3 +344,63 @@ async def test_update_options_no_change(
     mock_fp.set_control_mode.assert_not_called()
     # But async_request_refresh should still be called
     coordinator.async_request_refresh.assert_called_once()
+
+
+async def test_coordinator_performs_poll(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the library only polls when instructed by the coordinator.
+
+    The library auto-polls by default; ensure the coordinator disables that
+    and drives polling explicitly via perform_poll().
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    mock_config_entry_current.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify perform_poll was awaited during initial setup/refresh
+    mock_fp.perform_poll.assert_awaited_once()
+
+
+async def test_fireplace_built_with_polling_disabled(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+) -> None:
+    """Test that the fireplace is built with polling_enabled=False.
+
+    The library auto-polls by default; ensure it is constructed with polling
+    disabled so the coordinator controls all polling via perform_poll().
+    """
+    _mock_local, _mock_cloud, mock_fp = mock_apis_single_fp
+
+    # We need to capture the call to build_fireplace_from_common
+    with patch(
+        "homeassistant.components.intellifire.UnifiedFireplace.build_fireplace_from_common",
+        new_callable=AsyncMock,
+        return_value=mock_fp,
+    ) as mock_build:
+        mock_config_entry_current.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry_current.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify build_fireplace_from_common was called with polling_enabled=False
+        mock_build.assert_awaited_once()
+        call_kwargs = mock_build.call_args.kwargs
+        assert call_kwargs.get("polling_enabled") is False
+        # Coordinator drives exactly one poll; if the library were also auto-polling
+        # this would be > 1, catching the double-poll regression.
+        mock_fp.perform_poll.assert_awaited_once()
+
+
+async def test_build_fireplace_from_common_accepts_polling_enabled() -> None:
+    """Verify the backing lib's build_fireplace_from_common accepts polling_enabled.
+
+    Guards against the library renaming the kwarg without us noticing.
+    """
+    sig = inspect.signature(UnifiedFireplace.build_fireplace_from_common)
+    assert "polling_enabled" in sig.parameters
