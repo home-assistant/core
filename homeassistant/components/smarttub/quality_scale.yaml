@@ -1,6 +1,6 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup: todo
   appropriate-polling: done
   brands: done
   common-modules: done
