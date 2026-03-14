@@ -52,7 +52,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices: todo
 
   # Platinum
   async-dependency: done

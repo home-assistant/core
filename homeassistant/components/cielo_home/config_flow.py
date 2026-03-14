@@ -54,13 +54,12 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             token = await self.client.get_or_refresh_token()
 
-            username = getattr(self.client, "username", None)
-            if not isinstance(username, str) or not username.strip():
+            username = self.client.username
+            if not username:
                 return {"base": "no_username"}
 
             devices = await self.client.get_devices_data()
-            parsed = getattr(devices, "parsed", None)
-            if not parsed:
+            if not devices.parsed:
                 return {"base": "no_devices"}
 
         except AuthenticationError:
@@ -79,9 +78,6 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         if user_input:
             api_key = user_input[CONF_API_KEY].strip()
 
@@ -96,8 +92,8 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_TOKEN] = token
                 assert self.client is not None
 
-                username = getattr(self.client, "username", None)
-                if isinstance(username, str) and username:
+                username = self.client.username
+                if username:
                     await self.async_set_unique_id(username)
                     self._abort_if_unique_id_configured()
 

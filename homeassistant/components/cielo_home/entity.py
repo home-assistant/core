@@ -18,7 +18,7 @@ from .coordinator import CieloDataUpdateCoordinator
 
 
 class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
-    """Representation of a Cielo Base Entity."""
+    """Representation of a Cielo base entity."""
 
     _attr_has_entity_name = True
 
@@ -27,41 +27,31 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         coordinator: CieloDataUpdateCoordinator,
         device_id: str,
     ) -> None:
-        """Initiate Cielo Base Entity."""
+        """Initialize the Cielo base entity."""
         super().__init__(coordinator)
         self._device_id = device_id
         self._client = coordinator.client
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
         self._device_api: CieloDeviceAPI | None = None
-        self._device_api_id: str | None = None
 
     @property
     def client(self) -> CieloDeviceAPI:
-        """Return a per-device API wrapper (no shared mutable state)."""
+        """Return a per-device API wrapper."""
         dev = self.device_data
-        if self._client is None:
-            # Without an underlying client we cannot create a device API
-            raise HomeAssistantError("Cielo client not available")
-
         if dev is None:
-            # Device data may be temporarily missing; return any cached API
-            if self._device_api is None:
-                raise HomeAssistantError(
-                    f"Cielo device {self._device_id} data not available"
-                )
-            return self._device_api
-        # Recreate wrapper if device changed (coordinator refresh can replace objects)
-        if self._device_api is None or self._device_api_id != dev.id:
+            raise HomeAssistantError(
+                f"Cielo device {self._device_id} data not available"
+            )
+
+        if self._device_api is None:
             self._device_api = CieloDeviceAPI(self._client, dev)
-            self._device_api_id = dev.id
         else:
-            # Keep wrapper but update the device reference to the latest object
             self._device_api.device_data = dev
 
         return self._device_api
 
     @property
-    def device_data(self) -> CieloDevice | None:
+    def device_data(self) -> CieloDevice:
         """Return the device data from the coordinator."""
         return self.coordinator.data.parsed.get(self._device_id)
 
@@ -71,7 +61,6 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return (
             super().available
             and self._device_id in self.coordinator.data.parsed
-            and self.device_data is not None
             and bool(self.device_data.device_status)
         )
 
@@ -88,7 +77,7 @@ class CieloDeviceBaseEntity(CieloBaseEntity):
         super().__init__(coordinator, device_id)
         self.device_id = device_id
 
-        device = self._get_device()
+        device = coordinator.data.parsed[device_id]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
@@ -98,9 +87,3 @@ class CieloDeviceBaseEntity(CieloBaseEntity):
             configuration_url="https://home.cielowigle.com/",
             suggested_area=device.name,
         )
-
-    def _get_device(self) -> CieloDevice:
-        device = self.coordinator.data.parsed.get(self._device_id)
-        if device is None:
-            raise HomeAssistantError(f"Cielo device {self._device_id} not available")
-        return device

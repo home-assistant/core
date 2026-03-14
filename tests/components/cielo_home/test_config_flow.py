@@ -54,7 +54,7 @@ async def test_full_config_flow_success(hass: HomeAssistant) -> None:
 
 
 async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) -> None:
-    """Test the flow aborts because it's single instance only."""
+    """Test the flow aborts when the account is already configured."""
     with (
         patch(MOCK_AUTH_PATH, new=AsyncMock(return_value=MOCK_TOKEN)),
         patch(
@@ -76,9 +76,15 @@ async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) ->
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
+        assert result3["type"] is FlowResultType.FORM
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "single_instance_allowed"
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            user_input={CONF_API_KEY: "test-api-key"},
+        )
+
+    assert result4["type"] is FlowResultType.ABORT
+    assert result4["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

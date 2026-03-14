@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.event import async_call_later
@@ -60,7 +59,6 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self._known_device_ids: set[str] = set()
         self._cancel_delayed_refresh: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> CieloData:
@@ -72,19 +70,6 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
         except (TimeoutError, CieloError, ClientError) as err:
             raise UpdateFailed(err) from err
 
-        new_ids = set(data.parsed.keys()) if data.parsed else set()
-        removed_ids = self._known_device_ids - new_ids
-
-        if removed_ids:
-            dev_reg = dr.async_get(self.hass)
-            for dev_id in removed_ids:
-                device = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
-                if device:
-                    dev_reg.async_update_device(
-                        device.id, remove_config_entry_id=self.config_entry.entry_id
-                    )
-
-        self._known_device_ids = new_ids
         raw = dict(data.raw or {})
         parsed = dict(data.parsed or {})
         return CieloData(raw=raw, parsed=parsed)
@@ -94,8 +79,15 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
     ) -> None:
         """Apply an optimistic update from an API action response.
 
-        This updates coordinator data immediately (so all entities update together),
-        then schedules a refresh to reconcile with the backend once it catches up.
+        This updates the affected device locally in the coordinator state so the
+        UI reflects the change immediately without requiring a full backend refresh.
+
+        Performing a coordinator refresh after every action would fetch all devices
+        for the account, even when only a single device was updated. This is not
+        optimal from an API usage/cost perspective.
+
+        Instead, the coordinator applies the action result locally for the affected
+        device and schedules a later refresh to reconcile with the backend state.
         """
         if not self.data or not self.data.parsed or device_id not in self.data.parsed:
             await self.async_request_refresh()
