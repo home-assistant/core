@@ -24,6 +24,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "access_door_dps": {
+        "name": "Door Position Sensor"
+      }
+    },
     "button": {
       "unlock": {
         "name": "Unlock"

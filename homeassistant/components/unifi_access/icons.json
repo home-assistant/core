@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "access_door_dps": {
+        "default": "mdi:door"
+      }
+    },
     "button": {
       "unlock": {
         "default": "mdi:lock-open"
