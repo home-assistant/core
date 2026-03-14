@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Integration is already configured, only one instance allowed.",
+      "cannot_connect": "Cannot connect to the API. Please try again later.",
+      "invalid_api_key": "Invalid API key provided",
+      "rate_limit_exceeded": "Too many requests to the API. Please try again later.",
+      "reauth_successful": "API key was updated.",
+      "station_already_configured": "The selected station for this company is already configured"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the API. Please try again later.",
+      "invalid_api_key": "Invalid API key provided",
+      "rate_limit_exceeded": "Too many requests to the API. Please try again later."
+    },
+    "step": {
+      "company_selection": {
+        "data": {
+          "company": "Select company"
+        },
+        "data_description": {
+          "company": "The company you want to fetch prices from"
+        },
+        "description": "Select company"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "Enter new API key"
+        },
+        "data_description": {
+          "api_key": "Your personal API key"
+        },
+        "description": "Your API key needs to be updated."
+      },
+      "station_selection": {
+        "data": {
+          "station": "Select station"
+        },
+        "data_description": {
+          "station": "The station you want to create sensors for"
+        },
+        "description": "Select station to show prices for"
+      },
+      "user": {
+        "data": {
+          "api_key": "Enter API key"
+        },
+        "data_description": {
+          "api_key": "Your personal API key"
+        },
+        "description": "Enter your Fuelprices.dk API key\nIf you do not have an API key, you can get one for free at {website_url}"
+      }
+    }
+  },
+  "config_subentries": {
+    "station": {
+      "abort": {
+        "already_configured": "Integration is already configured, only one instance allowed.",
+        "station_already_configured": "The selected station for this company is already configured"
+      },
+      "entry_type": "Station",
+      "error": {
+        "cannot_connect": "Cannot connect to the API. Please try again later.",
+        "invalid_api_key": "Invalid API key provided",
+        "rate_limit_exceeded": "Too many requests to the API. Please try again later."
+      },
+      "initiate_flow": {
+        "user": "Add station"
+      },
+      "step": {
+        "company_selection": {
+          "data": {
+            "company": "Select company"
+          },
+          "data_description": {
+            "company": "The company you want to fetch prices from"
+          },
+          "description": "Select company"
+        },
+        "station_selection": {
+          "data": {
+            "station": "Select station"
+          },
+          "data_description": {
+            "station": "The station you want to create sensors for"
+          },
+          "description": "Select station to show prices for"
+        }
+      }
+    }
+  }
+}
