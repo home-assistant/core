@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from enum import IntEnum
+import importlib.util
 import sys
 import types
 
-# Stub inelnet_api so tests run without the real package (e.g. when not on PyPI)
-if "inelnet_api" not in sys.modules:
+# Stub inelnet_api only when the package is not installed (e.g. when not on PyPI)
+if importlib.util.find_spec("inelnet_api") is None:
 
     class Action(IntEnum):
         """Stub Action enum matching inelnet_api.Action."""

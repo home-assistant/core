@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelnetConfigEntry
-from .const import DEVICE_NAME_CHANNEL_TEMPLATE, DOMAIN
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -52,9 +52,10 @@ class InelnetCoverEntity(CoverEntity):
         self._attr_unique_id = f"{entry.entry_id}-ch{ch}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}-ch{ch}")},
-            name=DEVICE_NAME_CHANNEL_TEMPLATE.format(channel=ch),
             manufacturer="INELNET",
             model="Blinds controller",
+            translation_key="channel",
+            translation_placeholders={"channel": str(ch)},
         )
 
     @property

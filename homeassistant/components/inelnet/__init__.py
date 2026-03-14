@@ -9,7 +9,7 @@ from inelnet_api import InelnetChannel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_CHANNELS
@@ -31,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelnetConfigEntry) -> b
     """Set up INELNET: one device per channel, each entity controls a single channel only."""
     host = entry.data[CONF_HOST]
     channels = entry.data[CONF_CHANNELS]
+    if not channels:
+        raise ConfigEntryError("No channels configured")
 
     clients = {ch: InelnetChannel(host, ch) for ch in channels}
     session = async_get_clientsession(hass)

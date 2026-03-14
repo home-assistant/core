@@ -64,8 +64,19 @@ def test_cover_entity_attributes(cover_config_entry: MockConfigEntry) -> None:
         entity.device_info, "identifiers", entity.device_info.get("identifiers")
     )
     assert identifiers == {(DOMAIN, "test-cover-entry-ch1")}
-    name = getattr(entity.device_info, "name", entity.device_info.get("name"))
-    assert name == "INELNET Blinds channel 1"
+    assert (
+        getattr(
+            entity.device_info,
+            "translation_key",
+            entity.device_info.get("translation_key"),
+        )
+        == "channel"
+    )
+    assert getattr(
+        entity.device_info,
+        "translation_placeholders",
+        entity.device_info.get("translation_placeholders"),
+    ) == {"channel": "1"}
     assert entity.is_closed is None
 
 

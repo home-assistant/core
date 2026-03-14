@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from typing import Any
 
@@ -35,16 +36,25 @@ def parse_channels(value: str) -> list[int]:
     return sorted(channels)
 
 
+def _is_valid_hostname(host: str) -> bool:
+    """Validate hostname (not IP). Rejects dotted-quad that failed as IP (e.g. 256.1.1.1)."""
+    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+        return False
+    return bool(re.match(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}$", host))
+
+
 def is_valid_host(host: str) -> bool:
-    """Basic validation of host (IP or hostname)."""
+    """Validate host as IPv4, IPv6, or hostname."""
     host = host.strip()
     if not host:
         return False
-    if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        pass
+    else:
         return True
-    if re.match(r"^[a-zA-Z0-9][a-zA-Z0-9.-]{0,62}$", host):
-        return True
-    return False
+    return _is_valid_hostname(host)
 
 
 class InelnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

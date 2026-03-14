@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelnetConfigEntry
-from .const import DEVICE_NAME_CHANNEL_TEMPLATE, DOMAIN, Action
+from .const import DOMAIN, Action
 
 # Button kinds: (unique_id_suffix, action) – name from entity translation key
 BUTTON_UP_SHORT = ("short_up", Action.UP_SHORT)
@@ -24,9 +24,10 @@ def _device_info(entry: ConfigEntry, channel: int) -> DeviceInfo:
     """Build DeviceInfo for a channel (same as cover so entities share one device)."""
     return DeviceInfo(
         identifiers={(DOMAIN, f"{entry.entry_id}-ch{channel}")},
-        name=DEVICE_NAME_CHANNEL_TEMPLATE.format(channel=channel),
         manufacturer="INELNET",
         model="Blinds controller",
+        translation_key="channel",
+        translation_placeholders={"channel": str(channel)},
     )
 
 
