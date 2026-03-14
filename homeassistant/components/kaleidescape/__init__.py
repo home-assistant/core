@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
+PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SENSOR]
 
 type KaleidescapeConfigEntry = ConfigEntry[KaleidescapeDevice]
 
