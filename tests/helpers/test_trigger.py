@@ -1734,11 +1734,19 @@ async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
             State("light.bed", "on", {"color_mode": "rgb"}),
             id="attribute_based",
         ),
+        pytest.param(
+            "light",
+            {"on"},
+            State("light.bed", "off"),
+            State("light.bed", "on"),
+            State("light.bed", "off"),
+            id="state_based_domain_string",
+        ),
     ],
 )
 async def test_make_entity_target_state_trigger(
     hass: HomeAssistant,
-    domain_specs: Mapping[str, DomainSpec],
+    domain_specs: Mapping[str, DomainSpec] | str,
     to_states: set[str],
     from_state: State,
     to_state: State,
