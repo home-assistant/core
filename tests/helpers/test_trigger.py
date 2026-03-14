@@ -1766,22 +1766,34 @@ async def test_make_entity_target_state_trigger(
 
 
 @pytest.mark.parametrize(
-    ("domain_specs", "from_state", "to_state", "wrong_from", "wrong_to"),
+    (
+        "domain_specs",
+        "from_states",
+        "to_states",
+        "from_state",
+        "to_state",
+        "wrong_from",
+        "wrong_to",
+    ),
     [
         pytest.param(
             {"climate": DomainSpec()},
-            State("climate.living", "idle"),
-            State("climate.living", "heating"),
-            State("climate.living", "cooling"),
-            State("climate.living", "cooling"),
+            {"off"},
+            {"heat"},
+            State("climate.living", "off"),
+            State("climate.living", "heat"),
+            State("climate.living", "cool"),
+            State("climate.living", "cool"),
             id="state_based",
         ),
         pytest.param(
             {"climate": DomainSpec(value_source="hvac_action")},
+            {"idle"},
+            {"heating"},
             State("climate.living", "heat", {"hvac_action": "idle"}),
             State("climate.living", "heat", {"hvac_action": "heating"}),
-            State("climate.living", "heat", {"hvac_action": "cooling"}),
-            State("climate.living", "heat", {"hvac_action": "cooling"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
+            State("climate.living", "heat", {"hvac_action": "idle"}),
             id="attribute_based",
         ),
     ],
@@ -1789,6 +1801,8 @@ async def test_make_entity_target_state_trigger(
 async def test_make_entity_transition_trigger(
     hass: HomeAssistant,
     domain_specs: Mapping[str, DomainSpec],
+    from_states: set[str],
+    to_states: set[str],
     from_state: State,
     to_state: State,
     wrong_from: State,
@@ -1796,7 +1810,7 @@ async def test_make_entity_transition_trigger(
 ) -> None:
     """Test make_entity_transition_trigger with state and attribute-based DomainSpec."""
     trigger_cls = make_entity_transition_trigger(
-        domain_specs, from_states={"idle"}, to_states={"heating"}
+        domain_specs, from_states=from_states, to_states=to_states
     )
 
     config = TriggerConfig(
@@ -1823,20 +1837,22 @@ async def test_make_entity_transition_trigger(
 
 
 @pytest.mark.parametrize(
-    ("domain_specs", "from_state", "to_state", "wrong_from"),
+    ("domain_specs", "origin", "from_state", "to_state", "wrong_from"),
     [
         pytest.param(
             {"climate": DomainSpec()},
-            State("climate.living", "idle"),
-            State("climate.living", "heating"),
-            State("climate.living", "cooling"),
+            "off",
+            State("climate.living", "off"),
+            State("climate.living", "heat"),
+            State("climate.living", "cool"),
             id="state_based",
         ),
         pytest.param(
             {"climate": DomainSpec(value_source="hvac_action")},
+            "idle",
             State("climate.living", "heat", {"hvac_action": "idle"}),
             State("climate.living", "heat", {"hvac_action": "heating"}),
-            State("climate.living", "heat", {"hvac_action": "cooling"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
             id="attribute_based",
         ),
     ],
@@ -1844,12 +1860,13 @@ async def test_make_entity_transition_trigger(
 async def test_make_entity_origin_state_trigger(
     hass: HomeAssistant,
     domain_specs: Mapping[str, DomainSpec],
+    origin: str,
     from_state: State,
     to_state: State,
     wrong_from: State,
 ) -> None:
     """Test make_entity_origin_state_trigger with state and attribute-based DomainSpec."""
-    trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state="idle")
+    trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state=origin)
 
     config = TriggerConfig(
         key="climate.started_heating", target={"entity_id": "climate.living"}
