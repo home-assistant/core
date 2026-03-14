@@ -39,6 +39,7 @@ from homeassistant.components.recorder.statistics import (
     get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    update_statistics_issues,
     validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -3941,7 +3942,8 @@ async def test_recorder_platforms_with_custom_equivalent_units(
     hass: HomeAssistant,
     setup_recorder: None,
 ) -> None:
-    """Test recorder platforms providing custom equivalent units are joined when compiling statistics."""
+    """Test recorder platforms providing custom equivalent units are joined."""
+    instance = recorder.get_instance(hass)
     recorder_data = hass.data["recorder"]
     assert not recorder_data.recorder_platforms
 
@@ -3955,12 +3957,18 @@ async def test_recorder_platforms_with_custom_equivalent_units(
     def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
         return custom_equivalent_units_recorder_platform_one
 
+    def _mock_update_statistics_issues(*args: Any) -> None:
+        return
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
     recorder_platform_one = Mock(
         compile_statistics=Mock(wraps=_mock_compile_statistics),
         async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
         list_statistic_ids=None,
-        update_statistics_issues=None,
-        validate_statistics=None,
+        update_statistics_issues=Mock(wraps=_mock_update_statistics_issues),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
     )
 
     mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
@@ -4009,8 +4017,31 @@ async def test_recorder_platforms_with_custom_equivalent_units(
     recorder_platform_one.compile_statistics.assert_called_once_with(
         hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
     )
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
     recorder_platform_one.async_custom_equivalent_units.assert_called_once()
     recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    # Test update statistics issues
+    recorder_platform_one.update_statistics_issues.reset_mock()
+
+    await instance.async_add_executor_job(update_statistics_issues, hass)
+
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 2
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 2
+
+    # Test validate statistics
+    await instance.async_add_executor_job(validate_statistics, hass)
+
+    recorder_platform_one.validate_statistics.assert_called_once_with(
+        hass, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 3
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 3
 
 
 @pytest.mark.parametrize(
