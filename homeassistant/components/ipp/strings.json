@@ -34,6 +34,21 @@
   },
   "entity": {
     "sensor": {
+      "impressions_completed": {
+        "name": "Impressions completed"
+      },
+      "impressions_completed_full_color": {
+        "name": "Color impressions completed"
+      },
+      "impressions_completed_monochrome": {
+        "name": "Monochrome impressions completed"
+      },
+      "media_sheets_completed": {
+        "name": "Media sheets completed"
+      },
+      "pages_completed": {
+        "name": "Pages completed"
+      },
       "printer": {
         "state": {
           "idle": "[%key:common::state::idle%]",
@@ -43,21 +58,6 @@
       },
       "uptime": {
         "name": "Uptime"
-      },
-      "pages_completed": {
-        "name": "Pages completed"
-      },
-      "impressions_completed": {
-        "name": "Impressions completed"
-      },
-      "media_sheets_completed": {
-        "name": "Media sheets completed"
-      },
-      "impressions_completed_monochrome": {
-        "name": "Monochrome impressions completed"
-      },
-      "impressions_completed_full_color": {
-        "name": "Color impressions completed"
       }
     }
   }
