@@ -25,6 +25,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
 
+from homeassistant.util import dt as dt_util
+
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 600
@@ -261,15 +263,21 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         if not data or not isinstance(data.get("time_series"), list):
             raise UpdateFailed("Received invalid data")
 
+        time_series = data["time_series"]
+        if not time_series:
+            raise UpdateFailed("Empty time series data")
+
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
-        for period in data.get("time_series", []):
+        output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
+        for period in time_series:
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
                     if output[key] is None:
                         output[key] = period[key]
                     else:
                         output[key] += period[key]
+
+        output["_period_start"] = dt_util.parse_datetime(time_series[0]["timestamp"])
 
         return output
 
