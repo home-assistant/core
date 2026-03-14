@@ -511,6 +511,12 @@
       "tilt": {
         "name": "Tilt"
       },
+      "timer_remaining": {
+        "name": "Timer remaining"
+      },
+      "timer_remaining_with_channel_name": {
+        "name": "{channel_name} timer remaining"
+      },
       "valve_position": {
         "name": "Valve position"
       },
