@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unifi_access_api import ApiError, Door
+from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,8 @@ async def async_setup_entry(
     """Set up UniFi Access button entities."""
     coordinator = entry.runtime_data
     async_add_entities(
-        UnifiAccessUnlockButton(coordinator, door) for door in coordinator.data.values()
+        UnifiAccessUnlockButton(coordinator, door)
+        for door in coordinator.data.doors.values()
     )
 
 
@@ -45,7 +46,7 @@ class UnifiAccessUnlockButton(UnifiAccessEntity, ButtonEntity):
         """Unlock the door."""
         try:
             await self.coordinator.client.unlock_door(self._door_id)
-        except ApiError as err:
+        except UnifiAccessError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unlock_failed",

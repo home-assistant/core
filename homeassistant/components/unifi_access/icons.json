@@ -9,6 +9,14 @@
       "access": {
         "default": "mdi:door"
       }
+    },
+    "switch": {
+      "evacuation": {
+        "default": "mdi:exit-run"
+      },
+      "lockdown": {
+        "default": "mdi:lock-alert"
+      }
     }
   }
 }
