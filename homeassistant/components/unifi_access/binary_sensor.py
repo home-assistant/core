@@ -26,7 +26,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         UnifiAccessDoorPositionBinarySensor(coordinator, door)
-        for door in coordinator.data.values()
+        for door in coordinator.data.doors.values()
     )
 
 
