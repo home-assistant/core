@@ -71,8 +71,6 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
 
     async def _async_fetch_page_counts(self) -> dict[str, int]:
         """Fetch page count attributes from the printer."""
-        page_counts: dict[str, int] = {}
-
         try:
             response = await self.ipp.execute(
                 IppOperation.GET_PRINTER_ATTRIBUTES,
@@ -83,11 +81,10 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
                 },
             )
         except IPPError:
-            return page_counts
+            return self.page_counts
 
-        parsed: dict[str, Any] = next(
-            iter(response.get("printers") or []), {}
-        )
+        page_counts: dict[str, int] = {}
+        parsed: dict[str, Any] = next(iter(response.get("printers") or []), {})
         for attr in PAGE_COUNT_ATTRIBUTES:
             if attr not in parsed:
                 continue

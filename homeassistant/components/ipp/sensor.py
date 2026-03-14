@@ -170,9 +170,11 @@ async def async_setup_entry(
             )
         )
 
-    for description in PAGE_COUNT_SENSORS:
-        if description.ipp_attribute in coordinator.page_counts:
-            sensors.append(IPPPageCountSensor(coordinator, description))
+    sensors.extend(
+        IPPPageCountSensor(coordinator, description)
+        for description in PAGE_COUNT_SENSORS
+        if description.ipp_attribute in coordinator.page_counts
+    )
 
     async_add_entities(sensors, True)
 
@@ -209,6 +211,4 @@ class IPPPageCountSensor(IPPEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.page_counts.get(
-            self.entity_description.ipp_attribute
-        )
+        return self.coordinator.page_counts.get(self.entity_description.ipp_attribute)
