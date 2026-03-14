@@ -85,8 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, address)},
                 name=f"{ble_device_info['model']} {cometblue_device.device.address}",
-                sw_version=ble_device_info["firmware"],
-                hw_version=ble_device_info["version"],
+                sw_version=ble_device_info["version"],
                 manufacturer=ble_device_info["manufacturer"],
                 model=ble_device_info["model"],
             )
