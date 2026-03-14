@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 from collections import defaultdict
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -196,7 +197,7 @@ async def setup_onvif_integration(
     source=config_entries.SOURCE_USER,
     capabilities=None,
     events=None,
-    raw_events: list[tuple[str, EventEntity]] | None = None,
+    raw_events: list[tuple[str, list[EventEntity]]] | None = None,
 ) -> tuple[MockConfigEntry, MagicMock, MagicMock]:
     """Create an ONVIF config entry."""
     if not config:
@@ -239,12 +240,14 @@ async def setup_onvif_integration(
             # to test the full parsing pipeline including conversions
             event_manager = EventManager(hass, mock_onvif_camera, config_entry, NAME)
             mock_messages = []
-            event_by_topic: dict[str, EventEntity] = {}
-            for topic, raw_event in raw_events:
+            event_by_topic: collections.defaultdict[str, list[EventEntity]] = (
+                collections.defaultdict(list)
+            )
+            for topic, topic_events in raw_events:
                 mock_msg = MagicMock()
                 mock_msg.Topic._value_1 = topic
                 mock_messages.append(mock_msg)
-                event_by_topic[topic] = raw_event
+                event_by_topic[topic].extend(topic_events)
 
             async def mock_parse(topic, unique_id, msg):
                 return event_by_topic.get(topic)
