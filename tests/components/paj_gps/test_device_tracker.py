@@ -21,7 +21,7 @@ def _make_hass_and_config_entry(coordinator):
     return hass, config_entry
 
 
-def _make_sensor(device_id: int = 1, positions=None):
+def _make_tracker(device_id: int = 1, positions=None):
     """Create a PajGPSDeviceTracker for testing."""
     coord = make_coordinator()
     coord.data = PajGpsData(
@@ -32,70 +32,70 @@ def _make_sensor(device_id: int = 1, positions=None):
 
 
 def test_unique_id_is_set() -> None:
-    """Test that the unique ID is correctly set for the sensor."""
-    sensor = _make_sensor(1)
-    assert sensor._attr_unique_id == "42_1"
+    """Test that the unique ID is correctly set for the tracker."""
+    tracker = _make_tracker(1)
+    assert tracker._attr_unique_id == "42_1"
 
 
 def test_latitude_returns_float_when_position_exists() -> None:
     """Test that latitude returns a float when a position is available."""
     tp = make_trackpoint(device_id=1, lat=52.5, lng=13.4)
-    sensor = _make_sensor(1, positions={1: tp})
-    assert sensor.latitude == pytest.approx(52.5)
+    tracker = _make_tracker(1, positions={1: tp})
+    assert tracker.latitude == pytest.approx(52.5)
 
 
 def test_latitude_returns_none_when_no_position() -> None:
     """Test that latitude returns None when no position data exists."""
-    sensor = _make_sensor(1, positions={})
-    assert sensor.latitude is None
+    tracker = _make_tracker(1, positions={})
+    assert tracker.latitude is None
 
 
 def test_latitude_returns_none_when_lat_is_none() -> None:
     """Test that latitude returns None when the lat value is None."""
     tp = make_trackpoint(device_id=1, lat=None, lng=13.4)
-    sensor = _make_sensor(1, positions={1: tp})
-    assert sensor.latitude is None
+    tracker = _make_tracker(1, positions={1: tp})
+    assert tracker.latitude is None
 
 
 def test_longitude_returns_float_when_position_exists() -> None:
     """Test that longitude returns a float when a position is available."""
     tp = make_trackpoint(device_id=1, lat=52.5, lng=13.4)
-    sensor = _make_sensor(1, positions={1: tp})
-    assert sensor.longitude == pytest.approx(13.4)
+    tracker = _make_tracker(1, positions={1: tp})
+    assert tracker.longitude == pytest.approx(13.4)
 
 
 def test_longitude_returns_none_when_no_position() -> None:
     """Test that longitude returns None when no position data exists."""
-    sensor = _make_sensor(1, positions={})
-    assert sensor.longitude is None
+    tracker = _make_tracker(1, positions={})
+    assert tracker.longitude is None
 
 
 def test_longitude_returns_none_when_lng_is_none() -> None:
     """Test that longitude returns None when the lng value is None."""
     tp = make_trackpoint(device_id=1, lat=52.5, lng=None)
-    sensor = _make_sensor(1, positions={1: tp})
-    assert sensor.longitude is None
+    tracker = _make_tracker(1, positions={1: tp})
+    assert tracker.longitude is None
 
 
 def test_latitude_longitude_returns_zero_when_position_is_at_origin() -> None:
     """Test that lat/lng return 0.0 (not None) when the device is at exactly (0.0, 0.0)."""
     tp = make_trackpoint(device_id=1, lat=0.0, lng=0.0)
-    sensor = _make_sensor(1, positions={1: tp})
-    assert sensor.latitude == pytest.approx(0.0)
-    assert sensor.longitude == pytest.approx(0.0)
+    tracker = _make_tracker(1, positions={1: tp})
+    assert tracker.latitude == pytest.approx(0.0)
+    assert tracker.longitude == pytest.approx(0.0)
 
 
 def test_source_type_is_gps() -> None:
     """Test that the source type is reported as GPS."""
-    sensor = _make_sensor(1)
-    assert sensor.source_type == "gps"
+    tracker = _make_tracker(1)
+    assert tracker.source_type == "gps"
 
 
 def test_device_info_populated_at_construction() -> None:
     """Test that device info is populated immediately after entity construction."""
-    sensor = _make_sensor(1)
-    assert sensor._attr_device_info is not None
-    assert "identifiers" in sensor._attr_device_info
+    tracker = _make_tracker(1)
+    assert tracker._attr_device_info is not None
+    assert "identifiers" in tracker._attr_device_info
 
 
 async def test_entities_added_for_each_device() -> None:
