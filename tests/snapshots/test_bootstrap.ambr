@@ -65,9 +65,11 @@
     'lovelace',
     'media_player',
     'media_source',
+    'motion',
     'network',
     'notify',
     'number',
+    'occupancy',
     'onboarding',
     'person',
     'remote',
@@ -98,6 +100,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---
@@ -166,9 +169,11 @@
     'lovelace',
     'media_player',
     'media_source',
+    'motion',
     'network',
     'notify',
     'number',
+    'occupancy',
     'onboarding',
     'person',
     'remote',
@@ -199,6 +204,7 @@
     'weather',
     'web_rtc',
     'websocket_api',
+    'window',
     'zone',
   })
 # ---
