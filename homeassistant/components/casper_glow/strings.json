@@ -39,6 +39,18 @@
       "resume": {
         "name": "Resume dimming"
       }
+    },
+    "select": {
+      "dimming_time": {
+        "name": "Dimming time",
+        "state": {
+          "15": "15 minutes",
+          "30": "30 minutes",
+          "45": "45 minutes",
+          "60": "60 minutes",
+          "90": "90 minutes"
+        }
+      }
     }
   },
   "exceptions": {
