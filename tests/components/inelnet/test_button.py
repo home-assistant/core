@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.inelnet.button import InelnetButtonEntity
+from homeassistant.components.inelnet.button import (
+    InelnetButtonEntity,
+    async_setup_entry,
+)
 from homeassistant.components.inelnet.const import (
     ACT_DOWN_SHORT,
     ACT_PROGRAM,
@@ -18,6 +21,29 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+async def test_button_async_setup_entry_adds_entities(
+    hass: HomeAssistant,
+    button_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_setup_entry creates three buttons per channel."""
+    button_config_entry.runtime_data = MagicMock()
+    button_config_entry.runtime_data.host = "192.168.1.67"
+    button_config_entry.runtime_data.channels = [1, 2]
+    added: list = []
+
+    def add_entities(entities):
+        added.extend(entities)
+
+    await async_setup_entry(
+        hass,
+        button_config_entry,  # type: ignore[arg-type]
+        add_entities,
+    )
+
+    assert len(added) == 6
+    assert all(isinstance(e, InelnetButtonEntity) for e in added)
 
 
 @pytest.fixture

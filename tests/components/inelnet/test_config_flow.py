@@ -64,9 +64,10 @@ class TestIsValidHost:
         assert is_valid_host("10.0.0.1") is True
 
     def test_valid_hostname(self) -> None:
-        """Valid hostname is accepted."""
+        """Valid hostname is accepted (hostname regex branch)."""
         assert is_valid_host("inelnet.local") is True
         assert is_valid_host("controller") is True
+        assert is_valid_host("my.controller.local") is True
 
     def test_empty_invalid(self) -> None:
         """Empty or whitespace is invalid."""
@@ -77,6 +78,13 @@ class TestIsValidHost:
         """Invalid IPv4-like string can be rejected (implementation may allow)."""
         # Current impl allows any \d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}
         assert is_valid_host("256.1.1.1") is True  # regex allows it
+
+    def test_invalid_hostname_returns_false(self) -> None:
+        """Non-empty host that is neither IPv4 nor valid hostname returns False."""
+        assert is_valid_host("-leading-hyphen") is False
+        assert is_valid_host(".leading-dot") is False
+        assert is_valid_host("has space") is False
+        assert is_valid_host("underscore_not_allowed") is False
 
 
 async def test_config_flow_user_step_form(
@@ -169,6 +177,61 @@ async def test_config_flow_cannot_connect_shows_error(
     ) as mock_session_cls:
         mock_session = MagicMock()
         mock_session.get = MagicMock(return_value=failing_resp)
+        mock_session_cls.return_value = mock_session
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_config_flow_create_entry_with_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test successful config flow with hostname (covers hostname validation branch)."""
+    mock_resp = AsyncMock()
+    mock_resp.status = 200
+    mock_resp.__aenter__ = AsyncMock(return_value=mock_resp)
+    mock_resp.__aexit__ = AsyncMock(return_value=None)
+    with patch(
+        "homeassistant.components.inelnet.config_flow.async_get_clientsession",
+    ) as mock_session_cls:
+        mock_session = MagicMock()
+        mock_session.get = MagicMock(return_value=mock_resp)
+        mock_session_cls.return_value = mock_session
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "controller.local", CONF_CHANNELS: "1"},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "controller.local"
+
+
+async def test_config_flow_controller_http_error_shows_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Test that HTTP status >= 400 shows cannot_connect and does not create entry."""
+    bad_resp = AsyncMock()
+    bad_resp.status = 404
+    bad_resp.__aenter__ = AsyncMock(return_value=bad_resp)
+    bad_resp.__aexit__ = AsyncMock(return_value=None)
+    with patch(
+        "homeassistant.components.inelnet.config_flow.async_get_clientsession",
+    ) as mock_session_cls:
+        mock_session = MagicMock()
+        mock_session.get = MagicMock(return_value=bad_resp)
         mock_session_cls.return_value = mock_session
 
         result = await hass.config_entries.flow.async_init(
