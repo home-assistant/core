@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor_entities[binary_sensor.back_door_door-entry]
+# name: test_binary_sensor_entities[binary_sensor.back_door_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.back_door_door',
+    'entity_id': 'binary_sensor.back_door_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': 'Position',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Position',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,21 +35,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities[binary_sensor.back_door_door-state]
+# name: test_binary_sensor_entities[binary_sensor.back_door_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Back Door Door',
+      'friendly_name': 'Back Door Position',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.back_door_door',
+    'entity_id': 'binary_sensor.back_door_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor_entities[binary_sensor.front_door_door-entry]
+# name: test_binary_sensor_entities[binary_sensor.front_door_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.front_door_door',
+    'entity_id': 'binary_sensor.front_door_position',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,12 +70,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Door',
+    'object_id_base': 'Position',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': 'Door',
+    'original_name': 'Position',
     'platform': 'unifi_access',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -85,14 +85,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities[binary_sensor.front_door_door-state]
+# name: test_binary_sensor_entities[binary_sensor.front_door_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Front Door Door',
+      'friendly_name': 'Front Door Position',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.front_door_door',
+    'entity_id': 'binary_sensor.front_door_position',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

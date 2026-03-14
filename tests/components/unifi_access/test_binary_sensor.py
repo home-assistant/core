@@ -22,8 +22,8 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-FRONT_DOOR_ENTITY = "binary_sensor.front_door_door"
-BACK_DOOR_ENTITY = "binary_sensor.back_door_door"
+FRONT_DOOR_ENTITY = "binary_sensor.front_door_position"
+BACK_DOOR_ENTITY = "binary_sensor.back_door_position"
 
 
 def _get_on_connect(mock_client: MagicMock) -> Callable[[], None]:

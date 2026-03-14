@@ -26,7 +26,7 @@
   "entity": {
     "binary_sensor": {
       "access_door_dps": {
-        "name": "Door Position Sensor"
+        "name": "Position"
       }
     },
     "button": {

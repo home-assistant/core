@@ -14,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,8 +41,9 @@ class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity)
     ) -> None:
         """Initialize the binary sensor entity."""
         super().__init__(coordinator, door, "access_door_dps")
+        self._attr_name = "Position"
 
     @property
     def is_on(self) -> bool:
         """Return whether the door is open."""
-        return self._door.door_position_status is DoorPositionStatus.OPEN
+        return self._door.door_position_status == DoorPositionStatus.OPEN
