@@ -44,6 +44,7 @@ from homeassistant.util.async_ import create_eager_task
 from .alarms import SonosAlarms
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
+    CONF_KNOWN_SPEAKERS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -393,6 +394,19 @@ class SonosDiscoveryManager:
         async with self.creation_lock:
             await self.hass.async_add_executor_job(_add_speakers)
 
+        new_speakers = {
+            soco.uid: soco.ip_address
+            for soco in socos
+            if soco.uid in self.data.discovered
+        }
+        if new_speakers:
+            known_speakers = dict(self.entry.data.get(CONF_KNOWN_SPEAKERS, {}))
+            known_speakers.update(new_speakers)
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data={**self.entry.data, CONF_KNOWN_SPEAKERS: known_speakers},
+            )
+
     def _add_speaker(
         self, soco: SoCo, zone_group_state_sub: SubscriptionBase | None
     ) -> None:
@@ -649,38 +663,14 @@ class SonosDiscoveryManager:
             )
         )
 
-        await self._async_load_from_device_registry()
+        await self._async_load_known_speakers()
 
-    async def _async_load_from_device_registry(self) -> None:
-        """Load existing devices from device registry."""
-
-        device_registry = dr.async_get(self.hass)
-        devices = device_registry.devices.get_devices_for_config_entry_id(
-            self.entry.entry_id
-        )
-        for device in devices:
-            if not device.configuration_url:
-                _LOGGER.debug(
-                    "Skipping device %s without configuration URL", device.name
-                )
-                continue
-            host = urlparse(device.configuration_url).hostname
-
-            uid = next(
-                (
-                    identifier[1]
-                    for identifier in device.identifiers
-                    if identifier[0] == DOMAIN
-                ),
-                None,
-            )
-
-            if not uid or not host:
-                _LOGGER.debug("Skipping device %s without uid or host", device.name)
-                continue
-
-            _LOGGER.debug("Loading device %s with host %s", uid, host)
-            await self._async_handle_discovery_message(uid, host, "device registry")
+    async def _async_load_known_speakers(self) -> None:
+        """Load known speakers from config entry data."""
+        known_speakers: dict[str, str] = self.entry.data.get(CONF_KNOWN_SPEAKERS, {})
+        for uid, host in known_speakers.items():
+            _LOGGER.debug("Loading speaker %s with host %s", uid, host)
+            await self._async_handle_discovery_message(uid, host, "config entry")
 
 
 async def async_remove_config_entry_device(
@@ -693,5 +683,12 @@ async def async_remove_config_entry_device(
             continue
         uid = identifier[1]
         if uid not in known_devices:
+            known_speakers = dict(config_entry.data.get(CONF_KNOWN_SPEAKERS, {}))
+            if uid in known_speakers:
+                del known_speakers[uid]
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    data={**config_entry.data, CONF_KNOWN_SPEAKERS: known_speakers},
+                )
             return True
     return False
