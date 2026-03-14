@@ -13,16 +13,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your API key"
-        },
-        "description": "Sign in with your API key",
-        "title": "Connect to Cielo Home"
-      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -32,6 +22,16 @@
         },
         "description": "Your API key is no longer valid. Please enter a new API key to reauthenticate.",
         "title": "Reauthenticate Cielo Home"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Follow the [documentation]({url}) to get your API key"
+        },
+        "description": "Sign in with your API key",
+        "title": "Connect to Cielo Home"
       }
     }
   },

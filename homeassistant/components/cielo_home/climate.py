@@ -116,7 +116,7 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
 
         normalized = unit.strip().lower()
 
-        if normalized in {"c", "°c", "celsius", "celcius"}:
+        if normalized in {"c", "°c", "celsius"}:
             return UnitOfTemperature.CELSIUS
         if normalized in {"f", "°f", "fahrenheit"}:
             return UnitOfTemperature.FAHRENHEIT
@@ -291,9 +291,7 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         filtered_kwargs = {
-            key: value
-            for key, value in kwargs.items()
-            if key != "entity_id"
+            key: value for key, value in kwargs.items() if key != "entity_id"
         }
         return await self.client.async_set_temperature(
             self.temperature_unit,

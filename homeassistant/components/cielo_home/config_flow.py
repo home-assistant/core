@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, Final
 
 from aiohttp import ClientError
@@ -114,7 +115,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration re-authentication."""
         entry_id = self.context.get("entry_id")
@@ -125,10 +126,10 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._reauth_entry is None:
             return self.async_abort(reason="unknown")
 
-        return await self.async_step_reauth_confirm(user_input)
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm re-authentication with a new API key."""
         errors: dict[str, str] = {}
@@ -150,13 +151,10 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TOKEN: token,
                 }
 
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry,
                     data=new_data,
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
