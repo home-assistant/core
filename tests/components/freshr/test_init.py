@@ -1,7 +1,7 @@
 """Test the Fresh-r initialization."""
 
 from aiohttp import ClientError
-from pyfreshr.exceptions import ApiResponseError
+from pyfreshr.exceptions import ApiResponseError, LoginError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -21,6 +21,20 @@ async def test_unload_entry(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_login_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
+) -> None:
+    """Test that a login error during setup triggers reauthentication."""
+    mock_freshr_client.login.side_effect = LoginError("bad credentials")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
