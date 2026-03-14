@@ -10,10 +10,12 @@
       "notify": {
         "data": {
           "file_path": "[%key:component::file::config::step::sensor::data::file_path%]",
+          "overwrite": "Overwrite file",
           "timestamp": "Timestamp"
         },
         "data_description": {
           "file_path": "A local file path to write the notification to",
+          "overwrite": "Overwrite existing file contents instead of appending.",
           "timestamp": "Add a timestamp to the notification"
         },
         "description": "Set up a service that allows to write notification to a file.",
@@ -69,11 +71,13 @@
     "step": {
       "init": {
         "data": {
+          "overwrite": "[%key:component::file::config::step::notify::data::overwrite%]",
           "timestamp": "[%key:component::file::config::step::notify::data::timestamp%]",
           "unit_of_measurement": "[%key:component::file::config::step::sensor::data::unit_of_measurement%]",
           "value_template": "[%key:component::file::config::step::sensor::data::value_template%]"
         },
         "data_description": {
+          "overwrite": "[%key:component::file::config::step::notify::data_description::overwrite%]",
           "timestamp": "[%key:component::file::config::step::notify::data_description::timestamp%]",
           "unit_of_measurement": "[%key:component::file::config::step::sensor::data_description::unit_of_measurement%]",
           "value_template": "[%key:component::file::config::step::sensor::data_description::value_template%]"
