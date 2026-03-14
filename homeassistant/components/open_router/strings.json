@@ -23,19 +23,18 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "AI task",
       "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
         "user": "Add AI task"
       },
       "step": {
         "init": {
           "data": {
-            "model": "[%key:component::open_router::config_subentries::conversation::step::init::data::model%]"
-          },
-          "data_description": {
-            "model": "The model to use for the AI task"
+            "model": "[%key:common::generic::model%]"
           },
           "description": "Configure the AI task"
         }
@@ -45,22 +44,25 @@
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",
       "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
         "user": "Add conversation agent"
       },
       "step": {
         "init": {
           "data": {
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-            "model": "Model",
-            "prompt": "[%key:common::config_flow::data::prompt%]"
+            "model": "[%key:common::generic::model%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "web_search": "Enable web search"
           },
           "data_description": {
-            "model": "The model to use for the conversation agent",
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "web_search": "Allow the model to search the web for answers"
           },
           "description": "Configure the conversation agent"
         }
