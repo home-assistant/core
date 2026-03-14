@@ -102,7 +102,7 @@ async def test_timestamp_event_conversion(hass: HomeAssistant) -> None:
                         platform="sensor",
                         device_class="timestamp",
                         value="2023-10-01T12:00:00Z",
-                    )
+                    ),
                 ],
             ),
         ],
@@ -130,7 +130,7 @@ async def test_timestamp_event_invalid_value(hass: HomeAssistant) -> None:
                         platform="sensor",
                         device_class="timestamp",
                         value="0000-00-00T00:00:00Z",
-                    )
+                    ),
                 ],
             ),
         ],
