@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from smarttub import LoginFailed
 import pytest
+from smarttub import LoginFailed
 
 from homeassistant import config_entries
 from homeassistant.components.smarttub.const import DOMAIN
@@ -24,9 +24,7 @@ def mock_setup_entry():
         yield mock
 
 
-async def test_user_flow(
-    hass: HomeAssistant, mock_setup_entry, account
-) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_setup_entry, account) -> None:
     """Test the user config flow creates an entry with correct data."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,9 +77,7 @@ async def test_form_invalid_auth(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth_success(
-    hass: HomeAssistant, smarttub_api, config_entry
-) -> None:
+async def test_reauth_success(hass: HomeAssistant, smarttub_api, config_entry) -> None:
     """Test reauthentication flow."""
     config_entry.add_to_hass(hass)
 
