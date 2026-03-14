@@ -34,7 +34,7 @@ def _make_sensor(device_id: int = 1, positions=None):
 def test_unique_id_is_set() -> None:
     """Test that the unique ID is correctly set for the sensor."""
     sensor = _make_sensor(1)
-    assert sensor._attr_unique_id == "test_entry_id_1"
+    assert sensor._attr_unique_id == "42_1"
 
 
 def test_latitude_returns_float_when_position_exists() -> None:

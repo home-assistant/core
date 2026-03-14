@@ -41,11 +41,6 @@ VALID_USER_INPUT = {
 }
 
 
-# ---------------------------------------------------------------------------
-# PajGPSConfigFlow — initial config
-# ---------------------------------------------------------------------------
-
-
 class TestPajGPSConfigFlow(unittest.IsolatedAsyncioTestCase):
     """Tests for PajGPSConfigFlow.async_step_user."""
 

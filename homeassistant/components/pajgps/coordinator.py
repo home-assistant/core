@@ -58,6 +58,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         )
 
         self._email: str = config_entry.data[CONF_EMAIL]
+        self._user_id: int | None = None
         self.api = PajGpsApi(
             email=config_entry.data[CONF_EMAIL],
             password=config_entry.data[CONF_PASSWORD],
@@ -69,10 +70,16 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
         """Return the account email address for this coordinator."""
         return self._email
 
+    @property
+    def user_id(self) -> int | None:
+        """Return the user ID obtained from the login response."""
+        return self._user_id
+
     async def _async_setup(self) -> None:
         """Perform initial and first data refresh."""
         try:
-            await self.api.login()
+            auth = await self.api.login()
+            self._user_id = auth.userID
         except (AuthenticationError, TokenRefreshError) as exc:
             raise ConfigEntryAuthFailed from exc
         except Exception as exc:
@@ -109,7 +116,7 @@ class PajGpsCoordinator(DataUpdateCoordinator[PajGpsData]):
                 model = device_models[0].get("model") or None
 
             return DeviceInfo(
-                identifiers={(DOMAIN, f"{self.config_entry.entry_id}_{device_id}")},
+                identifiers={(DOMAIN, f"{self.user_id}_{device_id}")},
                 name=device.name or f"PAJ GPS {device_id}",
                 manufacturer="PAJ GPS",
                 model=model,

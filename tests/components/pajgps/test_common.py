@@ -119,4 +119,5 @@ def make_coordinator(
     ):
         coord = PajGpsCoordinator(hass, config_entry)
     coord.api.login = AsyncMock()
+    coord._user_id = 42
     return coord
