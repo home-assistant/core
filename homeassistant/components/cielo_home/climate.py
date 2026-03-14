@@ -276,7 +276,8 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @async_handle_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        return await self.client.async_set_temperature(self.temperature_unit, **kwargs)
+        filtered_kwargs = {key: value for key, value in kwargs.items() if key != "entity_id"}
+        return await self.client.async_set_temperature(self.temperature_unit, **filtered_kwargs)
 
     @async_handle_api_call
     async def async_set_fan_mode(self, fan_mode: str) -> None:

@@ -10,7 +10,7 @@ from cieloconnectapi.exceptions import AuthenticationError, CieloError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -39,6 +39,7 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the flow."""
         self.client: CieloClient | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the API key, initialize the client, and return errors or token."""
@@ -105,6 +106,60 @@ class CieloConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Show the user form
         return self.async_show_form(
             step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/cielo_home"
+            },
+        )
+
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle configuration re-authentication."""
+        entry_id = self.context.get("entry_id")
+        if entry_id is None:
+            return self.async_abort(reason="unknown")
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
+        if self._reauth_entry is None:
+            return self.async_abort(reason="unknown")
+
+        return await self.async_step_reauth_confirm(user_input)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm re-authentication with a new API key."""
+        errors: dict[str, str] = {}
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY].strip()
+
+            validation_result = await self._async_validate_api_key(api_key)
+
+            if "base" in validation_result:
+                errors = validation_result
+            else:
+                token: str = validation_result[CONF_TOKEN]
+                assert self._reauth_entry is not None
+
+                new_data = {
+                    **self._reauth_entry.data,
+                    CONF_API_KEY: api_key,
+                    CONF_TOKEN: token,
+                }
+
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data=new_data,
+                )
+                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=DATA_SCHEMA,
             errors=errors,
             description_placeholders={

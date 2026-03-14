@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from homeassistant.components.climate import HVACMode
 from homeassistant.components.cielo_home.const import DOMAIN
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 

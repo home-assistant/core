@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 MOCK_TOKEN = "valid-test-token"
-MOCK_AUTH_PATH = "cieloconnectapi.CieloClient.get_or_refresh_token"
-MOCK_DEVICES_PATH = "cieloconnectapi.CieloClient.get_devices_data"
 MOCK_CIELO_CLIENT_CTOR = "homeassistant.components.cielo_home.config_flow.CieloClient"
 
 
