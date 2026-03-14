@@ -686,6 +686,19 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
+def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
+    """Check whether any integration supplies custom equivalent units for its entities."""
+    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
+    for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
+        if custom_equivalent_units := getattr(
+            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
+        ):
+            custom_equivalent_units_per_entity |= run_callback_threadsafe(
+                hass.loop, custom_equivalent_units, hass
+            ).result()
+    return custom_equivalent_units_per_entity
+
+
 def _compile_statistics(
     instance: Recorder, session: Session, start: datetime, fire_events: bool
 ) -> set[str]:
@@ -706,19 +719,10 @@ def _compile_statistics(
         _LOGGER.debug("Statistics already compiled for %s-%s", start, end)
         return modified_statistic_ids
 
-    # Check whether any integration supplies custom equivalent units for its entities
-    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
-    for platform in instance.hass.data[DATA_RECORDER].recorder_platforms.values():
-        if custom_equivalent_units := getattr(
-            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
-        ):
-            custom_equivalent_units_per_entity |= run_callback_threadsafe(
-                instance.hass.loop, custom_equivalent_units, instance.hass
-            ).result()
-
     _LOGGER.debug("Compiling statistics for %s-%s", start, end)
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
+    custom_equivalent_units_per_entity = _get_custom_equivalent_units(instance.hass)
     # Collect statistics from all platforms implementing support
     for domain, platform in instance.hass.data[
         DATA_RECORDER
@@ -2678,16 +2682,8 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
     if not platform_validation_callables:
         return {}
 
-    custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
-    for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
-        if custom_equivalent_units := getattr(
-            platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
-        ):
-            custom_equivalent_units_per_entity |= run_callback_threadsafe(
-                hass.loop, custom_equivalent_units, hass
-            ).result()
-
     platform_validation: dict[str, list[ValidationIssue]] = {}
+    custom_equivalent_units_per_entity = _get_custom_equivalent_units(hass)
     for platform_validate_statistics in platform_validation_callables:
         platform_validation.update(
             platform_validate_statistics(hass, custom_equivalent_units_per_entity)
@@ -2712,15 +2708,7 @@ def update_statistics_issues(hass: HomeAssistant) -> None:
         if not platform_update_statistics_issues_callables:
             return
 
-        custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
-        for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
-            if custom_equivalent_units := getattr(
-                platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
-            ):
-                custom_equivalent_units_per_entity |= run_callback_threadsafe(
-                    hass.loop, custom_equivalent_units, hass
-                ).result()
-
+        custom_equivalent_units_per_entity = _get_custom_equivalent_units(hass)
         for platform_update_issues in platform_update_statistics_issues_callables:
             platform_update_issues(hass, session, custom_equivalent_units_per_entity)
 
