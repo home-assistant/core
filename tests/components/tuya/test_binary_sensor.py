@@ -34,7 +34,7 @@ async def test_platform_setup_and_discovery(
         hass,
         mock_manager,
         mock_config_entry,
-        [dev for dev in mock_devices if dev.id != "cs_biflejkeshx1sqig"],
+        mock_devices,
     )
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
