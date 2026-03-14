@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -73,3 +74,20 @@ async def test_unload_entry_logout_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_stop_event_logs_out(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_decora_wifi: MagicMock,
+    mock_person: MagicMock,
+) -> None:
+    """Test that the HA stop event triggers a session logout."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_person.logout.assert_called_once_with(mock_decora_wifi)

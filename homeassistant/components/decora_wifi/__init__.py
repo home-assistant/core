@@ -12,8 +12,13 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 PLATFORMS = [Platform.LIGHT]
@@ -68,6 +73,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: DecoraWifiConfigEntry) -
         ) from err
 
     entry.runtime_data = data
+
+    async def _logout(event: Event) -> None:
+        with suppress(ValueError):
+            await hass.async_add_executor_job(Person.logout, data.session)
+
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _logout))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
