@@ -3283,7 +3283,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.0.8
+wiim==0.1.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
