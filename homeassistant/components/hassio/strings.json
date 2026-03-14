@@ -164,6 +164,19 @@
       },
       "title": "Multiple data disks detected"
     },
+    "issue_system_ntp_sync_failed": {
+      "fix_flow": {
+        "abort": {
+          "apply_suggestion_fail": "Could not re-enable NTP. Check the Supervisor logs for more details."
+        },
+        "step": {
+          "system_enable_ntp": {
+            "description": "NTP time servers were unreachable and the system clock was found to be more than 1 hour off. The time has been corrected and the NTP service was temporarily disabled to allow this adjustment.\n\nCheck the **Host logs** to investigate why NTP servers could not be reached. Once resolved, select **Submit** to re-enable the NTP service."
+          }
+        }
+      },
+      "title": "NTP sync failed - system time was corrected"
+    },
     "issue_system_reboot_required": {
       "fix_flow": {
         "abort": {
