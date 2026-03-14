@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -29,7 +30,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -153,7 +158,7 @@ SENSOR_DESCRIPTIONS: tuple[SpecializedSensorEntityDescription, ...] = (
     SpecializedSensorEntityDescription(
         key="cadence",
         translation_key="cadence",
-        native_unit_of_measurement="RPM",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda s: s.motor.cadence_rpm,
     ),
@@ -241,6 +246,7 @@ class SpecializedTurboSensor(
         self.entity_description = description
         self._attr_unique_id = f"{format_mac(entry.data['address'])}_{description.key}"
         self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, format_mac(entry.data["address"]))},
             identifiers={(DOMAIN, format_mac(entry.data["address"]))},
             name=entry.title,
             manufacturer="Specialized",

@@ -113,7 +113,7 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         _LOGGER.info("Subscribed to telemetry notifications")
 
     def _notification_handler(
-        self, sender: BleakGATTCharacteristic, data: bytearray
+        self, sender: BleakGATTCharacteristic | int, data: bytearray
     ) -> None:
         """Parse a BLE notification and push the update to HA."""
         try:
