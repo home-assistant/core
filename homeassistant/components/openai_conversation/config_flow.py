@@ -545,8 +545,14 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
-            "gpt-5.2-pro": ["medium", "high", "xhigh"],
-            ("gpt-5.2", "gpt-5.3"): ["none", "low", "medium", "high", "xhigh"],
+            ("gpt-5.2-pro", "gpt-5.4-pro"): ["medium", "high", "xhigh"],
+            ("gpt-5.2", "gpt-5.3", "gpt-5.4"): [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+            ],
             "gpt-5.1": ["none", "low", "medium", "high"],
             "gpt-5": ["minimal", "low", "medium", "high"],
             "": ["low", "medium", "high"],  # The default case

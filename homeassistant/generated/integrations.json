@@ -647,6 +647,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "autoskope": {
+      "name": "Autoskope",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "avion": {
       "name": "Avi-on",
       "integration_type": "hub",
@@ -816,12 +822,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
-    },
-    "bmw_connected_drive": {
-      "name": "BMW Connected Drive",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "bond": {
       "name": "Bond",
@@ -995,6 +995,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "chess_com": {
+      "name": "Chess.com",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "cisco": {
       "name": "Cisco",
@@ -2204,6 +2210,12 @@
     },
     "freedompro": {
       "name": "Freedompro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "freshr": {
+      "name": "Fresh-r",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -4201,11 +4213,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "mini_connected": {
-      "name": "MINI Connected",
-      "integration_type": "virtual",
-      "supported_by": "bmw_connected_drive"
-    },
     "minio": {
       "name": "Minio",
       "integration_type": "hub",
@@ -4868,6 +4875,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "opendisplay": {
+      "name": "OpenDisplay",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "openerz": {
       "name": "Open ERZ",
@@ -6946,12 +6959,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tfiac": {
-      "name": "Tfiac",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "thermador": {
       "name": "Thermador",
       "integration_type": "virtual",
@@ -7371,6 +7378,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "unifi_access": {
+      "name": "UniFi Access",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "universal": {
       "name": "Universal media player",

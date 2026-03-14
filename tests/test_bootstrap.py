@@ -11,6 +11,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
@@ -274,13 +275,34 @@ async def test_core_failure_loads_recovery_mode(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_setting_up_config(hass: HomeAssistant) -> None:
+async def test_setting_up_empty_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test default integrations are set up with empty config."""
+    await bootstrap._async_set_up_integrations(hass, {})
+
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_setting_up_config(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test we set up domains in config."""
     await bootstrap._async_set_up_integrations(
         hass, {"group hello": {}, "homeassistant": {}}
     )
 
     assert "group" in hass.config.components
+    assert all(
+        domain in hass.config.components for domain in bootstrap.DEFAULT_INTEGRATIONS
+    )
+    assert set(hass.config.components) == snapshot
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -893,6 +915,36 @@ async def test_setup_hass_recovery_mode(
     # Validate we didn't try to set up config entry.
     assert "browser" not in hass.config.components
     assert len(browser_setup.mock_calls) == 0
+
+
+@pytest.mark.parametrize("domain", ["cloud", "backup"])
+async def test_setup_hass_recovery_mode_with_failing_integration(
+    mock_enable_logging: AsyncMock,
+    mock_is_virtual_env: Mock,
+    mock_mount_local_lib_path: AsyncMock,
+    mock_ensure_config_exists: AsyncMock,
+    mock_process_ha_config_upgrade: Mock,
+    domain: str,
+) -> None:
+    """Test recovery mode still starts if cloud or backup fails to set up."""
+    with patch(
+        f"homeassistant.components.{domain}.async_setup",
+        side_effect=Exception(f"{domain} setup failed"),
+    ):
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=True,
+            ),
+        )
+
+    assert "recovery_mode" in hass.config.components
+    assert domain not in hass.config.components
 
 
 @pytest.mark.usefixtures("mock_hass_config")

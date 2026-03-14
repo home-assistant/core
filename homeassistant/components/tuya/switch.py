@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
@@ -10,34 +9,18 @@ from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 
 from . import TuyaConfigEntry
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-
-
-@dataclass(frozen=True, kw_only=True)
-class TuyaDeprecatedSwitchEntityDescription(SwitchEntityDescription):
-    """Describes Tuya deprecated switch entity."""
-
-    deprecated: str
-    breaks_in_ha_version: str
-
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default instruction set of each category end up being a Switch.
@@ -664,14 +647,6 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    DeviceCategory.SFKZQ: (
-        TuyaDeprecatedSwitchEntityDescription(
-            key=DPCode.SWITCH,
-            translation_key="switch",
-            deprecated="deprecated_entity_new_valve",
-            breaks_in_ha_version="2026.4.0",
-        ),
-    ),
     DeviceCategory.SGBJ: (
         SwitchEntityDescription(
             key=DPCode.MUFFLING,
@@ -937,7 +912,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
     manager = entry.runtime_data.manager
-    entity_registry = er.async_get(hass)
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -954,12 +928,6 @@ async def async_setup_entry(
                             device, description.key, prefer_function=True
                         )
                     )
-                    and _check_deprecation(
-                        hass,
-                        device,
-                        description,
-                        entity_registry,
-                    )
                 )
 
         async_add_entities(entities)
@@ -969,55 +937,6 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
-
-
-def _check_deprecation(
-    hass: HomeAssistant,
-    device: CustomerDevice,
-    description: SwitchEntityDescription,
-    entity_registry: er.EntityRegistry,
-) -> bool:
-    """Check entity deprecation.
-
-    Returns:
-        `True` if the entity should be created, `False` otherwise.
-    """
-    # Not deprecated, just create it
-    if not isinstance(description, TuyaDeprecatedSwitchEntityDescription):
-        return True
-
-    unique_id = f"tuya.{device.id}{description.key}"
-    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
-
-    # Deprecated and not present in registry, skip creation
-    if not entity_id or not (entity_entry := entity_registry.async_get(entity_id)):
-        return False
-
-    # Deprecated and present in registry but disabled, remove it and skip creation
-    if entity_entry.disabled:
-        entity_registry.async_remove(entity_id)
-        async_delete_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_entity_{unique_id}",
-        )
-        return False
-
-    # Deprecated and present in registry and enabled, raise issue and create it
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_entity_{unique_id}",
-        breaks_in_ha_version=description.breaks_in_ha_version,
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key=description.deprecated,
-        translation_placeholders={
-            "name": f"{device.name} {entity_entry.name or entity_entry.original_name}",
-            "entity": entity_id,
-        },
-    )
-    return True
 
 
 class TuyaSwitchEntity(TuyaEntity, SwitchEntity):

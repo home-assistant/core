@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmarlaapi import AuthToken
 from pysmarlaapi.federwiege.services.classes import Property, Service
-from pysmarlaapi.federwiege.services.types import UpdateStatus
+from pysmarlaapi.federwiege.services.types import SpringStatus, UpdateStatus
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -80,11 +80,13 @@ def _mock_analyser_service() -> MagicMock:
         "oscillation": MagicMock(spec=Property),
         "activity": MagicMock(spec=Property),
         "swing_count": MagicMock(spec=Property),
+        "spring_status": MagicMock(spec=Property),
     }
 
     mock_analyser_service.props["oscillation"].get.return_value = [0, 0]
     mock_analyser_service.props["activity"].get.return_value = 0
     mock_analyser_service.props["swing_count"].get.return_value = 0
+    mock_analyser_service.props["spring_status"].get.return_value = SpringStatus.UNKNOWN
 
     return mock_analyser_service
 
@@ -93,9 +95,11 @@ def _mock_info_service() -> MagicMock:
     mock_info_service = MagicMock(spec=Service)
     mock_info_service.props = {
         "version": MagicMock(spec=Property),
+        "total_swing_time": MagicMock(spec=Property),
     }
 
     mock_info_service.props["version"].get.return_value = "1.0.0"
+    mock_info_service.props["total_swing_time"].get.return_value = 0
 
     return mock_info_service
 
@@ -105,6 +109,7 @@ def _mock_system_service() -> MagicMock:
     mock_system_service.props = {
         "firmware_update": MagicMock(spec=Property),
         "firmware_update_status": MagicMock(spec=Property),
+        "send_diagnostic_data": MagicMock(spec=Property),
     }
 
     mock_system_service.props["firmware_update"].get.return_value = 0

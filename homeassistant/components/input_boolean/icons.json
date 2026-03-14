@@ -20,5 +20,13 @@
     "turn_on": {
       "service": "mdi:toggle-switch"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:toggle-switch-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:toggle-switch"
+    }
   }
 }

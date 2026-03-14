@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from collections.abc import Awaitable, Callable, Coroutine
+from typing import Any, Concatenate, Generic, TypeVar
 
 from pylitterbot import Pet, Robot
+from pylitterbot.exceptions import LitterRobotException
 from pylitterbot.robot import EVENT_UPDATE
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -15,6 +18,26 @@ from .const import DOMAIN
 from .coordinator import LitterRobotDataUpdateCoordinator
 
 _WhiskerEntityT = TypeVar("_WhiskerEntityT", bound=Robot | Pet)
+
+
+def whisker_command[_WhiskerEntityT2: LitterRobotEntity, **_P](
+    func: Callable[Concatenate[_WhiskerEntityT2, _P], Awaitable[None]],
+) -> Callable[Concatenate[_WhiskerEntityT2, _P], Coroutine[Any, Any, None]]:
+    """Wrap a Whisker command to handle exceptions."""
+
+    async def handler(
+        self: _WhiskerEntityT2, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except LitterRobotException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
+
+    return handler
 
 
 def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
