@@ -338,6 +338,7 @@ class Analytics:
 
         hass = self._hass
         supervisor_info = None
+        addons_info: dict[str, Any] | None = None
         operating_system_info: dict[str, Any] = {}
 
         if self._data.uuid is None:
@@ -347,6 +348,7 @@ class Analytics:
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(hass)
             operating_system_info = hassio.get_os_info(hass) or {}
+            addons_info = hassio.get_addons_info(hass) or {}
 
         system_info = await async_get_system_info(hass)
         integrations = []
@@ -419,13 +421,10 @@ class Analytics:
 
                 integrations.append(integration.domain)
 
-            if supervisor_info is not None:
+            if addons_info is not None:
                 supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
-                    *(
-                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
-                        for addon in supervisor_info[ATTR_ADDONS]
-                    )
+                    *(supervisor_client.addons.addon_info(slug) for slug in addons_info)
                 )
                 addons.extend(
                     {

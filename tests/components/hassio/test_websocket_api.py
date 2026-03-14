@@ -1,5 +1,6 @@
 """Test websocket API."""
 
+from dataclasses import replace
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -44,39 +45,31 @@ def mock_all(
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
     addon_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    store_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
-        },
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
     )
+    addons_list.return_value.pop(1)
+    addon_info.return_value.version = "2.0.0"
+    addon_info.return_value.version_latest = "2.0.1"
+    addon_info.return_value.update_available = True
     aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
+        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
+
+    # The websocket API still relies on HassIO.send_command for all Supervisor API calls
+    # So must keep some aioclient mocks normally covered by aiohasupervisor in component
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
         json={
@@ -99,19 +92,6 @@ def mock_all(
                         "url": "https://github.com/home-assistant/addons/test",
                     },
                 ],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
             },
         },
     )
