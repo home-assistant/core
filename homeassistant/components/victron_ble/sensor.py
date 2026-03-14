@@ -410,7 +410,7 @@ SENSOR_DESCRIPTIONS = {
     ),
 }
 
-for i in range(1, 8):
+for i in range(1, 9):
     cell_key = getattr(Keys, f"CELL_{i}_VOLTAGE")
     SENSOR_DESCRIPTIONS[cell_key] = VictronBLESensorEntityDescription(
         key=cell_key,
@@ -418,6 +418,7 @@ for i in range(1, 8):
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_placeholders={"cell": str(i)},
     )
 
 
