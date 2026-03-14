@@ -58,9 +58,10 @@ def _device_to_client_and_channel(
             entry = hass.config_entries.async_get_entry(entry_id)
             if not entry or entry.domain != DOMAIN:
                 continue
-            if not hasattr(entry, "runtime_data") or entry.runtime_data is None:
+            typed_entry = cast(InelnetConfigEntry, entry)
+            data = getattr(typed_entry, "runtime_data", None)
+            if data is None:
                 continue
-            data = cast(InelnetConfigEntry, entry).runtime_data
             if data.clients and channel in data.clients:
                 return data.clients[channel], channel
             if data.host and data.channels and channel in data.channels:

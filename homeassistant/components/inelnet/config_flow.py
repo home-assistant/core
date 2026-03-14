@@ -158,12 +158,7 @@ class InelnetOptionsFlowHandler(OptionsFlowWithReload):
                         {
                             vol.Required(
                                 CONF_CHANNELS,
-                                default=",".join(
-                                    str(c)
-                                    for c in self.config_entry.data.get(
-                                        CONF_CHANNELS, [1]
-                                    )
-                                ),
+                                default=user_input[CONF_CHANNELS],
                             ): str,
                         }
                     ),

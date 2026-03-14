@@ -800,8 +800,8 @@ build.json @home-assistant/supervisor
 /tests/components/incomfort/ @jbouwh
 /homeassistant/components/indevolt/ @xirt
 /tests/components/indevolt/ @xirt
-/homeassistant/components/inelnet/ @kuhadatko
-/tests/components/inelnet/ @kuhadatko
+/homeassistant/components/inelnet/ @Hadatko
+/tests/components/inelnet/ @Hadatko
 /homeassistant/components/inels/ @epdevlab
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01 @Robbie1221

@@ -124,9 +124,16 @@ async def test_config_flow_create_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test successful config flow creates entry."""
-    with patch(
-        "homeassistant.components.inelnet.config_flow.InelnetChannel",
-    ) as MockChannel:
+    with (
+        patch(
+            "homeassistant.components.inelnet.config_flow.InelnetChannel",
+        ) as MockChannel,
+        patch(
+            "inelnet_api.client.InelnetChannel.ping",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+    ):
         mock_client = MagicMock()
         mock_client.ping = AsyncMock(return_value=True)
         MockChannel.return_value = mock_client
@@ -141,6 +148,7 @@ async def test_config_flow_create_entry(
             result["flow_id"],
             {CONF_HOST: "192.168.1.67", CONF_CHANNELS: "1,2"},
         )
+        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "INELNET 192.168.1.67 (ch 1,2)"
     assert result["data"][CONF_HOST] == "192.168.1.67"
