@@ -8,6 +8,17 @@
     "event": {
       "access": {
         "default": "mdi:door"
+      },
+      "doorbell": {
+        "default": "mdi:doorbell"
+      }
+    },
+    "switch": {
+      "evacuation": {
+        "default": "mdi:exit-run"
+      },
+      "lockdown": {
+        "default": "mdi:lock-alert"
       }
     }
   }

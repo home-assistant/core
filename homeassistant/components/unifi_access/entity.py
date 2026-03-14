@@ -35,9 +35,33 @@ class UnifiAccessEntity(CoordinatorEntity[UnifiAccessCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._door_id in self.coordinator.data
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self._door_id in self.coordinator.data.doors
+        )
 
     @property
     def _door(self) -> Door:
         """Return the current door state from coordinator data."""
-        return self.coordinator.data[self._door_id]
+        return self.coordinator.data.doors[self._door_id]
+
+
+class UnifiAccessHubEntity(CoordinatorEntity[UnifiAccessCoordinator]):
+    """Base entity for hub-level (controller-wide) UniFi Access entities."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: UnifiAccessCoordinator) -> None:
+        """Initialize the hub entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name="UniFi Access",
+            manufacturer="Ubiquiti",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data is not None
