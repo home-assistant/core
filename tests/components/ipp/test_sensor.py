@@ -1,6 +1,6 @@
 """Tests for the IPP sensor platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -54,3 +54,29 @@ async def test_missing_entry_unique_id(
     entity = entity_registry.async_get("sensor.test_ha_1000_series")
     assert entity
     assert entity.unique_id == f"{mock_config_entry.entry_id}_printer"
+
+
+async def test_no_page_count_sensors_when_unsupported(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_ipp: MagicMock,
+) -> None:
+    """Test that page count sensors are not created when printer doesn't support them."""
+    mock_ipp.execute.return_value = {"printers": [{}]}
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("sensor.test_ha_1000_series_pages_completed")
+    assert not hass.states.get("sensor.test_ha_1000_series_impressions_completed")
+    assert not hass.states.get("sensor.test_ha_1000_series_media_sheets_completed")
+    assert not hass.states.get(
+        "sensor.test_ha_1000_series_monochrome_impressions_completed"
+    )
+    assert not hass.states.get("sensor.test_ha_1000_series_color_impressions_completed")
+    assert not entity_registry.async_get("sensor.test_ha_1000_series_pages_completed")
+    assert not entity_registry.async_get(
+        "sensor.test_ha_1000_series_impressions_completed"
+    )
