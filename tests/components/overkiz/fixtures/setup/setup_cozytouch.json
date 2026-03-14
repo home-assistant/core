@@ -1,0 +1,2344 @@
+{
+  "creationTime": 1586341957000,
+  "lastUpdateTime": 1586341957000,
+  "id": "SETUP-1234-1234-3293",
+  "location": {
+    "creationTime": 1586341957000,
+    "lastUpdateTime": 1586341957000,
+    "city": "*",
+    "country": "*",
+    "postalCode": "* *",
+    "addressLine1": "* *",
+    "addressLine2": "",
+    "timezone": "Europe/Amsterdam",
+    "longitude": "*",
+    "latitude": "*",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "twilightCity": "amsterdam",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "NL"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-1234-3293",
+      "type": 29,
+      "subType": 14,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2021.4.4"
+      },
+      "upToDate": false,
+      "updateStatus": "READY_TO_UPDATE",
+      "syncInProgress": false,
+      "updateCriticityLevel": "BUG_FIX",
+      "automaticUpdate": true,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1606817819000,
+      "lastUpdateTime": 1606817819000,
+      "label": "* (*)",
+      "deviceURL": "homekit://1234-1234-3293/stack",
+      "shortcut": false,
+      "controllableName": "homekit:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "deleteControllers",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "HomekitStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "homekit:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "attributes": [
+        {
+          "name": "homekit:SetupPayload",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "homekit:SetupCode",
+          "type": 3,
+          "value": "*"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "HomekitStack",
+      "type": 5,
+      "oid": "7d689bb6-744b-4e1a-8353-19228a0ab6cf",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1586342112000,
+      "lastUpdateTime": 1586342112000,
+      "label": "*",
+      "deviceURL": "internal://1234-1234-3293/alarm/0",
+      "shortcut": false,
+      "controllableName": "internal:TSKAlarmComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "alarmOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmOn",
+            "nparams": 0
+          },
+          {
+            "commandName": "arm",
+            "nparams": 0
+          },
+          {
+            "commandName": "disarm",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshAlarmDelay",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCurrentAlarmMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshIntrusionDetected",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAlarmDelay",
+            "nparams": 1
+          },
+          {
+            "commandName": "alarmPartial1",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmPartial2",
+            "nparams": 0
+          },
+          {
+            "commandName": "setIntrusionDetected",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetAlarmMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:AlarmDelayState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "partial1", "partial2", "total"],
+            "qualifiedName": "internal:CurrentAlarmModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["detected", "notDetected", "pending", "sos"],
+            "qualifiedName": "internal:IntrusionDetectedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "partial1", "partial2", "sos", "total"],
+            "qualifiedName": "internal:TargetAlarmModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TSKAlarmController",
+        "uiProfiles": ["Alarm", "Switchable"],
+        "uiClass": "Alarm",
+        "qualifiedName": "internal:TSKAlarmComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "internal:CurrentAlarmModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "internal:AlarmDelayState",
+          "type": 1,
+          "value": 30
+        },
+        {
+          "name": "internal:TargetAlarmModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "internal:IntrusionDetectedState",
+          "type": 3,
+          "value": "notDetected"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "TSKAlarmController",
+      "type": 1,
+      "oid": "ebf12ec8-1b02-4aa1-8eef-b1ef40a43963",
+      "uiClass": "Alarm"
+    },
+    {
+      "creationTime": 1586341957000,
+      "lastUpdateTime": 1586341957000,
+      "label": "* *",
+      "deviceURL": "internal://1234-1234-3293/pod/0",
+      "shortcut": false,
+      "controllableName": "internal:PodV2Component",
+      "metadata": "{\"tahoma\":{\"touchButtonFlag\":true}}",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBatteryStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["offline", "online"],
+            "qualifiedName": "core:ConnectivityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CountryCodeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"],
+            "qualifiedName": "core:CyclicButtonState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:LocalIPv4AddressState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:BatteryStatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:LightingLedPodModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "uiClass": "Pod",
+        "qualifiedName": "internal:PodV2Component",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "internal:BatteryStatusState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 1.0
+        },
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "NL"
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "192.168.11.36"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "Pod",
+      "type": 1,
+      "oid": "91d89eee-5e61-4c16-a9b5-909a602ffa56",
+      "uiClass": "Pod"
+    },
+    {
+      "creationTime": 1600767780000,
+      "lastUpdateTime": 1600767780000,
+      "label": "* (*)",
+      "deviceURL": "io://1234-1234-3293/16483707",
+      "shortcut": false,
+      "controllableName": "io:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedSomfyDiscover",
+            "nparams": 1
+          },
+          {
+            "commandName": "discover1WayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "discoverActuators",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSensors",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "IOStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "io:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "IOStack",
+      "type": 5,
+      "oid": "d3da52e2-c26c-4ff3-96c1-5874fe3888db",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1586342605000,
+      "lastUpdateTime": 1586342605000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-3293/3541212",
+      "shortcut": false,
+      "controllableName": "io:VerticalExteriorAwningIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DeploymentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "PositionableScreen",
+        "uiProfiles": [
+          "StatefulDeployableVerticalAwning",
+          "StatefulDeployable",
+          "Deployable",
+          "DeployUndeploy",
+          "StatefulCloseable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "ExteriorScreen",
+        "qualifiedName": "io:VerticalExteriorAwningIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 62.0
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:DeploymentState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 89
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_up",
+            "dead_man_down",
+            "dead_man_stop",
+            "dead_man_impulse_up",
+            "dead_man_impulse_down",
+            "enter_settings_mode",
+            "save_upper_end_limit",
+            "save_lower_end_limit",
+            "stop_after_save_limit",
+            "set_auto_end_limits",
+            "save_settings",
+            "invert_rotation",
+            "save_my_position",
+            "delete_my_position",
+            "set_unstressing_status",
+            "set_obstacle_detection",
+            "set_type_lock",
+            "save_auxiliary_end_limit_entry",
+            "save_auxiliary_end_limit_exit",
+            "set_dbe_up",
+            "reset_actuator",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_back_impulse_setting_mode",
+            "save_back_impulse_position",
+            "set_x_time"
+          ]
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5121525A07"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "8fec16cf-4790-4a46-b0b6-49c3f1ae74f3",
+      "widget": "PositionableScreen",
+      "type": 1,
+      "oid": "6940d1da-762d-4a0c-bde3-a8ea675925d8",
+      "uiClass": "ExteriorScreen"
+    },
+    {
+      "creationTime": 1587481961000,
+      "lastUpdateTime": 1587481961000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-3293/5046564",
+      "shortcut": false,
+      "controllableName": "io:DimmableLightIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setIntensity",
+            "nparams": 1
+          },
+          {
+            "commandName": "setIntensityWithTimer",
+            "nparams": 3
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LightIntensityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DimmerLight",
+        "uiProfiles": [
+          "StatefulLightDimmer",
+          "StatefulDimmable",
+          "Dimmable",
+          "StatefulSwitchable",
+          "Switchable"
+        ],
+        "uiClass": "Light",
+        "qualifiedName": "io:DimmableLightIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 44.0
+        },
+        {
+          "name": "core:LightIntensityState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 82
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5133033A02"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "DimmerLight",
+      "type": 1,
+      "oid": "aab8630e-1c36-439f-b943-a0a0c9747289",
+      "uiClass": "Light"
+    },
+    {
+      "creationTime": 1586342695000,
+      "lastUpdateTime": 1586342695000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-3293/5353900",
+      "shortcut": false,
+      "controllableName": "io:VerticalExteriorAwningIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DeploymentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "PositionableScreen",
+        "uiProfiles": [
+          "StatefulDeployableVerticalAwning",
+          "StatefulDeployable",
+          "Deployable",
+          "DeployUndeploy",
+          "StatefulCloseable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "ExteriorScreen",
+        "qualifiedName": "io:VerticalExteriorAwningIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:DeploymentState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 90
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_up",
+            "dead_man_down",
+            "dead_man_stop",
+            "dead_man_impulse_up",
+            "dead_man_impulse_down",
+            "enter_settings_mode",
+            "save_upper_end_limit",
+            "save_lower_end_limit",
+            "stop_after_save_limit",
+            "set_auto_end_limits",
+            "save_settings",
+            "invert_rotation",
+            "save_my_position",
+            "delete_my_position",
+            "set_unstressing_status",
+            "set_obstacle_detection",
+            "set_type_lock",
+            "save_auxiliary_end_limit_entry",
+            "save_auxiliary_end_limit_exit",
+            "set_dbe_up",
+            "reset_actuator",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_back_impulse_setting_mode",
+            "save_back_impulse_position",
+            "set_x_time"
+          ]
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5121525A07"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "1d8338a3-66df-49f5-93ce-ef4d82dd7846",
+      "widget": "PositionableScreen",
+      "type": 1,
+      "oid": "f81add98-cdf7-477a-97bf-8f3cddbfe3ad",
+      "uiClass": "ExteriorScreen"
+    },
+    {
+      "creationTime": 1586342429000,
+      "lastUpdateTime": 1586342429000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-3293/5770898",
+      "shortcut": false,
+      "controllableName": "io:VerticalExteriorAwningIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DeploymentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "PositionableScreen",
+        "uiProfiles": [
+          "StatefulDeployableVerticalAwning",
+          "StatefulDeployable",
+          "Deployable",
+          "DeployUndeploy",
+          "StatefulCloseable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "ExteriorScreen",
+        "qualifiedName": "io:VerticalExteriorAwningIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 60.0
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:DeploymentState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 80
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:SupportedManufacturerSettingsCommands",
+          "type": 10,
+          "value": [
+            "dead_man_up",
+            "dead_man_down",
+            "dead_man_stop",
+            "dead_man_impulse_up",
+            "dead_man_impulse_down",
+            "enter_settings_mode",
+            "save_upper_end_limit",
+            "save_lower_end_limit",
+            "stop_after_save_limit",
+            "save_settings",
+            "invert_rotation",
+            "save_my_position",
+            "delete_my_position",
+            "reset_actuator",
+            "double_power_cut",
+            "eject_from_setting_mode",
+            "enter_back_impulse_setting_mode",
+            "save_back_impulse_position"
+          ]
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5104761X04"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "f00744c9-f07c-4de8-b92e-87bfc051623c",
+      "widget": "PositionableScreen",
+      "type": 1,
+      "oid": "526c2dfc-32f0-448c-aeb6-bda22bc0119b",
+      "uiClass": "ExteriorScreen"
+    },
+    {
+      "creationTime": 1586342365000,
+      "lastUpdateTime": 1586342365000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-3293/7614902",
+      "shortcut": false,
+      "controllableName": "io:SimpleBioclimaticPergolaIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "closeSlats",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "openSlats",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Orientation",
+            "nparams": 0
+          },
+          {
+            "commandName": "setMemorized1Orientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "runManufacturerSettingsCommand",
+            "nparams": 2
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "sendIOKey",
+            "nparams": 0
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AdditionalStatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerSettingsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1OrientationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredOrientationState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:SlatsOpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlatsOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "BioclimaticPergola",
+        "uiProfiles": [
+          "StatefulBioClimaticPergola",
+          "StatefulOrientableSlats",
+          "OrientableSlats"
+        ],
+        "uiClass": "Pergola",
+        "qualifiedName": "io:SimpleBioclimaticPergolaIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 42.0
+        },
+        {
+          "name": "core:SlatsOpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:SlatsOrientationState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:SecuredOrientationState",
+          "type": 1,
+          "value": 105
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5133756X72"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "f00744c9-f07c-4de8-b92e-87bfc051623c",
+      "widget": "BioclimaticPergola",
+      "type": 1,
+      "oid": "3d075e82-68ee-4b39-9232-a73415e1997c",
+      "uiClass": "Pergola"
+    },
+    {
+      "creationTime": 1593694963000,
+      "lastUpdateTime": 1593694963000,
+      "label": "* (*)",
+      "deviceURL": "ogp://1234-1234-3293/00000BE8",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "sendPrivate",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private10State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private4State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private5State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private6State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private7State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private8State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private9State"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "private"
+            }
+          ]
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "586ea4a3-8bcb-4ca3-a0d9-db9f8c9ec058",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1593694964000,
+      "lastUpdateTime": 1593694964000,
+      "label": "* * *",
+      "deviceURL": "ogp://1234-1234-3293/039575E9",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* * *"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Siegenia"
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Siegenia Bridge"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "5660a0c3-5198-459e-ac19-b5a22f1bb1ea",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1593694963000,
+      "lastUpdateTime": 1593694963000,
+      "label": "* * *",
+      "deviceURL": "ogp://1234-1234-3293/09E45393",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* * *"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Intesis Bridge"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Intesis"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "8a9ab23a-3531-4b9a-aa25-7451d8edb175",
+      "uiClass": "ProtocolGateway"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "disconnectionConfiguration": {
+    "targetPushSubscriptions": ["7290697a-e729-4b20-9166-1e913e206f4a"],
+    "notificationType": "PUSH"
+  },
+  "oid": "4eee1f79-a10f-4dec-9495-23f5ab739f44",
+  "rootPlace": {
+    "creationTime": 1586341957000,
+    "lastUpdateTime": 1586342930000,
+    "label": "*",
+    "type": 200,
+    "oid": "ed6e01d8-5912-4c79-9ead-fe4baecb6ff4",
+    "subPlaces": [
+      {
+        "creationTime": 1586342930000,
+        "lastUpdateTime": 1586342930000,
+        "label": "* *",
+        "type": 101,
+        "oid": "f00744c9-f07c-4de8-b92e-87bfc051623c",
+        "subPlaces": [
+          {
+            "creationTime": 1586342930000,
+            "lastUpdateTime": 1586342930000,
+            "label": "* *",
+            "type": 6,
+            "metadata": "{\"tahoma\":{\"order\":1}}",
+            "oid": "1d8338a3-66df-49f5-93ce-ef4d82dd7846",
+            "subPlaces": []
+          },
+          {
+            "creationTime": 1586342930000,
+            "lastUpdateTime": 1586342930000,
+            "label": "*",
+            "type": 2,
+            "metadata": "{\"tahoma\":{\"order\":0}}",
+            "oid": "8fec16cf-4790-4a46-b0b6-49c3f1ae74f3",
+            "subPlaces": []
+          }
+        ]
+      },
+      {
+        "creationTime": 1586342930000,
+        "lastUpdateTime": 1586342930000,
+        "label": "*",
+        "type": 24,
+        "metadata": "{\"tahoma\":{\"position\":0.25,\"decor\":[]}}",
+        "oid": "54e2b008-ecd9-4e1a-bf58-fc2240a2a53e",
+        "subPlaces": []
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "tahoma-premium",
+      "source": "GATEWAY_TYPE"
+    },
+    {
+      "name": "tahoma-security",
+      "source": "GATEWAY_TYPE"
+    }
+  ]
+}

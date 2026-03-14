@@ -1,0 +1,151 @@
+{
+  "creationTime": 1434967047000,
+  "id": "SETUP-1234-1234-8044",
+  "location": {
+    "creationTime": 1434967050000,
+    "city": "** ** ** **",
+    "country": "**",
+    "postalCode": "**",
+    "addressLine1": "** ** ** **",
+    "addressLine2": "*",
+    "timezone": "Europe/Paris",
+    "longitude": "**",
+    "latitude": "**",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "FR"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-1234-8044",
+      "type": 15,
+      "subType": 13,
+      "autoUpdateEnabled": false,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2018.4.4.7"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1666682200000,
+      "lastUpdateTime": 1666682200000,
+      "label": "** **",
+      "deviceURL": "rtd://1234-1234-8044/770015",
+      "shortcut": false,
+      "controllableName": "rtd:AlarmRTDComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "alarmOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmOn",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmZoneOn",
+            "nparams": 1
+          },
+          {
+            "commandName": "arm",
+            "nparams": 0
+          },
+          {
+            "commandName": "disarm",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "5000",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "StatelessAlarmController",
+        "uiProfiles": ["Alarm"],
+        "uiClass": "Alarm",
+        "qualifiedName": "rtd:AlarmRTDComponent",
+        "type": "ACTUATOR"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "2c9080963b51c407013c1150f93f0f71",
+      "widget": "StatelessAlarmController",
+      "type": 1,
+      "oid": "31071145-f47f-4aa9-a645-7807d584446b",
+      "uiClass": "Alarm"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "2c9080963b51c407013c1150f93f0f6f",
+  "rootPlace": {
+    "creationTime": 1434967038000,
+    "lastUpdateTime": 1434975346000,
+    "label": "** **",
+    "type": 200,
+    "oid": "2c9080963b51c407013c1150f93f0f71",
+    "subPlaces": [
+      {
+        "creationTime": 1434967038000,
+        "label": "** *é**",
+        "type": 102,
+        "oid": "b70dd07f-4301-4d66-94cb-eba50fbd8b87",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1434967038000,
+        "lastUpdateTime": 1434975346000,
+        "label": "**",
+        "type": 44,
+        "oid": "2c9080963b51c2f5013c11754f744da7",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1434967038000,
+        "label": "**é**",
+        "type": 101,
+        "oid": "2c9080963b51c2f5013c11754ecb4da5",
+        "subPlaces": [
+          {
+            "creationTime": 1434967038000,
+            "label": "**",
+            "type": 23,
+            "oid": "2c9080963b51c2f5013c11754f264da6",
+            "subPlaces": []
+          }
+        ]
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "tahoma-premium",
+      "source": "GATEWAY_TYPE"
+    },
+    {
+      "name": "tahoma-security",
+      "source": "GATEWAY_TYPE"
+    }
+  ]
+}

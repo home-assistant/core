@@ -1,0 +1,4388 @@
+{
+  "creationTime": 1602053832000,
+  "lastUpdateTime": 1602053832000,
+  "id": "SETUP-1234-1234-5614",
+  "location": {
+    "creationTime": 1602053832000,
+    "lastUpdateTime": 1607174186000,
+    "city": "*",
+    "country": "*",
+    "postalCode": "*",
+    "addressLine1": "* * * *",
+    "addressLine2": "",
+    "timezone": "Europe/Paris",
+    "longitude": "*",
+    "latitude": "*",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "twilightCity": "paris",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-1234-5614",
+      "type": 29,
+      "subType": 13,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2021.1.4"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "NO_AUTO",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1607173967000,
+      "lastUpdateTime": 1607173967000,
+      "label": "* (*)",
+      "deviceURL": "homekit://1234-1234-5614/stack",
+      "shortcut": false,
+      "controllableName": "homekit:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "deleteControllers",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "HomekitStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "homekit:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "attributes": [
+        {
+          "name": "homekit:SetupPayload",
+          "type": 3,
+          "value": "*://*"
+        },
+        {
+          "name": "homekit:SetupCode",
+          "type": 3,
+          "value": "*"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "HomekitStack",
+      "type": 5,
+      "oid": "46e560c4-8fb7-44e8-adfb-8f8db1171c8c",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1607174617000,
+      "lastUpdateTime": 1607174617000,
+      "label": "*",
+      "deviceURL": "internal://1234-1234-5614/alarm/0",
+      "shortcut": false,
+      "controllableName": "internal:TSKAlarmComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "alarmOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmOn",
+            "nparams": 0
+          },
+          {
+            "commandName": "arm",
+            "nparams": 0
+          },
+          {
+            "commandName": "disarm",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshAlarmDelay",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCurrentAlarmMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshIntrusionDetected",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAlarmDelay",
+            "nparams": 1
+          },
+          {
+            "commandName": "alarmPartial1",
+            "nparams": 0
+          },
+          {
+            "commandName": "alarmPartial2",
+            "nparams": 0
+          },
+          {
+            "commandName": "setIntrusionDetected",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetAlarmMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:AlarmDelayState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "partial1", "partial2", "total"],
+            "qualifiedName": "internal:CurrentAlarmModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["detected", "notDetected", "pending", "sos"],
+            "qualifiedName": "internal:IntrusionDetectedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "partial1", "partial2", "sos", "total"],
+            "qualifiedName": "internal:TargetAlarmModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TSKAlarmController",
+        "uiProfiles": ["Alarm", "Switchable"],
+        "uiClass": "Alarm",
+        "qualifiedName": "internal:TSKAlarmComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "internal:CurrentAlarmModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "internal:AlarmDelayState",
+          "type": 1,
+          "value": 30
+        },
+        {
+          "name": "internal:TargetAlarmModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "internal:IntrusionDetectedState",
+          "type": 3,
+          "value": "notDetected"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TSKAlarmController",
+      "type": 1,
+      "oid": "bc975b14-3e1b-43d3-ac36-cc9789ddc7c3",
+      "uiClass": "Alarm"
+    },
+    {
+      "creationTime": 1602053832000,
+      "lastUpdateTime": 1602053832000,
+      "label": "* *",
+      "deviceURL": "internal://1234-1234-5614/pod/0",
+      "shortcut": false,
+      "controllableName": "internal:PodV2Component",
+      "metadata": "{\"tahoma\":{\"touchButtonFlag\":true}}",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBatteryStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["offline", "online"],
+            "qualifiedName": "core:ConnectivityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CountryCodeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"],
+            "qualifiedName": "core:CyclicButtonState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:LocalIPv4AddressState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:BatteryStatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:LightingLedPodModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "uiClass": "Pod",
+        "qualifiedName": "internal:PodV2Component",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "internal:BatteryStatusState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "core:CyclicButtonState",
+          "type": 3,
+          "value": "pressed"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 0.0
+        },
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "FR"
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "192.168.77.127"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "566c198d-a6d9-4795-bd5b-cb0664d304ed",
+      "widget": "Pod",
+      "type": 1,
+      "oid": "409e424f-1c90-4f95-9378-e79c7fceaadd",
+      "uiClass": "Pod"
+    },
+    {
+      "creationTime": 1607175941000,
+      "lastUpdateTime": 1607175941000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/11530893#1",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlMainComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "cancelAbsence",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDeviceSerialNumber",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshErrorCode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHeatingDerogationAvailability",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTimeProgramById",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshZonesNumber",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAbsenceCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceEndDateTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceStartDateTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingCoolingAutoSwitch",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTimeProgramById",
+            "nparams": 2
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "refreshAbsenceSchedulingAvailability",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshProductType",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThermalSchedulingAvailability",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesTemperatureSensorAvailability",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshZonesThermalConfiguration",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCOperatingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:AbsenceCoolingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceEndDateTimeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:AbsenceHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceStartDateTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:DeviceSerialNumberState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorCodeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingCoolingAutoSwitchState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:HeatingDerogationAvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ProductModelNameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram4State"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:VersionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ZonesNumberState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "io:AbsenceSchedulingAvailabilityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["dateScheduling", "numberOfDaysScheduling"],
+            "qualifiedName": "io:AbsenceSchedulingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "drying", "heating", "stop"],
+            "qualifiedName": "io:LastPassAPCOperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "drying", "heating", "stop"],
+            "qualifiedName": "io:PassAPCOperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "accumulationDomesticHotWater",
+              "airConditioning",
+              "boiler",
+              "convector",
+              "doubleFlowControlledMechanicalVentilation",
+              "heatPump",
+              "heater",
+              "hybrid",
+              "singleFlowControlledMechanicalVentilation",
+              "thermodynamicDomesticHotWater",
+              "zoneController"
+            ],
+            "qualifiedName": "io:PassAPCProductTypeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "io:ThermalSchedulingAvailabilityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "heatingAndCoolingCommonScheduling",
+              "heatingAndCoolingSeparatedScheduling"
+            ],
+            "qualifiedName": "io:ThermalSchedulingModeState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "AtlanticPassAPCZoneControl",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["generator"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlMainComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 3,
+          "value": "41323832303032202020"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 100.0
+        },
+        {
+          "name": "core:ProductModelNameState",
+          "type": 3,
+          "value": "Zone Control 2.0"
+        },
+        {
+          "name": "core:DeviceSerialNumberState",
+          "type": 3,
+          "value": "A2DF71F8"
+        },
+        {
+          "name": "io:PassAPCProductTypeState",
+          "type": 3,
+          "value": "zoneController"
+        },
+        {
+          "name": "core:ZonesNumberState",
+          "type": 1,
+          "value": 5
+        },
+        {
+          "name": "io:PassAPCOperatingModeState",
+          "type": 3,
+          "value": "heating"
+        },
+        {
+          "name": "core:HeatingDerogationAvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "io:ThermalSchedulingAvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "io:ThermalSchedulingModeState",
+          "type": 3,
+          "value": "heatingAndCoolingCommonScheduling"
+        },
+        {
+          "name": "core:TimeProgram1State",
+          "type": 10,
+          "value": [
+            {
+              "monday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "tuesday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "wednesday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "thursday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "friday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "saturday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            },
+            {
+              "sunday": [
+                {
+                  "start": "00:00",
+                  "end": "02:00"
+                },
+                {
+                  "start": "05:30",
+                  "end": "09:00"
+                },
+                {
+                  "start": "17:30",
+                  "end": "24:00"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "core:TimeProgram2State",
+          "type": 10,
+          "value": [
+            {
+              "monday": [
+                {
+                  "start": "06:00",
+                  "end": "09:00"
+                },
+                {
+                  "start": "18:00",
+                  "end": "23:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "tuesday": [
+                {
+                  "start": "06:00",
+                  "end": "09:00"
+                },
+                {
+                  "start": "18:00",
+                  "end": "23:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "wednesday": [
+                {
+                  "start": "06:00",
+                  "end": "09:00"
+                },
+                {
+                  "start": "18:00",
+                  "end": "23:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "thursday": [
+                {
+                  "start": "06:00",
+                  "end": "09:00"
+                },
+                {
+                  "start": "18:00",
+                  "end": "23:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "friday": [
+                {
+                  "start": "06:00",
+                  "end": "09:00"
+                },
+                {
+                  "start": "18:00",
+                  "end": "23:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "saturday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "sunday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "core:TimeProgram3State",
+          "type": 10,
+          "value": [
+            {
+              "monday": [
+                {
+                  "start": "08:00",
+                  "end": "18:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "tuesday": [
+                {
+                  "start": "08:00",
+                  "end": "18:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "wednesday": [
+                {
+                  "start": "08:00",
+                  "end": "18:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "thursday": [
+                {
+                  "start": "08:00",
+                  "end": "18:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "friday": [
+                {
+                  "start": "08:00",
+                  "end": "18:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "saturday": [
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "sunday": [
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "core:TimeProgram4State",
+          "type": 10,
+          "value": [
+            {
+              "monday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "tuesday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "wednesday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "thursday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "friday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "saturday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            },
+            {
+              "sunday": [
+                {
+                  "start": "06:00",
+                  "end": "22:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                },
+                {
+                  "start": "00:00",
+                  "end": "00:00"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "io:AbsenceSchedulingAvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "io:AbsenceSchedulingModeState",
+          "type": 3,
+          "value": "dateScheduling"
+        },
+        {
+          "name": "core:AbsenceHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 13.0
+        },
+        {
+          "name": "core:AbsenceCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 0.0
+        },
+        {
+          "name": "core:AbsenceStartDateTimeState",
+          "type": 11,
+          "value": {
+            "month": 2,
+            "hour": 22,
+            "year": 2021,
+            "day": 12,
+            "minute": 28
+          }
+        },
+        {
+          "name": "core:AbsenceEndDateTimeState",
+          "type": 11,
+          "value": {
+            "month": 2,
+            "hour": 0,
+            "year": 2021,
+            "day": 12,
+            "minute": 0
+          }
+        },
+        {
+          "name": "core:HeatingCoolingAutoSwitchState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:ErrorCodeState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:LastPassAPCOperatingModeState",
+          "type": 3,
+          "value": "heating"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCZoneControl",
+      "type": 1,
+      "oid": "89774606-b02e-41a0-bb69-593cc14b9774",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "*",
+      "deviceURL": "io://1234-1234-5614/11530893#10",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlZoneComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshComfortCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setActiveCoolingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setActiveHeatingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogationOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshPassAPCCoolingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCCoolingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPassAPCHeatingMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveHeatingTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:CoolingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:CoolingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:DerogationOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingProfileState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingProfileState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticPassAPCHeatingAndCoolingZone",
+        "uiProfiles": [
+          "StatefulCoolingThermostat",
+          "CoolingThermostat",
+          "StatefulDualThermostat",
+          "DualThermostat",
+          "ThermostatTargetReader"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter", "heatingSystem", "coolingSystem"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlZoneComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heatingAndCooling"
+        },
+        {
+          "name": "io:PassAPCHeatingModeState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "io:PassAPCCoolingModeState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "io:PassAPCHeatingProfileState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "io:PassAPCCoolingProfileState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "core:ComfortHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:EcoHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ComfortCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:EcoCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:ActiveHeatingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "core:HeatingOnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:CoolingOnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:HeatingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:CoolingTargetTemperatureState",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "core:MinimumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 16.0
+        },
+        {
+          "name": "core:MinimumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 18.0
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 25.0
+        },
+        {
+          "name": "core:MaximumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:DerogationOnOffState",
+          "type": 3,
+          "value": "off"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCHeatingAndCoolingZone",
+      "type": 1,
+      "oid": "aa128b7d-9b17-49b7-9891-93471aad463b",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/11530893#11",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneTemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:AtlanticPassAPCZoneTemperatureSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 22.7
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 2,
+          "value": 5.0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "oid": "4f7a163b-b16b-436b-ad4d-8d590ba5c4b5",
+      "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* / *",
+      "deviceURL": "io://1234-1234-5614/11530893#2",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlZoneComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshComfortCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setActiveCoolingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setActiveHeatingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogationOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshPassAPCCoolingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCCoolingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPassAPCHeatingMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveCoolingTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveHeatingTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:CoolingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:CoolingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:DerogationOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingProfileState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingProfileState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticPassAPCHeatingAndCoolingZone",
+        "uiProfiles": [
+          "StatefulCoolingThermostat",
+          "CoolingThermostat",
+          "StatefulDualThermostat",
+          "DualThermostat",
+          "ThermostatTargetReader"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter", "heatingSystem", "coolingSystem"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlZoneComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heatingAndCooling"
+        },
+        {
+          "name": "io:PassAPCHeatingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCCoolingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCHeatingProfileState",
+          "type": 3,
+          "value": "eco"
+        },
+        {
+          "name": "io:PassAPCCoolingProfileState",
+          "type": 3,
+          "value": "eco"
+        },
+        {
+          "name": "core:ComfortHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:EcoHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ComfortCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:EcoCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ActiveHeatingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:ActiveCoolingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* / *"
+        },
+        {
+          "name": "core:HeatingOnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:CoolingOnOffState",
+          "type": 3,
+          "value": "on"
+        },
+        {
+          "name": "core:HeatingTargetTemperatureState",
+          "type": 2,
+          "value": 21.5
+        },
+        {
+          "name": "core:CoolingTargetTemperatureState",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "core:MinimumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 16.0
+        },
+        {
+          "name": "core:MinimumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 18.0
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 25.0
+        },
+        {
+          "name": "core:MaximumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:DerogationOnOffState",
+          "type": 3,
+          "value": "off"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCHeatingAndCoolingZone",
+      "type": 1,
+      "oid": "08aec450-ad24-4f97-bb66-af9b0f67ac8f",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* * *",
+      "deviceURL": "io://1234-1234-5614/11530893#3",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneTemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:AtlanticPassAPCZoneTemperatureSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 20.1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 2,
+          "value": 5.0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "oid": "55c86e99-6b8c-4c27-8629-88bd613d73e2",
+      "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "*",
+      "deviceURL": "io://1234-1234-5614/11530893#4",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlZoneComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshComfortCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setActiveCoolingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setActiveHeatingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogationOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshPassAPCCoolingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCCoolingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPassAPCHeatingMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveCoolingTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveHeatingTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:CoolingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:CoolingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:DerogationOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingProfileState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingProfileState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticPassAPCHeatingAndCoolingZone",
+        "uiProfiles": [
+          "StatefulCoolingThermostat",
+          "CoolingThermostat",
+          "StatefulDualThermostat",
+          "DualThermostat",
+          "ThermostatTargetReader"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter", "heatingSystem", "coolingSystem"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlZoneComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heatingAndCooling"
+        },
+        {
+          "name": "io:PassAPCHeatingModeState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "io:PassAPCCoolingModeState",
+          "type": 3,
+          "value": "manu"
+        },
+        {
+          "name": "io:PassAPCHeatingProfileState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "io:PassAPCCoolingProfileState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "core:ComfortHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:EcoHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ComfortCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:EcoCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 13.0
+        },
+        {
+          "name": "core:ActiveHeatingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:ActiveCoolingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "core:HeatingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:CoolingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:HeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:CoolingTargetTemperatureState",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "core:MinimumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 16.0
+        },
+        {
+          "name": "core:MinimumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 18.0
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 25.0
+        },
+        {
+          "name": "core:MaximumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:DerogationOnOffState",
+          "type": 3,
+          "value": "on"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCHeatingAndCoolingZone",
+      "type": 1,
+      "oid": "1cd56151-4b9a-4e04-93a9-e121be64fe3b",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/11530893#5",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneTemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:AtlanticPassAPCZoneTemperatureSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 20.4
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 2,
+          "value": 5.0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "oid": "fa90f3a9-d6f0-4cd1-841e-5911d3b2f9ec",
+      "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "*",
+      "deviceURL": "io://1234-1234-5614/11530893#6",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlZoneComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshComfortCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setActiveCoolingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setActiveHeatingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogationOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshPassAPCCoolingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCCoolingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPassAPCHeatingMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveHeatingTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:CoolingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:CoolingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:DerogationOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingProfileState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingProfileState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticPassAPCHeatingAndCoolingZone",
+        "uiProfiles": [
+          "StatefulCoolingThermostat",
+          "CoolingThermostat",
+          "StatefulDualThermostat",
+          "DualThermostat",
+          "ThermostatTargetReader"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter", "heatingSystem", "coolingSystem"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlZoneComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heatingAndCooling"
+        },
+        {
+          "name": "io:PassAPCHeatingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCCoolingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCHeatingProfileState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "io:PassAPCCoolingProfileState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "core:ComfortHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:EcoHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ComfortCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:EcoCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 13.0
+        },
+        {
+          "name": "core:ActiveHeatingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "core:HeatingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:CoolingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:HeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:CoolingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:MinimumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 16.0
+        },
+        {
+          "name": "core:MinimumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 18.0
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 25.0
+        },
+        {
+          "name": "core:MaximumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:DerogationOnOffState",
+          "type": 3,
+          "value": "off"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCHeatingAndCoolingZone",
+      "type": 1,
+      "oid": "548ad5ce-5198-45e0-b12c-48cb9b458cd6",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/11530893#7",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneTemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:AtlanticPassAPCZoneTemperatureSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 18.8
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 2,
+          "value": 5.0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "oid": "c41b23fa-c5bc-4ab4-ab9f-69774614b6eb",
+      "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "*",
+      "deviceURL": "io://1234-1234-5614/11530893#8",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneControlZoneComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshComfortCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshComfortHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumCoolingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMinimumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setActiveCoolingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setActiveHeatingTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDerogationOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingOnOffState",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumCoolingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMinimumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshPassAPCCoolingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCCoolingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPassAPCHeatingProfile",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPassAPCCoolingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPassAPCHeatingMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveHeatingTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:CoolingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:CoolingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:DerogationOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:HeatingOnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumCoolingTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MinimumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCCoolingProfileState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "auto",
+              "comfort",
+              "eco",
+              "externalScheduling",
+              "internalScheduling",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "absence",
+              "comfort",
+              "derogation",
+              "eco",
+              "externalSetpoint",
+              "frostprotection",
+              "manu",
+              "stop"
+            ],
+            "qualifiedName": "io:PassAPCHeatingProfileState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticPassAPCHeatingAndCoolingZone",
+        "uiProfiles": [
+          "StatefulCoolingThermostat",
+          "CoolingThermostat",
+          "StatefulDualThermostat",
+          "DualThermostat",
+          "ThermostatTargetReader"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter", "heatingSystem", "coolingSystem"],
+        "qualifiedName": "io:AtlanticPassAPCZoneControlZoneComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heatingAndCooling"
+        },
+        {
+          "name": "io:PassAPCHeatingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCCoolingModeState",
+          "type": 3,
+          "value": "internalScheduling"
+        },
+        {
+          "name": "io:PassAPCHeatingProfileState",
+          "type": 3,
+          "value": "externalSetpoint"
+        },
+        {
+          "name": "io:PassAPCCoolingProfileState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "core:ComfortHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:EcoHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:ComfortCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 24.0
+        },
+        {
+          "name": "core:EcoCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 13.0
+        },
+        {
+          "name": "core:ActiveHeatingTimeProgramState",
+          "type": 3,
+          "value": "1"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "*"
+        },
+        {
+          "name": "core:HeatingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:CoolingOnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:HeatingTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "core:CoolingTargetTemperatureState",
+          "type": 2,
+          "value": 19.5
+        },
+        {
+          "name": "core:MinimumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 16.0
+        },
+        {
+          "name": "core:MinimumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 18.0
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 25.0
+        },
+        {
+          "name": "core:MaximumCoolingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:DerogationOnOffState",
+          "type": 3,
+          "value": "on"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "AtlanticPassAPCHeatingAndCoolingZone",
+      "type": 1,
+      "oid": "e5a0a156-79b1-449b-8ea5-00aab5a5d4ec",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1607175960000,
+      "lastUpdateTime": 1607175960000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/11530893#9",
+      "shortcut": false,
+      "controllableName": "io:AtlanticPassAPCZoneTemperatureSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:AtlanticPassAPCZoneTemperatureSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 19.2
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 2,
+          "value": 5.0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "oid": "c1138faf-667d-45fa-894b-e94f72f4eaf7",
+      "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1607175284000,
+      "lastUpdateTime": 1607175284000,
+      "label": "* (*)",
+      "deviceURL": "io://1234-1234-5614/12903670",
+      "shortcut": false,
+      "controllableName": "io:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover1WayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "discoverActuators",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSensors",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "IOStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "io:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "IOStack",
+      "type": 5,
+      "oid": "4d99c126-b18a-407b-8164-95345d97423c",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1607175291000,
+      "lastUpdateTime": 1607175291000,
+      "label": "* *",
+      "deviceURL": "io://1234-1234-5614/6596573",
+      "shortcut": false,
+      "controllableName": "io:RollerShutterGenericIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMemorized1Position",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMemorized1Position",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSecuredPosition",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "keepOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllersAndDeleteNode",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "PositionableRollerShutter",
+        "uiProfiles": [
+          "StatefulCloseableShutter",
+          "StatefulCloseable",
+          "Closeable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "RollerShutter",
+        "qualifiedName": "io:RollerShutterGenericIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* *"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 100.0
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:Memorized1PositionState",
+          "type": 1,
+          "value": 85
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "PositionableRollerShutter",
+      "type": 1,
+      "oid": "25ff3e92-ed0f-4b24-bb9d-c906713d854f",
+      "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1602053836000,
+      "lastUpdateTime": 1602053836000,
+      "label": "* (*)",
+      "deviceURL": "ogp://1234-1234-5614/00000BE8",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "sendPrivate",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private10State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private4State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private5State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private6State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private7State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private8State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private9State"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "private"
+            }
+          ]
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "09392340-88a6-4a33-a018-b1903e1e066c",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1602053835000,
+      "lastUpdateTime": 1602053835000,
+      "label": "* * *",
+      "deviceURL": "ogp://1234-1234-5614/039575E9",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* * *"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Siegenia"
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Siegenia Bridge"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "d26ad902-552d-416b-abee-c79066986a33",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1602053836000,
+      "lastUpdateTime": 1602053836000,
+      "label": "* * *",
+      "deviceURL": "ogp://1234-1234-5614/09E45393",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "* * *"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Intesis Bridge"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Intesis"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+      "widget": "DynamicBridge",
+      "type": 1,
+      "oid": "c754a1de-6a4b-42ea-828e-bfb9c94a9dc5",
+      "uiClass": "ProtocolGateway"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "8d114f37-934d-4810-83f5-af4cbf3d95d7",
+  "rootPlace": {
+    "creationTime": 1602053832000,
+    "lastUpdateTime": 1607175122000,
+    "label": "*",
+    "type": 200,
+    "oid": "e14d84eb-7ccc-4db1-9fd3-f695860ee5be",
+    "subPlaces": [
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 16,
+        "metadata": "{\"tahoma\":{\"order\":0}}",
+        "oid": "58d1e8b3-f72d-46bf-930a-1b2c6b4ceaa4",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "* à *",
+        "type": 2,
+        "metadata": "{\"tahoma\":{\"order\":3}}",
+        "oid": "38dd19d1-bece-4a59-a8c4-ae2d6eedfd6d",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "* * *",
+        "type": 8,
+        "metadata": "{\"tahoma\":{\"order\":4}}",
+        "oid": "9a1ddea9-31be-4faa-94a0-45fd185f2773",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "* *",
+        "type": 5,
+        "metadata": "{\"tahoma\":{\"order\":6}}",
+        "oid": "a1d80f39-87e8-47a4-86d6-9c7b0983fd63",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 23,
+        "metadata": "{\"tahoma\":{\"order\":2}}",
+        "oid": "55abe03a-cdae-44d4-bf98-081d133a80cd",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 49,
+        "metadata": "{\"tahoma\":{\"position\":0.75,\"decor\":[]}}",
+        "oid": "d35b02df-755a-410c-b966-eeb85bf6ccfb",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 106,
+        "metadata": "{\"tahoma\":{\"position\":0.25,\"decor\":[]}}",
+        "oid": "24ca36a4-29b7-43bb-8d4b-23223e0d694a",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 14,
+        "metadata": "{\"tahoma\":{\"order\":1}}",
+        "oid": "566c198d-a6d9-4795-bd5b-cb0664d304ed",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "*",
+        "type": 9,
+        "metadata": "{\"tahoma\":{\"order\":7}}",
+        "oid": "4be3c749-20d5-4f96-8c94-6cb654089eb9",
+        "subPlaces": []
+      },
+      {
+        "creationTime": 1607175122000,
+        "lastUpdateTime": 1607175122000,
+        "label": "* *",
+        "type": 6,
+        "metadata": "{\"tahoma\":{\"order\":5}}",
+        "oid": "8173f834-cfb2-4b36-8da6-56fea472b8b9",
+        "subPlaces": []
+      }
+    ]
+  },
+  "features": [
+    {
+      "name": "tahoma-premium",
+      "source": "GATEWAY_TYPE"
+    },
+    {
+      "name": "tahoma-security",
+      "source": "GATEWAY_TYPE"
+    }
+  ]
+}
