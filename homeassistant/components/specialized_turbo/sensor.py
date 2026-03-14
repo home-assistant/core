@@ -8,6 +8,9 @@ from typing import Any
 
 from specialized_turbo import AssistLevel, TelemetrySnapshot
 
+from homeassistant.components.bluetooth.passive_update_coordinator import (
+    PassiveBluetoothCoordinatorEntity,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -28,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SpecializedTurboConfigEntry
 from .const import DOMAIN
@@ -219,7 +221,7 @@ async def async_setup_entry(
 
 
 class SpecializedTurboSensor(
-    CoordinatorEntity[SpecializedTurboCoordinator],
+    PassiveBluetoothCoordinatorEntity[SpecializedTurboCoordinator],
     SensorEntity,
 ):
     """One telemetry field from a Specialized Turbo bike."""
