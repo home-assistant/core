@@ -286,6 +286,7 @@ FLOWS = {
         "hegel",
         "heos",
         "here_travel_time",
+        "hetzner",
         "hikvision",
         "hisense_aehw4a1",
         "hive",

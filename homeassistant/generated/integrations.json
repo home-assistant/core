@@ -2777,6 +2777,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hetzner": {
+      "name": "Hetzner Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hexaom": {
       "name": "Hexaom Hexaconnect",
       "integration_type": "virtual",
