@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -42,7 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockOverkizClient
+from .conftest import MockOverkizClient, SetupOverkizIntegration
 
 from tests.common import async_fire_time_changed, snapshot_platform
 
@@ -69,18 +68,6 @@ SNAPSHOT_FIXTURES = [
     FIXTURE_SHUTTERS_AND_GARAGE,
     FIXTURE_TILTED_WINDOW,
 ]
-
-
-@dataclass(frozen=True, slots=True)
-class CoverCommandCase:
-    """Describe a service call against one device in a real setup fixture."""
-
-    fixture: str
-    device_url: str
-    command_name: str
-    expected_state: str | None = None
-    entity_unique_id: str | None = None
-    parameters: tuple[Any, ...] = ()
 
 
 @pytest.fixture(autouse=True)
@@ -161,7 +148,7 @@ async def async_deliver_events(
 )
 async def test_cover_entities_snapshot(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     fixture: str,
@@ -173,36 +160,42 @@ async def test_cover_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    "case",
+    ("fixture", "device_url", "command_name", "expected_state", "entity_unique_id"),
     [
-        CoverCommandCase(
+        (
             FIXTURE_SHUTTERS_AND_GARAGE,
             SHUTTER_URL,
             "open",
             CoverState.OPENING,
+            None,
         ),
-        CoverCommandCase(FIXTURE_AWNING, AWNING_URL, "deploy", CoverState.CLOSED),
-        CoverCommandCase(
+        (FIXTURE_AWNING, AWNING_URL, "deploy", CoverState.CLOSED, None),
+        (
             FIXTURE_SHUTTERS_AND_GARAGE,
             GARAGE_URL,
             "open",
             CoverState.OPENING,
+            None,
         ),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
 async def test_cover_open(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    case: CoverCommandCase,
+    fixture: str,
+    device_url: str,
+    command_name: str,
+    expected_state: str,
+    entity_unique_id: str | None,
 ) -> None:
     """Test opening supported covers via the service layer."""
-    await setup_overkiz_integration(fixture=case.fixture)
+    await setup_overkiz_integration(fixture=fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, case.entity_unique_id or case.device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -210,45 +203,51 @@ async def test_cover_open(
         blocking=True,
     )
 
-    assert get_state(hass, entity_id).state == case.expected_state
+    assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
-        device_url=case.device_url,
-        command_name=case.command_name,
+        device_url=device_url,
+        command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
-    "case",
+    ("fixture", "device_url", "command_name", "expected_state", "entity_unique_id"),
     [
-        CoverCommandCase(
+        (
             FIXTURE_SHUTTERS_AND_GARAGE,
             SHUTTER_URL,
             "close",
             CoverState.CLOSING,
+            None,
         ),
-        CoverCommandCase(FIXTURE_AWNING, AWNING_URL, "undeploy", CoverState.CLOSED),
-        CoverCommandCase(
+        (FIXTURE_AWNING, AWNING_URL, "undeploy", CoverState.CLOSED, None),
+        (
             FIXTURE_SHUTTERS_AND_GARAGE,
             GARAGE_URL,
             "close",
             CoverState.CLOSING,
+            None,
         ),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
 async def test_cover_close(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    case: CoverCommandCase,
+    fixture: str,
+    device_url: str,
+    command_name: str,
+    expected_state: str,
+    entity_unique_id: str | None,
 ) -> None:
     """Test closing supported covers via the service layer."""
-    await setup_overkiz_integration(fixture=case.fixture)
+    await setup_overkiz_integration(fixture=fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, case.entity_unique_id or case.device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -256,35 +255,38 @@ async def test_cover_close(
         blocking=True,
     )
 
-    assert get_state(hass, entity_id).state == case.expected_state
+    assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
-        device_url=case.device_url,
-        command_name=case.command_name,
+        device_url=device_url,
+        command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
-    "case",
+    ("fixture", "device_url", "command_name", "entity_unique_id"),
     [
-        CoverCommandCase(FIXTURE_SHUTTERS_AND_GARAGE, SHUTTER_URL, "stop"),
-        CoverCommandCase(FIXTURE_AWNING, AWNING_URL, "stop"),
-        CoverCommandCase(FIXTURE_SHUTTERS_AND_GARAGE, GARAGE_URL, "stop"),
+        (FIXTURE_SHUTTERS_AND_GARAGE, SHUTTER_URL, "stop", None),
+        (FIXTURE_AWNING, AWNING_URL, "stop", None),
+        (FIXTURE_SHUTTERS_AND_GARAGE, GARAGE_URL, "stop", None),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
 async def test_cover_stop(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    case: CoverCommandCase,
+    fixture: str,
+    device_url: str,
+    command_name: str,
+    entity_unique_id: str | None,
 ) -> None:
     """Test stop commands for supported covers."""
-    await setup_overkiz_integration(fixture=case.fixture)
+    await setup_overkiz_integration(fixture=fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, case.entity_unique_id or case.device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -294,40 +296,43 @@ async def test_cover_stop(
 
     assert_command_call(
         mock_client,
-        device_url=case.device_url,
-        command_name=case.command_name,
+        device_url=device_url,
+        command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("case", "position"),
+    (
+        "fixture",
+        "device_url",
+        "command_name",
+        "entity_unique_id",
+        "parameters",
+        "position",
+    ),
     [
         (
-            CoverCommandCase(
-                FIXTURE_SHUTTERS_AND_GARAGE,
-                SHUTTER_URL,
-                "setClosure",
-                parameters=(75,),
-            ),
+            FIXTURE_SHUTTERS_AND_GARAGE,
+            SHUTTER_URL,
+            "setClosure",
+            None,
+            (75,),
             25,
         ),
         (
-            CoverCommandCase(
-                FIXTURE_AWNING,
-                AWNING_URL,
-                "setDeployment",
-                parameters=(80,),
-            ),
+            FIXTURE_AWNING,
+            AWNING_URL,
+            "setDeployment",
+            None,
+            (80,),
             80,
         ),
         (
-            CoverCommandCase(
-                FIXTURE_LOW_SPEED,
-                LOW_SPEED_URL,
-                "setClosureAndLinearSpeed",
-                entity_unique_id=f"{LOW_SPEED_URL}_low_speed",
-                parameters=(65, OverkizCommandParam.LOWSPEED),
-            ),
+            FIXTURE_LOW_SPEED,
+            LOW_SPEED_URL,
+            "setClosureAndLinearSpeed",
+            f"{LOW_SPEED_URL}_low_speed",
+            (65, OverkizCommandParam.LOWSPEED),
             35,
         ),
     ],
@@ -335,17 +340,21 @@ async def test_cover_stop(
 )
 async def test_cover_set_position(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    case: CoverCommandCase,
+    fixture: str,
+    device_url: str,
+    command_name: str,
+    entity_unique_id: str | None,
+    parameters: tuple[Any, ...],
     position: int,
 ) -> None:
     """Test cover position services and mapping."""
-    await setup_overkiz_integration(fixture=case.fixture)
+    await setup_overkiz_integration(fixture=fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, case.entity_unique_id or case.device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -355,15 +364,15 @@ async def test_cover_set_position(
 
     assert_command_call(
         mock_client,
-        device_url=case.device_url,
-        command_name=case.command_name,
-        parameters=case.parameters,
+        device_url=device_url,
+        command_name=command_name,
+        parameters=parameters,
     )
 
 
 async def test_cover_tilt_services(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -456,7 +465,7 @@ async def test_cover_tilt_services(
 
 async def test_low_speed_cover_entities(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a low-speed shutter creates both standard and low-speed entities."""
@@ -478,7 +487,7 @@ async def test_low_speed_cover_entities(
 
 async def test_multiple_same_type_entities_have_distinct_unique_ids(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test repeated shutters from one setup keep distinct identities."""
@@ -497,7 +506,7 @@ async def test_multiple_same_type_entities_have_distinct_unique_ids(
 
 async def test_tilt_only_cover_supported_features(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the pergola only exposes tilt controls."""
@@ -516,7 +525,7 @@ async def test_tilt_only_cover_supported_features(
 
 async def test_cover_position_update_on_poll(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -606,7 +615,7 @@ async def test_cover_position_update_on_poll(
 
 async def test_cover_unavailable(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -636,7 +645,7 @@ async def test_cover_unavailable(
 )
 async def test_cover_is_closed_fallbacks(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     fixture: str,
     unique_id: str,
@@ -683,7 +692,7 @@ async def test_cover_is_closed_fallbacks(
 )
 async def test_vertical_cover_movement_state_fallback(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -750,7 +759,7 @@ async def test_vertical_cover_movement_state_fallback(
 )
 async def test_awning_movement_state_fallback(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -779,7 +788,7 @@ async def test_awning_movement_state_fallback(
 
 async def test_execution_tracking_sets_opening_state(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
@@ -851,7 +860,7 @@ async def test_execution_tracking_sets_opening_state(
 
 async def test_awning_direct_position_mapping(
     hass: HomeAssistant,
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,

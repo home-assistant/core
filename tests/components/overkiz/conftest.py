@@ -1,6 +1,6 @@
 """Configuration for overkiz tests."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -17,6 +17,8 @@ from . import DEFAULT_SETUP_FIXTURE, load_setup_fixture
 from .test_config_flow import TEST_EMAIL, TEST_GATEWAY_ID, TEST_PASSWORD, TEST_SERVER
 
 from tests.common import MockConfigEntry
+
+type SetupOverkizIntegration = Callable[..., Awaitable[MockConfigEntry]]
 
 
 @dataclass
@@ -116,7 +118,7 @@ def setup_overkiz_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MockOverkizClient,
-):
+) -> SetupOverkizIntegration:
     """Return a helper to set up the Overkiz integration from a chosen fixture."""
 
     async def _setup(
@@ -153,7 +155,7 @@ def setup_overkiz_integration(
 
 @pytest.fixture
 async def init_integration(
-    setup_overkiz_integration,
+    setup_overkiz_integration: SetupOverkizIntegration,
 ) -> MockConfigEntry:
     """Set up the Overkiz integration for testing."""
     return await setup_overkiz_integration()
