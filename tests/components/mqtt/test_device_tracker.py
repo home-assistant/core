@@ -657,7 +657,6 @@ async def test_setting_device_tracker_location_via_abbr_reset_message(
     )
 
     state = hass.states.get("device_tracker.test")
-    state = hass.states.get("device_tracker.test")
     assert state.state == "office"
 
     # Reset the manual set location
