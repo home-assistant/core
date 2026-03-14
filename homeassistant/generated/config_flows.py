@@ -407,6 +407,7 @@ FLOWS = {
         "lupusec",
         "lutron",
         "lutron_caseta",
+        "lyngdorf",
         "lyric",
         "madvr",
         "mailgun",

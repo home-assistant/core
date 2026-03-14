@@ -211,6 +211,12 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
         },
     ],
+    "lyngdorf": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "manufacturer": "Lyngdorf",
+        },
+    ],
     "nanoleaf": [
         {
             "st": "Nanoleaf_aurora:light",
