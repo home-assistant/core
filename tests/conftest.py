@@ -18,6 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
+import types
 from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
@@ -149,10 +150,194 @@ from .test_util.aiohttp import (  # noqa: E402, isort:skip
 
 _LOGGER = logging.getLogger(__name__)
 
+
+class _PipeSelfWakeup:
+    """Pipe-based replacement for asyncio's selector self-wakeup socketpair.
+
+    This is a sandbox-only workaround for Codex Linux environments where
+    `socket.socketpair()` writes can fail with `PermissionError: [Errno 1]
+    Operation not permitted`, which breaks asyncio's cross-thread loop wakeups
+    and can leave tests hanging in teardown. The issue is tracked upstream at
+    https://github.com/openai/codex/issues/6352.
+
+    The implementation below mirrors the private selector-loop wakeup contract
+    in CPython asyncio. If a Python upgrade changes selector wakeup internals,
+    revisit `_install_pipe_self_wakeup()` together with `install()`,
+    `_read_from_self()`, `_write_to_self()`, and `_close_self_pipe()`.
+    """
+
+    class _FD:
+        """Minimal file-descriptor wrapper for asyncio loop internals."""
+
+        def __init__(self, fd: int) -> None:
+            """Store the file descriptor."""
+            self._fd = fd
+
+        def fileno(self) -> int:
+            """Return the wrapped file descriptor."""
+            return self._fd
+
+        def close(self) -> None:
+            """Close the wrapped file descriptor once."""
+            if self._fd == -1:
+                return
+            os.close(self._fd)
+            self._fd = -1
+
+    def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Install a pipe-based self-wakeup on the event loop."""
+        self._loop = loop
+        self._read_fd, self._write_fd = os.pipe()
+        os.set_blocking(self._read_fd, False)
+        os.set_blocking(self._write_fd, False)
+
+    def install(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Replace the loop self-wakeup internals with the pipe-backed version."""
+
+        # Register the reader before replacing any loop attributes. That keeps
+        # the original socketpair wakeup intact if selector registration fails.
+        def _reader() -> None:
+            self._read_from_self(loop)
+
+        try:
+            loop._add_reader(self._read_fd, _reader)
+        except OSError:
+            # Undo the pipe allocation on partial install failure. The caller
+            # will leave the original socketpair wakeup in place.
+            if self._read_fd != -1:
+                os.close(self._read_fd)
+                self._read_fd = -1
+            if self._write_fd != -1:
+                os.close(self._write_fd)
+                self._write_fd = -1
+            raise
+
+        loop._ssock = self._FD(self._read_fd)
+        loop._csock = self._FD(self._write_fd)
+        loop._pipe_self_wakeup_installed = True
+        loop._pipe_self_wakeup = self
+        loop._read_from_self = types.MethodType(self._read_from_self, loop)
+        loop._write_to_self = types.MethodType(self._write_to_self, loop)
+        loop._close_self_pipe = types.MethodType(self._close_self_pipe, loop)
+
+    def _read_from_self(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Drain the wakeup pipe like CPython's selector-loop self reader."""
+        while True:
+            try:
+                data = os.read(self._read_fd, 4096)
+                if not data:
+                    break
+                loop._process_self_data(data)
+            except InterruptedError:
+                continue
+            except BlockingIOError:
+                break
+
+    def _write_to_self(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Wake the selector loop through the pipe-based writer."""
+        csock = loop._csock
+        if csock is None:
+            return
+        try:
+            os.write(self._write_fd, b"\0")
+        except OSError:
+            if loop._debug:
+                _LOGGER.debug(
+                    "Fail to write a null byte into the pipe self-wakeup",
+                    exc_info=True,
+                )
+
+    def _close_self_pipe(self, loop: asyncio.AbstractEventLoop) -> None:
+        """Close the pipe-based wakeup and keep asyncio fd bookkeeping aligned."""
+        loop._remove_reader(self._read_fd)
+        loop._ssock.close()
+        loop._ssock = None
+        loop._csock.close()
+        loop._csock = None
+        loop._internal_fds -= 1
+
+
+def _install_pipe_self_wakeup(loop: asyncio.AbstractEventLoop) -> None:
+    """Replace the selector self-socket with an `os.pipe` wakeup."""
+    if getattr(loop, "_pipe_self_wakeup_installed", False):
+        return
+
+    # These are the private selector-loop hooks this workaround replaces.
+    # If a future asyncio version changes this contract, skip installation
+    # rather than crashing test startup.
+    required_attrs = (
+        "_ssock",
+        "_csock",
+        "_add_reader",
+        "_remove_reader",
+        "_process_self_data",
+        "_internal_fds",
+    )
+    if not all(hasattr(loop, attr) for attr in required_attrs):
+        _LOGGER.info(
+            "Skipping pipe self-wakeup for unsupported loop implementation %s",
+            type(loop).__name__,
+        )
+        return
+
+    old_ssock = loop._ssock
+    old_csock = loop._csock
+    try:
+        pipe_self_wakeup = _PipeSelfWakeup(loop)
+        pipe_self_wakeup.install(loop)
+    except OSError:
+        _LOGGER.warning(
+            "Failed to install pipe self-wakeup; keeping socketpair wakeup",
+            exc_info=True,
+        )
+        return
+
+    # The replacement is active at this point, so cleanup of the original
+    # socketpair only needs to be best-effort.
+    try:
+        loop._remove_reader(old_ssock.fileno())
+    except OSError, RuntimeError, ValueError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to remove old self-wakeup reader from loop",
+                exc_info=True,
+            )
+    try:
+        old_ssock.close()
+    except OSError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to close old self-wakeup reader socket",
+                exc_info=True,
+            )
+    try:
+        old_csock.close()
+    except OSError:
+        if getattr(loop, "_debug", False):
+            _LOGGER.debug(
+                "Failed to close old self-wakeup writer socket",
+                exc_info=True,
+            )
+
+
+class _PipeWakeupHassEventLoopPolicy(runner.HassEventLoopPolicy):
+    """Event loop policy that swaps asyncio's self-wakeup socket for a pipe."""
+
+    def new_event_loop(self) -> asyncio.AbstractEventLoop:
+        """Create a Home Assistant event loop with pipe-based self-wakeup."""
+        loop = super().new_event_loop()
+        _install_pipe_self_wakeup(loop)
+        return loop
+
+
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+event_loop_policy: runner.HassEventLoopPolicy = runner.HassEventLoopPolicy(False)
+if os.environ.get("HASS_TEST_USE_PIPE_SELF_WAKEUP") == "1":
+    event_loop_policy = _PipeWakeupHassEventLoopPolicy(False)
+
+asyncio.set_event_loop_policy(event_loop_policy)
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
