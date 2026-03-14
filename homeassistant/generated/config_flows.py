@@ -743,6 +743,7 @@ FLOWS = {
         "trane",
         "transmission",
         "triggercmd",
+        "trmnl",
         "tuya",
         "twentemilieu",
         "twilio",
