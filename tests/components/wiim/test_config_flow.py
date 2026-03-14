@@ -20,7 +20,6 @@ def flow(mock_hass: HomeAssistant):
     return WiimConfigFlow(), mock_hass
 
 
-@pytest.mark.asyncio
 async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
     """Test user step returns entry on successful device validation."""
 
@@ -59,7 +58,6 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
         mock_abort.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_async_step_user_already_configured(
     hass: HomeAssistant, flow, mock_config_entry
 ) -> None:
@@ -106,7 +104,6 @@ class MockZeroconfServiceInfo:
         self.properties = {"uuid": "uuid:test-5678"}
 
 
-@pytest.mark.asyncio
 async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
     """Test zeroconf step with successful discovery."""
 
@@ -136,7 +133,6 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
         assert flow.context["title_placeholders"]["name"] == mock_device_info.name
 
 
-@pytest.mark.asyncio
 async def test_async_step_zeroconf_cannot_connect(flow) -> None:
     """Test zeroconf discovery when connection fails."""
     _flow, _ = flow
@@ -154,7 +150,6 @@ async def test_async_step_zeroconf_cannot_connect(flow) -> None:
     assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.asyncio
 async def test_async_step_discovery_confirm_create_entry(
     flow, mock_wiim_api_endpoint
 ) -> None:
@@ -177,7 +172,6 @@ async def test_async_step_discovery_confirm_create_entry(
     assert result["data"][CONF_HOST] == "192.168.1.100"
 
 
-@pytest.mark.asyncio
 async def test_async_step_discovery_confirm_show_form(flow) -> None:
     """Test discovery confirm step shows form when no user input."""
     _flow, _ = flow
@@ -189,7 +183,6 @@ async def test_async_step_discovery_confirm_show_form(flow) -> None:
     assert "Discovered WiiM Device" in result["description_placeholders"]["name"]
 
 
-@pytest.mark.asyncio
 async def test_async_probe_wiim_host_success(
     mock_hass: HomeAssistant, mock_upnp_device, mock_wiim_api_endpoint
 ) -> None:

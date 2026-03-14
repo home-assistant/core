@@ -1,6 +1,5 @@
 """Tests for the WiiM base entity."""
 
-import pytest
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim.const import DOMAIN
@@ -17,7 +16,6 @@ class MockWiimBaseEntity(WiimBaseEntity):
         self.entity_id = f"mock.wiim_device_{entity_id_suffix}"
 
 
-@pytest.mark.asyncio
 async def test_wiim_base_entity_init(mock_wiim_device: WiimDevice) -> None:
     """Test the initialization of WiimBaseEntity."""
     entity = MockWiimBaseEntity(mock_wiim_device)
@@ -27,7 +25,6 @@ async def test_wiim_base_entity_init(mock_wiim_device: WiimDevice) -> None:
     assert entity.unique_id == f"{mock_wiim_device.udn}-test"
 
 
-@pytest.mark.asyncio
 async def test_wiim_base_entity_device_info(mock_wiim_device: WiimDevice) -> None:
     """Test the device_info property of WiimBaseEntity."""
     entity = MockWiimBaseEntity(mock_wiim_device)

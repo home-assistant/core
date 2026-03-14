@@ -57,7 +57,6 @@ def _set_wiim_data(
     )
 
 
-@pytest.mark.asyncio
 async def test_media_player_setup_entry(
     mock_hass: HomeAssistant,
     mock_config_entry: MagicMock,
@@ -77,7 +76,6 @@ async def test_media_player_setup_entry(
     assert entity._device is mock_wiim_device
 
 
-@pytest.mark.asyncio
 async def test_media_player_attributes(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
 ) -> None:
@@ -113,7 +111,6 @@ async def test_media_player_attributes(
     assert entity.source == InputMode.LINE_IN.display_name  # type: ignore[attr-defined]
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_ha_state_from_sdk_cache(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -159,7 +156,6 @@ async def test_media_player_update_ha_state_from_sdk_cache(
         assert entity.media_title == "New Song"
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_device(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -218,7 +214,6 @@ async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_
     assert entity.media_position == 42
 
 
-@pytest.mark.asyncio
 async def test_media_player_async_added_to_hass_refreshes_supported_features(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_hass: HomeAssistant,
@@ -269,7 +264,6 @@ async def test_media_player_async_added_to_hass_refreshes_supported_features(
     mock_write_state.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_supported_features_adds_detected_features(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -305,7 +299,6 @@ async def test_media_player_update_supported_features_adds_detected_features(
     mock_write.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_supported_features_can_skip_state_write(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -332,7 +325,6 @@ async def test_media_player_update_supported_features_can_skip_state_write(
     mock_write.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_supported_features_follower_uses_leader_device(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -372,7 +364,6 @@ async def test_media_player_update_supported_features_follower_uses_leader_devic
     leader_device.async_get_transport_capabilities.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_update_supported_features_skips_write_when_unchanged(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -396,7 +387,6 @@ async def test_media_player_update_supported_features_skips_write_when_unchanged
     mock_write.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_media_player_handle_invalid_transport_state_event(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -425,7 +415,6 @@ async def test_media_player_handle_invalid_transport_state_event(
     mock_update_state.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_handle_playing_transport_state_event(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -460,7 +449,6 @@ async def test_media_player_handle_playing_transport_state_event(
     mock_update_state.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_play(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -480,7 +468,6 @@ async def test_media_player_play(
         mock_play.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_play_redirects_follower_to_leader(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -523,7 +510,6 @@ async def test_media_player_play_redirects_follower_to_leader(
     mock_leader_play.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_pause(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -544,7 +530,6 @@ async def test_media_player_pause(
         mock_pause.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_stop(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -563,7 +548,6 @@ async def test_media_player_stop(
         mock_stop.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_set_volume(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -580,7 +564,6 @@ async def test_media_player_set_volume(
         mock_set_volume.assert_awaited_once_with(75)
 
 
-@pytest.mark.asyncio
 async def test_media_player_mute_volume(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -597,7 +580,6 @@ async def test_media_player_mute_volume(
         mock_set_mute.assert_awaited_once_with(True)
 
 
-@pytest.mark.asyncio
 async def test_media_player_play_media_url(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -617,7 +599,6 @@ async def test_media_player_play_media_url(
         mock_http_cmd_ok.assert_awaited_once_with(1)
 
 
-@pytest.mark.asyncio
 async def test_media_player_select_source(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -635,7 +616,6 @@ async def test_media_player_select_source(
         mock_play_mode.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_select_sound_mode(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -653,7 +633,6 @@ async def test_media_player_select_sound_mode(
         mock_output_mode.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_seek(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -673,7 +652,6 @@ async def test_media_player_seek(
         mock_seek.assert_awaited_once_with(60)
 
 
-@pytest.mark.asyncio
 async def test_media_player_seek_redirects_follower_to_leader(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -716,7 +694,6 @@ async def test_media_player_seek_redirects_follower_to_leader(
     mock_leader_seek.assert_awaited_once_with(60)
 
 
-@pytest.mark.asyncio
 async def test_media_player_next(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -736,7 +713,6 @@ async def test_media_player_next(
         mock_next.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_previous(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -756,7 +732,6 @@ async def test_media_player_previous(
         mock_previous.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_media_player_set_repeat_mode(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -782,7 +757,6 @@ async def test_media_player_set_repeat_mode(
         mock_loop_mode.reset_mock()
 
 
-@pytest.mark.asyncio
 async def test_media_player_browse_media_root(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -831,7 +805,6 @@ async def test_media_player_browse_media_root(
     mock_browse_media.assert_not_awaited()
 
 
-@pytest.mark.asyncio
 async def test_media_player_browse_media_favorites(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
 ) -> None:
@@ -868,7 +841,6 @@ async def test_media_player_browse_media_favorites(
         assert child_item.thumbnail == "http://image1.jpg"
 
 
-@pytest.mark.asyncio
 async def test_media_player_browse_media_source_requires_http_api(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
 ) -> None:
@@ -885,7 +857,6 @@ async def test_media_player_browse_media_source_requires_http_api(
         await entity.async_browse_media(media_content_id="media-source://some-source")
 
 
-@pytest.mark.asyncio
 async def test_media_player_browse_media_playlists_queue(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
 ) -> None:
@@ -930,7 +901,6 @@ async def test_media_player_browse_media_playlists_queue(
         mock_get_queue_snapshot.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_async_play_media_source(hass: HomeAssistant) -> None:
     """Test async_play_media for a media-source URL."""
     mock_device = AsyncMock()
