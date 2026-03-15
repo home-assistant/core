@@ -46,6 +46,7 @@ class MySensorNodeEntity(Entity):
     """Representation of a MySensors device."""
 
     hass: HomeAssistant
+    _attr_should_poll = False
 
     def __init__(
         self, gateway_id: GatewayId, gateway: BaseAsyncGateway, node_id: int
@@ -148,8 +149,6 @@ def get_mysensors_devices(
 
 class MySensorsChildEntity(MySensorNodeEntity):
     """Representation of a MySensors entity."""
-
-    _attr_should_poll = False
 
     def __init__(
         self,
