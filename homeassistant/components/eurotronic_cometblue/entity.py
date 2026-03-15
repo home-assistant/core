@@ -1,6 +1,5 @@
 """Coordinator entity base class for CometBlue."""
 
-from datetime import timedelta
 import logging
 
 from homeassistant.components import bluetooth
@@ -9,7 +8,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import MAX_RETRIES
 from .coordinator import CometBlueDataUpdateCoordinator
 
-SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
 
 

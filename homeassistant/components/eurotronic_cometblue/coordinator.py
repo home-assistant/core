@@ -21,7 +21,6 @@ from .const import CONF_ALL_TEMPERATURES, MAX_RETRIES
 SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
 
-type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 
 
 class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
