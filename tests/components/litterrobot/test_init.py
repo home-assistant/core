@@ -2,16 +2,18 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 
+from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     VacuumActivity,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -19,7 +21,7 @@ from homeassistant.setup import async_setup_component
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -209,3 +211,36 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_update_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reauthentication flow is triggered on login error during update."""
+    entry = await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate an authentication error during update
+    mock_account.refresh_robots.side_effect = LitterRobotLoginException(
+        "Invalid credentials"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    # Ensure a reauthentication flow was triggered
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
