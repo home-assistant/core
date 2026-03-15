@@ -450,8 +450,6 @@ GRID_SOURCE_SCHEMA = vol.All(
             vol.Required("cost_adjustment_day"): vol.Coerce(float),
         }
     ),
-    _grid_ensure_single_price_import,
-    _grid_ensure_single_price_export,
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
     _reject_price_for_external_stat(
         stat_key="stat_energy_to",
@@ -459,6 +457,8 @@ GRID_SOURCE_SCHEMA = vol.All(
         number_price_key="number_energy_price_export",
         cost_stat_hint="stat_compensation",
     ),
+    _grid_ensure_single_price_import,
+    _grid_ensure_single_price_export,
     _grid_ensure_at_least_one_stat,
 )
 SOLAR_SOURCE_SCHEMA = vol.Schema(
