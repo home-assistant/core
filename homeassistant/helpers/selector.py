@@ -806,6 +806,8 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
 class DeviceSelectorConfig(BaseSelectorConfig, DeviceFilterSelectorConfig, total=False):
     """Class to represent a device selector config."""
 
+    exclude_devices: list[str]
+    include_devices: list[str]
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     multiple: bool
     filter: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
@@ -820,6 +822,8 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
     CONFIG_SCHEMA = make_selector_config_schema(
         {
             **_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT,
+            vol.Optional("exclude_devices"): [str],
+            vol.Optional("include_devices"): [str],
             # Device has to contain entities matching this selector
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -838,12 +842,22 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
+        include_devices = self.config.get("include_devices")
+        exclude_devices = self.config.get("exclude_devices")
+
+        def validate(d_id: str) -> str:
+            d_id = vol.Schema(str)(d_id)
+            if include_devices:
+                vol.In(include_devices)(d_id)
+            if exclude_devices:
+                vol.NotIn(exclude_devices)(d_id)
+            return d_id
+
         if not self.config["multiple"]:
-            device_id: str = vol.Schema(str)(data)
-            return device_id
+            return validate(data)
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+        return cast(list, vol.Schema([validate])(data))  # Output is a list
 
 
 class DurationSelectorConfig(BaseSelectorConfig, total=False):
