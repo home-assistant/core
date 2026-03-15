@@ -10,8 +10,14 @@ from homeassistant.helpers import entity_registry as er
 from .fixtures import (
     VICTRON_BATTERY_MONITOR_SERVICE_INFO,
     VICTRON_BATTERY_MONITOR_TOKEN,
+    VICTRON_BATTERY_SENSE_SERVICE_INFO,
+    VICTRON_BATTERY_SENSE_TOKEN,
+    VICTRON_DC_DC_CONVERTER_SERVICE_INFO,
+    VICTRON_DC_DC_CONVERTER_TOKEN,
     VICTRON_DC_ENERGY_METER_SERVICE_INFO,
     VICTRON_DC_ENERGY_METER_TOKEN,
+    VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
+    VICTRON_SMART_BATTERY_PROTECT_TOKEN,
     VICTRON_SOLAR_CHARGER_SERVICE_INFO,
     VICTRON_SOLAR_CHARGER_TOKEN,
     VICTRON_VEBUS_SERVICE_INFO,
@@ -30,11 +36,25 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     ),
     [
         (VICTRON_BATTERY_MONITOR_SERVICE_INFO, VICTRON_BATTERY_MONITOR_TOKEN),
+        (VICTRON_BATTERY_SENSE_SERVICE_INFO, VICTRON_BATTERY_SENSE_TOKEN),
+        (VICTRON_DC_DC_CONVERTER_SERVICE_INFO, VICTRON_DC_DC_CONVERTER_TOKEN),
         (VICTRON_DC_ENERGY_METER_SERVICE_INFO, VICTRON_DC_ENERGY_METER_TOKEN),
+        (
+            VICTRON_SMART_BATTERY_PROTECT_SERVICE_INFO,
+            VICTRON_SMART_BATTERY_PROTECT_TOKEN,
+        ),
         (VICTRON_SOLAR_CHARGER_SERVICE_INFO, VICTRON_SOLAR_CHARGER_TOKEN),
         (VICTRON_VEBUS_SERVICE_INFO, VICTRON_VEBUS_TOKEN),
     ],
-    ids=["battery_monitor", "dc_energy_meter", "solar_charger", "vebus"],
+    ids=[
+        "battery_monitor",
+        "battery_sense",
+        "dc_dc_converter",
+        "dc_energy_meter",
+        "smart_battery_protect",
+        "solar_charger",
+        "vebus",
+    ],
 )
 async def test_sensors(
     hass: HomeAssistant,
