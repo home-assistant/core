@@ -11,7 +11,7 @@ from wiim.exceptions import WiimDeviceException, WiimRequestException
 
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
@@ -56,10 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     try:
         base_url = get_url(hass, prefer_external=False)
     except NoURLAvailableError as err:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="missing_homeassistant_url",
-        ) from err
+        raise ConfigEntryNotReady("Failed to determine Home Assistant URL") from err
 
     local_host = urlparse(base_url).hostname
     if TYPE_CHECKING:

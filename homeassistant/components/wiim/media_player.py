@@ -119,7 +119,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     _attr_media_image_remotely_accessible = True
     _attr_name = None
     _attr_should_poll = False
-    _attr_state = None
 
     def __init__(self, device: WiimDevice, entry: WiimConfigEntry) -> None:
         """Initialize the WiiM entity."""
