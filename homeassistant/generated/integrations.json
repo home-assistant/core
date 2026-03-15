@@ -3150,6 +3150,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "inelnet": {
+      "name": "INELNET Blinds",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "inels": {
       "name": "iNELS",
       "integration_type": "hub",

@@ -1,0 +1,11 @@
+{
+  "domain": "inelnet",
+  "name": "INELNET Blinds",
+  "codeowners": ["@Hadatko"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/inelnet",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["inelnet-api==1.0.1"]
+}
