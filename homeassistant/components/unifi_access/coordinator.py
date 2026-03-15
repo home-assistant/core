@@ -13,6 +13,7 @@ from unifi_access_api import (
     ApiConnectionError,
     ApiError,
     Door,
+    EmergencyStatus,
     UnifiAccessApiClient,
     WsMessageHandler,
 )
@@ -21,6 +22,7 @@ from unifi_access_api.models.websocket import (
     InsightsAdd,
     LocationUpdateState,
     LocationUpdateV2,
+    SettingUpdate,
     V2LocationState,
     V2LocationUpdate,
     WebsocketMessage,
@@ -47,7 +49,15 @@ class DoorEvent:
     event_data: dict[str, Any]
 
 
-class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
+@dataclass(frozen=True)
+class UnifiAccessData:
+    """Data provided by the UniFi Access coordinator."""
+
+    doors: dict[str, Door]
+    emergency: EmergencyStatus
+
+
+class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
     """Coordinator for fetching UniFi Access door data."""
 
     config_entry: UnifiAccessConfigEntry
@@ -89,6 +99,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             "access.data.v2.location.update": self._handle_v2_location_update,
             "access.hw.door_bell": self._handle_doorbell,
             "access.logs.insights.add": self._handle_insights_add,
+            "access.data.setting.update": self._handle_setting_update,
         }
         self.client.start_websocket(
             handlers,
@@ -96,18 +107,26 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             on_disconnect=self._on_ws_disconnect,
         )
 
-    async def _async_update_data(self) -> dict[str, Door]:
-        """Fetch all doors from the API."""
+    async def _async_update_data(self) -> UnifiAccessData:
+        """Fetch all doors and emergency status from the API."""
         try:
             async with asyncio.timeout(10):
-                doors = await self.client.get_doors()
+                doors, emergency = await asyncio.gather(
+                    self.client.get_doors(),
+                    self.client.get_emergency_status(),
+                )
         except ApiAuthError as err:
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except ApiConnectionError as err:
             raise UpdateFailed(f"Error connecting to API: {err}") from err
         except ApiError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return {door.id: door for door in doors}
+        except TimeoutError as err:
+            raise UpdateFailed("Timeout communicating with UniFi Access API") from err
+        return UnifiAccessData(
+            doors={door.id: door for door in doors},
+            emergency=emergency,
+        )
 
     def _on_ws_connect(self) -> None:
         """Handle WebSocket connection established."""
@@ -121,7 +140,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
 
     def _on_ws_disconnect(self) -> None:
         """Handle WebSocket disconnection."""
-        _LOGGER.debug("WebSocket disconnected from UniFi Access")
+        _LOGGER.warning("WebSocket disconnected from UniFi Access")
         self.async_set_update_error(
             UpdateFailed("WebSocket disconnected from UniFi Access")
         )
@@ -140,13 +159,13 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
         self, door_id: str, ws_state: LocationUpdateState | V2LocationState | None
     ) -> None:
         """Process a door state update from WebSocket."""
-        if self.data is None or door_id not in self.data:
+        if self.data is None or door_id not in self.data.doors:
             return
 
         if ws_state is None:
             return
 
-        current_door = self.data[door_id]
+        current_door = self.data.doors[door_id]
         updates: dict[str, object] = {}
         if ws_state.dps is not None:
             updates["door_position_status"] = ws_state.dps
@@ -154,8 +173,30 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[dict[str, Door]]):
             updates["door_lock_relay_status"] = "lock"
         elif ws_state.lock == "unlocked":
             updates["door_lock_relay_status"] = "unlock"
+        if not updates:
+            return
         updated_door = current_door.with_updates(**updates)
-        self.async_set_updated_data({**self.data, door_id: updated_door})
+        self.async_set_updated_data(
+            UnifiAccessData(
+                doors={**self.data.doors, door_id: updated_door},
+                emergency=self.data.emergency,
+            )
+        )
+
+    async def _handle_setting_update(self, msg: WebsocketMessage) -> None:
+        """Handle settings update messages (evacuation/lockdown)."""
+        if self.data is None:
+            return
+        update = cast(SettingUpdate, msg)
+        self.async_set_updated_data(
+            UnifiAccessData(
+                doors=self.data.doors,
+                emergency=EmergencyStatus(
+                    evacuation=update.data.evacuation,
+                    lockdown=update.data.lockdown,
+                ),
+            )
+        )
 
     async def _handle_doorbell(self, msg: WebsocketMessage) -> None:
         """Handle doorbell press events."""
