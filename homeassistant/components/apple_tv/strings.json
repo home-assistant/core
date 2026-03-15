@@ -69,6 +69,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_grouping_entities": {
+      "message": "Entities [{entity_ids}] can't be grouped with `{entity_id}`. Are they available, and are they Apple TV media players?"
+    }
+  },
   "options": {
     "step": {
       "init": {

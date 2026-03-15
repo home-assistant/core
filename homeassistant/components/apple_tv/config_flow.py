@@ -37,7 +37,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
+from .const import (
+    CONF_CREDENTIALS,
+    CONF_IDENTIFIERS,
+    CONF_OUTPUT_DEVICE_ID,
+    CONF_START_OFF,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -600,6 +606,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_CREDENTIALS: self.credentials,
             CONF_ADDRESS: str(self.atv.address),
             CONF_IDENTIFIERS: self.atv_identifiers,
+            CONF_OUTPUT_DEVICE_ID: self.atv.device_info.output_device_id,
         }
 
         existing_entry = await self.async_set_unique_id(
