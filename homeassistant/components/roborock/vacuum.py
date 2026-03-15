@@ -19,7 +19,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -98,6 +98,19 @@ Q10_STATE_CODE_TO_STATE = {
     YXDeviceState.ROBOT_TRANSITIONING: VacuumActivity.CLEANING,
     YXDeviceState.ROBOT_WAIT_CHARGE: VacuumActivity.DOCKED,
 }
+
+# Map Q10 Fan Levels to V1 fan_speed state values. These also match
+# the translation names for how they appear in the Roborock app.
+Q10_FAN_LEVEL_TO_FAN_SPEED = {
+    YXFanLevel.CLOSE: "off",
+    YXFanLevel.QUIET: "quiet",
+    YXFanLevel.NORMAL: "balanced",
+    YXFanLevel.STRONG: "turbo",
+    YXFanLevel.MAX: "max",
+    YXFanLevel.SUPER: "max_plus",
+}
+
+Q10_FAN_SPEED_TO_LEVEL = {v: k for k, v in Q10_FAN_LEVEL_TO_FAN_SPEED.items()}
 
 PARALLEL_UPDATES = 0
 
@@ -515,7 +528,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     @property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speeds."""
-        return [level.value for level in YXFanLevel if level != YXFanLevel.UNKNOWN]
+        return list(Q10_FAN_SPEED_TO_LEVEL)
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -528,7 +541,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         if (fan_level := self.coordinator.api.status.fan_level) is not None:
-            return fan_level.value
+            return Q10_FAN_LEVEL_TO_FAN_SPEED.get(fan_level)
         return None
 
     async def async_start(self) -> None:
@@ -598,10 +611,16 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
-        try:
-            await self.coordinator.api.vacuum.set_fan_level(
-                YXFanLevel.from_value(fan_speed)
+        if (fan_level := Q10_FAN_SPEED_TO_LEVEL.get(fan_speed)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
             )
+        try:
+            await self.coordinator.api.vacuum.set_fan_level(fan_level)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
