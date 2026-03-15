@@ -109,14 +109,18 @@ class LunatoneLight(
         return self._device is not None and self._device.is_on
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+        return (
+            value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
+            if self._device.brightness is not None
+            else None
+        )
 
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.is_dimmable:
+        if self._device is not None and self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
@@ -149,7 +153,8 @@ class LunatoneLight(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if brightness_supported(self.supported_color_modes):
-            self._last_brightness = self.brightness
+            if self.brightness:
+                self._last_brightness = self.brightness
             await self._device.fade_to_brightness(0)
         else:
             await self._device.switch_off()

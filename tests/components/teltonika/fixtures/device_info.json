@@ -1,0 +1,12 @@
+{
+  "lang": "en",
+  "filename": null,
+  "device_name": "RUTX50 Test",
+  "device_model": "RUTX50",
+  "api_version": "1.9.2",
+  "device_identifier": "1234567890",
+  "security_banner": {
+    "title": "Unauthorized access prohibited",
+    "message": "This system is for authorized use only. All activities on this system are logged and monitored. By using this system, you consent to such monitoring. Unauthorized access or misuse may result in disciplinary action, civil and criminal penalties, or both.\n\nIf you are not authorized to use this system, disconnect immediately."
+  }
+}

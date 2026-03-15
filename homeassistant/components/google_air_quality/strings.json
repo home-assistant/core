@@ -205,9 +205,6 @@
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
-      "nitrogen_monoxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]"
-      },
       "non_methane_hydrocarbons": {
         "name": "Non-methane hydrocarbons"
       },

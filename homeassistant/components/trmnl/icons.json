@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "sleep_mode": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
+      }
+    }
+  }
+}

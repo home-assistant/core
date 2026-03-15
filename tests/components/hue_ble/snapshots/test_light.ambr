@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.XY: 'xy'>,
@@ -49,7 +47,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 100,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 250,
       'color_temp_kelvin': 4000,
       'friendly_name': 'Hue Light',
       'hs_color': tuple(
@@ -57,9 +54,7 @@
         34.87,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 454,
       'min_color_temp_kelvin': 2202,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         206,

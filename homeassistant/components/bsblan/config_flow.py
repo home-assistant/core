@@ -1,4 +1,4 @@
-"""Config flow for BSB-Lan integration."""
+"""Config flow for BSB-LAN integration."""
 
 from __future__ import annotations
 

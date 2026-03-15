@@ -176,7 +176,7 @@
     'state': '80',
   })
 # ---
-# name: test_number_entities[number.min123456_battery_discharge_soc_limit-entry]
+# name: test_number_entities[number.min123456_battery_discharge_soc_limit_off_grid-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -194,7 +194,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.min123456_battery_discharge_soc_limit',
+    'entity_id': 'number.min123456_battery_discharge_soc_limit_off_grid',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -202,25 +202,25 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery discharge SOC limit',
+    'object_id_base': 'Battery discharge SOC limit (off-grid)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Battery discharge SOC limit',
+    'original_name': 'Battery discharge SOC limit (off-grid)',
     'platform': 'growatt_server',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_discharge_soc_limit',
+    'translation_key': 'battery_discharge_soc_limit_off_grid',
     'unique_id': 'MIN123456_battery_discharge_soc_limit',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_number_entities[number.min123456_battery_discharge_soc_limit-state]
+# name: test_number_entities[number.min123456_battery_discharge_soc_limit_off_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MIN123456 Battery discharge SOC limit',
+      'friendly_name': 'MIN123456 Battery discharge SOC limit (off-grid)',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -228,10 +228,69 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.min123456_battery_discharge_soc_limit',
+    'entity_id': 'number.min123456_battery_discharge_soc_limit_off_grid',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
+  })
+# ---
+# name: test_number_entities[number.min123456_battery_discharge_soc_limit_on_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.min123456_battery_discharge_soc_limit_on_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery discharge SOC limit (on-grid)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery discharge SOC limit (on-grid)',
+    'platform': 'growatt_server',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_discharge_soc_limit_on_grid',
+    'unique_id': 'MIN123456_battery_discharge_soc_limit_on_grid',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number_entities[number.min123456_battery_discharge_soc_limit_on_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MIN123456 Battery discharge SOC limit (on-grid)',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.min123456_battery_discharge_soc_limit_on_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
   })
 # ---

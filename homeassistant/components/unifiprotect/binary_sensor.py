@@ -755,7 +755,8 @@ async def async_setup_entry(
             entities += async_all_device_entities(
                 data, klass, model_descriptions=model_descriptions, ufp_device=device
             )
-        if device.is_adopted and isinstance(device, Camera):
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
             entities += _async_event_entities(data, ufp_device=device)
         async_add_entities(entities)
 

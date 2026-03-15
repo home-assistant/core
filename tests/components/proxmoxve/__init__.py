@@ -5,6 +5,38 @@ from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
+# Example permissions dict with audit permissions granted for nodes and vms
+AUDIT_PERMISSIONS = {
+    "/nodes": {
+        "VM.GuestAgent.Audit": 1,
+        "Sys.Audit": 1,
+        "VM.Audit": 1,
+    },
+    "/vms": {
+        "Sys.Audit": 1,
+        "VM.GuestAgent.Audit": 1,
+        "VM.Audit": 1,
+    },
+    "/": {
+        "VM.Audit": 1,
+        "VM.GuestAgent.Audit": 1,
+        "Sys.Audit": 1,
+    },
+}
+
+POWER_PERMISSIONS = {
+    "/nodes": {"VM.PowerMgmt": 1},
+    "/vms": {"VM.PowerMgmt": 1},
+    "/": {
+        "VM.PowerMgmt": 1,
+    },
+}
+
+MERGED_PERMISSIONS = {
+    key: value | POWER_PERMISSIONS.get(key, {})
+    for key, value in AUDIT_PERMISSIONS.items()
+}
+
 
 async def setup_integration(
     hass: HomeAssistant,

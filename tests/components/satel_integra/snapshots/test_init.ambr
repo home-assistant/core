@@ -50,6 +50,37 @@
     'unique_id': 'switchable_output_1',
   })
 # ---
+# name: test_parent_device_exists[parent-device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'satel_integra',
+        '1234567890',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Satel',
+    'model': None,
+    'model_id': None,
+    'name': '192.168.0.2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_unique_id_migration_from_single_config[alarm_control_panel-satel_alarm_panel_1-1234567890_alarm_panel_1]
   EntityRegistryEntrySnapshot({
     'aliases': set({

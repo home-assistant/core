@@ -1258,7 +1258,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '545.0',
+    'state': '545',
   })
 # ---
 # name: test_all_entities[sensor.solarlog_usage-entry]

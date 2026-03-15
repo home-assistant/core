@@ -105,13 +105,19 @@ async def test_climate_service_calls(
     getattr(mock_saunum_client, client_method).assert_called_once_with(*expected_args)
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_hvac_mode_door_open_validation(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_saunum_client,
 ) -> None:
     """Test HVAC mode validation error when door is open."""
-    mock_saunum_client.async_get_data.return_value.door_open = True
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, door_open=True
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(
         ServiceValidationError,
@@ -140,9 +146,10 @@ async def test_hvac_actions(
     expected_hvac_action: HVACAction,
 ) -> None:
     """Test HVAC actions when session is active."""
-    mock_saunum_client.async_get_data.return_value.session_active = True
-    mock_saunum_client.async_get_data.return_value.heater_elements_active = (
-        heater_elements_active
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value,
+        session_active=True,
+        heater_elements_active=heater_elements_active,
     )
 
     mock_config_entry.add_to_hass(hass)
@@ -275,13 +282,19 @@ async def test_service_error_handling(
     assert exc_info.value.translation_domain == "saunum"
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_fan_mode_service_call(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_saunum_client,
 ) -> None:
     """Test setting fan mode."""
-    mock_saunum_client.async_get_data.return_value.session_active = True
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, session_active=True
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -327,8 +340,11 @@ async def test_fan_mode_attributes(
     fan_mode: str | None,
 ) -> None:
     """Test fan mode attribute mapping from device."""
-    mock_saunum_client.async_get_data.return_value.fan_speed = fan_speed
-    mock_saunum_client.async_get_data.return_value.session_active = True
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value,
+        fan_speed=fan_speed,
+        session_active=True,
+    )
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -342,11 +358,8 @@ async def test_fan_mode_attributes(
 @pytest.mark.usefixtures("init_integration")
 async def test_fan_mode_validation_error(
     hass: HomeAssistant,
-    mock_saunum_client,
 ) -> None:
     """Test fan mode validation error when session is not active."""
-    mock_saunum_client.async_get_data.return_value.session_active = False
-
     with pytest.raises(
         ServiceValidationError,
         match="Cannot change fan mode when sauna session is not active",
@@ -359,13 +372,19 @@ async def test_fan_mode_validation_error(
         )
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_preset_mode_validation_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_saunum_client,
 ) -> None:
     """Test preset mode validation error when session is active."""
-    mock_saunum_client.async_get_data.return_value.session_active = True
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, session_active=True
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
@@ -396,7 +415,9 @@ async def test_preset_mode_attributes_default_names(
     expected_preset: str,
 ) -> None:
     """Test preset mode attributes with default names."""
-    mock_saunum_client.async_get_data.return_value.sauna_type = sauna_type
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, sauna_type=sauna_type
+    )
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -423,7 +444,9 @@ async def test_preset_mode_attributes_custom_names(
         options=custom_options,
         title="Saunum",
     )
-    mock_saunum_client.async_get_data.return_value.sauna_type = 1
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, sauna_type=1
+    )
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -483,16 +506,21 @@ async def test_preset_mode_options_update(
         )
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_fan_mode_error_handling(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_saunum_client,
 ) -> None:
     """Test error handling when setting fan mode fails."""
     entity_id = "climate.saunum_leil"
 
-    # Ensure session is active
-    mock_saunum_client.async_get_data.return_value.session_active = True
+    mock_saunum_client.async_get_data.return_value = replace(
+        mock_saunum_client.async_get_data.return_value, session_active=True
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Make the client method raise an exception
     mock_saunum_client.async_set_fan_speed.side_effect = SaunumException(

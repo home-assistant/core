@@ -8,12 +8,12 @@ from motionblindsble.const import MotionBlindType, MotionSpeedLevel
 from motionblindsble.device import MotionDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEED, CONF_MAC_CODE, DOMAIN
+from . import MotionConfigEntry
+from .const import ATTR_SPEED, CONF_MAC_CODE
 from .entity import MotionblindsBLEEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,12 +33,12 @@ SELECT_TYPES: dict[str, SelectEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MotionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities based on a config entry."""
 
-    device: MotionDevice = hass.data[DOMAIN][entry.entry_id]
+    device = entry.runtime_data
 
     if device.blind_type not in {MotionBlindType.CURTAIN, MotionBlindType.VERTICAL}:
         async_add_entities([SpeedSelect(device, entry, SELECT_TYPES[ATTR_SPEED])])
@@ -50,7 +50,7 @@ class SpeedSelect(MotionblindsBLEEntity, SelectEntity):
     def __init__(
         self,
         device: MotionDevice,
-        entry: ConfigEntry,
+        entry: MotionConfigEntry,
         entity_description: SelectEntityDescription,
     ) -> None:
         """Initialize the speed select entity."""

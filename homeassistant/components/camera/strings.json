@@ -50,22 +50,22 @@
   "selector": {},
   "services": {
     "disable_motion_detection": {
-      "description": "Disables the motion detection.",
+      "description": "Disables the motion detection of a camera.",
       "name": "Disable motion detection"
     },
     "enable_motion_detection": {
-      "description": "Enables the motion detection.",
+      "description": "Enables the motion detection of a camera.",
       "name": "Enable motion detection"
     },
     "play_stream": {
-      "description": "Plays the camera stream on a supported media player.",
+      "description": "Plays a camera stream on a supported media player.",
       "fields": {
         "format": {
           "description": "Stream format supported by the media player.",
           "name": "Format"
         },
         "media_player": {
-          "description": "Media players to stream to.",
+          "description": "Media player to stream to.",
           "name": "Media player"
         }
       },
@@ -100,11 +100,11 @@
       "name": "Take snapshot"
     },
     "turn_off": {
-      "description": "Turns off the camera.",
+      "description": "Turns off a camera.",
       "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "description": "Turns on the camera.",
+      "description": "Turns on a camera.",
       "name": "[%key:common::action::turn_on%]"
     }
   },

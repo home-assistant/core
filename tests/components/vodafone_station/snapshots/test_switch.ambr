@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_all_entities[switch.vodafone_station_m123456789_guest_5ghz_network-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.vodafone_station_m123456789_guest_5ghz_network',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Guest 5GHz network',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Guest 5GHz network',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'guest_5g',
+    'unique_id': 'm123456789_guest_5g',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.vodafone_station_m123456789_guest_5ghz_network-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vodafone Station (m123456789) Guest 5GHz network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.vodafone_station_m123456789_guest_5ghz_network',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[switch.vodafone_station_m123456789_guest_network-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.vodafone_station_m123456789_guest_network',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Guest network',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Guest network',
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'guest',
+    'unique_id': 'm123456789_guest',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.vodafone_station_m123456789_guest_network-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vodafone Station (m123456789) Guest network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.vodafone_station_m123456789_guest_network',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

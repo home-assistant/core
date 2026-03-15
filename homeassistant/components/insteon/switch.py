@@ -46,7 +46,7 @@ class InsteonSwitchEntity(InsteonEntity, SwitchEntity):
     """A Class for an Insteon switch entity."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the boolean response if the node is on."""
         return bool(self._insteon_device_group.value)
 

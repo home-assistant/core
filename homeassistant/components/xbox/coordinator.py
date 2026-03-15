@@ -168,35 +168,39 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
             _LOGGER.debug("%s status: %s", console.name, status.model_dump())
 
             # Setup focus app
-            app_details: Product | None = None
-            if (current_state := self.data.get(console.id)) is not None:
-                app_details = current_state.app_details
+            app_details = (
+                current_state.app_details
+                if (current_state := self.data.get(console.id)) is not None
+                and status.focus_app_aumid
+                else None
+            )
 
-            if status.focus_app_aumid:
-                if (
-                    not current_state
-                    or status.focus_app_aumid != current_state.status.focus_app_aumid
-                ):
-                    app_id = status.focus_app_aumid.split("!")[0]
-                    id_type = AlternateIdType.PACKAGE_FAMILY_NAME
-                    if app_id in SYSTEM_PFN_ID_MAP:
-                        id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
-                        app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
-
-                    catalog_result = (
-                        await self.client.catalog.get_product_from_alternate_id(
-                            app_id, id_type
-                        )
+            if status.focus_app_aumid and (
+                not current_state
+                or status.focus_app_aumid != current_state.status.focus_app_aumid
+            ):
+                catalog_result = (
+                    await self.client.catalog.get_product_from_alternate_id(
+                        *self._resolve_app_id(status.focus_app_aumid)
                     )
+                )
 
-                    if catalog_result.products:
-                        app_details = catalog_result.products[0]
-            else:
-                app_details = None
+                if catalog_result.products:
+                    app_details = catalog_result.products[0]
 
             data[console.id] = ConsoleData(status=status, app_details=app_details)
 
         return data
+
+    def _resolve_app_id(self, focus_app_aumid: str) -> tuple[str, AlternateIdType]:
+        app_id = focus_app_aumid.split("!", maxsplit=1)[0]
+        id_type = AlternateIdType.PACKAGE_FAMILY_NAME
+
+        if app_id in SYSTEM_PFN_ID_MAP:
+            id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+            app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
+
+        return app_id, id_type
 
 
 class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
@@ -209,10 +213,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
-        batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
+        me = await self.client.people.get_friend_by_xuid(self.client.xuid)
         friends = await self.client.people.get_friends_own()
 
-        presence_data = {self.client.xuid: batch.people[0]}
+        presence_data = {self.client.xuid: me.people[0]}
         presence_data.update(
             {
                 friend.xuid: friend

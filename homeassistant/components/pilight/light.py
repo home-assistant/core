@@ -62,7 +62,7 @@ class PilightLight(PilightBaseDevice, LightEntity):
         self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness."""
         return self._brightness
 

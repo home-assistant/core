@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 8000,
-      'max_mireds': 1000,
       'min_color_temp_kelvin': 1000,
-      'min_mireds': 125,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -48,14 +46,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'CCT 0000-03',
       'hs_color': None,
       'max_color_temp_kelvin': 8000,
-      'max_mireds': 1000,
       'min_color_temp_kelvin': 1000,
-      'min_mireds': 125,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,

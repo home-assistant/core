@@ -605,9 +605,7 @@ async def test_rgb_color_temp_light(
         )
     ]
     states = [
-        LightState(
-            key=1, state=True, brightness=100, color_mode=ESPColorMode.BRIGHTNESS
-        )
+        LightState(key=1, state=True, brightness=100, color_mode=ESPColorMode.RGB)
     ]
     user_service = []
     await mock_generic_device_entry(
@@ -631,7 +629,7 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=ESPColorMode.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB,
                 device_id=0,
             )
         ]
@@ -649,7 +647,7 @@ async def test_rgb_color_temp_light(
             call(
                 key=1,
                 state=True,
-                color_mode=ESPColorMode.BRIGHTNESS,
+                color_mode=ESPColorMode.RGB,
                 brightness=pytest.approx(0.4980392156862745),
                 device_id=0,
             )

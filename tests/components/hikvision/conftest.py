@@ -68,7 +68,36 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_hikcamera() -> Generator[MagicMock]:
+def amount_of_channels() -> int:
+    """Return the default amount of video channels."""
+    return 0
+
+
+@pytest.fixture
+def mock_channels(amount_of_channels: int) -> list[MagicMock]:
+    """Return a list of mocked VideoChannel objects."""
+    channels = []
+    for channel_id in range(1, amount_of_channels + 1):
+        channel = MagicMock()
+        channel.id = channel_id
+        channel.name = f"Channel {channel_id}"
+        channel.enabled = True
+        channels.append(channel)
+    return channels
+
+
+@pytest.fixture
+def mock_hik_get_channels(mock_channels: list[MagicMock]) -> Generator[MagicMock]:
+    """Return a mocked HikCamera."""
+    with patch(
+        "homeassistant.components.hikvision.get_video_channels",
+    ) as hik_channels_mock:
+        hik_channels_mock.return_value = mock_channels
+        yield hik_channels_mock
+
+
+@pytest.fixture
+def mock_hikcamera(mock_hik_get_channels: MagicMock) -> Generator[MagicMock]:
     """Return a mocked HikCamera."""
     with (
         patch(

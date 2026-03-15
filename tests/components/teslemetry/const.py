@@ -20,6 +20,10 @@ VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
+    "site_info_week_crossing.json", DOMAIN
+)
+SITE_INFO_MULTI_SEASON = load_json_object_fixture("site_info_multi_season.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 ENERGY_HISTORY_EMPTY = load_json_object_fixture("energy_history_empty.json", DOMAIN)
 

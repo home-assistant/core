@@ -5,6 +5,12 @@ from __future__ import annotations
 from base64 import b64decode
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
@@ -20,8 +26,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DeviceWrapper, DPCodeEnumWrapper, DPCodeRawWrapper
-from .type_information import EnumTypeInformation
 
 ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
     DeviceCategory.MAL: (
@@ -33,7 +37,7 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
 }
 
 
-class _AlarmChangedByWrapper(DPCodeRawWrapper):
+class _AlarmChangedByWrapper(DPCodeRawWrapper[str]):
     """Wrapper for changed_by.
 
     Decode base64 to utf-16be string, but only if alarm has been triggered.
@@ -43,13 +47,13 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
-            or (status := super().read_device_status(device)) is None
+            or (status := self._read_dpcode_value(device)) is None
         ):
             return None
         return status.decode("utf-16be")
 
 
-class _AlarmStateWrapper(DPCodeEnumWrapper):
+class _AlarmStateWrapper(DPCodeEnumWrapper[AlarmControlPanelState]):
     """Wrapper for the alarm state of a device.
 
     Handles alarm mode enum values and determines the alarm state,
@@ -80,7 +84,7 @@ class _AlarmStateWrapper(DPCodeEnumWrapper):
             ):
                 return AlarmControlPanelState.TRIGGERED
 
-        if (status := super().read_device_status(device)) is None:
+        if (status := self._read_dpcode_value(device)) is None:
             return None
         return self._STATE_MAPPINGS.get(status)
 

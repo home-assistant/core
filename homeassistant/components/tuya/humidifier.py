@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.humidifier import (
@@ -20,21 +26,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-class _RoundedIntegerWrapper(DPCodeIntegerWrapper):
+class _RoundedIntegerWrapper(DPCodeIntegerWrapper[int]):
     """An integer that always rounds its value."""
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Read and round the device status."""
-        if (value := super().read_device_status(device)) is None:
+        if (value := self._read_dpcode_value(device)) is None:
             return None
         return round(value)
 

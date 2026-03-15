@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["aioimmich"],
-  "quality_scale": "silver",
-  "requirements": ["aioimmich==0.11.1"]
+  "quality_scale": "platinum",
+  "requirements": ["aioimmich==0.12.0"]
 }

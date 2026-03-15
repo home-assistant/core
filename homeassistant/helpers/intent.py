@@ -27,11 +27,11 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from . import (
-    area_registry,
+    area_registry as ar,
     config_validation as cv,
-    device_registry,
-    entity_registry,
-    floor_registry,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
 )
 from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
@@ -184,6 +184,52 @@ class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
 
 
+class MatchFailedError(IntentError):
+    """Error when target matching fails."""
+
+    def __init__(
+        self,
+        result: MatchTargetsResult,
+        constraints: MatchTargetsConstraints,
+        preferences: MatchTargetsPreferences | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.result = result
+        self.constraints = constraints
+        self.preferences = preferences
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
+
+
+class NoStatesMatchedError(MatchFailedError):
+    """Error when no states match the intent's constraints."""
+
+    def __init__(
+        self,
+        reason: MatchFailedReason,
+        name: str | None = None,
+        area: str | None = None,
+        floor: str | None = None,
+        domains: set[str] | None = None,
+        device_classes: set[str] | None = None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__(
+            result=MatchTargetsResult(False, reason),
+            constraints=MatchTargetsConstraints(
+                name=name,
+                area_name=area,
+                floor_name=floor,
+                domains=domains,
+                device_classes=device_classes,
+            ),
+        )
+
+
 class MatchFailedReason(Enum):
     """Possible reasons for match failure in async_match_targets."""
 
@@ -230,6 +276,29 @@ class MatchFailedReason(Enum):
             MatchFailedReason.INVALID_FLOOR,
             MatchFailedReason.DUPLICATE_NAME,
         )
+
+
+@dataclass
+class MatchTargetsResult:
+    """Result from async_match_targets."""
+
+    is_match: bool
+    """True if one or more entities matched."""
+
+    no_match_reason: MatchFailedReason | None = None
+    """Reason for failed match when is_match = False."""
+
+    states: list[State] = field(default_factory=list)
+    """List of matched entity states."""
+
+    no_match_name: str | None = None
+    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
+
+    areas: list[ar.AreaEntry] = field(default_factory=list)
+    """Areas that were targeted."""
+
+    floors: list[fr.FloorEntry] = field(default_factory=list)
+    """Floors that were targeted."""
 
 
 @dataclass
@@ -293,89 +362,18 @@ class MatchTargetsPreferences:
 
 
 @dataclass
-class MatchTargetsResult:
-    """Result from async_match_targets."""
-
-    is_match: bool
-    """True if one or more entities matched."""
-
-    no_match_reason: MatchFailedReason | None = None
-    """Reason for failed match when is_match = False."""
-
-    states: list[State] = field(default_factory=list)
-    """List of matched entity states."""
-
-    no_match_name: str | None = None
-    """Name of invalid area/floor or duplicate name when match fails for those reasons."""
-
-    areas: list[area_registry.AreaEntry] = field(default_factory=list)
-    """Areas that were targeted."""
-
-    floors: list[floor_registry.FloorEntry] = field(default_factory=list)
-    """Floors that were targeted."""
-
-
-class MatchFailedError(IntentError):
-    """Error when target matching fails."""
-
-    def __init__(
-        self,
-        result: MatchTargetsResult,
-        constraints: MatchTargetsConstraints,
-        preferences: MatchTargetsPreferences | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__()
-
-        self.result = result
-        self.constraints = constraints
-        self.preferences = preferences
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return f"<MatchFailedError result={self.result}, constraints={self.constraints}, preferences={self.preferences}>"
-
-
-class NoStatesMatchedError(MatchFailedError):
-    """Error when no states match the intent's constraints."""
-
-    def __init__(
-        self,
-        reason: MatchFailedReason,
-        name: str | None = None,
-        area: str | None = None,
-        floor: str | None = None,
-        domains: set[str] | None = None,
-        device_classes: set[str] | None = None,
-    ) -> None:
-        """Initialize error."""
-        super().__init__(
-            result=MatchTargetsResult(False, reason),
-            constraints=MatchTargetsConstraints(
-                name=name,
-                area_name=area,
-                floor_name=floor,
-                domains=domains,
-                device_classes=device_classes,
-            ),
-        )
-
-
-@dataclass
 class MatchTargetsCandidate:
     """Candidate for async_match_targets."""
 
     state: State
     is_exposed: bool
-    entity: entity_registry.RegistryEntry | None = None
-    area: area_registry.AreaEntry | None = None
-    device: device_registry.DeviceEntry | None = None
+    entity: er.RegistryEntry | None = None
+    area: ar.AreaEntry | None = None
+    device: dr.DeviceEntry | None = None
     matched_name: str | None = None
 
 
-def find_areas(
-    name: str, areas: area_registry.AreaRegistry
-) -> Iterable[area_registry.AreaEntry]:
+def find_areas(name: str, areas: ar.AreaRegistry) -> Iterable[ar.AreaEntry]:
     """Find all areas matching a name (including aliases)."""
     name_norm = _normalize_name(name)
     for area in areas.async_list_areas():
@@ -393,9 +391,7 @@ def find_areas(
                 break
 
 
-def find_floors(
-    name: str, floors: floor_registry.FloorRegistry
-) -> Iterable[floor_registry.FloorEntry]:
+def find_floors(name: str, floors: fr.FloorRegistry) -> Iterable[fr.FloorEntry]:
     """Find all floors matching a name (including aliases)."""
     name_norm = _normalize_name(name)
     for floor in floors.async_list_floors():
@@ -490,8 +486,8 @@ def _filter_by_device_classes(
 
 
 def _add_areas(
-    areas: area_registry.AreaRegistry,
-    devices: device_registry.DeviceRegistry,
+    areas: ar.AreaRegistry,
+    devices: dr.DeviceRegistry,
     candidates: Iterable[MatchTargetsCandidate],
 ) -> None:
     """Add area and device entries to match candidates."""
@@ -581,9 +577,9 @@ def async_match_targets(  # noqa: C901
         return MatchTargetsResult(True, states=[c.state for c in candidates])
 
     # We need entity registry entries now
-    er = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for candidate in candidates:
-        candidate.entity = er.async_get(candidate.state.entity_id)
+        candidate.entity = ent_reg.async_get(candidate.state.entity_id)
 
     if constraints.name:
         # Filter by entity name or alias
@@ -606,22 +602,22 @@ def async_match_targets(  # noqa: C901
             return MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
 
     # Check floor/area constraints
-    targeted_floors: list[floor_registry.FloorEntry] | None = None
-    targeted_areas: list[area_registry.AreaEntry] | None = None
+    targeted_floors: list[fr.FloorEntry] | None = None
+    targeted_areas: list[ar.AreaEntry] | None = None
 
     # True when area information has been added to candidates
     areas_added = False
 
     if constraints.floor_name or constraints.area_name:
-        ar = area_registry.async_get(hass)
-        dr = device_registry.async_get(hass)
-        _add_areas(ar, dr, candidates)
+        area_reg = ar.async_get(hass)
+        dev_reg = dr.async_get(hass)
+        _add_areas(area_reg, dev_reg, candidates)
         areas_added = True
 
         if constraints.floor_name:
             # Filter by areas associated with floor
-            fr = floor_registry.async_get(hass)
-            targeted_floors = list(find_floors(constraints.floor_name, fr))
+            floor_reg = fr.async_get(hass)
+            targeted_floors = list(find_floors(constraints.floor_name, floor_reg))
             if not targeted_floors:
                 return MatchTargetsResult(
                     False,
@@ -632,7 +628,7 @@ def async_match_targets(  # noqa: C901
             possible_floor_ids = {floor.floor_id for floor in targeted_floors}
             possible_area_ids = {
                 area.id
-                for area in ar.async_list_areas()
+                for area in area_reg.async_list_areas()
                 if area.floor_id in possible_floor_ids
             }
 
@@ -645,10 +641,10 @@ def async_match_targets(  # noqa: C901
                 )
         else:
             # All areas are possible
-            possible_area_ids = {area.id for area in ar.async_list_areas()}
+            possible_area_ids = {area.id for area in area_reg.async_list_areas()}
 
         if constraints.area_name:
-            targeted_areas = list(find_areas(constraints.area_name, ar))
+            targeted_areas = list(find_areas(constraints.area_name, area_reg))
             if not targeted_areas:
                 return MatchTargetsResult(
                     False,
@@ -677,9 +673,9 @@ def async_match_targets(  # noqa: C901
     if constraints.name and (not constraints.allow_duplicate_names):
         # Check for duplicates
         if not areas_added:
-            ar = area_registry.async_get(hass)
-            dr = device_registry.async_get(hass)
-            _add_areas(ar, dr, candidates)
+            area_reg = ar.async_get(hass)
+            dev_reg = dr.async_get(hass)
+            _add_areas(area_reg, dev_reg, candidates)
             areas_added = True
 
         sorted_candidates = sorted(
@@ -748,9 +744,9 @@ def async_match_targets(  # noqa: C901
             )
 
         if not areas_added:
-            ar = area_registry.async_get(hass)
-            dr = device_registry.async_get(hass)
-            _add_areas(ar, dr, candidates)
+            area_reg = ar.async_get(hass)
+            dev_reg = dr.async_get(hass)
+            _add_areas(area_reg, dev_reg, candidates)
             areas_added = True
 
         filtered_candidates: list[MatchTargetsCandidate] = candidates
@@ -919,7 +915,7 @@ class DynamicServiceIntentHandler(IntentHandler):
     def __init__(
         self,
         intent_type: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -931,7 +927,6 @@ class DynamicServiceIntentHandler(IntentHandler):
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
-        self.speech = speech
         self.required_domains = required_domains
         self.required_features = required_features
         self.required_states = required_states
@@ -1118,7 +1113,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for floor in match_result.floors
             )
-            speech_name = match_result.floors[0].name
         elif match_result.areas:
             success_results.extend(
                 IntentResponseTarget(
@@ -1126,9 +1120,6 @@ class DynamicServiceIntentHandler(IntentHandler):
                 )
                 for area in match_result.areas
             )
-            speech_name = match_result.areas[0].name
-        else:
-            speech_name = states[0].name
 
         service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
@@ -1169,9 +1160,6 @@ class DynamicServiceIntentHandler(IntentHandler):
         # Update all states
         states = [hass.states.get(state.entity_id) or state for state in states]
         response.async_set_states(states)
-
-        if self.speech is not None:
-            response.async_set_speech(self.speech.format(speech_name))
 
         return response
 
@@ -1235,7 +1223,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         intent_type: str,
         domain: str,
         service: str,
-        speech: str | None = None,
+        *,
         required_slots: _IntentSlotsType | None = None,
         optional_slots: _IntentSlotsType | None = None,
         required_domains: set[str] | None = None,
@@ -1248,7 +1236,6 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         """Create service handler."""
         super().__init__(
             intent_type,
-            speech=speech,
             required_slots=required_slots,
             optional_slots=optional_slots,
             required_domains=required_domains,
@@ -1343,7 +1330,7 @@ class IntentResponseType(
     """Response is an error"""
 
 
-class IntentResponseErrorCode(str, Enum):
+class IntentResponseErrorCode(StrEnum):
     """Reason for an intent response error."""
 
     NO_INTENT_MATCH = "no_intent_match"
@@ -1359,7 +1346,7 @@ class IntentResponseErrorCode(str, Enum):
     """Error outside the scope of intent processing"""
 
 
-class IntentResponseTargetType(str, Enum):
+class IntentResponseTargetType(StrEnum):
     """Type of target for an intent response."""
 
     AREA = "area"

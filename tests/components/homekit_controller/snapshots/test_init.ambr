@@ -2044,9 +2044,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -2085,14 +2083,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2514,9 +2509,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -2555,14 +2548,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'ArloBabyA0 Nightlight',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -11272,6 +11262,7 @@
             'attributes': dict({
               'current_position': 98,
               'friendly_name': 'Family Room North',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.family_room_north',
@@ -11528,6 +11519,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'Kitchen Window',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.kitchen_window',
@@ -12764,6 +12756,7 @@
             'attributes': dict({
               'current_position': 98,
               'friendly_name': 'Family Room North',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 15>,
             }),
             'entity_id': 'cover.family_room_north',
@@ -13020,6 +13013,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'Kitchen Window',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.kitchen_window',
@@ -14817,9 +14811,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -14858,14 +14850,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Laundry Smoke ED78',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15234,9 +15223,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15274,14 +15261,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15381,9 +15365,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15421,14 +15403,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15528,9 +15507,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15568,14 +15545,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15675,9 +15649,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15715,14 +15687,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15822,9 +15791,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15862,7 +15829,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp': 366,
               'color_temp_kelvin': 2732,
               'friendly_name': 'Hue ambiance spot',
               'hs_color': tuple(
@@ -15870,9 +15836,7 @@
                 64.71,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 168,
@@ -15979,9 +15943,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -16019,7 +15981,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp': 366,
               'color_temp_kelvin': 2732,
               'friendly_name': 'Hue ambiance spot',
               'hs_color': tuple(
@@ -16027,9 +15988,7 @@
                 64.71,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 168,
@@ -17497,9 +17456,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -17538,14 +17495,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -19558,9 +19512,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 470,
               'min_color_temp_kelvin': 2127,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -19599,7 +19551,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
               'hs_color': tuple(
@@ -19607,9 +19558,7 @@
                 89.0,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 470,
               'min_color_temp_kelvin': 2127,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 142,
@@ -21148,6 +21097,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'Master Bath South RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.master_bath_south_ryse_shade',
@@ -21404,6 +21354,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'RYSE SmartShade RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.ryse_smartshade_ryse_shade',
@@ -21583,6 +21534,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'BR Left RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.br_left_ryse_shade',
@@ -21758,6 +21710,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'LR Left RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.lr_left_ryse_shade',
@@ -21933,6 +21886,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'LR Right RYSE Shade',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.lr_right_ryse_shade',
@@ -22189,6 +22143,7 @@
             'attributes': dict({
               'current_position': 100,
               'friendly_name': 'RZSS RYSE Shade',
+              'is_closed': False,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.rzss_ryse_shade',
@@ -22689,6 +22644,7 @@
               'current_position': 0,
               'current_tilt_position': 100,
               'friendly_name': 'VELUX Internal Cover Venetian Blinds',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 183>,
             }),
             'entity_id': 'cover.velux_internal_cover_venetian_blinds',
@@ -23782,6 +23738,7 @@
               'current_position': 0,
               'device_class': 'window',
               'friendly_name': 'VELUX Window Roof Window',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_window_roof_window',
@@ -23913,6 +23870,7 @@
               'current_position': 0,
               'device_class': 'window',
               'friendly_name': 'VELUX Window Roof Window',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_window_roof_window',
@@ -24043,6 +24001,7 @@
             'attributes': dict({
               'current_position': 0,
               'friendly_name': 'VELUX External Cover Awning Blinds',
+              'is_closed': True,
               'supported_features': <CoverEntityFeature: 7>,
             }),
             'entity_id': 'cover.velux_external_cover_awning_blinds',
@@ -24202,9 +24161,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -24243,7 +24200,6 @@
             'attributes': dict({
               'brightness': 127.5,
               'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
               'hs_color': tuple(
@@ -24251,9 +24207,7 @@
                 100.0,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 0,
                 255,

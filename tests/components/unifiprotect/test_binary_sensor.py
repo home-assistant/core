@@ -7,6 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 from uiprotect.data import (
+    AiPort,
     Camera,
     Event,
     EventType,
@@ -721,6 +722,25 @@ async def test_binary_sensor_person_detected(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
     assert len(state_changes) == 2
+
+
+async def test_aiport_no_binary_sensor_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that AI Port devices do not create camera-specific binary sensor entities."""
+    await init_entry(hass, ufp, [aiport])
+
+    # AI Port should not create any camera-specific binary sensors (motion, smart detection, etc.)
+    # NVR HDD sensors will still be created, but no AI Port-specific entities
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+
+    for entity in entities:
+        if entity.domain == Platform.BINARY_SENSOR:
+            # No entities should contain the AI Port's device id
+            assert aiport.id not in entity.unique_id
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
