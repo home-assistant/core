@@ -20,6 +20,7 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
     """Describes JVC Projector select entities."""
 
     command: type[Command]
+    snake_case_states: bool = False
 
 
 SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
@@ -48,6 +49,18 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
         key="anamorphic",
         command=cmd.Anamorphic,
         entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
+        key="hdr_processing",
+        command=cmd.HdrProcessing,
+        entity_registry_enabled_default=False,
+        snake_case_states=True,
+    ),
+    JvcProjectorSelectDescription(
+        key="picture_mode",
+        command=cmd.PictureMode,
+        entity_registry_enabled_default=False,
+        snake_case_states=True,
     ),
 )
 
@@ -84,7 +97,8 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._options_map: dict[str, str] = coordinator.get_options_map(
-            self.command.name
+            self.command.name,
+            snake_case=description.snake_case_states,
         )
 
     @property
