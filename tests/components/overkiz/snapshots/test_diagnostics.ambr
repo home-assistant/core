@@ -849,7 +849,7 @@
           }),
           'deviceURL': 'rts://1234-5678-6867/16756006',
           'enabled': True,
-          'label': '** ** **',
+          'label': 'Living Room Shutter',
           'lastUpdateTime': 1667840384000,
           'oid': '1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8',
           'placeOID': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
@@ -946,13 +946,13 @@
       'resellerDelegationType': 'NEVER',
       'rootPlace': dict({
         'creationTime': 1665238624000,
-        'label': '** **',
+        'label': 'My House',
         'lastUpdateTime': 1665238630000,
         'oid': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
         'subPlaces': list([
           dict({
             'creationTime': 1667840432000,
-            'label': '**',
+            'label': 'Living Room',
             'lastUpdateTime': 1667840432000,
             'metadata': '{"color":"#08C27F"}',
             'oid': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
@@ -1812,7 +1812,7 @@
           }),
           'deviceURL': 'rts://1234-5678-6867/16756006',
           'enabled': True,
-          'label': '** ** **',
+          'label': 'Living Room Shutter',
           'lastUpdateTime': 1667840384000,
           'oid': '1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8',
           'placeOID': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',
@@ -1909,13 +1909,13 @@
       'resellerDelegationType': 'NEVER',
       'rootPlace': dict({
         'creationTime': 1665238624000,
-        'label': '** **',
+        'label': 'My House',
         'lastUpdateTime': 1665238630000,
         'oid': '41d63e43-bfa8-4e24-8c16-4faae0448cab',
         'subPlaces': list([
           dict({
             'creationTime': 1667840432000,
-            'label': '**',
+            'label': 'Living Room',
             'lastUpdateTime': 1667840432000,
             'metadata': '{"color":"#08C27F"}',
             'oid': '9e3d6899-50bb-4869-9c5e-46c2b57f7c9e',

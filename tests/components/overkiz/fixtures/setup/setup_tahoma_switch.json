@@ -759,7 +759,7 @@
     {
       "creationTime": 1667840384000,
       "lastUpdateTime": 1667840384000,
-      "label": "** ** **",
+      "label": "Living Room Shutter",
       "deviceURL": "rts://1234-5678-6867/16756006",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
@@ -872,14 +872,14 @@
   "rootPlace": {
     "creationTime": 1665238624000,
     "lastUpdateTime": 1665238630000,
-    "label": "** **",
+    "label": "My House",
     "type": 200,
     "oid": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
     "subPlaces": [
       {
         "creationTime": 1667840432000,
         "lastUpdateTime": 1667840432000,
-        "label": "**",
+        "label": "Living Room",
         "type": 108,
         "metadata": "{\"color\":\"#08C27F\"}",
         "oid": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
