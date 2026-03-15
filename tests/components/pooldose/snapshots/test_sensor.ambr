@@ -1,4 +1,299 @@
 # serializer version: 1
+# name: test_all_sensors[sensor.pool_device-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'circulation_pump_status',
+    'unique_id': 'TEST123456789_circulation_pump_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Pool Device',
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ph_orp',
+        'ph_orp_chlorine',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_config',
+    'unique_id': 'TEST123456789_device_config',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Pool Device',
+      'options': list([
+        'ph_orp',
+        'ph_orp_chlorine',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ph_orp',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_unit',
+    'unique_id': 'TEST123456789_temperature_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Pool Device',
+      'options': list([
+        'celsius',
+        'fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'celsius',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_on_delay_status',
+    'unique_id': 'TEST123456789_power_on_delay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Pool Device',
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.pool_device_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow_delay_status',
+    'unique_id': 'TEST123456789_flow_delay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_sensors[sensor.pool_device_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Pool Device',
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pool_device_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
 # name: test_all_sensors[sensor.pool_device_chlorine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -119,6 +414,7 @@
         'proportional',
         'on_off',
         'timed',
+        'cycle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -161,6 +457,7 @@
         'proportional',
         'on_off',
         'timed',
+        'cycle',
       ]),
     }),
     'context': <ANY>,
