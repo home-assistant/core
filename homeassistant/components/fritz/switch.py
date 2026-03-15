@@ -428,13 +428,11 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         for key, attr in attributes_dict.items():
             self._attributes[attr] = self.port_mapping[key]
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
+    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
-
-        resp = await self._avm_wrapper.async_add_port_mapping(
+        await self._avm_wrapper.async_add_port_mapping(
             self.connection_type, self.port_mapping
         )
-        return bool(resp is not None)
 
 
 class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
@@ -519,12 +517,11 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
 
-    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
         self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()
-        return True
 
 
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
@@ -584,10 +581,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         ]
         self._wifi_info = wifi_info
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
+    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         """Handle wifi switch."""
-        resp = await self._avm_wrapper.async_set_wlan_configuration(
-            self._network_num, turn_on
-        )
         self._wifi_info["NewEnable"] = turn_on
-        return bool(resp is not None)
+        await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
