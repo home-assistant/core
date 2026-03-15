@@ -470,14 +470,12 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
             is_dock_entity=description.is_dock_entity,
         )
 
-    def _update_from_latest_data(self) -> None:
-        """Update the sensor's state."""
+    @property
+    def native_value(self) -> StateType | datetime.datetime:
+        """Return the value reported by the sensor."""
         if self.coordinator.data is None:
-            # Parent will mark entity unavailable
-            return
-        self._attr_native_value = self.entity_description.value_fn(
-            self.coordinator.data
-        )
+            return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):

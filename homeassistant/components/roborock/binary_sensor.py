@@ -192,19 +192,11 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         self.entity_description = description
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the value reported by the sensor."""
         if (data := self.coordinator.data) is not None:
             return bool(self.entity_description.value_fn(data))
         return None
-
-    def _update_from_latest_data(self) -> None:
-        """Handles updating entity state from latest coordinator data."""
-        # XXX: Why do here instead of within is_on?
-        if (data := self.coordinator.data) is not None:
-            self._attr_is_on = bool(self.entity_description.value_fn(data))
-        else:
-            self._attr_is_on = None
 
 
 class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEntity):

@@ -1,10 +1,8 @@
 """Support for Roborock device base class."""
 
-from abc import abstractmethod
 from typing import Any
 
 from roborock.devices.traits.v1.command import CommandTrait
-from roborock.devices.traits.v1.status import StatusTrait
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -95,12 +93,6 @@ class RoborockCoordinatedEntityV1(
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
 
-    @property
-    def _device_status(self) -> StatusTrait:
-        """Return the status of the device."""
-        data = self.coordinator.data
-        return data.status
-
     async def send(
         self,
         command: RoborockCommand | str,
@@ -114,8 +106,8 @@ class RoborockCoordinatedEntityV1(
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        # Entity platform will handle updating state
         self._update_from_latest_data()
+        # Entity platform will handle updating state
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -123,9 +115,13 @@ class RoborockCoordinatedEntityV1(
         self._update_from_latest_data()
         super()._handle_coordinator_update()  # Will update state
 
-    @abstractmethod
     def _update_from_latest_data(self) -> None:
-        """Handles updating entity state from latest coordinator data."""
+        """Handles updating entity state on start or coordinator data update.
+
+        Most entities override methods that are called when state is updated,
+        and so this is only needed when entities set their own local values.
+        """
+        return
 
 
 class RoborockCoordinatedEntityA01(
