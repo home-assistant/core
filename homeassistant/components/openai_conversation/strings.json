@@ -51,8 +51,12 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::store_responses%]",
             "temperature": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::temperature%]",
             "top_p": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data::top_p%]"
+          },
+          "data_description": {
+            "store_responses": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::data_description::store_responses%]"
           },
           "title": "[%key:component::openai_conversation::config_subentries::conversation::step::advanced::title%]"
         },
@@ -107,8 +111,12 @@
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "max_tokens": "Maximum tokens to return in response",
+            "store_responses": "Store requests and responses in OpenAI",
             "temperature": "Temperature",
             "top_p": "Top P"
+          },
+          "data_description": {
+            "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
           },
           "title": "Advanced settings"
         },
