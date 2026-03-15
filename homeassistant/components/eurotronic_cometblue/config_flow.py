@@ -7,13 +7,13 @@ from typing import Any
 
 from eurotronic_cometblue_ha import AsyncCometBlue
 from eurotronic_cometblue_ha.const import SERVICE
+from habluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
