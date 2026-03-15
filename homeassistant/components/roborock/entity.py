@@ -7,7 +7,6 @@ from roborock.devices.traits.v1.status import StatusTrait
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -155,13 +154,7 @@ class RoborockCoordinatedEntityB01Q7(
 class RoborockCoordinatedEntityB01Q10(
     RoborockEntity, CoordinatorEntity[RoborockB01Q10UpdateCoordinator]
 ):
-    """Representation of coordinated Roborock Q10 Entity.
-
-    Roborock Q10 devices share a coordinator that will poll the device for updates,
-    however it does not hold on to any state updates. Instead, each entity
-    should register its own listener for receiving updates directly from the
-    device in `async_added_to_hass`.
-    """
+    """Representation of coordinated Roborock Q10 Entity."""
 
     def __init__(
         self,
@@ -176,12 +169,3 @@ class RoborockCoordinatedEntityB01Q10(
             device_info=coordinator.device_info,
         )
         self._attr_unique_id = unique_id
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator.
-
-        This is overridden to prevent state updates when the coordinator updates.
-        We use the coordinator to synchronize polling the device, but the updates
-        themselves arrive asynchronously.
-        """
