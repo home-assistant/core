@@ -601,13 +601,13 @@ class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntit
     _attr_supported_color_modes = {ColorMode.HS}
 
     _color_switcher: dict[str, tuple[float, float]] = {
-        "WHITE": (0.0, 0.0),
-        "RED": (0.0, 100.0),
-        "YELLOW": (60.0, 100.0),
-        "GREEN": (120.0, 100.0),
-        "TURQUOISE": (180.0, 100.0),
-        "BLUE": (240.0, 100.0),
-        "PURPLE": (300.0, 100.0),
+        RGBColorState.WHITE: (0.0, 0.0),
+        RGBColorState.RED: (0.0, 100.0),
+        RGBColorState.YELLOW: (60.0, 100.0),
+        RGBColorState.GREEN: (120.0, 100.0),
+        RGBColorState.TURQUOISE: (180.0, 100.0),
+        RGBColorState.BLUE: (240.0, 100.0),
+        RGBColorState.PURPLE: (300.0, 100.0),
     }
 
     def __init__(
