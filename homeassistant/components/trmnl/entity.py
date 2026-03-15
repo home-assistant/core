@@ -7,6 +7,7 @@ from trmnl.models import Device
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import TRMNLCoordinator
 
 
@@ -22,6 +23,7 @@ class TRMNLEntity(CoordinatorEntity[TRMNLCoordinator]):
         device = self._device
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, str(device_id))},
             name=device.name,
             manufacturer="TRMNL",
         )
