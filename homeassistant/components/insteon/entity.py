@@ -2,6 +2,7 @@
 
 import functools
 import logging
+from typing import Any
 
 from pyinsteon import devices
 
@@ -72,7 +73,7 @@ class InsteonEntity(Entity):
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Provide attributes for display on device card."""
         return {
             "insteon_address": self.address,

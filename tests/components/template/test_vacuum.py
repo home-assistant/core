@@ -312,7 +312,7 @@ async def setup_attributes_state_vacuum(
                 "fan_speed_template": "{{ this_function_does_not_exist() }}",
                 "start": {"service": "script.vacuum_start"},
             },
-            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
             None,
         ),
         (
@@ -323,7 +323,7 @@ async def setup_attributes_state_vacuum(
                 "fan_speed": "{{ this_function_does_not_exist() }}",
                 "start": {"service": "script.vacuum_start"},
             },
-            STATE_UNKNOWN,
+            STATE_UNAVAILABLE,
             None,
         ),
         (

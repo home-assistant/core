@@ -35,7 +35,7 @@ def error_callback(bot: Bot, error: Exception, update: object | None = None) -> 
     """Log the error."""
     try:
         raise error
-    except (TimedOut, NetworkError, RetryAfter):
+    except TimedOut, NetworkError, RetryAfter:
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:

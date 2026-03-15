@@ -19,6 +19,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "device_info": client.device_info,
         "vehicles": client.vehicles,
-        "ct_connected": client.ct_connected,
         "cap_available": client.cap_available,
     }

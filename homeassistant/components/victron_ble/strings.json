@@ -63,6 +63,7 @@
           "low_v_ac_out": "AC-out undervoltage",
           "low_voltage": "Undervoltage",
           "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "no_alarm": "No alarm",
           "overload": "Overload",
           "short_circuit": "Short circuit"
         }
@@ -86,6 +87,28 @@
       },
       "cell_voltage": {
         "name": "Cell {cell} voltage"
+      },
+      "charge_state": {
+        "name": "Charge state",
+        "state": {
+          "absorption": "[%key:component::victron_ble::entity::sensor::device_state::state::absorption%]",
+          "active": "[%key:component::victron_ble::entity::sensor::device_state::state::active%]",
+          "battery_safe": "[%key:component::victron_ble::entity::sensor::device_state::state::battery_safe%]",
+          "bulk": "[%key:component::victron_ble::entity::sensor::device_state::state::bulk%]",
+          "equalize_manual": "[%key:component::victron_ble::entity::sensor::device_state::state::equalize_manual%]",
+          "external_control": "[%key:component::victron_ble::entity::sensor::device_state::state::external_control%]",
+          "fault": "[%key:component::victron_ble::entity::sensor::device_state::state::fault%]",
+          "float": "[%key:component::victron_ble::entity::sensor::device_state::state::float%]",
+          "inverting": "[%key:component::victron_ble::entity::sensor::device_state::state::inverting%]",
+          "low_power": "[%key:component::victron_ble::entity::sensor::device_state::state::low_power%]",
+          "not_available": "[%key:component::victron_ble::entity::sensor::device_state::state::not_available%]",
+          "off": "[%key:common::state::off%]",
+          "power_supply": "[%key:component::victron_ble::entity::sensor::device_state::state::power_supply%]",
+          "recondition": "[%key:component::victron_ble::entity::sensor::device_state::state::recondition%]",
+          "repeated_absorption": "[%key:component::victron_ble::entity::sensor::device_state::state::repeated_absorption%]",
+          "starting_up": "[%key:component::victron_ble::entity::sensor::device_state::state::starting_up%]",
+          "storage": "[%key:component::victron_ble::entity::sensor::device_state::state::storage%]"
+        }
       },
       "charger_error": {
         "name": "Charger error",
@@ -202,6 +225,7 @@
           "analysing_input_voltage": "Analyzing input voltage",
           "bms": "Battery management system",
           "engine_shutdown": "Engine shutdown",
+          "load_output_disabled": "Load output disabled",
           "no_input_power": "No input power",
           "no_reason": "No reason",
           "pay_as_you_go_out_of_credit": "Pay-as-you-go out of credit",
@@ -224,7 +248,24 @@
         "name": "[%key:component::victron_ble::common::starter_voltage%]"
       },
       "warning": {
-        "name": "Warning"
+        "name": "Warning",
+        "state": {
+          "bms_lockout": "[%key:component::victron_ble::entity::sensor::alarm::state::bms_lockout%]",
+          "dc_ripple": "[%key:component::victron_ble::entity::sensor::alarm::state::dc_ripple%]",
+          "high_starter_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::high_starter_voltage%]",
+          "high_temperature": "[%key:component::victron_ble::entity::sensor::alarm::state::high_temperature%]",
+          "high_v_ac_out": "[%key:component::victron_ble::entity::sensor::alarm::state::high_v_ac_out%]",
+          "high_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::high_voltage%]",
+          "low_soc": "[%key:component::victron_ble::entity::sensor::alarm::state::low_soc%]",
+          "low_starter_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::low_starter_voltage%]",
+          "low_temperature": "[%key:component::victron_ble::entity::sensor::alarm::state::low_temperature%]",
+          "low_v_ac_out": "[%key:component::victron_ble::entity::sensor::alarm::state::low_v_ac_out%]",
+          "low_voltage": "[%key:component::victron_ble::entity::sensor::alarm::state::low_voltage%]",
+          "mid_voltage": "[%key:component::victron_ble::common::midpoint_voltage%]",
+          "no_alarm": "[%key:component::victron_ble::entity::sensor::alarm::state::no_alarm%]",
+          "overload": "[%key:component::victron_ble::entity::sensor::alarm::state::overload%]",
+          "short_circuit": "[%key:component::victron_ble::entity::sensor::alarm::state::short_circuit%]"
+        }
       },
       "yield_today": {
         "name": "Yield today"

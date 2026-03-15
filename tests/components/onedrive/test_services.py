@@ -18,7 +18,7 @@ from homeassistant.components.onedrive.services import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import setup_integration
 
@@ -64,9 +64,7 @@ def mock_upload_file(
         patch("pathlib.Path.stat") as mock_stat,
     ):
         mock_stat.return_value = Mock()
-        mock_stat.return_value.st_size = (
-            upload_file.size if upload_file.size else len(upload_file.content)
-        )
+        mock_stat.return_value.st_size = upload_file.size or len(upload_file.content)
         yield
 
 
@@ -125,7 +123,7 @@ async def test_upload_service_config_entry_not_found(
 ) -> None:
     """Test upload service call with a config entry that does not exist."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
@@ -137,6 +135,7 @@ async def test_upload_service_config_entry_not_found(
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_config_entry_not_loaded(
@@ -150,18 +149,19 @@ async def test_config_entry_not_loaded(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(HomeAssistantError, match="not found in registry"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             UPLOAD_SERVICE,
             {
-                CONF_CONFIG_ENTRY_ID: mock_config_entry.unique_id,
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
                 CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize("upload_file", [MockUploadFile(is_allowed_path=False)])

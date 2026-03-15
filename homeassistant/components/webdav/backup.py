@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupAgentError,
     BackupNotFound,
+    OnProgressCallback,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -140,6 +141,7 @@ class WebDavBackupAgent(BackupAgent):
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -154,6 +156,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
             content_length=backup.size,
+            progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
         _LOGGER.debug(
@@ -222,8 +225,10 @@ class WebDavBackupAgent(BackupAgent):
         async def _download_metadata(path: str) -> AgentBackup:
             """Download metadata file."""
             iterator = await self._client.download_iter(path)
-            metadata = await anext(iterator)
-            return AgentBackup.from_dict(json_loads_object(metadata))
+            metadata_bytes = bytearray()
+            async for chunk in iterator:
+                metadata_bytes.extend(chunk)
+            return AgentBackup.from_dict(json_loads_object(metadata_bytes))
 
         async def _list_metadata_files() -> dict[str, AgentBackup]:
             """List metadata files."""

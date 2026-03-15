@@ -124,37 +124,27 @@
 # name: test_entities[light.lamp_bulb_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 230,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
+      'brightness': None,
+      'color_mode': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Lamp Bulb 1',
-      'hs_color': tuple(
-        215.0,
-        33.333,
-      ),
+      'hs_color': None,
       'max_color_temp_kelvin': 7000,
       'min_color_temp_kelvin': 2000,
-      'rgb_color': tuple(
-        120,
-        145,
-        180,
-      ),
+      'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
-        0.248,
-        0.27,
-      ),
+      'xy_color': None,
     }),
     'context': <ANY>,
     'entity_id': 'light.lamp_bulb_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_entities[light.lamp_bulb_2-entry]

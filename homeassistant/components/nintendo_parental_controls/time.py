@@ -16,7 +16,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import BEDTIME_ALARM_DISABLE, BEDTIME_ALARM_MAX, BEDTIME_ALARM_MIN, DOMAIN
+from .const import (
+    BEDTIME_ALARM_DISABLE,
+    BEDTIME_ALARM_MAX,
+    BEDTIME_ALARM_MIN,
+    BEDTIME_END_TIME_MAX,
+    BEDTIME_END_TIME_MIN,
+    DOMAIN,
+)
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
@@ -30,6 +37,7 @@ class NintendoParentalControlsTime(StrEnum):
     """Store keys for Nintendo Parental time."""
 
     BEDTIME_ALARM = "bedtime_alarm"
+    BEDTIME_END_TIME = "bedtime_end_time"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -46,6 +54,12 @@ TIME_DESCRIPTIONS: tuple[NintendoParentalControlsTimeEntityDescription, ...] = (
         translation_key=NintendoParentalControlsTime.BEDTIME_ALARM,
         value_fn=lambda device: device.bedtime_alarm,
         set_value_fn=lambda device, value: device.set_bedtime_alarm(value=value),
+    ),
+    NintendoParentalControlsTimeEntityDescription(
+        key=NintendoParentalControlsTime.BEDTIME_END_TIME,
+        translation_key=NintendoParentalControlsTime.BEDTIME_END_TIME,
+        value_fn=lambda device: device.bedtime_end,
+        set_value_fn=lambda device, value: device.set_bedtime_end_time(value=value),
     ),
 )
 
@@ -88,6 +102,20 @@ class NintendoParentalControlsTimeEntity(NintendoDevice, TimeEntity):
         try:
             await self.entity_description.set_value_fn(self._device, value)
         except BedtimeOutOfRangeError as exc:
+            if (
+                self.entity_description.key
+                == NintendoParentalControlsTime.BEDTIME_END_TIME
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="bedtime_end_time_out_of_range",
+                    translation_placeholders={
+                        "value": value.strftime("%H:%M"),
+                        "bedtime_end_time_max": BEDTIME_END_TIME_MAX,
+                        "bedtime_end_time_min": BEDTIME_END_TIME_MIN,
+                        "bedtime_alarm_disable": BEDTIME_ALARM_DISABLE,
+                    },
+                ) from exc
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="bedtime_alarm_out_of_range",

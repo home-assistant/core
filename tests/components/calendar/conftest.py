@@ -82,7 +82,7 @@ class MockCalendarEntity(CalendarEntity):
         event = CalendarEvent(
             start=start,
             end=end,
-            summary=summary if summary else f"Event {secrets.token_hex(16)}",
+            summary=summary or f"Event {secrets.token_hex(16)}",
             description=description,
             location=location,
         )

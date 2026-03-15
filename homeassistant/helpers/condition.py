@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import abc
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable
+from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
@@ -54,7 +54,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -76,6 +76,8 @@ from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
+    DomainSpec,
+    filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
     move_options_fields_to_top_level,
@@ -173,14 +175,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
 
-    @callback
-    def new_triggers_conditions_listener() -> None:
+    async def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[CONDITION_DESCRIPTION_CACHE] = {}
         hass.data[CONDITION_DISABLED_CONDITIONS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
@@ -331,10 +334,10 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityConditionBase(Condition):
+class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
     """Base class for entity conditions."""
 
-    _domain: str
+    _domain_specs: Mapping[str, DomainSpecT]
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
 
     @override
@@ -355,12 +358,8 @@ class EntityConditionBase(Condition):
         self._behavior = config.options[ATTR_BEHAVIOR]
 
     def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities of this domain."""
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] == self._domain
-        }
+        """Filter entities matching any of the domain specs."""
+        return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
@@ -427,7 +426,7 @@ def make_entity_state_condition(
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _states = states_set
 
     return CustomCondition
@@ -457,7 +456,7 @@ def make_entity_state_attribute_condition(
     class CustomCondition(EntityStateAttributeConditionBase):
         """Condition for entity attribute."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _attribute = attribute
         _attribute_states = attribute_states_set
 

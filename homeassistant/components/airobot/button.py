@@ -85,7 +85,7 @@ class AirobotButton(AirobotEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
-        except (AirobotConnectionError, AirobotTimeoutError):
+        except AirobotConnectionError, AirobotTimeoutError:
             # Connection errors during reboot are expected as device restarts
             pass
         except AirobotError as err:

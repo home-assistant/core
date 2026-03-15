@@ -6,9 +6,9 @@
       'AUDIO_PLAYER',
       'MICROPHONE',
     ]),
-    'device cluster members': list([
-      'echo_test_serial_number',
-    ]),
+    'device cluster members': dict({
+      'echo_test_serial_number': 'echo_test_device_id',
+    }),
     'device family': 'mine',
     'device type': 'echo',
     'online': True,
@@ -44,9 +44,9 @@
             'AUDIO_PLAYER',
             'MICROPHONE',
           ]),
-          'device cluster members': list([
-            'echo_test_serial_number',
-          ]),
+          'device cluster members': dict({
+            'echo_test_serial_number': 'echo_test_device_id',
+          }),
           'device family': 'mine',
           'device type': 'echo',
           'online': True,

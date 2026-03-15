@@ -4,7 +4,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "cannot_connect": "Please verify your credentials.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "Unexpected error, please try again."
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "Unexpected error, please try again.",
+      "wrong_account": "You must reauthenticate with the same WaterFurnace account that was originally configured."
     },
     "error": {
       "cannot_connect": "Failed to connect to WaterFurnace service",
@@ -12,6 +14,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::waterfurnace::config::step::user::data_description::password%]",
+          "username": "[%key:component::waterfurnace::config::step::user::data_description::username%]"
+        },
+        "description": "Please re-enter your WaterFurnace Symphony account credentials.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -49,6 +63,9 @@
       "leaving_air_temp": {
         "name": "Leaving air temperature"
       },
+      "leaving_water_temp": {
+        "name": "Leaving water temperature"
+      },
       "loop_pump_power": {
         "name": "Loop pump power"
       },
@@ -64,8 +81,20 @@
       "tstat_active_setpoint": {
         "name": "Active setpoint"
       },
+      "tstat_cooling_setpoint": {
+        "name": "Cooling setpoint"
+      },
+      "tstat_dehumid_setpoint": {
+        "name": "Dehumidification setpoint"
+      },
+      "tstat_heating_setpoint": {
+        "name": "Heating setpoint"
+      },
       "tstat_humid_setpoint": {
         "name": "Humidity setpoint"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
       }
     }
   },

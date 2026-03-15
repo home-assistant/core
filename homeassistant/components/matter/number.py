@@ -190,6 +190,27 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
+            key="power_on_level",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="power_on_level",
+            native_max_value=255,
+            native_min_value=0,
+            mode=NumberMode.BOX,
+            # use 255 to indicate that the value should revert to the default
+            device_to_ha=lambda x: 255 if x is None else x,
+            ha_to_device=lambda x: None if x == 255 else int(x),
+            native_step=1,
+            native_unit_of_measurement=None,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
+        not_device_type=(device_types.Speaker,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
             key="on_transition_time",
             entity_category=EntityCategory.CONFIG,
             translation_key="on_transition_time",
@@ -284,6 +305,7 @@ DISCOVERY_SCHEMAS = [
         ),
         featuremap_contains=(clusters.Thermostat.Bitmaps.Feature.kSetback),
     ),
+    # Eve temperature offset with higher min/max
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
@@ -303,7 +325,27 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
-        vendor_id=(4874,),
+        vendor_id=(4874,),  # Eve Systems
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="TemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            native_max_value=25,  # Matter 1.3 limit
+            native_min_value=-25,  # Matter 1.3 limit
+            native_step=0.5,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_device=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -315,9 +357,9 @@ DISCOVERY_SCHEMAS = [
             native_min_value=0.5,
             native_step=0.5,
             device_to_ha=(
-                lambda x: None
-                if x is None
-                else min(x, 200) / 2  # Matter range (1-200, capped at 200)
+                lambda x: (
+                    None if x is None else min(x, 200) / 2
+                )  # Matter range (1-200, capped at 200)
             ),
             ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
             mode=NumberMode.SLIDER,
@@ -381,8 +423,10 @@ DISCOVERY_SCHEMAS = [
             key="MicrowaveOvenControlCookTime",
             translation_key="cook_time",
             device_class=NumberDeviceClass.DURATION,
-            command=lambda value: clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
-                cookTime=int(value)
+            command=lambda value: (
+                clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+                    cookTime=int(value)
+                )
             ),
             native_min_value=1,  # 1 second minimum cook time
             native_step=1,  # 1 second
@@ -475,6 +519,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOff,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -491,6 +536,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
+        product_id=(2, 16),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
