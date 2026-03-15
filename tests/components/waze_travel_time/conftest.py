@@ -50,6 +50,23 @@ def mock_update_fixture():
         yield mock_wrc
 
 
+@pytest.fixture(name="mock_update_0min")
+def mock_update_0min_fixture():
+    """Mock an update to the sensor for a 0 minute route."""
+    with patch(
+        "pywaze.route_calculator.WazeRouteCalculator.calc_routes",
+        return_value=[
+            CalcRoutesResponse(
+                distance=0,
+                duration=0,
+                name="",
+                street_names=[],
+            )
+        ],
+    ) as mock_wrc:
+        yield mock_wrc
+
+
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture(mock_update):
     """Return valid config entry."""
