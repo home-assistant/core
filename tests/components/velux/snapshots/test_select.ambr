@@ -1,0 +1,181 @@
+# serializer version: 1
+# name: test_select_setup[select.test_blind_velocity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_blind_velocity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Velocity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Velocity',
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'velocity',
+    'unique_id': '4711_velocity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_setup[select.test_blind_velocity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Blind Velocity',
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_blind_velocity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'default',
+  })
+# ---
+# name: test_select_setup[select.test_dual_roller_shutter_velocity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_dual_roller_shutter_velocity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Velocity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Velocity',
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'velocity',
+    'unique_id': '987654321_velocity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_setup[select.test_dual_roller_shutter_velocity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Dual Roller Shutter Velocity',
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_dual_roller_shutter_velocity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'default',
+  })
+# ---
+# name: test_select_setup[select.test_window_velocity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_window_velocity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Velocity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Velocity',
+    'platform': 'velux',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'velocity',
+    'unique_id': '123456789_velocity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_setup[select.test_window_velocity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Window Velocity',
+      'options': list([
+        'default',
+        'silent',
+        'fast',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_window_velocity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'default',
+  })
+# ---
