@@ -36,6 +36,16 @@
         'damping_morning': 0.5,
         'inverter_size': 2000,
       }),
+      'subentries': list([
+        dict({
+          'data': dict({
+            'declination': 30.0,
+            'azimuth': 180.0,
+            'modules_power': 2000,
+          }),
+          'title': 'Plane 1',
+        }),
+      ]),
       'title': 'Green House',
     }),
   })
