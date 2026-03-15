@@ -427,9 +427,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -466,7 +464,6 @@
       'attribution': 'Data provided by unpublished Intellifire API',
       'device_class': 'timestamp',
       'friendly_name': 'IntelliFire Timer end',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.intellifire_timer_end',
