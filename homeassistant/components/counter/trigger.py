@@ -24,7 +24,7 @@ class CounterDecrementedTrigger(EntityTriggerBase):
         return int(from_state.state) > int(to_state.state)
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
+        """Check if the new state attribute is valid."""
         try:
             int(state.state)
         except TypeError, ValueError:
@@ -45,7 +45,7 @@ class CounterIncrementedTrigger(EntityTriggerBase):
         return int(from_state.state) < int(to_state.state)
 
     def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
+        """Check if the new state attribute is valid."""
         try:
             int(state.state)
         except TypeError, ValueError:

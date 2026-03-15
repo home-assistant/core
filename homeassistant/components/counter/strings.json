@@ -1,6 +1,6 @@
 {
   "common": {
-    "condition_behavior_description": "How the state should match on the targeted counter devices.",
+    "condition_behavior_description": "How the state should match on the targeted counter helpers.",
     "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted counters to trigger on.",
     "trigger_behavior_name": "Behavior"
