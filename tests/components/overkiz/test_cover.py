@@ -8,7 +8,6 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-import humps
 from pyoverkiz.enums import EventName, ExecutionState, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Event
 import pytest
@@ -117,15 +116,14 @@ def build_event(
     exec_id: str | None = None,
     new_state: str | None = None,
 ) -> Event:
-    """Create an Overkiz event from a small JSON payload."""
-    payload: dict[str, Any] = {"name": name, "deviceURL": device_url}
-    if device_states is not None:
-        payload["deviceStates"] = device_states
-    if exec_id is not None:
-        payload["execId"] = exec_id
-    if new_state is not None:
-        payload["newState"] = new_state
-    return Event(**humps.decamelize(payload))
+    """Create an Overkiz event using the library model constructor."""
+    return Event(
+        name=name,
+        device_url=device_url,
+        device_states=device_states,
+        exec_id=exec_id,
+        new_state=new_state,
+    )
 
 
 async def async_deliver_events(
