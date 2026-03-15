@@ -25,6 +25,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "incoming_video_interlaced": {
+        "name": "Incoming video interlaced"
+      }
+    },
     "sensor": {
       "incoming_audio_config": {
         "name": "Incoming audio configuration",
