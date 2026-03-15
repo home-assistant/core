@@ -13,7 +13,6 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
-    make_entity_target_state_attribute_trigger,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
 )
@@ -47,11 +46,11 @@ class HVACModeChangedTrigger(EntityTargetStateTriggerBase):
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "hvac_mode_changed": HVACModeChangedTrigger,
-    "started_cooling": make_entity_target_state_attribute_trigger(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.COOLING
+    "started_cooling": make_entity_target_state_trigger(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.COOLING
     ),
-    "started_drying": make_entity_target_state_attribute_trigger(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.DRYING
+    "started_drying": make_entity_target_state_trigger(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
     ),
     "target_humidity_changed": make_entity_numerical_state_changed_trigger(
         {DOMAIN: NumericalDomainSpec(value_source=ATTR_HUMIDITY)}
@@ -80,8 +79,8 @@ TRIGGERS: dict[str, type[Trigger]] = {
             HVACMode.HEAT_COOL,
         },
     ),
-    "started_heating": make_entity_target_state_attribute_trigger(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.HEATING
+    "started_heating": make_entity_target_state_trigger(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
 }
 
