@@ -28,7 +28,7 @@ async def test_all_entities(
     """Test all entities."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
-        patch(f"{MODULE}._login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -44,7 +44,7 @@ async def test_dhw_active_state(
     """Test water heater uses direct DHW status for on/off state."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
-        patch(f"{MODULE}._login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
