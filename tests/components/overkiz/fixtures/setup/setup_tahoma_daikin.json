@@ -1,7 +1,7 @@
 {
   "creationTime": 1634372498000,
   "lastUpdateTime": 1634372498000,
-  "id": "SETUP-****-****-9183",
+  "id": "SETUP-1234-5678-9183",
   "location": {
     "creationTime": 1634372498000,
     "lastUpdateTime": 1642236654000,
@@ -41,7 +41,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-9183",
+      "gatewayId": "1234-5678-9183",
       "type": 98,
       "subType": 1,
       "placeOID": "090afa4f-7bf6-40b0-a555-681ccb1fb2f0",
@@ -64,7 +64,7 @@
       "creationTime": 1634372526000,
       "lastUpdateTime": 1634372526000,
       "label": "** *(**)*",
-      "deviceURL": "homekit://****-****-9183/stack",
+      "deviceURL": "homekit://1234-5678-9183/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
       "definition": {
@@ -106,7 +106,7 @@
       "creationTime": 1642236905000,
       "lastUpdateTime": 1642236905000,
       "label": "** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b",
       "shortcut": false,
       "controllableName": "hue:BridgeHUEV2Component",
       "definition": {
@@ -143,7 +143,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** ** ** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/1",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/1",
       "shortcut": false,
       "controllableName": "hue:GenericExtendedColorLightHUEComponent",
       "definition": {
@@ -337,7 +337,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/10",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/10",
       "shortcut": false,
       "controllableName": "hue:GenericExtendedColorLightHUEComponent",
       "definition": {
@@ -531,7 +531,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/11",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/11",
       "shortcut": false,
       "controllableName": "hue:GenericExtendedColorLightHUEComponent",
       "definition": {
@@ -725,7 +725,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/12",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/12",
       "shortcut": false,
       "controllableName": "hue:GenericDimmableLightHUEComponent",
       "definition": {
@@ -836,7 +836,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** ** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/2",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/2",
       "shortcut": false,
       "controllableName": "hue:GenericExtendedColorLightHUEComponent",
       "definition": {
@@ -1030,7 +1030,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** ** ** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/3",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/3",
       "shortcut": false,
       "controllableName": "hue:GenericExtendedColorLightHUEComponent",
       "definition": {
@@ -1224,7 +1224,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/4",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/4",
       "shortcut": false,
       "controllableName": "hue:HueSpotHUEComponent",
       "definition": {
@@ -1418,7 +1418,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/5",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/5",
       "shortcut": false,
       "controllableName": "hue:HueSpotHUEComponent",
       "definition": {
@@ -1612,7 +1612,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "**/** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/6",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/6",
       "shortcut": false,
       "controllableName": "hue:HueLuxHUEComponent",
       "definition": {
@@ -1723,7 +1723,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "**",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/7",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/7",
       "shortcut": false,
       "controllableName": "hue:HueLuxHUEComponent",
       "definition": {
@@ -1834,7 +1834,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** ** ** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/8",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/8",
       "shortcut": false,
       "controllableName": "hue:GenericDimmableLightHUEComponent",
       "definition": {
@@ -1945,7 +1945,7 @@
       "creationTime": 1642236908000,
       "lastUpdateTime": 1642236908000,
       "label": "** **",
-      "deviceURL": "hue://****-****-9183/0017887dee1b/lights/9",
+      "deviceURL": "hue://1234-5678-9183/0017887dee1b/lights/9",
       "shortcut": false,
       "controllableName": "hue:GenericDimmableLightHUEComponent",
       "definition": {
@@ -2056,7 +2056,7 @@
       "creationTime": 1634372526000,
       "lastUpdateTime": 1634372526000,
       "label": "**",
-      "deviceURL": "internal://****-****-9183/pod/0",
+      "deviceURL": "internal://1234-5678-9183/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV3Component",
       "definition": {
@@ -2203,7 +2203,7 @@
       "creationTime": 1634372526000,
       "lastUpdateTime": 1634372526000,
       "label": "** *(**/**)*",
-      "deviceURL": "internal://****-****-9183/wifi/0",
+      "deviceURL": "internal://1234-5678-9183/wifi/0",
       "shortcut": false,
       "controllableName": "internal:WifiComponent",
       "definition": {
@@ -2271,7 +2271,7 @@
       "creationTime": 1638978395000,
       "lastUpdateTime": 1638978395000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/10523674",
+      "deviceURL": "io://1234-5678-9183/10523674",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -2640,7 +2640,7 @@
       "creationTime": 1639038829000,
       "lastUpdateTime": 1639038829000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/11225911",
+      "deviceURL": "io://1234-5678-9183/11225911",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -3009,7 +3009,7 @@
       "creationTime": 1638024089000,
       "lastUpdateTime": 1638024089000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/11625424",
+      "deviceURL": "io://1234-5678-9183/11625424",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -3378,7 +3378,7 @@
       "creationTime": 1654200105000,
       "lastUpdateTime": 1654200105000,
       "label": "**",
-      "deviceURL": "io://****-****-9183/13105527",
+      "deviceURL": "io://1234-5678-9183/13105527",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -3747,7 +3747,7 @@
       "creationTime": 1638024017000,
       "lastUpdateTime": 1638024017000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/13635406",
+      "deviceURL": "io://1234-5678-9183/13635406",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -4116,7 +4116,7 @@
       "creationTime": 1638976645000,
       "lastUpdateTime": 1638976645000,
       "label": "**&** **",
-      "deviceURL": "io://****-****-9183/13822789",
+      "deviceURL": "io://1234-5678-9183/13822789",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -4485,7 +4485,7 @@
       "creationTime": 1638020752000,
       "lastUpdateTime": 1638020752000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/14391230",
+      "deviceURL": "io://1234-5678-9183/14391230",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -4854,7 +4854,7 @@
       "creationTime": 1638024361000,
       "lastUpdateTime": 1638024361000,
       "label": "**",
-      "deviceURL": "io://****-****-9183/15737943",
+      "deviceURL": "io://1234-5678-9183/15737943",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -5223,7 +5223,7 @@
       "creationTime": 1654200202000,
       "lastUpdateTime": 1654200202000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/16229706",
+      "deviceURL": "io://1234-5678-9183/16229706",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
       "definition": {
@@ -5575,7 +5575,7 @@
       "creationTime": 1638020389000,
       "lastUpdateTime": 1638020389000,
       "label": "** *(**)*",
-      "deviceURL": "io://****-****-9183/1959687",
+      "deviceURL": "io://1234-5678-9183/1959687",
       "shortcut": false,
       "controllableName": "io:StackComponent",
       "definition": {
@@ -5633,7 +5633,7 @@
       "creationTime": 1638023765000,
       "lastUpdateTime": 1638023765000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/3801927",
+      "deviceURL": "io://1234-5678-9183/3801927",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -6002,7 +6002,7 @@
       "creationTime": 1638976720000,
       "lastUpdateTime": 1638976720000,
       "label": "**&** **",
-      "deviceURL": "io://****-****-9183/649173",
+      "deviceURL": "io://1234-5678-9183/649173",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -6371,7 +6371,7 @@
       "creationTime": 1639038489000,
       "lastUpdateTime": 1639038489000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/6789728",
+      "deviceURL": "io://1234-5678-9183/6789728",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -6740,7 +6740,7 @@
       "creationTime": 1639038997000,
       "lastUpdateTime": 1639038997000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/6835399",
+      "deviceURL": "io://1234-5678-9183/6835399",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -7109,7 +7109,7 @@
       "creationTime": 1638976571000,
       "lastUpdateTime": 1638976571000,
       "label": "**&** **",
-      "deviceURL": "io://****-****-9183/7391591",
+      "deviceURL": "io://1234-5678-9183/7391591",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -7478,7 +7478,7 @@
       "creationTime": 1638023885000,
       "lastUpdateTime": 1638023885000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/8327353",
+      "deviceURL": "io://1234-5678-9183/8327353",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -7847,7 +7847,7 @@
       "creationTime": 1638024261000,
       "lastUpdateTime": 1638024261000,
       "label": "**",
-      "deviceURL": "io://****-****-9183/853516",
+      "deviceURL": "io://1234-5678-9183/853516",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -8216,7 +8216,7 @@
       "creationTime": 1639038924000,
       "lastUpdateTime": 1639038924000,
       "label": "** **",
-      "deviceURL": "io://****-****-9183/8552471",
+      "deviceURL": "io://1234-5678-9183/8552471",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -8585,7 +8585,7 @@
       "creationTime": 1638978283000,
       "lastUpdateTime": 1638978283000,
       "label": "**",
-      "deviceURL": "io://****-****-9183/857899",
+      "deviceURL": "io://1234-5678-9183/857899",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
       "definition": {
@@ -9996,7 +9996,7 @@
       "creationTime": 1657038606000,
       "lastUpdateTime": 1657038606000,
       "label": "**&**",
-      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b****-****-b****-127009254b42_climateControl_1",
+      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b1234-5678-b****-127009254b42_climateControl_1",
       "shortcut": false,
       "controllableName": "ogp:HVACZone",
       "definition": {
@@ -10389,7 +10389,7 @@
       "creationTime": 1657038606000,
       "lastUpdateTime": 1657038606000,
       "label": "**&**",
-      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b****-****-b****-127009254b42_climateControl_2",
+      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b1234-5678-b****-127009254b42_climateControl_2",
       "shortcut": false,
       "controllableName": "ogp:TemperatureSensor",
       "definition": {
@@ -10490,7 +10490,7 @@
       "creationTime": 1657038606000,
       "lastUpdateTime": 1657038606000,
       "label": "**",
-      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b****-****-b****-127009254b42_gateway",
+      "deviceURL": "ogcp://OGCP-S-DAIKIN-61b20582f1a777001d356a95/32db****-b1234-5678-b****-127009254b42_gateway",
       "shortcut": false,
       "controllableName": "ogp:Gateway",
       "definition": {
@@ -12384,7 +12384,7 @@
       "creationTime": 1634372531000,
       "lastUpdateTime": 1634372531000,
       "label": "** ** **",
-      "deviceURL": "ogp://****-****-9183/00000BE8",
+      "deviceURL": "ogp://1234-5678-9183/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -12512,7 +12512,7 @@
       "creationTime": 1644997087000,
       "lastUpdateTime": 1644997087000,
       "label": "** ** **",
-      "deviceURL": "ogp://****-****-9183/0003FEF3",
+      "deviceURL": "ogp://1234-5678-9183/0003FEF3",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -12600,7 +12600,7 @@
       "creationTime": 1634372532000,
       "lastUpdateTime": 1634372532000,
       "label": "** ** **",
-      "deviceURL": "ogp://****-****-9183/039575E9",
+      "deviceURL": "ogp://1234-5678-9183/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -12688,7 +12688,7 @@
       "creationTime": 1634372531000,
       "lastUpdateTime": 1634372531000,
       "label": "** ** **",
-      "deviceURL": "ogp://****-****-9183/09E45393",
+      "deviceURL": "ogp://1234-5678-9183/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
       "definition": {
@@ -12776,7 +12776,7 @@
       "creationTime": 1648573874000,
       "lastUpdateTime": 1648573874000,
       "label": "**",
-      "deviceURL": "ogp://****-****-9183/25FFEC53",
+      "deviceURL": "ogp://1234-5678-9183/25FFEC53",
       "shortcut": false,
       "controllableName": "ogp:AudioPlayer",
       "definition": {
@@ -12898,7 +12898,7 @@
       "creationTime": 1648621648000,
       "lastUpdateTime": 1648621648000,
       "label": "**",
-      "deviceURL": "ogp://****-****-9183/C516828A",
+      "deviceURL": "ogp://1234-5678-9183/C516828A",
       "shortcut": false,
       "controllableName": "ogp:AudioPlayer",
       "definition": {
@@ -13020,7 +13020,7 @@
       "creationTime": 1708541839000,
       "lastUpdateTime": 1708541839000,
       "label": "**",
-      "deviceURL": "ogp://****-****-9183/ECC80FBB",
+      "deviceURL": "ogp://1234-5678-9183/ECC80FBB",
       "shortcut": false,
       "controllableName": "ogp:AudioPlayer",
       "definition": {
@@ -13294,7 +13294,7 @@
       "creationTime": 1634372526000,
       "lastUpdateTime": 1634372526000,
       "label": "** *(**)*",
-      "deviceURL": "zigbee://****-****-9183/65535",
+      "deviceURL": "zigbee://1234-5678-9183/65535",
       "shortcut": false,
       "controllableName": "zigbee:TransceiverV3_0Component",
       "definition": {

@@ -1,7 +1,7 @@
 {
   "creationTime": 1564481982000,
   "lastUpdateTime": 1564481982000,
-  "id": "SETUP-****-****-1654",
+  "id": "SETUP-1234-5678-1654",
   "location": {
     "creationTime": 1564481982000,
     "lastUpdateTime": 1581589491000,
@@ -24,7 +24,7 @@
   },
   "gateways": [
     {
-      "gatewayId": "****-****-9876",
+      "gatewayId": "1234-5678-9876",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -42,7 +42,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-5524",
+      "gatewayId": "1234-5678-5524",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -60,7 +60,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-6082",
+      "gatewayId": "1234-5678-6082",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -78,7 +78,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-2310",
+      "gatewayId": "1234-5678-2310",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -96,7 +96,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-4453",
+      "gatewayId": "1234-5678-4453",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -114,7 +114,7 @@
       "functions": "CALENDAR"
     },
     {
-      "gatewayId": "****-****-1621",
+      "gatewayId": "1234-5678-1621",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -132,7 +132,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-0364",
+      "gatewayId": "1234-5678-0364",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -150,7 +150,7 @@
       "functions": ""
     },
     {
-      "gatewayId": "****-****-1654",
+      "gatewayId": "1234-5678-1654",
       "type": 22,
       "subType": 0,
       "placeOID": "0899a4b5-fe64-41ca-96bd-2d910e3c2402",
@@ -173,7 +173,7 @@
       "creationTime": 1567150472000,
       "lastUpdateTime": 1567150472000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-6082/0",
+      "deviceURL": "hlrrwifi://1234-5678-6082/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -229,7 +229,7 @@
       "creationTime": 1567150473000,
       "lastUpdateTime": 1567150473000,
       "label": "** **",
-      "deviceURL": "hlrrwifi://****-****-6082/1",
+      "deviceURL": "hlrrwifi://1234-5678-6082/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -399,7 +399,7 @@
       "creationTime": 1567329530000,
       "lastUpdateTime": 1567329530000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-4453/0",
+      "deviceURL": "hlrrwifi://1234-5678-4453/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -455,7 +455,7 @@
       "creationTime": 1567329531000,
       "lastUpdateTime": 1567329531000,
       "label": "** **",
-      "deviceURL": "hlrrwifi://****-****-4453/1",
+      "deviceURL": "hlrrwifi://1234-5678-4453/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -625,7 +625,7 @@
       "creationTime": 1566844814000,
       "lastUpdateTime": 1566844814000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-1621/0",
+      "deviceURL": "hlrrwifi://1234-5678-1621/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -681,7 +681,7 @@
       "creationTime": 1566844815000,
       "lastUpdateTime": 1566844815000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-1621/1",
+      "deviceURL": "hlrrwifi://1234-5678-1621/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -851,7 +851,7 @@
       "creationTime": 1567267859000,
       "lastUpdateTime": 1567267859000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-0364/0",
+      "deviceURL": "hlrrwifi://1234-5678-0364/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -907,7 +907,7 @@
       "creationTime": 1567267860000,
       "lastUpdateTime": 1567267860000,
       "label": "** **\u00eb** ** **",
-      "deviceURL": "hlrrwifi://****-****-0364/1",
+      "deviceURL": "hlrrwifi://1234-5678-0364/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -1077,7 +1077,7 @@
       "creationTime": 1567150486000,
       "lastUpdateTime": 1567150486000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-2310/0",
+      "deviceURL": "hlrrwifi://1234-5678-2310/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -1133,7 +1133,7 @@
       "creationTime": 1567150487000,
       "lastUpdateTime": 1567150487000,
       "label": "**\u00e9**",
-      "deviceURL": "hlrrwifi://****-****-2310/1",
+      "deviceURL": "hlrrwifi://1234-5678-2310/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -1303,7 +1303,7 @@
       "creationTime": 1567329573000,
       "lastUpdateTime": 1567329573000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-5524/0",
+      "deviceURL": "hlrrwifi://1234-5678-5524/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -1359,7 +1359,7 @@
       "creationTime": 1567329574000,
       "lastUpdateTime": 1567329574000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-5524/1",
+      "deviceURL": "hlrrwifi://1234-5678-5524/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -1534,7 +1534,7 @@
       "creationTime": 1566844877000,
       "lastUpdateTime": 1566844877000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-9876/0",
+      "deviceURL": "hlrrwifi://1234-5678-9876/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -1590,7 +1590,7 @@
       "creationTime": 1566844878000,
       "lastUpdateTime": 1566844878000,
       "label": "** **'**",
-      "deviceURL": "hlrrwifi://****-****-9876/1",
+      "deviceURL": "hlrrwifi://1234-5678-9876/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {
@@ -1760,7 +1760,7 @@
       "creationTime": 1566844894000,
       "lastUpdateTime": 1566844894000,
       "label": "**",
-      "deviceURL": "hlrrwifi://****-****-1654/0",
+      "deviceURL": "hlrrwifi://1234-5678-1654/0",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLRRWifiBridge",
       "definition": {
@@ -1816,7 +1816,7 @@
       "creationTime": 1566844895000,
       "lastUpdateTime": 1566844895000,
       "label": "** ** **",
-      "deviceURL": "hlrrwifi://****-****-1654/1",
+      "deviceURL": "hlrrwifi://1234-5678-1654/1",
       "shortcut": false,
       "controllableName": "hlrrwifi:HLinkMainController",
       "definition": {

@@ -1,7 +1,7 @@
 {
   "creationTime": 1482935318000,
   "lastUpdateTime": 1482935318000,
-  "id": "SETUP-****-****-6923",
+  "id": "SETUP-1234-5678-6923",
   "location": {
     "creationTime": 1482935318000,
     "lastUpdateTime": 1633728272000,
@@ -27,7 +27,7 @@
   },
   "gateways": [
     {
-      "gatewayId": "****-****-6923",
+      "gatewayId": "1234-5678-6923",
       "type": 32,
       "subType": 0,
       "placeOID": "27c236f2-8df0-49d6-80e8-bcdcae9f9dd4",
@@ -49,7 +49,7 @@
       "creationTime": 1482935318000,
       "lastUpdateTime": 1482935318000,
       "label": "**",
-      "deviceURL": "internal://****-****-6923/pod/0",
+      "deviceURL": "internal://1234-5678-6923/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodMiniComponent",
       "definition": {
@@ -174,7 +174,7 @@
       "creationTime": 1602403024000,
       "lastUpdateTime": 1602403024000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/11301395#1",
+      "deviceURL": "io://1234-5678-6923/11301395#1",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent",
       "definition": {
@@ -1448,7 +1448,7 @@
       "creationTime": 1602403024000,
       "lastUpdateTime": 1602403024000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/11301395#2",
+      "deviceURL": "io://1234-5678-6923/11301395#2",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -1517,7 +1517,7 @@
       "creationTime": 1602403024000,
       "lastUpdateTime": 1602403024000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/11301395#3",
+      "deviceURL": "io://1234-5678-6923/11301395#3",
       "shortcut": false,
       "controllableName": "io:ContactIOSystemDeviceSensor",
       "definition": {
@@ -1582,7 +1582,7 @@
       "creationTime": 1602403024000,
       "lastUpdateTime": 1602403024000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/11301395#4",
+      "deviceURL": "io://1234-5678-6923/11301395#4",
       "shortcut": false,
       "controllableName": "io:OccupancyIOSystemDeviceSensor",
       "definition": {
@@ -1648,7 +1648,7 @@
       "creationTime": 1602403024000,
       "lastUpdateTime": 1602403024000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/11301395#5",
+      "deviceURL": "io://1234-5678-6923/11301395#5",
       "shortcut": false,
       "controllableName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
       "definition": {
@@ -1762,7 +1762,7 @@
       "creationTime": 1482935729000,
       "lastUpdateTime": 1482935729000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/14799248#1",
+      "deviceURL": "io://1234-5678-6923/14799248#1",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent",
       "definition": {
@@ -3036,7 +3036,7 @@
       "creationTime": 1482935729000,
       "lastUpdateTime": 1482935729000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/14799248#2",
+      "deviceURL": "io://1234-5678-6923/14799248#2",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -3105,7 +3105,7 @@
       "creationTime": 1482935729000,
       "lastUpdateTime": 1482935729000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/14799248#3",
+      "deviceURL": "io://1234-5678-6923/14799248#3",
       "shortcut": false,
       "controllableName": "io:ContactIOSystemDeviceSensor",
       "definition": {
@@ -3170,7 +3170,7 @@
       "creationTime": 1482935729000,
       "lastUpdateTime": 1482935729000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/14799248#4",
+      "deviceURL": "io://1234-5678-6923/14799248#4",
       "shortcut": false,
       "controllableName": "io:OccupancyIOSystemDeviceSensor",
       "definition": {
@@ -3236,7 +3236,7 @@
       "creationTime": 1482935729000,
       "lastUpdateTime": 1482935729000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/14799248#5",
+      "deviceURL": "io://1234-5678-6923/14799248#5",
       "shortcut": false,
       "controllableName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
       "definition": {
@@ -3350,7 +3350,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/15021786#1",
+      "deviceURL": "io://1234-5678-6923/15021786#1",
       "shortcut": false,
       "controllableName": "io:AtlanticHeatRecoveryVentilationIOComponent",
       "definition": {
@@ -3773,7 +3773,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#2",
+      "deviceURL": "io://1234-5678-6923/15021786#2",
       "shortcut": false,
       "controllableName": "io:CO2IOSystemDeviceSensor",
       "definition": {
@@ -3837,7 +3837,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#3",
+      "deviceURL": "io://1234-5678-6923/15021786#3",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -3906,7 +3906,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#4",
+      "deviceURL": "io://1234-5678-6923/15021786#4",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -3975,7 +3975,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#5",
+      "deviceURL": "io://1234-5678-6923/15021786#5",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -4044,7 +4044,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#6",
+      "deviceURL": "io://1234-5678-6923/15021786#6",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -4113,7 +4113,7 @@
       "creationTime": 1482935460000,
       "lastUpdateTime": 1482935460000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/15021786#7",
+      "deviceURL": "io://1234-5678-6923/15021786#7",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -4182,7 +4182,7 @@
       "creationTime": 1612279823000,
       "lastUpdateTime": 1612279823000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/16597726#1",
+      "deviceURL": "io://1234-5678-6923/16597726#1",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent",
       "definition": {
@@ -5456,7 +5456,7 @@
       "creationTime": 1612279823000,
       "lastUpdateTime": 1612279823000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/16597726#2",
+      "deviceURL": "io://1234-5678-6923/16597726#2",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -5525,7 +5525,7 @@
       "creationTime": 1612279823000,
       "lastUpdateTime": 1612279823000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/16597726#3",
+      "deviceURL": "io://1234-5678-6923/16597726#3",
       "shortcut": false,
       "controllableName": "io:ContactIOSystemDeviceSensor",
       "definition": {
@@ -5590,7 +5590,7 @@
       "creationTime": 1612279823000,
       "lastUpdateTime": 1612279823000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/16597726#4",
+      "deviceURL": "io://1234-5678-6923/16597726#4",
       "shortcut": false,
       "controllableName": "io:OccupancyIOSystemDeviceSensor",
       "definition": {
@@ -5656,7 +5656,7 @@
       "creationTime": 1612279823000,
       "lastUpdateTime": 1612279823000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/16597726#5",
+      "deviceURL": "io://1234-5678-6923/16597726#5",
       "shortcut": false,
       "controllableName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
       "definition": {
@@ -5770,7 +5770,7 @@
       "creationTime": 1488118684000,
       "lastUpdateTime": 1488118684000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/2634956",
+      "deviceURL": "io://1234-5678-6923/2634956",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterIOComponent",
       "definition": {
@@ -6054,7 +6054,7 @@
       "creationTime": 1488127337000,
       "lastUpdateTime": 1488127337000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/4513187",
+      "deviceURL": "io://1234-5678-6923/4513187",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterIOComponent",
       "definition": {
@@ -6338,7 +6338,7 @@
       "creationTime": 1619602812000,
       "lastUpdateTime": 1619602812000,
       "label": "** **",
-      "deviceURL": "io://****-****-6923/4683855#1",
+      "deviceURL": "io://1234-5678-6923/4683855#1",
       "shortcut": false,
       "controllableName": "io:AtlanticDomesticHotWaterProductionV2IOComponent",
       "definition": {
@@ -6949,7 +6949,7 @@
       "creationTime": 1619602812000,
       "lastUpdateTime": 1619602812000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/4683855#2",
+      "deviceURL": "io://1234-5678-6923/4683855#2",
       "shortcut": false,
       "controllableName": "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
       "definition": {
@@ -7068,7 +7068,7 @@
       "creationTime": 1602366107000,
       "lastUpdateTime": 1602366107000,
       "label": "**",
-      "deviceURL": "io://****-****-6923/7016556#1",
+      "deviceURL": "io://1234-5678-6923/7016556#1",
       "shortcut": false,
       "controllableName": "io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent",
       "definition": {
@@ -8342,7 +8342,7 @@
       "creationTime": 1602366107000,
       "lastUpdateTime": 1602366107000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/7016556#2",
+      "deviceURL": "io://1234-5678-6923/7016556#2",
       "shortcut": false,
       "controllableName": "io:TemperatureInCelciusIOSystemDeviceSensor",
       "definition": {
@@ -8411,7 +8411,7 @@
       "creationTime": 1602366107000,
       "lastUpdateTime": 1602366107000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/7016556#3",
+      "deviceURL": "io://1234-5678-6923/7016556#3",
       "shortcut": false,
       "controllableName": "io:ContactIOSystemDeviceSensor",
       "definition": {
@@ -8476,7 +8476,7 @@
       "creationTime": 1602366107000,
       "lastUpdateTime": 1602366107000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/7016556#4",
+      "deviceURL": "io://1234-5678-6923/7016556#4",
       "shortcut": false,
       "controllableName": "io:OccupancyIOSystemDeviceSensor",
       "definition": {
@@ -8542,7 +8542,7 @@
       "creationTime": 1602366107000,
       "lastUpdateTime": 1602366107000,
       "label": "** *(**#**)*",
-      "deviceURL": "io://****-****-6923/7016556#5",
+      "deviceURL": "io://1234-5678-6923/7016556#5",
       "shortcut": false,
       "controllableName": "io:CumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
       "definition": {
@@ -8656,7 +8656,7 @@
       "creationTime": 1601377196000,
       "lastUpdateTime": 1601377196000,
       "label": "** *(**)*",
-      "deviceURL": "io://****-****-6923/948715",
+      "deviceURL": "io://1234-5678-6923/948715",
       "shortcut": false,
       "controllableName": "io:StackComponent",
       "definition": {
