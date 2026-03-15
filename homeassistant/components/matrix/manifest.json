@@ -2,6 +2,7 @@
   "domain": "matrix",
   "name": "Matrix",
   "codeowners": ["@PaarthShah"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/matrix",
   "iot_class": "cloud_push",
   "loggers": ["matrix_client"],

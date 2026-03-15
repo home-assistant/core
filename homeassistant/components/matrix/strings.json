@@ -1,4 +1,85 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured",
+      "cannot_connect": "Failed to connect to the Matrix server during import",
+      "invalid_auth": "Invalid username or password during import",
+      "reauth_successful": "Re-authentication was successful",
+      "unknown": "An unexpected error occurred",
+      "wrong_account": "You must use the same account that was originally configured"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Matrix server",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "Unexpected error occurred"
+    },
+    "step": {
+      "import": {
+        "description": "Import existing Matrix configuration from YAML",
+        "title": "Import Matrix configuration"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "Your Matrix account password"
+        },
+        "description": "Update your Matrix password for {username} on {homeserver}",
+        "title": "Reauthenticate Matrix"
+      },
+      "user": {
+        "data": {
+          "homeserver": "Homeserver URL",
+          "password": "Password",
+          "username": "Username",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "homeserver": "The URL of your Matrix homeserver",
+          "password": "Your Matrix account password",
+          "username": "Your Matrix username including the domain (e.g. @user:matrix.org)",
+          "verify_ssl": "Whether to verify the SSL certificate of your homeserver"
+        },
+        "description": "Configure your Matrix account",
+        "title": "Set up Matrix"
+      }
+    }
+  },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "No Matrix config entry found for the provided config entry ID."
+    },
+    "multiple_entries_loaded": {
+      "message": "Multiple Matrix config entries are loaded. Set config_entry_id to choose one."
+    },
+    "multiple_entries_match": {
+      "message": "Multiple Matrix config entries match the target rooms. Set config_entry_id to choose one."
+    },
+    "no_config_entries_loaded": {
+      "message": "You do not have any Matrix config entries loaded."
+    }
+  },
+  "options": {
+    "error": {
+      "invalid_commands": "Invalid commands. Each command needs a 'name' and exactly one trigger: 'word', 'expression', or 'reaction'",
+      "invalid_rooms": "Invalid room format. Each room must start with ! (room ID) or # (room alias) followed by the server name (e.g. !roomid:matrix.org or #alias:matrix.org)"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "commands": "Commands",
+          "rooms": "Listening rooms"
+        },
+        "data_description": {
+          "commands": "List of word, expression, or reaction commands. Each command requires a 'name' and one of: 'word', 'expression', or 'reaction'. Optionally restrict to specific 'rooms'.",
+          "rooms": "Room IDs or aliases to listen in. Add each room separately (e.g. !roomid:matrix.org or #alias:matrix.org)."
+        },
+        "description": "Configure which rooms to listen in and which commands to respond to",
+        "title": "Configure Matrix rooms and commands"
+      }
+    }
+  },
   "selector": {
     "send_message_data": {
       "fields": {
@@ -27,6 +108,10 @@
     "react": {
       "description": "Sends a reaction to a message.",
       "fields": {
+        "config_entry_id": {
+          "description": "The config entry to use when multiple Matrix accounts are configured.",
+          "name": "Config entry"
+        },
         "message_id": {
           "description": "The ID of the message to react to.",
           "name": "Message ID"
@@ -45,6 +130,10 @@
     "send_message": {
       "description": "Sends message to target room(s).",
       "fields": {
+        "config_entry_id": {
+          "description": "The config entry to use when multiple Matrix accounts are configured.",
+          "name": "Config entry"
+        },
         "data": {
           "description": "Extended information of notification.",
           "name": "Data"
