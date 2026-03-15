@@ -1,13 +1,17 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -22,7 +26,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -43,24 +49,36 @@ rules:
     comment: This integration relies on MAC-based BLE connections.
   discovery: done
   docs-data-update: done
-  docs-examples: done
+  docs-examples: todo
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations: done
+  entity-category:
+    status: exempt
+    comment: This integration only provides one primary entity.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not provide sensors.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration only provides one primary entity.
+  entity-translations:
+    status: exempt
+    comment: This integration only provides one primary entity.
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: Not required.
   reconfiguration-flow: done
-  repair-issues: done
+  repair-issues:
+    status: exempt
+    comment: Not required.
   stale-devices:
     status: exempt
-    comment: Only single device per ConfigEntry.
+    comment: Only single device per config entry.
 
   # Platinum
   async-dependency: done
