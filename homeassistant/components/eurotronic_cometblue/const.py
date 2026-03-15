@@ -3,7 +3,6 @@
 from typing import Final
 
 DOMAIN: Final = "eurotronic_cometblue"
-DEFAULT_NAME: Final = "Eurotronic Comet Blue"
 
 CONF_ALL_TEMPERATURES: Final = {
     "currentTemp",

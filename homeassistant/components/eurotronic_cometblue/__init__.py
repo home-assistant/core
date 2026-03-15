@@ -28,7 +28,7 @@ type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 
 
 @callback
-def _async_migrate_options_if_missing(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def _async_migrate_config_if_missing(hass: HomeAssistant, entry: ConfigEntry) -> None:
     data = dict(entry.data)
 
     changed = False
@@ -48,7 +48,7 @@ def _async_migrate_options_if_missing(hass: HomeAssistant, entry: ConfigEntry) -
 async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
     """Set up Eurotronic Comet Blue from a config entry."""
 
-    _async_migrate_options_if_missing(hass, entry)
+    _async_migrate_config_if_missing(hass, entry)
 
     address = entry.data[CONF_ADDRESS]
 
@@ -103,8 +103,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
-        await coordinator.async_shutdown()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
