@@ -48,11 +48,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up TRMNL switch entities based on a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        TRMNLSwitchEntity(coordinator, device_id, description)
-        for device_id in coordinator.data
-        for description in SWITCH_DESCRIPTIONS
-    )
+
+    known_device_ids: set[int] = set()
+
+    def _async_entity_listener() -> None:
+        new_ids = set(coordinator.data) - known_device_ids
+        if new_ids:
+            async_add_entities(
+                TRMNLSwitchEntity(coordinator, device_id, description)
+                for device_id in new_ids
+                for description in SWITCH_DESCRIPTIONS
+            )
+            known_device_ids.update(new_ids)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class TRMNLSwitchEntity(TRMNLEntity, SwitchEntity):
