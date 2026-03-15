@@ -1,4 +1,62 @@
 # serializer version: 1
+# name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.air_purifier_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lamp',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air purifier Lamp',
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.air_purifier_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -413,6 +471,68 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'vacuum',
+        'mop',
+        'vacuum_and_mop_together',
+        'mop_after_vacuum',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_cleaning_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning type',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning type',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_cleaning_type',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerCleaningType_cleaningType_cleaningType',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Cleaning type',
+      'options': list([
+        'vacuum',
+        'mop',
+        'vacuum_and_mop_together',
+        'mop_after_vacuum',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_cleaning_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'vacuum',
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-entry]
@@ -895,7 +1015,7 @@
     'state': 'none',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -914,7 +1034,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.dishwasher_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -937,10 +1057,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher-state]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher',
+      'friendly_name': 'Dishwasher 1',
       'options': list([
         'stop',
         'run',
@@ -948,14 +1068,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher',
+    'entity_id': 'select.dishwasher_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-entry]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -973,7 +1093,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.dishwasher_1_selected_zone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -996,17 +1116,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_selected_zone-state]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Selected zone',
+      'friendly_name': 'Dishwasher 1 Selected zone',
       'options': list([
         'lower',
         'all',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_selected_zone',
+    'entity_id': 'select.dishwasher_1_selected_zone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2027,7 +2147,7 @@
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer-entry]
+# name: test_all_entities[da_wm_wm_100001][select.washer_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2046,7 +2166,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2069,10 +2189,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer-state]
+# name: test_all_entities[da_wm_wm_100001][select.washer_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer',
+      'friendly_name': 'Washer 1',
       'options': list([
         'run',
         'pause',
@@ -2080,14 +2200,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer-entry]
+# name: test_all_entities[da_wm_wm_100002][select.washer_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2106,7 +2226,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2129,10 +2249,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer-state]
+# name: test_all_entities[da_wm_wm_100002][select.washer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer',
+      'friendly_name': 'Washer 2',
       'options': list([
         'run',
         'pause',
@@ -2140,7 +2260,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer',
+    'entity_id': 'select.washer_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
