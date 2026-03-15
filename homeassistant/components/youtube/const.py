@@ -16,9 +16,12 @@ LOGGER = logging.getLogger(__package__)
 
 ATTR_TITLE = "title"
 ATTR_TOTAL_VIEWS = "total_views"
-ATTR_LATEST_VIDEO = "latest_video"
+ATTR_LATEST_UPLOAD = "latest_upload"
 ATTR_SUBSCRIBER_COUNT = "subscriber_count"
 ATTR_DESCRIPTION = "description"
 ATTR_THUMBNAIL = "thumbnail"
 ATTR_VIDEO_ID = "video_id"
 ATTR_PUBLISHED_AT = "published_at"
+ATTR_LATEST_SHORT = "latest_short"
+ATTR_LATEST_VIDEO_NON_SHORT = "latest_video_non_short"
+ATTR_IS_SHORT = "is_short"
