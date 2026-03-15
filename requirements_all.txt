@@ -725,6 +725,9 @@ caldav==2.1.0
 # homeassistant.components.chess_com
 chess-com-api==1.1.0
 
+# homeassistant.components.cielo_home
+cielo-connect-api==1.0.5
+
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.9
 

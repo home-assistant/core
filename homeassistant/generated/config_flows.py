@@ -122,6 +122,7 @@ FLOWS = {
         "cert_expiry",
         "chacon_dio",
         "chess_com",
+        "cielo_home",
         "cloudflare",
         "cloudflare_r2",
         "co2signal",

@@ -1002,6 +1002,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "cielo_home": {
+      "name": "Cielo Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "cisco": {
       "name": "Cisco",
       "integrations": {
