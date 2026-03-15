@@ -10,10 +10,45 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="192.168.1.100",
+    macaddress="aabbccddeeff",
+    hostname="Litter-Robot4",
+)
+
+
+async def test_dhcp_discovery(hass: HomeAssistant, mock_account: Account) -> None:
+    """Test DHCP discovery triggers user flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
+    """Test DHCP discovery aborts when already configured."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(hass: HomeAssistant, mock_account) -> None:

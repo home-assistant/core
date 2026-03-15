@@ -5,7 +5,7 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "litter-robot4"
+      "hostname": "litter-robot*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/litterrobot",

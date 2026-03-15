@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -82,6 +83,14 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_RECONFIGURE_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle discovery via DHCP."""
+        if self.hass.config_entries.async_has_entries(DOMAIN):
+            return self.async_abort(reason="already_configured")
+        return await self.async_step_user()
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
