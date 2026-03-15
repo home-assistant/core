@@ -53,6 +53,11 @@
         }
       }
     },
+    "select": {
+      "keypad": {
+        "default": "mdi:key-arrow-right"
+      }
+    },
     "sensor": {
       "light_level": {
         "default": "mdi:brightness-7",
