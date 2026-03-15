@@ -12,5 +12,22 @@
     "set_value": {
       "service": "mdi:counter"
     }
+  },
+  "triggers": {
+    "decremented": {
+      "trigger": "mdi:numeric-negative-1"
+    },
+    "incremented": {
+      "trigger": "mdi:numeric-positive-1"
+    },
+    "maximum_reached": {
+      "trigger": "mdi:sort-numeric-ascending-variant"
+    },
+    "minimum_reached": {
+      "trigger": "mdi:sort-numeric-descending-variant"
+    },
+    "reset": {
+      "trigger": "mdi:refresh"
+    }
   }
 }

@@ -1,0 +1,27 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: counter
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+incremented:
+  target:
+    entity:
+      domain: counter
+decremented:
+  target:
+    entity:
+      domain: counter
+maximum_reached: *trigger_common
+minimum_reached: *trigger_common
+reset: *trigger_common
