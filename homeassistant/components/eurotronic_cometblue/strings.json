@@ -28,21 +28,5 @@
         "title": "Comet Blue TRV"
       }
     }
-  },
-  "entity": {
-    "number": {
-      "offset": {
-        "name": "Temperature Offset"
-      },
-      "target_temp_high": {
-        "name": "Target Temperature High"
-      },
-      "target_temp_low": {
-        "name": "Target Temperature Low"
-      },
-      "window_open_minutes": {
-        "name": "Window Open Minutes"
-      }
-    }
   }
 }

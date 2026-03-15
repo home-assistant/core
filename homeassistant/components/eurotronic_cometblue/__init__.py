@@ -21,7 +21,6 @@ from .coordinator import CometBlueDataUpdateCoordinator
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
-    Platform.NUMBER,
 ]
 LOGGER = logging.getLogger(__name__)
 
