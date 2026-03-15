@@ -60,6 +60,7 @@ INTENT_GET_WEATHER = "HassGetWeather"
 
 VALID_UNITS_PRESSURE: set[str] = {
     UnitOfPressure.HPA,
+    UnitOfPressure.KPA,
     UnitOfPressure.MBAR,
     UnitOfPressure.INHG,
     UnitOfPressure.MMHG,
