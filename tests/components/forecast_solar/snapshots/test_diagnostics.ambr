@@ -39,11 +39,11 @@
       'subentries': list([
         dict({
           'data': dict({
-            'declination': 30.0,
-            'azimuth': 180.0,
-            'modules_power': 2000,
+            'azimuth': 190,
+            'declination': 30,
+            'modules_power': 5100,
           }),
-          'title': 'Plane 1',
+          'title': '30° / 190° / 5100W',
         }),
       ]),
       'title': 'Green House',
