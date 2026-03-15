@@ -1,0 +1,104 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This bike is already configured.",
+      "no_devices_found": "No Specialized Turbo bikes found. Make sure the bike is powered on and Bluetooth is enabled.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the bike. Make sure it is powered on and in Bluetooth range."
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "Pairing PIN"
+        },
+        "data_description": {
+          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+        },
+        "description": "A Specialized Turbo bike was found at {address} ({name}). Enter the pairing PIN shown on the bike's TCU display to connect.",
+        "title": "Discovered Specialized Turbo Bike"
+      },
+      "reconfigure": {
+        "data": {
+          "pin": "Pairing PIN"
+        },
+        "data_description": {
+          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+        },
+        "description": "Update the pairing PIN for your Specialized Turbo bike.",
+        "title": "Reconfigure Specialized Turbo"
+      },
+      "user": {
+        "data": {
+          "address": "Bike",
+          "pin": "Pairing PIN"
+        },
+        "data_description": {
+          "address": "Select the Specialized Turbo bike you want to add.",
+          "pin": "The 4-digit PIN displayed on the bike's TCU screen during Bluetooth pairing. Leave empty if your bike does not require a PIN."
+        },
+        "description": "Select your Specialized Turbo bike from the discovered devices.",
+        "title": "Add Specialized Turbo Bike"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "assist_eco_pct": {
+        "name": "ECO assist"
+      },
+      "assist_level": {
+        "name": "Assist level"
+      },
+      "assist_trail_pct": {
+        "name": "Trail assist"
+      },
+      "assist_turbo_pct": {
+        "name": "Turbo assist"
+      },
+      "battery_capacity_wh": {
+        "name": "Battery capacity"
+      },
+      "battery_charge_cycles": {
+        "name": "Charge cycles"
+      },
+      "battery_charge_percent": {
+        "name": "Battery"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "battery_health": {
+        "name": "Battery health"
+      },
+      "battery_remaining_wh": {
+        "name": "Battery remaining"
+      },
+      "battery_temp": {
+        "name": "Battery temperature"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "cadence": {
+        "name": "Cadence"
+      },
+      "motor_power": {
+        "name": "Motor power"
+      },
+      "motor_temp": {
+        "name": "Motor temperature"
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "rider_power": {
+        "name": "Rider power"
+      },
+      "speed": {
+        "name": "Speed"
+      }
+    }
+  }
+}
