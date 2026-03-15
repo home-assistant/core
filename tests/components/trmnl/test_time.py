@@ -55,7 +55,7 @@ async def test_set_value(
     mock_config_entry: MockConfigEntry,
     entity_id: str,
     new_value: time,
-    expected_kwargs: dict,
+    expected_kwargs: dict[str, int],
 ) -> None:
     """Test setting a time value calls the client and triggers a coordinator refresh."""
     with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
