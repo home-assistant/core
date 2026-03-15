@@ -89,6 +89,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
                 manufacturer=ble_device_info["manufacturer"],
                 model=ble_device_info["model"],
             )
+            try:
+                # Device only returns battery level if PIN is correct
+                await cometblue_device.get_battery_async()
+            except Exception:
+                # need to use broad exception as different exceptions are raised
+                # based on the underlying OS and backend
+                LOGGER.exception(
+                    "Failed to read battery level, likely due to incorrect PIN"
+                )
     except BleakError as ex:
         raise ConfigEntryNotReady(
             f"Failed to get device info from '{cometblue_device.device.address}'"
