@@ -21,6 +21,7 @@ from zha.application.const import (
     ATTR_QUIRK_APPLIED,
     ATTR_TYPE,
     CLUSTER_TYPE_IN,
+    CLUSTER_TYPE_OUT,
 )
 from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
 from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device
@@ -73,6 +74,7 @@ from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
+IEEE_SWITCH_OUTPUT_DEVICE = "01:2d:6f:00:0a:90:69:e9"
 
 if TYPE_CHECKING:
     from zigpy.application import ControllerApplication
@@ -124,7 +126,7 @@ async def zha_client(
         {
             1: {
                 SIG_EP_INPUT: [general.OnOff.cluster_id, general.Basic.cluster_id],
-                SIG_EP_OUTPUT: [],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
                 SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
@@ -169,7 +171,7 @@ async def test_device_clusters(hass: HomeAssistant, zha_client) -> None:
 
     msg = await zha_client.receive_json()
 
-    assert len(msg["result"]) == 2
+    assert len(msg["result"]) == 3
 
     cluster_infos = sorted(msg["result"], key=lambda k: k[ID])
 
@@ -182,6 +184,11 @@ async def test_device_clusters(hass: HomeAssistant, zha_client) -> None:
     assert cluster_info[TYPE] == CLUSTER_TYPE_IN
     assert cluster_info[ID] == 6
     assert cluster_info[ATTR_NAME] == "OnOff"
+
+    cluster_info = cluster_infos[2]
+    assert cluster_info[TYPE] == CLUSTER_TYPE_OUT
+    assert cluster_info[ID] == 25
+    assert cluster_info[ATTR_NAME] == "Ota"
 
 
 async def test_device_cluster_attributes(zha_client) -> None:
@@ -229,6 +236,56 @@ async def test_device_cluster_commands(zha_client) -> None:
         assert command[ID] is not None
         assert command[ATTR_NAME] is not None
         assert command[TYPE] is not None
+
+
+async def test_device_cluster_commands_out(zha_client) -> None:
+    """Test getting device cluster commands."""
+    await zha_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zha/devices/clusters/commands",
+            ATTR_ENDPOINT_ID: 1,
+            ATTR_IEEE: IEEE_SWITCH_DEVICE,
+            ATTR_CLUSTER_ID: 25,
+            ATTR_CLUSTER_TYPE: CLUSTER_TYPE_OUT,
+        }
+    )
+
+    msg = await zha_client.receive_json()
+
+    commands = msg["result"]
+    assert commands == [
+        {
+            "id": 5,
+            "name": "image_block_response",
+            "schema": ANY,
+            "type": "client",
+        },
+        {
+            "id": 0,
+            "name": "image_notify",
+            "schema": ANY,
+            "type": "client",
+        },
+        {
+            "id": 2,
+            "name": "query_next_image_response",
+            "schema": ANY,
+            "type": "client",
+        },
+        {
+            "id": 9,
+            "name": "query_specific_file_response",
+            "schema": ANY,
+            "type": "client",
+        },
+        {
+            "id": 7,
+            "name": "upgrade_end_response",
+            "schema": ANY,
+            "type": "client",
+        },
+    ]
 
 
 @pytest.mark.freeze_time("2023-09-23 20:16:00+00:00")
