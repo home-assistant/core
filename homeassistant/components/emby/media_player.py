@@ -154,9 +154,9 @@ class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = True
+    _attr_has_entity_name = False
 
-    def __init__(self, emby, device_id):
+    def __init__(self, emby, device_id) -> None:
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
         self.emby = emby
