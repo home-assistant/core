@@ -60,6 +60,17 @@
         "name": "Motzei Shabbat/Hag"
       }
     },
+    "calendar": {
+      "daily_events": {
+        "name": "Daily events"
+      },
+      "learning_schedule": {
+        "name": "Learning schedule"
+      },
+      "yearly_events": {
+        "name": "Yearly events"
+      }
+    },
     "sensor": {
       "alot_hashachar": {
         "name": "Halachic dawn (Alot Hashachar)"
@@ -152,24 +163,62 @@
     "step": {
       "init": {
         "data": {
+          "calendar_events": "Calendar events to display",
           "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
-          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+          "daily_events": "Daily events to display",
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah",
+          "learning_schedule": "Learning schedule to display",
+          "yearly_events": "Yearly events to display"
         },
         "data_description": {
           "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
-          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
+          "daily_events": "Select which daily Jewish calendar events should be displayed in the Daily Events calendar",
+          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead",
+          "learning_schedule": "Select which learning schedules should be displayed in the Learning Schedule calendar",
+          "yearly_events": "Select which yearly Jewish calendar events should be displayed in the Yearly Events calendar"
         },
         "title": "Configure options for Jewish Calendar"
       }
     }
   },
   "selector": {
+    "daily_events": {
+      "options": {
+        "alot_hashachar": "Alot Hashachar (dawn)",
+        "chatzot_hayom": "Chatzot Hayom (midday)",
+        "date": "Hebrew date",
+        "mincha_gedola": "Mincha Gedola",
+        "mincha_ketana": "Mincha Ketana",
+        "netz_hachama": "Netz Hachama (sunrise)",
+        "plag_hamincha": "Plag Hamincha",
+        "shkia": "Shkia (sunset)",
+        "sof_zman_shema_gra": "Sof Zman Shema (Gr\"A)",
+        "sof_zman_shema_mga": "Sof Zman Shema (Mg\"A)",
+        "sof_zman_tfilla_gra": "Sof Zman Tefilla (Gr\"A)",
+        "sof_zman_tfilla_mga": "Sof Zman Tefilla (Mg\"A)",
+        "tset_hakohavim": "T'set Hakochavim (nightfall)"
+      }
+    },
+    "learning_schedule": {
+      "options": {
+        "daf_yomi": "Daf Yomi"
+      }
+    },
     "nusach": {
       "options": {
         "adot_mizrah": "Adot Mizrah",
         "ashkenaz": "Ashkenaz",
         "italian": "Italian",
         "sfarad": "Sfarad"
+      }
+    },
+    "yearly_events": {
+      "options": {
+        "candle_lighting": "Candle lighting",
+        "havdalah": "Havdalah",
+        "holiday": "Jewish holidays",
+        "omer_count": "Omer count",
+        "weekly_portion": "Torah portion"
       }
     }
   },
