@@ -162,7 +162,7 @@ def find_entity_ids(
 
 def async_find_group_entity_id(hass: HomeAssistant, domain, group):
     """Find the group entity id under test."""
-    entity_id = f"{domain}.coordinator_manufacturer_coordinator_model_{group.name.lower().replace(' ', '_')}"
+    entity_id = f"{domain}.{group.name.lower().replace(' ', '_')}"
 
     entity_ids = hass.states.async_entity_ids(domain)
     assert entity_id in entity_ids
