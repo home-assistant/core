@@ -5,12 +5,12 @@
         "status": "OK",
         "protocolVersion": "2023.1.4-12"
       },
-      "gatewayId": "****-****-9373"
+      "gatewayId": "1234-5678--9373"
     }
   ],
   "devices": [
     {
-      "deviceURL": "zigbee://****-****-9373/0/0",
+      "deviceURL": "zigbee://1234-5678--9373/0/0",
       "available": true,
       "synced": true,
       "type": 6,
@@ -83,7 +83,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/3000744#1",
+      "deviceURL": "io://1234-5678--9373/3000744#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -973,7 +973,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/15097783",
+      "deviceURL": "io://1234-5678--9373/15097783",
       "available": true,
       "synced": true,
       "type": 1,
@@ -1179,7 +1179,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/13876191#1",
+      "deviceURL": "io://1234-5678--9373/13876191#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -2059,7 +2059,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/13659989#1",
+      "deviceURL": "io://1234-5678--9373/13659989#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -2949,7 +2949,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/1170079",
+      "deviceURL": "io://1234-5678--9373/1170079",
       "available": true,
       "synced": true,
       "type": 1,
@@ -3195,7 +3195,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/1292684#2",
+      "deviceURL": "io://1234-5678--9373/1292684#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -3298,7 +3298,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/10074960#1",
+      "deviceURL": "io://1234-5678--9373/10074960#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -4188,7 +4188,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/10832611#2",
+      "deviceURL": "io://1234-5678--9373/10832611#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -4291,7 +4291,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/3904805",
+      "deviceURL": "io://1234-5678--9373/3904805",
       "available": true,
       "synced": true,
       "type": 1,
@@ -4605,7 +4605,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/9749990#2",
+      "deviceURL": "io://1234-5678--9373/9749990#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -4708,7 +4708,7 @@
       }
     },
     {
-      "deviceURL": "internal://****-****-9373/wifi/0",
+      "deviceURL": "internal://1234-5678--9373/wifi/0",
       "available": true,
       "synced": true,
       "type": 1,
@@ -4772,7 +4772,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/5488574",
+      "deviceURL": "io://1234-5678--9373/5488574",
       "available": true,
       "synced": true,
       "type": 1,
@@ -5018,7 +5018,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/13876191#2",
+      "deviceURL": "io://1234-5678--9373/13876191#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -5121,7 +5121,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/13659989#2",
+      "deviceURL": "io://1234-5678--9373/13659989#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -5224,7 +5224,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/3000744#2",
+      "deviceURL": "io://1234-5678--9373/3000744#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -5327,7 +5327,7 @@
       }
     },
     {
-      "deviceURL": "zigbee://****-****-9373/65535",
+      "deviceURL": "zigbee://1234-5678--9373/65535",
       "available": true,
       "synced": true,
       "type": 5,
@@ -5347,7 +5347,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/10832611#1",
+      "deviceURL": "io://1234-5678--9373/10832611#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -6237,7 +6237,7 @@
       }
     },
     {
-      "deviceURL": "zigbee://****-****-9373/0/1",
+      "deviceURL": "zigbee://1234-5678--9373/0/1",
       "available": true,
       "synced": true,
       "type": 5,
@@ -6346,7 +6346,7 @@
     },
     {
       "creationTime": 1686173907452,
-      "deviceURL": "rts://****-****-9373/16757362",
+      "deviceURL": "rts://1234-5678--9373/16757362",
       "available": true,
       "synced": true,
       "type": 1,
@@ -6415,7 +6415,7 @@
       "subsystemId": 0
     },
     {
-      "deviceURL": "io://****-****-9373/11754455",
+      "deviceURL": "io://1234-5678--9373/11754455",
       "available": true,
       "synced": true,
       "type": 5,
@@ -6472,7 +6472,7 @@
       }
     },
     {
-      "deviceURL": "zigbee://****-****-9373/0/242",
+      "deviceURL": "zigbee://1234-5678--9373/0/242",
       "available": true,
       "synced": true,
       "type": 5,
@@ -6580,7 +6580,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/10202865",
+      "deviceURL": "io://1234-5678--9373/10202865",
       "available": true,
       "synced": true,
       "type": 1,
@@ -6747,7 +6747,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/8381989",
+      "deviceURL": "io://1234-5678--9373/8381989",
       "available": true,
       "synced": true,
       "type": 1,
@@ -6993,7 +6993,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/3868695",
+      "deviceURL": "io://1234-5678--9373/3868695",
       "available": true,
       "synced": true,
       "type": 1,
@@ -7307,7 +7307,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/5740023",
+      "deviceURL": "io://1234-5678--9373/5740023",
       "available": true,
       "synced": true,
       "type": 1,
@@ -7553,7 +7553,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/1292684#1",
+      "deviceURL": "io://1234-5678--9373/1292684#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -8443,7 +8443,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/9749990#1",
+      "deviceURL": "io://1234-5678--9373/9749990#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -9333,7 +9333,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/5632438",
+      "deviceURL": "io://1234-5678--9373/5632438",
       "available": true,
       "synced": true,
       "type": 1,
@@ -9647,7 +9647,7 @@
       }
     },
     {
-      "deviceURL": "internal://****-****-9373/pod/0",
+      "deviceURL": "internal://1234-5678--9373/pod/0",
       "available": true,
       "synced": true,
       "type": 1,
@@ -9778,7 +9778,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/6360455#1",
+      "deviceURL": "io://1234-5678--9373/6360455#1",
       "available": true,
       "synced": true,
       "type": 1,
@@ -10668,7 +10668,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/10074960#2",
+      "deviceURL": "io://1234-5678--9373/10074960#2",
       "available": true,
       "synced": true,
       "type": 2,
@@ -10771,7 +10771,7 @@
       }
     },
     {
-      "deviceURL": "io://****-****-9373/6360455#2",
+      "deviceURL": "io://1234-5678--9373/6360455#2",
       "available": true,
       "synced": true,
       "type": 2,

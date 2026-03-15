@@ -62,7 +62,7 @@ RTS = FixtureDevice("setup/setup_hi_kumo.json", "rts://1234-1234-6362/16730022")
 SHUTTER = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/12184029")
 GARAGE = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/1166863")
 TILTED_WINDOW = FixtureDevice(
-    "setup/setup_local_with_climate.json", "io://****-****-9373/10202865"
+    "setup/setup_local_with_climate.json", "io://1234-5678-9373/10202865"
 )
 
 SNAPSHOT_FIXTURES = [
