@@ -372,8 +372,23 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     if parameter is None or parameter == "*":
         res = list(range(min_value, max_value + 1))
     elif isinstance(parameter, str):
-        if parameter.startswith("/"):
+        if "," in parameter:
+            res = []
+            for part in parameter.split(","):
+                res.extend(parse_time_expression(part, min_value, max_value))
+        elif "-" in parameter:
+            pieces = parameter.split("-")
+            if len(pieces) != 2:
+                raise ValueError(f"{parameter} has more than one hyphen")
+            start = parse_time_expression(pieces[0], min_value, max_value)[0]
+            end = parse_time_expression(pieces[1], min_value, max_value)[0]
+            if end <= start:
+                raise ValueError(f"{start} must be less than {end}")
+            res = list(range(start, end + 1))
+        elif parameter.startswith("/"):
             parameter = int(parameter[1:])
+            if not (0 < parameter <= max_value):
+                raise ValueError(f"{parameter} must be between 1 and {max_value}")
             res = list(
                 range(min_value + (-min_value % parameter), max_value + 1, parameter)
             )
@@ -383,7 +398,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
-        res = sorted(int(x) for x in parameter)
+        res = [int(x) for x in parameter]
 
     for val in res:
         if val < min_value or val > max_value:
@@ -392,7 +407,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
                 f"({min_value} to {max_value})"
             )
 
-    return res
+    return sorted(set(res))
 
 
 def _dst_offset_diff(dattim: dt.datetime) -> dt.timedelta:

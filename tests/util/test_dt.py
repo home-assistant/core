@@ -299,8 +299,29 @@ def test_parse_time_expression() -> None:
     assert dt_util.parse_time_expression(42, 0, 59) == [42]
     assert dt_util.parse_time_expression("42", 0, 59) == [42]
 
+    assert dt_util.parse_time_expression("1,2,3", 0, 59) == [1, 2, 3]
+    assert dt_util.parse_time_expression("3,2,1", 0, 59) == [1, 2, 3]
+    assert dt_util.parse_time_expression("1-3", 0, 59) == [1, 2, 3]
+    assert dt_util.parse_time_expression("1-3,20,/15,/20", 0, 59) == [
+        0,
+        1,
+        2,
+        3,
+        15,
+        20,
+        30,
+        40,
+        45,
+    ]
+
     with pytest.raises(ValueError):
         dt_util.parse_time_expression(61, 0, 60)
+    with pytest.raises(ValueError):
+        dt_util.parse_time_expression("1-2-3", 0, 59)
+    with pytest.raises(ValueError):
+        dt_util.parse_time_expression("3-1", 0, 59)
+    with pytest.raises(ValueError):
+        dt_util.parse_time_expression("/0.9", 0, 59)
 
 
 def test_find_next_time_expression_time_basic() -> None:
