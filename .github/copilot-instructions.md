@@ -12,6 +12,8 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
+Run `script/setup` to set up the development environment. This creates a virtual environment and installs all necessary requirements. Each time you start a new terminal session, activate the virtual environment with `source .venv/bin/activate`.
+
 .vscode/tasks.json contains useful commands used for development.
 
 ## Python Syntax Notes
