@@ -1743,6 +1743,9 @@ p1monitor==3.2.0
 # homeassistant.components.mqtt
 paho-mqtt==2.1.0
 
+# homeassistant.components.paj_gps
+pajgps-api==0.3.1
+
 # homeassistant.components.panasonic_bluray
 panacotta==0.2
 
