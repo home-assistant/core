@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -21,25 +20,19 @@ from .const import CONF_LOCATION_ID, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class CannotConnect(HomeAssistantError):
-    """Raised when the integration cannot connect during config flow."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Raised when provided credentials are invalid during config flow."""
-
-
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_EMAIL): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
+        ),
+        vol.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
     }
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[dict[str, Any], DiyanetApiClient]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DiyanetApiClient:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -51,7 +44,7 @@ async def validate_input(
     await client.authenticate()
 
     # Return info and authenticated client for subsequent steps
-    return {"title": f"Diyanet ({data[CONF_EMAIL]})"}, client
+    return client
 
 
 class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -60,16 +53,17 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize config flow runtime state."""
-        self._client: DiyanetApiClient | None = None
-        self._email: str | None = None
-        self._password: str | None = None
-        self._country_id: int | None = None
-        self._country_name: str | None = None
-        self._state_id: int | None = None
-        self._state_name: str | None = None
-        self._city_name: str | None = None
+    _client: DiyanetApiClient
+    _email: str | None = None
+    _password: str | None = None
+    _country_id: int | None = None
+    _country_name: str | None = None
+    _country_labels: dict[int, str]
+    _state_id: int | None = None
+    _state_name: str | None = None
+    _state_labels: dict[int, str]
+    _city_name: str | None = None
+    _city_labels: dict[int, str]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -79,14 +73,13 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 # Validate credentials by authenticating
-                _, client = await validate_input(self.hass, user_input)
-                self._email = user_input[CONF_EMAIL]
+                self._client = await validate_input(self.hass, user_input)
+                email = user_input[CONF_EMAIL]
+                self._email = email
                 self._password = user_input[CONF_PASSWORD]
-                # Reuse the already authenticated client for subsequent steps
-                self._client = client
 
                 # Prevent duplicate entries for the same email
-                await self.async_set_unique_id(self._email.lower())
+                await self.async_set_unique_id(email.lower())
                 self._abort_if_unique_id_configured()
 
                 # Proceed to country selection
@@ -102,44 +95,35 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
+        data_schema = self.add_suggested_values_to_schema(
+            STEP_USER_DATA_SCHEMA, user_input or {}
+        )
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_select_country(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a country to narrow down states."""
-        if self._client is None:
-            raise AbortFlow("missing_context")
         client = self._client
         errors: dict[str, str] = {}
 
         if user_input is not None:
             self._country_id = int(user_input["country_id"])
-            # Store country name for display
-            try:
-                countries = await client.get_countries()
-                for country in countries:
-                    if country.get("id") == self._country_id:
-                        self._country_name = str(
-                            country.get("code")
-                            or country.get("name")
-                            or country.get("Code")
-                            or country.get("Name")
-                        )
-                        break
-            except DiyanetConnectionError:
-                pass
+            # Reuse labels from the previously rendered selector options.
+            self._country_name = getattr(self, "_country_labels", {}).get(
+                self._country_id
+            )
             return await self.async_step_select_state()
 
         try:
             countries = await client.get_countries()
         except DiyanetConnectionError:
-            errors["base"] = "cannot_connect"
-            countries = []
+            return self.async_abort(reason="cannot_connect")
 
         options: list[selector.SelectOptionDict] = []
+        self._country_labels = {}
         for item in countries:
             # Prefer code for english-friendly labels, fallback to name
             label: str = str(
@@ -151,7 +135,11 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
                 or item.get("Title")
                 or item.get("id")
             )
-            value = str(item.get("id"))
+            if (country_id_raw := item.get("id")) is None:
+                continue
+            country_id = int(country_id_raw)
+            self._country_labels[country_id] = label
+            value = str(country_id)
             options.append(selector.SelectOptionDict(label=label, value=value))
 
         schema = vol.Schema(
@@ -171,7 +159,7 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a state within the chosen country."""
-        if self._client is None or self._country_id is None:
+        if self._country_id is None:
             raise AbortFlow("missing_context")
         client = self._client
         country_id = self._country_id
@@ -179,29 +167,17 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._state_id = int(user_input["state_id"])
-            # Store state name for display
-            try:
-                states = await client.get_states(country_id)
-                for state in states:
-                    if state.get("id") == self._state_id:
-                        self._state_name = str(
-                            state.get("code")
-                            or state.get("name")
-                            or state.get("Code")
-                            or state.get("Name")
-                        )
-                        break
-            except DiyanetConnectionError:
-                pass
+            # Reuse labels from the previously rendered selector options.
+            self._state_name = getattr(self, "_state_labels", {}).get(self._state_id)
             return await self.async_step_select_city()
 
         try:
             states = await client.get_states(country_id)
         except DiyanetConnectionError:
-            errors["base"] = "cannot_connect"
-            states = []
+            return self.async_abort(reason="cannot_connect")
 
         options: list[selector.SelectOptionDict] = []
+        self._state_labels = {}
         for item in states:
             label: str = str(
                 item.get("code")
@@ -212,7 +188,11 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
                 or item.get("Title")
                 or item.get("id")
             )
-            value = str(item.get("id"))
+            if (state_id_raw := item.get("id")) is None:
+                continue
+            state_id = int(state_id_raw)
+            self._state_labels[state_id] = label
+            value = str(state_id)
             options.append(selector.SelectOptionDict(label=label, value=value))
 
         schema = vol.Schema(
@@ -232,12 +212,7 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select a city within the chosen state and finish."""
-        if (
-            self._client is None
-            or self._state_id is None
-            or self._email is None
-            or self._password is None
-        ):
+        if self._state_id is None or self._email is None or self._password is None:
             raise AbortFlow("missing_context")
         client = self._client
         state_id = self._state_id
@@ -247,30 +222,8 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             city_id = int(user_input["city_id"])
-            # Store city name for display
-            try:
-                cities = await client.get_cities(state_id)
-                for city in cities:
-                    if city.get("id") == city_id:
-                        code = (
-                            city.get("code")
-                            or city.get("Code")
-                            or city.get("shortName")
-                            or city.get("ShortName")
-                        )
-                        name = (
-                            city.get("name")
-                            or city.get("Name")
-                            or city.get("title")
-                            or city.get("Title")
-                        )
-                        if code and name and str(code) != str(name):
-                            self._city_name = f"{code} – {name}"
-                        else:
-                            self._city_name = str(code or name)
-                        break
-            except DiyanetConnectionError:
-                pass
+            # Reuse labels from the previously rendered selector options.
+            self._city_name = getattr(self, "_city_labels", {}).get(city_id)
 
             try:
                 # Validate city works by fetching prayer times
@@ -303,10 +256,10 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             cities = await client.get_cities(state_id)
         except DiyanetConnectionError:
-            errors["base"] = "cannot_connect"
-            cities = []
+            return self.async_abort(reason="cannot_connect")
 
         options: list[selector.SelectOptionDict] = []
+        self._city_labels = {}
         for item in cities:
             # Show "CODE – Name" if both available; otherwise whichever exists
             code = (
@@ -325,7 +278,11 @@ class DiyanetConfigFlow(ConfigFlow, domain=DOMAIN):
                 label = f"{code} – {name}"
             else:
                 label = str(code or name or item.get("id"))
-            value = str(item.get("id"))
+            if (city_id_raw := item.get("id")) is None:
+                continue
+            city_id = int(city_id_raw)
+            self._city_labels[city_id] = label
+            value = str(city_id)
             options.append(selector.SelectOptionDict(label=label, value=value))
 
         schema = vol.Schema(
