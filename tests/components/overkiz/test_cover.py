@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import EventName, ExecutionState, OverkizCommandParam, OverkizState
-from pyoverkiz.models import Event
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -30,7 +29,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -41,8 +40,9 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockOverkizClient, SetupOverkizIntegration
+from .helpers import assert_command_call, async_deliver_events, build_event
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import snapshot_platform
 
 FIXTURE_AWNING = "setup/setup_local.json"
 FIXTURE_LOW_SPEED = "setup/setup_nexity_2.json"
@@ -90,53 +90,6 @@ def get_entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
         )
     )
     return entity_id
-
-
-def assert_command_call(
-    mock_client: MockOverkizClient,
-    *,
-    device_url: str,
-    command_name: str,
-    parameters: tuple[Any, ...] = (),
-) -> None:
-    """Assert the latest executed command."""
-    assert mock_client.execute_command.await_count == 1
-    args = mock_client.execute_command.await_args.args
-    assert args[0] == device_url
-    assert args[1].name == command_name
-    assert args[1].parameters == list(parameters)
-    assert args[2] == "Home Assistant"
-
-
-def build_event(
-    name: str,
-    *,
-    device_url: str,
-    device_states: list[dict[str, Any]] | None = None,
-    exec_id: str | None = None,
-    new_state: str | None = None,
-) -> Event:
-    """Create an Overkiz event using the library model constructor."""
-    return Event(
-        name=name,
-        device_url=device_url,
-        device_states=device_states,
-        exec_id=exec_id,
-        new_state=new_state,
-    )
-
-
-async def async_deliver_events(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_client: MockOverkizClient,
-    *event_batches: list[Event],
-) -> None:
-    """Queue event batches and advance time to trigger a coordinator refresh."""
-    mock_client.queue_events(*event_batches)
-    freezer.tick(UPDATE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
