@@ -33,6 +33,6 @@ async def test_wiim_base_entity_device_info(mock_wiim_device: WiimDevice) -> Non
     assert device_info is not None, "device_info unexpectedly None"
     assert device_info["identifiers"] == {(DOMAIN, mock_wiim_device.udn)}
     assert device_info["name"] == mock_wiim_device.name
-    assert device_info["manufacturer"] == mock_wiim_device._manufacturer
+    assert device_info["manufacturer"] == mock_wiim_device.manufacturer
     assert device_info["model"] == mock_wiim_device.model_name
     assert device_info["sw_version"] == mock_wiim_device.firmware_version

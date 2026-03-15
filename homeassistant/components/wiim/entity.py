@@ -22,13 +22,11 @@ class WiimBaseEntity(Entity):
             identifiers={(DOMAIN, self._device.udn)},
             name=self._device.name,
             manufacturer=self._device.manufacturer,
-            model=self._device.model,
+            model=self._device.model_name,
             sw_version=self._device.firmware_version,
         )
-        if self._device.upnp_device and self._device.upnp_device.presentation_url:
-            self._attr_device_info["configuration_url"] = (
-                self._device.upnp_device.presentation_url
-            )
+        if self._device.presentation_url:
+            self._attr_device_info["configuration_url"] = self._device.presentation_url
         elif self._device.http_api_url:
             self._attr_device_info["configuration_url"] = self._device.http_api_url
 
