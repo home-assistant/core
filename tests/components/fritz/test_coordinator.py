@@ -321,8 +321,10 @@ async def test_async_update_hosts_info_raises_homeassistant_error(
         side_effect=RuntimeError("broken")
     )
 
-    with pytest.raises(HomeAssistantError, match="error_refresh_hosts_info"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await fritz_tools._async_update_hosts_info()
+
+    assert exc_info.value.translation_key == "error_refresh_hosts_info"
 
 
 async def test_async_update_call_deflections_empty_paths(
