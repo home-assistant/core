@@ -70,6 +70,7 @@ async def _handle_webhook(
         base_result["data"] = await request.post()
 
     base_result["query"] = request.query
+    base_result["headers"] = request.headers
     base_result["description"] = "webhook"
 
     triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
