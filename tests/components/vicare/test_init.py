@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -105,3 +106,38 @@ async def test_device_and_entity_migration(
         == "gateway1_deviceId1-heating-0"
     )
     assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway2-0"
+
+
+async def test_migration_v1_1_to_v1_2_triggers_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migrated entry with empty token raises ConfigEntryAuthFailed."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        entry_id="1234",
+        version=1,
+        minor_version=1,
+        data={
+            "client_id": "old-client-id",
+            "username": "user@example.com",
+            "password": "secret",
+            CONF_HEATING_TYPE: "gas",
+        },
+    )
+    old_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(old_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Setup should fail with auth error, triggering reauth
+    assert old_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify migration happened
+    assert old_entry.minor_version == 2
+    assert old_entry.data["auth_implementation"] == DOMAIN
+    assert old_entry.data["token"] == {}
+    assert old_entry.data[CONF_HEATING_TYPE] == "gas"
+    # Old credentials should be removed from entry data
+    assert "password" not in old_entry.data
+    assert "username" not in old_entry.data

@@ -122,6 +122,33 @@ async def test_reauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_preserves_existing_data(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth preserves heating_type and other non-OAuth data."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Verify original data has heating_type
+    assert mock_config_entry.data[CONF_HEATING_TYPE] == "auto"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # Verify heating_type is preserved and token is updated
+    assert mock_config_entry.data[CONF_HEATING_TYPE] == "auto"
+    assert mock_config_entry.data["token"]["access_token"] == "mock-access-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_dhcp_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
