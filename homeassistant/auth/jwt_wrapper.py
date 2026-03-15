@@ -21,7 +21,9 @@ MAX_TOKEN_SIZE = 8192
 _VERIFY_KEYS = ("signature", "exp", "nbf", "iat", "aud", "iss", "sub", "jti")
 
 _VERIFY_OPTIONS: dict[str, Any] = {f"verify_{key}": True for key in _VERIFY_KEYS} | {
-    "require": []
+    "require": [],
+    "strict_aud": False,
+    "enforce_minimum_key_length": False,
 }
 _NO_VERIFY_OPTIONS = {f"verify_{key}": False for key in _VERIFY_KEYS}
 
