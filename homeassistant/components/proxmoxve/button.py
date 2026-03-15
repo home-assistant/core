@@ -209,7 +209,7 @@ async def async_setup_entry(
             (node_data, vm_data)
             for node_data in coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
-            if (node_data.node["node"], vmid) in coordinator.known_vms
+            if vmid in coordinator.known_vms
         ]
     )
     _async_add_new_containers(
@@ -217,7 +217,7 @@ async def async_setup_entry(
             (node_data, container_data)
             for node_data in coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
-            if (node_data.node["node"], vmid) in coordinator.known_containers
+            if vmid in coordinator.known_containers
         ]
     )
 
@@ -289,11 +289,12 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
+        # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
-            self.entity_description.press_action,
+            self.entity_description.press_action,  # type: ignore[arg-type]
             self.coordinator,
             self._node_name,
-            self.vm_data["vmid"],
+            self.device_id,
         )
 
 
@@ -310,9 +311,10 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
             )
+        # _node_name is guaranteed non-None when available is True
         await self.hass.async_add_executor_job(
-            self.entity_description.press_action,
+            self.entity_description.press_action,  # type: ignore[arg-type]
             self.coordinator,
             self._node_name,
-            self.container_data["vmid"],
+            self.device_id,
         )
