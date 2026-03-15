@@ -64,11 +64,6 @@ INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     }
 )
 
-ACTION_SCHEMA_MAP = {
-    INOVELLI_ALL_LED_EFFECT: INOVELLI_ALL_LED_EFFECT_SCHEMA,
-    INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
-}
-
 ACTION_SCHEMA = vol.Any(
     INOVELLI_ALL_LED_EFFECT_SCHEMA,
     INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
@@ -134,14 +129,6 @@ async def async_call_action_from_config(
     await ZHA_ACTION_TYPES[DEVICE_ACTION_TYPES[config[CONF_TYPE]]](
         hass, config, variables, context
     )
-
-
-async def async_validate_action_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
-    """Validate config."""
-    schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    return schema(config)
 
 
 async def async_get_actions(
