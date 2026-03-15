@@ -22,7 +22,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
 
 
-
 class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
@@ -49,7 +48,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         self.device_info = device_info
 
     async def send_command(
-        self, function: str, payload: dict[str, Any], caller_entity_id: str
+        self, function: str, payload: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Send command to device."""
 

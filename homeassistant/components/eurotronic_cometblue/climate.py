@@ -163,7 +163,6 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
                     "targetTempHigh": kwargs.get(ATTR_TARGET_TEMP_HIGH),
                 }
             },
-            self.entity_id,
         )
         await self.coordinator.async_request_refresh()
 
@@ -171,9 +170,11 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Set new target preset mode."""
 
         if self.preset_modes and preset_mode not in self.preset_modes:
-            raise ValueError(f"Unsupported preset_mode '{preset_mode}'")
+            raise ServiceValidationError(f"Unsupported preset_mode '{preset_mode}'")
         if preset_mode in [PRESET_NONE, PRESET_AWAY]:
-            raise ValueError(f"Unable to set preset '{preset_mode}', display only.")
+            raise ServiceValidationError(
+                f"Unable to set preset '{preset_mode}', display only."
+            )
         if preset_mode == PRESET_ECO:
             return await self.async_set_temperature(
                 temperature=self.target_temperature_low
@@ -195,7 +196,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return await self.async_set_temperature(
                 temperature=self.target_temperature_low
             )
-        raise ValueError(f"Unknown HVAC mode '{hvac_mode}'")
+        raise ServiceValidationError(f"Unknown HVAC mode '{hvac_mode}'")
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
