@@ -139,6 +139,12 @@
       "solar_power": {
         "name": "Solar power"
       },
+      "storage_charge_energy": {
+        "name": "Storage charge energy today"
+      },
+      "storage_discharge_energy": {
+        "name": "Storage discharge energy today"
+      },
       "storage_level": {
         "name": "Storage level"
       },
