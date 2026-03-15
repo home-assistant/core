@@ -215,7 +215,10 @@ async def async_setup_entry(
     def _update_entities() -> None:
         """Update entities."""
         new_entities: list[OpowerSensor] = []
-        current_accounts = set(coordinator.data)
+        current_account_device_ids = {
+            f"{coordinator.api.utility.subdomain()}_{account_id}"
+            for account_id in coordinator.data
+        }
 
         for account_id, opower_data in coordinator.data.items():
             if account_id in added_accounts:
@@ -261,24 +264,32 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities)
 
-        stale_accounts = added_accounts - current_accounts
-        if stale_accounts:
-            device_registry = dr.async_get(hass)
-            entity_registry = er.async_get(hass)
-            for account_id in stale_accounts:
-                device_id = f"{coordinator.api.utility.subdomain()}_{account_id}"
-                device_entry = device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
+        # Remove any registered devices not in the current coordinator data
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            device_domain_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not device_domain_ids.isdisjoint(current_account_device_ids):
+                continue  # device is still active
+            # Device is stale — remove its entities then detach it
+            for entity_entry in er.async_entries_for_device(
+                entity_registry, device_entry.id, include_disabled_entities=True
+            ):
+                entity_registry.async_remove(entity_entry.entity_id)
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=entry.entry_id
+            )
+            added_accounts.discard(
+                next(iter(device_domain_ids)).removeprefix(
+                    f"{coordinator.api.utility.subdomain()}_"
                 )
-                if device_entry:
-                    for entity_entry in er.async_entries_for_device(
-                        entity_registry, device_entry.id, include_disabled_entities=True
-                    ):
-                        entity_registry.async_remove(entity_entry.entity_id)
-                    device_registry.async_update_device(
-                        device_entry.id, remove_config_entry_id=entry.entry_id
-                    )
-            added_accounts.difference_update(stale_accounts)
+            )
 
     _update_entities()
     entry.async_on_unload(coordinator.async_add_listener(_update_entities))

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from opower import CostRead
 import pytest
 
+from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -172,3 +173,33 @@ async def test_dynamic_and_stale_devices(
     )
     assert len(devices) == 2
     assert len(entities) == 20
+
+
+async def test_stale_device_removed_on_load(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_opower_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that a stale device present before setup is removed on first load."""
+    # Simulate a device that was created by a previous version / old account
+    # and is already registered before the integration sets up.
+    mock_config_entry.add_to_hass(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "pge_stale_account_99999")},
+    )
+    assert device_registry.async_get(stale_device.id) is not None
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Stale device should have been removed on first coordinator update
+    assert device_registry.async_get(stale_device.id) is None
+
+    # Active devices should still be present
+    active_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(active_devices) == 2
