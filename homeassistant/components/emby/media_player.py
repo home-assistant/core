@@ -158,7 +158,7 @@ class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
     _attr_should_poll = False
-    _attr_has_entity_name = False
+    _attr_has_entity_name = True
 
     def __init__(self, emby, device_id):
         """Initialize the Emby device."""
@@ -203,7 +203,7 @@ class EmbyDevice(MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
+        return f"Emby {self.device.name or DEVICE_DEFAULT_NAME}"
 
     @property
     def state(self) -> MediaPlayerState | None:

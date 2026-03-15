@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import aiohttp
 from pyemby import EmbyServer
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,7 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS, CannotConnect, InvalidAuth
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EmbyConfigEntry) -> bool
     try:
         await _validate_connection(hass, host, port, key, ssl)
     except InvalidAuth as err:
-        raise ConfigEntryNotReady("Invalid API key") from err
+        raise ConfigEntryAuthFailed("Invalid API key") from err
     except CannotConnect as err:
         raise ConfigEntryNotReady("Unable to connect") from err
 
@@ -67,14 +68,15 @@ async def _validate_connection(
     hass: HomeAssistant, host: str, port: int, api_key: str, ssl: bool
 ) -> str:
     """Validate the connection to the Emby server and return the server ID."""
-    scheme = "https" if ssl else "http"
-    url = f"{scheme}://{host}:{port}/System/Info"
+    url = URL.build(
+        scheme="https" if ssl else "http", host=host, port=port, path="/System/Info"
+    )
 
     session = async_get_clientsession(hass)
     try:
         async with session.get(
             url,
-            params={"api_key": api_key},
+            headers={"X-Emby-Token": api_key},
             timeout=aiohttp.ClientTimeout(total=5),
         ) as resp:
             resp.raise_for_status()
@@ -83,6 +85,6 @@ async def _validate_connection(
     except aiohttp.ClientResponseError as err:
         if err.status == 401:
             raise InvalidAuth from err
-        raise
+        raise CannotConnect from err
     except (aiohttp.ClientError, TimeoutError) as err:
         raise CannotConnect from err

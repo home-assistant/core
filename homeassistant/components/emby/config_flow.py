@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.helpers import config_validation as cv
 
 from . import _validate_connection
 from .const import (
@@ -27,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_API_KEY): str,
-        vol.Optional(CONF_PORT): int,
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
     }
 )
