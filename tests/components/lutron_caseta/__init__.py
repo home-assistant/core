@@ -101,6 +101,7 @@ class MockBridge:
         self.occupancy_groups = {}
         self.scenes = self.get_scenes()
         self.devices = self.load_devices()
+        self.battery_statuses = {"802": "Good"}
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
         self.smart_away_state = smart_away_state
@@ -359,6 +360,10 @@ class MockBridge:
 
     async def stop_cover(self, device_id: str) -> None:
         """Mock stopping a cover."""
+
+    async def get_battery_status(self, device_id: str) -> str | None:
+        """Mock reading battery status for a device."""
+        return self.battery_statuses.get(device_id)
 
     async def close(self):
         """Close the mock bridge connection."""
