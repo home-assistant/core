@@ -45,7 +45,6 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
         self._store: Store[dict[str, Any]] = Store(
             hass, version=1, key=f"diyanet_{config_entry.entry_id}"
         )
-        self._loaded_from_cache = False
         self._force_refresh = False
         self._consecutive_failures = 0
         self._first_fetch_complete = False
@@ -127,7 +126,6 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
 
                 if cached_payload is not None and cached_dt == today:
                     _LOGGER.debug("Using cached prayer times for today")
-                    self._loaded_from_cache = True
                     self._first_fetch_complete = True
                     # Reset failure counter on successful cache use
                     if self._consecutive_failures > 0:
@@ -180,5 +178,4 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
             await self._store.async_save(
                 {"cache_date": today.isoformat(), "data": data}
             )
-            self._loaded_from_cache = False
             return data
