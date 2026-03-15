@@ -56,8 +56,8 @@ ROBOT_SELECT_MAP: dict[
             select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
         ),
     ),
-    (LitterRobot4, LitterRobot5): (
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_brightness",
             translation_key="globe_brightness",
             current_fn=(
@@ -74,7 +74,7 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="globe_light",
             translation_key="globe_light",
             current_fn=(
@@ -91,8 +91,6 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-    ),
-    LitterRobot4: (
         RobotSelectEntityDescription[LitterRobot4, str](
             key="panel_brightness",
             translation_key="brightness_level",
