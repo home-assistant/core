@@ -136,7 +136,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
 
         try:
-            if not self._session.cookie_jar.filter_cookies(URL(self.api.base_url)):
+            if not self._session.cookie_jar.filter_cookies(self.api.base_url):
                 _LOGGER.debug(
                     "Session cookies missing for host %s, re-login",
                     self.api.base_url.host,
