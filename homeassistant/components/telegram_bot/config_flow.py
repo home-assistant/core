@@ -622,7 +622,11 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         # suggest chat id based on the most recent chat
         suggested_values = {}
         description_placeholders["most_recent_chat"] = "Not available"
-        most_recent_chat = await _get_most_recent_chat(service)
+        try:
+            most_recent_chat = await _get_most_recent_chat(service)
+        except TelegramError:
+            _LOGGER.warning("Error occurred while fetching recent chat", exc_info=True)
+            most_recent_chat = None
         if most_recent_chat is not None:
             suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
             description_placeholders["most_recent_chat"] = (
@@ -661,13 +665,7 @@ async def _get_most_recent_chat(
         return (service.app.most_recent_chat_id, most_recent_chat_name)
 
     # broadcast bot
-
-    try:
-        updates = await service.bot.get_updates(offset=0)
-    except TelegramError as err:
-        _LOGGER.warning("Error occurred while fetching updates: %s", err)
-        return None
-
+    updates = await service.bot.get_updates(offset=0)
     if updates:
         last_update = updates[-1]
         if last_update.effective_chat:
