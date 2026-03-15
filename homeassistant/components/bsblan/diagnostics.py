@@ -24,7 +24,7 @@ async def async_get_config_entry_diagnostics(
             "sensor": data.fast_coordinator.data.sensor.model_dump(),
             "dhw": data.fast_coordinator.data.dhw.model_dump(),
         },
-        "static": data.static.model_dump(),
+        "static": data.static.model_dump() if data.static is not None else None,
     }
 
     # Add DHW config and schedule from slow coordinator if available

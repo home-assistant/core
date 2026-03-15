@@ -45,6 +45,22 @@ async def test_celsius_fahrenheit(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_climate_entity_loads_without_static_values(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the climate entity still loads when static values are unavailable."""
+    mock_bsblan.static_values.side_effect = BSBLANError("General error")
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["current_temperature"] == 18.6
+    assert state.attributes["temperature"] == 18.5
+
+
 async def test_climate_entity_properties(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
@@ -119,20 +135,32 @@ async def _async_set_hvac_action(
     return state.attributes.get("hvac_action")
 
 
+def _mock_hvac_action_without_value() -> MagicMock:
+    """Return a mocked hvac action object with no value."""
+    mock_action = MagicMock()
+    mock_action.value = None
+    return mock_action
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        pytest.param(None, None, id="missing-action"),
+        pytest.param(_mock_hvac_action_without_value(), None, id="missing-value"),
+    ],
+)
 async def test_hvac_action_handles_none_inputs(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    value: MagicMock | None,
+    expected: HVACAction | None,
 ) -> None:
     """Ensure hvac_action gracefully handles None values."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, None) is None
-
-    mock_action = MagicMock()
-    mock_action.value = None
-    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, mock_action) is None
+    assert await _async_set_hvac_action(hass, mock_bsblan, freezer, value) is expected
 
 
 async def test_hvac_action_uses_library_mapping(
@@ -156,48 +184,33 @@ async def test_hvac_action_uses_library_mapping(
     assert result == HVACAction.IDLE
 
 
-async def test_climate_without_current_temperature_sensor(
+@pytest.mark.parametrize(
+    ("state_attribute", "entity_attribute"),
+    [
+        pytest.param("current_temperature", "current_temperature", id="current"),
+        pytest.param("target_temperature", "temperature", id="target"),
+    ],
+)
+async def test_climate_without_temperature_sensor(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    state_attribute: str,
+    entity_attribute: str,
 ) -> None:
-    """Test climate entity when current temperature sensor is not available."""
+    """Test climate entity when a temperature sensor value is not available."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    # Set current_temperature to None to simulate no temperature sensor
-    mock_bsblan.state.return_value.current_temperature = None
+    setattr(mock_bsblan.state.return_value, state_attribute, None)
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not crash and current_temperature should be None in attributes
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes["current_temperature"] is None
-
-
-async def test_climate_without_target_temperature_sensor(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test climate entity when target temperature sensor is not available."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # Set target_temperature to None to simulate no temperature sensor
-    mock_bsblan.state.return_value.target_temperature = None
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Should not crash and target temperature should be None in attributes
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes["temperature"] is None
+    assert state.attributes[entity_attribute] is None
 
 
 async def test_climate_hvac_mode_object_none(
