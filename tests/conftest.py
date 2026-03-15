@@ -14,6 +14,7 @@ import os
 import pathlib
 import reprlib
 from shutil import copytree, rmtree
+import socket
 import sqlite3
 import ssl
 import sys
@@ -206,6 +207,13 @@ def pytest_runtest_setup() -> None:
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    def disable_dns(*args: Any, **kwargs: Any) -> None:
+        raise RuntimeError("DNS resolution disabled in tests")
+
+    setattr(socket, "getaddrinfo", disable_dns)
+    setattr(socket, "gethostbyname", disable_dns)
+    setattr(socket, "gethostbyname_ex", disable_dns)
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
