@@ -133,26 +133,20 @@ async def _async_wifi_entities_list(
         ]
     )
     _LOGGER.debug("WiFi networks count: %s", wifi_count)
-    networks: dict = {}
+    networks: dict[int, dict[str, Any]] = {}
     for i in range(1, wifi_count + 1):
         network_info = await avm_wrapper.async_get_wlan_configuration(i)
         # Devices with 4 WLAN services, use the 2nd for internal communications
         if not (wifi_count == 4 and i == 2):
-            networks[i] = {
-                "ssid": network_info["NewSSID"],
-                "bssid": network_info["NewBSSID"],
-                "standard": network_info["NewStandard"],
-                "enabled": network_info["NewEnable"],
-                "status": network_info["NewStatus"],
-            }
+            networks[i] = network_info
     for i, network in networks.copy().items():
-        networks[i]["switch_name"] = network["ssid"]
+        networks[i]["switch_name"] = network["NewSSID"]
         if (
             len(
                 [
                     j
                     for j, n in networks.items()
-                    if slugify(n["ssid"]) == slugify(network["ssid"])
+                    if slugify(n["NewSSID"]) == slugify(network["NewSSID"])
                 ]
             )
             > 1
@@ -541,10 +535,11 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
         network_num: int,
-        network_data: dict,
+        network_data: dict[str, Any],
     ) -> None:
         """Init Fritz Wifi switch."""
         self._avm_wrapper = avm_wrapper
+        self._wifi_info = network_data
 
         self._attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
@@ -560,7 +555,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
             type=SWITCH_TYPE_WIFINETWORK,
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
-            init_state=network_data["enabled"],
+            init_state=network_data["NewEnable"],
         )
         super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
 
@@ -587,7 +582,12 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         self._attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"
         ]
+        self._wifi_info = wifi_info
 
-    async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
+    async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
         """Handle wifi switch."""
-        await self._avm_wrapper.async_set_wlan_configuration(self._network_num, turn_on)
+        resp = await self._avm_wrapper.async_set_wlan_configuration(
+            self._network_num, turn_on
+        )
+        self._wifi_info["NewEnable"] = turn_on
+        return bool(resp is not None)
