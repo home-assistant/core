@@ -1,0 +1,49 @@
+charge:
+  fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: indevolt
+    target_soc:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    power:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2400
+          step: 1
+          unit_of_measurement: "W"
+
+discharge:
+  fields:
+    device_ids:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: indevolt
+    target_soc:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    power:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2400
+          step: 1
+          unit_of_measurement: "W"

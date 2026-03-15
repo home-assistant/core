@@ -7,6 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.indevolt.const import (
+    ENERGY_MODE_READ_KEY,
+    ENERGY_MODE_WRITE_KEY,
+    PORTABLE_MODE,
+)
 from homeassistant.components.indevolt.coordinator import SCAN_INTERVAL
 from homeassistant.components.select import SERVICE_SELECT_OPTION
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -17,9 +22,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-KEY_READ_ENERGY_MODE = "7101"
-KEY_WRITE_ENERGY_MODE = "47005"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -62,7 +64,7 @@ async def test_select_option(
     mock_indevolt.set_data.reset_mock()
 
     # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[KEY_READ_ENERGY_MODE] = expected_value
+    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = expected_value
 
     # Attempt to change option
     await hass.services.async_call(
@@ -73,7 +75,7 @@ async def test_select_option(
     )
 
     # Verify set_data was called with correct parameters
-    mock_indevolt.set_data.assert_called_with(KEY_WRITE_ENERGY_MODE, expected_value)
+    mock_indevolt.set_data.assert_called_with(ENERGY_MODE_WRITE_KEY, expected_value)
 
     # Verify updated state
     assert (state := hass.states.get("select.cms_sf2000_energy_mode")) is not None
@@ -120,7 +122,7 @@ async def test_select_unavailable_outdoor_portable(
     """Test that entity is unavailable when device is in outdoor/portable mode (value 0)."""
 
     # Update mock data to fake outdoor/portable mode
-    mock_indevolt.fetch_data.return_value[KEY_READ_ENERGY_MODE] = 0
+    mock_indevolt.fetch_data.return_value[ENERGY_MODE_READ_KEY] = PORTABLE_MODE
 
     # Initialize platform to test availability logic
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.SELECT]):

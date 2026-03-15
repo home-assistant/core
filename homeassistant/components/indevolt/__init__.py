@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
@@ -13,6 +17,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> bool:
@@ -24,6 +29,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: IndevoltConfigEntry) -> 
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up indevolt services (actions)."""
+
+    await async_setup_services(hass)
 
     return True
 
