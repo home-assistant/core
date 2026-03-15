@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest import mock
+from unittest.mock import AsyncMock, patch
 import uuid
 
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -24,6 +24,33 @@ from .const import (
 from tests.components.bluetooth import generate_ble_device
 
 # CometBlue device specific mocks and fixtures
+
+FAKE_BLE_DEVICE = generate_ble_device(
+    address=FIXTURE_MAC, name=FIXTURE_DEVICE_NAME, details={"path": "/dev/test"}
+)
+
+FAKE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name=FIXTURE_DEVICE_NAME,
+    address=FIXTURE_MAC,
+    rssi=FIXTURE_RSSI,
+    manufacturer_data={},
+    service_data={},
+    service_uuids=[FIXTURE_SERVICE_UUID],
+    source="local",
+    connectable=True,
+    time=0,
+    device=FAKE_BLE_DEVICE,
+    advertisement=AdvertisementData(
+        local_name=FIXTURE_DEVICE_NAME,
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[FIXTURE_SERVICE_UUID],
+        rssi=FIXTURE_RSSI,
+        tx_power=-127,
+        platform_data=(),
+    ),
+    tx_power=-127,
+)
 
 
 class MockCometBlueBleakClient(CometBlueBleakClient):
@@ -74,39 +101,28 @@ class MockCometBlueBleakClient(CometBlueBleakClient):
             raise BleakCharacteristicNotFoundError(char_specifier)
 
 
-# Bluetooth-related fixtures
-def fake_service_info():
-    """Return a BluetoothServiceInfoBleak for use in testing."""
-    return BluetoothServiceInfoBleak(
-        name=FIXTURE_DEVICE_NAME,
-        address=FIXTURE_MAC,
-        rssi=FIXTURE_RSSI,
-        manufacturer_data={},
-        service_data={},
-        service_uuids=[FIXTURE_SERVICE_UUID],
-        source="local",
-        connectable=True,
-        time=0,
-        device=generate_ble_device(address=FIXTURE_MAC, name=FIXTURE_DEVICE_NAME),
-        advertisement=AdvertisementData(
-            local_name=FIXTURE_DEVICE_NAME,
-            manufacturer_data={},
-            service_data={},
-            service_uuids=[FIXTURE_SERVICE_UUID],
-            rssi=FIXTURE_RSSI,
-            tx_power=-127,
-            platform_data=(),
-        ),
-        tx_power=-127,
-    )
-
-
 @pytest.fixture
 def mock_service_info() -> Generator[None]:
     """Patch async_discovered_service_info a mocked device info."""
-    with mock.patch(
+    with patch(
         "homeassistant.components.eurotronic_cometblue.config_flow.async_discovered_service_info",
-        return_value=[fake_service_info()],
+        return_value=[FAKE_SERVICE_INFO],
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ble_device() -> Generator[None]:
+    """Mock BLE device."""
+    with (
+        patch(
+            "homeassistant.components.eurotronic_cometblue.async_ble_device_from_address",
+            return_value=FAKE_BLE_DEVICE,
+        ),
+        patch(
+            "homeassistant.components.eurotronic_cometblue.config_flow.async_ble_device_from_address",
+            return_value=FAKE_BLE_DEVICE,
+        ),
     ):
         yield
 
@@ -115,7 +131,7 @@ def mock_service_info() -> Generator[None]:
 def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
     """Auto mock bluetooth."""
 
-    with mock.patch(
+    with patch(
         "eurotronic_cometblue_ha.CometBlueBleakClient", MockCometBlueBleakClient
     ):
         yield
@@ -123,9 +139,9 @@ def mock_bluetooth(enable_bluetooth: None) -> Generator[None]:
 
 # Home Assistant related fixtures
 @pytest.fixture
-def mock_setup_entry() -> Generator[mock.AsyncMock]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Patch async setup entry to return True."""
-    with mock.patch(
+    with patch(
         "homeassistant.components.eurotronic_cometblue.async_setup_entry",
         return_value=True,
     ) as mock_setup:

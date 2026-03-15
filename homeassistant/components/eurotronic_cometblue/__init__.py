@@ -8,7 +8,7 @@ import logging
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
-from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import (
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
 
     address = entry.data[CONF_ADDRESS]
 
-    ble_device = bluetooth.async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
+    ble_device = async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
 
     if not ble_device:
         raise ConfigEntryNotReady(

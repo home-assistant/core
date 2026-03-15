@@ -1,7 +1,9 @@
 """Test the eurotronic_cometblue config flow."""
 
+from copy import deepcopy
 from unittest import mock
 
+from bleak.exc import BleakDeviceNotFoundError
 import pytest
 import voluptuous as vol
 
@@ -10,12 +12,12 @@ from homeassistant.components.eurotronic_cometblue.config_flow import (
     name_from_discovery,
 )
 from homeassistant.components.eurotronic_cometblue.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_TIMEOUT
+from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from .conftest import fake_service_info
+from .conftest import FAKE_SERVICE_INFO
 from .const import FIXTURE_DEVICE_NAME, FIXTURE_MAC, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
@@ -69,9 +71,7 @@ async def test_user_step_discovered_devices(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"]["pin"] == 0
-    assert result["data"]["timeout"] == 20
-    assert result["data"]["retry_count"] == 3
+    assert result["data"][CONF_PIN] == "000000"
 
     mock_setup_entry.assert_called_once()
 
@@ -93,7 +93,7 @@ async def test_user_step_with_existing_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=fake_service_info(),
+        data=FAKE_SERVICE_INFO,
     )
     await hass.async_block_till_done()
 
@@ -110,7 +110,7 @@ async def test_bluetooth_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=fake_service_info(),
+        data=FAKE_SERVICE_INFO,
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -121,11 +121,82 @@ async def test_bluetooth_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
-    assert result["data"]["pin"] == 0
-    assert result["data"]["timeout"] == 20
-    assert result["data"]["retry_count"] == 3
+    assert result["data"][CONF_PIN] == "000000"
     assert result["context"]["unique_id"] == FIXTURE_MAC
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("patch", "side_effect", "expected_error"),
+    [
+        (
+            "eurotronic_cometblue_ha.AsyncCometBlue.get_battery_async",
+            TimeoutError(),
+            {"base": "invalid_pin"},
+        ),
+        (
+            "eurotronic_cometblue_ha.AsyncCometBlue.connect_async",
+            TimeoutError(),
+            {"base": "timeout_connect"},
+        ),
+        (
+            "eurotronic_cometblue_ha.AsyncCometBlue.connect_async",
+            BleakDeviceNotFoundError(FAKE_SERVICE_INFO.address),
+            {"base": "cannot_connect"},
+        ),
+    ],
+)
+async def test_bluetooth_flow_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: mock.AsyncMock,
+    patch: str,
+    side_effect: Exception,
+    expected_error: dict,
+) -> None:
+    """Test we can handle a bluetooth discovery flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=FAKE_SERVICE_INFO,
+    )
+
+    with mock.patch(patch, side_effect=side_effect):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == expected_error
+
+
+async def test_bluetooth_flow_no_device(
+    hass: HomeAssistant, mock_setup_entry: mock.AsyncMock
+) -> None:
+    """Test we can handle a bluetooth discovery flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=FAKE_SERVICE_INFO,
+    )
+
+    with mock.patch(
+        "homeassistant.components.eurotronic_cometblue.config_flow.async_ble_device_from_address",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reconfigure(hass: HomeAssistant) -> None:
@@ -140,7 +211,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    assert entry.data[CONF_TIMEOUT] == 20
+    assert entry.data[CONF_PIN] == "000000"
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -148,7 +219,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert set(result["data_schema"].schema) == set(FIXTURE_USER_INPUT)
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**FIXTURE_USER_INPUT, CONF_TIMEOUT: 10}
+        result["flow_id"], {**FIXTURE_USER_INPUT, CONF_PIN: "010101"}
     )
     await hass.async_block_till_done()
 
@@ -156,9 +227,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
 
     assert entry.data["address"] is not None
-    assert entry.data["pin"] == 0
-    assert entry.data["timeout"] == 10
-    assert entry.data["retry_count"] == 3
+    assert entry.data[CONF_PIN] == "010101"
 
 
 async def test_name_from_discovery() -> None:
@@ -167,9 +236,9 @@ async def test_name_from_discovery() -> None:
     assert name_from_discovery(None) == "Comet Blue"
 
     # If the name is the same as the address, just return the address to avoid long names
-    fake_info = fake_service_info()
+    fake_info = deepcopy(FAKE_SERVICE_INFO)
     fake_info.name = str(fake_info.address)
     assert name_from_discovery(fake_info) == str(fake_info.address)
 
-    fake_info = fake_service_info()
+    fake_info = deepcopy(FAKE_SERVICE_INFO)
     assert name_from_discovery(fake_info) == f"{FIXTURE_DEVICE_NAME} {FIXTURE_MAC}"
