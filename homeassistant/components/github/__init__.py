@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
+from types import MappingProxyType
+
 from aiogithubapi import GitHubAPI
 
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
 
-from .const import CONF_REPOSITORIES, DOMAIN, LOGGER
+from .const import CONF_REPOSITORIES, CONF_REPOSITORY, SUBENTRY_TYPE_REPOSITORY
 from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -26,10 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         client_name=SERVER_SOFTWARE,
     )
 
-    repositories: list[str] = entry.options[CONF_REPOSITORIES]
-
     entry.runtime_data = {}
-    for repository in repositories:
+    for subentry_id, repository_subentry in entry.subentries.items():
+        repository = repository_subentry.data[CONF_REPOSITORY]
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
             config_entry=entry,
@@ -42,41 +43,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        entry.runtime_data[repository] = coordinator
+        entry.runtime_data[subentry_id] = coordinator
 
-    async_cleanup_device_registry(hass=hass, entry=entry)
+    entry.async_on_unload(entry.add_update_listener(async_update_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-@callback
-def async_cleanup_device_registry(
-    hass: HomeAssistant,
-    entry: GithubConfigEntry,
-) -> None:
-    """Remove entries form device registry if we no longer track the repository."""
-    device_registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(
-        registry=device_registry,
-        config_entry_id=entry.entry_id,
-    )
-    for device in devices:
-        for item in device.identifiers:
-            if item[0] == DOMAIN and item[1] not in entry.options[CONF_REPOSITORIES]:
-                LOGGER.debug(
-                    (
-                        "Unlinking device %s for untracked repository %s from config"
-                        " entry %s"
-                    ),
-                    device.id,
-                    item[1],
-                    entry.entry_id,
-                )
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=entry.entry_id
-                )
-                break
+async def async_update_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> None:
+    """Update entry."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
@@ -86,3 +63,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
         coordinator.unsubscribe()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.minor_version == 1:
+        # In version 1 we added support for multiple repositories, so we need to
+        # migrate the old repository to a subentry.
+        for repository in entry.options[CONF_REPOSITORIES]:
+            subentry = ConfigSubentry(
+                data=MappingProxyType({CONF_REPOSITORY: repository}),
+                subentry_type=SUBENTRY_TYPE_REPOSITORY,
+                title=repository,
+                unique_id=repository,
+            )
+
+            hass.config_entries.async_add_subentry(entry, subentry)
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True

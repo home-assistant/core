@@ -15,6 +15,9 @@ DEFAULT_REPOSITORIES = ["home-assistant/core", "esphome/esphome"]
 FALLBACK_UPDATE_INTERVAL = timedelta(hours=1, minutes=30)
 
 CONF_REPOSITORIES = "repositories"
+CONF_REPOSITORY = "repository"
+
+SUBENTRY_TYPE_REPOSITORY = "repository"
 
 
 REFRESH_EVENT_TYPES = (
