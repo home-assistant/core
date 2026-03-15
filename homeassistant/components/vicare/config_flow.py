@@ -80,9 +80,10 @@ class ViCareFlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry after OAuth or update existing for reauth."""
         if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data=data,
+                reauth_entry,
+                data={**reauth_entry.data, **data},
             )
 
         self._oauth_data = data

@@ -20,7 +20,12 @@ from PyViCare.PyViCareUtils import (
 )
 import requests
 
-from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DEFAULT_HEATING_TYPE,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    HeatingType,
+)
 from .types import ViCareConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +37,9 @@ def get_device(
     """Get device for device config."""
     return getattr(
         device_config,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
+        HEATING_TYPE_TO_CREATOR_METHOD[
+            HeatingType(entry.data.get(CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE.value))
+        ],
     )()
 
 
