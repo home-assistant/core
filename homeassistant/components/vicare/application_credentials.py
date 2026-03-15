@@ -17,8 +17,6 @@ from homeassistant.components.application_credentials import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN
-
 VICARE_SCOPES = [
     "IoT User",
     "offline_access",
@@ -31,7 +29,7 @@ async def async_get_auth_implementation(
     """Return auth implementation with PKCE support."""
     return ViCareOAuth2Implementation(
         hass,
-        DOMAIN,
+        auth_domain,
         credential,
         AuthorizationServer(
             authorize_url=AUTHORIZE_URL,
