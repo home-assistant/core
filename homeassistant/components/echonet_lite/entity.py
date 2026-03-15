@@ -7,8 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Literal
 
-from pyhems import CONTROLLER_INSTANCE, ESV_SETC, Frame, Property
-from pyhems.definitions import EntityDefinition
+from pyhems import EntityDefinition, NodeState, Property
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -19,27 +18,61 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EchonetLiteCoordinator
-from .types import EchonetLiteConfigEntry, EchonetLiteNodeState
+from .types import EchonetLiteConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 # Platform type for entity classification
-type PlatformType = Literal["binary"]
+type PlatformType = Literal["switch"]
+
+
+def can_process_enum_values(entity: EntityDefinition) -> bool:
+    """Check if entity's enum_values can be automatically processed.
+
+    Enum values must have unique keys for automatic processing.
+    Entities with duplicate keys cannot be reliably mapped and are
+    excluded from platform creation and string generation.
+
+    Args:
+        entity: Entity definition to check.
+
+    Returns:
+        True if enum_values can be processed, False otherwise.
+    """
+    if not entity.enum_values:
+        return True  # Numeric entities are always processable
+
+    keys = set()
+    for enum_val in entity.enum_values:
+        if enum_val.key in keys:
+            return False
+        keys.add(enum_val.key)
+
+    return True
 
 
 def infer_platform(entity: EntityDefinition) -> PlatformType | None:
-    """Infer the platform type from entity definition.
+    """Infer the platform type from entity definition using MRA get/set info.
+
+    Decision matrix:
+        | Data shape        | writable (set != notApplicable) |
+        |-------------------|--------------------------------|
+        | 2 enum values     | switch                         |
+        | other             | None (skip)                    |
 
     Args:
         entity: Entity definition to analyze.
 
     Returns:
-        Platform type: "binary" or None for unsupported types.
+        Platform type string, or None if entity should be skipped.
     """
-    if entity.enum_values:
-        # Has enum values -> binary (2 values only)
-        return "binary" if len(entity.enum_values) == 2 else None
-    # Numeric entities not supported (sensor platform removed)
+    if (
+        entity.get != "notApplicable"
+        and entity.set != "notApplicable"
+        and entity.enum_values
+        and len(entity.enum_values) == 2
+    ):
+        return "switch"
     return None
 
 
@@ -51,7 +84,7 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
     def __init__(
         self,
         coordinator: EchonetLiteCoordinator,
-        node: EchonetLiteNodeState,
+        node: NodeState,
     ) -> None:
         """Initialize the base entity for the given device key."""
 
@@ -77,6 +110,9 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
         Args:
             epc: ECHONET Property Code
             value: Property Data Content (EDT)
+
+        Raises:
+            HomeAssistantError: If the EPC is not writable by the device.
         """
         await self._async_send_properties(properties=[Property(epc=epc, edt=value)])
 
@@ -85,22 +121,24 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
 
         Args:
             properties: List of Property objects to send
+
+        Raises:
+            HomeAssistantError: If any EPC is not writable by the device.
         """
         node = self._node
-        frame = Frame(
-            seoj=CONTROLLER_INSTANCE,
+        not_writable = [
+            prop.epc for prop in properties if prop.epc not in node.set_epcs
+        ]
+        if not_writable:
+            hex_list = ", ".join(f"0x{epc:02X}" for epc in not_writable)
+            raise HomeAssistantError(f"EPC {hex_list} is not writable by the device")
+        sent = await self.coordinator.config_entry.runtime_data.client.set_properties(
+            node_id=node.node_id,
             deoj=node.eoj,
-            esv=ESV_SETC,
             properties=properties,
         )
-        try:
-            sent = await self.coordinator.client.async_send(node.node_id, frame)
-            if not sent:
-                raise HomeAssistantError("The target node address is unknown")
-        except OSError as err:
-            raise HomeAssistantError(
-                f"Failed to send ECHONET Lite command: {err!s}"
-            ) from err
+        if not sent:
+            raise HomeAssistantError("The target node address is unknown")
 
         # After a Set operation, schedule an earlier poll so the UI reflects the
         # updated device state sooner.
@@ -117,7 +155,7 @@ class EchonetLiteEntityDescription(EntityDescription):
     this class and the appropriate platform EntityDescription using diamond
     inheritance:
 
-        class EchonetLiteSwitchEntityDescription(SwitchEntityDescription, EchonetLiteEntityDescription):
+        class EchonetLiteSensorEntityDescription(SensorEntityDescription, EchonetLiteEntityDescription):
             ...
 
     The diamond inheritance pattern works correctly because both this class and
@@ -129,14 +167,12 @@ class EchonetLiteEntityDescription(EntityDescription):
     """ECHONET Lite class code (class group + class code)."""
     epc: int
     """ECHONET Property Code."""
-    require_write: bool | None = None
-    """Write access requirement: None=don't care, True=must be writable, False=must NOT be writable."""
     manufacturer_code: int | None = None
     """Required manufacturer code for vendor-specific entities (None = all)."""
     fallback_name: str | None = None
     """Fallback name for user-defined entities without translation."""
 
-    def should_create(self, node: EchonetLiteNodeState) -> bool:
+    def should_create(self, node: NodeState) -> bool:
         """Check if entity should be created for this node.
 
         Args:
@@ -145,11 +181,10 @@ class EchonetLiteEntityDescription(EntityDescription):
         Returns:
             True if the entity should be created for this node.
         """
-        if self.epc not in node.get_epcs:
+        # Check if EPC is available in either GET or SET property map
+        # (write-only button entities are only in set_epcs)
+        if self.epc not in node.get_epcs and self.epc not in node.set_epcs:
             return False
-        if self.require_write is not None:
-            if self.require_write != (self.epc in node.set_epcs):
-                return False
         if self.manufacturer_code is not None:
             return node.manufacturer_code == self.manufacturer_code
         return True
@@ -161,9 +196,12 @@ class EchonetLiteDescribedEntity[DescriptionT: EchonetLiteEntityDescription](
     """Base class for ECHONET Lite entities with EntityDescription.
 
     This intermediate class handles the common initialization pattern shared by
-    the switch platform. It extracts the
+    binary_sensor, sensor, select, and switch platforms. It extracts the
     repetitive __init__ logic that sets up unique_id, translation_key/name,
     and epc from the entity description.
+
+    Climate entities should inherit from EchonetLiteEntity directly since they manage
+    multiple EPCs and don't use the standard EntityDescription pattern.
 
     The `description` attribute provides type-safe access to the entity
     description with the correct generic type, avoiding mypy conflicts with
@@ -176,7 +214,7 @@ class EchonetLiteDescribedEntity[DescriptionT: EchonetLiteEntityDescription](
     def __init__(
         self,
         coordinator: EchonetLiteCoordinator,
-        node: EchonetLiteNodeState,
+        node: NodeState,
         description: DescriptionT,
     ) -> None:
         """Initialize a described ECHONET Lite entity.
@@ -210,9 +248,7 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     async_add_entities: AddConfigEntryEntitiesCallback,
     platform_type: PlatformType,
     description_factory: Callable[[int, EntityDefinition], DescriptionT],
-    entity_factory: Callable[
-        [EchonetLiteCoordinator, EchonetLiteNodeState, DescriptionT], Entity
-    ],
+    entity_factory: Callable[[EchonetLiteCoordinator, NodeState, DescriptionT], Entity],
     platform_name: str,
 ) -> None:
     """Set up common entity platform setup pattern for ECHONET Lite.
@@ -220,6 +256,7 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     This helper handles:
     - Retrieving entity definitions from the definitions registry
     - Building entity descriptions from definitions (filtered by platform_type)
+    - Filtering out dedicated platform EPCs (from DEDICATED_PLATFORM_EPCS)
     - Creating entities for existing devices
     - Subscribing to coordinator updates for new device discovery
     - Logging skipped entities for debugging
@@ -227,11 +264,11 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     Args:
         entry: The config entry
         async_add_entities: Callback to add entities
-        platform_type: Type of platform ("binary")
+        platform_type: Type of platform (e.g. "sensor", "switch", "number")
         description_factory: Factory function to create descriptions from definitions.
             Args: (class_code, entity_def)
         entity_factory: Factory function to create entity instances
-        platform_name: Name of the platform for logging (e.g., "switch")
+        platform_name: Name of the platform for logging (e.g., "sensor", "switch")
 
     """
     runtime_data = entry.runtime_data
@@ -246,6 +283,8 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
             description_factory(class_code, entity_def)
             for entity_def in entity_defs
             if infer_platform(entity_def) == platform_type
+            and can_process_enum_values(entity_def)
+            and not (entity_def.set != "notApplicable" and entity_def.byte_offset > 0)
         ]
 
     @callback

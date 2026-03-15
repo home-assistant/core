@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from pyhems.definitions import EntityDefinition, create_binary_decoder
+from pyhems import EntityDefinition, create_binary_decoder
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,6 @@ class EchonetLiteSwitchEntityDescription(
     decoder: Callable[[bytes], bool | None] = lambda _: None
     on_value: bytes  # Byte value for ON command
     off_value: bytes  # Byte value for OFF command
-    require_write: bool | None = True  # Switch: must be writable
 
 
 def _create_switch_description(
@@ -64,7 +63,7 @@ async def async_setup_entry(
     setup_echonet_lite_platform(
         entry,
         async_add_entities,
-        "binary",
+        "switch",
         _create_switch_description,
         EchonetLiteSwitch,
         "switch",

@@ -19,16 +19,6 @@ RUNTIME_MONITOR_INTERVAL = timedelta(minutes=1)
 RUNTIME_MONITOR_MAX_SILENCE = timedelta(minutes=5)
 DISCOVERY_INTERVAL = 60.0 * 60.0  # 1 hour
 
-# Device identification EPCs
-EPC_MANUFACTURER_CODE = 0x8A
-EPC_PRODUCT_CODE = 0x8C
-EPC_SERIAL_NUMBER = 0x8D
-
-# Property map EPCs
-EPC_INF_PROPERTY_MAP = 0x9D
-EPC_SET_PROPERTY_MAP = 0x9E
-EPC_GET_PROPERTY_MAP = 0x9F
-
 # Stable (non-experimental) device class codes
 # These device classes have been verified with real hardware.
 # Other device classes are considered experimental.
@@ -51,12 +41,6 @@ __all__ = [
     "DEFAULT_POLL_INTERVAL",
     "DISCOVERY_INTERVAL",
     "DOMAIN",
-    "EPC_GET_PROPERTY_MAP",
-    "EPC_INF_PROPERTY_MAP",
-    "EPC_MANUFACTURER_CODE",
-    "EPC_PRODUCT_CODE",
-    "EPC_SERIAL_NUMBER",
-    "EPC_SET_PROPERTY_MAP",
     "ISSUE_RUNTIME_CLIENT_ERROR",
     "ISSUE_RUNTIME_INACTIVE",
     "MAX_POLL_INTERVAL",

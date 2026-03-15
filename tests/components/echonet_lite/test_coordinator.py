@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from pyhems import EOJ
-from pyhems.runtime import HemsInstanceListEvent
+from pyhems import EOJ, DeviceManager, HemsInstanceListEvent
 
-from homeassistant.components.echonet_lite.const import (
-    CONF_ENABLE_EXPERIMENTAL,
-    DOMAIN,
-    STABLE_CLASS_CODES,
-)
+from homeassistant.components.echonet_lite.const import DOMAIN, STABLE_CLASS_CODES
 from homeassistant.components.echonet_lite.coordinator import EchonetLiteCoordinator
 from homeassistant.core import HomeAssistant
 
@@ -44,38 +39,57 @@ class FrameMessage:
         return (0x70 <= self.esv <= 0x7F) or (0x50 <= self.esv <= 0x5F)
 
 
+def _make_coordinator(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    monitored_epcs: dict | None = None,
+    class_code_filter: frozenset[int] | None = None,
+) -> tuple[EchonetLiteCoordinator, DeviceManager]:
+    """Create a coordinator and device manager pair for testing."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    dm = DeviceManager(
+        client=client,
+        monitored_epcs=monitored_epcs or {},
+        class_code_filter=class_code_filter,
+    )
+    coordinator = EchonetLiteCoordinator(
+        hass,
+        config_entry=entry,
+        device_manager=dm,
+    )
+    return coordinator, dm
+
+
 async def test_process_frame_registers_node(hass: HomeAssistant) -> None:
     """Ensure frames with property maps populate the coordinator data snapshot."""
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
     client = AsyncMock()
     # Property map format: count byte + EPC list
     get_property_map = bytes([3, 0x80, 0x8A, 0xE0])  # 3 EPCs: 0x80, 0x8A, 0xE0
-    client.async_get.return_value = [
+    client.get.return_value = [
         FrameProperty(epc=0x9F, edt=get_property_map),
         FrameProperty(epc=0xE0, edt=b"\x00d"),
         FrameProperty(epc=0x8A, edt=b"\x00\x00\x01"),
     ]
-    coordinator = EchonetLiteCoordinator(
-        hass,
-        config_entry=entry,
-        client=client,
-        monitored_epcs={},
-        enable_experimental=False,
-    )
+    coordinator, dm = _make_coordinator(hass, client)
+
+    # Wire device_added callback
+    def _on_added(device_key: str) -> None:
+        coordinator.data = dict(dm.data)
+
+    dm.on_device_added(_on_added)
 
     node_hex = bytes.fromhex("010203").hex()
     eoj = EOJ(0x001101)
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=10.0,
     ):
-        await coordinator._async_setup_device(node_hex, eoj)
+        await dm.setup_device(node_hex, eoj)
 
     # Stable ID: uid(hex)-eoj(hex) (0x83 + EOJ preferred)
-    # 010203-001101
     node_id = f"{node_hex}-{int(eoj):06x}"
     node = coordinator.data[node_id]
     assert node.eoj == eoj
@@ -108,33 +122,32 @@ async def test_process_frame_registers_node(hass: HomeAssistant) -> None:
 async def test_set_response_does_not_overwrite_properties(hass: HomeAssistant) -> None:
     """Ensure Set responses (0x71) do not clobber stored property values."""
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
     client = AsyncMock()
 
     get_property_map = bytes([1, 0xB0])
-    client.async_get.return_value = [
+    client.get.return_value = [
         FrameProperty(epc=0x9F, edt=get_property_map),
         FrameProperty(epc=0xB0, edt=b"E"),
         FrameProperty(epc=0x8A, edt=b"\x00\x00\x01"),
     ]
 
-    coordinator = EchonetLiteCoordinator(
-        hass,
-        config_entry=entry,
-        client=client,
-        monitored_epcs={0x0011: frozenset({0xB0})},
-        enable_experimental=False,
+    coordinator, dm = _make_coordinator(
+        hass, client, monitored_epcs={0x0011: frozenset({0xB0})}
     )
+
+    def _on_added(device_key: str) -> None:
+        coordinator.data = dict(dm.data)
+
+    dm.on_device_added(_on_added)
 
     node_hex = bytes.fromhex("010203").hex()
     eoj = EOJ(0x001101)
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=10.0,
     ):
-        await coordinator._async_setup_device(node_hex, eoj)
+        await dm.setup_device(node_hex, eoj)
 
     device_key = f"{node_hex}-{int(eoj):06x}"
     assert coordinator.data[device_key].properties[0xB0] == b"E"
@@ -167,15 +180,8 @@ async def test_process_frame_registers_instance_list(hass: HomeAssistant) -> Non
     (but don't create nodes directly).
     """
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    coordinator = EchonetLiteCoordinator(
-        hass,
-        config_entry=entry,
-        client=MagicMock(),
-        monitored_epcs={},
-        enable_experimental=False,
-    )
+    client = AsyncMock()
+    coordinator, _dm = _make_coordinator(hass, client)
 
     frame = FrameMessage(
         tid=3,
@@ -204,21 +210,11 @@ async def test_process_frame_registers_instance_list(hass: HomeAssistant) -> Non
 async def test_experimental_filtering_skips_non_stable_classes(
     hass: HomeAssistant,
 ) -> None:
-    """Verify experimental device classes are skipped when enable_experimental is False."""
-    # Create entry with enable_experimental=False
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={CONF_ENABLE_EXPERIMENTAL: False},
-    )
-    entry.add_to_hass(hass)
+    """Verify experimental device classes are skipped when class_code_filter is set."""
 
     client = AsyncMock()
-    coordinator = EchonetLiteCoordinator(
-        hass,
-        config_entry=entry,
-        client=client,
-        monitored_epcs={},
-        enable_experimental=False,
+    coordinator, dm = _make_coordinator(
+        hass, client, class_code_filter=STABLE_CLASS_CODES
     )
 
     node_id = "010203040506"
@@ -233,10 +229,8 @@ async def test_experimental_filtering_skips_non_stable_classes(
         properties={},
     )
 
-    # Mock _async_setup_device to track calls
-    with patch.object(
-        coordinator, "_async_setup_device", new_callable=AsyncMock
-    ) as mock_request:
+    # Mock setup_device to track calls
+    with patch.object(dm, "setup_device", new_callable=AsyncMock) as mock_request:
         await coordinator.async_process_instance_list_event(event)
 
         # Only stable class should be requested
@@ -247,22 +241,11 @@ async def test_experimental_filtering_skips_non_stable_classes(
 async def test_experimental_filtering_allows_all_when_enabled(
     hass: HomeAssistant,
 ) -> None:
-    """Verify all device classes are allowed when enable_experimental is True."""
-    # Create entry with enable_experimental=True
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        options={CONF_ENABLE_EXPERIMENTAL: True},
-    )
-    entry.add_to_hass(hass)
+    """Verify all device classes are allowed when class_code_filter is None."""
 
     client = AsyncMock()
-    coordinator = EchonetLiteCoordinator(
-        hass,
-        config_entry=entry,
-        client=client,
-        monitored_epcs={},
-        enable_experimental=True,
-    )
+    # No class_code_filter means all classes are accepted
+    coordinator, dm = _make_coordinator(hass, client)
 
     node_id = "010203040506"
     # 0x0011 is temperature sensor (experimental), 0x0130 is air conditioner (stable)
@@ -276,9 +259,7 @@ async def test_experimental_filtering_allows_all_when_enabled(
         properties={},
     )
 
-    with patch.object(
-        coordinator, "_async_setup_device", new_callable=AsyncMock
-    ) as mock_request:
+    with patch.object(dm, "setup_device", new_callable=AsyncMock) as mock_request:
         await coordinator.async_process_instance_list_event(event)
 
         # Both classes should be requested

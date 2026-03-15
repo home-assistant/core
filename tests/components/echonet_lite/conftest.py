@@ -6,8 +6,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
-from pyhems import EOJ
-from pyhems.runtime import HemsFrameEvent
+from pyhems import CONTROLLER_INSTANCE, EOJ, ESV_SETC, Frame, HemsFrameEvent, Property
 import pytest
 
 from homeassistant.components.echonet_lite.const import (
@@ -116,9 +115,26 @@ def mock_echonet_lite_client() -> Generator[AsyncMock]:
     client = AsyncMock()
     client.start = AsyncMock()
     client.stop = AsyncMock()
-    client.async_get = AsyncMock(return_value=[])
+    client.get = AsyncMock(return_value=[])
     client.async_request = AsyncMock()
-    client.async_send = AsyncMock(return_value=True)
+    client.send = AsyncMock(return_value=True)
+
+    async def _async_set_properties(
+        *, node_id, deoj, properties, seoj=CONTROLLER_INSTANCE
+    ):
+        frame = Frame(seoj=seoj, deoj=deoj, esv=ESV_SETC, properties=properties)
+        return await client.send(node_id, frame)
+
+    async def _async_set_property(*, node_id, deoj, epc, edt, seoj=CONTROLLER_INSTANCE):
+        return await _async_set_properties(
+            node_id=node_id,
+            deoj=deoj,
+            properties=[Property(epc=epc, edt=edt)],
+            seoj=seoj,
+        )
+
+    client.set_property = AsyncMock(side_effect=_async_set_property)
+    client.set_properties = AsyncMock(side_effect=_async_set_properties)
 
     def _subscribe(callback):
         # Wrap the provided callback in an AsyncMock so tests can always await

@@ -10,19 +10,24 @@ import logging
 import time
 from typing import Final
 
-from pyhems.definitions import DefinitionsLoadError, load_definitions_registry
-from pyhems.runtime import (
+from pyhems import (
+    EPC_MANUFACTURER_CODE,
+    EPC_PRODUCT_CODE,
+    EPC_SERIAL_NUMBER,
+    DefinitionsLoadError,
+    DeviceManager,
     HemsClient,
     HemsErrorEvent,
     HemsFrameEvent,
     HemsInstanceListEvent,
+    PropertyPoller,
     RuntimeEvent,
+    load_definitions_registry,
 )
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -35,16 +40,13 @@ from .const import (
     DEFAULT_POLL_INTERVAL,
     DISCOVERY_INTERVAL,
     DOMAIN,
-    EPC_MANUFACTURER_CODE,
-    EPC_PRODUCT_CODE,
-    EPC_SERIAL_NUMBER,
     ISSUE_RUNTIME_CLIENT_ERROR,
     ISSUE_RUNTIME_INACTIVE,
     RUNTIME_MONITOR_INTERVAL,
     RUNTIME_MONITOR_MAX_SILENCE,
+    STABLE_CLASS_CODES,
 )
 from .coordinator import EchonetLiteCoordinator
-from .poller import EchonetLitePropertyPoller
 from .types import EchonetLiteConfigEntry, EchonetLiteRuntimeData, RuntimeHealth
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,22 +58,14 @@ PLATFORMS: Final = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
-    """Set up the HEMS echonet lite integration and ensure a config entry exists."""
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(  # fire-and-forget
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-            )
-        )
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the HEMS echonet lite integration."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EchonetLiteConfigEntry) -> bool:
     """Set up HEMS echonet lite from a config entry."""
 
-    # Get options
     interface = entry.options.get(CONF_INTERFACE, DEFAULT_INTERFACE)
     poll_interval = entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
     enable_experimental = entry.options.get(CONF_ENABLE_EXPERIMENTAL, False)
@@ -82,19 +76,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EchonetLiteConfigEntry) 
     try:
         definitions = await hass.async_add_executor_job(load_definitions_registry)
     except DefinitionsLoadError as err:
-        raise ConfigEntryNotReady(
-            "Device definitions file could not be loaded"
-        ) from err
+        raise ConfigEntryError("Device definitions file could not be loaded") from err
 
     # Build device-specific EPC sets for polling/notification
+    # Start with definitions-based EPCs (MRA + vendor)
     monitored_epcs: dict[int, frozenset[int]] = {
-        class_code: frozenset(e.epc for e in entities)
-        for class_code, entities in definitions.entities.items()
+        class_code: frozenset(entity_def.epc for entity_def in entity_defs)
+        for class_code, entity_defs in definitions.entities.items()
     }
 
     _LOGGER.debug(
         "Monitored EPCs (polling/notification) per device class: %s",
-        {hex(k): " ".join(f"{e:02x}" for e in v) for k, v in monitored_epcs.items()},
+        {
+            hex(class_code): " ".join(f"{epc:02x}" for epc in epcs)
+            for class_code, epcs in monitored_epcs.items()
+        },
     )
 
     # EPCs to request during node discovery (in addition to identification and instance list)
@@ -105,13 +101,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: EchonetLiteConfigEntry) 
         poll_interval=DISCOVERY_INTERVAL,
         extra_epcs=discovery_epcs,
     )
+
+    # Determine which device class codes to accept
+    class_code_filter: frozenset[int] | None = None
+    if not enable_experimental:
+        class_code_filter = STABLE_CLASS_CODES
+
+    device_manager = DeviceManager(
+        client=client,
+        monitored_epcs=monitored_epcs,
+        class_code_filter=class_code_filter,
+    )
     coordinator = EchonetLiteCoordinator(
         hass,
         config_entry=entry,
-        client=client,
-        monitored_epcs=monitored_epcs,
-        enable_experimental=enable_experimental,
+        device_manager=device_manager,
     )
+
+    # Wire DeviceManager callbacks to coordinator
+    @callback
+    def _on_device_added(device_key: str) -> None:
+        """Handle new device from DeviceManager."""
+        coordinator.new_device_keys.add(device_key)
+        coordinator.async_set_updated_data(dict(device_manager.data))
+        coordinator.new_device_keys.clear()
+
+    @callback
+    def _on_device_updated(device_key: str) -> None:
+        """Handle property update from DeviceManager."""
+        coordinator.async_update_listeners()
+
+    device_manager.on_device_added(_on_device_added)
+    device_manager.on_device_updated(_on_device_updated)
 
     runtime_health = RuntimeHealth()
     restart_lock = asyncio.Lock()
@@ -216,10 +237,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: EchonetLiteConfigEntry) 
     issue_monitor.start()
 
     # Property poller requests EPCs defined in node.poll_epcs (computed at node creation)
-    property_poller = EchonetLitePropertyPoller(
-        hass, coordinator, client, poll_interval=poll_interval
-    )
-    discovery_task = hass.async_create_task(client.async_probe_nodes())
+    property_poller = PropertyPoller(device_manager, poll_interval=poll_interval)
+    property_poller.start()
+    discovery_task = hass.async_create_task(client.probe_nodes())
 
     entry.runtime_data = EchonetLiteRuntimeData(
         interface=interface,
@@ -307,15 +327,15 @@ class _RuntimeIssueMonitor:
     @callback
     def record_activity(self, timestamp: float) -> None:
         """Note that activity was observed and clear issues if present."""
-        self._coordinator.last_frame_received_at = timestamp
+        self._coordinator.record_runtime_activity(timestamp)
         self._clear_inactivity_issue_if_needed()
 
     @callback
     def _async_check_runtime(self, _now: datetime) -> None:
-        last = self._coordinator.last_frame_received_at
-        if last is None:
+        last_activity_at = self._coordinator.last_runtime_activity_at
+        if last_activity_at is None:
             return
-        if self._monotonic() - last < self._threshold:
+        if self._monotonic() - last_activity_at < self._threshold:
             self._clear_inactivity_issue_if_needed()
             return
         if self._inactivity_issue_active:

@@ -7,8 +7,7 @@ from datetime import datetime, timedelta
 import time
 from unittest.mock import AsyncMock, patch
 
-from pyhems import EOJ
-from pyhems.runtime import HemsErrorEvent, HemsInstanceListEvent
+from pyhems import EOJ, HemsErrorEvent, HemsInstanceListEvent
 
 from homeassistant.components.echonet_lite import async_setup, async_unload_entry
 from homeassistant.components.echonet_lite.const import (
@@ -19,7 +18,6 @@ from homeassistant.components.echonet_lite.const import (
     ISSUE_RUNTIME_INACTIVE,
     RUNTIME_MONITOR_MAX_SILENCE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -29,31 +27,10 @@ from .conftest import TestFrame, TestProperty, make_frame_event
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_creates_flow_when_missing_entry(hass: HomeAssistant) -> None:
-    """Ensure async_setup starts an integration discovery flow."""
+async def test_async_setup_is_noop(hass: HomeAssistant) -> None:
+    """Ensure async_setup is a no-op for config-entry-only integration."""
 
     with (
-        patch.object(hass.config_entries, "async_entries", return_value=[]),
-        patch.object(
-            hass.config_entries.flow,
-            "async_init",
-            AsyncMock(),
-        ) as mock_init,
-    ):
-        assert await async_setup(hass, {})
-        await hass.async_block_till_done()
-
-    mock_init.assert_awaited_once_with(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-    )
-
-
-async def test_async_setup_skips_when_entry_exists(hass: HomeAssistant) -> None:
-    """Ensure async_setup does nothing when an entry already exists."""
-
-    with (
-        patch.object(hass.config_entries, "async_entries", return_value=[object()]),
         patch.object(
             hass.config_entries.flow,
             "async_init",
@@ -122,10 +99,13 @@ async def test_runtime_inactivity_issue_raised_and_cleared(
         issue_registry = ir.async_get(hass)
 
         monitor = entry.runtime_data.issue_monitor
+        coordinator = entry.runtime_data.coordinator
         assert monitor is not None
+        assert coordinator is not None
         timeline = {"value": 0.0}
         monitor._monotonic = lambda: timeline["value"]
         monitor.record_activity(0.0)
+        assert coordinator.last_runtime_activity_at == 0.0
 
         assert not issue_registry.async_get_issue(DOMAIN, ISSUE_RUNTIME_INACTIVE)
 
@@ -137,6 +117,7 @@ async def test_runtime_inactivity_issue_raised_and_cleared(
 
         timeline["value"] = 0.0
         monitor.record_activity(0.0)
+        assert coordinator.last_runtime_activity_at == 0.0
         assert not issue_registry.async_get_issue(DOMAIN, ISSUE_RUNTIME_INACTIVE)
 
         assert await async_unload_entry(hass, entry)
@@ -225,24 +206,11 @@ async def test_property_poller_requests_polled_properties(
     )
     entry.add_to_hass(hass)
 
-    callbacks: list = []
-
-    def _track_time_interval(
-        hass: HomeAssistant,
-        callback: Callable[[datetime], None],
-        interval: timedelta,
-    ) -> Callable[[], None]:
-        callbacks.append(callback)
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.echonet_lite.poller.async_track_time_interval",
-        side_effect=_track_time_interval,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator = entry.runtime_data.coordinator
+    poller = entry.runtime_data.property_poller
 
     now = time.monotonic()
     node_id = bytes.fromhex("00000000000002").hex()
@@ -268,7 +236,7 @@ async def test_property_poller_requests_polled_properties(
             ]
         raise AssertionError(f"Unexpected EOJ {eoj_arg:06x}")
 
-    mock_echonet_lite_client.async_get.side_effect = _async_get
+    mock_echonet_lite_client.get.side_effect = _async_get
 
     instance_event = HemsInstanceListEvent(
         received_at=now,
@@ -283,12 +251,11 @@ async def test_property_poller_requests_polled_properties(
     # Verify nodes were created
     assert len(coordinator.data) == 2
 
-    # The sensor node now has property maps; the poller should schedule polling
-    assert callbacks
-    prev_count = mock_echonet_lite_client.async_send.await_count
-    callbacks[0](dt_util.utcnow())
+    # The sensor node now has property maps; trigger a poll cycle manually
+    prev_count = mock_echonet_lite_client.send.await_count
+    poller.schedule_polls()
     await hass.async_block_till_done()
-    assert mock_echonet_lite_client.async_send.await_count > prev_count
+    assert mock_echonet_lite_client.send.await_count > prev_count
 
     assert await async_unload_entry(hass, entry)
 
@@ -306,24 +273,11 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
     )
     entry.add_to_hass(hass)
 
-    callbacks: list = []
-
-    def _track_time_interval(
-        hass: HomeAssistant,
-        callback: Callable[[datetime], None],
-        interval: timedelta,
-    ) -> Callable[[], None]:
-        callbacks.append(callback)
-        return lambda: None
-
-    with patch(
-        "homeassistant.components.echonet_lite.poller.async_track_time_interval",
-        side_effect=_track_time_interval,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator = entry.runtime_data.coordinator
+    poller = entry.runtime_data.property_poller
     node_id = bytes.fromhex("00000000000002").hex()
     node_profile_eoj = EOJ(0x0EF001)
     sensor_eoj = EOJ(0x001101)
@@ -347,7 +301,7 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
             ]
         raise AssertionError(f"Unexpected EOJ {eoj_arg:06x}")
 
-    mock_echonet_lite_client.async_get.side_effect = _async_get
+    mock_echonet_lite_client.get.side_effect = _async_get
 
     instance_event = HemsInstanceListEvent(
         received_at=30.0,
@@ -362,14 +316,13 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
     assert len(coordinator.data) == 2
 
     # With notifications disabled, poller should still poll via 0x62
-    assert callbacks
-    callbacks[0](dt_util.utcnow())
+    poller.schedule_polls()
     await hass.async_block_till_done()
 
     assert any(
         call.args[1].esv == 0x62
         and any(prop.epc == 0xE0 for prop in call.args[1].properties)
-        for call in mock_echonet_lite_client.async_send.await_args_list
+        for call in mock_echonet_lite_client.send.await_args_list
     )
 
 
@@ -408,14 +361,14 @@ async def test_node_created_with_property_maps(
             ]
         raise AssertionError(f"Unexpected EOJ {eoj_arg:06x}")
 
-    entry.runtime_data.client.async_get.side_effect = _async_get
+    entry.runtime_data.client.get.side_effect = _async_get
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         side_effect=[30.0, 31.0],
     ):
-        await coordinator._async_setup_device(node_hex, node_profile_eoj)
-        await coordinator._async_setup_device(node_hex, sensor_eoj)
+        await coordinator.device_manager.setup_device(node_hex, node_profile_eoj)
+        await coordinator.device_manager.setup_device(node_hex, sensor_eoj)
 
     # Parent node should be created
     parent_id = f"{node_hex}-{int(node_profile_eoj):06x}"
@@ -447,16 +400,16 @@ async def test_node_updated_by_subsequent_frames(
     node_hex = bytes.fromhex("00000000000001").hex()
     node_profile_eoj = EOJ(0x0EF001)
 
-    entry.runtime_data.client.async_get.return_value = [
+    entry.runtime_data.client.get.return_value = [
         TestProperty(epc=0x9F, edt=bytes.fromhex("028AD6")),
         TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
     ]
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=30.0,
     ):
-        await coordinator._async_setup_device(node_hex, node_profile_eoj)
+        await coordinator.device_manager.setup_device(node_hex, node_profile_eoj)
 
     # Node should be created
     node_id = f"{node_hex}-{int(node_profile_eoj):06x}"
@@ -500,34 +453,31 @@ async def test_property_poller_respects_get_property_map(
     entry = MockConfigEntry(domain=DOMAIN, options={CONF_INTERFACE: "0.0.0.0"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.echonet_lite.poller.async_track_time_interval",
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator = entry.runtime_data.coordinator
     now = time.monotonic()
 
     node_hex = bytes.fromhex("00000000000002").hex()
 
-    entry.runtime_data.client.async_get.return_value = [
+    entry.runtime_data.client.get.return_value = [
         TestProperty(epc=0x9F, edt=bytes.fromhex("018A")),  # Get map: 1 EPC (0x8A)
         TestProperty(epc=0x9D, edt=bytes.fromhex("00")),  # INF map: empty
         TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
     ]
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, EOJ(0x001101))
+        await coordinator.device_manager.setup_device(node_hex, EOJ(0x001101))
 
     await hass.async_block_till_done()
 
     # Verify that NO requests were sent for 0xE0
-    # Check all calls to async_send
-    for call in mock_echonet_lite_client.async_send.call_args_list:
+    # Check all calls to send
+    for call in mock_echonet_lite_client.send.call_args_list:
         frame = call.args[1]
         # Ensure 0xE0 is NOT in any request
         assert not any(p.epc == 0xE0 for p in frame.properties), (
@@ -547,18 +497,15 @@ async def test_property_poller_requests_notifications_for_required_epcs(
     entry = MockConfigEntry(domain=DOMAIN, options={CONF_INTERFACE: "0.0.0.0"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.echonet_lite.poller.async_track_time_interval",
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator = entry.runtime_data.coordinator
     now = time.monotonic()
 
     node_hex = bytes.fromhex("00000000000002").hex()
 
-    entry.runtime_data.client.async_get.return_value = [
+    entry.runtime_data.client.get.return_value = [
         # Get map: 0x8A (ID) and 0xB3 (required temp setpoint)
         TestProperty(epc=0x9F, edt=bytes.fromhex("028AB3")),
         # INF map announces 0xB3 so 0x63 can be used
@@ -568,20 +515,79 @@ async def test_property_poller_requests_notifications_for_required_epcs(
     ]
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, EOJ(0x013001))
+        await coordinator.device_manager.setup_device(node_hex, EOJ(0x013001))
 
     await hass.async_block_till_done()
 
     # Initial 0x63 should be sent once after device creation (since INF map includes 0xB3)
-    calls = mock_echonet_lite_client.async_send.await_args_list
+    calls = mock_echonet_lite_client.send.await_args_list
     assert any(
         call.args[1].esv == 0x63
         and any(prop.epc == 0xB3 for prop in call.args[1].properties)
         for call in calls
     ), "Should request notifications for 0xB3 via 0x63"
+
+
+async def test_climate_poller_requests_fan_and_swing(
+    hass: HomeAssistant,
+    mock_definitions_registry,
+    mock_echonet_lite_client,
+) -> None:
+    """Ensure poller includes fan/swing EPCs for climate devices."""
+
+    entry = MockConfigEntry(domain=DOMAIN, options={CONF_INTERFACE: "0.0.0.0"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinator
+    poller = entry.runtime_data.property_poller
+    now = time.monotonic()
+
+    node_hex = bytes.fromhex("00000000000002").hex()
+
+    # Get map includes required climate EPCs plus fan/swing; INF map empty
+    entry.runtime_data.client.get.return_value = [
+        TestProperty(epc=0x9F, edt=bytes.fromhex("0680B0B3BBA0A3")),
+        TestProperty(epc=0x9D, edt=bytes.fromhex("00")),
+        TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
+        TestProperty(epc=0x80, edt=bytes.fromhex("30")),
+    ]
+
+    with patch(
+        "pyhems.device_manager.time.monotonic",
+        return_value=now,
+    ):
+        await coordinator.device_manager.setup_device(node_hex, EOJ(0x013001))
+
+    await hass.async_block_till_done()
+
+    # Trigger a poll cycle manually
+    poller.schedule_polls()
+    await hass.async_block_till_done()
+
+    # Expect a 0x62 poll including both fan speed (0xA0) and swing (0xA3)
+    assert any(
+        call.args[1].esv == 0x62
+        and {prop.epc for prop in call.args[1].properties}.issuperset({0xA0, 0xA3})
+        for call in mock_echonet_lite_client.send.await_args_list
+    ), "Poller should request fan and swing EPCs for climate devices"
+
+    # Trigger polling interval again
+    poller.schedule_polls()
+    await hass.async_block_till_done()
+
+    # Verify 0x62 polling continues for 0xB3
+    calls = mock_echonet_lite_client.send.await_args_list
+    assert any(
+        call.args[1].esv == 0x62
+        and any(prop.epc == 0xB3 for prop in call.args[1].properties)
+        for call in calls
+    ), "Should poll 0xB3 via 0x62"
 
 
 async def test_property_poller_handles_sna_notification_response(
@@ -594,18 +600,16 @@ async def test_property_poller_handles_sna_notification_response(
     entry = MockConfigEntry(domain=DOMAIN, options={CONF_INTERFACE: "0.0.0.0"})
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.echonet_lite.poller.async_track_time_interval",
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     coordinator = entry.runtime_data.coordinator
+    poller = entry.runtime_data.property_poller
     now = time.monotonic()
 
     node_hex = bytes.fromhex("00000000000002").hex()
 
-    entry.runtime_data.client.async_get.return_value = [
+    entry.runtime_data.client.get.return_value = [
         TestProperty(epc=0x9F, edt=bytes.fromhex("028AB3")),
         # INF map is empty: device does not announce B3
         TestProperty(epc=0x9D, edt=bytes.fromhex("00")),
@@ -614,26 +618,26 @@ async def test_property_poller_handles_sna_notification_response(
     ]
 
     with patch(
-        "homeassistant.components.echonet_lite.coordinator.time.monotonic",
+        "pyhems.device_manager.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, EOJ(0x013001))
+        await coordinator.device_manager.setup_device(node_hex, EOJ(0x013001))
 
     await hass.async_block_till_done()
 
     # No 0x63 should be sent because INF map does not include 0xB3
     assert not any(
         call.args[1].esv == 0x63
-        for call in mock_echonet_lite_client.async_send.await_args_list
+        for call in mock_echonet_lite_client.send.await_args_list
     ), "Should not request notifications when device does not announce properties"
 
-    # Trigger polling interval manually (async_track_time_interval is patched)
-    entry.runtime_data.property_poller._async_handle_interval()
+    # Trigger polling interval manually
+    poller.schedule_polls()
     await hass.async_block_till_done()
 
     # Should poll 0xB3
     assert any(
         call.args[1].esv == 0x62
         and any(prop.epc == 0xB3 for prop in call.args[1].properties)
-        for call in mock_echonet_lite_client.async_send.await_args_list
+        for call in mock_echonet_lite_client.send.await_args_list
     )

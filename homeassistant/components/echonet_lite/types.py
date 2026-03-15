@@ -7,9 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
-from pyhems import EOJ
-from pyhems.definitions import DefinitionsRegistry
-from pyhems.runtime import HemsClient
+from pyhems import DefinitionsRegistry, HemsClient, PropertyPoller
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -42,41 +40,6 @@ class RuntimeIssueMonitorProtocol(Protocol):
         ...
 
 
-class PropertyPollerProtocol(Protocol):
-    # pylint: disable=unnecessary-ellipsis
-    """Protocol for property polling."""
-
-    def stop(self) -> None:
-        """Cancel listeners and scheduled callbacks."""
-        ...
-
-    def schedule_immediate_poll(self, device_key: str, *, delay: float = 1.0) -> None:
-        """Schedule polling for a device earlier than the regular cadence."""
-        ...
-
-
-@dataclass(slots=True)
-class EchonetLiteNodeState:
-    """State for a discovered node (SEOJ)."""
-
-    eoj: EOJ
-    properties: dict[int, bytes]
-    last_seen: float
-    node_id: str
-    manufacturer_code: int
-    get_epcs: frozenset[int]
-    set_epcs: frozenset[int]
-    inf_epcs: frozenset[int]
-    poll_epcs: frozenset[int]
-    product_code: str | None
-    serial_number: str | None
-
-    @property
-    def device_key(self) -> str:
-        """Return the unique device key."""
-        return f"{self.node_id}-{self.eoj:06x}"
-
-
 @dataclass(slots=True)
 class RuntimeHealth:
     """Health metadata tracked for the runtime client."""
@@ -96,7 +59,7 @@ class EchonetLiteRuntimeData:
     coordinator: EchonetLiteCoordinator
     client: HemsClient
     unsubscribe_runtime: Callable[[], None]
-    property_poller: PropertyPollerProtocol
+    property_poller: PropertyPoller
     issue_monitor: RuntimeIssueMonitorProtocol
     health: RuntimeHealth
     discovery_task: asyncio.Task[Any]
@@ -107,9 +70,7 @@ EchonetLiteConfigEntry = ConfigEntry[EchonetLiteRuntimeData]
 
 __all__ = [
     "EchonetLiteConfigEntry",
-    "EchonetLiteNodeState",
     "EchonetLiteRuntimeData",
-    "PropertyPollerProtocol",
     "RuntimeHealth",
     "RuntimeIssueMonitorProtocol",
 ]
