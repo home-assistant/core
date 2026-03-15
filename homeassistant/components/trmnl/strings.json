@@ -26,6 +26,14 @@
       "sleep_mode": {
         "name": "Sleep mode"
       }
+    },
+    "time": {
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      }
     }
   },
   "exceptions": {
