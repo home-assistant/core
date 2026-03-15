@@ -141,6 +141,7 @@ class BaseTelegramBot:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self.most_recent_chat_id: int | None = None
         self._bot = bot
 
     @abstractmethod
@@ -150,8 +151,6 @@ class BaseTelegramBot:
     async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""
         _LOGGER.debug("Handling update %s", update)
-        if not self.authorize_update(update):
-            return False
 
         # establish event type: text, command or callback_query
         if update.callback_query:
@@ -167,6 +166,11 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        self.most_recent_chat_id = event_data[ATTR_CHAT_ID]
+
+        if not self.authorize_update(update):
+            return False
 
         event_data["bot"] = _get_bot_info(self._bot, self.config)
 
