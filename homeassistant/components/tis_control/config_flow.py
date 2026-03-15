@@ -63,7 +63,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await tis_api.connect()
-        except ConnectionError, OSError:
+        except (ConnectionError, OSError):
             _LOGGER.debug("Failed to connect to TIS Control bridge")
             return False
         except Exception:
