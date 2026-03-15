@@ -4089,3 +4089,41 @@
     }),
   })
 # ---
+# name: test_minutely_forecast[get_forecasts]
+  dict({
+    'weather.home': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2023-09-08T22:03:00Z',
+          'precipitation': 0.0,
+          'precipitation_probability': 0.0,
+          'temperature': None,
+        }),
+        dict({
+          'datetime': '2023-09-08T22:04:00Z',
+          'precipitation': 0.0,
+          'precipitation_probability': 0.0,
+          'temperature': None,
+        }),
+        dict({
+          'datetime': '2023-09-08T22:05:00Z',
+          'precipitation': 0.2,
+          'precipitation_probability': 10.0,
+          'temperature': None,
+        }),
+        dict({
+          'datetime': '2023-09-08T22:06:00Z',
+          'precipitation': 0.5,
+          'precipitation_probability': 20.0,
+          'temperature': None,
+        }),
+        dict({
+          'datetime': '2023-09-08T22:07:00Z',
+          'precipitation': 0.8,
+          'precipitation_probability': 30.0,
+          'temperature': None,
+        }),
+      ]),
+    }),
+  })
+# ---
