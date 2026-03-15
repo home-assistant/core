@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -24,8 +25,12 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -34,6 +39,7 @@ from .const import (
     COMM_TIMEOUT,
     DATA_AMCREST,
     DEVICES,
+    DOMAIN,
     RESOLUTION_TO_STREAM,
     SERVICE_UPDATE,
     SNAPSHOT_TIMEOUT,
@@ -42,6 +48,7 @@ from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
+    from .models import AmcrestConfiguredDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +118,25 @@ CAMERA_SERVICES = {
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up an Amcrest camera from a config entry."""
+    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    serial = device.serial_number or config_entry.entry_id
+    unique_id = f"{serial}-{device.resolution}-{device.channel}"
+    entity = AmcrestCam(
+        device.name,
+        device,
+        get_ffmpeg_manager(hass),
+        device_info=device.device_info,
+        unique_id=unique_id,
+    )
+    async_add_entities([entity], True)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -142,11 +168,22 @@ class AmcrestCam(Camera):
     _attr_should_poll = True  # Cameras default to False
     _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
-    def __init__(self, name: str, device: AmcrestDevice, ffmpeg: FFmpegManager) -> None:
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestDevice | AmcrestConfiguredDevice,
+        ffmpeg: FFmpegManager,
+        device_info: DeviceInfo | None = None,
+        unique_id: str | None = None,
+    ) -> None:
         """Initialize an Amcrest camera."""
         super().__init__()
         self._name = name
         self._api = device.api
+        if device_info is not None:
+            self._attr_device_info = device_info
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
         self._ffmpeg = ffmpeg
         self._ffmpeg_arguments = device.ffmpeg_arguments
         self._stream_source = device.stream_source
@@ -367,7 +404,7 @@ class AmcrestCam(Camera):
                 else:
                     self._model = "unknown"
             if self._attr_unique_id is None:
-                serial_number = (await self._api.async_serial_number).strip()
+                serial_number = (await self._api.async_serial_number or "").strip()
                 if serial_number:
                     self._attr_unique_id = (
                         f"{serial_number}-{self._resolution}-{self._channel}"

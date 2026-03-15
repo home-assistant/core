@@ -16,10 +16,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
@@ -27,6 +31,7 @@ from .const import (
     BINARY_SENSOR_SCAN_INTERVAL_SECS,
     DATA_AMCREST,
     DEVICES,
+    DOMAIN,
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
@@ -34,6 +39,7 @@ from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
     from . import AmcrestDevice
+    from .models import AmcrestConfiguredDevice
 
 
 @dataclass(frozen=True)
@@ -133,6 +139,40 @@ def check_binary_sensors(value: list[str]) -> list[str]:
     return value
 
 
+def _get_config_flow_binary_sensors() -> tuple[AmcrestSensorEntityDescription, ...]:
+    """Return binary sensor descriptions for config flow (event-driven + online)."""
+    return tuple(
+        desc
+        for desc in BINARY_SENSORS
+        if desc.key
+        in (
+            _AUDIO_DETECTED_KEY,
+            _CROSSLINE_DETECTED_KEY,
+            _MOTION_DETECTED_KEY,
+            _ONLINE_KEY,
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up binary sensors for an Amcrest config entry."""
+    device = hass.data[DOMAIN][config_entry.entry_id]["device"]
+    name = device.name
+    serial = device.serial_number or config_entry.entry_id
+
+    entities = []
+    for entity_description in _get_config_flow_binary_sensors():
+        unique_id = f"{serial}-{entity_description.key}-{device.channel}"
+        entities.append(
+            AmcrestBinarySensor(name, device, entity_description, unique_id=unique_id)
+        )
+    async_add_entities(entities, True)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -162,8 +202,9 @@ class AmcrestBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice,
+        device: AmcrestDevice | AmcrestConfiguredDevice,
         entity_description: AmcrestSensorEntityDescription,
+        unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
         self._signal_name = name
@@ -173,6 +214,10 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
         self._attr_name = f"{name} {entity_description.name}"
         self._attr_should_poll = entity_description.should_poll
+        if unique_id:
+            self._attr_unique_id = unique_id
+        if hasattr(device, "device_info"):
+            self._attr_device_info = device.device_info
 
     @property
     def available(self) -> bool:
@@ -228,9 +273,9 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     async def _async_update_unique_id(self) -> None:
         """Set the unique id."""
-        if self._attr_unique_id is None and (
-            serial_number := await self._api.async_serial_number
-        ):
+        if self._attr_unique_id is not None:
+            return
+        if serial_number := await self._api.async_serial_number:
             self._attr_unique_id = (
                 f"{serial_number}-{self.entity_description.key}-{self._channel}"
             )
