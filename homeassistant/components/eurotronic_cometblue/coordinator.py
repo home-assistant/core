@@ -12,11 +12,7 @@ from eurotronic_cometblue_ha import AsyncCometBlue, InvalidByteValueError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -62,33 +58,30 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     ) -> dict[str, Any] | None:
         """Send command to device."""
 
-        LOGGER.debug("Updating device with '%s' from '%s'", caller_entity_id, payload)
+        LOGGER.debug("Updating device %s with '%s'", self.name, payload)
         retry_count = 0
         while retry_count < MAX_RETRIES:
             try:
                 async with self.device:
-                    if not self.device.connected:
-                        raise ConfigEntryNotReady(
-                            f"Failed to connect to '{self.device.device.address}'"
-                        )
                     return await getattr(self.device, function)(**payload)
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                 retry_count += 1
                 if retry_count >= MAX_RETRIES:
                     raise HomeAssistantError(
-                        f"Error sending command '{payload}' to '{caller_entity_id}': {ex}"
+                        f"Error sending command {function}({payload}) to '{self.name}': {ex}"
                     ) from ex
                 LOGGER.info(
-                    "Retrying command '%s' to '%s' after %s (%s)",
+                    "Retry sending command %s(%s) to %s after %s (%s)",
+                    function,
                     payload,
-                    caller_entity_id,
+                    self.name,
                     type(ex).__name__,
                     ex,
                 )
                 await asyncio.sleep(2.5)
             except ValueError as ex:
                 raise ServiceValidationError(
-                    f"Invalid payload '{payload}' for '{caller_entity_id}': {ex}"
+                    f"Invalid payload '{payload}' for '{self.name}': {ex}"
                 ) from ex
         return None
 
@@ -108,10 +101,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             and holiday is None
         ):
             async with self.device:
-                if not self.device.connected:
-                    raise ConfigEntryNotReady(
-                        f"Failed to connect to '{self.device.device.address}'"
-                    )
                 try:
                     # temperatures are required and must trigger a retry if not available
                     if not retrieved_temperatures:
@@ -126,7 +115,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                             holiday = await self.device.get_holiday_async(1) or {}
                     except InvalidByteValueError as ex:
                         LOGGER.warning(
-                            "Failed to retrieve optional data: %s (%s)",
+                            "Failed to retrieve optional data for %s: %s (%s)",
+                            self.name,
                             type(ex).__name__,
                             ex,
                         )
@@ -138,7 +128,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                             f"Error retrieving data: {ex}", retry_after=30
                         ) from ex
                     LOGGER.info(
-                        "Retrying after %s (%s)",
+                        "Retry updating %s after error: %s (%s)",
+                        self.name,
                         type(ex).__name__,
                         ex,
                     )
@@ -157,5 +148,5 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                 for k in CONF_ALL_TEMPERATURES
             },
         }
-        LOGGER.debug("Received data: %s", data)
+        LOGGER.debug("Received data for %s: %s", self.name, data)
         return data
