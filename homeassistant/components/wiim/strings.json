@@ -27,6 +27,9 @@
   "exceptions": {
     "invalid_grouping_entity": {
       "message": "Entity with ID {entity_id} can't be added to the WiiM multiroom. Is the entity a WiiM media player?"
+    },
+    "missing_homeassistant_url": {
+      "message": "Internal Home Assistant URL required."
     }
   }
 }
