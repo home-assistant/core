@@ -23,6 +23,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity
 
@@ -134,7 +135,11 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
         try:
             client = self.robot.get_camera_client()
         except Exception as err:
-            raise HomeAssistantError(f"Camera not available: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="camera_not_available",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         relay = CameraSignalingRelay(client)
         # Store relay immediately so ICE candidates arriving before start()
@@ -163,7 +168,11 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
             session = await relay.start(offer_sdp, on_answer, on_candidate)
         except Exception as err:
             self._relays.pop(session_id, None)
-            raise HomeAssistantError(f"Failed to start camera stream: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="camera_stream_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # Update cached session for fresh TURN creds
         self._cached_session = session

@@ -18,7 +18,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, async_update_night_light_settings
+from .entity import (
+    LitterRobotEntity,
+    async_update_night_light_settings,
+    whisker_command,
+)
 
 NIGHT_LIGHT_DESCRIPTION = LightEntityDescription(
     key="night_light",
@@ -57,6 +61,7 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
 
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_translation_key = "night_light"
 
     def __init__(
         self,
@@ -109,6 +114,7 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
         self._clear_optimistic_state()
         super()._handle_coordinator_update()
 
+    @whisker_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the night light with optional brightness and color."""
         updates: dict[str, Any] = {}
@@ -132,6 +138,7 @@ class LitterRobotNightLight(LitterRobotEntity[LitterRobot5], LightEntity):
         self.async_write_ha_state()
         await async_update_night_light_settings(self.robot, **updates)
 
+    @whisker_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the night light."""
         self._attr_is_on = False

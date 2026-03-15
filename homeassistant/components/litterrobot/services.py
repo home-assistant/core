@@ -63,7 +63,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         coordinator = entry.runtime_data
         if coordinator.recording_manager is None:
             raise HomeAssistantError(
-                "Recording is not enabled — turn it on via the integration options first"
+                translation_domain=DOMAIN,
+                translation_key="recording_not_enabled",
             )
 
         from pylitterbot import LitterRobot5  # noqa: PLC0415
@@ -89,8 +90,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         if triggered == 0:
             raise HomeAssistantError(
-                "No LR5 cameras found"
-                + (f" matching serial '{serial_filter}'" if serial_filter else "")
+                translation_domain=DOMAIN,
+                translation_key="no_cameras_found",
             )
 
     hass.services.async_register(
@@ -141,7 +142,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         if not robot_serial:
             raise HomeAssistantError(
-                f"Activity with eventId '{event_id}' not found in cache"
+                translation_domain=DOMAIN,
+                translation_key="activity_not_found",
+                translation_placeholders={"event_id": event_id},
             )
 
         # Find the robot
@@ -152,7 +155,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 break
 
         if robot is None:
-            raise HomeAssistantError(f"Robot with serial '{robot_serial}' not found")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="robot_not_found",
+            )
 
         result = await robot.reassign_pet_visit(
             event_id=event_id,
@@ -161,7 +167,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         )
 
         if result is None:
-            raise HomeAssistantError("Failed to reassign pet visit")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reassign_failed",
+            )
 
         # Update the activity in the local cache
         for i, activity in enumerate(coordinator.camera_activities[robot_serial]):

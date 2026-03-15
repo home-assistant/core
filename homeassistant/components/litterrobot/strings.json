@@ -347,6 +347,21 @@
     },
     "reassign_failed": {
       "message": "Failed to reassign the pet visit"
+    },
+    "camera_not_available": {
+      "message": "Camera is not available: {error}"
+    },
+    "camera_stream_failed": {
+      "message": "Failed to start camera stream: {error}"
+    },
+    "recording_not_enabled": {
+      "message": "Recording is not enabled. Turn it on via the integration options first."
+    },
+    "no_cameras_found": {
+      "message": "No Litter-Robot 5 cameras found"
+    },
+    "activity_not_found": {
+      "message": "Activity with event ID '{event_id}' was not found"
     }
   },
   "issues": {

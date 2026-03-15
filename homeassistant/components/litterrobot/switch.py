@@ -211,12 +211,14 @@ class LitterRobotCameraMicrophoneSwitch(LitterRobotEntity[LitterRobot5], SwitchE
                 exc_info=True,
             )
 
+    @whisker_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable camera microphone."""
         if await self.robot.set_camera_audio(True):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @whisker_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable camera microphone."""
         if await self.robot.set_camera_audio(False):
@@ -247,10 +249,12 @@ class LitterRobotCameraSwitch(LitterRobotEntity[LitterRobot5], SwitchEntity):
         """Return true if camera is on (not in privacy mode)."""
         return self.robot.privacy_mode != "Privacy"
 
+    @whisker_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera on (exit privacy mode)."""
         await self.robot.set_privacy_mode(False)
 
+    @whisker_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera off (enter privacy mode)."""
         await self.robot.set_privacy_mode(True)

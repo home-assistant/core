@@ -265,6 +265,7 @@ class LitterRobotCameraViewSelect(LitterRobotEntity[LitterRobot5], SelectEntity)
         """Return the current camera view."""
         return self._cached_view
 
+    @whisker_command
     async def async_select_option(self, option: str) -> None:
         """Change the camera view."""
         await self.robot.set_camera_view(option)
