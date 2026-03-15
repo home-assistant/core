@@ -106,8 +106,8 @@ from .util.ulid import ulid_at_time, ulid_now
 if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import HomeAssistantHTTP
-    from .config_entries import ConfigEntries
-    from .helpers.entity import StateInfo
+    from .config_entries import ConfigEntries, ConfigEntry
+    from .helpers.entity import Entity, StateInfo
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -126,6 +126,10 @@ BLOCK_LOG_TIMEOUT = 60
 
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
+type BatchedServiceCallback = Callable[
+    [ConfigEntry, list[Entity], ServiceCall],
+    Coroutine[None, None, EntityServiceResponse | None],
+]
 
 
 class EventStateEventData(TypedDict):
@@ -2411,6 +2415,7 @@ class Service:
     """Representation of a callable service."""
 
     __slots__ = [
+        "batched_handlers",
         "description_placeholders",
         "job",
         "schema",
@@ -2439,6 +2444,20 @@ class Service:
         self.schema = schema
         self.supports_response = supports_response
         self.description_placeholders = description_placeholders
+        self.batched_handlers: dict[ConfigEntry, BatchedServiceCallback] = {}
+
+    @callback
+    def async_register_batched_handler(
+        self,
+        config_entry: ConfigEntry,
+        handler: BatchedServiceCallback,
+    ) -> None:
+        """Register or update a per-ConfigEntry batched entity handler for this service.
+
+        The handler will receive a ConfigEntry, a list of entities
+        and a ServiceCall object.
+        """
+        self.batched_handlers.setdefault(config_entry, handler)
 
 
 class ServiceCall:
@@ -2644,6 +2663,31 @@ class ServiceRegistry:
         self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REGISTERED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
+
+    @callback
+    def async_register_batched_handler(
+        self,
+        domain: str,
+        service: str,
+        config_entry: ConfigEntry,
+        handler: BatchedServiceCallback,
+    ) -> None:
+        """Register a per-ConfigEntry batched entity handler for a specific service.
+
+        The handler will be stored on the Service object and scoped to
+        the given ConfigEntry. The handler receives a list of entities and the ServiceCall.
+        """
+        domain = domain.lower()
+        service = service.lower()
+
+        try:
+            service_obj = self._services[domain][service]
+        except KeyError as err:
+            raise HomeAssistantError(
+                f"Service {domain}.{service} does not exist; register it first"
+            ) from err
+
+        service_obj.async_register_batched_handler(config_entry, handler)
 
     def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""
