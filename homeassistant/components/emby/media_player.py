@@ -25,18 +25,19 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
+
+from . import EmbyConfigEntry
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_SSL_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8096
-DEFAULT_SSL_PORT = 8920
-DEFAULT_SSL = False
 
 SUPPORT_EMBY = (
     MediaPlayerEntityFeature.PAUSE
@@ -57,26 +58,12 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+@callback
+def _setup_emby_callbacks(
+    emby: EmbyServer,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Emby platform."""
-
-    host = config.get(CONF_HOST)
-    key = config.get(CONF_API_KEY)
-    port = config.get(CONF_PORT)
-    ssl = config[CONF_SSL]
-
-    if port is None:
-        port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
-
-    _LOGGER.debug("Setting up Emby server at: %s:%s", host, port)
-
-    emby = EmbyServer(host, key, port, ssl, hass.loop)
-
+    """Register device update and removal callbacks for an Emby server."""
     active_emby_devices: dict[str, EmbyDevice] = {}
     inactive_emby_devices: dict[str, EmbyDevice] = {}
 
@@ -114,6 +101,42 @@ async def async_setup_platform(
             _LOGGER.debug("Inactive %s, item: %s", data, rem)
             rem.set_available(False)
 
+    emby.add_new_devices_callback(device_update_callback)
+    emby.add_stale_devices_callback(device_removal_callback)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: EmbyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Emby from a config entry."""
+    emby = config_entry.runtime_data
+    _setup_emby_callbacks(emby, async_add_entities)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Emby platform."""
+
+    host = config.get(CONF_HOST)
+    key = config.get(CONF_API_KEY)
+    port = config.get(CONF_PORT)
+    ssl = config[CONF_SSL]
+
+    if port is None:
+        port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
+
+    _LOGGER.debug("Setting up Emby server at: %s:%s", host, port)
+
+    emby = EmbyServer(host, key, port, ssl, hass.loop)
+
+    _setup_emby_callbacks(emby, async_add_entities)
+
     @callback
     def start_emby(event):
         """Start Emby connection."""
@@ -123,9 +146,6 @@ async def async_setup_platform(
         """Stop Emby connection."""
         await emby.stop()
 
-    emby.add_new_devices_callback(device_update_callback)
-    emby.add_stale_devices_callback(device_removal_callback)
-
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_emby)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
 
@@ -134,8 +154,9 @@ class EmbyDevice(MediaPlayerEntity):
     """Representation of an Emby device."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = False
 
-    def __init__(self, emby, device_id):
+    def __init__(self, emby, device_id) -> None:
         """Initialize the Emby device."""
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
         self.emby = emby
@@ -176,9 +197,9 @@ class EmbyDevice(MediaPlayerEntity):
         return self.device.supports_remote_control
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
-        return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
+        return f"Emby {self.device.name or DEVICE_DEFAULT_NAME}"
 
     @property
     def state(self) -> MediaPlayerState | None:
