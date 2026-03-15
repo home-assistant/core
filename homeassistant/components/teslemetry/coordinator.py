@@ -48,7 +48,7 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
-PRODUCTS_INTERVAL = timedelta(hours=1)
+METADATA_INTERVAL = timedelta(hours=1)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -77,7 +77,7 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name="Teslemetry Metadata",
-            update_interval=PRODUCTS_INTERVAL,
+            update_interval=METADATA_INTERVAL,
         )
         self.teslemetry = teslemetry
 

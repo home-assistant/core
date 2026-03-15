@@ -24,7 +24,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INFO_INTERVAL,
     ENERGY_LIVE_INTERVAL,
-    PRODUCTS_INTERVAL,
+    METADATA_INTERVAL,
     VEHICLE_INTERVAL,
 )
 from homeassistant.components.teslemetry.models import TeslemetryData
@@ -902,7 +902,7 @@ async def test_dynamic_device_discovery_triggers_reload(
         patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
     ):
         # Advance time to trigger metadata coordinator refresh
-        freezer.tick(PRODUCTS_INTERVAL)
+        freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -928,7 +928,7 @@ async def test_dynamic_device_discovery_no_reload_for_unscoped_energy_site(
         return True
 
     with patch.object(hass.config_entries, "async_reload", side_effect=mock_reload):
-        freezer.tick(PRODUCTS_INTERVAL)
+        freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -962,7 +962,7 @@ async def test_dynamic_device_discovery_triggers_reload_on_scope_change(
         ),
         patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
     ):
-        freezer.tick(PRODUCTS_INTERVAL)
+        freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -995,7 +995,7 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
         patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
     ):
         # Advance time to trigger metadata coordinator refresh
-        freezer.tick(PRODUCTS_INTERVAL)
+        freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
