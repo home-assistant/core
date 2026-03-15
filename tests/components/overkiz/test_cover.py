@@ -293,10 +293,9 @@ async def test_cover_tilt_services(
     """Test tilt services for a pergola from a full user setup."""
     await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
-    # Real setup fixtures anonymize labels, so the stable device URL is the best
-    # handle for selecting the specific cover we want to exercise.
     entity_id = get_entity_id(entity_registry, PERGOLA.url)
     state = get_state(hass, entity_id)
+
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes["supported_features"] == (
