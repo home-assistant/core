@@ -7,9 +7,13 @@ here is independent of the lower level transport protocol.
 See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-example
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
+from functools import cache
+from hashlib import blake2s
+from itertools import count
 import json
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from mcp import types
@@ -24,21 +28,108 @@ from homeassistant.helpers import llm
 from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
+_MCP_TOOL_NAME_MAX_LENGTH = 64
+_MCP_TOOL_NAME_HASH_BYTES = 4
 
 
 def _format_tool(
-    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+    name: str, tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
     input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
     return types.Tool(
-        name=tool.name,
+        name=name,
         description=tool.description or "",
         inputSchema={
             "type": "object",
             "properties": input_schema["properties"],
         },
     )
+
+
+def _get_mcp_tool_name(tool_name: str, collision_index: int = 0) -> str:
+    """Return an MCP-compatible tool name that handles truncation and collisions."""
+    if len(tool_name) <= _MCP_TOOL_NAME_MAX_LENGTH:
+        return tool_name
+
+    digest_input = f"{tool_name}:{collision_index}"
+    digest = blake2s(
+        digest_input.encode(), digest_size=_MCP_TOOL_NAME_HASH_BYTES
+    ).hexdigest()
+    prefix_length = _MCP_TOOL_NAME_MAX_LENGTH - (_MCP_TOOL_NAME_HASH_BYTES * 2) - 1
+    return f"{tool_name[:prefix_length]}_{digest}"
+
+
+def _get_exposed_tool_names(tool_names: Sequence[str]) -> dict[str, str]:
+    """Return a mapping of exposed MCP tool names to their underlying tool names."""
+    exposed_names: dict[str, str] = {}
+
+    for tool_name in tool_names:
+        for collision_index in count():
+            mcp_tool_name = _get_mcp_tool_name(tool_name, collision_index)
+            if mcp_tool_name not in exposed_names:
+                exposed_names[mcp_tool_name] = tool_name
+                break
+
+    return exposed_names
+
+
+class _McpTools:
+    """Cache MCP tool aliases for a server session."""
+
+    def __init__(
+        self, get_api_instance: Callable[[], Awaitable[llm.APIInstance]]
+    ) -> None:
+        """Initialize the MCP tool cache."""
+        self._get_api_instance = get_api_instance
+
+    @cache
+    def _get_tool_maps(
+        self, tool_names: tuple[str, ...]
+    ) -> tuple[Mapping[str, str], Mapping[str, str]]:
+        """Return cached alias mappings for a tool-name signature."""
+        tool_name_by_alias = MappingProxyType(
+            _get_exposed_tool_names(tool_names)
+        )
+        alias_by_tool_name = MappingProxyType(
+            {
+                tool_name: alias
+                for alias, tool_name in tool_name_by_alias.items()
+            }
+        )
+        return tool_name_by_alias, alias_by_tool_name
+
+    def _get_tool_maps_for_api(
+        self, llm_api: llm.APIInstance
+    ) -> tuple[Mapping[str, str], Mapping[str, str]]:
+        """Return cached alias mappings for an API instance."""
+        tool_names = tuple(dict.fromkeys(tool.name for tool in llm_api.tools))
+        return self._get_tool_maps(tool_names)
+
+    async def async_list_tools(self) -> list[types.Tool]:
+        """Return MCP-formatted tools for the current API instance."""
+        llm_api = await self._get_api_instance()
+        _, alias_by_tool_name = self._get_tool_maps_for_api(llm_api)
+
+        seen_aliases: set[str] = set()
+        tools: list[types.Tool] = []
+        for tool in llm_api.tools:
+            alias = alias_by_tool_name[tool.name]
+            if alias in seen_aliases:
+                _LOGGER.warning(
+                    "Skipping duplicate MCP tool name %s", alias
+                )
+                continue
+            seen_aliases.add(alias)
+            tools.append(
+                _format_tool(alias, tool, llm_api.custom_serializer)
+            )
+        return tools
+
+    def resolve_tool_name(self, llm_api: llm.APIInstance, mcp_tool_name: str) -> str:
+        """Resolve an MCP tool name to the current Home Assistant tool name."""
+        tool_name_by_alias, _ = self._get_tool_maps_for_api(llm_api)
+        return tool_name_by_alias.get(mcp_tool_name, mcp_tool_name)
 
 
 async def create_server(
@@ -58,6 +149,8 @@ async def create_server(
         """Get the LLM API selected."""
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
+
+    mcp_tools = _McpTools(get_api_instance)
 
     @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
@@ -92,15 +185,18 @@ async def create_server(
 
     @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
-        """List available time tools."""
-        llm_api = await get_api_instance()
-        return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
+        """List available MCP tools for the selected LLM API."""
+        return await mcp_tools.async_list_tools()
 
     @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()
-        tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
+        tool_name = mcp_tools.resolve_tool_name(llm_api, name)
+        tool_input = llm.ToolInput(
+            tool_name=tool_name,
+            tool_args=arguments,
+        )
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
 
         try:
