@@ -86,6 +86,7 @@ CONF_STATE_CLASS: Final = "state_class"
 ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
+UPTIME_DRIFT_TOLERANCE: Final = 60
 
 
 class SensorDeviceClass(StrEnum):
@@ -110,6 +111,14 @@ class SensorDeviceClass(StrEnum):
 
     TIMESTAMP = "timestamp"
     """Timestamp.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    UPTIME = "uptime"
+    """Uptime.
 
     Unit of measurement: `None`
 
@@ -515,6 +524,7 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.DATE,
     SensorDeviceClass.ENUM,
     SensorDeviceClass.TIMESTAMP,
+    SensorDeviceClass.UPTIME,
 }
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -814,6 +824,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TEMPERATURE_DELTA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
+    SensorDeviceClass.UPTIME: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},

@@ -1158,7 +1158,7 @@ def time(
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
             after_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
@@ -1188,7 +1188,7 @@ def time(
                 return False
         elif (
             before_entity.attributes.get(ATTR_DEVICE_CLASS)
-            == SensorDeviceClass.TIMESTAMP
+            in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,

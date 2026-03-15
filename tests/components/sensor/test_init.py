@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 import math
 from typing import Any
@@ -30,7 +30,11 @@ from homeassistant.components.sensor import (
     async_rounded_state,
     async_update_suggested_units,
 )
-from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVERTERS
+from homeassistant.components.sensor.const import (
+    STATE_CLASS_UNITS,
+    UNIT_CONVERTERS,
+    UPTIME_DRIFT_TOLERANCE,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -281,6 +285,42 @@ async def test_datetime_conversion(
 
     state = hass.states.get(entities[4].entity_id)
     assert state.state == test_timestamp.isoformat()
+
+
+async def test_uptime_device_class_auto_normalizes_drift(
+    hass: HomeAssistant,
+) -> None:
+    """Test uptime device class suppresses small drift automatically."""
+    initial_uptime = datetime(2026, 2, 14, 9, 30, tzinfo=UTC)
+    entity = MockSensor(
+        name="Test",
+        native_value=initial_uptime,
+        device_class=SensorDeviceClass.UPTIME,
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity.entity_id))
+    assert state.state == initial_uptime.isoformat(timespec="seconds")
+
+    entity._values["native_value"] = initial_uptime + timedelta(
+        seconds=UPTIME_DRIFT_TOLERANCE - 1
+    )
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity.entity_id))
+    assert state.state == initial_uptime.isoformat(timespec="seconds")
+
+    updated_uptime = initial_uptime + timedelta(seconds=UPTIME_DRIFT_TOLERANCE + 1)
+    entity._values["native_value"] = updated_uptime
+    entity.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity.entity_id))
+    assert state.state == updated_uptime.isoformat(timespec="seconds")
 
 
 async def test_a_sensor_with_a_non_numeric_device_class(
@@ -2200,6 +2240,7 @@ async def test_invalid_enumeration_entity_without_device_class(
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     ],
 )
 async def test_non_numeric_device_class_with_unit_of_measurement(
@@ -2554,6 +2595,7 @@ async def test_device_classes_with_invalid_state_class(
         (SensorDeviceClass.ENUM, None, None, None, False),
         (SensorDeviceClass.DATE, None, None, None, False),
         (SensorDeviceClass.TIMESTAMP, None, None, None, False),
+        (SensorDeviceClass.UPTIME, None, None, None, False),
         ("custom", None, None, None, False),
         (SensorDeviceClass.POWER, None, "V", None, True),
         (None, SensorStateClass.MEASUREMENT, None, None, True),
@@ -3097,6 +3139,7 @@ def test_device_class_units_are_complete() -> None:
         SensorDeviceClass.ENUM,
         SensorDeviceClass.MONETARY,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
     }
     unit_device_classes = {
         device_class.value for device_class in SensorDeviceClass
@@ -3127,6 +3170,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.TIMESTAMP,
+        SensorDeviceClass.UPTIME,
         SensorDeviceClass.WIND_DIRECTION,
     }
     converter_device_classes = {

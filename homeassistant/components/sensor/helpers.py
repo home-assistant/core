@@ -18,7 +18,7 @@ def async_parse_date_datetime(
     value: str, entity_id: str, device_class: SensorDeviceClass | str | None
 ) -> datetime | date | None:
     """Parse datetime string to a data or datetime."""
-    if device_class == SensorDeviceClass.TIMESTAMP:
+    if device_class in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME):
         if (parsed_timestamp := dt_util.parse_datetime(value)) is None:
             _LOGGER.warning("%s rendered invalid timestamp: %s", entity_id, value)
             return None
