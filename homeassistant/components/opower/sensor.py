@@ -215,17 +215,17 @@ async def async_setup_entry(
     def _update_entities() -> None:
         """Update entities."""
         new_entities: list[OpowerSensor] = []
-        current_account_device_ids = {
-            f"{coordinator.api.utility.subdomain()}_{account_id}"
-            for account_id in coordinator.data
-        }
+        current_account_device_ids: set[str] = set()
+        current_account_ids: set[str] = set()
 
-        for account_id, opower_data in coordinator.data.items():
+        for opower_data in coordinator.data.values():
             account = opower_data.account
             forecast = opower_data.forecast
             device_id = (
                 f"{coordinator.api.utility.subdomain()}_{account.utility_account_id}"
             )
+            current_account_device_ids.add(device_id)
+            current_account_ids.add(account.utility_account_id)
             device = DeviceInfo(
                 identifiers={(DOMAIN, device_id)},
                 name=f"{account.meter_type.name} account {account.utility_account_id}",
@@ -281,10 +281,22 @@ async def async_setup_entry(
             for entity_entry in er.async_entries_for_device(
                 entity_registry, device_entry.id, include_disabled_entities=True
             ):
+                if entity_entry.config_entry_id != entry.entry_id:
+                    continue
                 entity_registry.async_remove(entity_entry.entity_id)
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=entry.entry_id
             )
+
+        # Prune sensor tracking for accounts that are no longer present
+        if created_sensors:
+            stale_sensor_keys = {
+                sensor_key
+                for sensor_key in created_sensors
+                if sensor_key[0] not in current_account_ids
+            }
+            if stale_sensor_keys:
+                created_sensors.difference_update(stale_sensor_keys)
 
     _update_entities()
     entry.async_on_unload(coordinator.async_add_listener(_update_entities))
