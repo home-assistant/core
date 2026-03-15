@@ -3,16 +3,17 @@
 from unittest.mock import MagicMock, patch
 
 from forecast_solar import ForecastSolarConnectionError
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
+    CONF_MODULES_POWER,
     DOMAIN,
+    SUBENTRY_TYPE_PLANE,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -55,12 +56,13 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
-    """Test config entry version 1 -> 2 migration."""
+async def test_migration_from_v1(hass: HomeAssistant) -> None:
+    """Test config entry migration from version 1."""
     mock_config_entry = MockConfigEntry(
         title="Green House",
         unique_id="unique",
         domain=DOMAIN,
+        version=1,
         data={
             CONF_LATITUDE: 52.42,
             CONF_LONGITUDE: 4.42,
@@ -78,4 +80,132 @@ async def test_migration(hass: HomeAssistant, snapshot: SnapshotAssertion) -> No
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id) == snapshot
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.version == 3
+    assert entry.options == {
+        CONF_API_KEY: "abcdef12345",
+        "damping_morning": 0.5,
+        "damping_evening": 0.5,
+        CONF_INVERTER_SIZE: 2000,
+    }
+    assert len(entry.subentries) == 1
+    subentry = list(entry.subentries.values())[0]
+    assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
+    assert subentry.data == {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH: 190,
+        CONF_MODULES_POWER: 5100,
+    }
+    assert subentry.title == "30° / 190° / 5100W"
+
+
+async def test_migration_from_v2(hass: HomeAssistant) -> None:
+    """Test config entry migration from version 2."""
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        domain=DOMAIN,
+        version=2,
+        data={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+        options={
+            CONF_API_KEY: "abcdef12345",
+            CONF_DECLINATION: 30,
+            CONF_AZIMUTH: 190,
+            CONF_MODULES_POWER: 5100,
+            CONF_INVERTER_SIZE: 2000,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.version == 3
+    assert entry.options == {
+        CONF_API_KEY: "abcdef12345",
+        CONF_INVERTER_SIZE: 2000,
+    }
+    assert len(entry.subentries) == 1
+    subentry = list(entry.subentries.values())[0]
+    assert subentry.subentry_type == SUBENTRY_TYPE_PLANE
+    assert subentry.data == {
+        CONF_DECLINATION: 30,
+        CONF_AZIMUTH: 190,
+        CONF_MODULES_POWER: 5100,
+    }
+    assert subentry.title == "30° / 190° / 5100W"
+
+
+async def test_setup_entry_no_planes(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test setup fails when all plane subentries have been removed."""
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+        options={
+            CONF_API_KEY: "abcdef1234567890",
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_multiple_planes_no_api_key(
+    hass: HomeAssistant,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test setup fails when multiple planes are configured without an API key."""
+    mock_config_entry = MockConfigEntry(
+        title="Green House",
+        unique_id="unique",
+        version=3,
+        domain=DOMAIN,
+        data={
+            CONF_LATITUDE: 52.42,
+            CONF_LONGITUDE: 4.42,
+        },
+        options={},
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 30,
+                    CONF_AZIMUTH: 190,
+                    CONF_MODULES_POWER: 5100,
+                },
+                subentry_id="plane_1",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="30° / 190° / 5100W",
+                unique_id=None,
+            ),
+            ConfigSubentryData(
+                data={
+                    CONF_DECLINATION: 45,
+                    CONF_AZIMUTH: 90,
+                    CONF_MODULES_POWER: 3000,
+                },
+                subentry_id="plane_2",
+                subentry_type=SUBENTRY_TYPE_PLANE,
+                title="45° / 90° / 3000W",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
