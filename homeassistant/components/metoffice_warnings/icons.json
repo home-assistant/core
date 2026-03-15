@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "warnings": {
+        "default": "mdi:weather-lightning-rainy"
+      }
+    }
+  }
+}

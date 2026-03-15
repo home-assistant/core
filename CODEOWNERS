@@ -1039,6 +1039,8 @@ build.json @home-assistant/supervisor
 /tests/components/meteoclimatic/ @adrianmo
 /homeassistant/components/metoffice/ @MrHarcombe @avee87
 /tests/components/metoffice/ @MrHarcombe @avee87
+/homeassistant/components/metoffice_warnings/ @ianByrne
+/tests/components/metoffice_warnings/ @ianByrne
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
 /homeassistant/components/miele/ @astrandb

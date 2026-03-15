@@ -4084,9 +4084,20 @@
     },
     "metoffice": {
       "name": "Met Office",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
+      "integrations": {
+        "metoffice": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Met Office"
+        },
+        "metoffice_warnings": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Met Office Weather Warnings"
+        }
+      }
     },
     "mfi": {
       "name": "Ubiquiti mFi mPort",
