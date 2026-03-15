@@ -769,7 +769,7 @@ async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
     assert result["reason"] == "ignore_ip6_link_local"
 
 
-async def test_upnp_not_enabled(hass: HomeAssistant) -> None:
+async def test_upnp_not_enabled(hass: HomeAssistant, fc_class_mock) -> None:
     """Test if UPNP service is enabled on the router."""
 
     result = await hass.config_entries.flow.async_init(
