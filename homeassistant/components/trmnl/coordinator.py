@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -54,4 +55,15 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
                 translation_key="update_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return {device.identifier: device for device in devices}
+        new_data = {device.identifier: device for device in devices}
+        if self.data is not None:
+            device_registry = dr.async_get(self.hass)
+            for device_id in set(self.data) - set(new_data):
+                if entry := device_registry.async_get_device(
+                    identifiers={(DOMAIN, str(device_id))}
+                ):
+                    device_registry.async_update_device(
+                        device_id=entry.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        return new_data

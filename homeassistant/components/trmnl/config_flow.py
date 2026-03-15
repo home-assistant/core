@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
+
+STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -21,7 +24,7 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+        """Handle a flow initialized by the user or reauth."""
         errors: dict[str, str] = {}
         if user_input:
             session = async_get_clientsession(self.hass)
@@ -37,6 +40,12 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(str(user.identifier))
+                if self.source == SOURCE_REAUTH:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user.name,
@@ -44,6 +53,12 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            data_schema=STEP_USER_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_user()

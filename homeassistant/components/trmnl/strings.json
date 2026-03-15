@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The API key belongs to a different account. Please use the API key for the original account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,6 +18,13 @@
         "data_description": {
           "api_key": "The API key for your TRMNL account."
         }
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "sleep_mode": {
+        "name": "Sleep mode"
       }
     }
   },
