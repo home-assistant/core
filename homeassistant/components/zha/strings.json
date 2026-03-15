@@ -942,7 +942,7 @@
         "name": "Start-up color temperature"
       },
       "start_up_current_level": {
-        "name": "Start-up current level"
+        "name": "Power-on level"
       },
       "startup_time": {
         "name": "Startup time"
@@ -1298,7 +1298,7 @@
         "name": "Speed"
       },
       "start_up_on_off": {
-        "name": "Start-up behavior"
+        "name": "Power-on behavior"
       },
       "status_indication": {
         "name": "Status indication"

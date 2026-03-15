@@ -74,6 +74,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def format_zigbee_address(address: str) -> str:
+    """Format a zigbee address to be more readable."""
+    return ":".join(address.lower()[i : i + 2] for i in range(0, 16, 2))
+
+
 @dataclass
 class SmartThingsData:
     """Define an object to hold SmartThings data."""
@@ -490,6 +495,14 @@ def create_devices(
                 kwargs[ATTR_CONNECTIONS] = {
                     (dr.CONNECTION_NETWORK_MAC, device.device.hub.mac_address)
                 }
+            if device.device.hub.hub_eui:
+                connections = kwargs.setdefault(ATTR_CONNECTIONS, set())
+                connections.add(
+                    (
+                        dr.CONNECTION_ZIGBEE,
+                        format_zigbee_address(device.device.hub.hub_eui),
+                    )
+                )
         if device.device.parent_device_id and device.device.parent_device_id in devices:
             kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
@@ -513,6 +526,10 @@ def create_devices(
                     ATTR_SW_VERSION: viper.software_version,
                 }
             )
+        if (zigbee := device.device.zigbee) is not None:
+            kwargs[ATTR_CONNECTIONS] = {
+                (dr.CONNECTION_ZIGBEE, format_zigbee_address(zigbee.eui))
+            }
         if (matter := device.device.matter) is not None:
             kwargs.update(
                 {
@@ -540,16 +557,16 @@ def create_devices(
             if (
                 device_status := main_component.get(Capability.SAMSUNG_IM_DEVICESTATUS)
             ) is not None:
-                connections: set[tuple[str, str]] = set()
+                mac_connections: set[tuple[str, str]] = set()
                 status = cast(dict[str, str], device_status[Attribute.STATUS].value)
                 if wifi_mac := status.get("wifiMac"):
-                    connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
+                    mac_connections.add((dr.CONNECTION_NETWORK_MAC, wifi_mac))
                 if bluetooth_address := status.get("btAddr"):
-                    connections.add(
+                    mac_connections.add(
                         (dr.CONNECTION_BLUETOOTH, bluetooth_address.lower())
                     )
-                if connections:
-                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(connections)
+                if mac_connections:
+                    kwargs.setdefault(ATTR_CONNECTIONS, set()).update(mac_connections)
         if (
             device_registry.async_get_device({(DOMAIN, device.device.device_id)})
             is None
