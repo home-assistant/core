@@ -167,6 +167,36 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 **storage_info_detail["storageDetailBean"],
                 **storage_energy_overview,
             }
+        elif self.device_type == "sph":
+            try:
+                sph_detail = self.api.sph_detail(self.device_id)
+                sph_energy = self.api.sph_energy(self.device_id)
+            except growattServer.GrowattV1ApiError as err:
+                if err.error_code == V1_API_ERROR_NO_PRIVILEGE:
+                    raise ConfigEntryAuthFailed(
+                        f"Authentication failed for Growatt API: {err.error_msg or str(err)}"
+                    ) from err
+                raise UpdateFailed(f"Error fetching SPH device data: {err}") from err
+
+            combined = {**sph_detail, **sph_energy}
+
+            # Parse last update timestamp from sph_energy "time" field
+            time_str = sph_energy.get("time")
+            if time_str:
+                try:
+                    parsed = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                    combined["lastdataupdate"] = parsed.replace(
+                        tzinfo=dt_util.get_default_time_zone()
+                    )
+                except ValueError, TypeError:
+                    _LOGGER.debug(
+                        "Could not parse SPH time field for %s: %r",
+                        self.device_id,
+                        time_str,
+                    )
+
+            self.data = combined
+            _LOGGER.debug("sph_info for device %s: %r", self.device_id, self.data)
         elif self.device_type == "mix":
             mix_info = self.api.mix_info(self.device_id)
             mix_totals = self.api.mix_totals(self.device_id, self.plant_id)
@@ -448,3 +478,123 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return "00:00"
         else:
             return f"{hour:02d}:{minute:02d}"
+
+    async def update_ac_charge_times(
+        self,
+        charge_power: int,
+        charge_stop_soc: int,
+        mains_enabled: bool,
+        periods: list[dict],
+    ) -> None:
+        """Update AC charge time periods for SPH device.
+
+        Args:
+            charge_power: Charge power limit (0-100 %)
+            charge_stop_soc: Stop charging at this SOC level (0-100 %)
+            mains_enabled: Whether AC (mains) charging is enabled
+            periods: List of up to 3 dicts with keys start_time, end_time, enabled
+        """
+        if self.api_version != "v1":
+            raise ServiceValidationError(
+                "Updating AC charge times requires token authentication"
+            )
+
+        try:
+            await self.hass.async_add_executor_job(
+                self.api.sph_write_ac_charge_times,
+                self.device_id,
+                charge_power,
+                charge_stop_soc,
+                mains_enabled,
+                periods,
+            )
+        except growattServer.GrowattV1ApiError as err:
+            raise HomeAssistantError(
+                f"API error updating AC charge times: {err}"
+            ) from err
+
+        if self.data:
+            self.data["chargePowerCommand"] = charge_power
+            self.data["wchargeSOCLowLimit"] = charge_stop_soc
+            self.data["acChargeEnable"] = 1 if mains_enabled else 0
+            for i, period in enumerate(periods, 1):
+                self.data[f"forcedChargeTimeStart{i}"] = period["start_time"].strftime(
+                    "%H:%M"
+                )
+                self.data[f"forcedChargeTimeStop{i}"] = period["end_time"].strftime(
+                    "%H:%M"
+                )
+                self.data[f"forcedChargeStopSwitch{i}"] = (
+                    1 if period.get("enabled", False) else 0
+                )
+            self.async_set_updated_data(self.data)
+
+    async def update_ac_discharge_times(
+        self,
+        discharge_power: int,
+        discharge_stop_soc: int,
+        periods: list[dict],
+    ) -> None:
+        """Update AC discharge time periods for SPH device.
+
+        Args:
+            discharge_power: Discharge power limit (0-100 %)
+            discharge_stop_soc: Stop discharging at this SOC level (0-100 %)
+            periods: List of up to 3 dicts with keys start_time, end_time, enabled
+        """
+        if self.api_version != "v1":
+            raise ServiceValidationError(
+                "Updating AC discharge times requires token authentication"
+            )
+
+        try:
+            await self.hass.async_add_executor_job(
+                self.api.sph_write_ac_discharge_times,
+                self.device_id,
+                discharge_power,
+                discharge_stop_soc,
+                periods,
+            )
+        except growattServer.GrowattV1ApiError as err:
+            raise HomeAssistantError(
+                f"API error updating AC discharge times: {err}"
+            ) from err
+
+        if self.data:
+            self.data["disChargePowerCommand"] = discharge_power
+            self.data["wdisChargeSOCLowLimit"] = discharge_stop_soc
+            for i, period in enumerate(periods, 1):
+                self.data[f"forcedDischargeTimeStart{i}"] = period[
+                    "start_time"
+                ].strftime("%H:%M")
+                self.data[f"forcedDischargeTimeStop{i}"] = period["end_time"].strftime(
+                    "%H:%M"
+                )
+                self.data[f"forcedDischargeStopSwitch{i}"] = (
+                    1 if period.get("enabled", False) else 0
+                )
+            self.async_set_updated_data(self.data)
+
+    async def read_ac_charge_times(self) -> dict:
+        """Read AC charge time settings from SPH device cache."""
+        if self.api_version != "v1":
+            raise ServiceValidationError(
+                "Reading AC charge times requires token authentication"
+            )
+
+        if not self.data:
+            await self.async_refresh()
+
+        return self.api.sph_read_ac_charge_times(settings_data=self.data)
+
+    async def read_ac_discharge_times(self) -> dict:
+        """Read AC discharge time settings from SPH device cache."""
+        if self.api_version != "v1":
+            raise ServiceValidationError(
+                "Reading AC discharge times requires token authentication"
+            )
+
+        if not self.data:
+            await self.async_refresh()
+
+        return self.api.sph_read_ac_discharge_times(settings_data=self.data)

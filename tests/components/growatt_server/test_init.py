@@ -563,8 +563,8 @@ async def test_v1_api_unsupported_device_type(
     # Return mix of MIN (type 7) and other device types
     mock_growatt_v1_api.device_list.return_value = {
         "devices": [
-            {"device_sn": "MIN123456", "type": 7},  # Supported
-            {"device_sn": "TLX789012", "type": 5},  # Unsupported
+            {"device_sn": "MIN123456", "type": 7},  # Supported (MIN)
+            {"device_sn": "UNK999999", "type": 3},  # Unsupported
         ]
     }
 
@@ -572,7 +572,7 @@ async def test_v1_api_unsupported_device_type(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Verify warning was logged for unsupported device
-    assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text
+    assert "Device UNK999999 with type 3 not supported in Open API V1" in caplog.text
 
 
 async def test_migrate_version_bump(
