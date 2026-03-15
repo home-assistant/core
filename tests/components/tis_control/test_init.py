@@ -11,7 +11,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from tests.common import MockConfigEntry, async_capture_events
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
@@ -28,7 +27,6 @@ async def test_async_setup_entry_success(
         assert mock_config_entry.runtime_data.tis_api == mock_tis_api
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_connect_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
@@ -45,7 +43,6 @@ async def test_async_setup_entry_connect_failure(
     mock_forward.assert_not_called()
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_scan_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
@@ -62,7 +59,6 @@ async def test_async_setup_entry_scan_failure(
         mock_forward.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_event_listener(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_tis_api: MagicMock
 ) -> None:
@@ -86,7 +82,6 @@ async def test_async_setup_entry_event_listener(
     assert captured_events[0].data == fake_event
 
 
-@pytest.mark.asyncio
 async def test_async_unload_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -98,7 +93,6 @@ async def test_async_unload_entry_success(
         assert result is True
 
 
-@pytest.mark.asyncio
 async def test_async_unload_entry_failure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -114,7 +108,6 @@ async def test_async_unload_entry_failure(
         mock_unload_platforms.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_async_setup_entry_event_listener_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
