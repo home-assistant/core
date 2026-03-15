@@ -1,10 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "open": {
-        "default": "mdi:door"
-      }
-    },
     "button": {
       "unlock": {
         "default": "mdi:lock-open"

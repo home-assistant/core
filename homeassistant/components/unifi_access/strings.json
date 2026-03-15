@@ -24,11 +24,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "open": {
-        "name": "Open"
-      }
-    },
     "button": {
       "unlock": {
         "name": "Unlock"

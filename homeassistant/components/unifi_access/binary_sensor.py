@@ -31,8 +31,8 @@ async def async_setup_entry(
 class UnifiAccessDoorPositionBinarySensor(UnifiAccessEntity, BinarySensorEntity):
     """Representation of a UniFi Access door position binary sensor."""
 
+    _attr_name = None
     _attr_device_class = BinarySensorDeviceClass.DOOR
-    _attr_translation_key = "open"
 
     def __init__(
         self,
