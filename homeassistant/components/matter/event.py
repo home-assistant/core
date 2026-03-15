@@ -36,6 +36,12 @@ EVENT_TYPES_MAP = {
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
 
+MULTI_PRESS_COUNT_TO_NAME = {
+    1: "single",
+    2: "double",
+    3: "triple",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,29 +69,27 @@ class MatterEventEntity(MatterEntity, EventEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
         )
-        if feature_map & SwitchFeature.kLatchingSwitch:
-            # a latching switch only supports switch_latched event
-            event_types.append("switch_latched")
-        elif feature_map & SwitchFeature.kMomentarySwitchMultiPress:
-            # Momentary switch with multi press support
-            # NOTE: We ignore 'multi press ongoing' as it doesn't make a lot
-            # of sense and many devices do not support it.
-            # Instead we report on the 'multi press complete' event with the number
-            # of presses.
-            max_presses_supported = self.get_matter_attribute_value(
-                clusters.Switch.Attributes.MultiPressMax
-            )
-            max_presses_supported = min(max_presses_supported or 2, 8)
-            for i in range(max_presses_supported):
-                event_types.append(f"multi_press_{i + 1}")  # noqa: PERF401
-        elif feature_map & SwitchFeature.kMomentarySwitch:
-            # momentary switch without multi press support
-            event_types.append("initial_press")
-            if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                # momentary switch without multi press support can optionally support release
-                event_types.append("short_release")
 
-        # a momentary switch can optionally support long press
+        # Either momentary xor latching is required
+        if feature_map & SwitchFeature.kLatchingSwitch:
+            event_types.append("switch_latched")
+
+        if feature_map & SwitchFeature.kMomentarySwitch:
+            event_types.append("initial_press")
+
+        # The specs are more strict about what features a device must support
+        # We just trust the device. No harm in expecting more events.
+
+        # release is optional, but requires momentary support
+        if feature_map & SwitchFeature.kMomentarySwitchRelease:
+            event_types.append("short_release")
+
+        # multi press is optional, but requires release support
+        if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
+            event_types.append("multi_press_ongoing")
+            event_types.append("multi_press_complete")
+
+        # long press is optional, but requires release support
         if feature_map & SwitchFeature.kMomentarySwitchLongPress:
             event_types.append("long_press")
             event_types.append("long_release")
@@ -117,12 +121,12 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
-        if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
-            # multi press event
-            presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
-            event_type = f"multi_press_{presses}"
-        else:
-            event_type = EVENT_TYPES_MAP[data.event_id]
+        event_type = EVENT_TYPES_MAP[data.event_id]
+
+        if event_type == "multi_press_complete" and data.data:
+            presses = data.data.get("totalNumberOfPressesCounted", 1)
+            if presses in MULTI_PRESS_COUNT_TO_NAME:
+                data.data["event_type_extra"] = MULTI_PRESS_COUNT_TO_NAME[presses]
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
