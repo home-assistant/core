@@ -349,7 +349,7 @@ async def test_async_scan_devices_stopping_returns(
     with patch.object(hass, "is_stopping", True):
         await fritz_tools.async_scan_devices()
 
-    assert "ERROR" not in caplog.text
+    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
 
 
 async def test_async_scan_devices_old_discovery_branch(
