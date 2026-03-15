@@ -681,7 +681,7 @@ async def test_subentry_flow_polling_bot_without_update(
         **DESCRIPTION_PLACEHOLDERS,
         "bot_username": "@mock_bot",
         "bot_url": "https://t.me/mock_bot",
-        "most_recent_chat": "",
+        "most_recent_chat": "Not available",
     }
 
 
@@ -710,7 +710,7 @@ async def test_subentry_flow_broadcast_without_update(
         **DESCRIPTION_PLACEHOLDERS,
         "bot_username": "@mock_bot",
         "bot_url": "https://t.me/mock_bot",
-        "most_recent_chat": "",
+        "most_recent_chat": "Not available",
     }
 
 
@@ -740,7 +740,7 @@ async def test_subentry_flow_broadcast_update_error(
         **DESCRIPTION_PLACEHOLDERS,
         "bot_username": "@mock_bot",
         "bot_url": "https://t.me/mock_bot",
-        "most_recent_chat": "",
+        "most_recent_chat": "Not available",
     }
 
 

@@ -621,7 +621,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
         # suggest chat id based on the most recent chat
         suggested_values = {}
-        description_placeholders["most_recent_chat"] = ""
+        description_placeholders["most_recent_chat"] = "Not available"
         most_recent_chat = await _get_most_recent_chat(service)
         if most_recent_chat is not None:
             suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
