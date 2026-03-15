@@ -11,6 +11,9 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -23,13 +26,32 @@
     }
   },
   "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      }
+    },
     "switch": {
       "sleep_mode": {
         "name": "Sleep mode"
       }
+    },
+    "time": {
+      "sleep_end_time": {
+        "name": "Sleep end time"
+      },
+      "sleep_start_time": {
+        "name": "Sleep start time"
+      }
     }
   },
   "exceptions": {
+    "action_error": {
+      "message": "An error occurred while communicating with TRMNL: {error}"
+    },
     "authentication_error": {
       "message": "Authentication failed. Please check your API key."
     },
