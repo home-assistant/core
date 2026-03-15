@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ColorMode,
     LightEntity,
@@ -155,6 +156,25 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         )
 
     @property
+    def color_mode(self) -> ColorMode | None:
+        """Return the color mode of the light."""
+        # check if light supports color temperature, then choose color_mode depending on the light color
+        if (
+            self._attr_supported_color_modes
+            and ColorMode.RGB in self._attr_supported_color_modes
+            and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+        ):
+            if color := self.coordinator.data.state.segments[self._segment].color:
+                primary = tuple(color.primary)
+                r, g, b, w = (*primary, 0, 0, 0, 0)[:4]
+                if (r == g == b == 0 and w > 0) or (r == g == b and w == 0):
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
+                else:
+                    self._attr_color_mode = ColorMode.RGB
+
+        return self._attr_color_mode
+
+    @property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color value."""
         if not (color := self.coordinator.data.state.segments[self._segment].color):
@@ -167,6 +187,32 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if not (color := self.coordinator.data.state.segments[self._segment].color):
             return None
         return cast(tuple[int, int, int, int], color.primary)
+
+    @property
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
+        """Return rgbww color value from WLED rgb+cct color value."""
+        state = self.coordinator.data.state
+        seg = state.segments[self._segment]
+        if not (color := seg.color) or not color.primary:
+            return None
+
+        r, g, b = color.primary[:3]
+        w_brightness = color.primary[3] if len(color.primary) > 3 else 0
+        cct = seg.cct
+
+        if cct <= 127:
+            # At low CCT values (warm end), keep warm white at full
+            # brightness and scale in cold white as CCT increases.
+            ww = w_brightness
+            cw = (cct * w_brightness) // 127
+        else:
+            # At high CCT values (cold end), keep cold white at full
+            # brightness and scale out warm white as CCT increases.
+            cw = w_brightness
+            ww = ((255 - cct) * w_brightness) // 128
+
+        # Home Assistant expects rgbww_color as (r, g, b, cold_white, warm_white).
+        return (r, g, b, cw, ww)
 
     @property
     def color_temp_kelvin(self) -> int | None:
@@ -238,12 +284,62 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         }
 
         if ATTR_RGB_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if (
+                self._attr_supported_color_modes
+                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+            ):
+                data[ATTR_CCT] = 127
+                # tell HA to display light RGB color in the interface
+                self._attr_color_mode = ColorMode.RGB
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGB_COLOR]
 
         if ATTR_RGBW_COLOR in kwargs:
+            # if the light supports cct reset white balance to white to not distort colors
+            if (
+                self._attr_supported_color_modes
+                and ColorMode.COLOR_TEMP in self._attr_supported_color_modes
+            ):
+                data[ATTR_CCT] = 127
+                # tell HA to display light RGBW color in the interface
+                self._attr_color_mode = ColorMode.RGBW
+
             data[ATTR_COLOR_PRIMARY] = kwargs[ATTR_RGBW_COLOR]
 
+        if ATTR_RGBWW_COLOR in kwargs:
+            # HA sends: (Red, Green, Blue, ColdWhite, WarmWhite)
+            r, g, b, cw, ww = kwargs[ATTR_RGBWW_COLOR]
+
+            w_brightness = max(cw, ww)
+
+            if w_brightness == 0:
+                cct = 127
+            elif ww == w_brightness:
+                cct = (cw * 127) // w_brightness
+            else:
+                cct = 255 - ((ww * 128) // w_brightness)
+
+            data[ATTR_COLOR_PRIMARY] = (r, g, b, w_brightness)
+            data[ATTR_CCT] = cct
+
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            if self._attr_supported_color_modes:
+                has_rgb = ColorMode.RGB in self._attr_supported_color_modes
+                has_rgbw = ColorMode.RGBW in self._attr_supported_color_modes
+                has_rgbww = ColorMode.RGBWW in self._attr_supported_color_modes
+
+                if has_rgb:
+                    data[ATTR_COLOR_PRIMARY] = (255, 255, 255, 0)
+
+                if has_rgbw or has_rgbww:
+                    data[ATTR_COLOR_PRIMARY] = (0, 0, 0, 255)
+
+                # if light is rgbww don't change color mode as it messes the rgbww page
+                if has_rgb or has_rgbw:
+                    # tell HA to display light CCT temperature color in the interface
+                    self._attr_color_mode = ColorMode.COLOR_TEMP
+
             data[ATTR_CCT] = kelvin_to_255(
                 kwargs[ATTR_COLOR_TEMP_KELVIN], COLOR_TEMP_K_MIN, COLOR_TEMP_K_MAX
             )
