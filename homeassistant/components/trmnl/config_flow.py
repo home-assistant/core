@@ -9,7 +9,12 @@ from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -24,7 +29,7 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user or reauth."""
+        """Handle a flow initialized by the user, reauth, or reconfigure."""
         errors: dict[str, str] = {}
         if user_input:
             session = async_get_clientsession(self.hass)
@@ -46,6 +51,12 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reauth_entry(),
                         data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
                     )
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user.name,
@@ -61,4 +72,10 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
         return await self.async_step_user()
