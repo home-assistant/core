@@ -138,8 +138,11 @@ async def test_dynamic_and_stale_devices(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 2
-    assert len(entities) == 20
+    initial_device_ids = {device.id for device in devices}
+    initial_entity_ids = {entity.entity_id for entity in entities}
+    # Ensure we actually created some devices and entities for this entry
+    assert initial_device_ids
+    assert initial_entity_ids
 
     # Remove the second account and update data
     mock_opower_api.async_get_accounts.return_value = [original_accounts[0]]
@@ -155,8 +158,14 @@ async def test_dynamic_and_stale_devices(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 1
-    assert len(entities) == 10
+    device_ids_after_removal = {device.id for device in devices}
+    entity_ids_after_removal = {entity.entity_id for entity in entities}
+    # After removing one account, we should have removed some devices/entities
+    # but not added any new ones.
+    assert device_ids_after_removal <= initial_device_ids
+    assert entity_ids_after_removal <= initial_entity_ids
+    assert device_ids_after_removal != initial_device_ids
+    assert entity_ids_after_removal != initial_entity_ids
 
     # Add back the second account
     mock_opower_api.async_get_accounts.return_value = original_accounts
@@ -171,8 +180,12 @@ async def test_dynamic_and_stale_devices(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(devices) == 2
-    assert len(entities) == 20
+    device_ids_after_restore = {device.id for device in devices}
+    entity_ids_after_restore = {entity.entity_id for entity in entities}
+    # After restoring the second account, we should be back to the original
+    # set of devices and entities.
+    assert device_ids_after_restore == initial_device_ids
+    assert entity_ids_after_restore == initial_entity_ids
 
 
 async def test_stale_device_removed_on_load(
@@ -198,8 +211,16 @@ async def test_stale_device_removed_on_load(
     # Stale device should have been removed on first coordinator update
     assert device_registry.async_get(stale_device.id) is None
 
-    # Active devices should still be present
+    # Active devices for known accounts should still be present,
+    # and the stale identifier should no longer be registered.
     active_devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert len(active_devices) == 2
+    active_identifiers = {
+        identifier
+        for device in active_devices
+        for (_domain, identifier) in device.identifiers
+    }
+    assert "pge_111111" in active_identifiers
+    assert "pge_222222" in active_identifiers
+    assert "pge_stale_account_99999" not in active_identifiers

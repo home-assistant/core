@@ -209,7 +209,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Opower sensor."""
     coordinator = entry.runtime_data
-    added_accounts: set[str] = set()
+    created_sensors: set[tuple[str, str]] = set()
 
     @callback
     def _update_entities() -> None:
@@ -221,10 +221,6 @@ async def async_setup_entry(
         }
 
         for account_id, opower_data in coordinator.data.items():
-            if account_id in added_accounts:
-                continue
-
-            added_accounts.add(account_id)
             account = opower_data.account
             forecast = opower_data.forecast
             device_id = (
@@ -250,16 +246,20 @@ async def async_setup_entry(
                 and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
             ):
                 sensors += GAS_SENSORS
-            new_entities.extend(
-                OpowerSensor(
-                    coordinator,
-                    sensor,
-                    account.utility_account_id,
-                    device,
-                    device_id,
+            for sensor in sensors:
+                sensor_key = (account.utility_account_id, sensor.key)
+                if sensor_key in created_sensors:
+                    continue
+                created_sensors.add(sensor_key)
+                new_entities.append(
+                    OpowerSensor(
+                        coordinator,
+                        sensor,
+                        account.utility_account_id,
+                        device,
+                        device_id,
+                    )
                 )
-                for sensor in sensors
-            )
 
         if new_entities:
             async_add_entities(new_entities)
@@ -284,11 +284,6 @@ async def async_setup_entry(
                 entity_registry.async_remove(entity_entry.entity_id)
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=entry.entry_id
-            )
-            added_accounts.discard(
-                next(iter(device_domain_ids)).removeprefix(
-                    f"{coordinator.api.utility.subdomain()}_"
-                )
             )
 
     _update_entities()
