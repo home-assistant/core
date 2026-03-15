@@ -27,7 +27,7 @@ from .entity import CometBlueBluetoothEntity
 
 LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 MIN_TEMP = 7.5
 MAX_TEMP = 28.5
 
