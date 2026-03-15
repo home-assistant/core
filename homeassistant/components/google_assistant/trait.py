@@ -79,6 +79,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.dt import utcnow
@@ -875,11 +876,29 @@ class StartStopTrait(_Trait):
         """Return StartStop attributes for a sync request."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
-            return {
+            sync_attributes = {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
+            attributes = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if attributes & VacuumEntityFeature.CLEAN_AREA:
+                available_zones = []
+                entity_registry = er.async_get(self.hass)
+                entry = entity_registry.async_get(self.state.entity_id)
+                area_registry = ar.async_get(self.hass)
+                if (
+                    entry
+                    and vacuum.DOMAIN in entry.options
+                    and "area_mapping" in entry.options[vacuum.DOMAIN]
+                ):
+                    area_mapping = entry.options[vacuum.DOMAIN]["area_mapping"]
+                    for area_id in area_mapping:
+                        area = area_registry.async_get_area(area_id)
+                        if area:
+                            available_zones.append(area.name)
+                sync_attributes["availableZones"] = available_zones
+            return sync_attributes
         if domain == lawn_mower.DOMAIN:
             return {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -943,15 +962,29 @@ class StartStopTrait(_Trait):
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
         service: str | None = None
+        service_data = {ATTR_ENTITY_ID: self.state.entity_id}
         if command == COMMAND_START_STOP:
             service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
+            zones = []
+            if "zone" in params:
+                zones.append(params["zone"])
+            elif "multipleZones" in params:
+                zones = params["multipleZones"]
+            if zones:
+                area_registry = ar.async_get(self.hass)
+                area_id_map = {
+                    area.name: area.id for area in area_registry.areas.values()
+                }
+                area_ids = [area_id_map[zone] for zone in zones]
+                service_data["cleaning_area_id"] = area_ids
+                service = vacuum.SERVICE_CLEAN_AREA
         elif command == COMMAND_PAUSE_UNPAUSE:
             service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
         if service:
             await self.hass.services.async_call(
                 self.state.domain,
                 service,
-                {ATTR_ENTITY_ID: self.state.entity_id},
+                service_data,
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )

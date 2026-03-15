@@ -79,6 +79,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import (
@@ -551,22 +552,50 @@ async def test_energystorage_vacuum(hass: HomeAssistant) -> None:
     assert err.value.code == const.ERR_FUNCTION_NOT_SUPPORTED
 
 
-async def test_startstop_vacuum(hass: HomeAssistant) -> None:
+async def test_startstop_vacuum(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
     """Test startStop trait support for vacuum domain."""
     assert helpers.get_google_type(vacuum.DOMAIN, None) is not None
     assert trait.StartStopTrait.supported(vacuum.DOMAIN, 0, None, None)
+
+    area_entry = area_registry.async_get_or_create("Office")
+
+    area_entry_2 = area_registry.async_get_or_create("Living room")
+
+    entity_registry.async_get_or_create(
+        vacuum.DOMAIN, "test", "1234", suggested_object_id="bla"
+    )
+    entity_registry.async_update_entity_options(
+        "vacuum.bla",
+        vacuum.DOMAIN,
+        {
+            "area_mapping": {
+                area_entry.id: ["office-123123"],
+                area_entry_2.id: ["living_room-123123"],
+            }
+        },
+    )
 
     trt = trait.StartStopTrait(
         hass,
         State(
             "vacuum.bla",
             vacuum.VacuumActivity.PAUSED,
-            {ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE},
+            {
+                ATTR_SUPPORTED_FEATURES: VacuumEntityFeature.PAUSE
+                | VacuumEntityFeature.CLEAN_AREA
+            },
         ),
         BASIC_CONFIG,
     )
 
-    assert trt.sync_attributes() == {"pausable": True}
+    assert trt.sync_attributes() == {
+        "pausable": True,
+        "availableZones": ["Office", "Living room"],
+    }
 
     assert trt.query_attributes() == {"isRunning": False, "isPaused": True}
 
@@ -574,6 +603,29 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": True}, {})
     assert len(start_calls) == 1
     assert start_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
+
+    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    await trt.execute(
+        trait.COMMAND_START_STOP, BASIC_DATA, {"start": True, "zone": "Office"}, {}
+    )
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {
+        ATTR_ENTITY_ID: "vacuum.bla",
+        "cleaning_area_id": [area_entry.id],
+    }
+
+    start_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_CLEAN_AREA)
+    await trt.execute(
+        trait.COMMAND_START_STOP,
+        BASIC_DATA,
+        {"start": True, "multipleZones": ["Office", "Living room"]},
+        {},
+    )
+    assert len(start_calls) == 1
+    assert start_calls[0].data == {
+        ATTR_ENTITY_ID: "vacuum.bla",
+        "cleaning_area_id": [area_entry.id, area_entry_2.id],
+    }
 
     stop_calls = async_mock_service(hass, vacuum.DOMAIN, vacuum.SERVICE_STOP)
     await trt.execute(trait.COMMAND_START_STOP, BASIC_DATA, {"start": False}, {})
