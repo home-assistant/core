@@ -124,3 +124,27 @@ async def test_bitmap(
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == tankfull
     assert hass.states.get("binary_sensor.dehumidifier_defrost").state == defrost
     assert hass.states.get("binary_sensor.dehumidifier_wet").state == wet
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cs_biflejkeshx1sqig"],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_bitmap_water_full_alias(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+) -> None:
+    """Test BITMAP fault sensor when the tank full bit is labeled water_full."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    assert hass.states.get("binary_sensor.d825a_i_tank_full").state == "off"
+    assert hass.states.get("binary_sensor.d825a_i_defrost") is None
+    assert hass.states.get("binary_sensor.d825a_i_wet") is None
+
+    await mock_listener.async_send_device_update(hass, mock_device, {"fault": 0x20})
+
+    assert hass.states.get("binary_sensor.d825a_i_tank_full").state == "on"
