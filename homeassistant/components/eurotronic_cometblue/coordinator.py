@@ -91,14 +91,10 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         retry_count = 0
         retrieved_temperatures: dict = {}
-        battery: int | None = None
         holiday: dict | None = None
 
         while (
-            retry_count < MAX_RETRIES
-            and not retrieved_temperatures
-            and battery is None
-            and holiday is None
+            retry_count < MAX_RETRIES and not retrieved_temperatures and holiday is None
         ):
             async with self.device:
                 try:
@@ -107,10 +103,8 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                         retrieved_temperatures = (
                             await self.device.get_temperature_async()
                         )
-                    # battery and holiday are optional and should not trigger a retry
+                    # holiday is optional and should not trigger a retry
                     try:
-                        if battery is None:
-                            battery = await self.device.get_battery_async()
                         if not holiday:
                             holiday = await self.device.get_holiday_async(1) or {}
                     except InvalidByteValueError as ex:
@@ -141,7 +135,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         # If one value was not retrieved correctly, keep the old value
         data = {
-            "battery": battery if battery is not None else self.data.get("battery"),
             "holiday": holiday if holiday is not None else self.data.get("holiday", {}),
             **{
                 k: retrieved_temperatures.get(k) or self.data.get(k)

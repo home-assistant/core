@@ -22,7 +22,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.NUMBER,
-    Platform.SENSOR,
 ]
 LOGGER = logging.getLogger(__name__)
 
