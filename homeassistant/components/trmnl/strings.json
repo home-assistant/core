@@ -25,6 +25,14 @@
     }
   },
   "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      }
+    },
     "switch": {
       "sleep_mode": {
         "name": "Sleep mode"
