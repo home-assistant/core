@@ -63,7 +63,8 @@ EXPECTED_PROMPT_SUFFIX = """
 - names: Kitchen Light
   domain: light
   areas: Kitchen
-"""
+
+When a user asks to turn on all devices of a specific type, ask user to specify an area, unless there is only one device of that type."""
 
 
 @pytest.fixture
