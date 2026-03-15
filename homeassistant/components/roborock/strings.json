@@ -618,6 +618,9 @@
     "invalid_credentials": {
       "message": "Invalid credentials."
     },
+    "invalid_fan_speed": {
+      "message": "Invalid fan speed: {fan_speed}"
+    },
     "invalid_user_agreement": {
       "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
     },

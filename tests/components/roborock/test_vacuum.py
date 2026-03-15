@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
-from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
@@ -34,7 +34,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -52,6 +52,8 @@ ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 Q7_ENTITY_ID = "vacuum.roborock_q7"
 Q7_DEVICE_ID = "q7_duid"
+Q10_ENTITY_ID = "vacuum.roborock_q10_s5"
+Q10_DEVICE_ID = "q10_duid"
 
 
 @pytest.fixture
@@ -693,12 +695,6 @@ async def test_q7_activity_none_status(
     assert vacuum.state == "unknown"
 
 
-# Tests for RoborockQ10Vacuum
-
-Q10_ENTITY_ID = "vacuum.roborock_q10_s5"
-Q10_DEVICE_ID = "q10_duid"
-
-
 @pytest.fixture
 def fake_q10_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
     """Get the fake Q10 vacuum device."""
@@ -806,6 +802,26 @@ async def test_q10_set_fan_speed_command(
         blocking=True,
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
+    assert q10_vacuum_api.vacuum.set_fan_level.call_args[0] == (YXFanLevel.QUIET,)
+
+
+async def test_q10_set_invalid_fan_speed(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that setting an invalid fan speed raises HomeAssistantError."""
+    vacuum = hass.states.get(Q10_ENTITY_ID)
+    assert vacuum
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "invalid_speed"},
+            blocking=True,
+        )
+    assert q10_vacuum_api.vacuum.set_fan_level.call_count == 0
 
 
 @pytest.mark.parametrize(
