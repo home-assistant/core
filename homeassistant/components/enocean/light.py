@@ -5,8 +5,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean_async import ERP1Telegram
-from enocean_async.esp3.packet import ESP3PacketType
+from enocean_async.protocol.erp1.telegram import ERP1Telegram
+from enocean_async.protocol.esp3.packet import ESP3PacketType
 import voluptuous as vol
 
 from homeassistant.components.light import (
