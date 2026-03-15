@@ -56,12 +56,11 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _existing_entry_data: dict[str, Any] = {}
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_addresses: list[str] = []
+        self._existing_entry_data: dict[str, Any] = {}
 
     async def _try_connect(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Verify connection to the device with the provided PIN and read initial data."""

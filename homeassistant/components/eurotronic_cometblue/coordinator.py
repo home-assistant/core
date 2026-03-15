@@ -24,10 +24,6 @@ LOGGER = logging.getLogger(__name__)
 type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 
 
-class DeviceUnavailable(HomeAssistantError):
-    """Raised if device can't be found."""
-
-
 class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
@@ -142,4 +138,5 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             },
         }
         LOGGER.debug("Received data for %s: %s", self.name, data)
+        self.failed_update_count = 0
         return data

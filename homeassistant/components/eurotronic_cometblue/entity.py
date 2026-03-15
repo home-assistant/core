@@ -1,4 +1,4 @@
-"""Update coordinator for CometBlue."""
+"""Coordinator entity base class for CometBlue."""
 
 from datetime import timedelta
 import logging

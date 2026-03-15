@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import CometBlueDataUpdateCoordinator
@@ -147,7 +148,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Set new target temperatures."""
 
         if self.preset_mode == PRESET_AWAY:
-            raise ValueError(
+            raise ServiceValidationError(
                 "Cannot adjust TRV remotely, manually disable 'holiday' mode on TRV first"
             )
 
