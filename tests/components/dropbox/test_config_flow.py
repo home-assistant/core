@@ -81,7 +81,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ACCOUNT_EMAIL
     assert result["data"]["token"]["access_token"] == "mock-access-token"
-    assert result["context"]["unique_id"] == ACCOUNT_ID
+    assert result["result"].unique_id == ACCOUNT_ID
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -132,17 +132,24 @@ async def test_already_configured(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    ("new_account_info", "expected_reason", "expected_setup_calls"),
+    (
+        "new_account_info",
+        "expected_reason",
+        "expected_setup_calls",
+        "expected_access_token",
+    ),
     [
         (
             SimpleNamespace(account_id=ACCOUNT_ID, email=ACCOUNT_EMAIL),
             "reauth_successful",
             1,
+            "updated-access-token",
         ),
         (
             SimpleNamespace(account_id="dbid:different", email="other@example.com"),
             "wrong_account",
             0,
+            "mock-access-token",
         ),
     ],
     ids=["success", "wrong_account"],
@@ -157,6 +164,7 @@ async def test_reauth_flow(
     new_account_info: SimpleNamespace,
     expected_reason: str,
     expected_setup_calls: int,
+    expected_access_token: str,
 ) -> None:
     """Test reauthentication flow outcomes."""
 
@@ -199,7 +207,4 @@ async def test_reauth_flow(
     assert result["reason"] == expected_reason
     assert mock_setup_entry.await_count == expected_setup_calls
 
-    if expected_reason == "reauth_successful":
-        assert config_entry.data["token"]["access_token"] == "updated-access-token"
-    else:
-        assert config_entry.data["token"]["access_token"] == "mock-access-token"
+    assert config_entry.data["token"]["access_token"] == expected_access_token
