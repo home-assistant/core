@@ -737,30 +737,15 @@ async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
     """Test websocket integration list command."""
     client = await ws_client()
     with patch(
-        "homeassistant.loader.APPLICATION_CREDENTIALS", ["example1", "example2"]
+        "homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN, "example1"]
     ):
         assert await client.cmd_result("config") == {
-            "domains": ["example1", "example2"],
+            "domains": [TEST_DOMAIN, "example1"],
             "integrations": {
+                TEST_DOMAIN: {"auth_type": AuthorizationTypes.CLIENT_CREDENTIALS},
                 "example1": {},
-                "example2": {},
             },
         }
-
-
-async def test_websocket_integration_list_with_auth_type(
-    hass: HomeAssistant,
-    ws_client: ClientFixture,
-    authorization_server: AuthorizationServer,
-) -> None:
-    """Test websocket integration list command returns auth_type."""
-    client = await ws_client()
-    # I've made a separate test, if the auth_type is desired, this can be merged with the above test
-    result = await client.cmd_result("config")
-    assert TEST_DOMAIN in result["domains"]
-    assert result["integrations"][TEST_DOMAIN] == {
-        "auth_type": AuthorizationTypes.CLIENT_CREDENTIALS,
-    }
 
 
 async def test_name(
