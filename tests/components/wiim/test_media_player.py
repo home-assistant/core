@@ -172,7 +172,6 @@ async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_
     leader_device.playing_status = PlayingStatus.PLAYING
     leader_device.play_mode = "Network"
     leader_device.loop_state = mock_wiim_device.loop_state
-    leader_device.output_mode = "speaker"
     leader_device.current_media = WiimMediaMetadata(
         title="Leader Song",
         artist="Leader Artist",
@@ -616,23 +615,6 @@ async def test_media_player_select_source(
         mock_play_mode.assert_awaited_once()
 
 
-async def test_media_player_select_sound_mode(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
-    mock_wiim_device: WiimDevice,
-    mock_hass: HomeAssistant,
-) -> None:
-    """Test media player select sound mode service."""
-    entity = mock_wiim_media_player_entity
-    _set_wiim_data(mock_hass)
-    entity.hass = mock_hass
-
-    with patch.object(
-        mock_wiim_device, "async_set_output_mode", new_callable=AsyncMock
-    ) as mock_output_mode:
-        await entity.async_select_sound_mode("Jazz")
-        mock_output_mode.assert_awaited_once()
-
-
 async def test_media_player_seek(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -909,11 +891,9 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
     mock_device.volume = 50
     mock_device.is_muted = False
     mock_device.supported_input_modes = ()
-    mock_device.supported_output_modes = ()
     mock_device.playing_status = None
     mock_device.play_mode = None
     mock_device.loop_state = MagicMock(repeat=WiimRepeatMode.OFF, shuffle=False)
-    mock_device.output_mode = None
     mock_device.current_media = None
 
     mock_entry = MagicMock(spec=ConfigEntry)

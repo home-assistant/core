@@ -3,13 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from wiim.consts import (
-    AudioOutputHwMode,
-    DeviceAttribute,
-    InputMode,
-    LoopMode,
-    PlayingStatus,
-)
+from wiim.consts import DeviceAttribute, InputMode, LoopMode, PlayingStatus
 from wiim.models import (
     WiimLoopState,
     WiimQueueSnapshot,
@@ -89,7 +83,6 @@ def mock_wiim_device() -> WiimDevice:
         shuffle=False,
     )
     wiim_device.input_mode = InputMode.LINE_IN
-    wiim_device.audio_output_hw_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
     wiim_device.mac_address = "AA:BB:CC:DD:EE:FF"
     wiim_device.current_track_info = {}
     wiim_device.current_media = None
@@ -101,11 +94,7 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device._device_info_properties = ""
     wiim_device._player_properties = ""
     wiim_device._manufacturer = "Linkplay Tech"
-    wiim_device.output_mode = "speaker"
     wiim_device.supported_input_modes = (InputMode.LINE_IN.display_name,)  # type: ignore[attr-defined]
-    wiim_device.supported_output_modes = (
-        AudioOutputHwMode.SPEAKER_OUT.display_name,  # type: ignore[attr-defined]
-    )
 
     wiim_device.upnp_device = MagicMock()
     wiim_device.upnp_device.udn = wiim_device.udn

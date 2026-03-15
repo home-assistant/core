@@ -7,7 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
-from wiim.consts import AudioOutputHwMode, PlayingStatus as SDKPlayingStatus
+from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
 from wiim.models import (
     WiimGroupRole,
@@ -65,7 +65,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.SELECT_SOURCE
-    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.GROUPING
     | MediaPlayerEntityFeature.SEEK
 )
@@ -154,7 +153,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_source_list = list(device.supported_input_modes) or None
         self._attr_shuffle: bool = False
         self._attr_repeat: RepeatMode | str = RepeatMode.OFF
-        self._attr_sound_mode_list = list(device.supported_output_modes) or None
         self._transport_capabilities: WiimTransportCapabilities | None = None
         self._supported_features_update_in_flight = False
 
@@ -264,7 +262,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_position = None
             self._attr_media_position_updated_at = None
             self._attr_source = None
-            self._attr_sound_mode = None
             self._transport_capabilities = None
             if write_state:
                 self.async_write_ha_state()
@@ -278,7 +275,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
         self._attr_is_volume_muted = self._device.is_muted
         self._attr_source_list = list(self._device.supported_input_modes) or None
-        self._attr_sound_mode_list = list(self._device.supported_output_modes) or None
 
         # Determine current group role (leader/follower/standalone)
         group_snapshot = self._get_group_snapshot()
@@ -303,7 +299,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         loop_state = metadata_device.loop_state
         self._attr_repeat = SDK_TO_HA_REPEAT[loop_state.repeat]
         self._attr_shuffle = loop_state.shuffle
-        self._attr_sound_mode = metadata_device.output_mode
 
         if media := metadata_device.current_media:
             self._attr_media_title = media.title
@@ -331,9 +326,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if write_state:
             self.async_write_ha_state()
-
-    async def _update_output_mode(self) -> None:
-        self._attr_sound_mode = await self._device.get_audio_output_hw_mode()
 
     @callback
     def _handle_sdk_general_device_update(self, device: WiimDevice) -> None:
@@ -488,9 +480,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        if self._device.supports_http_api:
-            await self._update_output_mode()
-
         self._wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
         LOGGER.debug(
             "Added %s (UDN: %s) to entity maps in hass.data",
@@ -676,14 +665,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
         await self._device.async_set_play_mode(source)
-
-    @media_player_exception_wrap
-    async def async_select_sound_mode(self, sound_mode: str) -> None:
-        """Select output mode (e.g., optical, coaxial)."""
-        if sound_mode == AudioOutputHwMode.OTHER_OUT.display_name:  # type: ignore[attr-defined]
-            return
-
-        await self._device.async_set_output_mode(sound_mode)
 
     async def async_browse_media(
         self,
