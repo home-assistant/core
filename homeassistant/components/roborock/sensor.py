@@ -10,7 +10,6 @@ import logging
 from roborock.data import (
     B01Props,
     DyadError,
-    NamedRoomMapping,
     RoborockDockErrorCode,
     RoborockDockTypeCode,
     RoborockDyadStateCode,
@@ -503,23 +502,25 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         self._home_trait = coordinator.properties_api.home
         self._map_content_trait = coordinator.properties_api.map_content
 
-    def _update_from_latest_data(self) -> None:
-        """Update the sensor's state."""
-        rooms: list[NamedRoomMapping] = []
-        current_rooom: int | None = None
+    @property
+    def options(self) -> list[str]:
+        """Return the currently valid rooms."""
         if self._home_trait.current_map_data is not None:
-            rooms = self._home_trait.current_map_data.rooms
-            if (
-                self._map_content_trait.map_data is not None
-                and self._map_content_trait.map_data.vacuum_room is not None
-            ):
-                current_rooom = self._map_content_trait.map_data.vacuum_room
+            return [room.name for room in self._home_trait.current_map_data.rooms]
+        return []
 
-        self._attr_options = [room.name for room in rooms]
-        self._attr_native_value = next(
-            iter(room.name for room in rooms if room.segment_id == current_rooom),
-            None,
-        )
+    @property
+    def native_value(self) -> str | None:
+        """Return the value reported by the sensor."""
+        if (
+            self._home_trait.current_map_data is not None
+            and self._map_content_trait.map_data is not None
+            and self._map_content_trait.map_data.vacuum_room is not None
+        ):
+            for room in self._home_trait.current_map_data.rooms:
+                if room.segment_id == self._map_content_trait.map_data.vacuum_room:
+                    return room.name
+        return None
 
 
 class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):

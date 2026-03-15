@@ -122,12 +122,13 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         self._maps_trait = coordinator.properties_api.maps
 
     @callback
-    def _update_from_latest_data(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
         Creates a repair issue when the vacuum reports different segments than
         what was available when the area mapping was last configured.
         """
+        super()._handle_coordinator_update()
         last_seen = self.last_seen_segments
         if last_seen is None:
             # No area mapping has been configured yet; nothing to check.
@@ -163,20 +164,17 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
+        command = RoborockCommand.APP_START
         if self.coordinator.data is not None:
             if self._status_trait.in_returning == 1:
-                await self.send(RoborockCommand.APP_CHARGE)
-                return
-            if self._status_trait.in_cleaning == 2:
-                await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
-                return
-            if self._status_trait.in_cleaning == 3:
-                await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
-                return
-            if self._status_trait.in_cleaning == 4:
-                await self.send(RoborockCommand.APP_RESUME_BUILD_MAP)
-                return
-        await self.send(RoborockCommand.APP_START)
+                command = RoborockCommand.APP_CHARGE
+            elif self._status_trait.in_cleaning == 2:
+                command = RoborockCommand.RESUME_ZONED_CLEAN
+            elif self._status_trait.in_cleaning == 3:
+                command = RoborockCommand.RESUME_SEGMENT_CLEAN
+            elif self._status_trait.in_cleaning == 4:
+                command = RoborockCommand.APP_RESUME_BUILD_MAP
+        await self.send(command)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""

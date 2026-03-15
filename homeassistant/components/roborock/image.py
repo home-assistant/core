@@ -9,7 +9,7 @@ from roborock.devices.traits.v1.map_content import MapContent
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -73,6 +73,13 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self.map_flag = map_flag
         self.cached_map: bytes | None = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_image_last_updated = None
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass load any previously cached maps from disk."""
+        await super().async_added_to_hass()
+        self._update_from_latest_data()
+        self.async_write_ha_state()
 
     @property
     def _map_content(self) -> MapContent | None:
@@ -81,6 +88,12 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         ):
             return map_content
         return None
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_latest_data()
+        super()._handle_coordinator_update()  # Will update state
 
     def _update_from_latest_data(self) -> None:
         """Handle updated data from the coordinator.
