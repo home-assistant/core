@@ -244,25 +244,40 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
 
 
-def _flow_from_ensure_valid_price(
+def _reject_price_for_external_stat(
+    *,
+    stat_key: str,
+    entity_price_key: str = "entity_energy_price",
+    number_price_key: str = "number_energy_price",
+    cost_stat_hint: str = "stat_cost",
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
+    """Return a validator that rejects entity/number price for external statistics."""
+
+    def validate(val: dict[str, Any]) -> dict[str, Any]:
+        stat_id = val.get(stat_key)
+        if stat_id is not None and not valid_entity_id(stat_id):
+            if (
+                val.get(entity_price_key) is not None
+                or val.get(number_price_key) is not None
+            ):
+                raise vol.Invalid(
+                    "Entity or number price is not supported for external"
+                    f" statistics. Use {cost_stat_hint} instead"
+                )
+        return val
+
+    return validate
+
+
+def _flow_from_ensure_single_price(
     val: FlowFromGridSourceType,
 ) -> FlowFromGridSourceType:
-    """Ensure we use a single price source and it's compatible with the energy stat."""
+    """Ensure we use a single price source."""
     if (
         val.get("entity_energy_price") is not None
         and val.get("number_energy_price") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for the price")
-
-    if not valid_entity_id(val["stat_energy_from"]) and (
-        val.get("entity_energy_price") is not None
-        or val.get("number_energy_price") is not None
-    ):
-        raise vol.Invalid(
-            "Entity or number price is not supported for external statistics. "
-            "Use stat_cost to track costs for external statistics"
-        )
-
     return val
 
 
@@ -277,29 +292,20 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_from_ensure_valid_price,
+    _flow_from_ensure_single_price,
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
 
 
-def _flow_to_ensure_valid_price(
+def _flow_to_ensure_single_price(
     val: dict[str, Any],
 ) -> dict[str, Any]:
-    """Ensure price is compatible with the energy stat for grid export."""
+    """Ensure we use a single price source for grid export."""
     if (
         val.get("entity_energy_price") is not None
         and val.get("number_energy_price") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for the price")
-
-    if not valid_entity_id(val["stat_energy_to"]) and (
-        val.get("entity_energy_price") is not None
-        or val.get("number_energy_price") is not None
-    ):
-        raise vol.Invalid(
-            "Entity or number price is not supported for external statistics. "
-            "Use stat_compensation to track costs for external statistics"
-        )
-
     return val
 
 
@@ -314,7 +320,10 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_to_ensure_valid_price,
+    _flow_to_ensure_single_price,
+    _reject_price_for_external_stat(
+        stat_key="stat_energy_to", cost_stat_hint="stat_compensation"
+    ),
 )
 
 
@@ -394,17 +403,6 @@ def _grid_ensure_single_price_import(
         and val.get("number_energy_price") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for import price")
-    if val.get("stat_energy_from") is not None and not valid_entity_id(
-        val["stat_energy_from"]
-    ):
-        if (
-            val.get("entity_energy_price") is not None
-            or val.get("number_energy_price") is not None
-        ):
-            raise vol.Invalid(
-                "Entity or number price is not supported for external statistics. "
-                "Use stat_cost to track costs for external statistics"
-            )
     return val
 
 
@@ -417,17 +415,6 @@ def _grid_ensure_single_price_export(
         and val.get("number_energy_price_export") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for export price")
-    if val.get("stat_energy_to") is not None and not valid_entity_id(
-        val["stat_energy_to"]
-    ):
-        if (
-            val.get("entity_energy_price_export") is not None
-            or val.get("number_energy_price_export") is not None
-        ):
-            raise vol.Invalid(
-                "Entity or number price is not supported for external statistics. "
-                "Use stat_compensation to track costs for external statistics"
-            )
     return val
 
 
@@ -477,6 +464,13 @@ GRID_SOURCE_SCHEMA = vol.All(
     ),
     _grid_ensure_single_price_import,
     _grid_ensure_single_price_export,
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
+    _reject_price_for_external_stat(
+        stat_key="stat_energy_to",
+        entity_price_key="entity_energy_price_export",
+        number_price_key="number_energy_price_export",
+        cost_stat_hint="stat_compensation",
+    ),
     _grid_ensure_at_least_one_stat,
 )
 SOLAR_SOURCE_SCHEMA = vol.Schema(
@@ -498,19 +492,6 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
     }
 )
-def _ensure_no_price_for_external_stat(
-    val: dict[str, Any],
-) -> dict[str, Any]:
-    """Ensure entity/number price is not set for external statistics."""
-    if not valid_entity_id(val["stat_energy_from"]) and (
-        val.get("entity_energy_price") is not None
-        or val.get("number_energy_price") is not None
-    ):
-        raise vol.Invalid(
-            "Entity or number price is not supported for external statistics. "
-            "Use stat_cost to track costs for external statistics"
-        )
-    return val
 
 
 GAS_SOURCE_SCHEMA = vol.All(
@@ -526,7 +507,7 @@ GAS_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _ensure_no_price_for_external_stat,
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
 WATER_SOURCE_SCHEMA = vol.All(
     vol.Schema(
@@ -539,7 +520,7 @@ WATER_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _ensure_no_price_for_external_stat,
+    _reject_price_for_external_stat(stat_key="stat_energy_from"),
 )
 
 
