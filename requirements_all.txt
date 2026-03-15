@@ -1231,6 +1231,9 @@ home-assistant-frontend==20260312.0
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
 
+# homeassistant.components.homekit
+homekit-audio-proxy==1.2.1
+
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
 
