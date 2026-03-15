@@ -52,11 +52,11 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
         else:
             self._attr_is_unlocked = status in {
                 LockStatus.UNLOCKED,
-                LockStatus.NOT_FULLY_LOCKED
+                LockStatus.NOT_FULLY_LOCKED,
             }
         self._attr_is_locked = status in {
             LockStatus.LOCKED,
-            LockStatus.HALF_LOCKED
+            LockStatus.HALF_LOCKED,
         }
         self._attr_is_locking = status is LockStatus.LOCKING
         self._attr_is_unlocking = status is LockStatus.UNLOCKING
