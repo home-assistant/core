@@ -33,13 +33,22 @@ AIR_PURIFIER_INFO = Device(
     hubDeviceId="test-hub-id",
 )
 
-CIRCULATOR_FAN_INFO = Device(
+BATTERY_CIRCULATOR_FAN_INFO = Device(
     version="V1.0",
     deviceId="battery-fan-id-1",
     deviceName="battery-fan-1",
     deviceType="Battery Circulator Fan",
     hubDeviceId="test-hub-id",
 )
+
+CIRCULATOR_FAN_INFO = Device(
+    version="V1.0",
+    deviceId="fan-id-1",
+    deviceName="fan-1",
+    deviceType="Circulator Fan",
+    hubDeviceId="test-hub-id",
+)
+
 
 METER_INFO = Device(
     version="V1.0",
