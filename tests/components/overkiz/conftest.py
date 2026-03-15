@@ -2,11 +2,11 @@
 
 from collections.abc import Awaitable, Callable, Generator
 from dataclasses import dataclass, field
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.enums import APIType
-from pyoverkiz.models import Event, Setup
+from pyoverkiz.models import Event, OverkizServer, Setup
 import pytest
 
 from homeassistant.components.overkiz.const import DOMAIN
@@ -27,9 +27,11 @@ class MockOverkizClient(OverkizClient):
 
     setup: Setup = field(default_factory=load_setup_fixture)
     event_batches: list[list[Event]] = field(default_factory=list)
-    server: Mock = field(
-        default_factory=lambda: Mock(
-            manufacturer="Somfy", configuration_url="https://example.test"
+    server: OverkizServer = field(
+        default_factory=lambda: OverkizServer(
+            name="Somfy",
+            endpoint="https://example.test/enduser-mobile-web/enduserAPI",
+            manufacturer="Somfy",
         )
     )
 
