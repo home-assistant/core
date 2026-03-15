@@ -99,16 +99,16 @@
         "name": "Recirculation"
       },
       "relay_alarm": {
-        "name": "Alarm relay status"
+        "name": "Alarm relay"
       },
       "relay_aux1": {
-        "name": "Auxiliary relay 1 status"
+        "name": "Auxiliary relay 1"
       },
       "relay_aux2": {
-        "name": "Auxiliary relay 2 status"
+        "name": "Auxiliary relay 2"
       },
       "relay_aux3": {
-        "name": "Auxiliary relay 3 status"
+        "name": "Auxiliary relay 3"
       }
     },
     "number": {
