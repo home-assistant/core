@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -15,6 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def setup_platforms():
+    """Patch PLATFORMS for all tests in this file."""
+    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.SWITCH]):
+        yield
 
 
 async def test_switch_setup(
@@ -35,9 +43,8 @@ async def test_switch_setup(
     led.state = 0
     led.last_state = 0
 
-    with patch("homeassistant.components.lutron.PLATFORMS", [Platform.SWITCH]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

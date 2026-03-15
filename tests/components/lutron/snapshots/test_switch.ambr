@@ -91,7 +91,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Switch',
-      'lutron_integration_id': 'switch_id',
+      'lutron_integration_id': 2,
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch',

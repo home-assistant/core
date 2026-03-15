@@ -46,10 +46,12 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
-        OptionKey.BSH_COMMON_DURATION: int,
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: int,
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: int,
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
+        OptionKey.BSH_COMMON_DURATION: vol.All(int, vol.Range(min=0)),
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: vol.All(int, vol.Range(min=0)),
+        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: vol.All(
+            int, vol.Range(min=0)
+        ),
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
         OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY: bool,
@@ -60,7 +62,10 @@ PROGRAM_OPTIONS = {
         OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS: bool,
         OptionKey.DISHCARE_DISHWASHER_ECO_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY: bool,
-        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: int,
+        OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE: vol.All(
+            int, vol.Range(min=1, max=100)
+        ),
+        OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE: vol.All(int, vol.Range(min=0)),
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE: bool,
