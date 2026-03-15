@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -107,8 +109,9 @@
 # ---
 # name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -160,8 +163,9 @@
 # ---
 # name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

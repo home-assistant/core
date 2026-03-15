@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -51,8 +52,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_media_streaming-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -100,8 +102,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.dummy_usp_pdu_pro_outlet_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -150,8 +153,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.dummy_usp_pdu_pro_usb_outlet_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -200,8 +204,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +255,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_1_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -300,8 +306,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -350,8 +357,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_2_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -400,8 +408,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -450,8 +459,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,8 +510,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.mock_name_port_4_poe-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -550,8 +561,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.plug_outlet_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -600,8 +612,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,8 +663,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_plex-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +714,9 @@
 # ---
 # name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.unifi_network_test_traffic_rule-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

@@ -55,8 +55,9 @@
 # name: test_registry_settings
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
         'fan_modes': list([

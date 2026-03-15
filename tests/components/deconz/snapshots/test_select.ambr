@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -119,8 +121,9 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -179,8 +182,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -237,8 +241,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -297,8 +302,9 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -357,8 +363,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -415,8 +422,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -475,8 +483,9 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -535,8 +544,9 @@
 # ---
 # name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_battery:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -53,8 +54,9 @@
 # ---
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -103,8 +105,9 @@
 # ---
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -153,8 +156,9 @@
 # ---
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -211,8 +215,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -268,8 +273,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_battery:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -319,8 +325,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_blade_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -369,8 +376,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -426,8 +434,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_error:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -476,8 +485,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_ip_address:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -525,8 +535,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_lens_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -575,8 +586,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -632,8 +644,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -692,8 +705,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -744,8 +758,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_rssi:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -793,8 +808,9 @@
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -842,8 +858,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -899,8 +916,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_battery:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -950,8 +968,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1007,8 +1026,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_error:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1057,8 +1077,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1107,8 +1128,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_ip_address:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1156,8 +1178,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_main_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1206,8 +1229,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_round_mop_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1256,8 +1280,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1306,8 +1331,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_station_state:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1369,8 +1395,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1426,8 +1453,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1486,8 +1514,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1538,8 +1567,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_unit_care_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1588,8 +1618,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_wi_fi_rssi:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1637,8 +1668,9 @@
 # ---
 # name: test_sensors[qhe2o2][sensor.dusty_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1686,8 +1718,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1743,8 +1776,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_battery:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1794,8 +1828,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1851,8 +1886,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_error:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1901,8 +1937,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_filter_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1951,8 +1988,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_ip_address:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2000,8 +2038,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2050,8 +2089,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2100,8 +2140,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2157,8 +2198,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleaning_duration:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2217,8 +2259,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -2269,8 +2312,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_rssi:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2318,8 +2362,9 @@
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_ssid:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

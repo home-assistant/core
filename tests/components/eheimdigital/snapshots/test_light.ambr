@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_dynamic_new_devices[light.mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_setup_classic_led_ctrl[tankconfig0][light.mock_classicledcontrol_e_channel_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -133,8 +135,9 @@
 # ---
 # name: test_setup_classic_led_ctrl[tankconfig1][light.mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -199,8 +202,9 @@
 # ---
 # name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
@@ -265,8 +269,9 @@
 # ---
 # name: test_setup_classic_led_ctrl[tankconfig2][light.mock_classicledcontrol_e_channel_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([

@@ -141,11 +141,12 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
         "light",
         "test",
         "unique-demo-light",
+        original_name="Demo Light",
         suggested_object_id="demo_light",
     )
     registries.entity.async_update_entity(
         entity.entity_id,
-        aliases={"Stay", "Healthy"},
+        aliases=[er.COMPUTED_NAME, "Stay", "Healthy"],
     )
 
     light = DemoLight(
@@ -288,6 +289,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         "light",
         "test",
         "1235",
+        original_name="Demo Light",
         suggested_object_id="demo_light",
         device_id=device.id,
     )

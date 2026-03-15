@@ -83,8 +83,9 @@
 # ---
 # name: test_unique_id_migration_from_single_config[alarm_control_panel-satel_alarm_panel_1-1234567890_alarm_panel_1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -119,8 +120,9 @@
 # ---
 # name: test_unique_id_migration_from_single_config[binary_sensor-satel_output_1-1234567890_output_1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -155,8 +157,9 @@
 # ---
 # name: test_unique_id_migration_from_single_config[binary_sensor-satel_zone_1-1234567890_zone_1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -191,8 +194,9 @@
 # ---
 # name: test_unique_id_migration_from_single_config[switch-satel_switch_1-1234567890_switch_1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

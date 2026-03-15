@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.1p7k_500006_dynamic_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 32,
@@ -60,8 +61,9 @@
 # ---
 # name: test_all_entities[number.1p7k_500006_led_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

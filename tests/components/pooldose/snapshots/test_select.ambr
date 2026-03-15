@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_selects[select.pool_device_chlorine_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -63,8 +64,9 @@
 # ---
 # name: test_all_selects[select.pool_device_chlorine_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -121,8 +123,9 @@
 # ---
 # name: test_all_selects[select.pool_device_flow_rate_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -179,8 +182,9 @@
 # ---
 # name: test_all_selects[select.pool_device_orp_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -241,8 +245,9 @@
 # ---
 # name: test_all_selects[select.pool_device_orp_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -299,8 +304,9 @@
 # ---
 # name: test_all_selects[select.pool_device_ph_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -361,8 +367,9 @@
 # ---
 # name: test_all_selects[select.pool_device_ph_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -419,8 +426,9 @@
 # ---
 # name: test_all_selects[select.pool_device_water_meter_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

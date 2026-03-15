@@ -63,8 +63,9 @@
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][update.aq_sensor_3_ikea_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -125,8 +126,9 @@
 # ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][update.radiator_thermostat_ii_m_wohnzimmer_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -187,8 +189,9 @@
 # ---
 # name: test_all_entities[centralite][update.dimmer_debian_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -249,8 +252,9 @@
 # ---
 # name: test_all_entities[contact_sensor][update.front_door_open_closed_sensor_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -311,8 +315,9 @@
 # ---
 # name: test_all_entities[ikea_kadrilj][update.kitchen_ikea_kadrilj_window_blind_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -621,8 +626,9 @@
 # ---
 # name: test_all_entities[multipurpose_sensor][update.deck_door_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -683,8 +689,9 @@
 # ---
 # name: test_all_entities[smart_plug][update.arlo_beta_basestation_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -745,8 +752,9 @@
 # ---
 # name: test_all_entities[yale_push_button_deadbolt_lock][update.basement_door_lock_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

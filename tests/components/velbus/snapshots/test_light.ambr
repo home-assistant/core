@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[light.bedroom_kid_1_led_buttonon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_entities[light.dimmer_full_name_dimmer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

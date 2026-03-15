@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_covers[eve_shutter][cover.eve_shutter_switch_20eci1701-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_covers[mock_window_covering_full][cover.mock_full_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -108,8 +110,9 @@
 # ---
 # name: test_covers[mock_window_covering_lift][cover.mock_lift_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -160,8 +163,9 @@
 # ---
 # name: test_covers[mock_window_covering_pa_lift][cover.longan_link_wncv_da01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -213,8 +217,9 @@
 # ---
 # name: test_covers[mock_window_covering_pa_tilt][cover.mock_pa_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -266,8 +271,9 @@
 # ---
 # name: test_covers[mock_window_covering_tilt][cover.mock_tilt_window_covering-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -318,8 +324,9 @@
 # ---
 # name: test_covers[zemismart_mt25b][cover.zemismart_mt25b_roller_motor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

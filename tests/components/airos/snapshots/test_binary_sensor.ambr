@@ -550,8 +550,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -600,8 +601,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -650,8 +652,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcpv6_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -700,8 +703,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_port_forwarding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -749,8 +753,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_pppoe_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

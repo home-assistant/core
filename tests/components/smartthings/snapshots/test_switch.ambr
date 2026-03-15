@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[c2c_arlo_pro_3_switch][switch.2nd_floor_hallway-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,8 +149,9 @@
 # ---
 # name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -197,8 +199,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -246,8 +249,9 @@
 # ---
 # name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,8 +299,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][switch.range_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -393,8 +398,9 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][switch.four_sabbath_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -442,8 +448,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -491,8 +498,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -540,8 +548,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -589,8 +598,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -638,8 +648,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -687,8 +698,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -736,8 +748,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -785,8 +798,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -834,8 +848,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -883,8 +898,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_power_cool-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -932,8 +948,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_power_freeze-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -981,8 +998,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1030,8 +1048,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][switch.lodowka_power_cool-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1079,8 +1098,9 @@
 # ---
 # name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_do_not_disturb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1177,8 +1197,9 @@
 # ---
 # name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1226,8 +1247,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][switch.dishwasher_high_temp_wash-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1275,8 +1297,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][switch.dishwasher_sanitize-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1324,8 +1347,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_000001][switch.dishwasher_speed_booster-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1373,8 +1397,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1422,8 +1447,9 @@
 # ---
 # name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1471,8 +1497,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1520,8 +1547,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_keep_fresh_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1569,8 +1597,9 @@
 # ---
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_sanitize-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1618,8 +1647,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001][switch.dryer_wrinkle_prevent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1667,8 +1697,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa_wrinkle_prevent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1716,8 +1747,9 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][switch.trockner_wrinkle_prevent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1765,8 +1797,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine_bubble_soak-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1814,8 +1847,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1863,8 +1897,9 @@
 # ---
 # name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1961,8 +1996,9 @@
 # ---
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2010,8 +2046,9 @@
 # ---
 # name: test_all_entities[smart_plug][switch.arlo_beta_basestation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2059,8 +2096,9 @@
 # ---
 # name: test_all_entities[tplink_p110][switch.spulmaschine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2108,8 +2146,9 @@
 # ---
 # name: test_all_entities[vd_sensor_light_2023][switch.light_sensor_55_the_frame-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

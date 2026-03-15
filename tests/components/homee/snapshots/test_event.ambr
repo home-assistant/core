@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_event_snapshot[20][event.remote_control_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -63,8 +64,9 @@
 # ---
 # name: test_event_snapshot[20][event.remote_control_switch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -125,8 +127,9 @@
 # ---
 # name: test_event_snapshot[20][event.remote_control_up_down_remote-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
