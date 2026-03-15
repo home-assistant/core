@@ -819,6 +819,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "smartthings",
+        "hostname": "smarthub",
+        "macaddress": "683A48*",
+    },
+    {
+        "domain": "smartthings",
         "hostname": "samsung-*",
     },
     {
