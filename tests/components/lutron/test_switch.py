@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from pylutron import Led
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -105,7 +106,7 @@ async def test_led_turn_on_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert led.state == 1
+    assert led.state == Led.LED_ON
 
     # Turn off
     await hass.services.async_call(
@@ -114,4 +115,22 @@ async def test_led_turn_on_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    assert led.state == 0
+    assert led.state == Led.LED_OFF
+
+
+async def test_led_slow_flash(
+    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test LED in slow flash state."""
+    mock_config_entry.add_to_hass(hass)
+
+    led = mock_lutron.areas[0].keypads[0].leds[0]
+    led.last_state = Led.LED_SLOW_FLASH
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "switch.test_keypad_test_button"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
