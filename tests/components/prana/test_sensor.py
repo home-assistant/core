@@ -34,8 +34,8 @@ async def test_sensors_not_added_if_none(
 ) -> None:
     """Test sensors are not added when value_fn returns None."""
 
-    mock_prana_api.get_device_data.return_value.co2 = None
-    mock_prana_api.get_device_data.return_value.humidity = 45
+    mock_prana_api.get_state.return_value.co2 = None
+    mock_prana_api.get_state.return_value.humidity = 45
 
     with patch("homeassistant.components.prana.PLATFORMS", [Platform.SENSOR]):
         await async_init_integration(hass, mock_config_entry)
