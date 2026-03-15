@@ -1,0 +1,21 @@
+# HiVi Speaker integration services
+# Descriptions for UI (Developer Tools > Services) can be localized via translations/services.en.json etc.
+
+refresh_discovery:
+  name: Refresh discovery
+  description: Trigger device discovery to find HiVi speakers on the network.
+
+postpone_discovery:
+  name: Postpone discovery
+  description: Postpone the next scheduled discovery run.
+
+remove_device:
+  name: Remove device
+  description: Remove a HiVi speaker device by its speaker device ID.
+  fields:
+    speaker_device_id:
+      name: Speaker device ID
+      description: The unique device ID of the speaker to remove.
+      required: true
+      selector:
+        text:

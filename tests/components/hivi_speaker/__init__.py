@@ -1,0 +1,1 @@
+# HiVi Speaker integration tests.
