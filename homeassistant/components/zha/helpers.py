@@ -146,6 +146,9 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_SUCCESS,
     CONF_ALARM_ARM_REQUIRES_CODE,
+    CONF_ALARM_EXIT_DELAY_AWAY,
+    CONF_ALARM_EXIT_DELAY_HOME,
+    CONF_ALARM_EXIT_DELAY_NIGHT,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
     CONF_BAUDRATE,
@@ -1268,6 +1271,15 @@ CONF_ZHA_ALARM_SCHEMA = vol.Schema(
         vol.Required(CONF_ALARM_MASTER_CODE, default="1234"): cv.string,
         vol.Required(CONF_ALARM_FAILED_TRIES, default=3): cv.positive_int,
         vol.Required(CONF_ALARM_ARM_REQUIRES_CODE, default=False): cv.boolean,
+        vol.Required(CONF_ALARM_EXIT_DELAY_AWAY, default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=255)
+        ),
+        vol.Required(CONF_ALARM_EXIT_DELAY_HOME, default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=255)
+        ),
+        vol.Required(CONF_ALARM_EXIT_DELAY_NIGHT, default=0): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=255)
+        ),
     }
 )
 
@@ -1336,6 +1348,9 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         master_code=ha_acp_options.get(CONF_ALARM_MASTER_CODE),
         failed_tries=ha_acp_options.get(CONF_ALARM_FAILED_TRIES),
         arm_requires_code=ha_acp_options.get(CONF_ALARM_ARM_REQUIRES_CODE),
+        exit_delay_away=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_AWAY),
+        exit_delay_home=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_HOME),
+        exit_delay_night=ha_acp_options.get(CONF_ALARM_EXIT_DELAY_NIGHT),
     )
     coord_config: CoordinatorConfiguration = CoordinatorConfiguration(
         path=app_config[CONF_DEVICE][CONF_DEVICE_PATH],

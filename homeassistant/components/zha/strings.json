@@ -151,6 +151,9 @@
   "config_panel": {
     "zha_alarm_options": {
       "alarm_arm_requires_code": "Code required for arming actions",
+      "alarm_exit_delay_away": "Default exit delay for away mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",
+      "alarm_exit_delay_home": "Default exit delay for home mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",
+      "alarm_exit_delay_night": "Default exit delay for night mode (seconds, 0 to disable, can be overridden by zha.set_exit_delay service)",
       "alarm_failed_tries": "The number of consecutive failed code entries to trigger an alarm",
       "alarm_master_code": "Master code for the alarm control panel(s)",
       "title": "Alarm control panel options"
@@ -2355,6 +2358,38 @@
         }
       },
       "name": "Remove"
+    },
+    "set_entry_delay": {
+      "description": "Starts entry delay countdown on IAS ACE alarm keypad.",
+      "fields": {
+        "duration": {
+          "description": "Entry delay duration in seconds.",
+          "name": "Duration"
+        },
+        "ieee": {
+          "description": "IEEE address of the alarm keypad device.",
+          "name": "IEEE address"
+        }
+      },
+      "name": "Set entry delay"
+    },
+    "set_exit_delay": {
+      "description": "Starts exit delay countdown on IAS ACE alarm keypad.",
+      "fields": {
+        "arm_mode": {
+          "description": "Which arm mode to activate after delay.",
+          "name": "Arm mode"
+        },
+        "duration": {
+          "description": "Exit delay duration in seconds.",
+          "name": "Duration"
+        },
+        "ieee": {
+          "description": "IEEE address of the alarm keypad device.",
+          "name": "IEEE address"
+        }
+      },
+      "name": "Set exit delay"
     },
     "set_lock_user_code": {
       "description": "Sets a user code on a lock.",
