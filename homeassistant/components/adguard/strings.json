@@ -1,11 +1,16 @@
 {
+  "common": {
+    "data_description_url": "Enter your AdGuard Home URL.\n\nExamples:\n- `{example_host}`\n- `{example_host_port}`\n- `{example_ip_port}`\n- `{example_url}`\n\nIf you enter a hostname or IP address without a scheme and without a port, port `{default_port}` is used.\nIf you enter a URL starting with `https://` or `http://` without a port, the standard port for that scheme is used (`443` for HTTPS, `80` for HTTP).\nIf no scheme is provided, `http://` is assumed.",
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates. This setting has no effect when using HTTP (no `https://`)."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "existing_instance_updated": "Updated existing configuration."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Invalid URL"
     },
     "step": {
       "hassio_confirm": {
@@ -14,17 +19,16 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "Address",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your AdGuard Home."
+          "url": "[%key:component::adguard::common::data_description_url%]",
+          "verify_ssl": "[%key:component::adguard::common::data_description_verify_ssl%]"
         },
-        "description": "Set up your AdGuard Home instance to allow monitoring and control."
+        "description": "Set up your AdGuard Home instance."
       }
     }
   },
