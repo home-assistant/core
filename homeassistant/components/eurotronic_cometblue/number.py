@@ -66,7 +66,7 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
         key="target_temp_high",
@@ -78,7 +78,7 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
         key="window_open_minutes",
@@ -100,7 +100,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Comet Blue number based on a config entry."""
+    """Set up the number entities."""
     coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
 
     entities: list[CometBlueNumberEntity] = [
