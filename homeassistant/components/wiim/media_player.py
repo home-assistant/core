@@ -30,8 +30,9 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -69,18 +70,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SDK_TO_HA_REPEAT = {
-    WiimRepeatMode.ALL: RepeatMode.ALL,
-    WiimRepeatMode.ONE: RepeatMode.ONE,
-    WiimRepeatMode.OFF: RepeatMode.OFF,
-}
-
-HA_TO_SDK_REPEAT = {
-    RepeatMode.ALL: WiimRepeatMode.ALL,
-    RepeatMode.ONE: WiimRepeatMode.ONE,
-    RepeatMode.OFF: WiimRepeatMode.OFF,
-}
-
 
 def media_player_exception_wrap[
     _WiimMediaPlayerEntityT: "WiimMediaPlayerEntity",
@@ -98,13 +87,11 @@ def media_player_exception_wrap[
         try:
             result = await func(self, *args, **kwargs)
         except (WiimDeviceException, WiimRequestException, WiimException) as err:
-            LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
             await self._async_handle_critical_error(err)
             raise HomeAssistantError(
                 f"{func.__name__} failed for {self.entity_id}"
             ) from err
         except RuntimeError as err:
-            LOGGER.warning("%s failed for %s: %s", func.__name__, self.entity_id, err)
             raise HomeAssistantError(
                 f"{func.__name__} failed for {self.entity_id}"
             ) from err
@@ -122,23 +109,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiiM media player from a config entry."""
-
-    device = entry.runtime_data
-
-    # Create and add the media player entity
-    entity = WiimMediaPlayerEntity(device, entry)
-    async_add_entities([entity])
+    async_add_entities([WiimMediaPlayerEntity(entry.runtime_data, entry)])
 
 
 class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
-    """Representation of a WiiM Media Player."""
+    """Representation of a WiiM media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_media_image_remotely_accessible = True
     _attr_name = None
     _attr_should_poll = False
-
-    # Added to track if the current entity is a leader
-    _is_group_leader: bool = False
+    _attr_state = None
 
     def __init__(self, device: WiimDevice, entry: WiimConfigEntry) -> None:
         """Initialize the WiiM entity."""
@@ -146,13 +127,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._entry = entry
 
         self._attr_unique_id = device.udn
-        self.model_name = device.model_name
-
-        self._attr_state = MediaPlayerState.IDLE
-        self._attr_media_image_remotely_accessible = True
         self._attr_source_list = list(device.supported_input_modes) or None
         self._attr_shuffle: bool = False
-        self._attr_repeat: RepeatMode | str = RepeatMode.OFF
+        self._attr_repeat = RepeatMode.OFF
         self._transport_capabilities: WiimTransportCapabilities | None = None
         self._supported_features_update_in_flight = False
 
@@ -254,13 +231,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         if not self._attr_available:
             self._attr_state = None
-            self._attr_media_title = None
-            self._attr_media_artist = None
-            self._attr_media_album_name = None
-            self._attr_media_image_url = None
-            self._attr_media_duration = None
-            self._attr_media_position = None
-            self._attr_media_position_updated_at = None
+            self._clear_media_metadata()
             self._attr_source = None
             self._transport_capabilities = None
             if write_state:
@@ -268,17 +239,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return
 
         # Update common attributes first
-        self._attr_volume_level = (
-            float(self._device.volume) / 100.0
-            if self._device.volume is not None
-            else None
-        )
+        self._attr_volume_level = self._device.volume / 100
         self._attr_is_volume_muted = self._device.is_muted
         self._attr_source_list = list(self._device.supported_input_modes) or None
 
         # Determine current group role (leader/follower/standalone)
         group_snapshot = self._get_group_snapshot()
-        self._is_group_leader = group_snapshot.role == WiimGroupRole.LEADER
 
         metadata_device = self._metadata_device
         if group_snapshot.role == WiimGroupRole.FOLLOWER:
@@ -297,7 +263,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_source = metadata_device.play_mode
 
         loop_state = metadata_device.loop_state
-        self._attr_repeat = SDK_TO_HA_REPEAT[loop_state.repeat]
+        self._attr_repeat = RepeatMode(loop_state.repeat)
         self._attr_shuffle = loop_state.shuffle
 
         if media := metadata_device.current_media:
@@ -336,18 +302,26 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             device.name,
         )
         if not self._device.available:
-            self.hass.async_create_task(
-                self._async_handle_critical_error(WiimException("Device offline."))
+            self._update_ha_state_from_sdk_cache()
+            self._entry.async_create_background_task(
+                self.hass,
+                self._async_handle_critical_error(WiimException("Device offline.")),
+                name=f"wiim_{self.entity_id}_critical_error",
             )
             return
 
         async def _wrapped() -> None:
-            if self._device.supports_http_api:
-                await self._device.ensure_subscriptions()
-                await self._update_output_mode()
+            await self._device.ensure_subscriptions()
             self._update_ha_state_from_sdk_cache()
 
-        self.hass.async_create_task(_wrapped())
+        if self._device.supports_http_api:
+            self._entry.async_create_background_task(
+                self.hass,
+                _wrapped(),
+                name=f"wiim_{self.entity_id}_general_update",
+            )
+        else:
+            self._update_ha_state_from_sdk_cache()
 
     @callback
     def _handle_sdk_av_transport_event(
@@ -390,8 +364,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self._attr_media_duration = None
                     self._attr_media_position = None
                 elif sdk_status in {SDKPlayingStatus.PAUSED, SDKPlayingStatus.PLAYING}:
-                    self.hass.async_create_task(
-                        self._device.sync_device_duration_and_position()
+                    self._entry.async_create_background_task(
+                        self.hass,
+                        self._device.sync_device_duration_and_position(),
+                        name=f"wiim_{self.entity_id}_sync_position",
                     )
 
         self._update_ha_state_from_sdk_cache()
@@ -475,7 +451,26 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             finally:
                 self._supported_features_update_in_flight = False
 
-        self.hass.async_create_task(_refresh_supported_features())
+        self._entry.async_create_background_task(
+            self.hass,
+            _refresh_supported_features(),
+            name=f"wiim_{self.entity_id}_refresh_supported_features",
+        )
+
+    @callback
+    def _async_registry_updated(
+        self, event: Event[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Keep the entity-to-UDN map in sync with entity registry updates."""
+        if (
+            event.data["action"] == "update"
+            and (old_entity_id := event.data.get("old_entity_id"))
+            and old_entity_id != (entity_id := event.data["entity_id"])
+        ):
+            self._wiim_data.entity_id_to_udn_map.pop(old_entity_id, None)
+            self._wiim_data.entity_id_to_udn_map[entity_id] = self._device.udn
+
+        super()._async_registry_updated(event)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
@@ -513,51 +508,28 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.entity_id,
             self._device.name,
         )
-        await self._device.disconnect()
-
-        del self._wiim_data.entity_id_to_udn_map[self.entity_id]
+        self._wiim_data.entity_id_to_udn_map.pop(self.entity_id, None)
         LOGGER.debug("Removed %s from entity_id_to_udn_map", self.entity_id)
 
         await super().async_will_remove_from_hass()
 
-    async def _async_handle_critical_error(self, e: WiimException) -> None:
-        """Handle critical communication errors, marking device unavailable and cleaning up."""
-        LOGGER.warning(
-            "Device %s encountered a critical communication error: %s",
-            self.entity_id,
-            e,
-        )
-
-        LOGGER.info(
-            "Device %s is now considered offline. Disconnecting UPnP subscriptions",
-            self.entity_id,
-        )
-        self._device.set_available(False)
-        controller = self._wiim_data.controller
-        group_snapshot = controller.get_group_snapshot(self._device.udn)
-
-        if group_snapshot.role == WiimGroupRole.LEADER:
+    async def _async_handle_critical_error(self, error: WiimException) -> None:
+        """Handle communication failures by marking the device unavailable."""
+        if self._device.available:
             LOGGER.info(
-                "Device %s was a leader. Attempting to ungroup all its followers",
+                "Lost connection to WiiM device %s: %s",
                 self.entity_id,
+                error,
             )
+            self._device.set_available(False)
+            self._update_ha_state_from_sdk_cache()
 
-            # Cannot clear followers metadata directly anymore as we don't have access to their entities.
-            # Followers must handle leader unavailability themselves.
-        elif group_snapshot.role == WiimGroupRole.FOLLOWER:
-            LOGGER.info(
-                "Device %s was a follower. Attempting to unjoin from its group",
-                self.entity_id,
-            )
-
-        await controller.async_update_all_multiroom_status()
-
-        self._update_ha_state_from_sdk_cache()
+        await self._wiim_data.controller.async_update_all_multiroom_status()
 
     @media_player_exception_wrap
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0-1."""
-        await self._device.async_set_volume(int(volume * 100))
+        await self._device.async_set_volume(round(volume * 100))
 
     @media_player_exception_wrap
     async def async_mute_volume(self, mute: bool) -> None:
@@ -604,8 +576,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         LOGGER.debug(
             "async_play_media: type=%s, id=%s, kwargs=%s", media_type, media_id, kwargs
         )
+        target_device = self._get_command_target_device("play_media")
 
         if media_source.is_media_source_id(media_id):
+            if not target_device.supports_http_api:
+                raise ServiceValidationError(
+                    "Media sources are not supported on this device"
+                )
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
@@ -613,14 +590,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             url = async_process_play_media_url(self.hass, media_id)
             LOGGER.debug("HTTP media_type for play_media: %s", url)
-            await self._device.play_url(url)
+            await target_device.play_url(url)
             self._attr_state = MediaPlayerState.PLAYING
         elif media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
             if not media_id.isdigit():
                 raise ServiceValidationError(f"Invalid preset ID: {media_id}")
 
             preset_number = int(media_id)
-            await self._device.play_preset(preset_number)
+            await target_device.play_preset(preset_number)
             self._attr_media_content_id = f"wiim_preset_{preset_number}"
             self._attr_media_content_type = MediaType.PLAYLIST
             self._attr_state = MediaPlayerState.PLAYING
@@ -631,32 +608,26 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
 
             track_index = int(media_id)
-            await self._device.async_play_queue_with_index(track_index)
+            await target_device.async_play_queue_with_index(track_index)
             self._attr_media_content_id = f"wiim_track_{track_index}"
             self._attr_media_content_type = MediaType.TRACK
             self._attr_state = MediaPlayerState.PLAYING
         else:
-            LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
             raise ServiceValidationError(f"Unsupported media type: {media_type}")
 
     @media_player_exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        sdk_repeat = HA_TO_SDK_REPEAT[repeat]
         await self._device.async_set_loop_mode(
-            self._device.build_loop_mode(sdk_repeat, self._attr_shuffle)
+            self._device.build_loop_mode(WiimRepeatMode(repeat), self._attr_shuffle)
         )
 
     @media_player_exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
-        if isinstance(self._attr_repeat, str):
-            repeat_enum = RepeatMode(self._attr_repeat)
-        else:
-            repeat_enum = self._attr_repeat
         await self._device.async_set_loop_mode(
             self._device.build_loop_mode(
-                HA_TO_SDK_REPEAT[repeat_enum],
+                WiimRepeatMode(self._attr_repeat),
                 shuffle,
             )
         )

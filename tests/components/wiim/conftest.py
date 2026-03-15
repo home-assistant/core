@@ -71,6 +71,7 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.firmware_version = "4.8.523456"
     wiim_device.ip_address = "192.168.1.100"
     wiim_device.http_api_url = "http://192.168.1.100:8080"
+    wiim_device.presentation_url = "http://192.168.1.100/"
     wiim_device.available = True
     wiim_device.model = "WiiM Pro"
     wiim_device.volume = 50
@@ -192,7 +193,6 @@ def mock_wiim_media_player_entity(
 ) -> WiimMediaPlayerEntity:
     """Fixture for a WiimMediaPlayerEntity instance."""
     entity = WiimMediaPlayerEntity(mock_wiim_device, mock_config_entry)
-    entity._attr_unique_id = f"{mock_wiim_device.udn}-media_player"
     entity.entity_id = "media_player.test_device"
     return entity
 
