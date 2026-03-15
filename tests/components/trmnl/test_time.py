@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from trmnl.exceptions import TRMNLError
 from trmnl.models import Device
 
 from homeassistant.components.time import (
@@ -15,6 +16,7 @@ from homeassistant.components.time import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -72,6 +74,29 @@ async def test_set_value(
 
     mock_trmnl_client.update_device.assert_called_once_with(42793, **expected_kwargs)
     assert mock_trmnl_client.get_devices.call_count == 2
+
+
+async def test_action_error(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a TRMNLError during a time action raises HomeAssistantError."""
+    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
+
+    with pytest.raises(HomeAssistantError, match="connection failed"):
+        await hass.services.async_call(
+            TIME_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: "time.test_trmnl_sleep_start_time",
+                ATTR_TIME: time(22, 0),
+            },
+            blocking=True,
+        )
 
 
 async def test_dynamic_new_device(
