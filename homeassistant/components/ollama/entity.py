@@ -29,6 +29,7 @@ from .const import (
     DEFAULT_MAX_HISTORY,
     DEFAULT_NUM_CTX,
     DOMAIN,
+    KEEP_ALIVE_FOREVER,
 )
 from .models import MessageHistory, MessageRole
 
@@ -237,14 +238,23 @@ class OllamaBaseLLMEntity(Entity):
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
+                keep_alive_value = int(
+                    settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)
+                )
+                # -1 is a special sentinel meaning "keep loaded forever".
+                # All other values are a duration in seconds (e.g. "300s").
+                keep_alive: int | str = (
+                    keep_alive_value
+                    if keep_alive_value == KEEP_ALIVE_FOREVER
+                    else f"{keep_alive_value}s"
+                )
                 response_generator = await client.chat(
                     model=model,
                     # Make a copy of the messages because we mutate the list later
                     messages=list(message_history.messages),
                     tools=tools,
                     stream=True,
-                    # keep_alive requires specifying unit. In this case, seconds
-                    keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    keep_alive=keep_alive,
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                     think=settings.get(CONF_THINK),
                     format=output_format,
