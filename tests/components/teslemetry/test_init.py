@@ -45,6 +45,7 @@ from .const import (
     ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
+    METADATA_NOSCOPE,
     PRODUCTS_MODERN,
     SITE_INFO,
     UNIQUE_ID,
@@ -906,6 +907,65 @@ async def test_dynamic_device_discovery_triggers_reload(
         await hass.async_block_till_done()
 
     # Verify reload was triggered due to new vehicle
+    assert reload_called
+
+
+async def test_dynamic_device_discovery_no_reload_for_unscoped_energy_site(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_metadata: AsyncMock,
+) -> None:
+    """Test metadata refresh does not reload for energy sites without scope."""
+    mock_metadata.return_value = deepcopy(METADATA_NOSCOPE)
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    reload_called = False
+
+    async def mock_reload(entry_id):
+        nonlocal reload_called
+        reload_called = True
+        return True
+
+    with patch.object(hass.config_entries, "async_reload", side_effect=mock_reload):
+        freezer.tick(PRODUCTS_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert not reload_called
+
+
+async def test_dynamic_device_discovery_triggers_reload_on_scope_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_metadata: AsyncMock,
+) -> None:
+    """Test metadata refresh reloads when a relevant scope is newly granted."""
+    mock_metadata.return_value = deepcopy(METADATA_NOSCOPE)
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    reload_called = False
+
+    async def mock_reload(entry_id):
+        nonlocal reload_called
+        reload_called = True
+        return True
+
+    refreshed_metadata = deepcopy(METADATA_NOSCOPE)
+    refreshed_metadata["scopes"].append("energy_device_data")
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=refreshed_metadata,
+        ),
+        patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
+    ):
+        freezer.tick(PRODUCTS_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
     assert reload_called
 
 

@@ -110,6 +110,28 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
     return cast(str, oauth_session.token[CONF_ACCESS_TOKEN])
 
 
+def _get_tracked_ids_from_metadata(data: dict[str, Any]) -> tuple[set[str], set[str]]:
+    """Return metadata device IDs that are eligible for setup."""
+    scopes = set(data["scopes"])
+
+    tracked_vins = (
+        {vin for vin, info in data["vehicles"].items() if info.get("access")}
+        if Scope.VEHICLE_DEVICE_DATA in scopes
+        else set()
+    )
+    tracked_site_ids = (
+        {
+            site_id
+            for site_id, info in data["energy_sites"].items()
+            if info.get("access")
+        }
+        if Scope.ENERGY_DEVICE_DATA in scopes
+        else set()
+    )
+
+    return tracked_vins, tracked_site_ids
+
+
 def _setup_dynamic_discovery(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -126,15 +148,7 @@ def _setup_dynamic_discovery(
         if not data:
             return
 
-        current_vins = {
-            vin for vin, info in data["vehicles"].items() if info.get("access")
-        }
-
-        current_site_ids = {
-            site_id
-            for site_id, info in data["energy_sites"].items()
-            if info.get("access")
-        }
+        current_vins, current_site_ids = _get_tracked_ids_from_metadata(data)
 
         added_vins = current_vins - known_vins
         removed_vins = known_vins - current_vins
@@ -153,6 +167,7 @@ def _setup_dynamic_discovery(
                 removed_sites or "none",
             )
             entry.async_create_background_task(
+                hass,
                 hass.config_entries.async_reload(entry.entry_id),
                 "teslemetry_reload_on_metadata_change",
             )
@@ -227,9 +242,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Remember each device identifier we create
     current_devices: set[tuple[str, str]] = set()
 
-    # Track known devices for dynamic discovery (based on subscription status)
-    known_vins: set[str] = set()
-    known_site_ids: set[str] = set()
+    # Track known devices for dynamic discovery (based on eligible metadata state)
+    known_vins, known_site_ids = _get_tracked_ids_from_metadata(calls[0])
 
     for product in products:
         if (
@@ -238,7 +252,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             and Scope.VEHICLE_DEVICE_DATA in scopes
         ):
             vin = product["vin"]
-            known_vins.add(vin)
             current_devices.add((DOMAIN, vin))
 
             # Create stream if required (for first vehicle)
@@ -302,7 +315,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
         ):
             site_id = product["energy_site_id"]
-            known_site_ids.add(str(site_id))
             current_devices.add((DOMAIN, str(site_id)))
 
             powerwall = (
