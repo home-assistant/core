@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_alert_sensor_single_alert
+  ReadOnlyDict({
+    'alerts': list([
+      dict({
+        'alert_code': 'frost_advisory',
+        'area': 'Ottawa (Kanata - Orléans)',
+        'color': 'yellow',
+        'confidence': 'High',
+        'expiry': '2022-10-04T08:00:00+00:00',
+        'impact': 'Frost may damage crops and plants.',
+        'issued': '2022-10-03T19:05:00+00:00',
+        'status': 'active',
+        'text': 'Frost advisory in effect. Near zero temperatures expected.',
+        'title': 'Frost Advisory',
+        'type': 'advisory',
+        'url': 'https://weather.gc.ca/warnings/report_e.html?on61',
+      }),
+    ]),
+    'attribution': 'Data provided by Environment Canada',
+    'friendly_name': 'Home Alerts',
+    'location': 'Ottawa (Kanata - Orléans)',
+    'station': 'Ottawa Macdonald-Cartier Intl Airport',
+  })
+# ---

@@ -1,19 +1,7 @@
 {
   "entity": {
     "sensor": {
-      "advisories": {
-        "default": "mdi:bell-alert"
-      },
-      "endings": {
-        "default": "mdi:alert-circle-check"
-      },
-      "statements": {
-        "default": "mdi:bell-alert"
-      },
-      "warnings": {
-        "default": "mdi:alert-octagon"
-      },
-      "watches": {
+      "alerts": {
         "default": "mdi:alert"
       }
     }
