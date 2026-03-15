@@ -1382,7 +1382,6 @@ class IntentResponse:
         self.reprompt: dict[str, dict[str, Any]] = {}
         self.card: dict[str, dict[str, str]] = {}
         self.error_code: IntentResponseErrorCode | None = None
-        self.intent_targets: list[IntentResponseTarget] = []
         self.success_results: list[IntentResponseTarget] = []
         self.failed_results: list[IntentResponseTarget] = []
         self.matched_states: list[State] = []
@@ -1433,14 +1432,6 @@ class IntentResponse:
         self.async_set_speech(message)
 
     @callback
-    def async_set_targets(
-        self,
-        intent_targets: list[IntentResponseTarget],
-    ) -> None:
-        """Set response targets."""
-        self.intent_targets = intent_targets
-
-    @callback
     def async_set_results(
         self,
         success_results: list[IntentResponseTarget],
@@ -1485,11 +1476,7 @@ class IntentResponse:
             response_data["code"] = self.error_code.value
         else:
             # action done or query answer
-            response_data["targets"] = [
-                dataclasses.asdict(target) for target in self.intent_targets
-            ]
 
-            # Add success/failed targets
             response_data["success"] = [
                 dataclasses.asdict(target) for target in self.success_results
             ]
