@@ -661,6 +661,6 @@ def _resolve_q10_dp(command: str) -> B01_Q10_DP | None:
     # Try integer code lookup (e.g. "11")
     try:
         return B01_Q10_DP.from_code(int(command))
-    except ValueError, TypeError:
+    except (ValueError, TypeError):
         pass
     return None
