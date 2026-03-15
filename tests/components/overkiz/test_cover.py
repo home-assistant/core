@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -44,28 +44,34 @@ from .helpers import assert_command_call, async_deliver_events, build_event
 
 from tests.common import snapshot_platform
 
-FIXTURE_AWNING = "setup/setup_local.json"
-FIXTURE_LOW_SPEED = "setup/setup_nexity_2.json"
-FIXTURE_PERGOLA = "setup/setup_local_tahoma.json"
-FIXTURE_RTS = "setup/setup_hi_kumo.json"
-FIXTURE_SHUTTERS_AND_GARAGE = "setup/setup_tahoma_3.json"
-FIXTURE_TILTED_WINDOW = "setup/setup_local_with_climate.json"
 
-AWNING_URL = "io://1234-1234-1234/5928357"
-LOW_SPEED_URL = "io://1234-5678-1698/141613"
-LOW_SPEED_OTHER_URL = "io://1234-5678-1698/4080031"
-PERGOLA_URL = "io://1234-5678-3293/7614902"
-RTS_URL = "rts://1234-1234-6362/16730022"
-GARAGE_URL = "io://1234-1234-6233/1166863"
-SHUTTER_URL = "io://1234-1234-6233/12184029"
+class FixtureDevice(NamedTuple):
+    """Test device binding a fixture file to a device URL."""
+
+    fixture: str
+    url: str
+
+
+AWNING = FixtureDevice("setup/setup_local.json", "io://1234-1234-1234/5928357")
+LOW_SPEED = FixtureDevice("setup/setup_nexity_2.json", "io://1234-5678-1698/141613")
+LOW_SPEED_OTHER = FixtureDevice(
+    "setup/setup_nexity_2.json", "io://1234-5678-1698/4080031"
+)
+PERGOLA = FixtureDevice("setup/setup_local_tahoma.json", "io://1234-5678-3293/7614902")
+RTS = FixtureDevice("setup/setup_hi_kumo.json", "rts://1234-1234-6362/16730022")
+SHUTTER = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/12184029")
+GARAGE = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/1166863")
+TILTED_WINDOW = FixtureDevice(
+    "setup/setup_local_with_climate.json", "io://****-****-9373/10202865"
+)
 
 SNAPSHOT_FIXTURES = [
-    FIXTURE_AWNING,
-    FIXTURE_LOW_SPEED,
-    FIXTURE_PERGOLA,
-    FIXTURE_RTS,
-    FIXTURE_SHUTTERS_AND_GARAGE,
-    FIXTURE_TILTED_WINDOW,
+    AWNING,
+    LOW_SPEED,
+    PERGOLA,
+    RTS,
+    SHUTTER,
+    TILTED_WINDOW,
 ]
 
 
@@ -93,41 +99,29 @@ def get_entity_id(entity_registry: er.EntityRegistry, unique_id: str) -> str:
 
 
 @pytest.mark.parametrize(
-    "fixture",
+    "device",
     SNAPSHOT_FIXTURES,
-    ids=[Path(fixture).name for fixture in SNAPSHOT_FIXTURES],
+    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
 )
 async def test_cover_entities_snapshot(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    fixture: str,
+    device: FixtureDevice,
 ) -> None:
     """Test representative real setups via snapshot."""
-    config_entry = await setup_overkiz_integration(fixture=fixture)
+    config_entry = await setup_overkiz_integration(fixture=device.fixture)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    ("fixture", "device_url", "command_name", "expected_state", "entity_unique_id"),
+    ("device", "command_name", "expected_state", "entity_unique_id"),
     [
-        (
-            FIXTURE_SHUTTERS_AND_GARAGE,
-            SHUTTER_URL,
-            "open",
-            CoverState.OPENING,
-            None,
-        ),
-        (FIXTURE_AWNING, AWNING_URL, "deploy", CoverState.CLOSED, None),
-        (
-            FIXTURE_SHUTTERS_AND_GARAGE,
-            GARAGE_URL,
-            "open",
-            CoverState.OPENING,
-            None,
-        ),
+        (SHUTTER, "open", CoverState.OPENING, None),
+        (AWNING, "deploy", CoverState.CLOSED, None),
+        (GARAGE, "open", CoverState.OPENING, None),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
@@ -136,17 +130,16 @@ async def test_cover_open(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    fixture: str,
-    device_url: str,
+    device: FixtureDevice,
     command_name: str,
     expected_state: str,
     entity_unique_id: str | None,
 ) -> None:
     """Test opening supported covers via the service layer."""
-    await setup_overkiz_integration(fixture=fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -157,29 +150,17 @@ async def test_cover_open(
     assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
-        device_url=device_url,
+        device_url=device.url,
         command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("fixture", "device_url", "command_name", "expected_state", "entity_unique_id"),
+    ("device", "command_name", "expected_state", "entity_unique_id"),
     [
-        (
-            FIXTURE_SHUTTERS_AND_GARAGE,
-            SHUTTER_URL,
-            "close",
-            CoverState.CLOSING,
-            None,
-        ),
-        (FIXTURE_AWNING, AWNING_URL, "undeploy", CoverState.CLOSED, None),
-        (
-            FIXTURE_SHUTTERS_AND_GARAGE,
-            GARAGE_URL,
-            "close",
-            CoverState.CLOSING,
-            None,
-        ),
+        (SHUTTER, "close", CoverState.CLOSING, None),
+        (AWNING, "undeploy", CoverState.CLOSED, None),
+        (GARAGE, "close", CoverState.CLOSING, None),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
@@ -188,17 +169,16 @@ async def test_cover_close(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    fixture: str,
-    device_url: str,
+    device: FixtureDevice,
     command_name: str,
     expected_state: str,
     entity_unique_id: str | None,
 ) -> None:
     """Test closing supported covers via the service layer."""
-    await setup_overkiz_integration(fixture=fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -209,17 +189,17 @@ async def test_cover_close(
     assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
         mock_client,
-        device_url=device_url,
+        device_url=device.url,
         command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
-    ("fixture", "device_url", "command_name", "entity_unique_id"),
+    ("device", "command_name", "entity_unique_id"),
     [
-        (FIXTURE_SHUTTERS_AND_GARAGE, SHUTTER_URL, "stop", None),
-        (FIXTURE_AWNING, AWNING_URL, "stop", None),
-        (FIXTURE_SHUTTERS_AND_GARAGE, GARAGE_URL, "stop", None),
+        (SHUTTER, "stop", None),
+        (AWNING, "stop", None),
+        (GARAGE, "stop", None),
     ],
     ids=["roller-shutter", "awning", "garage-door"],
 )
@@ -228,16 +208,15 @@ async def test_cover_stop(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    fixture: str,
-    device_url: str,
+    device: FixtureDevice,
     command_name: str,
     entity_unique_id: str | None,
 ) -> None:
     """Test stop commands for supported covers."""
-    await setup_overkiz_integration(fixture=fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -247,42 +226,26 @@ async def test_cover_stop(
 
     assert_command_call(
         mock_client,
-        device_url=device_url,
+        device_url=device.url,
         command_name=command_name,
     )
 
 
 @pytest.mark.parametrize(
     (
-        "fixture",
-        "device_url",
+        "device",
         "command_name",
         "entity_unique_id",
         "parameters",
         "position",
     ),
     [
+        (SHUTTER, "setClosure", None, (75,), 25),
+        (AWNING, "setDeployment", None, (80,), 80),
         (
-            FIXTURE_SHUTTERS_AND_GARAGE,
-            SHUTTER_URL,
-            "setClosure",
-            None,
-            (75,),
-            25,
-        ),
-        (
-            FIXTURE_AWNING,
-            AWNING_URL,
-            "setDeployment",
-            None,
-            (80,),
-            80,
-        ),
-        (
-            FIXTURE_LOW_SPEED,
-            LOW_SPEED_URL,
+            LOW_SPEED,
             "setClosureAndLinearSpeed",
-            f"{LOW_SPEED_URL}_low_speed",
+            f"{LOW_SPEED.url}_low_speed",
             (65, OverkizCommandParam.LOWSPEED),
             35,
         ),
@@ -294,18 +257,17 @@ async def test_cover_set_position(
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
     entity_registry: er.EntityRegistry,
-    fixture: str,
-    device_url: str,
+    device: FixtureDevice,
     command_name: str,
     entity_unique_id: str | None,
     parameters: tuple[Any, ...],
     position: int,
 ) -> None:
     """Test cover position services and mapping."""
-    await setup_overkiz_integration(fixture=fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, entity_unique_id or device_url)
+    entity_id = get_entity_id(entity_registry, entity_unique_id or device.url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -315,7 +277,7 @@ async def test_cover_set_position(
 
     assert_command_call(
         mock_client,
-        device_url=device_url,
+        device_url=device.url,
         command_name=command_name,
         parameters=parameters,
     )
@@ -329,11 +291,11 @@ async def test_cover_tilt_services(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tilt services for a pergola from a full user setup."""
-    await setup_overkiz_integration(fixture=FIXTURE_PERGOLA)
+    await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
     # Real setup fixtures anonymize labels, so the stable device URL is the best
     # handle for selecting the specific cover we want to exercise.
-    entity_id = get_entity_id(entity_registry, PERGOLA_URL)
+    entity_id = get_entity_id(entity_registry, PERGOLA.url)
     state = get_state(hass, entity_id)
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
@@ -354,7 +316,7 @@ async def test_cover_tilt_services(
     assert get_state(hass, entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
-        device_url=PERGOLA_URL,
+        device_url=PERGOLA.url,
         command_name="openSlats",
     )
 
@@ -365,7 +327,7 @@ async def test_cover_tilt_services(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=PERGOLA_URL,
+                device_url=PERGOLA.url,
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED.value,
             )
@@ -382,7 +344,7 @@ async def test_cover_tilt_services(
     assert get_state(hass, entity_id).state == CoverState.CLOSING
     assert_command_call(
         mock_client,
-        device_url=PERGOLA_URL,
+        device_url=PERGOLA.url,
         command_name="closeSlats",
     )
 
@@ -395,7 +357,7 @@ async def test_cover_tilt_services(
     )
     assert_command_call(
         mock_client,
-        device_url=PERGOLA_URL,
+        device_url=PERGOLA.url,
         command_name="stop",
     )
 
@@ -408,7 +370,7 @@ async def test_cover_tilt_services(
     )
     assert_command_call(
         mock_client,
-        device_url=PERGOLA_URL,
+        device_url=PERGOLA.url,
         command_name="setOrientation",
         parameters=(60,),
     )
@@ -420,10 +382,10 @@ async def test_low_speed_cover_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a low-speed shutter creates both standard and low-speed entities."""
-    await setup_overkiz_integration(fixture=FIXTURE_LOW_SPEED)
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
 
-    standard_entity_id = get_entity_id(entity_registry, LOW_SPEED_URL)
-    low_speed_entity_id = get_entity_id(entity_registry, f"{LOW_SPEED_URL}_low_speed")
+    standard_entity_id = get_entity_id(entity_registry, LOW_SPEED.url)
+    low_speed_entity_id = get_entity_id(entity_registry, f"{LOW_SPEED.url}_low_speed")
 
     assert hass.states.get(standard_entity_id)
     assert hass.states.get(low_speed_entity_id)
@@ -432,8 +394,8 @@ async def test_low_speed_cover_entities(
     low_speed = entity_registry.async_get(low_speed_entity_id)
     assert standard is not None
     assert low_speed is not None
-    assert standard.unique_id == LOW_SPEED_URL
-    assert low_speed.unique_id == f"{LOW_SPEED_URL}_low_speed"
+    assert standard.unique_id == LOW_SPEED.url
+    assert low_speed.unique_id == f"{LOW_SPEED.url}_low_speed"
 
 
 async def test_multiple_same_type_entities_have_distinct_unique_ids(
@@ -442,10 +404,10 @@ async def test_multiple_same_type_entities_have_distinct_unique_ids(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test repeated shutters from one setup keep distinct identities."""
-    await setup_overkiz_integration(fixture=FIXTURE_LOW_SPEED)
+    await setup_overkiz_integration(fixture=LOW_SPEED.fixture)
 
-    first_entity_id = get_entity_id(entity_registry, LOW_SPEED_URL)
-    second_entity_id = get_entity_id(entity_registry, LOW_SPEED_OTHER_URL)
+    first_entity_id = get_entity_id(entity_registry, LOW_SPEED.url)
+    second_entity_id = get_entity_id(entity_registry, LOW_SPEED_OTHER.url)
     first_entry = entity_registry.async_get(first_entity_id)
     second_entry = entity_registry.async_get(second_entity_id)
     assert first_entry is not None
@@ -461,9 +423,9 @@ async def test_tilt_only_cover_supported_features(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the pergola only exposes tilt controls."""
-    await setup_overkiz_integration(fixture=FIXTURE_PERGOLA)
+    await setup_overkiz_integration(fixture=PERGOLA.fixture)
 
-    state = get_state(hass, get_entity_id(entity_registry, PERGOLA_URL))
+    state = get_state(hass, get_entity_id(entity_registry, PERGOLA.url))
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.attributes["supported_features"] == (
@@ -482,9 +444,9 @@ async def test_cover_position_update_on_poll(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover state updates after coordinator refresh."""
-    await setup_overkiz_integration(fixture=FIXTURE_SHUTTERS_AND_GARAGE)
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER_URL)
+    entity_id = get_entity_id(entity_registry, SHUTTER.url)
     assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     await async_deliver_events(
@@ -494,7 +456,7 @@ async def test_cover_position_update_on_poll(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER_URL,
+                device_url=SHUTTER.url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -532,7 +494,7 @@ async def test_cover_position_update_on_poll(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER_URL,
+                device_url=SHUTTER.url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -572,25 +534,25 @@ async def test_cover_unavailable(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test cover unavailability propagates to the entity state."""
-    await setup_overkiz_integration(fixture=FIXTURE_SHUTTERS_AND_GARAGE)
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER_URL)
+    entity_id = get_entity_id(entity_registry, SHUTTER.url)
     await async_deliver_events(
         hass,
         freezer,
         mock_client,
-        [build_event(EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER_URL)],
+        [build_event(EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.url)],
     )
 
     assert get_state(hass, entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
-    ("fixture", "unique_id", "expected_state", "expected_closed"),
+    ("device", "expected_state", "expected_closed"),
     [
-        (FIXTURE_SHUTTERS_AND_GARAGE, GARAGE_URL, CoverState.CLOSED, True),
-        (FIXTURE_PERGOLA, PERGOLA_URL, CoverState.CLOSED, True),
-        (FIXTURE_RTS, RTS_URL, STATE_UNKNOWN, None),
+        (GARAGE, CoverState.CLOSED, True),
+        (PERGOLA, CoverState.CLOSED, True),
+        (RTS, STATE_UNKNOWN, None),
     ],
     ids=["open-closed-unknown", "tilt-fallback", "unknown-rts"],
 )
@@ -598,15 +560,14 @@ async def test_cover_is_closed_fallbacks(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     entity_registry: er.EntityRegistry,
-    fixture: str,
-    unique_id: str,
+    device: FixtureDevice,
     expected_state: str,
     expected_closed: bool | None,
 ) -> None:
     """Test is_closed fallback order via entity state."""
-    await setup_overkiz_integration(fixture=fixture)
+    await setup_overkiz_integration(fixture=device.fixture)
 
-    state = get_state(hass, get_entity_id(entity_registry, unique_id))
+    state = get_state(hass, get_entity_id(entity_registry, device.url))
     assert state.state == expected_state
     assert state.attributes["is_closed"] is expected_closed
 
@@ -651,9 +612,9 @@ async def test_vertical_cover_movement_state_fallback(
     expected_state: CoverState,
 ) -> None:
     """Test moving state fallback for vertical covers."""
-    await setup_overkiz_integration(fixture=FIXTURE_SHUTTERS_AND_GARAGE)
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
-    entity_id = get_entity_id(entity_registry, SHUTTER_URL)
+    entity_id = get_entity_id(entity_registry, SHUTTER.url)
     await async_deliver_events(
         hass,
         freezer,
@@ -661,7 +622,7 @@ async def test_vertical_cover_movement_state_fallback(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER_URL,
+                device_url=SHUTTER.url,
                 device_states=device_states,
             )
         ],
@@ -718,9 +679,9 @@ async def test_awning_movement_state_fallback(
     expected_state: CoverState,
 ) -> None:
     """Test moving state fallback for awnings."""
-    await setup_overkiz_integration(fixture=FIXTURE_AWNING)
+    await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING_URL)
+    entity_id = get_entity_id(entity_registry, AWNING.url)
     await async_deliver_events(
         hass,
         freezer,
@@ -728,7 +689,7 @@ async def test_awning_movement_state_fallback(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=AWNING_URL,
+                device_url=AWNING.url,
                 device_states=device_states,
             )
         ],
@@ -745,10 +706,10 @@ async def test_execution_tracking_sets_opening_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test execution tracking keeps the cover opening until completion."""
-    await setup_overkiz_integration(fixture=FIXTURE_SHUTTERS_AND_GARAGE)
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
     mock_client.execute_command.reset_mock()
 
-    entity_id = get_entity_id(entity_registry, SHUTTER_URL)
+    entity_id = get_entity_id(entity_registry, SHUTTER.url)
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -764,7 +725,7 @@ async def test_execution_tracking_sets_opening_state(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=SHUTTER_URL,
+                device_url=SHUTTER.url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_CLOSURE.value,
@@ -799,7 +760,7 @@ async def test_execution_tracking_sets_opening_state(
         [
             build_event(
                 EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=SHUTTER_URL,
+                device_url=SHUTTER.url,
                 exec_id="exec-1",
                 new_state=ExecutionState.COMPLETED.value,
             )
@@ -817,9 +778,9 @@ async def test_awning_direct_position_mapping(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test awning deployment uses direct mapping while vertical covers invert."""
-    await setup_overkiz_integration(fixture=FIXTURE_AWNING)
+    await setup_overkiz_integration(fixture=AWNING.fixture)
 
-    entity_id = get_entity_id(entity_registry, AWNING_URL)
+    entity_id = get_entity_id(entity_registry, AWNING.url)
     assert get_state(hass, entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
     mock_client.execute_command.reset_mock()
@@ -831,7 +792,7 @@ async def test_awning_direct_position_mapping(
     )
     assert_command_call(
         mock_client,
-        device_url=AWNING_URL,
+        device_url=AWNING.url,
         command_name="setDeployment",
         parameters=(35,),
     )
@@ -843,7 +804,7 @@ async def test_awning_direct_position_mapping(
         [
             build_event(
                 EventName.DEVICE_STATE_CHANGED.value,
-                device_url=AWNING_URL,
+                device_url=AWNING.url,
                 device_states=[
                     {
                         "name": OverkizState.CORE_DEPLOYMENT.value,
