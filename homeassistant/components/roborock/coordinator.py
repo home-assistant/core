@@ -48,6 +48,9 @@ from .const import (
 from .models import DeviceState, get_device_info
 
 SCAN_INTERVAL = timedelta(seconds=30)
+# The Q10 is a push-based MQTT device; use a longer, Q10-specific interval
+# for occasional polling as a safety net, rather than frequent polling.
+Q10_UPDATE_INTERVAL = timedelta(minutes=15)
 
 # Roborock devices have a known issue where they go offline for a short period
 # around 3AM local time for ~1 minute and reset both the local connection
@@ -597,7 +600,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=A01_UPDATE_INTERVAL,
+            update_interval=Q10_UPDATE_INTERVAL,
         )
         self._device = device
         self.api = api
