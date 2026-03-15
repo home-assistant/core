@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -118,14 +119,18 @@ async def test_led_turn_on_off(
     assert led.state == Led.LED_OFF
 
 
-async def test_led_slow_flash(
-    hass: HomeAssistant, mock_lutron: MagicMock, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize("led_state", [Led.LED_SLOW_FLASH, Led.LED_FAST_FLASH])
+async def test_led_flash_states(
+    hass: HomeAssistant,
+    mock_lutron: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    led_state: int,
 ) -> None:
-    """Test LED in slow flash state."""
+    """Test LED in flash states."""
     mock_config_entry.add_to_hass(hass)
 
     led = mock_lutron.areas[0].keypads[0].leds[0]
-    led.last_state = Led.LED_SLOW_FLASH
+    led.last_state = led_state
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -133,4 +138,4 @@ async def test_led_slow_flash(
     entity_id = "switch.test_keypad_test_button"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
