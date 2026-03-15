@@ -17,6 +17,7 @@ from datetime import datetime
 import hashlib
 from http import HTTPStatus
 import json
+from json import JSONDecodeError
 import logging
 from random import randint
 import secrets
@@ -468,7 +469,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")
@@ -506,57 +507,53 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         """Wait for the user to activate the device."""
         expires_in = datetime.timestamp(datetime.now()) + device["expires_in"]
         jitter = randint(1, 3)  # Jitter to avoid being throttled
+        token_request = {
+            "client_id": self.client_id,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+            "device_code": device["device_code"],
+        }
+        session = async_get_clientsession(self.hass)
+        interval = device.get("interval", 5)
         while True:
             if expires_in < datetime.timestamp(datetime.now()):
                 raise DeviceFlowTimeout
 
-            data = {
-                "client_id": self.client_id,
-                "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
-                "device_code": device["device_code"],
-            }
-
             try:
                 async with asyncio.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
-                    session = async_get_clientsession(self.hass)
                     resp = await session.post(
                         self.token_url,
-                        data=data,
+                        data=token_request,
                         headers={"Accept": "application/json"},
                     )  # Again, Github by default returns a form. Need flexibility or standard enforce?
                     response = await resp.json()
-                    # The RFC describes that the endpoint should return 400 when the user hasn't authorized yet, but some providers (like github....) return 200 with an error key in the response.
-                    match response.get("error"):
-                        # Maybe should make constants out of these.
-                        case "authorization_pending":
-                            _LOGGER.info(
-                                "User has not authorized device yet. Continue polling"
-                            )
-                            await asyncio.sleep(device["interval"] + jitter)
-                            continue
-                        case "slow_down":
-                            # See if the API sends a new interval.
-                            # Else, resort back to RFC's suggestion of increasing interval by 5 seconds
-                            device["interval"] = response.get(
-                                "interval", device["interval"] + 5
-                            )
-                            _LOGGER.info(
-                                "API asked to slow down. Increasing polling interval to %s",
-                                device["interval"],
-                            )
-                            await asyncio.sleep(device["interval"] + jitter)
-                            continue
-                        case "access_denied":
-                            raise DeviceFlowUnauthorized
-                        case "expired_token":
-                            raise DeviceFlowTimeout
-                    break
             except TimeoutError as err:
                 _LOGGER.error("Timeout resolving OAuth token: %s", err)
                 raise DeviceFlowTimeout from err
             except (ClientResponseError, ClientError) as err:
                 _LOGGER.error("Error resolving OAuth token: %s", err)
                 raise DeviceFlowError from err
+
+            # The RFC describes that the endpoint should return 400 when the user hasn't authorized yet, but some providers (like github....) return 200 with an error key in the response.
+            match response.get("error"):
+                # Maybe should make constants out of these.
+                case "authorization_pending":
+                    _LOGGER.info("User has not authorized device yet. Continue polling")
+                case "slow_down":
+                    # See if the API sends a new interval.
+                    # Else, resort back to RFC's suggestion of increasing interval by 5 seconds
+                    interval = response.get("interval", interval + 5)
+                    _LOGGER.info(
+                        "API asked to slow down. Increasing polling interval to %s",
+                        interval,
+                    )
+                case "access_denied":
+                    raise DeviceFlowUnauthorized
+                case "expired_token":
+                    raise DeviceFlowTimeout
+                case None:
+                    break
+
+            await asyncio.sleep(interval + jitter)
         return cast(dict, response)
 
     async def _token_request(self, data: dict) -> dict:
@@ -570,7 +567,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
-            except (ClientError, JSONDecodeError):
+            except ClientError, JSONDecodeError:
                 error_response = {}
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")
@@ -601,8 +598,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         self.external_data: Any = None
         self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
-        self.login_task: asyncio.Task | None = None
-        self.device_token: dict[str, str] | None = None
 
     @property
     @abstractmethod
@@ -664,10 +659,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create an entry for auth."""
-        # Branch off to device flow
-        if isinstance(self.flow_impl, DeviceFlowImplementation):
-            return await self.async_step_device()
-
         # Flow has been triggered by external data
         if user_input is not None:
             self.external_data = user_input
@@ -691,71 +682,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             )
 
         return self.async_external_step(step_id="auth", url=url)
-
-    async def async_step_device(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Create an entry for device flow."""
-        try:
-            async with asyncio.timeout(
-                OAUTH_AUTHORIZE_URL_TIMEOUT_SEC
-            ):  # Should we maintain this timeout?
-                # Done so we don't have to enforce abstract methods on the other implementations
-                device = await cast(
-                    DeviceFlowImplementation, self.flow_impl
-                ).async_register_device()
-        except TimeoutError as err:
-            _LOGGER.error("Timeout registering device: %s", err)
-            return self.async_abort(reason="authorize_url_timeout")
-
-        async def _wait_for_login() -> dict[str, str]:
-            """Wait for the user to authorize the device."""
-            return await cast(
-                DeviceFlowImplementation, self.flow_impl
-            ).async_check_device_activation(device)
-
-        if self.login_task is None:
-            _LOGGER.info("Starting login task")
-            self.login_task = self.hass.async_create_task(_wait_for_login())
-
-        if self.login_task.done():
-            if self.login_task.exception():
-                match self.login_task.exception():
-                    case DeviceFlowTimeout():
-                        return self.async_abort(reason="oauth_timeout")
-                    case DeviceFlowUnauthorized():
-                        return self.async_abort(reason="user_rejected_authorize")
-                    case DeviceFlowError():
-                        return self.async_abort(reason="oauth_error")
-            # The idea is that once the task is done, we move to the next step
-            # A generic one so integrations can follow up with their desired logic
-            # Open for suggestions here
-            self.device_token = self.login_task.result()
-            return self.async_show_progress_done(next_step_id="device_flow_complete")
-
-        return self.async_show_progress(
-            step_id="device_flow",
-            progress_action="wait_for_device",
-            description_placeholders={
-                "url": device["verification_uri"],
-                "code": device["user_code"],
-            },
-            progress_task=self.login_task,
-        )
-
-    async def async_step_device_flow_complete(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle completion of device flow step."""
-        return await self.async_oauth_create_entry(
-            {"auth_implementation": self.flow_impl.domain, "token": self.device_token}
-        )
-
-    async def async_step_device_flow(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Proxy the progress step back to the device handler."""
-        return await self.async_step_device(user_input)
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
@@ -867,6 +793,84 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> None:
         """Register a local implementation."""
         async_register_implementation(hass, cls.DOMAIN, local_impl)
+
+
+class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMeta):
+    """Handle a device flow config flow."""
+
+    flow_impl: DeviceFlowImplementation
+
+    def __init__(self) -> None:
+        """Instantiate device flow handler."""
+        super().__init__()
+
+        self.login_task: asyncio.Task | None = None
+        self.device_token: dict[str, str] | None = None
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Run the auth step for device flow."""
+        return await self.async_step_device()
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Create an entry for device flow."""
+        try:
+            async with asyncio.timeout(OAUTH_AUTHORIZE_URL_TIMEOUT_SEC):
+                # Done so we don't have to enforce abstract methods on the other implementations
+                device = await self.flow_impl.async_register_device()
+        except TimeoutError as err:
+            _LOGGER.error("Timeout registering device: %s", err)
+            return self.async_abort(reason="authorize_url_timeout")
+
+        async def _wait_for_login() -> dict[str, str]:
+            """Wait for the user to authorize the device."""
+            return await self.flow_impl.async_check_device_activation(device)
+
+        if self.login_task is None:
+            _LOGGER.info("Starting login task")
+            self.login_task = self.hass.async_create_task(_wait_for_login())
+
+        if self.login_task.done():
+            if self.login_task.exception():
+                match self.login_task.exception():
+                    case DeviceFlowTimeout():
+                        return self.async_abort(reason="oauth_timeout")
+                    case DeviceFlowUnauthorized():
+                        return self.async_abort(reason="user_rejected_authorize")
+                    case DeviceFlowError():
+                        return self.async_abort(reason="oauth_error")
+            # The idea is that once the task is done, we move to the next step
+            # A generic one so integrations can follow up with their desired logic
+            # Open for suggestions here
+            self.device_token = self.login_task.result()
+            return self.async_show_progress_done(next_step_id="device_flow_complete")
+
+        return self.async_show_progress(
+            step_id="device_flow",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": device["verification_uri"],
+                "code": device["user_code"],
+            },
+            progress_task=self.login_task,
+        )
+
+    async def async_step_device_flow_complete(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle completion of device flow step."""
+        return await self.async_oauth_create_entry(
+            {"auth_implementation": self.flow_impl.domain, "token": self.device_token}
+        )
+
+    async def async_step_device_flow(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Proxy the progress step back to the device handler."""
+        return await self.async_step_device(user_input)
 
 
 @callback
