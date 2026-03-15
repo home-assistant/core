@@ -275,6 +275,10 @@ async def async_setup_entry(
                 for identifier in device_entry.identifiers
                 if identifier[0] == DOMAIN
             }
+            if not device_domain_ids:
+                # This device has no Opower identifiers; it may be a merged/shared
+                # device owned by another integration. Do not alter it here.
+                continue
             if not device_domain_ids.isdisjoint(current_account_device_ids):
                 continue  # device is still active
             # Device is stale — remove its entities then detach it
