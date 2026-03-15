@@ -152,7 +152,10 @@ def _setup_dynamic_discovery(
                 added_sites or "none",
                 removed_sites or "none",
             )
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+            entry.async_create_background_task(
+                hass.config_entries.async_reload(entry.entry_id),
+                "teslemetry_reload_on_metadata_change",
+            )
 
     entry.async_on_unload(
         metadata_coordinator.async_add_listener(_handle_metadata_update)
