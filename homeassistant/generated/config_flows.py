@@ -346,6 +346,7 @@ FLOWS = {
         "iqvia",
         "irm_kmi",
         "iron_os",
+        "iseo_argo_ble",
         "iskra",
         "islamic_prayer_times",
         "israel_rail",

@@ -303,6 +303,7 @@ homeassistant.components.ipp.*
 homeassistant.components.iqvia.*
 homeassistant.components.iron_os.*
 homeassistant.components.isal.*
+homeassistant.components.iseo_argo_ble.*
 homeassistant.components.islamic_prayer_times.*
 homeassistant.components.isy994.*
 homeassistant.components.jellyfin.*
