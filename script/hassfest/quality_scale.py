@@ -869,7 +869,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sma",
     "smappee",
     "smart_meter_texas",
-    "smarttub",
     "smarty",
     "smhi",
     "sms",
