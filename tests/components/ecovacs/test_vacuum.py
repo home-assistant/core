@@ -3,15 +3,23 @@
 from dataclasses import asdict
 import logging
 
+from deebot_client.commands.json.custom import CustomCommand
 from deebot_client.events import CachedMapInfoEvent, Event, RoomsEvent
 from deebot_client.events.map import Map
-from deebot_client.models import CleanMode, Room
+from deebot_client.events.work_mode import WorkMode, WorkModeEvent
+from deebot_client.models import CleanAction, CleanMode, Room
 from deebot_client.rs.map import RotationAngle  # pylint: disable=no-name-in-module
 import pytest
 
-from homeassistant.components import vacuum
+from homeassistant.components import select, vacuum
+from homeassistant.components.ecovacs.const import INTELLIGENT_HOSTING
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    SERVICE_SELECT_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -489,3 +497,69 @@ async def test_get_segments(
     assert msg["result"] == {"segments": [asdict(seg) for seg in expected_segments]}
     for log_message in expected_log_messages:
         assert log_message in caplog.record_tuples
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["n0vyif"])
+@pytest.mark.parametrize("platforms", [[Platform.SELECT, Platform.VACUUM]])
+async def test_start_intelligent_hosting_sends_entrust_command(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test that vacuum.start sends clean_V2/entrust when intelligent_hosting is selected."""
+    vacuum_entity_id = "vacuum.x8_pro_omni"
+    work_mode_entity_id = "select.x8_pro_omni_work_mode"
+    device = controller.devices[0]
+
+    # Set the work mode to intelligent_hosting (local-only, no robot command)
+    await hass.services.async_call(
+        select.DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: work_mode_entity_id, ATTR_OPTION: INTELLIGENT_HOSTING},
+        blocking=True,
+    )
+    assert hass.states.get(work_mode_entity_id).state == INTELLIGENT_HOSTING
+
+    device._execute_command.reset_mock()
+
+    # Start the vacuum — should send clean_V2 with type: entrust
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        vacuum.SERVICE_START,
+        {ATTR_ENTITY_ID: vacuum_entity_id},
+        blocking=True,
+    )
+    device._execute_command.assert_called_once_with(
+        CustomCommand("clean_V2", {"act": "start", "content": {"type": "entrust"}})
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("device_fixture", ["n0vyif"])
+@pytest.mark.parametrize("platforms", [[Platform.SELECT, Platform.VACUUM]])
+async def test_start_normal_work_mode_sends_clean_action(
+    hass: HomeAssistant,
+    controller: EcovacsController,
+) -> None:
+    """Test that vacuum.start sends CleanAction.START when a normal work mode is selected."""
+    vacuum_entity_id = "vacuum.x8_pro_omni"
+    work_mode_entity_id = "select.x8_pro_omni_work_mode"
+    device = controller.devices[0]
+
+    # Set a normal work mode (sends setWorkMode to the robot)
+    device.events.notify(WorkModeEvent(WorkMode.VACUUM))
+    await hass.async_block_till_done()
+    assert hass.states.get(work_mode_entity_id).state == "vacuum"
+
+    device._execute_command.reset_mock()
+
+    # Start the vacuum — should use the standard clean action
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        vacuum.SERVICE_START,
+        {ATTR_ENTITY_ID: vacuum_entity_id},
+        blocking=True,
+    )
+    device._execute_command.assert_called_once_with(
+        device.capabilities.clean.action.command(CleanAction.START)
+    )

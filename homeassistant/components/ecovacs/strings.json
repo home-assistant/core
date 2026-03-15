@@ -151,6 +151,7 @@
       "work_mode": {
         "name": "Work mode",
         "state": {
+          "intelligent_hosting": "Intelligent Hosting",
           "mop": "Mop",
           "mop_after_vacuum": "Mop after vacuum",
           "vacuum": "Vacuum",
