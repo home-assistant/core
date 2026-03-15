@@ -516,7 +516,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         res = {}
         for key in ("duration", "start", "override", "drlcLevel"):
-            if key in drlc_status:
+            if drlc_status and key in drlc_status:
                 dict_key = {"drlcLevel": "drlc_status_level"}.get(
                     key, f"drlc_status_{key}"
                 )
@@ -612,7 +612,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Attribute.SUPPORTED_AC_OPTIONAL_MODE,
             )
             modes = []
-            for mode in supported_modes:
+            for mode in (supported_modes or []):
                 if (ha_mode := PRESET_MODE_TO_HA.get(mode)) is not None:
                     modes.append(ha_mode)
                 else:
