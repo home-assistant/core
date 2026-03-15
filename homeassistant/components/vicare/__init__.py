@@ -13,12 +13,21 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.storage import STORAGE_DIR
 
+from .api import ConfigEntryAuth
 from .const import (
     DEFAULT_CACHE_DURATION,
     DOMAIN,
@@ -27,23 +36,78 @@ from .const import (
     VICARE_TOKEN_FILENAME,
 )
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
-from .utils import get_device, get_device_serial, login
+from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
+    """Migrate old config entry to OAuth2."""
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating ViCare config entry from version %s.%s to 1.2",
+            entry.version,
+            entry.minor_version,
+        )
+
+        # Import the old client_id as an application credential
+        if "client_id" in entry.data:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    entry.data["client_id"],
+                    "",
+                    entry.data.get("username"),
+                ),
+            )
+
+        # Remove old token file
+        with suppress(FileNotFoundError):
+            await hass.async_add_executor_job(
+                os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
+            )
+
+        # Update entry to new format — user must re-authenticate via OAuth
+        hass.config_entries.async_update_entry(
+            entry,
+            minor_version=2,
+            data={
+                "auth_implementation": DOMAIN,
+                "token": {},
+                "heating_type": entry.data.get("heating_type", "auto"),
+            },
+        )
+        _LOGGER.debug("Migration to version 1.2 successful")
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
-    try:
-        entry.runtime_data = await hass.async_add_executor_job(
-            setup_vicare_api, hass, entry
+
+    # After migration, token is empty — trigger reauth
+    if not entry.data.get("token"):
+        raise ConfigEntryAuthFailed("Re-authentication required after migration")
+
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
+    )
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    auth = ConfigEntryAuth(hass, session)
+
+    try:
+        vicare_data = await hass.async_add_executor_job(setup_vicare_api, entry, auth)
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
+    entry.runtime_data = vicare_data
+
     for device in entry.runtime_data.devices:
-        # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -51,13 +115,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     return True
 
 
-def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
+def setup_vicare_api(
+    entry: ViCareConfigEntry,
+    auth: ConfigEntryAuth,
+    cache_duration: int = DEFAULT_CACHE_DURATION,
+) -> ViCareData:
     """Set up PyVicare API."""
-    client = login(hass, entry.data)
+    client = _login(auth, cache_duration)
 
     device_config_list = get_supported_devices(client.devices)
 
-    # increase cache duration to fit rate limit to number of devices
+    # Increase cache duration to fit rate limit to number of devices
     if (number_of_devices := len(device_config_list)) > 1:
         cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
         _LOGGER.debug(
@@ -65,12 +133,14 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
             number_of_devices,
             cache_duration,
         )
-        client = login(hass, entry.data, cache_duration)
+        client = _login(auth, cache_duration)
         device_config_list = get_supported_devices(client.devices)
 
     for device in device_config_list:
         _LOGGER.debug(
-            "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
+            "Found device: %s (online: %s)",
+            device.getModel(),
+            str(device.isOnline()),
         )
 
     devices = [
@@ -81,16 +151,20 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
     return ViCareData(client=client, devices=devices)
 
 
+def _login(
+    auth: ConfigEntryAuth,
+    cache_duration: int = DEFAULT_CACHE_DURATION,
+) -> PyViCare:
+    """Login via PyViCare API using external OAuth."""
+    vicare_api = PyViCare()
+    vicare_api.setCacheDuration(cache_duration)
+    vicare_api.initWithExternalOAuth(auth)
+    return vicare_api
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Unload ViCare config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME)
-        )
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_migrate_devices_and_entities(
@@ -158,7 +232,8 @@ async def async_migrate_devices_and_entities(
                     entity_new_unique_id,
                 )
                 entity_registry.async_update_entity(
-                    entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
+                    entity_id=entity_entry.entity_id,
+                    new_unique_id=entity_new_unique_id,
                 )
 
 

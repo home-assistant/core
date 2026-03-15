@@ -6,15 +6,10 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidConfigurationError,
-    PyViCareInvalidCredentialsError,
-)
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -23,97 +18,90 @@ from .const import (
     DEFAULT_HEATING_TYPE,
     DOMAIN,
     VICARE_NAME,
-    VIESSMANN_DEVELOPER_PORTAL,
     HeatingType,
 )
-from .utils import login
 
 _LOGGER = logging.getLogger(__name__)
 
-REAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_CLIENT_ID): cv.string,
-    }
-)
 
-USER_SCHEMA = REAUTH_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value): vol.In(
-            [e.value for e in HeatingType]
-        ),
-    }
-)
+class ViCareFlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
+    """Handle a config flow for ViCare using OAuth2."""
 
-
-class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ViCare."""
-
+    DOMAIN = DOMAIN
     VERSION = 1
+    MINOR_VERSION = 2
+
+    def __init__(self) -> None:
+        """Initialize ViCare flow handler."""
+        super().__init__()
+        self._heating_type: str = DEFAULT_HEATING_TYPE.value
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Invoke when a user initiates a flow via the user interface."""
-        if self._async_current_entries():
+        """Handle a flow initiated by the user."""
+        if self.source != SOURCE_REAUTH and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        errors: dict[str, str] = {}
+        return await super().async_step_user(user_input)
 
+    async def async_step_heating_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask the user for their heating type after OAuth."""
         if user_input is not None:
-            try:
-                await self.hass.async_add_executor_job(login, self.hass, user_input)
-            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
-                errors["base"] = "invalid_auth"
-            else:
-                return self.async_create_entry(title=VICARE_NAME, data=user_input)
+            self._heating_type = user_input[CONF_HEATING_TYPE]
+            return self.async_create_entry(
+                title=VICARE_NAME,
+                data={
+                    **self._oauth_data,
+                    CONF_HEATING_TYPE: self._heating_type,
+                },
+            )
 
         return self.async_show_form(
-            step_id="user",
-            description_placeholders={
-                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL
-            },
-            data_schema=USER_SCHEMA,
-            errors=errors,
+            step_id="heating_type",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HEATING_TYPE, default=DEFAULT_HEATING_TYPE.value
+                    ): vol.In([e.value for e in HeatingType]),
+                }
+            ),
         )
+
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create an entry after OAuth or update existing for reauth."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        self._oauth_data = data
+        return await self.async_step_heating_type()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Handle re-authentication with ViCare."""
+        """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm re-authentication with ViCare."""
-        errors: dict[str, str] = {}
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
 
-        reauth_entry = self._get_reauth_entry()
-        if user_input:
-            data = {
-                **reauth_entry.data,
-                **user_input,
-            }
-
-            try:
-                await self.hass.async_add_executor_job(login, self.hass, data)
-            except PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError:
-                errors["base"] = "invalid_auth"
-            else:
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            description_placeholders={
-                "viessmann_developer_portal": VIESSMANN_DEVELOPER_PORTAL
-            },
-            data_schema=self.add_suggested_values_to_schema(
-                REAUTH_SCHEMA, reauth_entry.data
-            ),
-            errors=errors,
-        )
+        return await self.async_step_user()
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
