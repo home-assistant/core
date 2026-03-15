@@ -16,6 +16,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONFIG_ENTRY_FORCE_POLL,
+    CONFIG_ENTRY_ROLLOVER_DELTAS,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
@@ -80,9 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     assert discovery_info.ssdp_udn
     assert discovery_info.ssdp_all_locations
     force_poll = entry.options.get(CONFIG_ENTRY_FORCE_POLL, False)
+    rollover_deltas = entry.options.get(CONFIG_ENTRY_ROLLOVER_DELTAS, False)
     location = get_preferred_location(discovery_info.ssdp_all_locations)
     try:
-        device = await async_create_device(hass, location, force_poll)
+        device = await async_create_device(hass, location, force_poll, rollover_deltas)
     except UpnpConnectionError as err:
         raise ConfigEntryNotReady(
             f"Error connecting to device at location: {location}, err: {err}"

@@ -84,7 +84,7 @@ async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str
 
 
 async def async_create_device(
-    hass: HomeAssistant, location: str, force_poll: bool
+    hass: HomeAssistant, location: str, force_poll: bool, rollover_deltas: bool
 ) -> Device:
     """Create UPnP/IGD device."""
     session = async_get_clientsession(hass, verify_ssl=False)
@@ -106,19 +106,25 @@ async def async_create_device(
 
     # Create profile wrapper.
     igd_device = IgdDevice(upnp_device, notify_server.event_handler)
-    return Device(hass, igd_device, force_poll)
+    return Device(hass, igd_device, force_poll, rollover_deltas)
 
 
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
     def __init__(
-        self, hass: HomeAssistant, igd_device: IgdDevice, force_poll: bool
+        self,
+        hass: HomeAssistant,
+        igd_device: IgdDevice,
+        force_poll: bool,
+        rollover_deltas: bool,
     ) -> None:
         """Initialize UPnP/IGD device."""
         self.hass = hass
         self._igd_device = igd_device
         self._force_poll = force_poll
+        self._rollover_deltas = rollover_deltas
+        self._prev_data: dict | None = None
 
         self.coordinator: (
             DataUpdateCoordinator[dict[str, str | datetime | int | float | None]] | None
@@ -246,7 +252,7 @@ class Device:
 
             return value
 
-        return {
+        data = {
             TIMESTAMP: igd_state.timestamp,
             BYTES_RECEIVED: get_value(igd_state.bytes_received),
             BYTES_SENT: get_value(igd_state.bytes_sent),
@@ -263,3 +269,76 @@ class Device:
                 igd_state.port_mapping_number_of_entries
             ),
         }
+
+        if self._rollover_deltas:
+            if self._prev_data:
+                data = self._recalc_rates(data)
+
+            self._prev_data = data
+
+        return data
+
+    def _recalc_rates(self, data: dict) -> dict | None:
+        """Recalculates rates, caring for 32-bit counter rollover"""
+
+        prev_uptime = self._prev_data[ROUTER_UPTIME]
+        cur_uptime = data[ROUTER_UPTIME]
+
+        if prev_uptime is None or cur_uptime is None or prev_uptime > cur_uptime:
+            _LOGGER.warning(
+                "Skipping rate recalc due to possible router reset: %s %s",
+                prev_uptime,
+                cur_uptime,
+            )
+
+            return data
+
+        delta_time = cur_uptime - prev_uptime
+
+        prev_bytes_recv = self._prev_data[BYTES_RECEIVED]
+        prev_bytes_sent = self._prev_data[BYTES_SENT]
+        prev_packets_recv = self._prev_data[PACKETS_RECEIVED]
+        prev_packets_sent = self._prev_data[PACKETS_SENT]
+
+        cur_bytes_recv = data[BYTES_RECEIVED]
+        cur_bytes_sent = data[BYTES_SENT]
+        cur_packets_recv = data[PACKETS_RECEIVED]
+        cur_packets_sent = data[PACKETS_SENT]
+
+        def rollover_rate(cur: int, prev: int, delta: int) -> int | None:
+            if cur < prev:
+                if (
+                    (1 << 31) < prev
+                    and prev < (1 << 32)
+                    and (0) < cur
+                    and cur < (1 << 31)
+                ):
+                    _LOGGER.debug("Rolling over 32-bit value: %s → %s", prev, cur)
+                    prev -= 1 << 32
+                else:
+                    _LOGGER.warning("Bad 32-bit rollover: %s → %s", prev, cur)
+                    return None
+
+            return (cur - prev) / delta
+
+        if prev_bytes_recv is not None and cur_bytes_recv is not None:
+            data[KIBIBYTES_PER_SEC_RECEIVED] = rollover_rate(
+                cur_bytes_recv, prev_bytes_recv, delta_time * 1024
+            )
+
+        if prev_bytes_sent is not None and cur_bytes_sent is not None:
+            data[KIBIBYTES_PER_SEC_SENT] = rollover_rate(
+                cur_bytes_sent, prev_bytes_sent, delta_time * 1024
+            )
+
+        if prev_packets_recv is not None and cur_packets_recv is not None:
+            data[PACKETS_PER_SEC_RECEIVED] = rollover_rate(
+                cur_packets_recv, prev_packets_recv, delta_time
+            )
+
+        if prev_packets_sent is not None and cur_packets_sent is not None:
+            data[PACKETS_PER_SEC_SENT] = rollover_rate(
+                cur_packets_sent, prev_packets_sent, delta_time
+            )
+
+        return data

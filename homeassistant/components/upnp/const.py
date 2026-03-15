@@ -25,6 +25,7 @@ PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4 = "port_mapping_number_of_entries"
 ROUTER_IP = "ip"
 ROUTER_UPTIME = "uptime"
 CONFIG_ENTRY_FORCE_POLL = "force_poll"
+CONFIG_ENTRY_ROLLOVER_DELTAS = "rollover_deltas"
 CONFIG_ENTRY_ST = "st"
 CONFIG_ENTRY_UDN = "udn"
 CONFIG_ENTRY_ORIGINAL_UDN = "original_udn"
@@ -35,5 +36,6 @@ IDENTIFIER_HOST = "upnp_host"
 IDENTIFIER_SERIAL_NUMBER = "upnp_serial_number"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30).total_seconds()
 DEFAULT_CONFIG_ENTRY_FORCE_POLL = False
+DEFAULT_CONFIG_ENTRY_ROLLOVER_DELTAS = False
 ST_IGD_V1 = "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
 ST_IGD_V2 = "urn:schemas-upnp-org:device:InternetGatewayDevice:2"

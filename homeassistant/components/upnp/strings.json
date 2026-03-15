@@ -66,7 +66,8 @@
     "step": {
       "init": {
         "data": {
-          "force_poll": "Force polling of all data"
+          "force_poll": "Force polling of all data",
+          "rollover_deltas": "Calculate rates assuming 32-bit rollover counters"
         }
       }
     }
