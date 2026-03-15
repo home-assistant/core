@@ -15,6 +15,7 @@ from pylitterbot import (
     Pet,
     Robot,
 )
+from pylitterbot.exceptions import LitterRobotException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -22,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT, get_device_info, whisker_command
 
@@ -37,39 +39,33 @@ class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEnti
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
 
 
-ROBOT_BUTTON_MAP: dict[
-    type[Robot] | tuple[type[Robot], ...], tuple[RobotButtonEntityDescription, ...]
-] = {
-    (LitterRobot3, LitterRobot5): (
-        RobotButtonEntityDescription[LitterRobot3 | LitterRobot5](
-            key="reset_waste_drawer",
-            translation_key="reset_waste_drawer",
-            entity_category=EntityCategory.CONFIG,
-            press_fn=lambda robot: robot.reset_waste_drawer(),
-        ),
+ROBOT_BUTTON_MAP: dict[tuple[type[Robot], ...], RobotButtonEntityDescription] = {
+    (LitterRobot3, LitterRobot5): RobotButtonEntityDescription[
+        LitterRobot3 | LitterRobot5
+    ](
+        key="reset_waste_drawer",
+        translation_key="reset_waste_drawer",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.reset_waste_drawer(),
     ),
-    (LitterRobot4, LitterRobot5): (
-        RobotButtonEntityDescription[LitterRobot4 | LitterRobot5](
-            key="reset",
-            translation_key="reset",
-            entity_category=EntityCategory.CONFIG,
-            press_fn=lambda robot: robot.reset(),
-        ),
+    (LitterRobot4, LitterRobot5): RobotButtonEntityDescription[
+        LitterRobot4 | LitterRobot5
+    ](
+        key="reset",
+        translation_key="reset",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.reset(),
     ),
-    LitterRobot5: (
-        RobotButtonEntityDescription[LitterRobot5](
-            key="change_filter",
-            translation_key="change_filter",
-            entity_category=EntityCategory.CONFIG,
-            press_fn=lambda robot: robot.change_filter(),
-        ),
+    (LitterRobot5,): RobotButtonEntityDescription[LitterRobot5](
+        key="change_filter",
+        translation_key="change_filter",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.change_filter(),
     ),
-    (FeederRobot,): (
-        RobotButtonEntityDescription[FeederRobot](
-            key="give_snack",
-            translation_key="give_snack",
-            press_fn=lambda robot: robot.give_snack(),
-        ),
+    (FeederRobot,): RobotButtonEntityDescription[FeederRobot](
+        key="give_snack",
+        translation_key="give_snack",
+        press_fn=lambda robot: robot.give_snack(),
     ),
 }
 
@@ -86,9 +82,8 @@ async def async_setup_entry(
             robot=robot, coordinator=coordinator, description=description
         )
         for robot in coordinator.account.robots
-        for robot_type, descriptions in ROBOT_BUTTON_MAP.items()
+        for robot_type, description in ROBOT_BUTTON_MAP.items()
         if isinstance(robot, robot_type)
-        for description in descriptions
     ]
 
     pets = list(coordinator.account.pets)
@@ -120,6 +115,7 @@ class ReassignVisitButton(ButtonEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:swap-horizontal"
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "reassign_visit"
 
     def __init__(
         self,
@@ -133,31 +129,51 @@ class ReassignVisitButton(ButtonEntity):
         self.coordinator = coordinator
         slug = to_pet.name.lower().replace(" ", "_")
         self._attr_unique_id = f"{from_pet.id}-reassign_visit_to_{slug}"
-        self._attr_name = f"Reassign to {to_pet.name}"
+        self._attr_translation_placeholders = {"pet_name": to_pet.name}
         self._attr_device_info = get_device_info(from_pet)
 
     async def async_press(self) -> None:
         """Reassign the from_pet's latest visit to to_pet."""
         activity = self._find_latest_visit()
         if activity is None:
-            raise HomeAssistantError(f"No recent visit found for {self._from_pet.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_recent_visit",
+                translation_placeholders={"name": self._from_pet.name},
+            )
 
         event_id = activity.get("eventId")
         if not event_id:
-            raise HomeAssistantError("Latest visit has no eventId")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="visit_no_event_id",
+            )
 
         robot = self._find_robot(activity)
         if robot is None:
-            raise HomeAssistantError("Could not find robot for this visit")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="robot_not_found",
+            )
 
-        result = await robot.reassign_pet_visit(
-            event_id=event_id,
-            from_pet_id=self._from_pet.id,
-            to_pet_id=self._to_pet.id,
-        )
+        try:
+            result = await robot.reassign_pet_visit(
+                event_id=event_id,
+                from_pet_id=self._from_pet.id,
+                to_pet_id=self._to_pet.id,
+            )
+        except LitterRobotException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
         if result is None:
-            raise HomeAssistantError("Failed to reassign pet visit")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reassign_failed",
+            )
 
         self._update_cache(activity, result)
         self.coordinator.async_set_updated_data(None)
@@ -213,24 +229,44 @@ class UnassignVisitButton(ButtonEntity):
         """Unassign the pet's latest visit."""
         activity = self._find_latest_visit()
         if activity is None:
-            raise HomeAssistantError(f"No recent visit found for {self._pet.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_recent_visit",
+                translation_placeholders={"name": self._pet.name},
+            )
 
         event_id = activity.get("eventId")
         if not event_id:
-            raise HomeAssistantError("Latest visit has no eventId")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="visit_no_event_id",
+            )
 
         robot = self._find_robot(activity)
         if robot is None:
-            raise HomeAssistantError("Could not find robot for this visit")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="robot_not_found",
+            )
 
-        result = await robot.reassign_pet_visit(
-            event_id=event_id,
-            from_pet_id=self._pet.id,
-            to_pet_id=None,
-        )
+        try:
+            result = await robot.reassign_pet_visit(
+                event_id=event_id,
+                from_pet_id=self._pet.id,
+                to_pet_id=None,
+            )
+        except LitterRobotException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
         if result is None:
-            raise HomeAssistantError("Failed to unassign pet visit")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="reassign_failed",
+            )
 
         self._update_cache(activity, result)
         self.coordinator.async_set_updated_data(None)

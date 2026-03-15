@@ -20,12 +20,14 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, ROBOT_5_DATA, ROBOT_5_PRO_DATA
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 ROBOT_DATA = load_json_object_fixture("litter_robot_3_data.json", DOMAIN)
 ROBOT_4_DATA = load_json_object_fixture("litter_robot_4_data.json", DOMAIN)
+ROBOT_5_DATA = load_json_object_fixture("litter_robot_5_data.json", DOMAIN)
+ROBOT_5_PRO_DATA = load_json_object_fixture("litter_robot_5_pro_data.json", DOMAIN)
 FEEDER_ROBOT_DATA = load_json_object_fixture("feeder_robot_data.json", DOMAIN)
 PET_DATA = load_json_object_fixture("pet_data.json", DOMAIN)
 

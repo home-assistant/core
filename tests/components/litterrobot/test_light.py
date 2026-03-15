@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_integration
+from .conftest import ROBOT_5_DATA, setup_integration
 
 LIGHT_ENTITY_ID = "light.test_night_light"
 
@@ -136,9 +136,7 @@ async def test_night_light_turn_on_from_off(
     }
     mock_account_with_litterrobot_5.robots[0] = LitterRobot5(
         data={
-            **__import__(
-                "tests.components.litterrobot.common", fromlist=["ROBOT_5_DATA"]
-            ).ROBOT_5_DATA,
+            **ROBOT_5_DATA,
             **robot_data,
         },
         account=mock_account_with_litterrobot_5,

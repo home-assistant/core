@@ -133,6 +133,9 @@
       "reset_waste_drawer": {
         "name": "Reset waste drawer"
       },
+      "reassign_visit": {
+        "name": "Reassign to {pet_name}"
+      },
       "unassign_visit": {
         "name": "Unassign visit"
       }
@@ -332,6 +335,18 @@
     },
     "invalid_credentials": {
       "message": "Invalid credentials. Please check your username and password, then try again"
+    },
+    "no_recent_visit": {
+      "message": "No recent visit found for {name}"
+    },
+    "visit_no_event_id": {
+      "message": "The latest visit has no event ID and cannot be reassigned"
+    },
+    "robot_not_found": {
+      "message": "Could not find the robot associated with this visit"
+    },
+    "reassign_failed": {
+      "message": "Failed to reassign the pet visit"
     }
   },
   "issues": {
