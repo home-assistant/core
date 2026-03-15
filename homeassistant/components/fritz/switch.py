@@ -26,7 +26,7 @@ from .const import (
     MeshRoles,
 )
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
-from .entity import FritzBoxBaseEntity, FritzDeviceBase
+from .entity import FritzBoxBaseEntity
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice, SwitchInfo
 
@@ -190,7 +190,7 @@ async def _async_profile_entities_list(
             )
             continue
 
-        new_profiles.append(FritzBoxProfileSwitch(avm_wrapper, device))
+        new_profiles.append(FritzBoxProfileSwitch(avm_wrapper, device.hostname, device))
         data_fritz.profile_switches[avm_wrapper.unique_id].add(mac)
 
     _LOGGER.debug("Creating %s profile switches", len(new_profiles))
@@ -332,12 +332,12 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._is_available = True
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return name."""
         return self._name
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Return name."""
         return self._icon
 
@@ -493,17 +493,52 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
         self.async_write_ha_state()
 
 
-class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
+class FritzBoxProfileSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
+    _attr_has_entity_name = True
     _attr_translation_key = "internet_access"
 
-    def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
+    def __init__(
+        self,
+        avm_wrapper: AvmWrapper,
+        device_friendly_name: str,
+        device: FritzDevice,
+    ) -> None:
         """Init Fritz profile."""
-        super().__init__(avm_wrapper, device)
-        self._attr_is_on: bool = False
-        self._attr_unique_id = f"{self._mac}_internet_access"
+        self._mac = device.mac_address
+        switch_info = SwitchInfo(
+            description="Internet access",
+            friendly_name=device_friendly_name,
+            icon="",
+            type=SWITCH_TYPE_PROFILE,
+            callback_update=self._async_fetch_update,
+            callback_switch=self._async_handle_turn_on_off,
+            init_state=device.wan_access is True,
+        )
+        super().__init__(avm_wrapper, device_friendly_name, switch_info)
+        self._unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
+        return DeviceInfo(connections={(CONNECTION_NETWORK_MAC, self._mac)})
+
+    @property
+    def ip_address(self) -> str:
+        """Return the primary ip address of the device."""
+        return self._avm_wrapper.devices[self._mac].ip_address
+
+    @property
+    def name(self) -> str | None:
+        """Return the profile switch name."""
+        return "Internet access"
+
+    @property
+    def icon(self) -> str | None:
+        """Return the profile icon."""
+        return None
 
     @property
     def is_on(self) -> bool | None:
@@ -517,6 +552,10 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
             return False
         return super().available
 
+    async def _async_fetch_update(self) -> None:
+        """Update profile switch state."""
+        self._attr_is_on = self._avm_wrapper.devices[self._mac].wan_access is True
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._async_handle_turn_on_off(turn_on=True)
@@ -525,12 +564,11 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
 
-    async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
+    async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
         self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()
-        return True
 
 
 class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
