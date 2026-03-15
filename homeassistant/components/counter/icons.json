@@ -23,6 +23,9 @@
     "maximum_reached": {
       "trigger": "mdi:sort-numeric-ascending-variant"
     },
+    "minimum_reached": {
+      "trigger": "mdi:sort-numeric-descending-variant"
+    },
     "reset": {
       "trigger": "mdi:refresh"
     }

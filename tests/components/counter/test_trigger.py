@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 
 from homeassistant.components.counter import (
-    ATTR_STEP,
     CONF_INITIAL,
     CONF_MAXIMUM,
     CONF_MINIMUM,
@@ -36,6 +35,7 @@ async def target_counters(hass: HomeAssistant) -> list[str]:
         "counter.decremented",
         "counter.incremented",
         "counter.maximum_reached",
+        "counter.minimum_reached",
         "counter.reset",
     ],
 )
@@ -60,84 +60,24 @@ async def test_counter_triggers_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_trigger_states(
-            trigger="counter.decremented",
-            target_states=[("1", {ATTR_STEP: 1})],
-            other_states=[("2", {ATTR_STEP: 1})],
-        ),
         (
             "counter.decremented",
-            {},
+            None,
             [
-                {"included": {"state": None, "attributes": {ATTR_STEP: 3}}, "count": 0},
-                {
-                    # not triggered as no from state
-                    "included": {"state": "10", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # not triggered as delta is not step size of 3
-                    "included": {"state": "9", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # not triggered as delta is not step size of 3
-                    "included": {"state": "5", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # triggered as delta is step size of 3
-                    "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
-                    "count": 1,
-                },
-                {
-                    # triggered as delta is lower than step size of 3 but new state is minimum value
-                    "included": {
-                        "state": "0",
-                        "attributes": {ATTR_STEP: 3, CONF_MINIMUM: 0},
-                    },
-                    "count": 1,
-                },
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 1},
             ],
-        ),
-        *parametrize_trigger_states(
-            trigger="counter.incremented",
-            target_states=[("2", {ATTR_STEP: 1})],
-            other_states=[("1", {ATTR_STEP: 1})],
         ),
         (
             "counter.incremented",
-            {},
+            None,
             [
-                {"included": {"state": None, "attributes": {ATTR_STEP: 3}}, "count": 0},
-                {
-                    # not triggered as no from state
-                    "included": {"state": "1", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # not triggered as delta is not step size of 3
-                    "included": {"state": "2", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # not triggered as delta is not step size of 3
-                    "included": {"state": "4", "attributes": {ATTR_STEP: 3}},
-                    "count": 0,
-                },
-                {
-                    # triggered as delta is step size of 3
-                    "included": {"state": "7", "attributes": {ATTR_STEP: 3}},
-                    "count": 1,
-                },
-                {
-                    # triggered as delta is lower than step size of 3 but new state is maximum value
-                    "included": {
-                        "state": "9",
-                        "attributes": {ATTR_STEP: 3, CONF_MAXIMUM: 9},
-                    },
-                    "count": 1,
-                },
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 1},
             ],
         ),
         *parametrize_trigger_states(
@@ -151,7 +91,21 @@ async def test_counter_triggers_gated_by_labs_flag(
             [
                 {"included": {"state": None, "attributes": {}}, "count": 0},
                 {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.minimum_reached",
+            target_states=[("1", {CONF_MINIMUM: 1})],
+            other_states=[("2", {CONF_MINIMUM: 1})],
+        ),
+        (
+            "counter.minimum_reached",
+            {},
+            [
                 {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
             ],
         ),
         *parametrize_trigger_states(
@@ -161,7 +115,7 @@ async def test_counter_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_counter_state_trigger_behavior(
+async def test_counter_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     target_counters: list[str],
@@ -169,7 +123,7 @@ async def test_counter_state_trigger_behavior(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    trigger_options: dict[str, Any],
+    trigger_options: dict[str, Any] | None,
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the counter state trigger fires when any counter state changes to a specific state."""
@@ -178,9 +132,9 @@ async def test_counter_state_trigger_behavior(
     # Set all counters, including the tested one, to the initial state
     for eid in target_counters:
         set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, None, trigger_target_config)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
         included_state = state["included"]
@@ -194,6 +148,166 @@ async def test_counter_state_trigger_behavior(
         # Check if changing other counters also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
+        await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="counter.maximum_reached",
+            target_states=[("2", {CONF_MAXIMUM: 2})],
+            other_states=[("1", {CONF_MAXIMUM: 2})],
+        ),
+        (
+            "counter.maximum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.minimum_reached",
+            target_states=[("1", {CONF_MINIMUM: 1})],
+            other_states=[("2", {CONF_MINIMUM: 1})],
+        ),
+        (
+            "counter.minimum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.reset",
+            target_states=[("2", {CONF_INITIAL: 2})],
+            other_states=[("3", {CONF_INITIAL: 2})],
+        ),
+    ],
+)
+async def test_counter_state_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_counters: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the counter state trigger fires when the first counter changes to a specific state."""
+    other_entity_ids = set(target_counters) - {entity_id}
+
+    # Set all counters, including the tested one, to the initial state
+    for eid in target_counters:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Triggering other counters should not cause the trigger to fire again
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities(DOMAIN),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_trigger_states(
+            trigger="counter.maximum_reached",
+            target_states=[("2", {CONF_MAXIMUM: 2})],
+            other_states=[("1", {CONF_MAXIMUM: 2})],
+        ),
+        (
+            "counter.maximum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.minimum_reached",
+            target_states=[("1", {CONF_MINIMUM: 1})],
+            other_states=[("2", {CONF_MINIMUM: 1})],
+        ),
+        (
+            "counter.minimum_reached",
+            {},
+            [
+                {"included": {"state": None, "attributes": {}}, "count": 0},
+                {"included": {"state": "2", "attributes": {}}, "count": 0},
+                {"included": {"state": "1", "attributes": {}}, "count": 0},
+            ],
+        ),
+        *parametrize_trigger_states(
+            trigger="counter.reset",
+            target_states=[("2", {CONF_INITIAL: 2})],
+            other_states=[("3", {CONF_INITIAL: 2})],
+        ),
+    ],
+)
+async def test_counter_state_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_counters: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test that the counter state trigger fires when the last counter changes to a specific state."""
+    other_entity_ids = set(target_counters) - {entity_id}
+
+    # Set all counters, including the tested one, to the initial state
+    for eid in target_counters:
+        set_or_remove_state(hass, eid, states[0]["included"])
+    await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
+
+    for state in states[1:]:
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
