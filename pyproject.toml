@@ -914,6 +914,8 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
+"datetime.datetime.now".msg = "use homeassistant.util.dt.now instead"
+"datetime.datetime.utcnow".msg = "use homeassistant.util.dt.utcnow instead"
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
