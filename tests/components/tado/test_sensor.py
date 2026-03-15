@@ -21,7 +21,7 @@ def setup_platforms() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
