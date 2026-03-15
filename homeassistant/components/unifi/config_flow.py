@@ -76,6 +76,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     sites: Sites
 

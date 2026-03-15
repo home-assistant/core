@@ -7,14 +7,18 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components import unifi
+from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -25,7 +29,7 @@ from .conftest import (
     WebsocketMessageMock,
 )
 
-from tests.common import flush_store
+from tests.common import MockConfigEntry, flush_store
 from tests.typing import WebSocketGenerator
 
 
@@ -57,6 +61,66 @@ async def test_setup_entry_fails_trigger_reauth_flow(
         mock_flow_init.assert_called_once()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_migrate_legacy_entry_preserves_track_clients_default(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
+    """Legacy entries keep tracking clients enabled after migration."""
+    config_entry = await config_entry_factory()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.options[CONF_TRACK_CLIENTS] is True
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
+async def test_migrate_legacy_entry_preserves_explicit_track_clients_false(
+    hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
+) -> None:
+    """Legacy entries keep an explicit disabled client tracking option."""
+    config_entry = await config_entry_factory()
+
+    assert config_entry.minor_version == 2
+    assert config_entry.options[CONF_TRACK_CLIENTS] is False
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+async def test_new_entry_defaults_track_clients_off(
+    hass: HomeAssistant,
+    config_entry_data: dict[str, Any],
+    mock_requests,
+) -> None:
+    """New entries should not create client trackers by default."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
+        unique_id="1",
+        data=config_entry_data,
+        options={},
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_requests(config_entry.data[CONF_HOST], config_entry.data[CONF_SITE_ID])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {}
+    assert hass.states.async_entity_ids(TRACKER_DOMAIN) == []
 
 
 @pytest.mark.parametrize(
