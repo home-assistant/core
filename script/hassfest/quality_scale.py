@@ -1595,7 +1595,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "meteoalarm",
     "meteoclimatic",
     "metoffice",
-    "metoffice_warnings",
     "mfi",
     "microbees",
     "microsoft",
