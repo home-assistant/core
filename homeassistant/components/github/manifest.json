@@ -3,7 +3,6 @@
   "name": "GitHub",
   "codeowners": ["@timmo001", "@ludeeus"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/github",
   "integration_type": "service",
   "iot_class": "cloud_polling",
