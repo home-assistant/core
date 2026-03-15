@@ -10,22 +10,22 @@
       "invalid_pin": "Invalid device PIN",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
-    "flow_title": "{name}",
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "Device PIN",
-          "retry_count": "Number of retries",
-          "timeout": "Connection timeout in seconds"
+          "pin": "PIN"
         },
-        "description": "Configure Comet Blue TRV?",
-        "title": "Comet Blue TRV"
+        "data_description": {
+          "pin": "6-digit device PIN"
+        }
       },
       "pick_device": {
         "data": {
-          "address": "Discovered Comet Blue devices"
+          "address": "Discovered devices"
         },
-        "title": "Comet Blue TRV"
+        "data_description": {
+          "address": "Select device to continue."
+        }
       }
     }
   }
