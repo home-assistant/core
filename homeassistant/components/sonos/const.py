@@ -11,6 +11,7 @@ UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
+CONF_KNOWN_SPEAKERS = "known_speakers"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,

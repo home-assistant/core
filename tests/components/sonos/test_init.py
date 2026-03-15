@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,7 +12,9 @@ from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
+from homeassistant.components.config import device_registry as config_dr
 from homeassistant.components.sonos.const import (
+    CONF_KNOWN_SPEAKERS,
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
     UPNP_ISSUE_ID,
@@ -20,7 +22,11 @@ from homeassistant.components.sonos.const import (
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -29,6 +35,7 @@ from homeassistant.util import dt as dt_util
 from .conftest import MockSoCo, SoCoMockFactory
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_creating_entry_sets_up_media_player(
@@ -556,3 +563,73 @@ async def test_ipv6_not_supported(
         await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
+
+
+async def test_setup_from_known_speakers(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test devices can be set up from config entry data."""
+
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={CONF_KNOWN_SPEAKERS: {soco.uid: soco.ip_address}},
+    )
+    await async_setup_sonos()
+    assert "media_player.bedroom" in entity_registry.entities
+
+
+async def test_remove_active_config_entry_device(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    soco: MockSoCo,
+) -> None:
+    """Test that an active/online speaker cannot be removed via the device UI."""
+    config_dr.async_setup(hass)
+
+    assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
+    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
+    assert device is not None
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id, config_entry.entry_id)
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert soco.uid in config_entry.data.get(CONF_KNOWN_SPEAKERS, {})
+
+
+async def test_remove_offline_config_entry_device(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    soco: MockSoCo,
+) -> None:
+    """Test that removing an offline speaker cleans up config entry data."""
+    config_dr.async_setup(hass)
+    identifiers = {(sonos.DOMAIN, soco.uid)}
+
+    # Reload the integration making the device unreachable.
+    soco.zoneGroupTopology.subscribe = AsyncMock(side_effect=OSError("unreachable"))
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Speaker remains in config entry data and device registry while offline
+    assert soco.uid in config_entry.data[CONF_KNOWN_SPEAKERS]
+    device = device_registry.async_get_device(identifiers=identifiers)
+    assert device is not None
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device.id, config_entry.entry_id)
+    assert response["success"]
+    assert soco.uid not in config_entry.data[CONF_KNOWN_SPEAKERS]
+    assert device_registry.async_get_device(identifiers=identifiers) is None

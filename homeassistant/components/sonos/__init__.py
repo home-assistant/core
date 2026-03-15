@@ -44,6 +44,7 @@ from homeassistant.util.async_ import create_eager_task
 from .alarms import SonosAlarms
 from .const import (
     AVAILABILITY_CHECK_INTERVAL,
+    CONF_KNOWN_SPEAKERS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
@@ -393,6 +394,19 @@ class SonosDiscoveryManager:
         async with self.creation_lock:
             await self.hass.async_add_executor_job(_add_speakers)
 
+        new_speakers = {
+            soco.uid: soco.ip_address
+            for soco in socos
+            if soco.uid in self.data.discovered
+        }
+        if new_speakers:
+            known_speakers = dict(self.entry.data.get(CONF_KNOWN_SPEAKERS, {}))
+            known_speakers.update(new_speakers)
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data={**self.entry.data, CONF_KNOWN_SPEAKERS: known_speakers},
+            )
+
     def _add_speaker(
         self, soco: SoCo, zone_group_state_sub: SubscriptionBase | None
     ) -> None:
@@ -649,6 +663,15 @@ class SonosDiscoveryManager:
             )
         )
 
+        await self._async_load_known_speakers()
+
+    async def _async_load_known_speakers(self) -> None:
+        """Load known speakers from config entry data."""
+        known_speakers: dict[str, str] = self.entry.data.get(CONF_KNOWN_SPEAKERS, {})
+        for uid, host in known_speakers.items():
+            _LOGGER.debug("Loading speaker %s with host %s", uid, host)
+            await self._async_handle_discovery_message(uid, host, "config entry")
+
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
@@ -660,5 +683,12 @@ async def async_remove_config_entry_device(
             continue
         uid = identifier[1]
         if uid not in known_devices:
+            known_speakers = dict(config_entry.data.get(CONF_KNOWN_SPEAKERS, {}))
+            if uid in known_speakers:
+                del known_speakers[uid]
+                hass.config_entries.async_update_entry(
+                    config_entry,
+                    data={**config_entry.data, CONF_KNOWN_SPEAKERS: known_speakers},
+                )
             return True
     return False
