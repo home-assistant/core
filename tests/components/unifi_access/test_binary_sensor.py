@@ -80,7 +80,7 @@ async def test_binary_sensor_state_updates(
         event="access.data.device.location_update_v2",
         data=LocationUpdateData(
             id="door-001",
-            location_type="door",
+            location_type="DOOR",
             state=LocationUpdateState(dps=DoorPositionStatus.OPEN),
         ),
     )
