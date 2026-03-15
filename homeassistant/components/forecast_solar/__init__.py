@@ -93,7 +93,7 @@ async def _async_update_listener(
     hass: HomeAssistant, entry: ForecastSolarConfigEntry
 ) -> None:
     """Handle config entry updates (options or subentry changes)."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 async def async_unload_entry(
