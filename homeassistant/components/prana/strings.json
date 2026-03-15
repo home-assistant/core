@@ -49,6 +49,33 @@
         }
       }
     },
+    "sensor": {
+      "air_pressure": {
+        "name": "[%key:component::sensor::entity_component::pressure::name%]"
+      },
+      "co2": {
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "inside_temperature": {
+        "name": "Inside temperature"
+      },
+      "inside_temperature_2": {
+        "name": "Inside temperature 2"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "outside_temperature_2": {
+        "name": "Outside temperature 2"
+      },
+
+      "voc": {
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]"
+      }
+    },
     "switch": {
       "auto": {
         "name": "Auto"
