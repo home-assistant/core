@@ -1389,6 +1389,7 @@ class IntentResponse:
         self.unmatched_states: list[State] = []
         self.speech_slots: dict[str, Any] = {}
         self.response_type = IntentResponseType.ACTION_DONE
+        self.match_failed_error: MatchFailedError | None = None
 
     @callback
     def async_set_speech(
@@ -1431,6 +1432,15 @@ class IntentResponse:
 
         # Speak error message
         self.async_set_speech(message)
+
+    @callback
+    def async_set_match_failed_error(
+        self, match_failed_error: MatchFailedError
+    ) -> None:
+        """Set response error."""
+        self.response_type = IntentResponseType.ERROR
+        self.error_code = IntentResponseErrorCode.NO_VALID_TARGETS
+        self.match_failed_error = match_failed_error
 
     @callback
     def async_set_targets(
@@ -1483,6 +1493,28 @@ class IntentResponse:
         if self.response_type == IntentResponseType.ERROR:
             assert self.error_code is not None, "error code is required"
             response_data["code"] = self.error_code.value
+
+            if self.match_failed_error:
+                match_error_dict: dict[str, Any] = {}
+                if self.match_failed_error.result.no_match_reason:
+                    match_error_dict["no_match_reason"] = (
+                        self.match_failed_error.result.no_match_reason.name
+                    )
+
+                if self.match_failed_error.result.no_match_name:
+                    match_error_dict["no_match_name"] = (
+                        self.match_failed_error.result.no_match_name
+                    )
+
+                match_error_dict["constraints"] = dataclasses.asdict(
+                    self.match_failed_error.constraints
+                )
+                if self.match_failed_error.preferences:
+                    match_error_dict["preferences"] = dataclasses.asdict(
+                        self.match_failed_error.preferences
+                    )
+
+                response_data["match_error"] = match_error_dict
         else:
             # action done or query answer
             response_data["targets"] = [
@@ -1497,6 +1529,18 @@ class IntentResponse:
             response_data["failed"] = [
                 dataclasses.asdict(target) for target in self.failed_results
             ]
+
+            # Add query matched/unmatched
+            response_data["query"] = {
+                "matched": [
+                    {"entity_id": s.entity_id, "state": s.state}
+                    for s in self.matched_states
+                ],
+                "unmatched": [
+                    {"entity_id": s.entity_id, "state": s.state}
+                    for s in self.unmatched_states
+                ],
+            }
 
         response_dict["data"] = response_data
 

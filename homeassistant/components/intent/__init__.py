@@ -656,7 +656,13 @@ class IntentHandleView(http.HomeAssistantView):
                 device_id=data.get("device_id"),
                 satellite_id=data.get("satellite_id"),
             )
-        except (intent.IntentHandleError, intent.MatchFailedError) as err:
+        except intent.MatchFailedError as err:
+            # Match failure.
+            # Be more specific so the client can create a proper error message.
+            intent_result = intent.IntentResponse(language=language)
+            intent_result.async_set_match_failed_error(err)
+        except intent.IntentHandleError as err:
+            # General error
             intent_result = intent.IntentResponse(language=language)
             intent_result.async_set_error(
                 intent.IntentResponseErrorCode.FAILED_TO_HANDLE, str(err)
