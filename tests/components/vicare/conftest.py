@@ -4,16 +4,22 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import ENTRY_CONFIG, MODULE, setup_integration
+from . import MODULE, setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -68,6 +74,18 @@ class MockViCareService:
         return readFeature(self._test_data["data"], property_name)
 
 
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("mock-client-id", ""),
+        DOMAIN,
+    )
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -75,7 +93,19 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="ViCare",
         entry_id="1234",
-        data=ENTRY_CONFIG,
+        version=1,
+        minor_version=2,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": time.time() + 3600,
+                "scope": "IoT User offline_access",
+                "token_type": "Bearer",
+            },
+            CONF_HEATING_TYPE: "auto",
+        },
     )
 
 
@@ -86,7 +116,7 @@ async def mock_vicare_gas_boiler(
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with patch(
-        f"{MODULE}.login",
+        f"{MODULE}._login",
         return_value=MockPyViCare(fixtures),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -104,7 +134,7 @@ async def mock_vicare_room_sensors(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
     ]
     with patch(
-        f"{MODULE}.login",
+        f"{MODULE}._login",
         return_value=MockPyViCare(fixtures),
     ):
         await setup_integration(hass, mock_config_entry)

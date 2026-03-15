@@ -1,32 +1,26 @@
 """Test the ViCare config flow."""
 
-from unittest.mock import AsyncMock, patch
+from http import HTTPStatus
+from unittest.mock import patch
 
 import pytest
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidConfigurationError,
-    PyViCareInvalidCredentialsError,
-)
-from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import CONF_HEATING_TYPE, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import MOCK_MAC, MODULE
+from . import MOCK_MAC
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
-VALID_CONFIG = {
-    CONF_USERNAME: "foo@bar.com",
-    CONF_PASSWORD: "1234",
-    CONF_CLIENT_ID: "5678",
-}
+TOKEN_URL = "https://iam.viessmann-climatesolutions.com/idp/v3/token"
 
 DHCP_INFO = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -35,151 +29,131 @@ DHCP_INFO = DhcpServiceInfo(
 )
 
 
-async def test_user_create_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, snapshot: SnapshotAssertion
+async def _do_oauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    result: dict,
+) -> dict:
+    """Complete the OAuth2 flow from EXTERNAL_STEP to the next step."""
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    return await hass.config_entries.flow.async_configure(result["flow_id"])
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test that the user step works."""
-    # start user flow
+    """Test the full OAuth2 flow with heating type selection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
-    # test PyViCareInvalidConfigurationError
-    with patch(
-        f"{MODULE}.config_flow.login",
-        side_effect=PyViCareInvalidConfigurationError(
-            {"error": "foo", "error_description": "bar"}
-        ),
-    ):
+    result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
+
+    # After OAuth, should ask for heating type
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "heating_type"
+
+    # Submit heating type
+    with patch("homeassistant.components.vicare.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            VALID_CONFIG,
+            {CONF_HEATING_TYPE: "auto"},
         )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # test PyViCareInvalidCredentialsError
-    with patch(
-        f"{MODULE}.config_flow.login",
-        side_effect=PyViCareInvalidCredentialsError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            VALID_CONFIG,
-        )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # test success
-    with patch(
-        f"{MODULE}.config_flow.login",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            VALID_CONFIG,
-        )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ViCare"
-    assert result["data"] == snapshot
-    mock_setup_entry.assert_called_once()
+    assert result["data"]["auth_implementation"] == DOMAIN
+    assert result["data"]["token"]["access_token"] == "mock-access-token"
+    assert result["data"][CONF_HEATING_TYPE] == "auto"
 
 
-async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test reauth flow."""
-    new_password = "ABCD"
-    new_client_id = "EFGH"
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=VALID_CONFIG,
-    )
-    config_entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    result = await config_entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    # test PyViCareInvalidConfigurationError
-    with patch(
-        f"{MODULE}.config_flow.login",
-        side_effect=PyViCareInvalidConfigurationError(
-            {"error": "foo", "error_description": "bar"}
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {"base": "invalid_auth"}
+    # User confirms, gets redirected to OAuth
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
-    # test success
-    with patch(
-        f"{MODULE}.config_flow.login",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PASSWORD: new_password, CONF_CLIENT_ID: new_client_id},
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
 
-        assert len(hass.config_entries.async_entries()) == 1
-        assert (
-            hass.config_entries.async_entries()[0].data[CONF_PASSWORD] == new_password
-        )
-        assert (
-            hass.config_entries.async_entries()[0].data[CONF_CLIENT_ID] == new_client_id
-        )
-        await hass.async_block_till_done()
+    # Should update existing entry
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_form_dhcp(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, snapshot: SnapshotAssertion
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_dhcp_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test we can setup from dhcp."""
-
+    """Test we can setup from DHCP discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
         data=DHCP_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
-    with patch(
-        f"{MODULE}.config_flow.login",
-        return_value=None,
-    ):
+    result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "heating_type"
+
+    with patch("homeassistant.components.vicare.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            VALID_CONFIG,
+            {CONF_HEATING_TYPE: "auto"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ViCare"
-    assert result["data"] == snapshot
-    mock_setup_entry.assert_called_once()
 
 
 async def test_dhcp_single_instance_allowed(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=VALID_CONFIG,
+        data={"auth_implementation": DOMAIN, "token": {"access_token": "test"}},
     )
     mock_entry.add_to_hass(hass)
 
@@ -197,7 +171,7 @@ async def test_user_input_single_instance_allowed(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
-        data=VALID_CONFIG,
+        data={"auth_implementation": DOMAIN, "token": {"access_token": "test"}},
     )
     mock_entry.add_to_hass(hass)
 
