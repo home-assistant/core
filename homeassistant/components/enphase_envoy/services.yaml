@@ -1,0 +1,13 @@
+inspect:
+  fields:
+    endpoint:
+      required: true
+      example: "/api/v1/production"
+      selector:
+        text:
+    device_id:
+      selector:
+        device:
+          filter:
+            - integration: enphase_envoy
+              model_id: ENVOY
