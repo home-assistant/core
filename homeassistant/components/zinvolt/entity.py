@@ -16,8 +16,10 @@ class ZinvoltEntity(CoordinatorEntity[ZinvoltDeviceCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
+            identifiers={(DOMAIN, coordinator.data.battery.serial_number)},
             manufacturer="Zinvolt",
             name=coordinator.battery.name,
-            serial_number=coordinator.data.serial_number,
+            serial_number=coordinator.data.battery.serial_number,
+            model_id=coordinator.data.model,
+            sw_version=coordinator.data.sw_version,
         )
