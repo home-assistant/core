@@ -1,0 +1,76 @@
+{
+  "config": {
+    "abort": {
+      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "reconfigure_successful": "Network interface updated successfully",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "Unexpected error while validating the configuration"
+    },
+    "error": {
+      "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
+      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0).",
+      "unknown": "Unexpected error while validating the configuration"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "interface": "[%key:component::echonet_lite::config::step::user::data::interface%]"
+        },
+        "data_description": {
+          "interface": "[%key:component::echonet_lite::config::step::user::data_description::interface%]"
+        },
+        "description": "Change the network interface for ECHONET Lite communication.",
+        "title": "Reconfigure ECHONET Lite"
+      },
+      "user": {
+        "data": {
+          "interface": "Network interface"
+        },
+        "data_description": {
+          "interface": "Select the network interface to use for ECHONET Lite communication. Select Auto to let Home Assistant automatically detect the appropriate interface."
+        },
+        "description": "Home Assistant automatically binds to the ECHONET Lite multicast channel (224.0.23.0:3610) and begins listening for devices.",
+        "title": "Set up ECHONET Lite"
+      }
+    }
+  },
+  "entity": {},
+  "issues": {
+    "runtime_client_error": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The ECHONET Lite integration encountered an error: {error}. This may be caused by network issues or device disconnection.\n\nPress Submit to restart the ECHONET Lite integration and attempt recovery. If the problem persists, check your network configuration.",
+            "title": "Restart ECHONET Lite integration"
+          }
+        }
+      },
+      "title": "ECHONET Lite runtime error"
+    },
+    "runtime_inactive": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "No frames have been received from ECHONET Lite devices for more than {minutes} minutes. This may indicate that devices are offline or there is a network issue.\n\nPress Submit to restart the ECHONET Lite integration. Check that your ECHONET Lite devices are powered on and connected to the network.",
+            "title": "Restart ECHONET Lite integration"
+          }
+        }
+      },
+      "title": "ECHONET Lite devices not responding"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_experimental": "Enable experimental device classes",
+          "poll_interval": "Polling interval"
+        },
+        "data_description": {
+          "enable_experimental": "When enabled, device classes that have not been verified with real hardware will also be registered. These may not work correctly.",
+          "poll_interval": "How often to poll device properties (in seconds). Lower values provide faster updates but increase network traffic."
+        }
+      }
+    }
+  }
+}

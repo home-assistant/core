@@ -1,0 +1,14 @@
+{
+  "domain": "echonet_lite",
+  "name": "HEMS echonet lite",
+  "codeowners": ["@sayurin"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/echonet_lite",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["pyhems"],
+  "quality_scale": "bronze",
+  "requirements": ["pyhems==0.2.0"],
+  "single_config_entry": true
+}
