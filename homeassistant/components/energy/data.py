@@ -274,10 +274,11 @@ def _flow_from_ensure_single_price(
 ) -> FlowFromGridSourceType:
     """Ensure we use a single price source."""
     if (
-        val.get("entity_energy_price") is not None
-        and val.get("number_energy_price") is not None
+        val["entity_energy_price"] is not None
+        and val["number_energy_price"] is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for the price")
+
     return val
 
 
@@ -292,21 +293,9 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_from_ensure_single_price,
     _reject_price_for_external_stat(stat_key="stat_energy_from"),
+    _flow_from_ensure_single_price,
 )
-
-
-def _flow_to_ensure_single_price(
-    val: dict[str, Any],
-) -> dict[str, Any]:
-    """Ensure we use a single price source for grid export."""
-    if (
-        val.get("entity_energy_price") is not None
-        and val.get("number_energy_price") is not None
-    ):
-        raise vol.Invalid("Define either an entity or a fixed number for the price")
-    return val
 
 
 FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
@@ -320,7 +309,6 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_to_ensure_single_price,
     _reject_price_for_external_stat(
         stat_key="stat_energy_to", cost_stat_hint="stat_compensation"
     ),
