@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 
-from airthings_ble import AirthingsDevice
+from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,6 +40,12 @@ from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+CONNECTIVITY_MODE_MAP = {
+    AirthingsConnectivityMode.BLE.value: "bluetooth",
+    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
+    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
+}
 
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
@@ -128,6 +134,14 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+    ),
+    "connectivity_mode": SensorEntityDescription(
+        key="connectivity_mode",
+        translation_key="connectivity_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CONNECTIVITY_MODE_MAP.values()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -256,4 +270,12 @@ class AirthingsSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data.sensors[self.entity_description.key]
+        value = self.coordinator.data.sensors[self.entity_description.key]
+
+        # Map connectivity mode to enum values
+        if self.entity_description.key == "connectivity_mode":
+            if not isinstance(value, str):
+                return None
+            return CONNECTIVITY_MODE_MAP.get(value)
+
+        return value

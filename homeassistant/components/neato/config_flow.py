@@ -9,15 +9,15 @@ from typing import Any
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import NEATO_DOMAIN
+from .const import DOMAIN
 
 
 class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=NEATO_DOMAIN
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
     """Config flow to handle Neato Botvac OAuth2 authentication."""
 
-    DOMAIN = NEATO_DOMAIN
+    DOMAIN = DOMAIN
 
     @property
     def logger(self) -> logging.Logger:

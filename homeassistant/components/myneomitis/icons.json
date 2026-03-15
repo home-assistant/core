@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "select": {
+      "pilote": {
+        "state": {
+          "antifrost": "mdi:snowflake",
+          "auto": "mdi:refresh-auto",
+          "boost": "mdi:rocket-launch",
+          "comfort": "mdi:fire",
+          "eco": "mdi:leaf",
+          "eco_1": "mdi:leaf",
+          "eco_2": "mdi:leaf",
+          "standby": "mdi:toggle-switch-off-outline"
+        }
+      },
+      "relais": {
+        "state": {
+          "auto": "mdi:refresh-auto",
+          "off": "mdi:toggle-switch-off-outline",
+          "on": "mdi:toggle-switch"
+        }
+      },
+      "ufh": {
+        "state": {
+          "cooling": "mdi:snowflake",
+          "heating": "mdi:fire"
+        }
+      }
+    }
+  }
+}

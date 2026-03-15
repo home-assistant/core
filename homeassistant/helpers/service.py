@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     BatchedServiceCallback,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     EntityServiceResponse,
     HassJob,
@@ -43,6 +44,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceNotSupported,
+    ServiceValidationError,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -887,6 +889,8 @@ async def entity_service_call(
         all_referenced,
     )
 
+    entity_candidates = [e for e in entity_candidates if e.available]
+
     if not target_all_entities:
         assert referenced is not None
         # Only report on explicit referenced entities
@@ -1247,11 +1251,13 @@ class ReloadServiceHelper[_T]:
 
         if do_reload:
             # Reload, then notify other tasks
-            await self._service_func(service_call)
-            async with self._service_condition:
-                self._service_running = False
-                self._pending_reload_targets -= reload_targets
-                self._service_condition.notify_all()
+            try:
+                await self._service_func(service_call)
+            finally:
+                async with self._service_condition:
+                    self._service_running = False
+                    self._pending_reload_targets -= reload_targets
+                    self._service_condition.notify_all()
 
 
 def _validate_entity_service_schema(
@@ -1357,3 +1363,39 @@ def async_register_platform_entity_service(
         job_type=HassJobType.Coroutinefunction,
         description_placeholders=description_placeholders,
     )
+
+
+@callback
+def async_get_config_entry(
+    hass: HomeAssistant, domain: str, entry_id: str
+) -> ConfigEntry:
+    """Get and validate a service config entry."""
+    config_entry = hass.config_entries.async_get_entry(entry_id)
+    if not config_entry:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_found",
+            translation_placeholders={
+                "domain": domain,
+                "entry_id": entry_id,
+            },
+        )
+    if config_entry.domain != domain:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_wrong_domain",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_loaded",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    return config_entry

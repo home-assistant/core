@@ -160,6 +160,16 @@
         "name": "Reduced temperature"
       }
     },
+    "select": {
+      "dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "efficient": "Efficient",
+          "efficient_with_min_comfort": "Efficient with minimum comfort",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
@@ -221,6 +231,9 @@
       "compressor_inlet_temperature": {
         "name": "Compressor inlet temperature"
       },
+      "compressor_modulation": {
+        "name": "Compressor modulation"
+      },
       "compressor_outlet_pressure": {
         "name": "Compressor outlet pressure"
       },
@@ -241,6 +254,9 @@
           "ready": "[%key:common::state::idle%]"
         }
       },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
       "compressor_starts": {
         "name": "Compressor starts"
       },
@@ -249,6 +265,18 @@
       },
       "condenser_subcooling_temperature": {
         "name": "Condenser subcooling temperature"
+      },
+      "cop_cooling": {
+        "name": "Coefficient of performance - cooling"
+      },
+      "cop_dhw": {
+        "name": "Coefficient of performance - domestic hot water"
+      },
+      "cop_heating": {
+        "name": "Coefficient of performance - heating"
+      },
+      "cop_total": {
+        "name": "Coefficient of performance"
       },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
@@ -270,6 +298,12 @@
       },
       "energy_consumption_cooling_today": {
         "name": "Cooling electricity consumption today"
+      },
+      "energy_consumption_dhw_this_year": {
+        "name": "DHW energy consumption this year"
+      },
+      "energy_consumption_heating_this_year": {
+        "name": "Heating energy consumption this year"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"
@@ -396,6 +430,12 @@
       "heating_rod_starts": {
         "name": "Heating rod starts"
       },
+      "hot_gas_pressure": {
+        "name": "Hot gas pressure"
+      },
+      "hot_gas_temperature": {
+        "name": "Hot gas temperature"
+      },
       "hotwater_gas_consumption_heating_this_month": {
         "name": "DHW gas consumption this month"
       },
@@ -431,6 +471,18 @@
       },
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
+      },
+      "inverter_current": {
+        "name": "Inverter current"
+      },
+      "inverter_power": {
+        "name": "Inverter power"
+      },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
+      "liquid_gas_temperature": {
+        "name": "Liquid gas temperature"
       },
       "outside_humidity": {
         "name": "Outside humidity"
@@ -499,6 +551,9 @@
       "power_production_today": {
         "name": "Energy production today"
       },
+      "primary_circuit_pump_rotation": {
+        "name": "Primary circuit pump rotation"
+      },
       "primary_circuit_return_temperature": {
         "name": "Primary circuit return temperature"
       },
@@ -537,6 +592,12 @@
       },
       "spf_total": {
         "name": "Seasonal performance factor"
+      },
+      "suction_gas_pressure": {
+        "name": "Suction gas pressure"
+      },
+      "suction_gas_temperature": {
+        "name": "Suction gas temperature"
       },
       "supply_fan_hours": {
         "name": "Supply fan hours"

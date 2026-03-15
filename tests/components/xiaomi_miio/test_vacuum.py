@@ -28,10 +28,7 @@ from homeassistant.components.xiaomi_miio.const import (
     DOMAIN,
     MODELS_VACUUM,
 )
-from homeassistant.components.xiaomi_miio.vacuum import (
-    ATTR_ERROR,
-    ATTR_TIMERS,
-    CONF_DEVICE,
+from homeassistant.components.xiaomi_miio.services import (
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,
@@ -40,9 +37,11 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
 )
+from homeassistant.components.xiaomi_miio.vacuum import ATTR_ERROR, ATTR_TIMERS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,

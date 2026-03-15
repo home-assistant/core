@@ -7,5 +7,13 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["aioairq"],
-  "requirements": ["aioairq==0.4.7"]
+  "requirements": ["aioairq==0.4.7"],
+  "zeroconf": [
+    {
+      "properties": {
+        "device": "air-q"
+      },
+      "type": "_http._tcp.local."
+    }
+  ]
 }

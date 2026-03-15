@@ -5,6 +5,7 @@
       'current_position': 20,
       'device_class': 'blind',
       'friendly_name': 'Test',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -36,6 +37,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,

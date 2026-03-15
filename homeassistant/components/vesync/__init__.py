@@ -81,6 +81,14 @@ async def async_setup_entry(
 
     config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
 
+    # Complete version migration now that we have the account_id
+    if config_entry.minor_version == 2:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=manager.account_id,
+            minor_version=3,
+        )
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
@@ -123,7 +131,6 @@ async def async_migrate_entry(
             else:
                 _LOGGER.debug("Skipping entity with unique_id: %s", reg_entry.unique_id)
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
-
     return True
 
 

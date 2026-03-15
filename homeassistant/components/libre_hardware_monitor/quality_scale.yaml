@@ -45,16 +45,17 @@ rules:
     comment: |
       Device is expected to be temporarily unavailable.
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: |
-      This integration does not require authentication.
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: Device can't be discovered
+  discovery:
+    status: exempt
+    comment: Device can't be discovered
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -77,5 +78,5 @@ rules:
   stale-devices: done
   # Platinum
   async-dependency: done
-  inject-websession: todo
+  inject-websession: done
   strict-typing: done

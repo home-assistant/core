@@ -1,0 +1,205 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices": "No devices found for this API key",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices found for this API key",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::liebherr::config::step::user::data_description::api_key%]"
+        },
+        "description": "Your API key is no longer valid. Please enter a new API key to continue."
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key from the Liebherr SmartDevice app. Note: The API key can only be copied once from the app."
+        },
+        "description": "Enter your Liebherr HomeAPI key. You can find it in the Liebherr SmartDevice app under Settings → Become a beta tester."
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "name": "Setpoint"
+      },
+      "setpoint_temperature_bottom_zone": {
+        "name": "Bottom zone setpoint"
+      },
+      "setpoint_temperature_middle_zone": {
+        "name": "Middle zone setpoint"
+      },
+      "setpoint_temperature_top_zone": {
+        "name": "Top zone setpoint"
+      }
+    },
+    "select": {
+      "bio_fresh_plus": {
+        "name": "BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "-2°C | -2°C",
+          "minus_two_zero": "-2°C | 0°C",
+          "zero_minus_two": "0°C | -2°C",
+          "zero_zero": "0°C | 0°C"
+        }
+      },
+      "bio_fresh_plus_bottom_zone": {
+        "name": "Bottom zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "bio_fresh_plus_middle_zone": {
+        "name": "Middle zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "bio_fresh_plus_top_zone": {
+        "name": "Top zone BioFresh-Plus",
+        "state": {
+          "minus_two_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_minus_two%]",
+          "minus_two_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::minus_two_zero%]",
+          "zero_minus_two": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_minus_two%]",
+          "zero_zero": "[%key:component::liebherr::entity::select::bio_fresh_plus::state::zero_zero%]"
+        }
+      },
+      "hydro_breeze": {
+        "name": "HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_bottom_zone": {
+        "name": "Bottom zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_middle_zone": {
+        "name": "Middle zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "hydro_breeze_top_zone": {
+        "name": "Top zone HydroBreeze",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "ice_maker": {
+        "name": "IceMaker",
+        "state": {
+          "max_ice": "MaxIce",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_bottom_zone": {
+        "name": "Bottom zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_middle_zone": {
+        "name": "Middle zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "ice_maker_top_zone": {
+        "name": "Top zone IceMaker",
+        "state": {
+          "max_ice": "[%key:component::liebherr::entity::select::ice_maker::state::max_ice%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
+    "sensor": {
+      "bottom_zone": {
+        "name": "Bottom zone"
+      },
+      "middle_zone": {
+        "name": "Middle zone"
+      },
+      "top_zone": {
+        "name": "Top zone"
+      }
+    },
+    "switch": {
+      "night_mode": {
+        "name": "NightMode"
+      },
+      "party_mode": {
+        "name": "PartyMode"
+      },
+      "super_cool": {
+        "name": "SuperCool"
+      },
+      "super_cool_bottom_zone": {
+        "name": "Bottom zone SuperCool"
+      },
+      "super_cool_middle_zone": {
+        "name": "Middle zone SuperCool"
+      },
+      "super_cool_top_zone": {
+        "name": "Top zone SuperCool"
+      },
+      "super_frost": {
+        "name": "SuperFrost"
+      },
+      "super_frost_bottom_zone": {
+        "name": "Bottom zone SuperFrost"
+      },
+      "super_frost_middle_zone": {
+        "name": "Middle zone SuperFrost"
+      },
+      "super_frost_top_zone": {
+        "name": "Top zone SuperFrost"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the device"
+    }
+  }
+}

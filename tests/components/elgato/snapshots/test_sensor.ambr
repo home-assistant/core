@@ -38,6 +38,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -129,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -223,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -317,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -408,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

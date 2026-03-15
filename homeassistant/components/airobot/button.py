@@ -43,6 +43,13 @@ BUTTON_TYPES: tuple[AirobotButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda coordinator: coordinator.client.reboot_thermostat(),
     ),
+    AirobotButtonEntityDescription(
+        key="recalibrate_co2",
+        translation_key="recalibrate_co2",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        press_fn=lambda coordinator: coordinator.client.recalibrate_co2_sensor(),
+    ),
 )
 
 
@@ -78,7 +85,7 @@ class AirobotButton(AirobotEntity, ButtonEntity):
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
-        except (AirobotConnectionError, AirobotTimeoutError):
+        except AirobotConnectionError, AirobotTimeoutError:
             # Connection errors during reboot are expected as device restarts
             pass
         except AirobotError as err:

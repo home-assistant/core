@@ -1,5 +1,6 @@
-"""The BSB-Lan integration."""
+"""The BSB-LAN integration."""
 
+import asyncio
 import dataclasses
 
 from bsblan import (
@@ -35,7 +36,7 @@ from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -55,13 +56,13 @@ class BSBLanData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the BSB-Lan integration."""
+    """Set up the BSB-LAN integration."""
     async_setup_services(hass)
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bool:
-    """Set up BSB-Lan from a config entry."""
+    """Set up BSB-LAN from a config entry."""
 
     # create config using BSBLANConfig
     config = BSBLANConfig(
@@ -77,12 +78,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     bsblan = BSBLAN(config, session)
 
     try:
-        # Initialize the client first - this sets up internal caches and validates the connection
+        # Initialize the client first - this sets up internal caches and validates
+        # the connection by fetching firmware version
         await bsblan.initialize()
-        # Fetch all required device metadata
-        device = await bsblan.device()
-        info = await bsblan.info()
-        static = await bsblan.static_values()
+
+        # Fetch device metadata in parallel for faster startup
+        device, info, static = await asyncio.gather(
+            bsblan.device(),
+            bsblan.info(),
+            bsblan.static_values(),
+        )
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -110,10 +115,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan)
     slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
 
-    # Perform first refresh of both coordinators
+    # Perform first refresh of fast coordinator (required for entities)
     await fast_coordinator.async_config_entry_first_refresh()
 
-    # Try to refresh slow coordinator, but don't fail if DHW is not available
+    # Refresh slow coordinator - don't fail if DHW is not available
     # This allows the integration to work even if the device doesn't support DHW
     await slow_coordinator.async_refresh()
 

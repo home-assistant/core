@@ -2,6 +2,7 @@
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
@@ -14,7 +15,7 @@ from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelStat
 
 
 def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
-    """Get the device class of an entity or UNDEFINED if not found."""
+    """Test if an entity supports the specified features."""
     try:
         return bool(get_supported_features(hass, entity_id) & features)
     except HomeAssistantError:
@@ -39,12 +40,12 @@ class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
 def make_entity_state_trigger_required_features(
     domain: str, to_state: str, required_features: int
 ) -> type[EntityTargetStateTriggerBase]:
-    """Create an entity state trigger class."""
+    """Create an entity state trigger class with required feature filtering."""
 
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _to_states = {to_state}
         _required_features = required_features
 

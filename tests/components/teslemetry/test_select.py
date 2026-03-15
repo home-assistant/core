@@ -132,7 +132,6 @@ async def test_select_invalid_data(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -158,17 +157,13 @@ async def test_select_streaming(
 
     await reload_platform(hass, entry, [Platform.SELECT])
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "select.test_seat_heater_front_left",
-        "select.test_seat_heater_front_right",
-        "select.test_seat_heater_rear_left",
-        "select.test_seat_heater_rear_center",
-        "select.test_seat_heater_rear_right",
-        "select.test_steering_wheel_heater",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=entity_id)
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("select.test_seat_heater_front_left").state == "off"
+    assert hass.states.get("select.test_seat_heater_front_right").state == "low"
+    assert hass.states.get("select.test_seat_heater_rear_left").state == "medium"
+    assert hass.states.get("select.test_seat_heater_rear_center").state == STATE_UNKNOWN
+    assert hass.states.get("select.test_seat_heater_rear_right").state == "high"
+    assert hass.states.get("select.test_steering_wheel_heater").state == "off"
 
 
 async def test_export_rule_restore(

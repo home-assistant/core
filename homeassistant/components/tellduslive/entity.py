@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import Any
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
@@ -68,7 +69,7 @@ class TelldusLiveEntity(Entity):
         return self._client.is_available(self.device_id)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {}
         if self._battery_level:

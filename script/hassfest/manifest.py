@@ -62,6 +62,7 @@ NO_IOT_CLASS = [
     "auth",
     "automation",
     "blueprint",
+    "brands",
     "color_extractor",
     "config",
     "configurator",
@@ -70,10 +71,13 @@ NO_IOT_CLASS = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "door",
     "downloader",
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -84,6 +88,7 @@ NO_IOT_CLASS = [
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
+    "humidity",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -97,7 +102,9 @@ NO_IOT_CLASS = [
     "logger",
     "lovelace",
     "media_source",
+    "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
     "plant",
@@ -118,6 +125,7 @@ NO_IOT_CLASS = [
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
@@ -427,7 +435,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
             [
-                "pre-commit",
+                "prek",
                 "run",
                 "--hook-stage",
                 "manual",

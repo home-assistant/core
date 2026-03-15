@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -139,6 +141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature unit on display',
     'options': dict({
     }),
     'original_device_class': None,

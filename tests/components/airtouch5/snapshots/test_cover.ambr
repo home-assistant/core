@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -40,6 +41,7 @@
       'current_position': 90,
       'device_class': 'damper',
       'friendly_name': 'Zone 1 Damper',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -71,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Damper',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DAMPER: 'damper'>,
@@ -91,6 +94,7 @@
       'current_position': 100,
       'device_class': 'damper',
       'friendly_name': 'Zone 2 Damper',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
