@@ -49,7 +49,7 @@ async def test_all_entities(
         Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json"),
     ]
     with (
-        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}._login_oauth", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)

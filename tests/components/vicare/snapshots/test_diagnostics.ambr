@@ -4723,17 +4723,16 @@
     ]),
     'entry': dict({
       'data': dict({
-        'client_id': '**REDACTED**',
+        'auth_implementation': 'vicare',
         'heating_type': 'auto',
-        'password': '**REDACTED**',
-        'username': '**REDACTED**',
+        'token': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
       }),
       'domain': 'vicare',
       'entry_id': '1234',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
