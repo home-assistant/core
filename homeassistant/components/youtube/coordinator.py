@@ -103,6 +103,12 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=15),
         )
 
+    async def async_shutdown(self) -> None:
+        """Close the aiohttp session on shutdown."""
+        await super().async_shutdown()
+        if self._session and not self._session.closed:
+            await self._session.close()
+
     async def _async_update_data(self) -> dict[str, Any]:
         if self._session is None or self._session.closed:
             self._session = aiohttp.ClientSession(

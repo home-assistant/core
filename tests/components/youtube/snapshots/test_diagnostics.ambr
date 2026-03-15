@@ -4,7 +4,16 @@
     'UC_x5XG1OV2P6uZZ5FSM9Ttw': dict({
       'icon': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'id': 'UC_x5XG1OV2P6uZZ5FSM9Ttw',
-      'latest_video': dict({
+      'latest_short': None,
+      'latest_upload': dict({
+        'is_short': False,
+        'published_at': '2023-05-11T00:20:46+00:00',
+        'thumbnail': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
+        'title': "What's new in Google Home in less than 1 minute",
+        'video_id': 'wysukDrMdqU',
+      }),
+      'latest_video_non_short': dict({
+        'is_short': False,
         'published_at': '2023-05-11T00:20:46+00:00',
         'thumbnail': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
         'title': "What's new in Google Home in less than 1 minute",

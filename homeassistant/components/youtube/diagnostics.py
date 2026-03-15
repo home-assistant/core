@@ -7,7 +7,14 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import ATTR_DESCRIPTION, ATTR_LATEST_VIDEO, COORDINATOR, DOMAIN
+from .const import (
+    ATTR_DESCRIPTION,
+    ATTR_LATEST_SHORT,
+    ATTR_LATEST_UPLOAD,
+    ATTR_LATEST_VIDEO_NON_SHORT,
+    COORDINATOR,
+    DOMAIN,
+)
 from .coordinator import YouTubeDataUpdateCoordinator
 
 
@@ -20,6 +27,12 @@ async def async_get_config_entry_diagnostics(
     ]
     sensor_data: dict[str, Any] = {}
     for channel_id, channel_data in coordinator.data.items():
-        channel_data.get(ATTR_LATEST_VIDEO, {}).pop(ATTR_DESCRIPTION)
+        # Strip verbose description field from all video entries.
+        for attr in (
+            ATTR_LATEST_UPLOAD,
+            ATTR_LATEST_SHORT,
+            ATTR_LATEST_VIDEO_NON_SHORT,
+        ):
+            (channel_data.get(attr) or {}).pop(ATTR_DESCRIPTION, None)
         sensor_data[channel_id] = channel_data
     return sensor_data

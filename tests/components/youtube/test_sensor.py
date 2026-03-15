@@ -27,6 +27,12 @@ async def test_sensor(
     state = hass.states.get("sensor.google_for_developers_latest_upload")
     assert state == snapshot
 
+    state = hass.states.get("sensor.google_for_developers_latest_short")
+    assert state == snapshot
+
+    state = hass.states.get("sensor.google_for_developers_latest_video")
+    assert state == snapshot
+
     state = hass.states.get("sensor.google_for_developers_subscribers")
     assert state == snapshot
 
@@ -71,6 +77,10 @@ async def test_sensor_updating(
     assert state
     assert state.attributes["video_id"] == "wysukDrMdqU"
 
+    state = hass.states.get("sensor.google_for_developers_latest_video")
+    assert state
+    assert state.attributes["video_id"] == "wysukDrMdqU"
+
     with patch(
         "homeassistant.components.youtube.api.AsyncConfigEntryAuth.get_resource",
         return_value=MockYouTube(
@@ -99,6 +109,9 @@ async def test_sensor_reauth_trigger(
     mock = await setup_integration()
 
     state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state.state == "What's new in Google Home in less than 1 minute"
+
+    state = hass.states.get("sensor.google_for_developers_latest_video")
     assert state.state == "What's new in Google Home in less than 1 minute"
 
     state = hass.states.get("sensor.google_for_developers_subscribers")
@@ -142,6 +155,9 @@ async def test_sensor_unavailable(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.google_for_developers_latest_upload")
+    assert state.state == "unavailable"
+
+    state = hass.states.get("sensor.google_for_developers_latest_video")
     assert state.state == "unavailable"
 
     state = hass.states.get("sensor.google_for_developers_subscribers")

@@ -92,6 +92,16 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_is_youtube_short() -> None:
+    """Mock _is_youtube_short to avoid real HTTP requests in tests."""
+    with patch(
+        "homeassistant.components.youtube.coordinator._is_youtube_short",
+        return_value=False,
+    ):
+        yield
+
+
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
