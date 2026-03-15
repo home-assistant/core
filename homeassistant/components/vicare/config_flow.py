@@ -37,6 +37,7 @@ class ViCareFlowHandler(
         """Initialize ViCare flow handler."""
         super().__init__()
         self._heating_type: str = DEFAULT_HEATING_TYPE.value
+        self._oauth_data: dict = {}
 
     @property
     def logger(self) -> logging.Logger:
