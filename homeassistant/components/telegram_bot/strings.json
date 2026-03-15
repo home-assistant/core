@@ -100,8 +100,7 @@
       "step": {
         "user": {
           "data": {
-            "chat_id": "Chat ID",
-            "most_recent_chat": "Most recent chat"
+            "chat_id": "Chat ID"
           },
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."

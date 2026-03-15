@@ -661,7 +661,13 @@ async def _get_most_recent_chat(
         return (service.app.most_recent_chat_id, most_recent_chat_name)
 
     # broadcast bot
-    updates = await service.bot.get_updates(offset=0)
+
+    try:
+        updates = await service.bot.get_updates(offset=0)
+    except TelegramError as err:
+        _LOGGER.warning("Error occurred while fetching updates: %s", err)
+        return None
+
     if updates:
         last_update = updates[-1]
         if last_update.effective_chat:
