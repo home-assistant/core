@@ -33,15 +33,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import EmbyConfigEntry
+from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_SSL_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 MEDIA_TYPE_TRAILER = "trailer"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 8096
-DEFAULT_SSL_PORT = 8920
-DEFAULT_SSL = False
 
 SUPPORT_EMBY = (
     MediaPlayerEntityFeature.PAUSE
