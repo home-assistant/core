@@ -41,7 +41,7 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
         return self._show_setup_form(errors=errors)
 
     @callback
-    def _show_setup_form(self, errors=None) -> ConfigFlowResult:
+    def _show_setup_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
         schema = vol.Schema(
