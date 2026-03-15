@@ -8,6 +8,9 @@ DOMAIN = "enocean"
 
 MANUFACTURER = "EnOcean"
 
+CONFIG_FLOW_VERSION = 1
+CONFIG_FLOW_MINOR_VERSION = 2
+
 ERROR_INVALID_DONGLE_PATH = "invalid_dongle_path"
 
 SIGNAL_RECEIVE_MESSAGE = "enocean.receive_message"
