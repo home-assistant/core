@@ -63,7 +63,7 @@
         "name": "pH overfeed alternative"
       },
       "alarm_ofa_cl": {
-        "name": "Chlorine tank level"
+        "name": "Chlorine overfeed"
       },
       "alarm_ofa_orp": {
         "name": "ORP overfeed"
