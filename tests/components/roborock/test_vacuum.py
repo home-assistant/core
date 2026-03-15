@@ -784,7 +784,7 @@ async def test_q10_locate_command(
         blocking=True,
     )
     assert q10_vacuum_api.command.send.call_count == 1
-    assert q10_vacuum_api.command.send.call_args[0] == (RoborockCommand.FIND_ME, None)
+    assert q10_vacuum_api.command.send.call_args[0] == (RoborockCommand.SEEK, None)
 
 
 async def test_q10_set_fan_speed_command(
