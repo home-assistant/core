@@ -17,6 +17,7 @@ from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import FritzGuestWLAN
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import xmltodict
 
 from homeassistant.components.device_tracker import (
@@ -393,17 +394,41 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
 
+    def _call_action_with_connection_handling(
+        self,
+        service: str,
+        action_name: str,
+        *,
+        log_context: str,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Call a Fritz service action with common connection error handling."""
+        try:
+            return self.connection.call_action(service, action_name, **kwargs)
+        except RequestsConnectionError as ex:
+            _LOGGER.warning(
+                "Connection error to %s while calling %s %s: %s",
+                self.host,
+                log_context,
+                action_name,
+                ex,
+            )
+            return {}
+
     async def _async_get_wan_access(self, ip_address: str) -> bool | None:
         """Get WAN access rule for given IP address."""
         try:
             wan_access = await self.hass.async_add_executor_job(
                 partial(
-                    self.connection.call_action,
+                    self._call_action_with_connection_handling,
                     "X_AVM-DE_HostFilter:1",
                     "GetWANAccessByIP",
+                    log_context=f"X_AVM-DE_HostFilter:1 for {ip_address}",
                     NewIPv4Address=ip_address,
                 )
             )
+            if not wan_access:
+                return None
             return not wan_access.get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
             _LOGGER.debug(
@@ -485,7 +510,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     def _update_device_info(self) -> tuple[bool, str | None, str | None]:
         """Retrieve latest device information from the FRITZ!Box."""
-        info = self.connection.call_action("UserInterface1", "GetInfo")
+        info = self._call_action_with_connection_handling(
+            "UserInterface1",
+            "GetInfo",
+            log_context="device info update",
+        )
+        if not info:
+            return False, None, None
         version = info.get("NewX_AVM-DE_Version")
         release_url = info.get("NewX_AVM-DE_InfoURL")
         return bool(version), version, release_url
@@ -499,7 +530,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     ) -> dict[int, dict[str, Any]]:
         """Call GetDeflections action from X_AVM-DE_OnTel service."""
         raw_data = await self.hass.async_add_executor_job(
-            partial(self.connection.call_action, "X_AVM-DE_OnTel1", "GetDeflections")
+            partial(
+                self._call_action_with_connection_handling,
+                "X_AVM-DE_OnTel1",
+                "GetDeflections",
+                log_context="call deflections update",
+            )
         )
         if not raw_data:
             return {}
@@ -654,8 +690,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
         results = await self.hass.async_add_executor_job(
-            self.connection.call_action, "UserInterface:1", "X_AVM-DE_DoUpdate"
+            partial(
+                self._call_action_with_connection_handling,
+                "UserInterface:1",
+                "X_AVM-DE_DoUpdate",
+                log_context="firmware update",
+            )
         )
+        if not results:
+            return False
         return cast(bool, results["NewX_AVM-DE_UpdateState"])
 
     async def async_trigger_reboot(self) -> None:
@@ -739,9 +782,10 @@ class AvmWrapper(FritzBoxTools):
         try:
             result: dict = await self.hass.async_add_executor_job(
                 partial(
-                    self.connection.call_action,
+                    self._call_action_with_connection_handling,
                     f"{service_name}:{service_suffix}",
                     action_name,
+                    log_context=f"{service_name}/{service_suffix}",
                     **kwargs,
                 )
             )
@@ -758,6 +802,7 @@ class AvmWrapper(FritzBoxTools):
                 action_name,
             )
             return {}
+
         return result
 
     async def async_get_upnp_configuration(self) -> dict[str, Any]:
