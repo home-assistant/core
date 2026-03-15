@@ -4,6 +4,15 @@ from unittest.mock import patch
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.components.system_bridge.services import (
+    SERVICE_GET_PROCESS_BY_ID,
+    SERVICE_GET_PROCESSES_BY_NAME,
+    SERVICE_OPEN_PATH,
+    SERVICE_OPEN_URL,
+    SERVICE_POWER_COMMAND,
+    SERVICE_SEND_KEYPRESS,
+    SERVICE_SEND_TEXT,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -11,6 +20,16 @@ from homeassistant.core import HomeAssistant
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 
 from tests.common import MockConfigEntry
+
+ALL_SERVICES = (
+    SERVICE_GET_PROCESS_BY_ID,
+    SERVICE_GET_PROCESSES_BY_NAME,
+    SERVICE_OPEN_PATH,
+    SERVICE_POWER_COMMAND,
+    SERVICE_OPEN_URL,
+    SERVICE_SEND_KEYPRESS,
+    SERVICE_SEND_TEXT,
+)
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
@@ -131,3 +150,18 @@ async def test_coordinator_get_data_timeout(hass: HomeAssistant) -> None:
 
         assert result is False
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_last_entry_removes_services(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test unloading the last entry removes all registered services."""
+    for service in ALL_SERVICES:
+        assert hass.services.has_service(DOMAIN, service)
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    for service in ALL_SERVICES:
+        assert not hass.services.has_service(DOMAIN, service)
