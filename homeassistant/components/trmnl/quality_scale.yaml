@@ -36,12 +36,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Uses the cloud API
@@ -66,7 +66,7 @@ rules:
   repair-issues:
     status: exempt
     comment: There are no repairable issues
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

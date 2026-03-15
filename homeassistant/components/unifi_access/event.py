@@ -55,7 +55,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         UnifiAccessEventEntity(coordinator, door_id, description)
-        for door_id in coordinator.data
+        for door_id in coordinator.data.doors
         for description in EVENT_DESCRIPTIONS
     )
 
@@ -72,7 +72,7 @@ class UnifiAccessEventEntity(UnifiAccessEntity, EventEntity):
         description: UnifiAccessEventEntityDescription,
     ) -> None:
         """Initialize the event entity."""
-        door = coordinator.data[door_id]
+        door = coordinator.data.doors[door_id]
         super().__init__(coordinator, door, description.key)
         self.entity_description = description
 
