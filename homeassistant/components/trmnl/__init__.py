@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import TRMNLConfigEntry, TRMNLCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TRMNLConfigEntry) -> bool:

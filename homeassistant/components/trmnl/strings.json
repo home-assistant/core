@@ -19,6 +19,13 @@
       }
     }
   },
+  "entity": {
+    "switch": {
+      "sleep_mode": {
+        "name": "Sleep mode"
+      }
+    }
+  },
   "exceptions": {
     "authentication_error": {
       "message": "Authentication failed. Please check your API key."
