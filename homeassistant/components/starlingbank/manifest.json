@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["starlingbank"],
   "quality_scale": "legacy",
-  "requirements": ["starlingbank==3.2"]
+  "requirements": ["starlingbankapi==3.3"]
 }
