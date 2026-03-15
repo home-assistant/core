@@ -31,7 +31,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Gardena Bluetooth sensor based on a config entry."""
+    """Set up Comet Blue Bluetooth sensor based on a config entry."""
     coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
 
     entities: list[CometBlueSensorEntity] = [

@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from propcache.api import cached_property
-
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -76,27 +74,27 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.address}-climate"
 
-    @cached_property
+    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data["currentTemp"]
 
-    @cached_property
+    @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         return self.coordinator.data["manualTemp"]
 
-    @cached_property
+    @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         return self.coordinator.data["targetTempHigh"]
 
-    @cached_property
+    @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         return self.coordinator.data["targetTempLow"]
 
-    @cached_property
+    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation mode."""
         if self.target_temperature == MIN_TEMP:
@@ -105,7 +103,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return HVACMode.HEAT
         return HVACMode.AUTO
 
-    @cached_property
+    @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac action if supported."""
 
@@ -117,7 +115,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return HVACAction.HEATING
         return HVACAction.IDLE
 
-    @cached_property
+    @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         # presets have an order in which they are displayed on TRV:
@@ -135,7 +133,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
-    @cached_property
+    @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 

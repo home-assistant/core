@@ -8,7 +8,6 @@ import logging
 from typing import Any
 
 from eurotronic_cometblue_ha import AsyncCometBlue
-from propcache.api import cached_property
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -127,7 +126,7 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
 
-    @cached_property
+    @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self.coordinator.data.get(self.entity_description.cometblue_key)
