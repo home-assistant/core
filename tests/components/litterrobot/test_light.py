@@ -131,9 +131,16 @@ async def test_night_light_turn_on_from_off(
     mock_account_with_litterrobot_5: MagicMock,
 ) -> None:
     """Test turning on the night light when mode is OFF."""
-    robot_data = {"nightLightSettings": {"brightness": 50, "color": "#FF0000", "mode": "Off"}}
+    robot_data = {
+        "nightLightSettings": {"brightness": 50, "color": "#FF0000", "mode": "Off"}
+    }
     mock_account_with_litterrobot_5.robots[0] = LitterRobot5(
-        data={**__import__("tests.components.litterrobot.common", fromlist=["ROBOT_5_DATA"]).ROBOT_5_DATA, **robot_data},
+        data={
+            **__import__(
+                "tests.components.litterrobot.common", fromlist=["ROBOT_5_DATA"]
+            ).ROBOT_5_DATA,
+            **robot_data,
+        },
         account=mock_account_with_litterrobot_5,
     )
     await setup_integration(hass, mock_account_with_litterrobot_5, LIGHT_DOMAIN)

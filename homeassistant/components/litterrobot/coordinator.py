@@ -148,11 +148,9 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     merged.append(a)
                     seen.add(mid)
             # Sort newest first
-            merged.sort(
-                key=lambda a: a.get("timestamp", ""), reverse=True
-            )
+            merged.sort(key=lambda a: a.get("timestamp", ""), reverse=True)
             activities = merged
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Failed to fetch activities for %s", robot.name, exc_info=True
             )
@@ -166,7 +164,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             videos = await robot.get_camera_videos(limit=1)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Failed to fetch camera videos for %s", robot.name, exc_info=True
             )
@@ -184,7 +182,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             resp = await session.get(thumbnail_url)
             if resp.status == 200:
                 self.camera_thumbnails[robot.serial] = await resp.read()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Failed to download thumbnail for %s", robot.name, exc_info=True
             )
@@ -308,7 +306,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             activities = await robot.get_activities(limit=3)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Fast poll: failed to fetch activities for %s",
                 robot.name,
@@ -338,9 +336,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             return
 
         # Normalize event type and check against configured types
-        raw_type = str(
-            latest.get("eventType", latest.get("type", ""))
-        )
+        raw_type = str(latest.get("eventType", latest.get("type", "")))
         event_type = _normalize_event_type(raw_type)
 
         if event_type not in self._recording_event_types:
@@ -387,9 +383,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             # Signal active cycle recording if one exists; otherwise
             # fall back to a fixed recording (e.g. cycle started before
             # recording was enabled)
-            if not self.recording_manager.signal_cycle_complete(
-                robot.serial
-            ):
+            if not self.recording_manager.signal_cycle_complete(robot.serial):
                 self.recording_manager.trigger_recording(
                     robot,
                     latest,
@@ -409,7 +403,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             videos = await robot.get_camera_videos(limit=3)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Fast poll: failed to fetch camera videos for %s",
                 robot.name,
@@ -462,7 +456,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await robot.refresh()
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug(
                 "Fast poll: failed to refresh state for %s",
                 robot.name,
@@ -543,7 +537,9 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             current_status == LitterBoxStatus.CLEAN_CYCLE
             and "cycle_completed" in self._recording_event_types
         ):
-            _LOGGER.debug("Cycle started for %s (WS), triggering cycle recording", robot.name)
+            _LOGGER.debug(
+                "Cycle started for %s (WS), triggering cycle recording", robot.name
+            )
             self.recording_manager.trigger_cycle_recording(robot)
 
         elif (
@@ -556,7 +552,9 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             current_status == LitterBoxStatus.CAT_DETECTED
             and "cat_detect" in self._recording_event_types
         ):
-            _LOGGER.debug("Cat detected for %s (WS), triggering visit recording", robot.name)
+            _LOGGER.debug(
+                "Cat detected for %s (WS), triggering visit recording", robot.name
+            )
             self.recording_manager.trigger_visit_recording(robot)
 
     def _resolve_pet(self, activity: dict[str, Any]) -> tuple[str | None, str]:

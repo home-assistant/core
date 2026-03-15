@@ -202,11 +202,7 @@ class LitterRobotCameraMicrophoneSwitch(LitterRobotEntity[LitterRobot5], SwitchE
             if settings:
                 reported = settings.get("reportedSettings", [{}])
                 data = reported[0].get("data", {}) if reported else {}
-                muted = (
-                    data.get("audio_in", {})
-                    .get("global", {})
-                    .get("mute", True)
-                )
+                muted = data.get("audio_in", {}).get("global", {}).get("mute", True)
                 self._attr_is_on = not muted
         except Exception:  # noqa: BLE001
             _LOGGER.debug(

@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, LitterRobot5, Pet, Robot
+from pylitterbot import (
+    FeederRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Pet,
+    Robot,
+)
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -87,8 +94,9 @@ async def async_setup_entry(
     pets = list(coordinator.account.pets)
     for pet in pets:
         others = [p for p in pets if p.id != pet.id]
-        for other in others:
-            entities.append(ReassignVisitButton(pet, other, coordinator))
+        entities.extend(
+            ReassignVisitButton(pet, other, coordinator) for other in others
+        )
         entities.append(UnassignVisitButton(pet, coordinator))
 
     async_add_entities(entities)
@@ -132,9 +140,7 @@ class ReassignVisitButton(ButtonEntity):
         """Reassign the from_pet's latest visit to to_pet."""
         activity = self._find_latest_visit()
         if activity is None:
-            raise HomeAssistantError(
-                f"No recent visit found for {self._from_pet.name}"
-            )
+            raise HomeAssistantError(f"No recent visit found for {self._from_pet.name}")
 
         event_id = activity.get("eventId")
         if not event_id:
@@ -171,16 +177,11 @@ class ReassignVisitButton(ButtonEntity):
         for serial, activities in self.coordinator.camera_activities.items():
             if activity in activities:
                 for robot in self.coordinator.account.robots:
-                    if (
-                        isinstance(robot, LitterRobot5)
-                        and robot.serial == serial
-                    ):
+                    if isinstance(robot, LitterRobot5) and robot.serial == serial:
                         return robot
         return None
 
-    def _update_cache(
-        self, old: dict[str, Any], new: dict[str, Any]
-    ) -> None:
+    def _update_cache(self, old: dict[str, Any], new: dict[str, Any]) -> None:
         """Replace the old activity with the new one in the cache."""
         for serial, activities in self.coordinator.camera_activities.items():
             for i, act in enumerate(activities):
@@ -212,9 +213,7 @@ class UnassignVisitButton(ButtonEntity):
         """Unassign the pet's latest visit."""
         activity = self._find_latest_visit()
         if activity is None:
-            raise HomeAssistantError(
-                f"No recent visit found for {self._pet.name}"
-            )
+            raise HomeAssistantError(f"No recent visit found for {self._pet.name}")
 
         event_id = activity.get("eventId")
         if not event_id:
@@ -251,16 +250,11 @@ class UnassignVisitButton(ButtonEntity):
         for serial, activities in self.coordinator.camera_activities.items():
             if activity in activities:
                 for robot in self.coordinator.account.robots:
-                    if (
-                        isinstance(robot, LitterRobot5)
-                        and robot.serial == serial
-                    ):
+                    if isinstance(robot, LitterRobot5) and robot.serial == serial:
                         return robot
         return None
 
-    def _update_cache(
-        self, old: dict[str, Any], new: dict[str, Any]
-    ) -> None:
+    def _update_cache(self, old: dict[str, Any], new: dict[str, Any]) -> None:
         """Replace the old activity with the new one in the cache."""
         for serial, activities in self.coordinator.camera_activities.items():
             for i, act in enumerate(activities):

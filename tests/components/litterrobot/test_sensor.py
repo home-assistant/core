@@ -192,8 +192,7 @@ async def test_litter_robot_5_sensor(
     assert sensor
     assert sensor.state == "-53"
     assert (
-        sensor.attributes["unit_of_measurement"]
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+        sensor.attributes["unit_of_measurement"] == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
 
     sensor = hass.states.get("sensor.test_firmware")

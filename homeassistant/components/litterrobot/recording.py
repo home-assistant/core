@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from fractions import Fraction
@@ -90,9 +91,7 @@ class RecordingManager:
         pet_id: str | None = None
         pet_name = "unknown"
         if "pet_visit" in event_type or "petvisit" in event_type:
-            raw = activity.get("petId") or (
-                activity.get("petIds") or [None]
-            )[0]
+            raw = activity.get("petId") or (activity.get("petIds") or [None])[0]
             if raw:
                 pet_id = str(raw)
                 if pet_name_map:
@@ -202,9 +201,7 @@ class RecordingManager:
         visit_ctx.pet_name = pet_name
         visit_ctx.pet_id = pet_id
         visit_ctx.stop_event.set()
-        _LOGGER.debug(
-            "Visit complete signaled for %s: pet=%s", serial, pet_name
-        )
+        _LOGGER.debug("Visit complete signaled for %s: pet=%s", serial, pet_name)
         return True
 
     def trigger_cycle_recording(self, robot: LitterRobot5) -> None:
@@ -270,14 +267,12 @@ class RecordingManager:
         serial = robot.serial
         tmp_path = filepath.with_name(f".{filepath.name}.tmp")
 
-        _LOGGER.info(
-            "Starting cycle recording for %s: %s", robot.name, filepath.name
-        )
+        _LOGGER.info("Starting cycle recording for %s: %s", robot.name, filepath.name)
 
         try:
             await robot.set_camera_view("globe")
             _LOGGER.debug("Set camera view to globe for %s", robot.name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.warning(
                 "Failed to set camera view to globe for %s",
                 robot.name,
@@ -290,10 +285,8 @@ class RecordingManager:
 
         def on_video_frame(frame: Any) -> None:
             """Put frames into the queue, dropping if full."""
-            try:
+            with contextlib.suppress(queue.Full):
                 frame_queue.put_nowait(frame)
-            except queue.Full:
-                pass
 
         encoder_thread = threading.Thread(
             target=self._encode_mp4,
@@ -309,9 +302,7 @@ class RecordingManager:
             stream.on_video_frame(on_video_frame)
             await stream.start()
 
-            connected = await stream.wait_for_connection(
-                timeout=WEBRTC_CONNECT_TIMEOUT
-            )
+            connected = await stream.wait_for_connection(timeout=WEBRTC_CONNECT_TIMEOUT)
             if not connected:
                 _LOGGER.warning(
                     "WebRTC connection timeout for %s, aborting cycle recording",
@@ -319,9 +310,7 @@ class RecordingManager:
                 )
                 return
 
-            _LOGGER.debug(
-                "WebRTC connected for %s, cycle recording active", robot.name
-            )
+            _LOGGER.debug("WebRTC connected for %s, cycle recording active", robot.name)
 
             # Wait for cycle complete signal or max timeout
             try:
@@ -344,17 +333,15 @@ class RecordingManager:
             # Brief grace period after cycle ends
             await asyncio.sleep(POST_CYCLE_GRACE)
 
-        except Exception:
-            _LOGGER.warning(
-                "Cycle recording failed for %s", robot.name, exc_info=True
-            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Cycle recording failed for %s", robot.name, exc_info=True)
         finally:
             encoder_stop.set()
 
             if stream is not None:
                 try:
                     await stream.stop()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     _LOGGER.debug(
                         "Error stopping camera stream for %s",
                         robot.name,
@@ -386,7 +373,7 @@ class RecordingManager:
             try:
                 await robot.set_camera_view(camera_view)
                 _LOGGER.debug("Set camera view to %s for %s", camera_view, robot.name)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "Failed to set camera view to %s for %s",
                     camera_view,
@@ -400,10 +387,8 @@ class RecordingManager:
 
         def on_video_frame(frame: Any) -> None:
             """Put frames into the queue, dropping if full."""
-            try:
+            with contextlib.suppress(queue.Full):
                 frame_queue.put_nowait(frame)
-            except queue.Full:
-                pass
 
         encoder_thread = threading.Thread(
             target=self._encode_mp4,
@@ -419,9 +404,7 @@ class RecordingManager:
             stream.on_video_frame(on_video_frame)
             await stream.start()
 
-            connected = await stream.wait_for_connection(
-                timeout=WEBRTC_CONNECT_TIMEOUT
-            )
+            connected = await stream.wait_for_connection(timeout=WEBRTC_CONNECT_TIMEOUT)
             if not connected:
                 _LOGGER.warning(
                     "WebRTC connection timeout for %s, aborting recording",
@@ -436,17 +419,15 @@ class RecordingManager:
             )
             await asyncio.sleep(self._duration)
 
-        except Exception:
-            _LOGGER.warning(
-                "Recording failed for %s", robot.name, exc_info=True
-            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Recording failed for %s", robot.name, exc_info=True)
         finally:
             stop_event.set()
 
             if stream is not None:
                 try:
                     await stream.stop()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     _LOGGER.debug(
                         "Error stopping camera stream for %s",
                         robot.name,
@@ -474,15 +455,13 @@ class RecordingManager:
         serial = robot.serial
         tmp_path = filepath.with_name(f".{filepath.name}.tmp")
 
-        _LOGGER.info(
-            "Starting visit recording for %s: %s", robot.name, filepath.name
-        )
+        _LOGGER.info("Starting visit recording for %s: %s", robot.name, filepath.name)
 
         # Start on front camera to capture approach
         try:
             await robot.set_camera_view("front")
             _LOGGER.debug("Set camera view to front for %s", robot.name)
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.warning(
                 "Failed to set camera view to front for %s",
                 robot.name,
@@ -495,10 +474,8 @@ class RecordingManager:
 
         def on_video_frame(frame: Any) -> None:
             """Put frames into the queue, dropping if full."""
-            try:
+            with contextlib.suppress(queue.Full):
                 frame_queue.put_nowait(frame)
-            except queue.Full:
-                pass
 
         encoder_thread = threading.Thread(
             target=self._encode_mp4,
@@ -515,9 +492,7 @@ class RecordingManager:
             stream.on_video_frame(on_video_frame)
             await stream.start()
 
-            connected = await stream.wait_for_connection(
-                timeout=WEBRTC_CONNECT_TIMEOUT
-            )
+            connected = await stream.wait_for_connection(timeout=WEBRTC_CONNECT_TIMEOUT)
             if not connected:
                 _LOGGER.warning(
                     "WebRTC connection timeout for %s, aborting visit recording",
@@ -532,10 +507,8 @@ class RecordingManager:
                 await asyncio.sleep(VIEW_SWITCH_DELAY)
                 try:
                     await robot.set_camera_view("globe")
-                    _LOGGER.debug(
-                        "Switched camera to globe for %s", robot.name
-                    )
-                except Exception:
+                    _LOGGER.debug("Switched camera to globe for %s", robot.name)
+                except Exception:  # noqa: BLE001
                     _LOGGER.warning(
                         "Failed to switch camera to globe for %s",
                         robot.name,
@@ -569,10 +542,8 @@ class RecordingManager:
             # Grace period to capture cat leaving
             await asyncio.sleep(POST_VISIT_GRACE)
 
-        except Exception:
-            _LOGGER.warning(
-                "Visit recording failed for %s", robot.name, exc_info=True
-            )
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Visit recording failed for %s", robot.name, exc_info=True)
         finally:
             if switch_task is not None and not switch_task.done():
                 switch_task.cancel()
@@ -582,7 +553,7 @@ class RecordingManager:
             if stream is not None:
                 try:
                     await stream.stop()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     _LOGGER.debug(
                         "Error stopping camera stream for %s",
                         robot.name,
@@ -603,7 +574,9 @@ class RecordingManager:
             new_name = filepath.name.replace("_VISIT.", f"_VISIT_{visit_ctx.pet_name}.")
             final_filepath = filepath.with_name(new_name)
 
-        await self._finalize_recording(robot.name, tmp_path, final_filepath, encoder_error)
+        await self._finalize_recording(
+            robot.name, tmp_path, final_filepath, encoder_error
+        )
 
     async def _finalize_recording(
         self,
@@ -631,7 +604,7 @@ class RecordingManager:
 
             try:
                 RecordingManager._apply_faststart(tmp_path, filepath)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning(
                     "faststart post-processing failed for %s, saving as-is",
                     robot_name,
@@ -641,18 +614,14 @@ class RecordingManager:
             return "saved"
 
         if encoder_error:
-            _LOGGER.warning(
-                "Encoding failed for %s: %s", robot_name, encoder_error[0]
-            )
+            _LOGGER.warning("Encoding failed for %s: %s", robot_name, encoder_error[0])
 
         result = await self._hass.async_add_executor_job(_finalize_sync)
 
         if result == "saved":
             _LOGGER.info("Recording saved: %s", filepath.name)
         elif result == "empty":
-            _LOGGER.warning(
-                "Recording empty for %s, removed temp file", robot_name
-            )
+            _LOGGER.warning("Recording empty for %s, removed temp file", robot_name)
 
     @staticmethod
     def _encode_mp4(
@@ -705,7 +674,7 @@ class RecordingManager:
                 for packet in stream.encode():
                     container.mux(packet)
 
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             errors.append(exc)
         finally:
             if container is not None:
@@ -734,6 +703,7 @@ class RecordingManager:
                 str(filepath),
             ],
             capture_output=True,
+            check=False,
         )
         if result.returncode != 0:
             # Keep temp file so caller can fall back to saving as-is
@@ -779,9 +749,7 @@ class RecordingManager:
         for serial, task in list(self._active_recordings.items()):
             if not task.done():
                 task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await task
-                except asyncio.CancelledError:
-                    pass
             _LOGGER.debug("Cancelled recording for %s", serial)
         self._active_recordings.clear()

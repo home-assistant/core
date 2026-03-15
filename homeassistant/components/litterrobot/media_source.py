@@ -17,10 +17,9 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant
 
-from .http import RECORDING_ENDPOINT
-
 from .const import DOMAIN
 from .coordinator import LitterRobotDataUpdateCoordinator
+from .http import RECORDING_ENDPOINT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,9 +70,7 @@ class LitterRobotMediaSource(MediaSource):
 
         raise Unresolvable(f"Invalid identifier: {item.identifier}")
 
-    def _resolve_local_recording(
-        self, serial: str, filename: str
-    ) -> PlayMedia:
+    def _resolve_local_recording(self, serial: str, filename: str) -> PlayMedia:
         """Resolve a local MP4 recording to a playable URL."""
         # Validate filename to prevent path traversal
         if "/" in filename or "\\" in filename or ".." in filename:
@@ -212,7 +209,7 @@ def _parse_recording_title(stem: str) -> str:
     if rest.startswith("PET_VISIT_"):
         # e.g. PET_VISIT_Willow
         event = "PET_VISIT"
-        pet = rest[len("PET_VISIT_"):]
+        pet = rest[len("PET_VISIT_") :]
     elif rest in COMPOUND_EVENTS:
         event = rest
     elif "_" in rest:

@@ -106,7 +106,10 @@ class LitterRobotCameraEntity(LitterRobotEntity[LitterRobot5], Camera):
             # Use auto_start=False — we only need TURN credentials here,
             # not to wake the camera for a stream.
             self._cached_session = await client.generate_session(auto_start=False)
-            _LOGGER.debug("Camera session refreshed (expires %s)", self._cached_session.session_expiration)
+            _LOGGER.debug(
+                "Camera session refreshed (expires %s)",
+                self._cached_session.session_expiration,
+            )
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Failed to refresh camera session", exc_info=True)
 

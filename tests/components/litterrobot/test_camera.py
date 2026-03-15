@@ -1,10 +1,8 @@
 """Test the Litter-Robot camera entity."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from pylitterbot import LitterRobot5
-from pylitterbot.camera import CameraSession, CameraSignalingRelay
-import pytest
+from pylitterbot.camera import CameraSession
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant

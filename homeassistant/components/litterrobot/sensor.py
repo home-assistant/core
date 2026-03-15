@@ -25,10 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import (
-    LitterRobotConfigEntry,
-    LitterRobotDataUpdateCoordinator,
-)
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT
 
 PARALLEL_UPDATES = 0
@@ -183,22 +180,6 @@ ROBOT_SENSOR_MAP: dict[
         ),
     ],
     LitterRobot5: [
-        RobotSensorEntityDescription[LitterRobot5](
-            key="litter_level",
-            translation_key="litter_level",
-            native_unit_of_measurement=PERCENTAGE,
-            icon_fn=lambda state: icon_for_gauge_level(state, 10),
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda robot: robot.litter_level,
-        ),
-        RobotSensorEntityDescription[LitterRobot5](
-            key="pet_weight",
-            translation_key="pet_weight",
-            native_unit_of_measurement=UnitOfMass.POUNDS,
-            device_class=SensorDeviceClass.WEIGHT,
-            state_class=SensorStateClass.MEASUREMENT,
-            value_fn=lambda robot: robot.pet_weight,
-        ),
         RobotSensorEntityDescription[LitterRobot5](
             key="wifi_rssi",
             translation_key="wifi_rssi",
@@ -511,12 +492,10 @@ class LitterRobotPetLastVisitSensor(LitterRobotEntity[Pet], SensorEntity):
             if not ts:
                 continue
             try:
-                activity_dt = datetime.fromisoformat(
-                    ts.replace("Z", "+00:00")
-                )
+                activity_dt = datetime.fromisoformat(ts)
                 if activity_dt >= start_of_day:
                     result.append(activity)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 continue
         return result
 

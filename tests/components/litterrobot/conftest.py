@@ -20,14 +20,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from .common import (
-    ACCOUNT_USER_ID,
-    CONFIG,
-    DOMAIN,
-    PET_DATA,
-    ROBOT_5_DATA,
-    ROBOT_5_PRO_DATA,
-)
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, ROBOT_5_DATA, ROBOT_5_PRO_DATA
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -118,7 +111,9 @@ def create_mock_account(
     account.robots = (
         []
         if skip_robots
-        else [create_mock_robot(robot_data, account, v4, v5, v5_pro, feeder, side_effect)]
+        else [
+            create_mock_robot(robot_data, account, v4, v5, v5_pro, feeder, side_effect)
+        ]
     )
     account.get_robots = lambda robot_class: [
         robot for robot in account.robots if isinstance(robot, robot_class)

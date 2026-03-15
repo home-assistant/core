@@ -94,4 +94,7 @@ async def test_litter_robot_5_button(
             blocking=True,
         )
     await hass.async_block_till_done()
-    assert getattr(mock_account_with_litterrobot_5.robots[0], robot_command).call_count == 1
+    assert (
+        getattr(mock_account_with_litterrobot_5.robots[0], robot_command).call_count
+        == 1
+    )

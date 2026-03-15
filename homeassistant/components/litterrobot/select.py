@@ -91,7 +91,9 @@ ROBOT_SELECT_MAP: dict[
                 )
             ),
         ),
-        RobotSelectEntityDescription[LitterRobot4 | LitterRobot5, str](
+    ),
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
             key="panel_brightness",
             translation_key="brightness_level",
             current_fn=(

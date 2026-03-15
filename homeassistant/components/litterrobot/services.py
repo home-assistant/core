@@ -79,7 +79,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
             # Reset cooldown so the manual trigger always works
             # Key format is (serial, event_type) — match trigger_recording()
-            coordinator.recording_manager._last_trigger_times.pop(
+            coordinator.recording_manager._last_trigger_times.pop(  # noqa: SLF001
                 (robot.serial, "manual"), None
             )
             coordinator.recording_manager.trigger_recording(
@@ -152,9 +152,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 break
 
         if robot is None:
-            raise HomeAssistantError(
-                f"Robot with serial '{robot_serial}' not found"
-            )
+            raise HomeAssistantError(f"Robot with serial '{robot_serial}' not found")
 
         result = await robot.reassign_pet_visit(
             event_id=event_id,

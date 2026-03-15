@@ -24,7 +24,8 @@ def async_setup_recording_view(hass: HomeAssistant, media_root: Path) -> None:
     """Register the recording HTTP view."""
     global _media_root  # noqa: PLW0603
     _media_root = media_root
-    hass.http.register_view(LitterRobotRecordingView)
+    if hass.http is not None:
+        hass.http.register_view(LitterRobotRecordingView)
 
 
 class LitterRobotRecordingView(HomeAssistantView):
