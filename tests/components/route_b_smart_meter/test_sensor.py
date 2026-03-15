@@ -1,6 +1,6 @@
 """Tests for the Smart Meter B-Route sensor."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
@@ -47,9 +47,10 @@ async def test_route_b_smart_meter_sensor_no_update(
     assert entity.state == "1"
 
     mock_momonga.return_value.get_instantaneous_current.side_effect = MomongaError
-    freezer.tick(DEFAULT_SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    with patch("homeassistant.components.route_b_smart_meter.coordinator.time.sleep"):
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     assert entity.state is STATE_UNAVAILABLE
