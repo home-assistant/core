@@ -419,3 +419,16 @@ async def test_room_airconditioner(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner")
     assert state.attributes["supported_features"] & ClimateEntityFeature.TURN_ON
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+@pytest.mark.parametrize("attributes", [{"1/513/0": None}])
+async def test_thermostat_with_null_local_temperature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat is created when LocalTemperature is null."""
+    state = hass.states.get("climate.longan_link_hvac")
+    assert state
+    assert state.attributes["current_temperature"] is None
