@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import aiohttp
@@ -18,8 +17,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import BASE_URL, CONF_REGION, DOMAIN, REGIONS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MetOfficeWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,8 +40,10 @@ class MetOfficeWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
             url = BASE_URL.format(region=region)
             try:
                 session = async_get_clientsession(self.hass)
-                resp = await session.get(url, timeout=aiohttp.ClientTimeout(total=10))
-                resp.raise_for_status()
+                async with session.get(
+                    url, timeout=aiohttp.ClientTimeout(total=10)
+                ) as resp:
+                    resp.raise_for_status()
             except aiohttp.ClientError, TimeoutError:
                 errors["base"] = "cannot_connect"
             else:

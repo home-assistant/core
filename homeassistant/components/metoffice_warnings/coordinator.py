@@ -68,11 +68,11 @@ class MetOfficeWarningsCoordinator(DataUpdateCoordinator[MetOfficeWarningsData])
     async def _async_update_data(self) -> MetOfficeWarningsData:
         """Fetch and parse the RSS feed."""
         try:
-            resp = await self._session.get(
+            async with self._session.get(
                 self._url, timeout=aiohttp.ClientTimeout(total=30)
-            )
-            resp.raise_for_status()
-            text = await resp.text()
+            ) as resp:
+                resp.raise_for_status()
+                text = await resp.text()
         except (aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(f"Error fetching feed from {self._url}: {err}") from err
 
