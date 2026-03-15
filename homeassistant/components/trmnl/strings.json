@@ -37,6 +37,9 @@
     }
   },
   "exceptions": {
+    "action_error": {
+      "message": "An error occurred while communicating with TRMNL: {error}"
+    },
     "authentication_error": {
       "message": "Authentication failed. Please check your API key."
     },

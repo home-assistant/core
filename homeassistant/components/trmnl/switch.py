@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TRMNLConfigEntry
 from .coordinator import TRMNLCoordinator
-from .entity import TRMNLEntity
+from .entity import TRMNLEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -76,6 +76,7 @@ class TRMNLSwitchEntity(TRMNLEntity, SwitchEntity):
         """Return if sleep mode is enabled."""
         return self.entity_description.value_fn(self._device)
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable sleep mode."""
         await self.entity_description.set_value_fn(
@@ -83,6 +84,7 @@ class TRMNLSwitchEntity(TRMNLEntity, SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable sleep mode."""
         await self.entity_description.set_value_fn(

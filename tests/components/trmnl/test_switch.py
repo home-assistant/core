@@ -4,10 +4,12 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from trmnl.exceptions import TRMNLError
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -58,3 +60,28 @@ async def test_set_switch(
         42793, sleep_mode_enabled=expected_value
     )
     assert mock_trmnl_client.get_devices.call_count == 2
+
+
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_TURN_ON, SERVICE_TURN_OFF],
+)
+async def test_action_error(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Test that a TRMNLError during a switch action raises HomeAssistantError."""
+    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
+
+    with pytest.raises(HomeAssistantError, match="connection failed"):
+        await hass.services.async_call(
+            "switch",
+            service,
+            {ATTR_ENTITY_ID: "switch.test_trmnl_sleep_mode"},
+            blocking=True,
+        )
