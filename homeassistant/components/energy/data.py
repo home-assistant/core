@@ -9,7 +9,7 @@ from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.helpers import config_validation as cv, singleton, storage
 
 from .const import DOMAIN
@@ -244,15 +244,24 @@ class EnergyPreferencesUpdate(EnergyPreferences, total=False):
     """all types optional."""
 
 
-def _flow_from_ensure_single_price(
+def _flow_from_ensure_valid_price(
     val: FlowFromGridSourceType,
 ) -> FlowFromGridSourceType:
-    """Ensure we use a single price source."""
+    """Ensure we use a single price source and it's compatible with the energy stat."""
     if (
-        val["entity_energy_price"] is not None
-        and val["number_energy_price"] is not None
+        val.get("entity_energy_price") is not None
+        and val.get("number_energy_price") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for the price")
+
+    if not valid_entity_id(val["stat_energy_from"]) and (
+        val.get("entity_energy_price") is not None
+        or val.get("number_energy_price") is not None
+    ):
+        raise vol.Invalid(
+            "Entity or number price is not supported for external statistics. "
+            "Use stat_cost to track costs for external statistics"
+        )
 
     return val
 
@@ -268,19 +277,44 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
     ),
-    _flow_from_ensure_single_price,
+    _flow_from_ensure_valid_price,
 )
 
 
-FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("stat_energy_to"): str,
-        vol.Optional("stat_compensation"): vol.Any(str, None),
-        # entity_energy_to was removed in HA Core 2022.10
-        vol.Remove("entity_energy_to"): vol.Any(str, None),
-        vol.Optional("entity_energy_price"): vol.Any(str, None),
-        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-    }
+def _flow_to_ensure_valid_price(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Ensure price is compatible with the energy stat for grid export."""
+    if (
+        val.get("entity_energy_price") is not None
+        and val.get("number_energy_price") is not None
+    ):
+        raise vol.Invalid("Define either an entity or a fixed number for the price")
+
+    if not valid_entity_id(val["stat_energy_to"]) and (
+        val.get("entity_energy_price") is not None
+        or val.get("number_energy_price") is not None
+    ):
+        raise vol.Invalid(
+            "Entity or number price is not supported for external statistics. "
+            "Use stat_compensation to track costs for external statistics"
+        )
+
+    return val
+
+
+FLOW_TO_GRID_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("stat_energy_to"): str,
+            vol.Optional("stat_compensation"): vol.Any(str, None),
+            # entity_energy_to was removed in HA Core 2022.10
+            vol.Remove("entity_energy_to"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        }
+    ),
+    _flow_to_ensure_valid_price,
 )
 
 
@@ -360,6 +394,17 @@ def _grid_ensure_single_price_import(
         and val.get("number_energy_price") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for import price")
+    if val.get("stat_energy_from") is not None and not valid_entity_id(
+        val["stat_energy_from"]
+    ):
+        if (
+            val.get("entity_energy_price") is not None
+            or val.get("number_energy_price") is not None
+        ):
+            raise vol.Invalid(
+                "Entity or number price is not supported for external statistics. "
+                "Use stat_cost to track costs for external statistics"
+            )
     return val
 
 
@@ -372,6 +417,17 @@ def _grid_ensure_single_price_export(
         and val.get("number_energy_price_export") is not None
     ):
         raise vol.Invalid("Define either an entity or a fixed number for export price")
+    if val.get("stat_energy_to") is not None and not valid_entity_id(
+        val["stat_energy_to"]
+    ):
+        if (
+            val.get("entity_energy_price_export") is not None
+            or val.get("number_energy_price_export") is not None
+        ):
+            raise vol.Invalid(
+                "Entity or number price is not supported for external statistics. "
+                "Use stat_compensation to track costs for external statistics"
+            )
     return val
 
 
@@ -442,27 +498,48 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
     }
 )
-GAS_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("type"): "gas",
-        vol.Required("stat_energy_from"): str,
-        vol.Optional("stat_rate"): str,
-        vol.Optional("stat_cost"): vol.Any(str, None),
-        # entity_energy_from was removed in HA Core 2022.10
-        vol.Remove("entity_energy_from"): vol.Any(str, None),
-        vol.Optional("entity_energy_price"): vol.Any(str, None),
-        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-    }
+def _ensure_no_price_for_external_stat(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Ensure entity/number price is not set for external statistics."""
+    if not valid_entity_id(val["stat_energy_from"]) and (
+        val.get("entity_energy_price") is not None
+        or val.get("number_energy_price") is not None
+    ):
+        raise vol.Invalid(
+            "Entity or number price is not supported for external statistics. "
+            "Use stat_cost to track costs for external statistics"
+        )
+    return val
+
+
+GAS_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("type"): "gas",
+            vol.Required("stat_energy_from"): str,
+            vol.Optional("stat_rate"): str,
+            vol.Optional("stat_cost"): vol.Any(str, None),
+            # entity_energy_from was removed in HA Core 2022.10
+            vol.Remove("entity_energy_from"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        }
+    ),
+    _ensure_no_price_for_external_stat,
 )
-WATER_SOURCE_SCHEMA = vol.Schema(
-    {
-        vol.Required("type"): "water",
-        vol.Required("stat_energy_from"): str,
-        vol.Optional("stat_rate"): str,
-        vol.Optional("stat_cost"): vol.Any(str, None),
-        vol.Optional("entity_energy_price"): vol.Any(str, None),
-        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
-    }
+WATER_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required("type"): "water",
+            vol.Required("stat_energy_from"): str,
+            vol.Optional("stat_rate"): str,
+            vol.Optional("stat_cost"): vol.Any(str, None),
+            vol.Optional("entity_energy_price"): vol.Any(str, None),
+            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+        }
+    ),
+    _ensure_no_price_for_external_stat,
 )
 
 
