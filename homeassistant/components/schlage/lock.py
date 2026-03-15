@@ -60,6 +60,11 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         self._attr_is_jammed = self._lock.is_jammed
         self._attr_changed_by = self._lock.last_changed_by()
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._lock.connected
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.hass.async_add_executor_job(self._lock.lock)

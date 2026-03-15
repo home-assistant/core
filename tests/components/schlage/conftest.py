@@ -1,6 +1,6 @@
 """Common fixtures for the Schlage tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import Awaitable
 
 from . import MockSchlageConfigEntry
 
@@ -32,20 +33,32 @@ def mock_config_entry() -> MockSchlageConfigEntry:
 
 @pytest.fixture
 async def mock_added_config_entry(
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+) -> MockSchlageConfigEntry:
+    """Mock ConfigEntry that's been added to HA."""
+    return await mock_add_config_entry()
+
+
+@pytest.fixture
+async def mock_add_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
     mock_lock: Mock,
-) -> MockSchlageConfigEntry:
+) -> Callable[[], Awaitable[MockSchlageConfigEntry]]:
     """Mock ConfigEntry that's been added to HA."""
-    mock_schlage.locks.return_value = [mock_lock]
-    mock_schlage.users.return_value = []
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert DOMAIN in hass.config_entries.async_domains()
-    return mock_config_entry
+
+    async def callback() -> MockSchlageConfigEntry:
+        mock_schlage.locks.return_value = [mock_lock]
+        mock_schlage.users.return_value = []
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert DOMAIN in hass.config_entries.async_domains()
+        return mock_config_entry
+
+    return callback
 
 
 @pytest.fixture
@@ -58,14 +71,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_schlage() -> Mock:
+def mock_schlage() -> Generator[Mock]:
     """Mock pyschlage.Schlage."""
     with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
-def mock_pyschlage_auth() -> Mock:
+def mock_pyschlage_auth() -> Generator[Mock]:
     """Mock pyschlage.Auth."""
     with patch("pyschlage.Auth", autospec=True) as mock_auth:
         mock_auth.return_value.user_id = "abc123"

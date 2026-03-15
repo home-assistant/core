@@ -1,9 +1,9 @@
 """Test schlage lock."""
 
-from datetime import timedelta
-from unittest.mock import Mock
+from collections.abc import Awaitable, Callable
+from unittest.mock import Mock, patch
 
-from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
 import pytest
@@ -16,37 +16,61 @@ from homeassistant.components.schlage.const import (
     SERVICE_DELETE_CODE,
     SERVICE_GET_CODES,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from . import MockSchlageConfigEntry
 
-from tests.common import async_fire_time_changed
+from tests.common import snapshot_platform
 
 
 async def test_lock_attributes(
     hass: HomeAssistant,
-    mock_added_config_entry: MockSchlageConfigEntry,
-    mock_schlage: Mock,
-    mock_lock: Mock,
-    freezer: FrozenDateTimeFactory,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test lock attributes."""
-    lock = hass.states.get("lock.vault_door")
-    assert lock is not None
-    assert lock.state == LockState.UNLOCKED
-    assert lock.attributes["changed_by"] == "thumbturn"
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
+
+async def test_lock_jammed(
+    hass: HomeAssistant,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    mock_lock: Mock,
+) -> None:
+    """Test lock jammed state."""
     mock_lock.is_locked = False
     mock_lock.is_jammed = True
-    # Make the coordinator refresh data.
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    lock = hass.states.get("lock.vault_door")
-    assert lock is not None
-    assert lock.state == LockState.JAMMED
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
+        await mock_add_config_entry()
+        lock = hass.states.get("lock.vault_door")
+        assert lock is not None
+        assert lock.state == LockState.JAMMED
+
+
+async def test_lock_disconnected(
+    hass: HomeAssistant,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
+    mock_lock: Mock,
+) -> None:
+    """Test lock jammed state."""
+    mock_lock.connected = False
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
+        await mock_add_config_entry()
+        lock = hass.states.get("lock.vault_door")
+        assert lock is not None
+        assert lock.state == STATE_UNAVAILABLE
 
 
 async def test_lock_services(
@@ -79,22 +103,16 @@ async def test_lock_services(
 async def test_changed_by(
     hass: HomeAssistant,
     mock_lock: Mock,
-    mock_added_config_entry: MockSchlageConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
 ) -> None:
     """Test population of the changed_by attribute."""
     mock_lock.last_changed_by.reset_mock()
     mock_lock.last_changed_by.return_value = "access code - foo"
-
-    # Make the coordinator refresh data.
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    mock_lock.last_changed_by.assert_called_with()
-
-    lock_device = hass.states.get("lock.vault_door")
-    assert lock_device is not None
-    assert lock_device.attributes.get("changed_by") == "access code - foo"
+    with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
+        await mock_add_config_entry()
+        lock = hass.states.get("lock.vault_door")
+        assert lock is not None
+        assert lock.attributes.get("changed_by") == "access code - foo"
 
 
 async def test_add_code_service(
