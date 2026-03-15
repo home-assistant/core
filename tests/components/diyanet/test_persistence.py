@@ -1,6 +1,7 @@
 """Test persistence logic for Diyanet integration."""
 
-from datetime import datetime, timedelta
+# pylint: disable=redefined-outer-name
+from datetime import date, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,10 +16,7 @@ async def mock_coordinator(hass: HomeAssistant):
     """Return a coordinator with mocked API client and config entry."""
     api_client = MagicMock()
     api_client.get_prayer_times = AsyncMock(
-        return_value={
-            "gregorianDateLong": datetime.now().strftime("%d %B %Y"),
-            "fajr": "06:00",
-        }
+        return_value={"fajr": "06:00"},
     )
     config_entry = MagicMock()
     config_entry.entry_id = "test_entry"
@@ -27,38 +25,34 @@ async def mock_coordinator(hass: HomeAssistant):
 
 async def test_cache_used_for_today(mock_coordinator) -> None:
     """Test that cached data for today is used and no API call is made."""
-    today_str = datetime.now().strftime("%d %B %Y")
-    cached_data = {"gregorianDateLong": today_str, "fajr": "06:00"}
+    today = date.today()
+    cached_store = {"cache_date": today.isoformat(), "data": {"fajr": "06:00"}}
     with (
-        patch.object(Store, "async_load", return_value=cached_data),
+        patch.object(Store, "async_load", return_value=cached_store),
         patch.object(
             mock_coordinator.client, "get_prayer_times", new_callable=AsyncMock
         ) as mock_api,
     ):
         await mock_coordinator.async_refresh()
 
-        assert mock_coordinator.data["gregorianDateLong"] == today_str
+        assert mock_coordinator.data["fajr"] == "06:00"
         assert not mock_api.called
 
 
 async def test_cache_outdated_triggers_fetch(mock_coordinator) -> None:
     """Test that outdated cached data triggers API fetch and cache update."""
-    yesterday = datetime.now() - timedelta(days=1)
-    yesterday_str = yesterday.strftime("%d %B %Y")
-    cached_data = {"gregorianDateLong": yesterday_str, "fajr": "05:59"}
+    yesterday = date.today() - timedelta(days=1)
+    cached_store = {"cache_date": yesterday.isoformat(), "data": {"fajr": "05:59"}}
     with (
-        patch.object(Store, "async_load", return_value=cached_data),
+        patch.object(Store, "async_load", return_value=cached_store),
         patch.object(
             mock_coordinator.client, "get_prayer_times", new_callable=AsyncMock
         ) as mock_api,
         patch.object(Store, "async_save", new_callable=AsyncMock) as mock_save,
     ):
-        mock_api.return_value = {
-            "gregorianDateLong": datetime.now().strftime("%d %B %Y"),
-            "fajr": "06:00",
-        }
+        mock_api.return_value = {"fajr": "06:00"}
         await mock_coordinator.async_refresh()
 
-        assert mock_coordinator.data["gregorianDateLong"] != yesterday_str
+        assert mock_coordinator.data["fajr"] == "06:00"
         assert mock_api.called
         assert mock_save.called
