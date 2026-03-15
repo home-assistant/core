@@ -12,6 +12,7 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
+from pyportainer.models.portainer import PortainerSystemStatus
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -32,7 +33,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def _validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> PortainerSystemStatus:
     """Validate the user input allows us to connect."""
 
     client = Portainer(
@@ -41,7 +44,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         session=async_get_clientsession(hass=hass, verify_ssl=data[CONF_VERIFY_SSL]),
     )
     try:
-        await client.get_endpoints()
+        system_status = await client.portainer_system_status()
     except PortainerAuthenticationError:
         raise InvalidAuth from None
     except PortainerConnectionError as err:
@@ -50,12 +53,13 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise PortainerTimeout from err
 
     _LOGGER.debug("Connected to Portainer API: %s", data[CONF_URL])
+    return system_status
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
-    VERSION = 4
+    VERSION = 5
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -63,9 +67,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
-                await _validate_input(self.hass, user_input)
+                system_status = await _validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -76,7 +79,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_TOKEN])
+                await self.async_set_unique_id(system_status.instance_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_URL], data=user_input
@@ -142,7 +145,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                await _validate_input(
+                system_status = await _validate_input(
                     self.hass,
                     data={
                         **reconf_entry.data,
@@ -159,12 +162,8 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Logic that can be reverted back once the new unique ID is in
-                existing_entry = await self.async_set_unique_id(
-                    user_input[CONF_API_TOKEN]
-                )
-                if existing_entry and existing_entry.entry_id != reconf_entry.entry_id:
-                    return self.async_abort(reason="already_configured")
+                await self.async_set_unique_id(system_status.instance_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
