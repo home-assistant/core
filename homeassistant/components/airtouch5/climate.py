@@ -133,13 +133,25 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         """Initialise the Climate Entity."""
         super().__init__(client)
         self._ability = ability
-        self._attr_unique_id = f"ac_{ability.ac_number}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"ac_{ability.ac_number}")},
-            name=f"AC {ability.ac_number}",
-            manufacturer="Polyaire",
-            model="AirTouch 5",
-        )
+
+        # Check to see if the System_id is set to 0 (old way of doing things)
+        if client.device.system_id == 0:
+            self._attr_unique_id = f"ac_{client.device.system_id}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"ac_{client.device.system_id}")},
+                name=f"AC {client.device.system_id}",
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
+        else:  # new way
+            self._attr_unique_id = f"{client.device.system_id}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._attr_unique_id)},
+                name=f"AC {client.device.name}",
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
+
         self._attr_hvac_modes = [HVACMode.OFF]
         if ability.supports_mode_auto:
             self._attr_hvac_modes.append(HVACMode.AUTO)
@@ -283,13 +295,23 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         super().__init__(client)
         self._name = name
 
-        self._attr_unique_id = f"zone_{name.zone_number}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"zone_{name.zone_number}")},
-            name=name.zone_name,
-            manufacturer="Polyaire",
-            model="AirTouch 5",
-        )
+        # Check to see if the System_id is set to 0 (old way of doing things)
+        if client.device.system_id == 0:
+            self._attr_unique_id = f"zone_{name.zone_number}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"zone_{name.zone_number}")},
+                name=name.zone_name,
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
+        else:  # new way
+            self._attr_unique_id = f"zone_{client.device.system_id}_{name.zone_number}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{client.device.system_id}_{name.zone_number}")},
+                name=name.zone_name,
+                manufacturer="Polyaire",
+                model="AirTouch 5",
+            )
         # We can have different setpoints for heat and cool, we expose the lowest low and highest high
         self._attr_min_temp = min(ac.min_cool_set_point, ac.min_heat_set_point)
         self._attr_max_temp = max(ac.max_cool_set_point, ac.max_heat_set_point)
