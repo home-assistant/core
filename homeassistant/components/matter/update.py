@@ -88,12 +88,34 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         | UpdateEntityFeature.RELEASE_NOTES
     )
 
+    @staticmethod
+    def _format_version(
+        version_string: str | None, version_int: int | None
+    ) -> str | None:
+        """Format a Matter version string including the integer software version.
+
+        The Matter spec allows different firmware builds to share the same
+        SoftwareVersionString while having distinct SoftwareVersion integers.
+        Including the integer in the display string ensures correct comparison
+        and gives users full visibility into the actual firmware build.
+        """
+        if version_string is None:
+            return None
+        if version_int is not None:
+            return f"{version_string} ({version_int})"
+        return version_string
+
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
 
-        self._attr_installed_version = self.get_matter_attribute_value(
-            clusters.BasicInformation.Attributes.SoftwareVersionString
+        self._attr_installed_version = self._format_version(
+            self.get_matter_attribute_value(
+                clusters.BasicInformation.Attributes.SoftwareVersionString
+            ),
+            self.get_matter_attribute_value(
+                clusters.BasicInformation.Attributes.SoftwareVersion
+            ),
         )
         update_state: clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum = (
             self.get_matter_attribute_value(
@@ -134,7 +156,10 @@ class MatterUpdate(MatterEntity, UpdateEntity):
                 return
 
             self._software_update = update_information
-            self._attr_latest_version = update_information.software_version_string
+            self._attr_latest_version = self._format_version(
+                update_information.software_version_string,
+                update_information.software_version,
+            )
             self._attr_release_url = update_information.release_notes_url
 
         except UpdateCheckError as err:
@@ -212,7 +237,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
 
         software_version: str | int | None = version
         if self._software_update is not None and (
-            version is None or version == self._software_update.software_version_string
+            version is None or version == self._attr_latest_version
         ):
             # Update to the version previously fetched and shown.
             # We can pass the integer version directly to speedup download.
