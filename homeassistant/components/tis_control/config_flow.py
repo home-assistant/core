@@ -20,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 class TISConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TIS Control."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
-
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
