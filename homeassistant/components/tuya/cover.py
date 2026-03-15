@@ -9,13 +9,12 @@ from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
 )
-from tuya_device_handlers.type_information import (
-    EnumTypeInformation,
-    IntegerTypeInformation,
+from tuya_device_handlers.device_wrapper.extended import (
+    DPCodeInvertedPercentageWrapper,
+    DPCodePercentageWrapper,
 )
-from tuya_device_handlers.utils import RemapHelper
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -35,48 +34,10 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 100)
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return False
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        if (value := device.status.get(self.dpcode)) is None:
-            return None
-
-        return round(
-            self._remap_helper.remap_value_to(
-                value, reverse=self._position_reversed(device)
-            )
-        )
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        return round(
-            self._remap_helper.remap_value_from(
-                value, reverse=self._position_reversed(device)
-            )
-        )
-
-
-class _InvertedPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return True
-
-
-class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
+class _ControlBackModePercentageMappingWrapper(DPCodePercentageWrapper):
     """Wrapper for DPCode position values with control_back_mode support."""
 
-    def _position_reversed(self, device: CustomerDevice) -> bool:
+    def _remap_inverted(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
 
@@ -149,9 +110,7 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     )
     current_position: DPCode | tuple[DPCode, ...] | None = None
     instruction_wrapper: type[_InstructionEnumWrapper] = _InstructionEnumWrapper
-    position_wrapper: type[_DPCodePercentageMappingWrapper] = (
-        _InvertedPercentageMappingWrapper
-    )
+    position_wrapper: type[DPCodePercentageWrapper] = DPCodeInvertedPercentageWrapper
     set_position: DPCode | None = None
 
 
