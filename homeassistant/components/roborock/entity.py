@@ -157,7 +157,7 @@ class RoborockCoordinatedEntityB01Q10(
 ):
     """Representation of coordinated Roborock Q10 Entity.
 
-    Roborock Q10 share a coordinator that will poll the device for updates,
+    Roborock Q10 devices share a coordinator that will poll the device for updates,
     however it does not hold on to any state updates. Instead, each entity
     should register its own listener for receiving updates directly from the
     device in `async_added_to_hass`.
