@@ -174,7 +174,8 @@ class NestClimate(NestEntity[NestThermostat], ClimateEntity):
         payload: dict[str, Any] = {}
 
         if self.device.is_eco_mode:
-            payload["eco"] = {"mode": "schedule"}
+            # Signal client layer to exit eco before applying setpoint
+            payload["exit_eco"] = True
 
         if ATTR_TEMPERATURE in kwargs:
             payload["target_temperature"] = kwargs[ATTR_TEMPERATURE]

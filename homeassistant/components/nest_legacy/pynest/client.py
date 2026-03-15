@@ -759,6 +759,10 @@ class NestClient:
         if "hvac_mode" in data:
             data["target_temperature_type"] = data.pop("hvac_mode")
 
+        # Translate semantic exit_eco flag to legacy REST eco payload
+        if data.pop("exit_eco", None):
+            data["eco"] = {"mode": "schedule"}
+
         shared_properties = {
             "target_temperature",
             "target_temperature_low",
@@ -1726,7 +1730,11 @@ class NestClient:
         # stale coordinator snapshot (which won't update until the next observe).
         eco_data = data.get("eco", {})
         preset_val = data.get("preset_mode") or eco_data.get("mode")
-        if preset_val:
+        if data.get("exit_eco"):
+            # Semantic flag from ClimateEntity: exit eco before applying a new setpoint
+            intended_is_eco = False
+            preset_val = "schedule"  # Ensures the eco-off command block below fires
+        elif preset_val:
             intended_is_eco = preset_val in ("manual-eco", "eco")
         else:
             intended_is_eco = device.is_eco_mode

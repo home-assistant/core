@@ -523,6 +523,8 @@ class NestParser:
             fan_timer_timeout=data.get("fan_timer_timeout", 0),
             has_dehumidifier=data.get("has_dehumidifier", False),
             dehumidifier_state=data.get("dehumidifier_state", False),
+            has_humidifier=data.get("has_humidifier", False),
+            humidifier_state=data.get("humidifier_state", False),
             occupancy=occupancy,
             battery_level=_scale_value(batt_volts, 3.6, 3.9, 0, 100)
             if batt_volts is not None
