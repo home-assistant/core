@@ -20,6 +20,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -1062,6 +1063,7 @@ async def test_creating_ai_task_subentry_advanced(
         {
             CONF_CHAT_MODEL: "gpt-4o",
             CONF_MAX_TOKENS: 200,
+            CONF_STORE_RESPONSES: True,
             CONF_TEMPERATURE: 0.5,
             CONF_TOP_P: 0.9,
         },
@@ -1085,6 +1087,7 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_CHAT_MODEL: "gpt-4o",
         CONF_IMAGE_MODEL: "gpt-image-1.5",
         CONF_MAX_TOKENS: 200,
+        CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,
         CONF_CODE_INTERPRETER: False,
