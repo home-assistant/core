@@ -247,7 +247,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 PLANE_SCHEMA,
-                {CONF_DECLINATION: DEFAULT_DECLINATION, CONF_AZIMUTH: DEFAULT_AZIMUTH, CONF_MODULES_POWER: DEFAULT_MODULES_POWER},
+                {
+                    CONF_DECLINATION: DEFAULT_DECLINATION,
+                    CONF_AZIMUTH: DEFAULT_AZIMUTH,
+                    CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
+                },
             ),
         )
 
