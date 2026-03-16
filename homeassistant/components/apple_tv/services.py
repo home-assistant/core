@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from pyatv.const import KeyboardFocusState
+from pyatv.exceptions import NotSupportedError, ProtocolError
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -10,6 +14,9 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_TEXT, DOMAIN
+
+if TYPE_CHECKING:
+    from . import AppleTVManager
 
 SERVICE_SET_KEYBOARD_TEXT = "set_keyboard_text"
 SERVICE_SET_KEYBOARD_TEXT_SCHEMA = vol.Schema(
@@ -35,14 +42,12 @@ SERVICE_CLEAR_KEYBOARD_TEXT_SCHEMA = vol.Schema(
 )
 
 
-def _get_manager(call: ServiceCall):
+def _get_manager(call: ServiceCall) -> AppleTVManager:
     """Get the AppleTVManager for a service call."""
-    from . import AppleTvConfigEntry
-
-    entry: AppleTvConfigEntry = service.async_get_config_entry(
+    entry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    manager = entry.runtime_data
+    manager: AppleTVManager = entry.runtime_data
     if manager.atv is None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -51,13 +56,11 @@ def _get_manager(call: ServiceCall):
     return manager
 
 
-def _check_keyboard_focus(manager) -> None:
+def _check_keyboard_focus(manager: AppleTVManager) -> None:
     """Check that keyboard is focused on the device."""
-    from pyatv.const import KeyboardFocusState
-
     try:
-        focus_state = manager.atv.keyboard.text_focus_state
-    except Exception as err:
+        focus_state = manager.atv.keyboard.text_focus_state  # type: ignore[union-attr]
+    except NotSupportedError as err:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="keyboard_not_available",
@@ -74,8 +77,8 @@ async def _async_set_keyboard_text(call: ServiceCall) -> None:
     manager = _get_manager(call)
     _check_keyboard_focus(manager)
     try:
-        await manager.atv.keyboard.text_set(call.data[ATTR_TEXT])
-    except Exception as err:
+        await manager.atv.keyboard.text_set(call.data[ATTR_TEXT])  # type: ignore[union-attr]
+    except ProtocolError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="keyboard_error",
@@ -87,8 +90,8 @@ async def _async_append_keyboard_text(call: ServiceCall) -> None:
     manager = _get_manager(call)
     _check_keyboard_focus(manager)
     try:
-        await manager.atv.keyboard.text_append(call.data[ATTR_TEXT])
-    except Exception as err:
+        await manager.atv.keyboard.text_append(call.data[ATTR_TEXT])  # type: ignore[union-attr]
+    except ProtocolError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="keyboard_error",
@@ -100,8 +103,8 @@ async def _async_clear_keyboard_text(call: ServiceCall) -> None:
     manager = _get_manager(call)
     _check_keyboard_focus(manager)
     try:
-        await manager.atv.keyboard.text_clear()
-    except Exception as err:
+        await manager.atv.keyboard.text_clear()  # type: ignore[union-attr]
+    except ProtocolError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="keyboard_error",
