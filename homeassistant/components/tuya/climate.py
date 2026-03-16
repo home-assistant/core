@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import Any, cast
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
 from tuya_device_handlers.device_wrapper.climate import (
     DefaultHVACModeWrapper,
     DefaultPresetModeWrapper,
+    SwingModeCompositeWrapper,
 )
 from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
@@ -16,7 +17,10 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeIntegerWrapper,
 )
 from tuya_device_handlers.device_wrapper.extended import DPCodeRoundedIntegerWrapper
-from tuya_device_handlers.helpers.homeassistant import TuyaClimateHVACMode
+from tuya_device_handlers.helpers.homeassistant import (
+    TuyaClimateHVACMode,
+    TuyaClimateSwingMode,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -57,83 +61,14 @@ _TUYA_TO_HA_HVACMODE_MAPPINGS: dict[TuyaClimateHVACMode | None, HVACMode | None]
 }
 _HA_TO_TUYA_HVACMODE_MAPPINGS = {v: k for k, v in _TUYA_TO_HA_HVACMODE_MAPPINGS.items()}
 
-
-@dataclass(kw_only=True)
-class _SwingModeWrapper(DeviceWrapper[str]):
-    """Wrapper for managing climate swing mode operations across multiple DPCodes."""
-
-    on_off: DPCodeBooleanWrapper | None = None
-    horizontal: DPCodeBooleanWrapper | None = None
-    vertical: DPCodeBooleanWrapper | None = None
-    options: list[str]
-
-    @classmethod
-    def find_dpcode(cls, device: CustomerDevice) -> Self | None:
-        """Find and return a _SwingModeWrapper for the given DP codes."""
-        on_off = DPCodeBooleanWrapper.find_dpcode(
-            device, (DPCode.SWING, DPCode.SHAKE), prefer_function=True
-        )
-        horizontal = DPCodeBooleanWrapper.find_dpcode(
-            device, DPCode.SWITCH_HORIZONTAL, prefer_function=True
-        )
-        vertical = DPCodeBooleanWrapper.find_dpcode(
-            device, DPCode.SWITCH_VERTICAL, prefer_function=True
-        )
-        if on_off or horizontal or vertical:
-            options = [SWING_OFF]
-            if on_off:
-                options.append(SWING_ON)
-            if horizontal:
-                options.append(SWING_HORIZONTAL)
-            if vertical:
-                options.append(SWING_VERTICAL)
-            return cls(
-                on_off=on_off,
-                horizontal=horizontal,
-                vertical=vertical,
-                options=options,
-            )
-        return None
-
-    def read_device_status(self, device: CustomerDevice) -> str | None:
-        """Read the device swing mode."""
-        if self.on_off and self.on_off.read_device_status(device):
-            return SWING_ON
-
-        horizontal = (
-            self.horizontal.read_device_status(device) if self.horizontal else None
-        )
-        vertical = self.vertical.read_device_status(device) if self.vertical else None
-        if horizontal and vertical:
-            return SWING_BOTH
-        if horizontal:
-            return SWING_HORIZONTAL
-        if vertical:
-            return SWING_VERTICAL
-
-        return SWING_OFF
-
-    def get_update_commands(
-        self, device: CustomerDevice, value: str
-    ) -> list[dict[str, Any]]:
-        """Set new target swing operation."""
-        commands = []
-        if self.on_off:
-            commands.extend(self.on_off.get_update_commands(device, value == SWING_ON))
-
-        if self.vertical:
-            commands.extend(
-                self.vertical.get_update_commands(
-                    device, value in (SWING_BOTH, SWING_VERTICAL)
-                )
-            )
-        if self.horizontal:
-            commands.extend(
-                self.horizontal.get_update_commands(
-                    device, value in (SWING_BOTH, SWING_HORIZONTAL)
-                )
-            )
-        return commands
+_TUYA_TO_HA_SWING_MAPPINGS = {
+    TuyaClimateSwingMode.BOTH: SWING_BOTH,
+    TuyaClimateSwingMode.HORIZONTAL: SWING_HORIZONTAL,
+    TuyaClimateSwingMode.OFF: SWING_OFF,
+    TuyaClimateSwingMode.ON: SWING_ON,
+    TuyaClimateSwingMode.VERTICAL: SWING_VERTICAL,
+}
+_HA_TO_TUYA_SWING_MAPPINGS = {v: k for k, v in _TUYA_TO_HA_SWING_MAPPINGS.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -300,7 +235,7 @@ async def async_setup_entry(
                             device, DPCode.MODE, prefer_function=True
                         ),
                         set_temperature_wrapper=temperature_wrappers[1],
-                        swing_wrapper=_SwingModeWrapper.find_dpcode(device),
+                        swing_wrapper=SwingModeCompositeWrapper.find_dpcode(device),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, DPCode.SWITCH, prefer_function=True
                         ),
@@ -337,7 +272,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         hvac_mode_wrapper: DeviceWrapper[TuyaClimateHVACMode] | None,
         preset_wrapper: DeviceWrapper[str] | None,
         set_temperature_wrapper: DeviceWrapper[float] | None,
-        swing_wrapper: DeviceWrapper[str] | None,
+        swing_wrapper: DeviceWrapper[TuyaClimateSwingMode] | None,
         switch_wrapper: DeviceWrapper[bool] | None,
         target_humidity_wrapper: DeviceWrapper[int] | None,
         temperature_unit: UnitOfTemperature,
@@ -401,7 +336,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine swing modes
         if swing_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-            self._attr_swing_modes = swing_wrapper.options
+            self._attr_swing_modes = [
+                ha_swing_mode
+                for tuya_swing_mode in cast(
+                    list[TuyaClimateSwingMode], swing_wrapper.options
+                )
+                if (ha_swing_mode := _TUYA_TO_HA_SWING_MAPPINGS.get(tuya_swing_mode))
+            ]
 
         if switch_wrapper:
             self._attr_supported_features |= (
@@ -441,7 +382,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
-        await self._async_send_wrapper_updates(self._swing_wrapper, swing_mode)
+        if tuya_mode := _HA_TO_TUYA_SWING_MAPPINGS.get(swing_mode):
+            await self._async_send_wrapper_updates(self._swing_wrapper, tuya_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -501,7 +443,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return swing mode."""
-        return self._read_wrapper(self._swing_wrapper)
+        tuya_value = self._read_wrapper(self._swing_wrapper)
+        return _TUYA_TO_HA_SWING_MAPPINGS.get(tuya_value) if tuya_value else None
 
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
