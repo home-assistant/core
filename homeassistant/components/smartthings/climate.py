@@ -611,8 +611,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Attribute.SUPPORTED_AC_OPTIONAL_MODE,
             )
-            modes = []
-            for mode in (supported_modes or []):
+            if supported_modes is None:
+                return None
+            modes: list[str] = []
+            for mode in supported_modes:
                 if (ha_mode := PRESET_MODE_TO_HA.get(mode)) is not None:
                     modes.append(ha_mode)
                 else:
@@ -622,6 +624,11 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                     )
             return modes
         return None
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes."""
+        return self._determine_preset_modes()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set optional AC modes."""
