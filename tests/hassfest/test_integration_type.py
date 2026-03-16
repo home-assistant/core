@@ -1,24 +1,11 @@
 """Tests for hassfest integration_type."""
 
-from pathlib import Path
-
 import pytest
 
 from script.hassfest import integration_type
 from script.hassfest.model import Config, Integration
 
 from . import get_integration
-
-
-@pytest.fixture
-def config() -> Config:
-    """Fixture for hassfest Config."""
-    return Config(
-        root=Path(".").absolute(),
-        specific_integrations=None,
-        action="validate",
-        requirements=True,
-    )
 
 
 def _get_integration(domain: str, config: Config, manifest_extra: dict) -> Integration:
