@@ -1,0 +1,566 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
+        conda env update --file environment.yml --name base
+    - name: Lint with flake8
+      run: |
+        conda install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        conda install pytest
+        pytest
+Anda ingin mengetahui tentang file `python-package-conda.yml`. Nama file ini sangat umum digunakan untuk mendefinisikan lingkungan (**environment**) Conda untuk proyek Python. File ini biasanya disimpan dengan nama seperti `environment.yml` dan berfungsi sebagai "resep" untuk menciptakan lingkungan yang konsisten dan dapat direproduksi .
+
+Mari kita bahas secara mendalam apa itu file environment Conda, bagaimana strukturnya, dan bagaimana cara menggunakannya, terutama jika dikaitkan dengan konteks GitHub Codespaces yang sebelumnya kita bicarakan.
+
+### 📁 Apa Itu File Environment Conda (YAML)?
+
+File environment Conda adalah file teks berformat YAML (`.yml` atau `.yaml`) yang berisi spesifikasi lengkap tentang lingkungan Conda, termasuk nama lingkungan, channel tempat paket diambil, dan daftar dependensi (paket) yang diperlukan beserta versinya .
+
+Tujuan utamanya adalah **reproduksibilitas**. Dengan satu file ini, Anda (atau orang lain) dapat menciptakan ulang lingkungan yang persis sama di mesin yang berbeda, sehingga menghindari masalah "tapi di komputer saya bisa" .
+
+### 📝 Struktur Dasar `environment.yml`
+
+Sebuah file environment Conda yang khas memiliki tiga bagian utama :
+
+```yaml
+name: nama-lingkungan-saya   # 1. NAMA LINGKUNGAN
+channels:                    # 2. CHANNEL (sumber paket)
+  - conda-forge
+  - defaults
+dependencies:                # 3. DEPENDENSI (daftar paket)
+  - python=3.11
+  - numpy
+  - pandas=2.0
+  - pip
+  - pip:
+    - requests
+    - flask
+```
+
+Mari kita bedah setiap bagian:
+
+1.  **`name`** : Menentukan nama untuk lingkungan yang akan dibuat. Nama ini akan digunakan saat mengaktifkan lingkungan dengan `conda activate nama-lingkungan-saya` .
+2.  **`channels`** : Daftar channel Conda (repositori paket) yang akan dicari untuk menginstall dependensi. Channel `conda-forge` sangat direkomendasikan karena komunitasnya besar dan paketnya lengkap serta selalu diperbarui . Urutan channel menentukan prioritas.
+3.  **`dependencies`** : Inti dari file ini. Bagian ini adalah daftar paket yang akan diinstal.
+    *   Anda bisa menentukan versi secara spesifik (`pandas=2.0`) atau menggunakan operator seperti `>=`, `<` (`python>=3.10,<3.12`) .
+    *   Jika Anda membutuhkan paket yang hanya tersedia di **PyPI (pip)**, Anda perlu menambahkan `pip` ke dalam daftar dependensi Conda, lalu di bawahnya buat sub-bagian `- pip:` yang berisi daftar paket-paket pip .
+
+### 🛠️ Contoh `environment.yml` untuk Berbagai Kebutuhan
+
+#### Contoh 1: Lingkungan Dasar untuk Analisis Data
+
+File ini membuat lingkungan bernama `analisis-data` dengan Python 3.11, dan paket-paket dasar untuk analisis data.
+
+```yaml
+name: analisis-data
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - matplotlib
+  - jupyter
+  - pip
+  - pip:
+    - streamlit
+```
+
+#### Contoh 2: Lingkungan untuk Pengembangan Web dengan Flask
+
+Lingkungan ini (bernama `web-dev`) fokus pada pengembangan web menggunakan Flask.
+
+```yaml
+name: web-dev
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.9,<3.11
+  - flask
+  - gunicorn
+  - pip
+  - pip:
+    - flask-sqlalchemy
+    - python-dotenv
+```
+
+#### Contoh 3: Lingkungan dengan CUDA untuk Machine Learning
+
+File ini mendefinisikan lingkungan untuk proyek machine learning yang membutuhkan GPU. Perhatikan penggunaan channel `nvidia` untuk CUDA toolkit .
+
+```yaml
+name: ml-project
+channels:
+  - nvidia
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10
+  - cudatoolkit=11.8
+  - pytorch
+  - torchvision
+  - torchaudio
+  - tensorflow
+  - scikit-learn
+  - pip
+  - pip:
+    - transformers
+    - datasets
+```
+
+### 🚀 Cara Menggunakan File `environment.yml`
+
+#### Membuat Lingkungan Baru dari File
+Simpan file di atas dengan nama, misalnya, `environment.yml`. Kemudian jalankan perintah ini di terminal (pastikan Conda sudah terinstall):
+```bash
+conda env create -f environment.yml
+```
+Perintah ini akan membuat lingkungan baru dengan nama dan semua dependensi yang tercantum dalam file .
+
+#### Mengaktifkan Lingkungan
+```bash
+conda activate nama-lingkungan-saya
+```
+Ganti `nama-lingkungan-saya` dengan nilai `name` yang ada di file YAML Anda .
+
+#### Memperbarui Lingkungan dari File
+Jika Anda mengubah file `environment.yml` (misalnya menambah paket baru), Anda dapat memperbarui lingkungan yang sudah ada dengan perintah:
+```bash
+conda env update -f environment.yml --prune
+```
+Flag `--prune` berguna untuk menghapus paket yang sudah tidak tercantum lagi di file YAML .
+
+### 💡 Menghubungkan dengan `devcontainer.json` (GitHub Codespaces)
+
+Nah, ini dia kaitannya dengan pertanyaan Anda sebelumnya tentang `devcontainer.json`. Jika Anda menggunakan GitHub Codespaces, Anda bisa mengotomatiskan pembuatan lingkungan Conda ini.
+
+Caranya, di dalam file `.devcontainer/devcontainer.json`, Anda bisa menambahkan fitur (`feature`) untuk menginstall Miniconda dan secara otomatis membuat lingkungan dari file `environment.yml` Anda. Berikut adalah contoh konfigurasi yang bisa Anda tambahkan ke dalam `devcontainer.json`:
+
+```json
+{
+    "name": "Python Project dengan Conda",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu", // Atau image lain
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "installTools": true,
+            "version": "3.11" // Versi Python default
+        },
+        "ghcr.io/devcontainers/features/conda:1": { // Fitur untuk menginstall Conda
+            "addCondaForge": true,
+            "version": "latest"
+        }
+    },
+    "postCreateCommand": "conda env create -f environment.yml", // Perintah setelah container dibuat
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter"
+            ]
+        }
+    }
+}
+```
+
+Dengan konfigurasi di atas, setiap kali Codespaces dibuat, ia akan:
+1.  Menginstall Python dan Conda.
+2.  Menjalankan perintah `conda env create -f environment.yml` untuk membuat lingkungan persis seperti yang Anda definisikan.
+
+**Kesimpulannya**, file `environment.yml` adalah alat yang sangat ampuh untuk mengelola dependensi Python. Dengan mengkombinasikannya dengan `devcontainer.json`, Anda mendapatkan lingkungan pengembangan yang tidak hanya terdefinisi dengan baik, tetapi juga terisolasi dan otomatis tercipta di cloud.
+
+Jika Anda memiliki file `environment.yml` spesifik yang ingin saya bantu analisis, atau jika ada paket tertentu yang ingin Anda tambahkan, beri tahu saja! Saya siap membantu.Baik, saya akan bantu lengkapi semua kebutuhan database untuk proyek Anda secara menyeluruh. Berdasarkan diskusi sebelumnya, kita akan membangun solusi terintegrasi yang mencakup:
+
+1. **Development Environment** dengan database PostgreSQL di GitHub Codespaces.
+2. **Production Website** di GitHub Pages yang menampilkan data dari file SQLite (karena GitHub Pages hanya mendukung file statis).
+3. **Otomatisasi Ekspor Data** dari PostgreSQL ke SQLite menggunakan GitHub Actions, agar data di website selalu diperbarui.
+
+Dengan pendekatan ini, Anda bisa mengembangkan aplikasi secara lokal (di Codespaces) dengan database penuh, dan secara berkala "memublikasikan" data ke format yang bisa dibaca oleh website statis.
+
+---
+
+## 🏗️ Arsitektur Lengkap
+
+```mermaid
+graph TD
+    A[GitHub Codespaces] --> B[PostgreSQL Development DB]
+    B --> C[Script Ekspor ke SQLite]
+    C --> D[File SQLite .db di Repo]
+    D --> E[GitHub Pages Website]
+    E --> F[Pengunjung Membaca Data via sql.js]
+```
+
+- **Development**: Anda menulis kode, mengubah data di PostgreSQL.
+- **Ekspor**: Script Python membaca dari PostgreSQL dan menulis ke file SQLite `.db`.
+- **Publikasi**: File `.db` di-commit ke repositori (manual atau otomatis via GitHub Actions).
+- **Runtime Website**: Browser pengunjung menjalankan `sql.js` untuk membaca file `.db` dan menampilkan data.
+
+---
+
+## 📦 1. Setup Development Environment di GitHub Codespaces
+
+### 📁 Struktur Direktori Proyek
+
+Buat struktur folder seperti ini di repositori `sazwan96.github.io`:
+
+```
+sazwan96.github.io/
+├── .devcontainer/
+│   └── devcontainer.json
+├── .github/
+│   └── workflows/
+│       └── export-db.yml        (otomatisasi ekspor)
+├── backend/
+│   ├── environment.yml           (dependensi Python)
+│   ├── export_to_sqlite.py       (skrip ekspor)
+│   └── ... (file Python lain)
+├── database/
+│   └── data.db                   (file SQLite, dihasilkan)
+├── index.html                     (halaman utama)
+├── script.js                       (JavaScript pembaca SQLite)
+└── style.css
+```
+
+### ⚙️ File `.devcontainer/devcontainer.json`
+
+File ini akan mengatur lingkungan Codespaces dengan Python, Conda, dan PostgreSQL.
+
+```json
+{
+    "name": "Python + PostgreSQL",
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.11",
+            "installTools": true
+        },
+        "ghcr.io/devcontainers/features/conda:1": {
+            "addCondaForge": true,
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/postgres:1": {
+            "version": "16",
+            "password": "postgres",
+            "database": "appdb"
+        }
+    },
+    "forwardPorts": [5432, 8000],
+    "remoteEnv": {
+        "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/appdb",
+        "SQLITE_PATH": "${containerWorkspaceFolder}/database/data.db"
+    },
+    "postCreateCommand": "conda env create -f backend/environment.yml && echo 'conda activate myenv' >> ~/.bashrc",
+    "postStartCommand": "sudo service postgresql start",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "cweijan.vscode-postgresql-client2",
+                "qwtel.sqlite-viewer"
+            ]
+        }
+    }
+}
+```
+
+**Penjelasan:**
+- `features` menginstall Python, Conda, dan PostgreSQL.
+- `remoteEnv` menyimpan URL koneksi database dan path file SQLite.
+- `postCreateCommand` membuat environment Conda dari file `environment.yml`.
+- `postStartCommand` memastikan PostgreSQL berjalan setiap kali container dimulai.
+- Ekstensi VS Code memudahkan manajemen database.
+
+### 🐍 File `backend/environment.yml`
+
+Dependensi Python yang dibutuhkan (termasuk untuk akses PostgreSQL dan SQLite).
+
+```yaml
+name: myenv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - psycopg2
+  - sqlalchemy
+  - pandas
+  - fastapi
+  - uvicorn
+  - python-dotenv
+  - pip:
+    - databases[postgresql]
+    - sqlite-utils
+```
+
+Setelah container dibuat, environment `myenv` akan aktif otomatis (karena kita tambahkan ke `.bashrc`).
+
+---
+
+## 📤 2. Skrip Ekspor Data dari PostgreSQL ke SQLite
+
+File `backend/export_to_sqlite.py` akan membaca seluruh tabel dari PostgreSQL dan menulisnya ke file SQLite. Anda bisa menjalankannya manual atau otomatis.
+
+```python
+import os
+import pandas as pd
+from sqlalchemy import create_engine, inspect
+
+# Ambil koneksi dari environment variable
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/appdb")
+SQLITE_PATH = os.environ.get("SQLITE_PATH", "database/data.db")
+
+# Buat engine PostgreSQL dan SQLite
+pg_engine = create_engine(DATABASE_URL)
+sqlite_engine = create_engine(f"sqlite:///{SQLITE_PATH}")
+
+# Dapatkan daftar tabel di PostgreSQL
+inspector = inspect(pg_engine)
+tables = inspector.get_table_names()
+
+for table in tables:
+    print(f"Exporting table: {table}")
+    df = pd.read_sql_table(table, pg_engine)
+    # Simpan ke SQLite (ganti jika tabel sudah ada)
+    df.to_sql(table, sqlite_engine, if_exists='replace', index=False)
+
+print("Export selesai!")
+```
+
+Jalankan skrip ini di terminal Codespaces:
+```bash
+conda activate myenv
+python backend/export_to_sqlite.py
+```
+
+Setelah itu, file `database/data.db` akan terisi dengan data dari PostgreSQL.
+
+---
+
+## 🤖 3. Otomatisasi dengan GitHub Actions
+
+Agar data di website selalu up-to-date, kita bisa menjalankan ekspor secara berkala (misal setiap jam) menggunakan GitHub Actions. Buat file `.github/workflows/export-db.yml`:
+
+```yaml
+name: Export PostgreSQL to SQLite
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # setiap jam
+  workflow_dispatch:       # bisa dijalankan manual
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install psycopg2-binary pandas sqlalchemy
+
+      - name: Run export script
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}   # simpan di secrets GitHub
+          SQLITE_PATH: database/data.db
+        run: python backend/export_to_sqlite.py
+
+      - name: Commit and push if changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add database/data.db
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update database [skip ci]"
+          git push
+```
+
+**Catatan:** Anda perlu menyimpan `DATABASE_URL` sebagai **Secret** di repositori (Settings → Secrets and variables → Actions). Isinya adalah string koneksi ke PostgreSQL yang bisa diakses dari GitHub Actions (misalnya menggunakan layanan seperti Supabase, atau jika PostgreSQL di-host di server pribadi).
+
+---
+
+## 🌐 4. Website GitHub Pages Membaca SQLite
+
+Sekarang kita buat halaman HTML yang menggunakan `sql.js` untuk membaca file `database/data.db` dan menampilkan data.
+
+### 📄 File `index.html`
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Data dari SQLite</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sql.js@1.8.0/dist/sql-wasm.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <h1>📊 Data Terkini</h1>
+    <div id="loading">⏳ Memuat data...</div>
+    <div id="content" style="display:none;"></div>
+</body>
+</html>
+```
+
+### 📄 File `script.js`
+
+```javascript
+async function loadDatabase() {
+    const loading = document.getElementById('loading');
+    const content = document.getElementById('content');
+
+    try {
+        // Inisialisasi sql.js
+        const SQL = await initSqlJs({
+            locateFile: file => `https://sql.js.org/dist/${file}`
+        });
+
+        // Ambil file .db dari repositori
+        const response = await fetch('database/data.db');
+        if (!response.ok) throw new Error('Gagal memuat database');
+        const buffer = await response.arrayBuffer();
+        const uInt8Array = new Uint8Array(buffer);
+
+        // Buat database SQLite
+        const db = new SQL.Database(uInt8Array);
+
+        // Query semua tabel (contoh: ambil dari tabel 'users')
+        let html = '';
+        const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table';");
+        if (tables.length === 0) {
+            html = '<p>Tidak ada tabel ditemukan.</p>';
+        } else {
+            for (const tableRow of tables[0].values) {
+                const tableName = tableRow[0];
+                html += `<h2>Tabel: ${tableName}</h2>`;
+                const result = db.exec(`SELECT * FROM ${tableName} LIMIT 100;`);
+                if (result.length > 0) {
+                    const columns = result[0].columns;
+                    const values = result[0].values;
+                    html += '<table border="1"><tr>';
+                    columns.forEach(col => html += `<th>${col}</th>`);
+                    html += '</tr>';
+                    values.forEach(row => {
+                        html += '<tr>';
+                        row.forEach(cell => html += `<td>${cell}</td>`);
+                        html += '</tr>';
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p>Tabel kosong.</p>';
+                }
+            }
+        }
+
+        content.innerHTML = html;
+        loading.style.display = 'none';
+        content.style.display = 'block';
+    } catch (err) {
+        loading.innerText = '❌ Error: ' + err.message;
+    }
+}
+
+window.onload = loadDatabase;
+```
+
+### 🎨 File `style.css` (opsional)
+
+```css
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    line-height: 1.6;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+th {
+    background-color: #f2f2f2;
+}
+```
+
+---
+
+## 🚀 5. Menjalankan Seluruh Sistem
+
+### Langkah-langkah Implementasi:
+
+1. **Buat repositori** `sazwan96.github.io` (jika belum).
+2. **Tambahkan semua file** di atas ke repositori sesuai struktur.
+3. **Buka di GitHub Codespaces**:
+   - Codespaces akan otomatis membangun container dengan PostgreSQL dan dependensi Python.
+   - Setelah masuk terminal, aktifkan environment: `conda activate myenv`.
+4. **Isi data awal di PostgreSQL**:
+   - Bisa menggunakan ekstensi VS Code PostgreSQL, atau jalankan skrip Python untuk membuat tabel dan insert data contoh.
+   - Contoh skrip inisialisasi: `backend/init_db.py` (bisa dibuat sendiri).
+5. **Jalankan ekspor manual**:
+   ```bash
+   python backend/export_to_sqlite.py
+   ```
+   File `database/data.db` akan terbuat.
+6. **Commit dan push** perubahan (termasuk file `.db`).
+7. **Aktifkan GitHub Pages** di repositori (Settings → Pages → pilih branch `main` dan folder `/root`).
+8. **Website akan live** di `https://sazwan96.github.io` dan menampilkan data dari SQLite.
+
+### Untuk Pembaruan Data Otomatis:
+
+- Jika Anda menggunakan GitHub Actions (langkah 3), setiap jam file `.db` akan diperbarui dan di-commit ulang. GitHub Pages akan otomatis menampilkan versi terbaru setelah proses commit selesai (mungkin perlu beberapa menit).
+
+---
+
+## ⚠️ Catatan Penting
+
+- **Ukuran File**: File SQLite yang terlalu besar (>50 MB) dapat memperlambat loading di browser. Jika data sangat besar, pertimbangkan untuk mempartisi atau menggunakan `sql.js-httpvfs` yang mendukung akses range.
+- **Keamanan**: Jangan pernah menyimpan data sensitif (password, token) di repositori publik. File SQLite yang di-commit juga akan terbaca oleh siapa pun.
+- **Performa Query**: `sql.js` menjalankan SQLite murni di browser, jadi query kompleks bisa lambat. Batasi jumlah data yang ditampilkan.
+- **Alternatif Backend**: Jika Anda membutuhkan interaksi tulis/baca real-time, pertimbangkan untuk menggunakan backend-as-a-service seperti Supabase (free tier) yang menyediakan REST API dan bisa diakses langsung dari JavaScript.
+
+---
+
+## 📚 Kesimpulan
+
+Dengan solusi lengkap di atas, Anda memiliki:
+
+- **Environment development** yang konsisten dan portable (Codespaces + Conda + PostgreSQL).
+- **Database production** dalam bentuk file SQLite yang bisa diakses website statis.
+- **Otomatisasi ekspor data** agar website selalu up-to-date.
+
+Sekarang, Anda tinggal menyesuaikan dengan data dan kebutuhan spesifik proyek Anda. Jika ada bagian yang perlu didetailkan atau dimodifikasi (misalnya struktur tabel, query, dll.), beri tahu saya! Saya siap membantu. 😊
