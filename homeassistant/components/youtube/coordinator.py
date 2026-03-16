@@ -6,7 +6,6 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-import aiohttp
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,43 +32,6 @@ from .const import (
     LOGGER,
 )
 
-# Use fake curl's User-Agent to avoid YouTube GDPR consent redirects triggered by unknown clients.
-_YOUTUBE_HEADERS = {"User-Agent": "curl/x.x"}
-
-
-async def _is_youtube_short(session: aiohttp.ClientSession, video_id: str) -> bool:
-    """Detect whether a video is a YouTube Short.
-
-    Sends a HEAD request to the /shorts/{id} endpoint (no redirect follow).
-    - HTTP 200 → the Shorts page exists → IS a Short.
-    - HTTP 303 → redirected to /watch?v=… → NOT a Short.
-    Any network error defaults to False (treat as regular video).
-    """
-
-    LOGGER.debug("Checking if video %s is a Short", video_id)
-    url = f"https://www.youtube.com/shorts/{video_id}"
-    try:
-        async with session.head(
-            url,
-            allow_redirects=False,
-            timeout=aiohttp.ClientTimeout(total=5),
-        ) as resp:
-            if resp.status == 200:
-                LOGGER.debug("Video %s is a Short (200)", video_id)
-                return True
-            if resp.status in (302, 303):
-                # Non-Short : YouTube redirige vers /watch?v=...
-                LOGGER.debug(
-                    "Video %s is not a Short (%d) => redirect to %s",
-                    video_id,
-                    resp.status,
-                    resp.headers.get("Location", ""),
-                )
-                return False
-    except (TimeoutError, aiohttp.ClientError) as err:
-        LOGGER.debug("Could not determine if %s is a Short: %s", video_id, err)
-    return False
-
 
 def _build_video_dict(video: Any, is_short: bool) -> dict[str, Any]:
     """Build the video attribute dict shared by all video sensors."""
@@ -94,7 +56,6 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
-        self._session: aiohttp.ClientSession | None = None
         super().__init__(
             hass,
             LOGGER,
@@ -103,18 +64,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=15),
         )
 
-    async def async_shutdown(self) -> None:
-        """Close the aiohttp session on shutdown."""
-        await super().async_shutdown()
-        if self._session and not self._session.closed:
-            await self._session.close()
-
     async def _async_update_data(self) -> dict[str, Any]:
-        if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession(
-                headers=_YOUTUBE_HEADERS,
-            )
-
         youtube = await self._auth.get_resource()
         res = {}
         channel_ids = self.config_entry.options[CONF_CHANNELS]
@@ -132,10 +82,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
                 # Detect Shorts concurrently to minimise latency.
                 is_short_flags = await asyncio.gather(
-                    *[
-                        _is_youtube_short(self._session, v.content_details.video_id)
-                        for v in videos
-                    ]
+                    *[youtube.is_short(v.content_details.video_id) for v in videos]
                 )
                 latest_upload: dict[str, Any] | None = None
                 latest_short: dict[str, Any] | None = None
