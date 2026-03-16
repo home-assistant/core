@@ -7,7 +7,7 @@ from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, MANUFACTURER
@@ -17,7 +17,6 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
-from .util import resolve_uid
 
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
 
@@ -36,10 +35,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
 
+    assert entry.unique_id
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, resolve_uid(hass, coordinator_info.data))},
+        identifiers={(DOMAIN, entry.unique_id)},
         name=info_api.name,
         manufacturer=MANUFACTURER,
         sw_version=info_api.version,
@@ -65,6 +66,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         dali_line_broadcasts,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if info_api.uid is not None:
+        new_unique_id = info_api.uid.replace("-", "")
+
+        # Check if unique ID migration is needed
+        if entry.unique_id != new_unique_id:
+            # Update the config entry itself
+            hass.config_entries.async_update_entry(entry, unique_id=new_unique_id)
+
+            # Update all associated entities
+            entity_registry = er.async_get(hass)
+            entities = er.async_entries_for_config_entry(
+                entity_registry, entry.entry_id
+            )
+
+            for entity in entities:
+                parts = list(entity.unique_id.partition("-"))
+                parts[0] = new_unique_id
+
+                entity_registry.async_update_entity(
+                    entity.entity_id, new_unique_id="".join(parts)
+                )
 
     return True
 

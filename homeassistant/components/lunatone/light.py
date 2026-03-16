@@ -26,7 +26,6 @@ from .coordinator import (
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
 )
-from .util import resolve_uid
 
 PARALLEL_UPDATES = 0
 STATUS_UPDATE_DELAY = 0.04
@@ -42,17 +41,21 @@ async def async_setup_entry(
     coordinator_devices = config_entry.runtime_data.coordinator_devices
     dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
 
+    assert config_entry.unique_id is not None
+
     entities: list[LightEntity] = [
         LunatoneLineBroadcastLight(
-            hass, coordinator_info, coordinator_devices, dali_line_broadcast
+            hass,
+            coordinator_info,
+            coordinator_devices,
+            dali_line_broadcast,
+            config_entry.unique_id,
         )
         for dali_line_broadcast in dali_line_broadcasts
     ]
-
-    interface_uid = resolve_uid(hass, coordinator_info.data)
     entities.extend(
         [
-            LunatoneLight(coordinator_devices, device_id, interface_uid)
+            LunatoneLight(coordinator_devices, device_id, config_entry.unique_id)
             for device_id in coordinator_devices.data
         ]
     )
@@ -77,14 +80,14 @@ class LunatoneLight(
         self,
         coordinator: LunatoneDevicesDataUpdateCoordinator,
         device_id: int,
-        interface_uid: str,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone light."""
         super().__init__(coordinator)
         self._device_id = device_id
-        self._interface_uid = interface_uid
+        self._config_entry_unique_id = config_entry_unique_id
         self._device = self.coordinator.data[device_id]
-        self._attr_unique_id = f"{interface_uid}-device{device_id}"
+        self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -95,7 +98,7 @@ class LunatoneLight(
             name=self._device.name,
             via_device=(
                 DOMAIN,
-                f"{self._interface_uid}-line{self._device.data.line}",
+                f"{self._config_entry_unique_id}-line{self._device.data.line}",
             ),
         )
 
@@ -181,6 +184,7 @@ class LunatoneLineBroadcastLight(
         coordinator_info: LunatoneInfoDataUpdateCoordinator,
         coordinator_devices: LunatoneDevicesDataUpdateCoordinator,
         broadcast: DALIBroadcast,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize a Lunatone line broadcast light."""
         super().__init__(coordinator_info)
@@ -188,9 +192,8 @@ class LunatoneLineBroadcastLight(
         self._broadcast = broadcast
 
         line = broadcast.line
-        interface_uid = resolve_uid(hass, coordinator_info.data)
 
-        self._attr_unique_id = f"{interface_uid}-line{line}"
+        self._attr_unique_id = f"{config_entry_unique_id}-line{line}"
 
         line_device = self.coordinator.data.lines[str(line)].device
         extra_info: dict = {}
@@ -205,7 +208,7 @@ class LunatoneLineBroadcastLight(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
-            via_device=(DOMAIN, interface_uid),
+            via_device=(DOMAIN, config_entry_unique_id),
             **extra_info,
         )
 
