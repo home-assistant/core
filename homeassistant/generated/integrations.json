@@ -3828,6 +3828,12 @@
         }
       }
     },
+    "lojack": {
+      "name": "LoJack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "london_air": {
       "name": "London Air",
       "integration_type": "hub",

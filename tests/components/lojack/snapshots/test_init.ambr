@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lojack',
+        '12345',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Spireon LoJack',
+    'model': 'Accord',
+    'model_id': None,
+    'name': '2021 Honda Accord',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '1HGBH41JXMN109186',
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
