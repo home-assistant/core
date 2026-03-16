@@ -21,7 +21,7 @@ async def safe_library_call(
     """Call a player method (sync or async) safely and raise HomeAssistantError on failure."""
     try:
         result = method(*args, **kwargs)
-        if asyncio.iscoroutine(result):
+        if isinstance(result, Awaitable):
             result = await result
 
     except ValueError:
