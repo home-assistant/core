@@ -7,8 +7,10 @@ from aiohttp import ClientConnectionError, RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
 import pytest
 
+from homeassistant.components.aladdin_connect import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
 
@@ -106,3 +108,32 @@ async def test_setup_entry_api_connection_error(
     mock_aladdin_connect_api.get_doors.side_effect = ClientConnectionError()
     await init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_remove_stale_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale devices are removed on setup."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a device that the API will no longer return
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "stale_device_id")},
+    )
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The stale device should be gone, only the real door remains
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
+    assert device_entries[0].identifiers == {(DOMAIN, "test_device_id-1")}

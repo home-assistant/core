@@ -2,24 +2,26 @@
 
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 
+from homeassistant.components.litterrobot.coordinator import UPDATE_INTERVAL
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     VacuumActivity,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, DOMAIN, VACUUM_ENTITY_ID
+from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -58,6 +60,9 @@ async def test_entry_not_setup(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -67,6 +72,118 @@ async def test_entry_not_setup(
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is expected_state
+
+
+async def test_unique_id_migration(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that legacy entries get unique_id set during migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id == ACCOUNT_USER_ID
+    assert entry.minor_version == 2
+    mock_account.disconnect.assert_called_once()
+
+
+async def test_unique_id_migration_unsupported_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migration fails for entries with version > 1."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+        version=2,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_unique_id_migration_conflict(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test that migration skips unique_id when another entry owns it."""
+    # First entry already has the unique_id
+    MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        unique_id=ACCOUNT_USER_ID,
+    ).add_to_hass(hass)
+
+    # Second entry is legacy (no unique_id)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    assert entry.unique_id is None
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.litterrobot.Account",
+            return_value=mock_account,
+        ),
+        patch(
+            "homeassistant.components.litterrobot.coordinator.Account",
+            return_value=mock_account,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 2
+
+
+async def test_unique_id_migration_connection_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test that migration fails when the API is unreachable during unique_id backfill."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.litterrobot.Account.connect",
+        side_effect=LitterRobotException,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.unique_id is None
+    assert entry.minor_version == 1
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_remove_devices(
@@ -94,3 +211,36 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_update_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reauthentication flow is triggered on login error during update."""
+    entry = await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
+
+    # Simulate an authentication error during update
+    mock_account.refresh_robots.side_effect = LitterRobotLoginException(
+        "Invalid credentials"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(VACUUM_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
+
+    # Ensure a reauthentication flow was triggered
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id

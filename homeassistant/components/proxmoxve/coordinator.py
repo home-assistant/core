@@ -190,8 +190,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             password=self.config_entry.data[CONF_PASSWORD],
             verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
+
         try:
-            self.permissions = self.proxmox.access.permissions.get()
+            self.permissions = self.proxmox.access.permissions.get() or {}
         except ResourceException as err:
             if 400 <= err.status_code < 500:
                 raise ProxmoxPermissionsError from err
@@ -219,9 +220,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
         node: dict[str, Any],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Get vms and containers for a node."""
-        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get()
-        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get()
-        assert vms is not None and containers is not None
+        vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
+        containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
         return vms, containers
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
