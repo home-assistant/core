@@ -278,7 +278,7 @@ def _normalize_states(
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
-    custom_units_for_entity: dict[str, str],
+    custom_units_for_entity: dict[str, str] | None,
 ) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     state_unit: str | None = None
@@ -286,7 +286,10 @@ def _normalize_states(
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
     device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
-    equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
+    if custom_units_for_entity:
+        equivalent_units_for_entity = EQUIVALENT_UNITS | custom_units_for_entity
+    else:
+        equivalent_units_for_entity = EQUIVALENT_UNITS
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
@@ -581,7 +584,7 @@ def compile_statistics(  # noqa: C901
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
             continue
-        custom_units_for_entity = custom_units_for_entities.get(entity_id, {})
+        custom_units_for_entity = custom_units_for_entities.get(entity_id)
         unit_class, statistics_unit, valid_float_states = _normalize_states(
             hass,
             old_metadatas,
