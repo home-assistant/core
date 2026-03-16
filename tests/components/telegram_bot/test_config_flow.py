@@ -1,10 +1,12 @@
 """Config flow tests for the Telegram Bot integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from telegram import User
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
+from homeassistant.components.telegram_bot.bot import TelegramNotificationService
 from homeassistant.components.telegram_bot.config_flow import DESCRIPTION_PLACEHOLDERS
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
@@ -27,6 +29,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, pytest
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.telegram_bot.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_options_flow(
@@ -112,6 +123,14 @@ async def test_reconfigure_flow_broadcast(
     assert result["reason"] == "reconfigure_successful"
     assert mock_webhooks_config_entry.data[CONF_PLATFORM] == PLATFORM_BROADCAST
     assert mock_webhooks_config_entry.data[CONF_PROXY_URL] == "https://test"
+
+    service: TelegramNotificationService = mock_webhooks_config_entry.runtime_data
+    assert (
+        service.bot._request[0]._client_kwargs["proxy"].url == "https://test"
+    )  # get updates request
+    assert (
+        service.bot._request[1]._client_kwargs["proxy"].url == "https://test"
+    )  # all other requests
 
 
 async def test_reconfigure_flow_webhooks(
@@ -393,6 +412,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_create_webhook_entry(
     hass: HomeAssistant, api_endpoint: str, webhook_url: str
 ) -> None:

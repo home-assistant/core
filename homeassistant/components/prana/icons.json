@@ -1,5 +1,13 @@
 {
   "entity": {
+    "fan": {
+      "extract": {
+        "default": "mdi:arrow-expand-right"
+      },
+      "supply": {
+        "default": "mdi:arrow-expand-left"
+      }
+    },
     "switch": {
       "auto": {
         "default": "mdi:fan-auto"
