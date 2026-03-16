@@ -482,6 +482,49 @@ async def test_ac_set_preset_mode(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_supported_optional_modes_none(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup when supported optional mode list is None."""
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+        Attribute.SUPPORTED_AC_OPTIONAL_MODE,
+        None,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.ac_office_granit") is not None
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_drlc_status_none(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup when demand response load control status is None."""
+    set_attribute_value(
+        devices,
+        Capability.DEMAND_RESPONSE_LOAD_CONTROL,
+        Attribute.DEMAND_RESPONSE_LOAD_CONTROL_STATUS,
+        None,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.ac_office_granit")
+    assert state is not None
+    assert "drlc_status_duration" not in state.attributes
+    assert "drlc_status_start" not in state.attributes
+    assert "drlc_status_override" not in state.attributes
+    assert "drlc_status_level" not in state.attributes
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
