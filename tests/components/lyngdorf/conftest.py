@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from lyngdorf.const import LyngdorfModel
 import pytest
@@ -13,6 +13,15 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def ssdp_scanner_mock() -> Generator[Mock]:
+    """Mock the SSDP Scanner."""
+    with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
+        reg_callback = mock_scanner.return_value.async_register_callback
+        reg_callback.return_value = Mock(return_value=None)
+        yield mock_scanner.return_value
 
 
 @pytest.fixture

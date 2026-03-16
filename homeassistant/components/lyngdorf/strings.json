@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_model": "This Lyngdorf model is not supported"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from async_upnp_client.profiles.dlna import DmrDevice
 import getmac
 from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import async_find_receiver_model
+from lyngdorf.device import async_find_receiver_model, lookup_receiver_model
 import voluptuous as vol
 
 from homeassistant.components import ssdp
@@ -179,7 +179,10 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             raise AbortFlow("cannot_connect")
 
-        self._device_model = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
+        device_model_name = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
+        if not lookup_receiver_model(device_model_name):
+            raise AbortFlow("unsupported_model")
+        self._device_model = device_model_name
         self._device_serial_number = (
             discovery_info.upnp.get(ATTR_UPNP_SERIAL) or ""
         ).lower() or None
