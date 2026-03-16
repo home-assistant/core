@@ -32,22 +32,17 @@ async def _async_probe_wiim_host(hass: HomeAssistant, host: str) -> WiimProbeRes
             host=host,
         )
     except TimeoutError as err:
-        LOGGER.warning(
-            "Timeout while validating WiiM device at %s: %s",
-            location,
-            err,
-        )
-        raise CannotConnect(f"Timeout connecting to device: {err}") from err
+        raise CannotConnect from err
 
     if probe_result is None:
-        raise CannotConnect("Could not determine device information via UPnP.")
+        raise CannotConnect
     return probe_result
 
 
 class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiiM."""
 
-    _discovered_info: WiimProbeResult
+    _discovered_info: WiimProbeResult | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,9 +57,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info.udn)
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: device_info.host}
-                )
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=device_info.name,
                     data={
@@ -114,7 +107,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user confirmation of discovered device."""
-        discovered_info = getattr(self, "_discovered_info", None)
+        discovered_info = self._discovered_info
         if user_input is not None and discovered_info is not None:
             return self.async_create_entry(
                 title=discovered_info.name,

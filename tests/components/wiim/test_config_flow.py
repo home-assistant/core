@@ -1,5 +1,6 @@
 """Tests for the WiiM config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -10,12 +11,13 @@ from homeassistant.components.wiim.config_flow import (
     WiimConfigFlow,
     _async_probe_wiim_host,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def flow(mock_hass: HomeAssistant):
+def flow(mock_hass: HomeAssistant) -> tuple[WiimConfigFlow, HomeAssistant]:
     """Fixture for a WiimConfigFlow instance."""
     return WiimConfigFlow(), mock_hass
 
@@ -59,7 +61,9 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
 
 
 async def test_async_step_user_already_configured(
-    hass: HomeAssistant, flow, mock_config_entry
+    hass: HomeAssistant,
+    flow: tuple[WiimConfigFlow, HomeAssistant],
+    mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the user step when device is already configured."""
 
@@ -133,7 +137,9 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
         assert flow.context["title_placeholders"]["name"] == mock_device_info.name
 
 
-async def test_async_step_zeroconf_cannot_connect(flow) -> None:
+async def test_async_step_zeroconf_cannot_connect(
+    flow: tuple[WiimConfigFlow, HomeAssistant]
+) -> None:
     """Test zeroconf discovery when connection fails."""
     _flow, _ = flow
 
@@ -151,7 +157,7 @@ async def test_async_step_zeroconf_cannot_connect(flow) -> None:
 
 
 async def test_async_step_discovery_confirm_create_entry(
-    flow, mock_wiim_api_endpoint
+    flow: tuple[WiimConfigFlow, HomeAssistant]
 ) -> None:
     """Test discovery confirm step creates entry with user input."""
     _flow, _ = flow
@@ -172,7 +178,9 @@ async def test_async_step_discovery_confirm_create_entry(
     assert result["data"][CONF_HOST] == "192.168.1.100"
 
 
-async def test_async_step_discovery_confirm_show_form(flow) -> None:
+async def test_async_step_discovery_confirm_show_form(
+    flow: tuple[WiimConfigFlow, HomeAssistant]
+) -> None:
     """Test discovery confirm step shows form when no user input."""
     _flow, _ = flow
 
@@ -184,7 +192,9 @@ async def test_async_step_discovery_confirm_show_form(flow) -> None:
 
 
 async def test_async_probe_wiim_host_success(
-    mock_hass: HomeAssistant, mock_upnp_device, mock_wiim_api_endpoint
+    mock_hass: HomeAssistant,
+    mock_upnp_device: Any,
+    mock_wiim_api_endpoint: AsyncMock,
 ) -> None:
     """Test probing a host returns WiiM device information."""
     location = "http://192.168.1.100:49152/description.xml"

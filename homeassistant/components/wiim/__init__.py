@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from wiim.controller import WiimController
@@ -21,7 +22,10 @@ DEFAULT_AVAILABILITY_POLLING_INTERVAL = 60
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool:
-    """Set up WiiM from a config entry (called after async_setup or UI flow)."""
+    """Set up WiiM from a config entry.
+
+    This method owns the device connect/disconnect lifecycle.
+    """
     LOGGER.debug(
         "Setting up WiiM entry: %s (UDN: %s, Source: %s)",
         entry.title,
@@ -52,12 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     try:
         base_url = get_url(hass, prefer_external=False)
     except NoURLAvailableError as err:
-        raise ConfigEntryNotReady(
-            "Failed to determine Home Assistant URL for WiiM event subscriptions"
-        ) from err
+        raise ConfigEntryNotReady("Failed to determine Home Assistant URL") from err
 
     local_host = urlparse(base_url).hostname
-    assert local_host is not None
+    if TYPE_CHECKING:
+        assert local_host is not None
 
     try:
         wiim_device = await async_create_wiim_device(
@@ -68,11 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
             polling_interval=DEFAULT_AVAILABILITY_POLLING_INTERVAL,
         )
     except WiimRequestException as err:
-        LOGGER.error("HTTP API request failed during setup for %s: %s", host, err)
         raise ConfigEntryNotReady(f"HTTP API request failed for {host}: {err}") from err
     except WiimDeviceException as err:
-        LOGGER.error("SDK Device Exception during setup for %s: %s", host, err)
-        return False
+        raise ConfigEntryNotReady(f"Device setup failed for {host}: {err}") from err
 
     await controller.add_device(wiim_device)
 

@@ -1,7 +1,7 @@
 {
   "domain": "wiim",
   "name": "WiiM",
-  "codeowners": ["@Linkplay"],
+  "codeowners": ["@Linkplay2020"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wiim",
   "integration_type": "hub",

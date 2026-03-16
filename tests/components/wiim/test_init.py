@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from wiim.controller import WiimController
 from wiim.exceptions import WiimDeviceException
 from wiim.wiim_device import WiimDevice
@@ -11,6 +12,7 @@ from homeassistant.components.wiim.const import DATA_WIIM, DOMAIN, PLATFORMS
 from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 
 async def test_async_setup_entry_success(
@@ -91,7 +93,8 @@ async def test_async_setup_entry_device_init_failure(
         mock_controller_instance = AsyncMock()
         mock_controller_class.return_value = mock_controller_instance
 
-        assert not await async_setup_entry(mock_hass, mock_config_entry)
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(mock_hass, mock_config_entry)
 
 
 async def test_async_unload_entry_success(

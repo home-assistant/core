@@ -32,7 +32,6 @@ from homeassistant.components.wiim.media_player import (
     MEDIA_CONTENT_ID_PLAYLISTS,
     MEDIA_CONTENT_ID_ROOT,
     MEDIA_TYPE_WIIM_LIBRARY,
-    SDK_TO_HA_STATE,
     SUPPORT_WIIM_BASE,
     WiimMediaPlayerEntity,
     async_process_play_media_url,
@@ -41,6 +40,7 @@ from homeassistant.components.wiim.media_player import (
 from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityPlatformState
 
 
@@ -83,20 +83,20 @@ async def test_media_player_attributes(
     entity = mock_wiim_media_player_entity
     entity._device = mock_wiim_device
     entity._attr_name = mock_wiim_device.name  # type: ignore[assignment]
-    entity._attr_unique_id = f"{mock_wiim_device.udn}-media_player"
+    entity._attr_unique_id = mock_wiim_device.udn
     entity._attr_device_info = {
         "identifiers": {(DOMAIN, mock_wiim_device.udn)},
         "name": mock_wiim_device.name,
     }
     entity._transport_capabilities = None
     entity._attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    entity._attr_state = SDK_TO_HA_STATE.get(mock_wiim_device.playing_status)
+    entity._attr_state = MediaPlayerState.IDLE
     entity._attr_volume_level = mock_wiim_device.volume / 100
     entity._attr_is_volume_muted = mock_wiim_device.is_muted
     entity._attr_repeat = RepeatMode.OFF
     entity._attr_source = InputMode.LINE_IN.display_name  # type: ignore[attr-defined]
 
-    assert entity.unique_id == f"{mock_wiim_device.udn}-media_player"
+    assert entity.unique_id == mock_wiim_device.udn
     assert entity.name == mock_wiim_device.name
     assert entity.device_info is not None
     assert entity.device_info["identifiers"] == {(DOMAIN, mock_wiim_device.udn)}
@@ -104,7 +104,7 @@ async def test_media_player_attributes(
     assert entity.supported_features == SUPPORT_WIIM_BASE
     assert entity.device_class == MediaPlayerDeviceClass.SPEAKER
 
-    assert entity.state == SDK_TO_HA_STATE.get(mock_wiim_device.playing_status)
+    assert entity.state == MediaPlayerState.IDLE
     assert entity.volume_level == mock_wiim_device.volume / 100
     assert entity.is_volume_muted == mock_wiim_device.is_muted
     assert entity.repeat == RepeatMode.OFF
@@ -130,10 +130,6 @@ async def test_media_player_update_ha_state_from_sdk_cache(
     entity._device = mock_wiim_device
     entity.entity_id = "media_player.test_device"
     entity._attr_group_members = ["media_player.test_device", "media_player.follower1"]
-
-    follower_entity = MagicMock()
-    follower_entity.entity_id = "media_player.follower1"
-    follower_entity._async_apply_leader_metadata = AsyncMock()
 
     with (
         patch.object(entity, "schedule_update_ha_state", new=MagicMock()),
@@ -172,7 +168,6 @@ async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_
     leader_device.playing_status = PlayingStatus.PLAYING
     leader_device.play_mode = "Network"
     leader_device.loop_state = mock_wiim_device.loop_state
-    leader_device.output_mode = "speaker"
     leader_device.current_media = WiimMediaMetadata(
         title="Leader Song",
         artist="Leader Artist",
@@ -402,7 +397,9 @@ async def test_media_player_handle_invalid_transport_state_event(
 
     with (
         patch.object(
-            mock_hass, "async_create_task", new=MagicMock()
+            entity._entry,
+            "async_create_background_task",
+            new=MagicMock(),
         ) as mock_create_task,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
@@ -436,7 +433,9 @@ async def test_media_player_handle_playing_transport_state_event(
             new=MagicMock(return_value=sync_task),
         ),
         patch.object(
-            mock_hass, "async_create_task", new=MagicMock()
+            entity._entry,
+            "async_create_background_task",
+            new=MagicMock(),
         ) as mock_create_task,
         patch.object(
             entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
@@ -445,7 +444,8 @@ async def test_media_player_handle_playing_transport_state_event(
         entity._handle_sdk_av_transport_event(MagicMock(), [])
 
     assert mock_wiim_device.playing_status is PlayingStatus.PLAYING
-    mock_create_task.assert_called_once_with(sync_task)
+    mock_create_task.assert_called_once()
+    assert mock_create_task.call_args.args[1] is sync_task
     mock_update_state.assert_called_once()
 
 
@@ -614,23 +614,6 @@ async def test_media_player_select_source(
     ) as mock_play_mode:
         await entity.async_select_source("Bluetooth")
         mock_play_mode.assert_awaited_once()
-
-
-async def test_media_player_select_sound_mode(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
-    mock_wiim_device: WiimDevice,
-    mock_hass: HomeAssistant,
-) -> None:
-    """Test media player select sound mode service."""
-    entity = mock_wiim_media_player_entity
-    _set_wiim_data(mock_hass)
-    entity.hass = mock_hass
-
-    with patch.object(
-        mock_wiim_device, "async_set_output_mode", new_callable=AsyncMock
-    ) as mock_output_mode:
-        await entity.async_select_sound_mode("Jazz")
-        mock_output_mode.assert_awaited_once()
 
 
 async def test_media_player_seek(
@@ -909,15 +892,16 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
     mock_device.volume = 50
     mock_device.is_muted = False
     mock_device.supported_input_modes = ()
-    mock_device.supported_output_modes = ()
     mock_device.playing_status = None
     mock_device.play_mode = None
     mock_device.loop_state = MagicMock(repeat=WiimRepeatMode.OFF, shuffle=False)
-    mock_device.output_mode = None
     mock_device.current_media = None
 
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.runtime_data = mock_device
+    mock_entry.async_create_background_task.side_effect = (
+        lambda hass, coro, name=None: hass.async_create_task(coro)
+    )
 
     entity = WiimMediaPlayerEntity(mock_device, mock_entry)
     entity.hass = hass
@@ -942,6 +926,69 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
         await entity.async_play_media(media_type=MediaType.MUSIC, media_id=media_id)
 
     expected_url = async_process_play_media_url(hass, mock_play_item.url)
-    mock_device.play_url.assert_called_once_with(expected_url)
+    mock_device.play_url.assert_awaited_once_with(expected_url)
 
     assert entity._attr_state == MediaPlayerState.PLAYING
+
+
+async def test_async_play_media_source_requires_http_api(
+    hass: HomeAssistant,
+    mock_wiim_device: WiimDevice,
+) -> None:
+    """Test media-source playback is gated when HTTP API is unavailable."""
+    mock_wiim_device.supports_http_api = False
+
+    mock_entry = MagicMock(spec=ConfigEntry)
+    mock_entry.runtime_data = mock_wiim_device
+    mock_entry.async_create_background_task.side_effect = (
+        lambda hass, coro, name=None: hass.async_create_task(coro)
+    )
+
+    entity = WiimMediaPlayerEntity(mock_wiim_device, mock_entry)
+    entity.hass = hass
+    entity.entity_id = "media_player.test_device"
+    _set_wiim_data(hass)
+
+    with (
+        patch(
+            "homeassistant.components.media_source.is_media_source_id",
+            return_value=True,
+        ),
+        pytest.raises(ServiceValidationError, match="Media sources are not supported"),
+    ):
+        await entity.async_play_media(
+            media_type=MediaType.MUSIC,
+            media_id="media-source://some-song",
+        )
+
+
+async def test_media_player_play_media_routes_follower_to_leader(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test play_media routes follower commands through the group leader."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-1234"
+    leader_device.play_preset = AsyncMock()
+
+    mock_controller = MagicMock()
+    mock_controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        command_target_udn=leader_device.udn,
+    )
+    mock_controller.get_device.return_value = leader_device
+    _set_wiim_data(mock_hass, controller=mock_controller)
+
+    with patch.object(
+        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+    ) as mock_update_state:
+        await entity.async_play_media(MediaType.MUSIC, "1")
+
+    mock_update_state.assert_called_once()
+    leader_device.play_preset.assert_awaited_once_with(1)
+    mock_wiim_device.play_preset.assert_not_awaited()
