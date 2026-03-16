@@ -101,7 +101,7 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
                     # New wrapper format
                     try:
                         cached_dt = date.fromisoformat(str(cached["cache_date"]))
-                    except Exception:  # noqa: BLE001
+                    except (TypeError, ValueError):
                         cached_dt = None
                     cached_payload = cached["data"]
                 else:
@@ -113,7 +113,7 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
                     if isinstance(iso_field, str):
                         try:
                             cached_dt = date.fromisoformat(iso_field)
-                        except Exception:  # noqa: BLE001
+                        except (TypeError, ValueError):
                             cached_dt = None
                     if cached_dt is None and (
                         long_field := cached.get("gregorianDateLong")
@@ -121,7 +121,7 @@ class DiyanetCoordinator(DataUpdateCoordinator[dict]):
                         # Example format: "29 November 2025" (locale dependent)
                         try:
                             cached_dt = datetime.strptime(long_field, "%d %B %Y").date()
-                        except Exception:  # noqa: BLE001
+                        except (TypeError, ValueError):
                             cached_dt = None
 
                 if cached_payload is not None and cached_dt == today:
