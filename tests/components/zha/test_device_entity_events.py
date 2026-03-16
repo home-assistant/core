@@ -16,7 +16,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -150,17 +150,18 @@ async def test_handle_device_entity_removed(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test that a runtime DeviceEntityRemovedEvent removes the HA entity."""
+    """Test that a runtime DeviceEntityRemovedEvent unloads the HA entity."""
     zha_device_proxy, gateway_proxy, _ = await _create_switch_device(
         hass, setup_zha, zigpy_device_mock
     )
 
-    # Verify entity exists
+    # Verify entity exists and has a state
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
 
     registry = er.async_get(hass)
     assert registry.async_get(entity_id) is not None
+    assert hass.states.get(entity_id) is not None
 
     # Get the unique_id of the platform entity backing this HA entity
     entity_refs = gateway_proxy.ha_entity_refs[zha_device_proxy.device.ieee]
@@ -173,8 +174,13 @@ async def test_handle_device_entity_removed(
     )
     await hass.async_block_till_done()
 
-    # Verify the entity was removed from the entity registry
-    assert registry.async_get(entity_id) is None
+    # The registry entry is preserved so the user can manually delete it
+    assert registry.async_get(entity_id) is not None
+
+    # The entity state is set to unavailable
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_handle_device_entity_removed_unknown_unique_id(
