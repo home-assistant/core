@@ -44,10 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Unsupported devices have an empty devices dict and won't trigger this.
         if update.devices and len(update.entity_values) <= 1:
             consecutive_failures += 1
-            if (
-                consecutive_failures >= REAUTH_AFTER_FAILURES
-                and not reauth_triggered
-            ):
+            if consecutive_failures >= REAUTH_AFTER_FAILURES and not reauth_triggered:
                 _LOGGER.debug(
                     "Triggering reauth for %s after %d consecutive failures",
                     address,

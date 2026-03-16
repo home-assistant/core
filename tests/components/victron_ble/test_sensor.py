@@ -6,6 +6,7 @@ from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.victron_ble import REAUTH_AFTER_FAILURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,12 +21,18 @@ from .fixtures import (
     VICTRON_SMART_LITHIUM_TOKEN,
     VICTRON_SOLAR_CHARGER_SERVICE_INFO,
     VICTRON_SOLAR_CHARGER_TOKEN,
+    VICTRON_VEBUS_BAD_KEY_SERVICE_INFO,
     VICTRON_VEBUS_SERVICE_INFO,
     VICTRON_VEBUS_TOKEN,
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_advertisement_with_time_and_source_connectable,
+    inject_bluetooth_service_info,
+)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -74,19 +81,6 @@ async def test_sensors(
 
     # Use snapshot testing to verify all entity states and registry entries
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
-
-
-from homeassistant.components.victron_ble import REAUTH_AFTER_FAILURES
-
-from .fixtures import (
-    VICTRON_VEBUS_BAD_KEY_SERVICE_INFO,
-)
-
-from tests.components.bluetooth import (
-    inject_advertisement_with_time_and_source_connectable,
-    generate_advertisement_data,
-    generate_ble_device,
-)
 
 
 def _inject_bad_advertisement(hass: HomeAssistant, seq: int = 0) -> None:

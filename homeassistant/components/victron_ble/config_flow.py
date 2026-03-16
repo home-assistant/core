@@ -142,9 +142,7 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             # Find the current advertisement data for this device
             for discovery_info in async_discovered_service_info(self.hass, False):
                 if discovery_info.address == reauth_entry.unique_id:
-                    mfr_data = discovery_info.manufacturer_data.get(
-                        VICTRON_IDENTIFIER
-                    )
+                    mfr_data = discovery_info.manufacturer_data.get(VICTRON_IDENTIFIER)
                     if mfr_data is None or not device.validate_advertisement_key(
                         mfr_data
                     ):
