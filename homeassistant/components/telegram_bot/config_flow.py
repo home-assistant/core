@@ -629,8 +629,11 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             most_recent_chat = None
         if most_recent_chat is not None:
             suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
+
             description_placeholders["most_recent_chat"] = (
                 f"{most_recent_chat[1]} ({most_recent_chat[0]})"
+                if most_recent_chat[1]
+                else str(most_recent_chat[0])
             )
 
         return self.async_show_form(
@@ -646,7 +649,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
 async def _get_most_recent_chat(
     service: TelegramNotificationService,
-) -> tuple[int, str] | None:
+) -> tuple[int, str | None] | None:
     """Get the most recent chat ID and name.
 
     For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
@@ -660,9 +663,6 @@ async def _get_most_recent_chat(
             return None
 
         chat = await service.bot.get_chat(service.app.most_recent_chat_id)
-        assert (
-            chat.effective_name is not None
-        )  # value is based on title for group chats and full_name for private chats, either of which should always be present
         return (service.app.most_recent_chat_id, chat.effective_name)
 
     # broadcast bot
@@ -670,7 +670,7 @@ async def _get_most_recent_chat(
     if updates:
         last_update = updates[-1]
         if last_update.effective_chat:
-            chat_name = last_update.effective_chat.effective_name or ""
+            chat_name = last_update.effective_chat.effective_name
             return (
                 last_update.effective_chat.id,
                 chat_name,
