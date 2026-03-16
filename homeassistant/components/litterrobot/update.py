@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     def _check_robots() -> None:
         all_robots = list(coordinator.litter_robots())
-        current_robots = {robot.id for robot in all_robots}
+        current_robots = {robot.serial for robot in all_robots}
         new_robots = current_robots - known_robots
         if new_robots:
             known_robots.update(new_robots)
@@ -54,7 +54,7 @@ async def async_setup_entry(
                     description=FIRMWARE_UPDATE_ENTITY,
                 )
                 for robot in all_robots
-                if robot.id in new_robots
+                if robot.serial in new_robots
                 if isinstance(robot, LitterRobot4)
             )
             async_add_entities(entities, True)

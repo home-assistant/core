@@ -1,7 +1,6 @@
 {
   "name": "Test",
   "serial": "LR4C010001",
-  "unitId": "LR4-0123456789",
   "userId": "1234567",
   "espFirmware": "1.1.50",
   "picFirmwareVersion": "10512.2560.2.53",
