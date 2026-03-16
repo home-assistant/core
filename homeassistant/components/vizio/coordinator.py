@@ -128,7 +128,12 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         input_list = await self.device.get_inputs_list(log_api_exception=False)
 
         current_app_config = None
-        if self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV:
+        # Only attempt to fetch app config if the device is a TV and supports apps
+        if (
+            self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
+            and input_list
+            and any(input_item.name == APPS for input_item in input_list)
+        ):
             current_app_config = await self.device.get_current_app_config(
                 log_api_exception=False
             )
