@@ -51,13 +51,11 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_zah67ekd"],
-)
-@pytest.mark.parametrize(
-    ("service", "service_data", "expected_commands"),
+    ("mock_device_code", "entity_id", "service", "service_data", "expected_commands"),
     [
         (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
             SERVICE_OPEN_COVER,
             {},
             [
@@ -65,6 +63,8 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
             SERVICE_CLOSE_COVER,
             {},
             [
@@ -72,12 +72,32 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            "cl_zah67ekd",
+            "cover.kitchen_blinds_curtain",
             SERVICE_SET_COVER_POSITION,
             {
                 ATTR_POSITION: 25,
             },
             [
                 {"code": "percent_control", "value": 75},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_OPEN_COVER,
+            {},
+            [
+                {"code": "control", "value": "open"},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_CLOSE_COVER,
+            {},
+            [
+                {"code": "control", "value": "close"},
             ],
         ),
     ],
@@ -88,12 +108,12 @@ async def test_action(
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    entity_id: str,
     service: str,
     service_data: dict[str, Any],
     expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test cover action."""
-    entity_id = "cover.kitchen_blinds_curtain"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     state = hass.states.get(entity_id)
