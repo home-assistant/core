@@ -20,6 +20,7 @@ from tests.common import MockConfigEntry
 
 BASE_URL: Final = "http://10.0.0.131"
 PRODUCT_NAME: Final = "Test Product"
+SERIAL_NUMBER: Final = 12345
 UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"
 VERSION: Final = "v1.14.1/1.4.3"
 
@@ -127,10 +128,8 @@ def build_device_data_list() -> list[DeviceData]:
     ]
 
 
-async def setup_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up the Lunatone integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

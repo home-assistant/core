@@ -47,7 +47,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
     """Test full flow."""
-    mock_lunatone_info.data = None
+    mock_lunatone_info.serial_number = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

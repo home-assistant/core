@@ -6,10 +6,11 @@ import aiohttp
 
 from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import BASE_URL, PRODUCT_NAME, VERSION, setup_integration
+from . import BASE_URL, PRODUCT_NAME, SERIAL_NUMBER, VERSION, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -133,3 +134,24 @@ async def test_config_entry_not_ready_no_serial_number(
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_config_entry_migrating_unique_ids(
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the Lunatone configuration entry not ready due to a missing serial number."""
+    config_entry = MockConfigEntry(
+        title=BASE_URL,
+        domain=DOMAIN,
+        data={CONF_URL: BASE_URL},
+        unique_id=str(SERIAL_NUMBER),
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == mock_config_entry.unique_id
