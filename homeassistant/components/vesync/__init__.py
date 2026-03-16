@@ -76,8 +76,17 @@ async def async_setup_entry(
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err
 
-    await manager.update()
-    await manager.check_firmware()
+    try:
+        await manager.update()
+        await manager.check_firmware()
+    except VeSyncServerError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="server_error"
+        ) from err
+    except VeSyncAPIResponseError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="api_response_error"
+        ) from err
 
     config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
 
