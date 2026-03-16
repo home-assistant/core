@@ -16,10 +16,15 @@ from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = DhcpServiceInfo(
+DHCP_DISCOVERY_LR4 = DhcpServiceInfo(
     ip="192.168.1.100",
     macaddress="aabbccddeeff",
     hostname="litter-robot4",
+)
+DHCP_DISCOVERY_LR5 = DhcpServiceInfo(
+    ip="192.168.1.101",
+    macaddress="aabbccddeef0",
+    hostname="whiskerrobots",
 )
 
 
@@ -266,18 +271,30 @@ async def test_reconfigure(hass: HomeAssistant, mock_account: Account) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "dhcp_discovery",
+    [DHCP_DISCOVERY_LR4, DHCP_DISCOVERY_LR5],
+)
+async def test_dhcp_discovery(
+    hass: HomeAssistant, dhcp_discovery: DhcpServiceInfo
+) -> None:
     """Test DHCP discovery triggers user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
+        data=dhcp_discovery,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "dhcp_discovery",
+    [DHCP_DISCOVERY_LR4, DHCP_DISCOVERY_LR5],
+)
+async def test_dhcp_discovery_already_configured(
+    hass: HomeAssistant, dhcp_discovery: DhcpServiceInfo
+) -> None:
     """Test DHCP discovery aborts when already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -288,7 +305,7 @@ async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
+        data=dhcp_discovery,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -301,7 +318,7 @@ async def test_dhcp_discovery_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
+        data=DHCP_DISCOVERY_LR4,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

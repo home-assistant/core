@@ -399,7 +399,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "litterrobot",
-        "hostname": "litter-robot*",
+        "hostname": "litter-robot4",
+    },
+    {
+        "domain": "litterrobot",
+        "hostname": "whiskerrobots",
     },
     {
         "domain": "lyric",
