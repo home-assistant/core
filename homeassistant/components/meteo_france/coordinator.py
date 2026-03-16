@@ -7,6 +7,7 @@ from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -26,8 +27,6 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
         hass: HomeAssistant,
         entry: ConfigEntry,
         client: MeteoFranceClient,
-        latitude: float,
-        longitude: float,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -38,8 +37,8 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
             update_interval=SCAN_INTERVAL,
         )
         self._client = client
-        self._latitude = latitude
-        self._longitude = longitude
+        self._latitude = entry.data[CONF_LATITUDE]
+        self._longitude = entry.data[CONF_LONGITUDE]
 
     async def _async_update_data(self) -> Forecast:
         """Get data from Meteo-France forecast."""
@@ -58,8 +57,6 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
         hass: HomeAssistant,
         entry: ConfigEntry,
         client: MeteoFranceClient,
-        latitude: float,
-        longitude: float,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -70,8 +67,8 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
             update_interval=SCAN_INTERVAL_RAIN,
         )
         self._client = client
-        self._latitude = latitude
-        self._longitude = longitude
+        self._latitude = entry.data[CONF_LATITUDE]
+        self._longitude = entry.data[CONF_LONGITUDE]
 
     async def _async_update_data(self) -> Rain:
         """Get data from Meteo-France rain."""

@@ -7,7 +7,6 @@ from meteofrance_api.helpers import is_valid_warning_department
 from requests import RequestException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -32,16 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     client = MeteoFranceClient()
-    latitude = entry.data[CONF_LATITUDE]
-    longitude = entry.data[CONF_LONGITUDE]
 
-    coordinator_forecast = MeteoFranceForecastUpdateCoordinator(
-        hass,
-        entry,
-        client,
-        latitude,
-        longitude,
-    )
+    coordinator_forecast = MeteoFranceForecastUpdateCoordinator(hass, entry, client)
     coordinator_rain = None
     coordinator_alert = None
 
@@ -52,13 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     # Check rain forecast.
-    coordinator_rain = MeteoFranceRainUpdateCoordinator(
-        hass,
-        entry,
-        client,
-        latitude,
-        longitude,
-    )
+    coordinator_rain = MeteoFranceRainUpdateCoordinator(hass, entry, client)
     try:
         await coordinator_rain._async_refresh(log_failures=False)  # noqa: SLF001
     except RequestException:
