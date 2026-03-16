@@ -9,6 +9,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+# Patch ServiceRegistry.async_call (read-only on instance, so patch on class)
+SERVICE_ASYNC_CALL = "homeassistant.core.ServiceRegistry.async_call"
+
 
 async def test_user_flow(
     hass: HomeAssistant,
@@ -37,10 +40,16 @@ async def test_single_instance_allowed(
     """Test that a second config flow aborts with single_instance_allowed."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
+    # Ensure translation for abort reason is available (integration strings.json may not be loaded in test env)
+    with patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        new_callable=AsyncMock,
+        return_value={"config.abort.single_instance_allowed": "Only one instance allowed."},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -71,12 +80,7 @@ async def test_options_flow_skip_refresh(
     """Test options flow: user unchecks confirm_refresh -> entry updated, no service call."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch.object(
-        hass.services,
-        "async_call",
-        new_callable=AsyncMock,
-        return_value=None,
-    ) as mock_async_call:
+    with patch(SERVICE_ASYNC_CALL, new_callable=AsyncMock) as mock_async_call:
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id,
             data=None,
@@ -101,13 +105,7 @@ async def test_options_flow_confirm_refresh_then_success(
     """Test options flow: user confirms refresh -> service called -> success step -> done."""
     mock_config_entry.add_to_hass(hass)
 
-    # Mock service call so flow does not depend on integration being fully set up
-    with patch.object(
-        hass.services,
-        "async_call",
-        new_callable=AsyncMock,
-        return_value=None,
-    ) as mock_async_call:
+    with patch(SERVICE_ASYNC_CALL, new_callable=AsyncMock) as mock_async_call:
         result = await hass.config_entries.options.async_init(
             mock_config_entry.entry_id,
             data=None,
