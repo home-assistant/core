@@ -183,7 +183,7 @@ SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = vol.Schema(
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
         vol.Required(ATTR_DRAFT_ID): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Required(ATTR_MESSAGE): cv.string,
