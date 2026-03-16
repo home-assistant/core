@@ -9,7 +9,6 @@ from itertools import chain
 from typing import cast
 
 from homeassistant.components.sensor import (
-    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -71,7 +70,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
     TessieSensorEntityDescription(
         key="charge_state_charge_energy_added",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=1,
@@ -379,17 +378,6 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
 
 PARALLEL_UPDATES = 0
 
-CHARGE_ENERGY_RESET_KEYS = frozenset({"charge_state_charge_energy_added"})
-CHARGE_ENERGY_RESET_THRESHOLD = 1.0  # kWh
-
-
-def _is_charge_energy_reset(previous_value: float | None, new_value: float) -> bool:
-    """Return if a charge energy value indicates a reset."""
-    return previous_value is not None and (
-        (new_value == 0 and previous_value != 0)
-        or new_value < previous_value - CHARGE_ENERGY_RESET_THRESHOLD
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -432,11 +420,10 @@ async def async_setup_entry(
     )
 
 
-class TessieVehicleSensorEntity(TessieEntity, RestoreSensor):
+class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
     """Base class for Tessie sensor entities."""
 
     entity_description: TessieSensorEntityDescription
-    _previous_native_value: float | None = None
 
     def __init__(
         self,
@@ -446,26 +433,6 @@ class TessieVehicleSensorEntity(TessieEntity, RestoreSensor):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(vehicle, description.key)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        if (
-            self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
-            and (last_state := await self.async_get_last_state()) is not None
-            and (last_reset := last_state.attributes.get("last_reset")) is not None
-        ):
-            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the sensor."""
-        if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS:
-            raw_value = self.get()
-            if isinstance(raw_value, float | int):
-                new_value = float(raw_value)
-                if _is_charge_energy_reset(self._previous_native_value, new_value):
-                    self._attr_last_reset = dt_util.utcnow()
-                self._previous_native_value = new_value
 
     @property
     def native_value(self) -> StateType | datetime:

@@ -47,9 +47,6 @@ from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
 PARALLEL_UPDATES = 0
 
-CHARGE_ENERGY_RESET_KEYS = frozenset({"charge_state_charge_energy_added"})
-CHARGE_ENERGY_RESET_THRESHOLD = 1.0  # kWh
-
 CHARGE_STATES = {
     "Starting": "starting",
     "Charging": "charging",
@@ -91,7 +88,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
     ),
     TeslaFleetSensorEntityDescription(
         key="charge_state_charge_energy_added",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=1,
@@ -427,7 +424,7 @@ ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=(
             key.startswith("total") or key == "grid_energy_imported"
         ),
@@ -500,7 +497,6 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
     """Base class for Tesla Fleet vehicle metric sensors."""
 
     entity_description: TeslaFleetSensorEntityDescription
-    _previous_value: float | None = None
 
     def __init__(
         self,
@@ -517,31 +513,11 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
         if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
             if (sensor_data := await self.async_get_last_sensor_data()) is not None:
                 self._attr_native_value = sensor_data.native_value
-                if isinstance(sensor_data.native_value, float | int):
-                    self._previous_value = float(sensor_data.native_value)
-
-        if (
-            self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
-            and (last_state := await self.async_get_last_state()) is not None
-            and (last_reset := last_state.attributes.get("last_reset")) is not None
-        ):
-            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.has:
-            new_value = self.entity_description.value_fn(self._value)
-            if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS and isinstance(
-                new_value, float | int
-            ):
-                if self._previous_value is not None and (
-                    (new_value == 0 and self._previous_value != 0)
-                    or new_value
-                    < self._previous_value - CHARGE_ENERGY_RESET_THRESHOLD
-                ):
-                    self._attr_last_reset = dt_util.utcnow()
-                self._previous_value = float(new_value)
-            self._attr_native_value = new_value
+            self._attr_native_value = self.entity_description.value_fn(self._value)
         else:
             self._attr_native_value = None
 
@@ -608,7 +584,6 @@ class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorE
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self._value
-        self._attr_last_reset = self.coordinator.data.get("_period_start")
 
 
 class TeslaFleetWallConnectorSensorEntity(TeslaFleetWallConnectorEntity, SensorEntity):
