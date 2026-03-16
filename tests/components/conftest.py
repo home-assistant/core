@@ -640,6 +640,7 @@ def homeassistant_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
         audio_input=None,
         audio_output=None,
         backups_exclude_database=False,
+        duplicate_log_file=False,
     )
     return supervisor_client.homeassistant.info
 
