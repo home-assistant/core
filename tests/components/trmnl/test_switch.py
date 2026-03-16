@@ -10,7 +10,7 @@ from trmnl.exceptions import TRMNLError
 from trmnl.models import Device
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -49,8 +49,7 @@ async def test_set_switch(
     expected_value: bool,
 ) -> None:
     """Test turning the sleep mode switch on and off."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         "switch",
@@ -76,8 +75,7 @@ async def test_action_error(
     service: str,
 ) -> None:
     """Test that a TRMNLError during a switch action raises HomeAssistantError."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
 
@@ -88,6 +86,25 @@ async def test_action_error(
             {ATTR_ENTITY_ID: "switch.test_trmnl_sleep_mode"},
             blocking=True,
         )
+
+
+async def test_coordinator_unavailable(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that switch entities become unavailable when the coordinator fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.test_trmnl_sleep_mode").state != STATE_UNAVAILABLE
+
+    mock_trmnl_client.get_devices.side_effect = TRMNLError
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_trmnl_sleep_mode").state == STATE_UNAVAILABLE
 
 
 async def test_dynamic_new_device(

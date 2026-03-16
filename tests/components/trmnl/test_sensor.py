@@ -6,9 +6,10 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from trmnl.exceptions import TRMNLError
 from trmnl.models import Device
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,6 +31,25 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_coordinator_unavailable(
+    hass: HomeAssistant,
+    mock_trmnl_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that sensor entities become unavailable when the coordinator fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.test_trmnl_battery").state != STATE_UNAVAILABLE
+
+    mock_trmnl_client.get_devices.side_effect = TRMNLError
+    freezer.tick(timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_trmnl_battery").state == STATE_UNAVAILABLE
 
 
 async def test_dynamic_new_device(
