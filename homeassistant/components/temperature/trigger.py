@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State, split_entity_id
+from homeassistant.helpers.automation import NumericalDomainSpec
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
     BEHAVIOR_ANY,
@@ -46,7 +47,6 @@ from homeassistant.helpers.trigger import (
     _number_or_entity,
     _validate_limits_for_threshold_type,
     _validate_range,
-    get_device_class_or_undefined,
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -98,7 +98,21 @@ TEMPERATURE_CROSSED_THRESHOLD_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
     }
 )
 
-_DOMAINS = {SENSOR_DOMAIN, CLIMATE_DOMAIN, WATER_HEATER_DOMAIN, WEATHER_DOMAIN}
+
+TEMPERATURE_DOMAIN_SPECS = {
+    CLIMATE_DOMAIN: NumericalDomainSpec(
+        value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
+    ),
+    SENSOR_DOMAIN: NumericalDomainSpec(
+        device_class=SensorDeviceClass.TEMPERATURE,
+    ),
+    WATER_HEATER_DOMAIN: NumericalDomainSpec(
+        value_source=WATER_HEATER_ATTR_CURRENT_TEMPERATURE
+    ),
+    WEATHER_DOMAIN: NumericalDomainSpec(
+        value_source=ATTR_WEATHER_TEMPERATURE,
+    ),
+}
 
 
 class _TemperatureTriggerMixin(EntityNumericalStateBase):
@@ -110,7 +124,7 @@ class _TemperatureTriggerMixin(EntityNumericalStateBase):
         WATER_HEATER_DOMAIN: WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
         WEATHER_DOMAIN: ATTR_WEATHER_TEMPERATURE,
     }
-    _domains = _DOMAINS
+    _domain_specs = TEMPERATURE_DOMAIN_SPECS
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
@@ -118,17 +132,6 @@ class _TemperatureTriggerMixin(EntityNumericalStateBase):
         self._trigger_unit: str = self._options.get(
             CONF_UNIT, hass.config.units.temperature_unit
         )
-
-    def entity_filter(self, entities: set[str]) -> set[str]:
-        """Filter entities: sensor only with device_class temperature."""
-        entities = super().entity_filter(entities)
-        return {
-            entity_id
-            for entity_id in entities
-            if split_entity_id(entity_id)[0] != SENSOR_DOMAIN
-            or get_device_class_or_undefined(self._hass, entity_id)
-            == SensorDeviceClass.TEMPERATURE
-        }
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""
