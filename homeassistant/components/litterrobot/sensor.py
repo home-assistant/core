@@ -440,15 +440,20 @@ class LitterRobotLastEventSensor(LitterRobotEntity[LitterRobot5], SensorEntity):
             attrs["event_id"] = event_id
 
         # Recent activity history for dashboard rendering
+        recording_map = self.coordinator.get_recording_map(self.robot.serial)
         attrs["recent_history"] = _build_activity_list(
-            activities[:MAX_HISTORY_ENTRIES], self.coordinator.pet_name_map
+            activities[:MAX_HISTORY_ENTRIES],
+            self.coordinator.pet_name_map,
+            recording_map,
         )
         attrs["is_reassigned"] = latest.get("isReassigned", False)
         return attrs or None
 
 
 def _build_activity_list(
-    activities: list[dict[str, Any]], pet_name_map: dict[str, str]
+    activities: list[dict[str, Any]],
+    pet_name_map: dict[str, str],
+    recording_map: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Build a list of activity dicts for dashboard rendering."""
     result: list[dict[str, Any]] = []
@@ -476,6 +481,18 @@ def _build_activity_list(
             entry["weight_lbs"] = round(pet_weight / 100, 1)
         if (duration := activity.get("duration")) is not None:
             entry["duration"] = _format_duration(duration)
+
+        # Match to recording file if available
+        if recording_map and activity.get("timestamp"):
+            try:
+                ts = datetime.fromisoformat(activity["timestamp"])
+                prefix = ts.strftime("%Y%m%d_%H%M")
+                for fname, url in recording_map.items():
+                    if fname.startswith(prefix):
+                        entry["recording_url"] = url
+                        break
+            except (ValueError, TypeError):
+                pass
 
         result.append(entry)
     return result
@@ -602,8 +619,14 @@ class LitterRobotPetLastVisitSensor(LitterRobotEntity[Pet], SensorEntity):
         attrs["total_duration_today"] = _format_duration(total_duration)
 
         # Recent visit history for dashboard rendering
+        # Gather recording maps from all robots for URL matching
+        combined_map: dict[str, str] = {}
+        for serial in self.coordinator.camera_activities:
+            combined_map.update(self.coordinator.get_recording_map(serial))
         attrs["recent_history"] = _build_activity_list(
-            activities[:MAX_HISTORY_ENTRIES], self.coordinator.pet_name_map
+            activities[:MAX_HISTORY_ENTRIES],
+            self.coordinator.pet_name_map,
+            combined_map,
         )
 
         return attrs

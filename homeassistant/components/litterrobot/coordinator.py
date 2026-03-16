@@ -592,6 +592,18 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.recording_manager.async_stop()
             self.recording_manager = None
 
+    def get_recording_map(self, serial: str) -> dict[str, str]:
+        """Return a map of filename -> URL for recordings of this robot."""
+        media_dir = Path(self.hass.config.path("media")) / "litterrobot" / serial
+        if not media_dir.is_dir():
+            return {}
+        result: dict[str, str] = {}
+        for filepath in media_dir.iterdir():
+            if filepath.suffix == ".mp4":
+                url = f"/api/litterrobot/recordings/{serial}/{filepath.name}"
+                result[filepath.name] = url
+        return result
+
     def rename_recording_for_reassign(
         self,
         serial: str,
