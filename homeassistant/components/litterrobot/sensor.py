@@ -29,6 +29,7 @@ from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinato
 from .entity import LitterRobotEntity, _WhiskerEntityT
 
 PARALLEL_UPDATES = 0
+MAX_HISTORY_ENTRIES = 20
 
 
 def _start_of_local_week() -> datetime:
@@ -437,8 +438,47 @@ class LitterRobotLastEventSensor(LitterRobotEntity[LitterRobot5], SensorEntity):
             attrs["timestamp"] = timestamp
         if (event_id := latest.get("eventId")) is not None:
             attrs["event_id"] = event_id
+
+        # Recent activity history for dashboard rendering
+        attrs["recent_history"] = _build_activity_list(
+            activities[:MAX_HISTORY_ENTRIES], self.coordinator.pet_name_map
+        )
         attrs["is_reassigned"] = latest.get("isReassigned", False)
         return attrs or None
+
+
+def _build_activity_list(
+    activities: list[dict[str, Any]], pet_name_map: dict[str, str]
+) -> list[dict[str, Any]]:
+    """Build a list of activity dicts for dashboard rendering."""
+    result: list[dict[str, Any]] = []
+    for activity in activities:
+        pet_ids = activity.get("petIds") or []
+        pet_id = activity.get("petId") or (pet_ids[0] if pet_ids else None)
+        pet_name = pet_name_map.get(pet_id, "Unknown") if pet_id else "Unknown"
+
+        raw_type = activity.get("type", "")
+        event_type = ACTIVITY_TYPE_MAP.get(raw_type, raw_type.lower())
+
+        entry: dict[str, Any] = {
+            "event_type": EVENT_TYPE_LABELS.get(event_type, event_type),
+            "pet": pet_name,
+            "timestamp": activity.get("timestamp", ""),
+            "event_id": activity.get("eventId", ""),
+            "is_reassigned": activity.get("isReassigned", False),
+        }
+
+        if (waste_type := activity.get("wasteType")) is not None:
+            entry["waste_type"] = waste_type
+        if (waste_weight := activity.get("wasteWeight")) is not None:
+            entry["waste_oz"] = _waste_weight_oz(waste_weight)
+        if (pet_weight := activity.get("petWeight")) is not None:
+            entry["weight_lbs"] = round(pet_weight / 100, 1)
+        if (duration := activity.get("duration")) is not None:
+            entry["duration"] = _format_duration(duration)
+
+        result.append(entry)
+    return result
 
 
 def _waste_weight_oz(raw: float) -> float:
@@ -560,5 +600,10 @@ class LitterRobotPetLastVisitSensor(LitterRobotEntity[Pet], SensorEntity):
         attrs["feces_today"] = feces_count
         attrs["feces_weight_today_oz"] = _waste_weight_oz(feces_weight)
         attrs["total_duration_today"] = _format_duration(total_duration)
+
+        # Recent visit history for dashboard rendering
+        attrs["recent_history"] = _build_activity_list(
+            activities[:MAX_HISTORY_ENTRIES], self.coordinator.pet_name_map
+        )
 
         return attrs
