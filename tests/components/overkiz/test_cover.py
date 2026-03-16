@@ -52,28 +52,40 @@ class FixtureDevice(NamedTuple):
     url: str
 
 
-AWNING = FixtureDevice("setup/setup_local.json", "io://1234-1234-1234/5928357")
-LOW_SPEED = FixtureDevice("setup/setup_nexity_2.json", "io://1234-5678-1698/141613")
-LOW_SPEED_OTHER = FixtureDevice(
-    "setup/setup_nexity_2.json", "io://1234-5678-1698/4080031"
+AWNING = FixtureDevice(
+    "setup/local_somfy_connexoon_europe.json", "io://1234-1234-1234/5928357"
 )
-PERGOLA = FixtureDevice("setup/setup_local_tahoma.json", "io://1234-5678-3293/7614902")
-RTS = FixtureDevice("setup/setup_hi_kumo.json", "rts://1234-1234-6362/16730022")
-SHUTTER = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/12184029")
-GARAGE = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/1166863")
+LOW_SPEED = FixtureDevice(
+    "setup/cloud_nexity_rail_din_europe.json", "io://1234-5678-1698/141613"
+)
+LOW_SPEED_OTHER = FixtureDevice(
+    "setup/cloud_nexity_rail_din_europe.json", "io://1234-5678-1698/4080031"
+)
+PERGOLA = FixtureDevice(
+    "setup/local_somfy_tahoma_v2_europe.json", "io://1234-5678-3293/7614902"
+)
+RTS = FixtureDevice(
+    "setup/cloud_somfy_connexoon_rts_asia.json", "rts://1234-1234-6362/16730022"
+)
+SHUTTER = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json", "io://1234-1234-6233/12184029"
+)
+GARAGE = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json", "io://1234-1234-6233/1166863"
+)
 TILTED_WINDOW = FixtureDevice(
-    "setup/setup_local_with_climate.json", "io://1234-5678-9373/10202865"
+    "setup/local_somfy_tahoma_switch_europe_3.json", "io://1234-5678-9373/10202865"
 )
 # Device with ClosureState=108
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
-    "setup/setup_local_somfy_europe.json", "io://1234-5678-6508/4877511"
+    "setup/local_somfy_tahoma_switch_europe.json", "io://1234-5678-6508/4877511"
 )
 # Device with ClosureState=124
 POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
-    "setup/setup_local_somfy_europe_2.json", "io://1234-5678-1516/3656107"
+    "setup/local_somfy_tahoma_switch_europe_2.json", "io://1234-5678-1516/3656107"
 )
 POSITIONABLE_DUAL_ROLLER_SHUTTER = FixtureDevice(
-    "setup/setup_cloud_tahoma_switch.json", "io://1234-5678-5010/12931361"
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json", "io://1234-5678-5010/12931361"
 )
 
 SNAPSHOT_FIXTURES = [

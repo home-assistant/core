@@ -7,7 +7,7 @@ from homeassistant.components.overkiz.const import DOMAIN
 
 from tests.common import load_json_object_fixture
 
-DEFAULT_SETUP_FIXTURE = "setup/setup_tahoma_switch.json"
+DEFAULT_SETUP_FIXTURE = "setup/cloud_somfy_tahoma_switch_europe.json"
 
 
 def load_setup_fixture(fixture: str = DEFAULT_SETUP_FIXTURE) -> Setup:
