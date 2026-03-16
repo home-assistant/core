@@ -64,6 +64,10 @@ GARAGE = FixtureDevice("setup/setup_tahoma_3.json", "io://1234-1234-6233/1166863
 TILTED_WINDOW = FixtureDevice(
     "setup/setup_local_with_climate.json", "io://1234-5678-9373/10202865"
 )
+# Device with ClosureState=108
+DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
+    "setup/setup_local_somfy_europe.json", "io://1234-5678-6508/4877511"
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -72,6 +76,7 @@ SNAPSHOT_FIXTURES = [
     RTS,
     SHUTTER,
     TILTED_WINDOW,
+    DYNAMIC_EXTERIOR_VENETIAN_BLIND,
 ]
 
 
