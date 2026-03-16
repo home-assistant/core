@@ -1,11 +1,8 @@
 """Provides conditions for climates."""
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.condition import (
-    Condition,
-    make_entity_state_attribute_condition,
-    make_entity_state_condition,
-)
+from homeassistant.helpers.automation import DomainSpec
+from homeassistant.helpers.condition import Condition, make_entity_state_condition
 
 from .const import ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
 
@@ -22,14 +19,14 @@ CONDITIONS: dict[str, type[Condition]] = {
             HVACMode.HEAT_COOL,
         },
     ),
-    "is_cooling": make_entity_state_attribute_condition(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.COOLING
+    "is_cooling": make_entity_state_condition(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.COOLING
     ),
-    "is_drying": make_entity_state_attribute_condition(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.DRYING
+    "is_drying": make_entity_state_condition(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.DRYING
     ),
-    "is_heating": make_entity_state_attribute_condition(
-        DOMAIN, ATTR_HVAC_ACTION, HVACAction.HEATING
+    "is_heating": make_entity_state_condition(
+        {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
 }
 
