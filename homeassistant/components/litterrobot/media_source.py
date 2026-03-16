@@ -276,7 +276,7 @@ def _parse_recording_title(
         return f"Recording - {date_fmt} {time_fmt}"
 
     # Compound events that never carry a pet name after them
-    COMPOUND_EVENTS = {"CYCLE_COMPLETED", "CYCLE_INTERRUPTED", "CAT_DETECT"}
+    COMPOUND_EVENTS = {"CYCLE_COMPLETED", "CYCLE_INTERRUPTED", "CAT_DETECT", "MOTION"}
     # Event types where a missing pet name means the visit was unassigned
     VISIT_EVENTS = {"VISIT", "PET_VISIT"}
 
@@ -298,7 +298,8 @@ def _parse_recording_title(
     if pet is None and event in VISIT_EVENTS:
         pet = "Unassigned"
 
-    pretty_event = event.replace("_", " ").title()
+    EVENT_DISPLAY = {"CAT_DETECT": "Motion Detected", "MOTION": "Motion Detected"}
+    pretty_event = EVENT_DISPLAY.get(event, event.replace("_", " ").title())
 
     # Try to enrich with activity data
     time_key = f"{date_str}_{time_str[:4]}"

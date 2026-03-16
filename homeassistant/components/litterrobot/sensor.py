@@ -363,7 +363,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
 
 EVENT_TYPE_LABELS: dict[str, str] = {
     "pet_visit": "Pet visit",
-    "cat_detect": "Cat detected",
+    "cat_detect": "Motion detected",
     "motion": "Motion",
     "cycle_completed": "Cycle completed",
     "cycle_interrupted": "Cycle interrupted",
