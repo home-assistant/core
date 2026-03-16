@@ -1,7 +1,7 @@
 """Test sensor of WaterFurnace integration."""
 
 import asyncio
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,14 +9,14 @@ from syrupy.assertion import SnapshotAssertion
 from waterfurnace.waterfurnace import WFException
 
 from homeassistant.components.waterfurnace.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("seed_statistics", "init_integration")
+@pytest.mark.usefixtures("seed_statistics")
 async def test_sensors(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,
@@ -25,6 +25,10 @@ async def test_sensors(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we create the expected sensors."""
+    with patch("homeassistant.components.waterfurnace.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
