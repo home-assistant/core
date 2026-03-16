@@ -2,9 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyatv.const import FeatureName, FeatureState
+from pyatv.const import FeatureName
 from pyatv.interface import MediaMetadata
-import pytest
 
 from homeassistant.components.apple_tv.media_player import AppleTvMediaPlayer
 from homeassistant.components.media_player import ATTR_MEDIA_EXTRA, MediaType
