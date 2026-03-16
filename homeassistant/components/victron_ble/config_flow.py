@@ -150,7 +150,9 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                     ):
                         return self.async_update_reload_and_abort(
                             reauth_entry,
-                            data={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
+                            data_updates={
+                                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]
+                            },
                         )
                     errors["base"] = "invalid_access_token"
                     break
