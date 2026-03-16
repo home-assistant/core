@@ -210,7 +210,7 @@ async def get_media_info(
     client: JellyfinClient,
     user_id: str,
     media_content_id: str,
-) -> tuple[str | None, list[dict[str, Any]] | None, str | None]:
+) -> tuple[str | None, list[dict[str, Any]] | None, str | None, str | None]:
     """Fetch media info."""
     thumbnail: str | None = None
     title: str | None = None
