@@ -1,17 +1,79 @@
 """Test the OMIE - Spain and Portugal electricity prices integration."""
 
-from homeassistant.components.omie.const import DOMAIN
+import aiohttp
+from freezegun import freeze_time
+import pytest
+
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component
+from . import spot_price_fetcher
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_empty_config(hass: HomeAssistant) -> None:
-    """Test setup with empty configuration."""
-    assert await async_setup_component(
-        hass,
-        DOMAIN,
-        {},
-    )
-    assert_setup_component(0, DOMAIN)
+async def test_setup_and_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyomie,
+) -> None:
+    """Test setup and unload of a config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_pyomie.spot_price.call_count == 1
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("hass_madrid")
+async def test_coordinator_unavailability_logging(
+    hass: HomeAssistant,
+    mock_pyomie,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator logs unavailability and recovery appropriately."""
+    mock_config_entry.add_to_hass(hass)
+
+    with freeze_time("2024-01-15T12:01:00Z"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_pyomie.spot_price.call_count == 1
+    assert "ERROR" not in caplog.text
+
+    # Trigger refresh with API failure
+    mock_pyomie.spot_price.side_effect = aiohttp.ClientError("Connection timeout")
+    with freeze_time("2024-01-15T12:16:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert mock_pyomie.spot_price.call_count == 2
+    assert "Error requesting omie data" in caplog.text
+    assert "Connection timeout" in caplog.text
+
+    # Second failure should not log again
+    caplog.clear()
+    with freeze_time("2024-01-15T12:31:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert mock_pyomie.spot_price.call_count == 3
+    assert "Error" not in caplog.text
+
+    # Trigger recovery
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
+    with freeze_time("2024-01-15T12:46:02Z"):
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done()
+
+    assert mock_pyomie.spot_price.call_count == 4
+    assert "Fetching omie data recovered" in caplog.text

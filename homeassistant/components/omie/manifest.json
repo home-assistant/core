@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/omie",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["pyomie==1.1.1"],
   "single_config_entry": true
 }

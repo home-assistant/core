@@ -5,7 +5,6 @@ from __future__ import annotations
 import datetime as dt
 from datetime import timedelta
 import logging
-from logging import DEBUG
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -20,10 +19,6 @@ from .const import DOMAIN
 from .util import CET, current_quarter_hour_cet
 
 _LOGGER = logging.getLogger(__name__)
-
-_SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
-"""To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE
- data becomes available."""
 
 _UPDATE_INTERVAL_PADDING = timedelta(seconds=1)
 """Padding to add to the update interval to work around early refresh scheduling by
@@ -40,7 +35,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}",
+            name=DOMAIN,
             config_entry=config_entry,
             update_interval=dt.timedelta(minutes=1),
         )
@@ -58,22 +53,20 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         return data
 
     def _set_update_interval(self) -> None:
-        """Schedules the next refresh at the start of the next quarter-hour."""
+        """Schedule the next refresh at the start of the next quarter-hour."""
         now = util.dt.now()
         self.update_interval = calc_update_interval(now)
-        if _LOGGER.isEnabledFor(DEBUG):
-            _LOGGER.debug(
-                "Next refresh at %s", (now + self.update_interval).isoformat()
-            )
+        _LOGGER.debug("Next refresh at %s", (now + self.update_interval).isoformat())
 
     async def _spot_price(self, date: dt.date) -> OMIEResults[SpotData]:
+        """Fetch OMIE spot price data for the given date."""
         _LOGGER.debug("Fetching OMIE spot data for %s", date)
         return await pyomie.spot_price(self._client_session, date)
 
 
 def calc_update_interval(now: dt.datetime) -> dt.timedelta:
-    """Calculates the update_interval needed to trigger at the next 15-minute boundary."""
-    current_quarter_hour = current_quarter_hour_cet(now)
-    next_quarter_hour = current_quarter_hour + dt.timedelta(minutes=15)
+    """Calculate the update_interval needed to trigger at the next 15-minute boundary."""
+    current_quarter = current_quarter_hour_cet(now)
+    next_quarter = current_quarter + dt.timedelta(minutes=15)
 
-    return next_quarter_hour - now + _UPDATE_INTERVAL_PADDING
+    return next_quarter - now + _UPDATE_INTERVAL_PADDING

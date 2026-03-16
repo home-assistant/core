@@ -2,14 +2,28 @@
 
 from collections.abc import Generator
 import datetime as dt
-from datetime import date
 import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from pyomie.model import OMIEResults, SpotData
 import pytest
 
+from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
+from . import price_enc, spot_price_fetcher
+
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="OMIE",
+        domain=DOMAIN,
+        unique_id="omie_singleton",
+    )
 
 
 @pytest.fixture
@@ -22,46 +36,23 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def hass_lisbon(hass: HomeAssistant):
+async def hass_lisbon(hass: HomeAssistant) -> None:
     """Home Assistant configured for Lisbon timezone."""
     await hass.config.async_set_time_zone("Europe/Lisbon")
-    return hass
 
 
 @pytest.fixture
-async def hass_madrid(hass: HomeAssistant):
+async def hass_madrid(hass: HomeAssistant) -> None:
     """Home Assistant configured for Madrid timezone."""
     await hass.config.async_set_time_zone("Europe/Madrid")
-    return hass
 
 
 @pytest.fixture
 def mock_pyomie():
     """Mock pyomie.spot_price with realistic responses."""
     with patch("homeassistant.components.omie.coordinator.pyomie") as mock:
-        # Mock successful responses - return different mock objects for each call
-        async def mock_spot_price(session, market_date):
-            mock_result = Mock()
-            mock_result.market_date = market_date
-            mock_result.contents = Mock()
-            mock_result.updated_at = Mock()
-            return mock_result
-
-        mock.spot_price.side_effect = mock_spot_price
+        mock.spot_price.side_effect = spot_price_fetcher({})
         yield mock
-
-
-def price_enc(country: int, day: int, hour: int, minute: int) -> float:
-    """Encodes the given data into a price.
-
-    Format is CCDDhhmm000. Examples:
-    -  351 15 01 15 000 for CC=351 (Portugal), DD=15 (day of month), hh=01 (1 am), mm=15.
-    -   34 16 23 00 000 for CC=344 (Spain), DD=16 (day of month), hh=23 (11 pm), mm=00.
-
-    This allows us to make assertions in tests without having
-    to look up the expected values in large datasets.
-    """
-    return country * 10**9 + day * 10**7 + hour * 10**5 + minute * 10**3
 
 
 @pytest.fixture
@@ -132,20 +123,3 @@ def mock_omie_results_jan16() -> OMIEResults:
         contents=spot_data,
         raw=json.dumps(spot_data),
     )
-
-
-def spot_price_fetcher(spot_price_data: dict):
-    """Return spot price fetcher for any data dictionary.
-
-    Args:
-        spot_price_data: Dictionary mapping ISO date strings to mock results
-    """
-    data_by_date = {
-        date.fromisoformat(iso_date): mock_result
-        for iso_date, mock_result in spot_price_data.items()
-    }
-
-    async def spot_price_fetcher_(session, requested_date) -> OMIEResults:
-        return data_by_date.get(requested_date)
-
-    return spot_price_fetcher_

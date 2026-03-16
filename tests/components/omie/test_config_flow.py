@@ -43,3 +43,5 @@ async def test_form_already_setup(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert len(mock_setup_entry.mock_calls) == 0

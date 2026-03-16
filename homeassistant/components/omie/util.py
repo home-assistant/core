@@ -11,7 +11,7 @@ CET: Final = ZoneInfo("CET")
 
 
 def current_quarter_hour_cet(current_time: dt.datetime) -> dt.datetime:
-    """Returns the start of the quarter-hour for the passed in time in CET."""
+    """Return the start of the quarter-hour for the passed in time in CET."""
     current_quarter_begin = current_time.minute // 15 * 15
     return current_time.replace(
         minute=current_quarter_begin, second=0, microsecond=0
