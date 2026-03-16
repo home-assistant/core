@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
+import logging
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
@@ -25,6 +26,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OperationalState(IntEnum):
@@ -168,8 +171,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         segments: dict[str, Segment] = {}
         for area in supported_areas:
             area_name = None
-            if area.areaInfo and area.areaInfo.locationInfo:
-                area_name = area.areaInfo.locationInfo.locationName
+            location_info = area.areaInfo.locationInfo
+            if location_info not in (None, clusters.NullValue):
+                area_name = location_info.locationName
 
             if area_name:
                 segment_id = str(area.areaID)
@@ -206,10 +210,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         if (
             response
-            and response.status != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
+            and response["status"]
+            != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
         ):
             raise HomeAssistantError(
-                f"Failed to select areas: {response.statusText or response.status.name}"
+                f"Failed to select areas: {response['statusText'] or response['status']}"
             )
 
         await self.send_device_command(
@@ -252,9 +257,18 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             VacuumEntityFeature.CLEAN_AREA in self.supported_features
             and self.registry_entry is not None
             and (last_seen_segments := self.last_seen_segments) is not None
-            and self._current_segments != {s.id: s for s in last_seen_segments}
+            # Ignore empty segments; some devices transiently
+            # report an empty list before sending the real one.
+            and (current_segments := self._current_segments)
         ):
-            self.async_create_segments_issue()
+            last_seen_by_id = {s.id: s for s in last_seen_segments}
+            if current_segments != last_seen_by_id:
+                _LOGGER.debug(
+                    "Vacuum segments changed: last_seen=%s, current=%s",
+                    last_seen_by_id,
+                    current_segments,
+                )
+                self.async_create_segments_issue()
 
     @callback
     def _calculate_features(self) -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import fields
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
@@ -37,7 +39,6 @@ from .coordinator import (
     SeriesDataUpdateCoordinator,
     SonarrConfigEntry,
     SonarrData,
-    SonarrDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
     WantedDataUpdateCoordinator,
 )
@@ -89,16 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bo
     )
     # Temporary, until we add diagnostic entities
     _version = None
-    coordinators: list[SonarrDataUpdateCoordinator] = [
-        data.upcoming,
-        data.commands,
-        data.diskspace,
-        data.queue,
-        data.series,
-        data.status,
-        data.wanted,
-    ]
-    for coordinator in coordinators:
+    for field in fields(data):
+        coordinator = getattr(data, field.name)
         await coordinator.async_config_entry_first_refresh()
         if isinstance(coordinator, StatusDataUpdateCoordinator):
             _version = coordinator.data.version

@@ -24,7 +24,7 @@ SUBENTRY_TYPE_ZONE = "zone"
 
 # Defaults
 DEFAULT_PORT = 4999
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
 DEFAULT_INFER_ARMING_STATE = False
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 

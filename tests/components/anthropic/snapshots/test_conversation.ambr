@@ -1,4 +1,200 @@
 # serializer version: 1
+# name: test_bash_code_execution
+  list([
+    dict({
+      'attachments': None,
+      'content': "Write a file with a random number and save it to '/tmp/number.txt'",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll create a file with a random number and save it to '/tmp/number.txt'.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'echo $RANDOM > /tmp/number.txt && cat /tmp/number.txt',
+          }),
+          'tool_name': 'bash_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'bash_code_execution',
+      'tool_result': dict({
+        'content': list([
+        ]),
+        'return_code': 0,
+        'stderr': '',
+        'stdout': '''
+          3268
+  
+        ''',
+        'type': 'bash_code_execution_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "Done! I've created the file '/tmp/number.txt' with the random number 3268.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_bash_code_execution.1
+  list([
+    dict({
+      'content': "Write a file with a random number and save it to '/tmp/number.txt'",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll create a file with a random number and save it to '/tmp/number.txt'.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'echo $RANDOM > /tmp/number.txt && cat /tmp/number.txt',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'content': list([
+            ]),
+            'return_code': 0,
+            'stderr': '',
+            'stdout': '''
+              3268
+  
+            ''',
+            'type': 'bash_code_execution_result',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'text': "Done! I've created the file '/tmp/number.txt' with the random number 3268.",
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_bash_code_execution_error
+  list([
+    dict({
+      'attachments': None,
+      'content': "Write a file with a random number and save it to '/tmp/number.txt'",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll create a file with a random number and save it to '/tmp/number.txt'.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'echo $RANDOM > /tmp/number.txt && cat /tmp/number.txt',
+          }),
+          'tool_name': 'bash_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'bash_code_execution',
+      'tool_result': dict({
+        'error_code': 'unavailable',
+        'type': 'bash_code_execution_tool_result_error',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'The container is currently unavailable.',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_bash_code_execution_error.1
+  list([
+    dict({
+      'content': "Write a file with a random number and save it to '/tmp/number.txt'",
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll create a file with a random number and save it to '/tmp/number.txt'.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'echo $RANDOM > /tmp/number.txt && cat /tmp/number.txt',
+          }),
+          'name': 'bash_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'error_code': 'unavailable',
+            'type': 'bash_code_execution_tool_result_error',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'bash_code_execution_tool_result',
+        }),
+        dict({
+          'text': 'The container is currently unavailable.',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
 # name: test_disabled_thinking
   list([
     dict({
@@ -30,6 +226,7 @@
 # ---
 # name: test_disabled_thinking.1
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -65,6 +262,7 @@
 # ---
 # name: test_extended_thinking
   dict({
+    'container': None,
     'max_tokens': 3000,
     'messages': list([
       dict({
@@ -134,6 +332,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -148,6 +347,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -588,6 +788,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -602,6 +803,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
@@ -616,12 +818,419 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': 'EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny',
         'thinking_signature': None,
       }),
       'role': 'assistant',
       'thinking_content': None,
       'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts0-content0]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Do the needful',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll do it.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'create',
+            'file_text': '3268',
+            'path': '/tmp/number.txt',
+          }),
+          'tool_name': 'text_editor_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'text_editor_code_execution',
+      'tool_result': dict({
+        'is_file_update': False,
+        'type': 'text_editor_code_execution_create_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Done',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts0-content0].1
+  list([
+    dict({
+      'content': 'Do the needful',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll do it.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'create',
+            'file_text': '3268',
+            'path': '/tmp/number.txt',
+          }),
+          'name': 'text_editor_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'is_file_update': False,
+            'type': 'text_editor_code_execution_create_result',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'text_editor_code_execution_tool_result',
+        }),
+        dict({
+          'text': 'Done',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts1-content1]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Do the needful',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll do it.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'str_replace',
+            'new_str': '8623',
+            'old_str': '3268',
+            'path': '/tmp/number.txt',
+          }),
+          'tool_name': 'text_editor_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'text_editor_code_execution',
+      'tool_result': dict({
+        'lines': list([
+          '-3268',
+          '\\ No newline at end of file',
+          '+8623',
+          '\\ No newline at end of file',
+        ]),
+        'new_lines': 1,
+        'new_start': 1,
+        'old_lines': 1,
+        'old_start': 1,
+        'type': 'text_editor_code_execution_str_replace_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Done',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts1-content1].1
+  list([
+    dict({
+      'content': 'Do the needful',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll do it.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'str_replace',
+            'new_str': '8623',
+            'old_str': '3268',
+            'path': '/tmp/number.txt',
+          }),
+          'name': 'text_editor_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'lines': list([
+              '-3268',
+              '\\ No newline at end of file',
+              '+8623',
+              '\\ No newline at end of file',
+            ]),
+            'new_lines': 1,
+            'new_start': 1,
+            'old_lines': 1,
+            'old_start': 1,
+            'type': 'text_editor_code_execution_str_replace_result',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'text_editor_code_execution_tool_result',
+        }),
+        dict({
+          'text': 'Done',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts2-content2]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Do the needful',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll do it.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'view',
+            'path': '/tmp/number.txt',
+          }),
+          'tool_name': 'text_editor_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'text_editor_code_execution',
+      'tool_result': dict({
+        'content': '8623',
+        'file_type': 'text',
+        'num_lines': 1,
+        'start_line': 1,
+        'total_lines': 1,
+        'type': 'text_editor_code_execution_view_result',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Done',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts2-content2].1
+  list([
+    dict({
+      'content': 'Do the needful',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll do it.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'view',
+            'path': '/tmp/number.txt',
+          }),
+          'name': 'text_editor_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'content': '8623',
+            'file_type': 'text',
+            'num_lines': 1,
+            'start_line': 1,
+            'total_lines': 1,
+            'type': 'text_editor_code_execution_view_result',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'text_editor_code_execution_tool_result',
+        }),
+        dict({
+          'text': 'Done',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts3-content3]
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Do the needful',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "I'll do it.",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'command': 'view',
+            'path': '/tmp/number2.txt',
+          }),
+          'tool_name': 'text_editor_code_execution',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'text_editor_code_execution',
+      'tool_result': dict({
+        'error_code': 'unavailable',
+        'error_message': 'Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)',
+        'type': 'text_editor_code_execution_tool_result_error',
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': 'Done',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
+      'native': dict({
+        'citation_details': list([
+        ]),
+        'container': Container(id='container_1234567890ABCDEFGHIJKLMN', expires_at=HAFakeDatetime(2025, 10, 31, 12, 5, tzinfo=datetime.timezone.utc)),
+        'redacted_thinking': None,
+        'thinking_signature': None,
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_text_editor_code_execution[args_parts3-content3].1
+  list([
+    dict({
+      'content': 'Do the needful',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': "I'll do it.",
+          'type': 'text',
+        }),
+        dict({
+          'id': 'srvtoolu_12345ABC',
+          'input': dict({
+            'command': 'view',
+            'path': '/tmp/number2.txt',
+          }),
+          'name': 'text_editor_code_execution',
+          'type': 'server_tool_use',
+        }),
+        dict({
+          'content': dict({
+            'error_code': 'unavailable',
+            'error_message': 'Tool response parsing error for view: Failed to parse tool response as JSON: unexpected character: line 1 column 1 (char 0)',
+            'type': 'text_editor_code_execution_tool_result_error',
+          }),
+          'tool_use_id': 'srvtoolu_12345ABC',
+          'type': 'text_editor_code_execution_tool_result',
+        }),
+        dict({
+          'text': 'Done',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
     }),
   ])
 # ---
@@ -674,6 +1283,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -725,6 +1335,7 @@
       'native': dict({
         'citation_details': list([
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': 'ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==',
       }),
@@ -776,6 +1387,7 @@
             'length': 29,
           }),
         ]),
+        'container': None,
         'redacted_thinking': None,
         'thinking_signature': None,
       }),

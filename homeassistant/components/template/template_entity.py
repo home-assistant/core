@@ -29,7 +29,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -264,16 +264,30 @@ class TemplateEntity(AbstractTemplateEntity):
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
+    def _get_this_variable(self) -> TemplateStateFromEntityId:
+        """Create a this variable for the entity."""
+        entity_id = self.entity_id
+        if self._preview_callback:
+            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # a temporary entity_id is created.
+            # During option flow, the preview entity_id will be None, however the registry entry
+            # will contain the target entity_id.
+            if self.registry_entry:
+                entity_id = self.registry_entry.entity_id
+            else:
+                entity_id = async_generate_entity_id(
+                    self._entity_id_format, self._attr_name or "preview", hass=self.hass
+                )
+
+        return TemplateStateFromEntityId(self.hass, entity_id)
+
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
             return self._run_variables
 
         return self._run_variables.async_render(
-            self.hass,
-            {
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            },
+            self.hass, {"this": self._get_this_variable()}
         )
 
     def setup_state_template(
@@ -451,7 +465,7 @@ class TemplateEntity(AbstractTemplateEntity):
         has_availability_template = False
 
         variables = {
-            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            "this": self._get_this_variable(),
             **self._render_script_variables(),
         }
 

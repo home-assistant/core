@@ -1,13 +1,12 @@
 {
+  "exceptions": {
+    "zone_only_service": {
+      "message": "Only zones support the `{service}` action"
+    }
+  },
   "services": {
     "clear_zone_override": {
       "description": "Sets a zone to follow its schedule.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]",
-          "name": "[%key:component::evohome::services::set_zone_override::fields::entity_id::name%]"
-        }
-      },
       "name": "Clear zone override"
     },
     "refresh_system": {
@@ -42,10 +41,6 @@
         "duration": {
           "description": "The zone will revert to its schedule after this time. If 0 the change is until the next scheduled setpoint.",
           "name": "Duration"
-        },
-        "entity_id": {
-          "description": "The entity ID of the Evohome zone.",
-          "name": "Entity"
         },
         "setpoint": {
           "description": "The temperature to be used instead of the scheduled setpoint.",
