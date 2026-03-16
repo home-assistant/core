@@ -40,8 +40,7 @@ async def test_coordinator_unavailable(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that sensor entities become unavailable when the coordinator fails."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_trmnl_battery").state != STATE_UNAVAILABLE
 

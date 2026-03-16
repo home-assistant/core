@@ -62,8 +62,7 @@ async def test_set_value(
     expected_kwargs: dict[str, int],
 ) -> None:
     """Test setting a time value calls the client and triggers a coordinator refresh."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         TIME_DOMAIN,
@@ -82,8 +81,7 @@ async def test_action_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that a TRMNLError during a time action raises HomeAssistantError."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
 
@@ -106,8 +104,7 @@ async def test_coordinator_unavailable(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that time entities become unavailable when the coordinator fails."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.TIME]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert (
         hass.states.get("time.test_trmnl_sleep_start_time").state != STATE_UNAVAILABLE

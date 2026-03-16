@@ -49,8 +49,7 @@ async def test_set_switch(
     expected_value: bool,
 ) -> None:
     """Test turning the sleep mode switch on and off."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         "switch",
@@ -76,8 +75,7 @@ async def test_action_error(
     service: str,
 ) -> None:
     """Test that a TRMNLError during a switch action raises HomeAssistantError."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     mock_trmnl_client.update_device.side_effect = TRMNLError("connection failed")
 
@@ -97,8 +95,7 @@ async def test_coordinator_unavailable(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that switch entities become unavailable when the coordinator fails."""
-    with patch("homeassistant.components.trmnl.PLATFORMS", [Platform.SWITCH]):
-        await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.test_trmnl_sleep_mode").state != STATE_UNAVAILABLE
 
