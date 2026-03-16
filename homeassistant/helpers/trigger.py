@@ -362,12 +362,16 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
+    def _get_tracked_value(self, state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[split_entity_id(state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return state.state
+        return state.attributes.get(domain_spec.value_source)
+
+    @abc.abstractmethod
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
-        return from_state.state != to_state.state
 
     @abc.abstractmethod
     def is_valid_state(self, state: State) -> bool:
@@ -448,7 +452,11 @@ class EntityTriggerBase[DomainSpecT: DomainSpec = DomainSpec](Trigger):
 
 
 class EntityTargetStateTriggerBase(EntityTriggerBase):
-    """Trigger for entity state changes to a specific state."""
+    """Trigger for entity state changes to a specific state.
+
+    Uses _get_tracked_value to extract the value, so it works for both
+    state-based and attribute-based triggers depending on the DomainSpec.
+    """
 
     _to_states: set[str]
 
@@ -457,14 +465,15 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
         if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
+        from_value = self._get_tracked_value(from_state)
         return (
-            from_state.state != to_state.state
-            and from_state.state not in self._to_states
+            from_value != self._get_tracked_value(to_state)
+            and from_value not in self._to_states
         )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
-        return state.state in self._to_states
+        return self._get_tracked_value(state) in self._to_states
 
 
 class EntityTransitionTriggerBase(EntityTriggerBase):
@@ -475,14 +484,18 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
-        if not super().is_valid_transition(from_state, to_state):
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
 
-        return from_state.state in self._from_states
+        from_value = self._get_tracked_value(from_state)
+        return (
+            from_value != self._get_tracked_value(to_state)
+            and from_value in self._from_states
+        )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected states."""
-        return state.state in self._to_states
+        return self._get_tracked_value(state) in self._to_states
 
 
 class EntityOriginStateTriggerBase(EntityTriggerBase):
@@ -492,33 +505,14 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected one and that the state changed."""
-        return (
-            from_state.state == self._from_state and to_state.state != self._from_state
+        return bool(
+            self._get_tracked_value(from_state) == self._from_state
+            and self._get_tracked_value(to_state) != self._from_state
         )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state is not the same as the expected origin state."""
-        return state.state != self._from_state
-
-
-class EntityTargetStateAttributeTriggerBase(EntityTriggerBase):
-    """Trigger for entity state attribute changes to a specific state."""
-
-    _attribute: str
-    _attribute_to_state: str
-
-    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
-        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
-            self._attribute
-        )
-
-    def is_valid_state(self, state: State) -> bool:
-        """Check if the new state attribute matches the expected one."""
-        return state.attributes.get(self._attribute) == self._attribute_to_state
+        return bool(self._get_tracked_value(state) != self._from_state)
 
 
 def _validate_range[_T: dict[str, Any]](
@@ -599,7 +593,7 @@ def _get_numerical_value(
     return entity_or_float
 
 
-class EntityNumericalStateBase(EntityTriggerBase[NumericalDomainSpec]):
+class EntityNumericalStateTriggerBase(EntityTriggerBase[NumericalDomainSpec]):
     """Base class for numerical state and state attribute triggers."""
 
     def _get_tracked_value(self, state: State) -> Any:
@@ -617,7 +611,7 @@ class EntityNumericalStateBase(EntityTriggerBase[NumericalDomainSpec]):
         return float
 
 
-class EntityNumericalStateAttributeChangedTriggerBase(EntityNumericalStateBase):
+class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes."""
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
@@ -721,9 +715,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 )
 
 
-class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
-    EntityNumericalStateBase
-):
+class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTriggerBase):
     """Trigger for numerical state and state attribute changes.
 
     This trigger only fires when the observed attribute changes from not within to within
@@ -790,10 +782,25 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(
         return not between
 
 
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
+
+
 def make_entity_target_state_trigger(
-    domain: str, to_states: str | set[str]
+    domain_specs: Mapping[str, DomainSpec] | str,
+    to_states: str | set[str],
 ) -> type[EntityTargetStateTriggerBase]:
-    """Create a trigger for entity state changes to specific state(s)."""
+    """Create a trigger for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based triggers,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     if isinstance(to_states, str):
         to_states_set = {to_states}
@@ -803,21 +810,29 @@ def make_entity_target_state_trigger(
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
-        _domain_specs = {domain: DomainSpec()}
+        _domain_specs = specs
         _to_states = to_states_set
 
     return CustomTrigger
 
 
 def make_entity_transition_trigger(
-    domain: str, *, from_states: set[str], to_states: set[str]
+    domain_specs: Mapping[str, DomainSpec] | str,
+    *,
+    from_states: set[str],
+    to_states: set[str],
 ) -> type[EntityTransitionTriggerBase]:
-    """Create a trigger for entity state changes between specific states."""
+    """Create a trigger for entity state changes between specific states.
+
+    domain_specs can be a string (domain name) for simple state-based triggers,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
-        _domain_specs = {domain: DomainSpec()}
+        _domain_specs = specs
         _from_states = from_states
         _to_states = to_states
 
@@ -825,14 +840,21 @@ def make_entity_transition_trigger(
 
 
 def make_entity_origin_state_trigger(
-    domain: str, *, from_state: str
+    domain_specs: Mapping[str, DomainSpec] | str,
+    *,
+    from_state: str,
 ) -> type[EntityOriginStateTriggerBase]:
-    """Create a trigger for entity state changes from a specific state."""
+    """Create a trigger for entity state changes from a specific state.
+
+    domain_specs can be a string (domain name) for simple state-based triggers,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain triggers.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
-        _domain_specs = {domain: DomainSpec()}
+        _domain_specs = specs
         _from_state = from_state
 
     return CustomTrigger
@@ -840,10 +862,10 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
-) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
+) -> type[EntityNumericalStateChangedTriggerBase]:
     """Create a trigger for numerical state value change."""
 
-    class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
+    class CustomTrigger(EntityNumericalStateChangedTriggerBase):
         """Trigger for numerical state value changes."""
 
         _domain_specs = domain_specs
@@ -853,28 +875,13 @@ def make_entity_numerical_state_changed_trigger(
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, NumericalDomainSpec],
-) -> type[EntityNumericalStateAttributeCrossedThresholdTriggerBase]:
+) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
     """Create a trigger for numerical state value crossing a threshold."""
 
-    class CustomTrigger(EntityNumericalStateAttributeCrossedThresholdTriggerBase):
+    class CustomTrigger(EntityNumericalStateCrossedThresholdTriggerBase):
         """Trigger for numerical state value crossing a threshold."""
 
         _domain_specs = domain_specs
-
-    return CustomTrigger
-
-
-def make_entity_target_state_attribute_trigger(
-    domain: str, attribute: str, to_state: str
-) -> type[EntityTargetStateAttributeTriggerBase]:
-    """Create a trigger for entity state attribute changes to a specific state."""
-
-    class CustomTrigger(EntityTargetStateAttributeTriggerBase):
-        """Trigger for entity state changes."""
-
-        _domain_specs = {domain: DomainSpec()}
-        _attribute = attribute
-        _attribute_to_state = to_state
 
     return CustomTrigger
 
