@@ -117,8 +117,8 @@ async def test_reauth_triggered_after_consecutive_failures(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Inject bad advertisements (device type recognized but decryption fails)
-    # Vary RSSI so the bluetooth manager doesn't deduplicate
+    # Inject bad advertisements (device type recognized but decryption fails).
+    # Each call uses a unique payload suffix to avoid bluetooth manager deduplication.
     for i in range(REAUTH_AFTER_FAILURES):
         _inject_bad_advertisement(hass, seq=i)
         await hass.async_block_till_done()
