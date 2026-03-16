@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -98,6 +99,15 @@ async def test_platform_setup_and_discovery(
             {},
             [
                 {"code": "control", "value": "close"},
+            ],
+        ),
+        (
+            "cl_n3xgr5pdmpinictg",
+            "cover.estore_sala_curtain",
+            SERVICE_STOP_COVER,
+            {},
+            [
+                {"code": "control", "value": "stop"},
             ],
         ),
     ],
