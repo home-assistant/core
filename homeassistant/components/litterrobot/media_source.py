@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from pathlib import Path
+from typing import Any
 
 from pylitterbot import LitterRobot5
 
@@ -139,18 +141,36 @@ class LitterRobotMediaSource(MediaSource):
             children_media_class=MediaClass.VIDEO,
         )
 
+        # Get activity data for enriching recording titles
+        coordinator = None
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            for r in entry.runtime_data.account.robots:
+                if isinstance(r, LitterRobot5) and r.serial == robot.serial:
+                    coordinator = entry.runtime_data
+                    break
+
+        activities = (
+            coordinator.camera_activities.get(robot.serial, []) if coordinator else []
+        )
+        pet_names = coordinator.pet_name_map if coordinator else {}
+
         children: list[BrowseMediaSource] = []
 
         # Local recordings (newest first)
         local_recordings = await self.hass.async_add_executor_job(
-            self._list_local_recordings, robot.serial
+            self._list_local_recordings, robot.serial, activities, pet_names
         )
         children.extend(local_recordings)
 
         base.children = children
         return base
 
-    def _list_local_recordings(self, serial: str) -> list[BrowseMediaSource]:
+    def _list_local_recordings(
+        self,
+        serial: str,
+        activities: list[dict[str, Any]],
+        pet_names: dict[str, str],
+    ) -> list[BrowseMediaSource]:
         """List local MP4 recordings for a robot (runs in executor)."""
         recording_dir = self._get_recording_dir(serial)
         if not recording_dir.exists():
@@ -162,13 +182,16 @@ class LitterRobotMediaSource(MediaSource):
             reverse=True,
         )[:MAX_LOCAL_RECORDINGS]
 
+        # Build timestamp->activity index for enrichment
+        activity_index = _build_activity_index(activities, pet_names)
+
         return [
             BrowseMediaSource(
                 domain=DOMAIN,
                 identifier=f"local|{serial}|{mp4.name}",
                 media_class=MediaClass.VIDEO,
                 media_content_type="video/mp4",
-                title=_parse_recording_title(mp4.stem),
+                title=_parse_recording_title(mp4.stem, activity_index),
                 can_play=True,
                 can_expand=False,
             )
@@ -176,13 +199,67 @@ class LitterRobotMediaSource(MediaSource):
         ]
 
 
-def _parse_recording_title(stem: str) -> str:
+def _build_activity_index(
+    activities: list[dict[str, Any]],
+    pet_names: dict[str, str],
+) -> dict[str, dict[str, Any]]:
+    """Build a timestamp prefix -> activity data index.
+
+    Keys are YYYYMMDD_HHMM (minute-level) to match recording filenames.
+    Values include resolved pet name, weight, waste type, duration.
+    """
+    index: dict[str, dict[str, Any]] = {}
+    for activity in activities:
+        ts = activity.get("timestamp")
+        if not ts:
+            continue
+        try:
+            activity_dt = datetime.fromisoformat(ts)
+            key = activity_dt.strftime("%Y%m%d_%H%M")
+        except ValueError, TypeError:
+            continue
+
+        pet_ids = activity.get("petIds") or []
+        pet_id = activity.get("petId") or (pet_ids[0] if pet_ids else None)
+        pet_name = pet_names.get(pet_id, "") if pet_id else ""
+
+        weight_raw = activity.get("petWeight")
+        weight = f"{weight_raw / 100:.1f}lbs" if weight_raw else ""
+
+        waste_raw = activity.get("wasteWeight")
+        waste_type = activity.get("wasteType", "")
+        waste = ""
+        if waste_raw:
+            waste_oz = f"{waste_raw / 100 * 16:.1f}oz"
+            waste = f"{waste_oz} {waste_type}" if waste_type else waste_oz
+
+        duration_raw = activity.get("duration")
+        duration = ""
+        if duration_raw:
+            if duration_raw >= 60:
+                m, s = divmod(duration_raw, 60)
+                duration = f"{m}m{s}s"
+            else:
+                duration = f"{duration_raw}s"
+
+        index[key] = {
+            "pet": pet_name,
+            "weight": weight,
+            "waste": waste,
+            "duration": duration,
+            "event_id": activity.get("eventId", ""),
+            "is_reassigned": activity.get("isReassigned", False),
+        }
+    return index
+
+
+def _parse_recording_title(
+    stem: str,
+    activity_index: dict[str, dict[str, Any]] | None = None,
+) -> str:
     """Convert a recording filename stem to a human-readable title.
 
-    Filename formats produced by recording.py:
-      YYYYMMDD_HHMMSS_PET_VISIT_{PetName}  — pet visit with assigned name
-      YYYYMMDD_HHMMSS_{EVENT_TYPE}          — other events (VISIT, CYCLE, etc.)
-      YYYYMMDD_HHMMSS_{COMPOUND}_{PetName} — older VISIT_{Name} format
+    Enriches with activity data (weight, waste, duration) when available.
     """
     parts = stem.split("_", 2)
     if len(parts) < 2:
@@ -207,26 +284,50 @@ def _parse_recording_title(stem: str) -> str:
     event = rest
 
     if rest.startswith("PET_VISIT_"):
-        # e.g. PET_VISIT_Willow
         event = "PET_VISIT"
         pet = rest[len("PET_VISIT_") :]
     elif rest in COMPOUND_EVENTS:
         event = rest
     elif "_" in rest:
-        # Could be VISIT_PetName (mixed-case pet) or a compound event type
         event_part, suffix = rest.split("_", 1)
-        # Pet names start with uppercase and contain lowercase letters
-        # (e.g. "Willow", "Loki"); event suffixes like "COMPLETED" are all-caps
         if suffix and suffix[0].isupper() and any(c.islower() for c in suffix):
             event = event_part
             pet = suffix
-        # else: treat the whole thing as a compound event name
 
     # Visit-type recordings with no pet name = cat wasn't identified
     if pet is None and event in VISIT_EVENTS:
         pet = "Unassigned"
 
     pretty_event = event.replace("_", " ").title()
+
+    # Try to enrich with activity data
+    time_key = f"{date_str}_{time_str[:4]}"
+    activity_data = (activity_index or {}).get(time_key)
+
+    if activity_data:
+        # Prefer activity pet name over filename-derived pet name
+        if activity_data["pet"]:
+            pet = activity_data["pet"]
+            if activity_data["is_reassigned"]:
+                pet = f"{pet} *"
+
+        details: list[str] = []
+        if activity_data["weight"]:
+            details.append(activity_data["weight"])
+        if activity_data["waste"]:
+            details.append(activity_data["waste"])
+        if activity_data["duration"]:
+            details.append(activity_data["duration"])
+
+        detail_str = " | ".join(details)
+
+        if pet and detail_str:
+            return f"{pet} - {detail_str} - {date_fmt} {time_fmt}"
+        if pet:
+            return f"{pet} - {pretty_event} - {date_fmt} {time_fmt}"
+        if detail_str:
+            return f"{pretty_event} - {detail_str} - {date_fmt} {time_fmt}"
+
     if pet:
         return f"{pretty_event} ({pet}) - {date_fmt} {time_fmt}"
     return f"{pretty_event} - {date_fmt} {time_fmt}"
