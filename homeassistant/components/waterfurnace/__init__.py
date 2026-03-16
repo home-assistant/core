@@ -103,7 +103,7 @@ async def _async_setup_coordinator(
     coordinator = WaterFurnaceCoordinator(hass, device_client, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    if not isinstance(device_client.gwid, str):
+    if device_client.gwid is None:
         raise ConfigEntryNotReady(
             f"Invalid GWID for device at index {device_index}: {device_client.gwid}"
         )
