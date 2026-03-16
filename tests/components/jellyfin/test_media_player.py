@@ -386,13 +386,42 @@ async def test_browse_media(
     assert response["result"]["title"] == "FOLDER"
     assert response["result"]["children"][0] == expected_child_item
 
+    # browse for series
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_type": "tvshow",
+            "media_content_id": "SERIES-UUID",
+        }
+    )
+
+    response = await client.receive_json()
+    expected_child_item = {
+        "title": "SEASON",
+        "media_class": MediaClass.SEASON.value,
+        "media_content_type": MediaType.SEASON.value,
+        "media_content_id": "SEASON-UUID",
+        "can_play": True,
+        "can_expand": True,
+        "can_search": False,
+        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "children_media_class": None,
+    }
+
+    assert response["success"]
+    assert response["result"]["media_content_id"] == "SERIES-UUID"
+    assert response["result"]["title"] == "SERIES"
+    assert response["result"]["children"][0] == expected_child_item
+
     # browse for collection without children
     mock_api.user_items.side_effect = None
     mock_api.user_items.return_value = {}
 
     await client.send_json(
         {
-            "id": 3,
+            "id": 4,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
@@ -414,7 +443,7 @@ async def test_browse_media(
 
     await client.send_json(
         {
-            "id": 4,
+            "id": 5,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
