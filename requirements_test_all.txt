@@ -267,7 +267,7 @@ aioharmony==0.5.3
 aiohasupervisor==0.4.1
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.30.0
+aiohomeconnect==0.32.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -1928,7 +1928,7 @@ pylitterbot==2025.1.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.3.0
+pylutron==0.4.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4

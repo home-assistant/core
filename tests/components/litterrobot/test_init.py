@@ -256,12 +256,12 @@ async def test_dynamic_devices(
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test new device found."""
+    """Test dynamic addition of new devices and removal of stale devices."""
     delta_time = timedelta(seconds=305)  # 5 minutes + 5 delta seconds
 
     entry = await setup_integration(hass, mock_account)
 
-    # First check -> there is 1 device in total
+    # First check -> 1 device created
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
 
     mock_account.robots.extend([LitterRobot4(data=ROBOT_4_DATA, account=mock_account)])
@@ -270,5 +270,14 @@ async def test_dynamic_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Second check -> added one device
+    # Second check -> added 1 device
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    mock_account.robots.pop(0)
+
+    freezer.tick(delta_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Third check -> removed 1 device
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
