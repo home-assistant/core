@@ -352,7 +352,7 @@ async def test_delete_removed_device(
     init_integration: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test device removal at integration init."""
+    """Test device removal after a coordinator refresh."""
     data = mock_smile_adam_heat_cool.async_update.return_value
 
     device_entry = device_registry.async_get_device(
