@@ -1,6 +1,6 @@
 """Common fixtures for the Schlage tests."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
@@ -10,7 +10,6 @@ import pytest
 from homeassistant.components.schlage.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import Awaitable
 
 from . import MockSchlageConfigEntry
 
@@ -35,7 +34,7 @@ def mock_config_entry() -> MockSchlageConfigEntry:
 async def mock_added_config_entry(
     mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
 ) -> MockSchlageConfigEntry:
-    """Mock ConfigEntry that's been added to HA."""
+    """Return a callback that adds and sets up a mock ConfigEntry in HA when awaited."""
     return await mock_add_config_entry()
 
 

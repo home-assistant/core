@@ -3,10 +3,10 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
-from syrupy.assertion import SnapshotAssertion
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
