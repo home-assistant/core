@@ -160,6 +160,8 @@ def api_get_item_side_effect(*args):
     """Handle variable responses for get_item method."""
     if args[0] == "SERIES-UUID":
         return load_json_fixture("get-item-series.json")
+    if args[0] == "SEASON-UUID":
+        return load_json_fixture("get-item-season.json")
     return load_json_fixture("get-item-collection.json")
 
 
@@ -170,6 +172,8 @@ def api_user_items_side_effect(*args, **kwargs):
     if "parentId" in params:
         if params["parentId"] == "SERIES-UUID":
             return load_json_fixture("user-items-series.json")
+        if params["parentId"] == "SEASON-UUID":
+            return load_json_fixture("user-items-season.json")
         return load_json_fixture("user-items-parent-id.json")
 
     return load_json_fixture("user-items.json")

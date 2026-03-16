@@ -410,9 +410,33 @@ async def test_browse_media(
         "children_media_class": None,
     }
 
+    # browse for season
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "media_player/browse_media",
+            "entity_id": "media_player.jellyfin_device",
+            "media_content_type": "season",
+            "media_content_id": "SEASON-UUID",
+        }
+    )
+
+    response = await client.receive_json()
+    expected_child_item = {
+        "title": "EPISODE",
+        "media_class": MediaClass.EPISODE.value,
+        "media_content_type": MediaType.EPISODE.value,
+        "media_content_id": "EPISODE-UUID",
+        "can_play": True,
+        "can_expand": False,
+        "can_search": False,
+        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "children_media_class": None,
+    }
+
     assert response["success"]
-    assert response["result"]["media_content_id"] == "SERIES-UUID"
-    assert response["result"]["title"] == "SERIES"
+    assert response["result"]["media_content_id"] == "SEASON-UUID"
+    assert response["result"]["title"] == "SEASON"
     assert response["result"]["children"][0] == expected_child_item
 
     # browse for collection without children
@@ -421,7 +445,7 @@ async def test_browse_media(
 
     await client.send_json(
         {
-            "id": 4,
+            "id": 5,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
@@ -443,7 +467,7 @@ async def test_browse_media(
 
     await client.send_json(
         {
-            "id": 5,
+            "id": 6,
             "type": "media_player/browse_media",
             "entity_id": "media_player.jellyfin_device",
             "media_content_type": "collection",
