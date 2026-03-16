@@ -160,6 +160,16 @@
         "name": "Reduced temperature"
       }
     },
+    "select": {
+      "dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "efficient": "Efficient",
+          "efficient_with_min_comfort": "Efficient with minimum comfort",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"

@@ -298,6 +298,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_operating_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.table_de_cuisson_operating_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating state',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooktop_operating_state',
+    'unique_id': '5c202ad1-d112-d746-50b8-bd76a554b362_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_operating_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Table de cuisson Operating state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.table_de_cuisson_operating_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ks_cooktop_000001][binary_sensor.table_de_cuisson_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1034,6 +1083,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.vulcan_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_operating_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.vulcan_operating_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating state',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating state',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooktop_operating_state',
+    'unique_id': '2c3cbaa0-1899-5ddc-7b58-9d657bd48f18_main_custom.cooktopOperatingState_cooktopOperatingState_cooktopOperatingState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_range_0101x][binary_sensor.vulcan_operating_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Vulcan Operating state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.vulcan_operating_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3804,6 +3902,106 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gas_detector_gas',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[ikea_leak_battery][binary_sensor.waschkeller_feuchtigkeitssensor_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.waschkeller_feuchtigkeitssensor_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Moisture',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4496dbbd-db7b-4b72-89a8-208ed9482832_main_waterSensor_water_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ikea_leak_battery][binary_sensor.waschkeller_feuchtigkeitssensor_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Waschkeller Feuchtigkeitssensor Moisture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.waschkeller_feuchtigkeitssensor_moisture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6f730725-d8c9-4d06-bac6-7dd96a3c75d8_main_motionSensor_motion_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[ikea_motion_illuminance_battery][binary_sensor.gaderobe_bewegungsmelder_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'Gaderobe Bewegungsmelder Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gaderobe_bewegungsmelder_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
