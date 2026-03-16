@@ -34,7 +34,7 @@ REASSIGN_VISIT_SCHEMA = vol.Schema(
 
 
 @callback
-def async_setup_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Set up services."""
 
     service.async_register_platform_entity_service(
@@ -172,10 +172,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="reassign_failed",
             )
 
-        # Update the activity in the local cache
+        # Update the activity in the local cache and rename recording
         for i, activity in enumerate(coordinator.camera_activities[robot_serial]):
             if activity.get("eventId") == event_id:
                 coordinator.camera_activities[robot_serial][i] = result
+                # Resolve new pet name for file rename
+                new_pet_name = None
+                if to_pet_id:
+                    new_pet_name = coordinator.pet_name_map.get(to_pet_id)
+                coordinator.rename_recording_for_reassign(
+                    robot_serial, activity, new_pet_name
+                )
                 break
 
         # Trigger a coordinator update to refresh sensors

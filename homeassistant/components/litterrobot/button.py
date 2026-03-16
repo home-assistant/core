@@ -175,7 +175,11 @@ class ReassignVisitButton(ButtonEntity):
                 translation_key="reassign_failed",
             )
 
+        serial = robot.serial
         self._update_cache(activity, result)
+        self.coordinator.rename_recording_for_reassign(
+            serial, activity, self._to_pet.name
+        )
         self.coordinator.async_set_updated_data(None)
 
     def _find_latest_visit(self) -> dict[str, Any] | None:
@@ -268,7 +272,9 @@ class UnassignVisitButton(ButtonEntity):
                 translation_key="reassign_failed",
             )
 
+        serial = robot.serial
         self._update_cache(activity, result)
+        self.coordinator.rename_recording_for_reassign(serial, activity, None)
         self.coordinator.async_set_updated_data(None)
 
     def _find_latest_visit(self) -> dict[str, Any] | None:

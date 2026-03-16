@@ -592,6 +592,59 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.recording_manager.async_stop()
             self.recording_manager = None
 
+    def rename_recording_for_reassign(
+        self,
+        serial: str,
+        activity: dict[str, Any],
+        new_pet_name: str | None,
+    ) -> None:
+        """Rename the recording file to reflect a pet reassignment.
+
+        Searches for a recording matching the activity's timestamp and renames
+        it with the new pet name (or removes the pet name for unassign).
+        """
+        media_dir = Path(self.hass.config.path("media")) / "litterrobot" / serial
+        if not media_dir.is_dir():
+            return
+
+        timestamp = activity.get("timestamp")
+        if not timestamp:
+            return
+
+        # Parse timestamp to match filename format: YYYYMMDD_HHMMSS
+        try:
+            activity_dt = datetime.fromisoformat(timestamp)
+            file_prefix = activity_dt.strftime("%Y%m%d_%H%M")
+        except ValueError, TypeError:
+            return
+
+        # Find recordings matching this timestamp (within the same minute)
+        for filepath in media_dir.iterdir():
+            if not filepath.name.startswith(file_prefix):
+                continue
+            if filepath.suffix != ".mp4":
+                continue
+
+            old_name = filepath.name
+            # Strip existing pet name: split on _VISIT_ or _PET_VISIT_
+            # Patterns: YYYYMMDD_HHMMSS_VISIT_PetName.mp4
+            #           YYYYMMDD_HHMMSS_PET_VISIT_PetName.mp4
+            #           YYYYMMDD_HHMMSS_VISIT.mp4
+            for marker in ("_PET_VISIT_", "_VISIT_", "_PET_VISIT.", "_VISIT."):
+                if marker in old_name:
+                    base = old_name.split(marker)[0]
+                    if new_pet_name:
+                        suffix = marker.rstrip(".").rstrip("_")
+                        new_name = f"{base}{suffix}_{new_pet_name}.mp4"
+                    else:
+                        suffix = marker.rstrip(".").rstrip("_")
+                        new_name = f"{base}{suffix}.mp4"
+                    new_path = filepath.with_name(new_name)
+                    if new_path != filepath:
+                        filepath.rename(new_path)
+                        _LOGGER.debug("Renamed recording: %s -> %s", old_name, new_name)
+                    break
+
     def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""
         return (
