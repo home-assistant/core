@@ -123,15 +123,12 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
     def _get_station_name(self) -> str:
-        default_name = f"station {self._station_id}"
-        if self.coordinator.data is None:
-            return default_name
+        if (
+            station := self.coordinator.data.stations.get(self._station_id)
+        ) is not None:
+            return station.name
 
-        station = self.coordinator.data.stations.get(self._station_id)
-        if station is None:
-            return default_name
-
-        return station.name
+        return f"station {self._station_id}"
 
     @property
     def unique_id(self) -> str | None:
