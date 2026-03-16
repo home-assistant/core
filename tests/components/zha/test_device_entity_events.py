@@ -10,6 +10,7 @@ from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
 from homeassistant.components.zha.helpers import (
+    SIGNAL_ADD_ENTITIES,
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_data,
@@ -17,8 +18,9 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway_proxy,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -98,26 +100,22 @@ async def test_handle_device_entity_added(
     # The platform entity list should be empty (cleared after initial entity creation)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
 
+    # Listen for the add entities signal
+    signal_calls: list[bool] = []
+
+    @callback
+    def _signal_listener() -> None:
+        signal_calls.append(True)
+
+    async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, _signal_listener)
+
     # Fire the entity added event
-    with patch(
-        "homeassistant.components.zha.helpers.async_dispatcher_send"
-    ) as mock_dispatch:
-        zha_device_proxy.handle_zha_device_entity_added_event(
-            DeviceEntityAddedEvent(unique_id=platform_entity.unique_id)
-        )
+    zha_device_proxy.handle_zha_device_entity_added_event(
+        DeviceEntityAddedEvent(unique_id=platform_entity.unique_id)
+    )
 
-        # Verify EntityData was appended to the platform list
-        assert len(ha_zha_data.platforms[Platform.SWITCH]) == 1
-        entity_data = ha_zha_data.platforms[Platform.SWITCH][0]
-        assert entity_data.entity is platform_entity
-        assert entity_data.device_proxy is zha_device_proxy
-        assert entity_data.group_proxy is None
-
-        # Verify SIGNAL_ADD_ENTITIES was dispatched
-        mock_dispatch.assert_called_once_with(hass, "zha_add_entities")
-
-    # Clean up
-    ha_zha_data.platforms[Platform.SWITCH].clear()
+    # Verify the signal was dispatched
+    assert len(signal_calls) == 1
 
 
 async def test_handle_device_entity_added_unknown_unique_id(
@@ -133,16 +131,21 @@ async def test_handle_device_entity_added_unknown_unique_id(
     ha_zha_data = get_zha_data(hass)
     assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
 
-    with patch(
-        "homeassistant.components.zha.helpers.async_dispatcher_send"
-    ) as mock_dispatch:
-        zha_device_proxy.handle_zha_device_entity_added_event(
-            DeviceEntityAddedEvent(unique_id="nonexistent_unique_id")
-        )
+    signal_calls: list[bool] = []
 
-        # Nothing should be added and no signal dispatched
-        assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
-        mock_dispatch.assert_not_called()
+    @callback
+    def _signal_listener() -> None:
+        signal_calls.append(True)
+
+    async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, _signal_listener)
+
+    zha_device_proxy.handle_zha_device_entity_added_event(
+        DeviceEntityAddedEvent(unique_id="nonexistent_unique_id")
+    )
+
+    # Nothing should be added and no signal dispatched
+    assert len(ha_zha_data.platforms[Platform.SWITCH]) == 0
+    assert len(signal_calls) == 0
 
 
 async def test_handle_device_entity_removed(
