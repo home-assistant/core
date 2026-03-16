@@ -4742,7 +4742,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

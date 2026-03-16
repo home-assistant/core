@@ -8,7 +8,6 @@ from typing import Any
 
 from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
-from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -45,11 +44,6 @@ def login(
         hass.config.path(STORAGE_DIR, VICARE_TOKEN_FILENAME),
     )
     return vicare_api
-
-
-def get_device(device_config: PyViCareDeviceConfig) -> PyViCareDevice:
-    """Get device for device config."""
-    return device_config.asAutoDetectDevice()
 
 
 def get_device_serial(device: PyViCareDevice) -> str | None:
