@@ -17,6 +17,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,6 +46,16 @@ SENSOR_DESCRIPTIONS: tuple[TRMNLSensorEntityDescription, ...] = (
         value_fn=lambda device: device.percent_charged,
     ),
     TRMNLSensorEntityDescription(
+        key="battery_voltage",
+        translation_key="battery_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.battery_voltage,
+    ),
+    TRMNLSensorEntityDescription(
         key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -52,6 +63,15 @@ SENSOR_DESCRIPTIONS: tuple[TRMNLSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.rssi,
+    ),
+    TRMNLSensorEntityDescription(
+        key="wifi_strength",
+        translation_key="wifi_strength",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: device.wifi_strength,
     ),
 )
 
@@ -63,11 +83,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up TRMNL sensor entities based on a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        TRMNLSensor(coordinator, device_id, description)
-        for device_id in coordinator.data
-        for description in SENSOR_DESCRIPTIONS
-    )
+
+    known_device_ids: set[int] = set()
+
+    def _async_entity_listener() -> None:
+        new_ids = set(coordinator.data) - known_device_ids
+        if new_ids:
+            async_add_entities(
+                TRMNLSensor(coordinator, device_id, description)
+                for device_id in new_ids
+                for description in SENSOR_DESCRIPTIONS
+            )
+            known_device_ids.update(new_ids)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class TRMNLSensor(TRMNLEntity, SensorEntity):

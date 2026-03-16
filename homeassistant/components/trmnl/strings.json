@@ -3,12 +3,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The API key belongs to a different account. Please use the API key for the original account."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
       "user": {
@@ -17,11 +21,20 @@
         },
         "data_description": {
           "api_key": "The API key for your TRMNL account."
-        }
+        },
+        "description": "You can find your API key on [your TRMNL account page]({account_url})."
       }
     }
   },
   "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength"
+      }
+    },
     "switch": {
       "sleep_mode": {
         "name": "Sleep mode"
@@ -37,6 +50,9 @@
     }
   },
   "exceptions": {
+    "action_error": {
+      "message": "An error occurred while communicating with TRMNL: {error}"
+    },
     "authentication_error": {
       "message": "Authentication failed. Please check your API key."
     },

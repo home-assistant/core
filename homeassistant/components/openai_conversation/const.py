@@ -25,6 +25,7 @@ CONF_REASONING_EFFORT = "reasoning_effort"
 CONF_REASONING_SUMMARY = "reasoning_summary"
 CONF_RECOMMENDED = "recommended"
 CONF_STORE_RESPONSES = "store_responses"
+CONF_SERVICE_TIER = "service_tier"
 CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
 CONF_TTS_SPEED = "tts_speed"
@@ -44,6 +45,7 @@ RECOMMENDED_MAX_TOKENS = 3000
 RECOMMENDED_REASONING_EFFORT = "low"
 RECOMMENDED_STORE_RESPONSES = False
 RECOMMENDED_REASONING_SUMMARY = "auto"
+RECOMMENDED_SERVICE_TIER = "auto"
 RECOMMENDED_STT_MODEL = "gpt-4o-mini-transcribe"
 RECOMMENDED_TEMPERATURE = 1.0
 RECOMMENDED_TOP_P = 1.0
@@ -121,3 +123,38 @@ RECOMMENDED_TTS_OPTIONS = {
     CONF_PROMPT: "",
     CONF_CHAT_MODEL: "gpt-4o-mini-tts",
 }
+
+UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS: list[str] = [
+    "gpt-5.3",
+    "gpt-5.2-chat",
+    "gpt-5.1-chat",
+    "gpt-5-chat",
+    "gpt-5.2-codex",
+    "gpt-5.1-codex",
+    "gpt-5-codex",
+    "gpt-5.2-pro",
+    "gpt-5-pro",
+    "gpt-4",
+    "o1",
+    "o3-pro",
+    "o3-deep-research",
+    "o4-mini-deep-research",
+    "o3-mini",
+    "codex-mini",
+]
+UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS: list[str] = [
+    "gpt-5-nano",
+    "gpt-5.3-chat",
+    "gpt-5.2-chat",
+    "gpt-5.1-chat",
+    "gpt-5.1-codex-mini",
+    "gpt-5-chat",
+    "gpt-5.2-pro",
+    "gpt-5-pro",
+    "o1",
+    "o3-pro",
+    "o3-deep-research",
+    "o4-mini-deep-research",
+    "o3-mini",
+    "codex-mini",
+]

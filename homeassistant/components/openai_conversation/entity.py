@@ -75,6 +75,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_STORE_RESPONSES,
     CONF_REASONING_SUMMARY,
+    CONF_SERVICE_TIER,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -94,6 +95,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_SERVICE_TIER,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
@@ -502,6 +504,7 @@ class OpenAIBaseLLMEntity(Entity):
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
             store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
+            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             stream=True,
         )
 
@@ -657,6 +660,15 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
             except openai.RateLimitError as err:
+                if (
+                    model_args["service_tier"] == "flex"
+                    and "resource unavailable" in (err.message or "").lower()
+                ):
+                    LOGGER.info(
+                        "Flex tier is not available at the moment, continuing with default tier"
+                    )
+                    model_args["service_tier"] = "default"
+                    continue
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:

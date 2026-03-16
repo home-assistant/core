@@ -55,6 +55,7 @@ from .const import (
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
     CONF_STORE_RESPONSES,
+    CONF_SERVICE_TIER,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_TTS_SPEED,
@@ -82,6 +83,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_STORE_RESPONSES,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_SERVICE_TIER,
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
@@ -94,8 +96,10 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
     UNSUPPORTED_CODE_INTERPRETER_MODELS,
+    UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS,
     UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
+    UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
 )
 
@@ -449,6 +453,25 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             if not model.startswith("gpt-5"):
                 options.pop(CONF_REASONING_SUMMARY)
 
+        service_tiers = self._get_service_tiers(model)
+        if "flex" in service_tiers or "priority" in service_tiers:
+            step_schema[
+                vol.Optional(
+                    CONF_SERVICE_TIER,
+                    default=RECOMMENDED_SERVICE_TIER,
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=service_tiers,
+                    translation_key=CONF_SERVICE_TIER,
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+        else:
+            options.pop(CONF_SERVICE_TIER, None)
+        if options.get(CONF_SERVICE_TIER) not in service_tiers:
+            options.pop(CONF_SERVICE_TIER, None)
+
         if self._subentry_type == "conversation" and not model.startswith(
             tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
         ):
@@ -568,6 +591,20 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             if model.startswith(prefix):
                 return options
         return []  # pragma: no cover
+
+    def _get_service_tiers(self, model: str) -> list[str]:
+        """Get service tier options based on model."""
+        service_tiers = ["auto"]
+
+        if not model.startswith(tuple(UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS)):
+            service_tiers.append("flex")
+
+        service_tiers.append("default")
+
+        if not model.startswith(tuple(UNSUPPORTED_PRIORITY_SERVICE_TIERS_MODELS)):
+            service_tiers.append("priority")
+
+        return service_tiers
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""

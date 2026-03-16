@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 import math
 from typing import Any
 
@@ -21,7 +22,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import PranaConfigEntry
-from .entity import PranaBaseEntity, PranaCoordinator, PranaEntityDescription, StrEnum
+from .entity import PranaBaseEntity, PranaCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -40,14 +41,15 @@ class PranaFanType(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class PranaFanEntityDescription(FanEntityDescription, PranaEntityDescription):
+class PranaFanEntityDescription(FanEntityDescription):
     """Description of a Prana fan entity."""
 
+    key: PranaFanType
     value_fn: Callable[[PranaCoordinator], FanState]
     speed_range: Callable[[PranaCoordinator], tuple[int, int]]
 
 
-ENTITIES: tuple[PranaEntityDescription, ...] = (
+ENTITIES: tuple[PranaFanEntityDescription, ...] = (
     PranaFanEntityDescription(
         key=PranaFanType.SUPPLY,
         translation_key="supply",

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TRMNLConfigEntry
 from .coordinator import TRMNLCoordinator
-from .entity import TRMNLEntity
+from .entity import TRMNLEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
@@ -72,11 +72,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up TRMNL time entities based on a config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        TRMNLTimeEntity(coordinator, device_id, description)
-        for device_id in coordinator.data
-        for description in TIME_DESCRIPTIONS
-    )
+
+    known_device_ids: set[int] = set()
+
+    def _async_entity_listener() -> None:
+        new_ids = set(coordinator.data) - known_device_ids
+        if new_ids:
+            async_add_entities(
+                TRMNLTimeEntity(coordinator, device_id, description)
+                for device_id in new_ids
+                for description in TIME_DESCRIPTIONS
+            )
+            known_device_ids.update(new_ids)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class TRMNLTimeEntity(TRMNLEntity, TimeEntity):
@@ -100,6 +110,7 @@ class TRMNLTimeEntity(TRMNLEntity, TimeEntity):
         """Return the current time value."""
         return self.entity_description.value_fn(self._device)
 
+    @exception_handler
     async def async_set_value(self, value: time) -> None:
         """Set the time value."""
         await self.entity_description.set_value_fn(
