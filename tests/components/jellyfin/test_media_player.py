@@ -309,7 +309,6 @@ async def test_services_shuffle(
         "play_media_shuffle",
         {
             ATTR_ENTITY_ID: state.entity_id,
-            "media_content_type": "",
             "media_content_id": "ITEM-UUID",
         },
         blocking=True,
