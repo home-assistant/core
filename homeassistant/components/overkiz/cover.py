@@ -46,6 +46,14 @@ def is_closed(device: Device) -> bool | None:
     return None
 
 
+def is_closed_unknown(device: Device) -> bool | None:
+    """Return if the cover is closed."""
+    if state := device.states[OverkizState.CORE_OPEN_CLOSED_UNKNOWN]:
+        return state.value == OverkizCommandParam.CLOSED
+
+    return None
+
+
 def is_closed_upper(device: Device) -> bool | None:
     """Return if the cover is closed."""
     if state := device.states[OverkizState.CORE_UPPER_OPEN_CLOSED]:
@@ -235,7 +243,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_fn=is_closed,
+        is_closed_fn=is_closed_unknown,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
