@@ -614,7 +614,6 @@ class OpenAIBaseLLMEntity(Entity):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
-            model_args["store"] = True  # Avoid sending image data back and forth
 
         if tools:
             model_args["tools"] = tools
