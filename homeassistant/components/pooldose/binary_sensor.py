@@ -94,19 +94,19 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="alarm_ofa2_ph",
-        translation_key="alarm_ofa2_ph",
+        translation_key="alarm_ofa_ph_alternative",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="alarm_ofa2_orp",
-        translation_key="alarm_ofa2_orp",
+        translation_key="alarm_ofa_orp_alternative",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="alarm_ofa2_cl",
-        translation_key="alarm_ofa2_cl",
+        translation_key="alarm_ofa_cl_alternative",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

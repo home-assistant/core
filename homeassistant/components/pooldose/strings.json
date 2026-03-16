@@ -53,23 +53,23 @@
       "alarm_cl_too_low_orp": {
         "name": "Chlorine too low (ORP)"
       },
-      "alarm_ofa2_cl": {
-        "name": "Chlorine overfeed alternative"
-      },
-      "alarm_ofa2_orp": {
-        "name": "ORP overfeed alternative"
-      },
-      "alarm_ofa2_ph": {
-        "name": "pH overfeed alternative"
-      },
       "alarm_ofa_cl": {
         "name": "Chlorine overfeed"
+      },
+      "alarm_ofa_cl_alternative": {
+        "name": "Chlorine overfeed alternative"
       },
       "alarm_ofa_orp": {
         "name": "ORP overfeed"
       },
+      "alarm_ofa_orp_alternative": {
+        "name": "ORP overfeed alternative"
+      },
       "alarm_ofa_ph": {
         "name": "pH overfeed"
+      },
+      "alarm_ofa_ph_alternative": {
+        "name": "pH overfeed alternative"
       },
       "alarm_ph_too_high": {
         "name": "pH too high"
