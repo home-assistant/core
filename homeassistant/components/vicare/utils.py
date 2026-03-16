@@ -25,14 +25,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_CACHE_DURATION,
-    HEATING_TYPE_TO_CREATOR_METHOD,
-    VICARE_TOKEN_FILENAME,
-    HeatingType,
-)
-from .types import ViCareConfigEntry
+from .const import DEFAULT_CACHE_DURATION, VICARE_TOKEN_FILENAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +47,9 @@ def login(
     return vicare_api
 
 
-def get_device(
-    entry: ViCareConfigEntry, device_config: PyViCareDeviceConfig
-) -> PyViCareDevice:
+def get_device(device_config: PyViCareDeviceConfig) -> PyViCareDevice:
     """Get device for device config."""
-    return getattr(
-        device_config,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
-    )()
+    return device_config.asAutoDetectDevice()
 
 
 def get_device_serial(device: PyViCareDevice) -> str | None:
