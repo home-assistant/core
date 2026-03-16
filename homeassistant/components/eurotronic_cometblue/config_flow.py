@@ -123,6 +123,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
+            data_schema=DATA_SCHEMA,
             errors=errors,
         )
 
