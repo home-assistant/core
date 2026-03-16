@@ -179,8 +179,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if tuya_mode := _HA_TO_TUYA_DIRECTION_MAPPINGS.get(direction):
-            await self._async_send_wrapper_updates(self._direction_wrapper, tuya_mode)
+        if tuya_value := _HA_TO_TUYA_DIRECTION_MAPPINGS.get(direction):
+            await self._async_send_wrapper_updates(self._direction_wrapper, tuya_value)
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
