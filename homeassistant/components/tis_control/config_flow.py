@@ -48,7 +48,6 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {vol.Required(CONF_PORT, default=6000): cv.port},
-            required=True,
         )
         return self.async_show_form(
             step_id="user",
