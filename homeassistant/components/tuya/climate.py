@@ -49,8 +49,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 
-_TUYA_TO_HA_HVACMODE_MAPPINGS: dict[TuyaClimateHVACMode | None, HVACMode | None] = {
-    None: None,
+_TUYA_TO_HA_HVACMODE_MAPPINGS = {
     TuyaClimateHVACMode.OFF: HVACMode.OFF,
     TuyaClimateHVACMode.HEAT: HVACMode.HEAT,
     TuyaClimateHVACMode.COOL: HVACMode.COOL,
@@ -305,10 +304,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._attr_hvac_modes = []
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
-            for mode in hvac_mode_wrapper.options:
-                if mode != HVACMode.OFF:
+            for tuya_mode in cast(list[TuyaClimateHVACMode], hvac_mode_wrapper.options):
+                if (
+                    ha_mode := _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode)
+                ) and ha_mode != HVACMode.OFF:
                     # OFF is always added first
-                    self._attr_hvac_modes.append(HVACMode(mode))
+                    self._attr_hvac_modes.append(ha_mode)
 
         elif switch_wrapper:
             self._attr_hvac_modes = [
@@ -360,8 +361,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         if (
             self._hvac_mode_wrapper
-            and hvac_mode in self._hvac_mode_wrapper.options
             and (tuya_mode := _HA_TO_TUYA_HVACMODE_MAPPINGS.get(hvac_mode))
+            and tuya_mode in self._hvac_mode_wrapper.options
         ):
             commands.extend(
                 self._hvac_mode_wrapper.get_update_commands(self.device, tuya_mode)
@@ -426,9 +427,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return None
 
         # If we do have a mode wrapper, check if the mode maps to an HVAC mode.
-        return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(
-            self._read_wrapper(self._hvac_mode_wrapper)
-        )
+        tuya_mode = self._read_wrapper(self._hvac_mode_wrapper)
+        return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode) if tuya_mode else None
 
     @property
     def preset_mode(self) -> str | None:

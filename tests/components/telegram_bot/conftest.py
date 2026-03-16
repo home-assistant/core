@@ -12,6 +12,7 @@ from telegram import (
     Chat,
     ChatFullInfo,
     Message,
+    Update,
     User,
     WebhookInfo,
 )
@@ -137,6 +138,24 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "send_animation", return_value=message),
         patch.object(BotMock, "send_location", return_value=message),
         patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(
+            BotMock,
+            "get_updates",
+            return_value=(
+                Update(
+                    1,
+                    Message(
+                        1,
+                        datetime.now(),
+                        Chat(
+                            id=123456,
+                            type=ChatType.PRIVATE,
+                            first_name="mock first_name",
+                        ),
+                    ),
+                ),
+            ),
+        ),
         patch.object(BotMock, "log_out", return_value=True),
         patch("telegram.ext.Updater._bootstrap"),
     ):
