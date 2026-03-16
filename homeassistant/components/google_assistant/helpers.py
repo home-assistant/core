@@ -614,7 +614,10 @@ class GoogleEntity:
                 state.domain, state.attributes.get(ATTR_DEVICE_CLASS)
             ),
         }
-        # Add name and aliases
+        # Add name and aliases.
+        # The entity's alias list is ordered: the first slot naturally serves
+        # as the primary name (set to the auto-generated full entity name by
+        # default), while the rest serve as alternative names (nicknames).
         aliases = intent.async_get_entity_aliases(
             self.hass, entity_entry, state=state, allow_empty=False
         )
