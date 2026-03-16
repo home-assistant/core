@@ -3,5 +3,12 @@
   "extends": ["config:best-practices"],
   "pip_requirements": {
     "managerFilePatterns": ["/^homeassistant/package_constraints\\.txt$/"]
-  }
+  },
+  "packageRules": [
+    {
+      "matchPackageNames": ["home-assistant-frontend"],
+      "prPriority": 1,
+      "maxMajorIncrement": 0
+    }
+  ]
 }
