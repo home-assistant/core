@@ -60,10 +60,9 @@ class LoJackCoordinator(DataUpdateCoordinator[Location]):
         try:
             location = await self.vehicle.get_location(force=True)
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                f"Authentication failed: {err}"
-            ) from err
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except ApiError as err:
             raise UpdateFailed(f"Error fetching data: {err}") from err
-
+        if location is None:
+            raise UpdateFailed("No location data available")
         return location

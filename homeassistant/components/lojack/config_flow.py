@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from lojack_api import ApiError, AuthenticationError, LoJackClient
@@ -49,7 +49,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -94,7 +94,7 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except ApiError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -106,8 +106,6 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
-            description_placeholders={
-                CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
-            },
+            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )

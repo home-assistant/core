@@ -15,7 +15,6 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-
 ENTITY_ID = "device_tracker.2021_honda_accord"
 
 

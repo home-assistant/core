@@ -11,4 +11,3 @@ LOGGER = logging.getLogger(__package__)
 
 # Default polling interval (in minutes)
 DEFAULT_UPDATE_INTERVAL: Final = 5
-

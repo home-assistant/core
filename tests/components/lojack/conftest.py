@@ -3,11 +3,10 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
-import pytest
-
 from lojack_api import LoJackClient
 from lojack_api.device import Vehicle
 from lojack_api.models import Location
+import pytest
 
 from homeassistant.components.lojack.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
