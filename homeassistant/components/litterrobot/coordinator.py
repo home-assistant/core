@@ -194,13 +194,13 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
     def _build_recording_map(self, serial: str) -> dict[str, str]:
-        """Build filename -> URL map for recordings (runs in executor)."""
+        """Build filename -> player URL map for recordings (runs in executor)."""
         media_dir = Path(self.hass.config.path("media")) / "litterrobot" / serial
         if not media_dir.is_dir():
             return {}
         try:
             return {
-                fp.name: f"/api/litterrobot/recordings/{serial}/{fp.name}"
+                fp.name: f"/api/litterrobot/player/{serial}/{fp.name}"
                 for fp in media_dir.iterdir()
                 if fp.suffix == ".mp4"
             }
