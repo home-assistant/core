@@ -4,14 +4,17 @@ import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from anthropic import RateLimitError
+from anthropic import AuthenticationError, RateLimitError
 from anthropic.types import (
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
+    Message,
+    TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
     TextEditorCodeExecutionStrReplaceResultBlock,
     TextEditorCodeExecutionToolResultError,
     TextEditorCodeExecutionViewResultBlock,
+    Usage,
     WebSearchResultBlock,
 )
 from anthropic.types.text_editor_code_execution_tool_result_block import (
@@ -36,8 +39,10 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DOMAIN,
 )
 from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -107,7 +112,7 @@ async def test_error_handling(
     mock_init_component,
     mock_create_stream: AsyncMock,
 ) -> None:
-    """Test that the default prompt works."""
+    """Test error handling."""
     mock_create_stream.side_effect = RateLimitError(
         message=None,
         response=Response(status_code=429, request=Request(method="POST", url=URL())),
@@ -120,6 +125,38 @@ async def test_error_handling(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
+
+
+async def test_auth_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test reauth after authentication error during conversation."""
+    mock_create_stream.side_effect = AuthenticationError(
+        message="Invalid API key",
+        response=Response(status_code=403, request=Request(method="POST", url=URL())),
+        body=None,
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown", result
+
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_template_error(
@@ -547,6 +584,68 @@ async def test_refusal(
     assert (
         result.response.speech["plain"]["speech"]
         == "Potential policy violation detected"
+    )
+
+
+async def test_stream_wrong_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error if the response is not a stream."""
+    mock_create_stream.return_value = Message(
+        type="message",
+        id="message_id",
+        model="claude-opus-4-6",
+        role="assistant",
+        content=[TextBlock(type="text", text="This is not a stream")],
+        usage=Usage(input_tokens=42, output_tokens=42),
+    )
+
+    result = await conversation.async_converse(
+        hass,
+        "Hi",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert result.response.speech["plain"]["speech"] == "Expected a stream of messages"
+
+
+async def test_double_system_messages(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test error for two or more system prompts."""
+    conversation_id = "conversation_id"
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.content = [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.SystemContent("And I am the user."),
+        ]
+
+        result = await conversation.async_converse(
+            hass,
+            "What time is it?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Unexpected content type in chat log"
     )
 
 

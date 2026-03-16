@@ -512,6 +512,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     options.pop(CONF_WEB_SEARCH_REGION, None)
                     options.pop(CONF_WEB_SEARCH_COUNTRY, None)
                     options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+            if (
+                user_input.get(CONF_CODE_INTERPRETER)
+                and user_input.get(CONF_REASONING_EFFORT) == "minimal"
+            ):
+                errors[CONF_CODE_INTERPRETER] = "code_interpreter_minimal_reasoning"
 
             options.update(user_input)
             if not errors:
@@ -539,15 +544,21 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
             return []
 
-        MODELS_REASONING_MAP = {
-            "gpt-5.2-pro": ["medium", "high", "xhigh"],
-            "gpt-5.2": ["none", "low", "medium", "high", "xhigh"],
+        models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            ("gpt-5.2-pro", "gpt-5.4-pro"): ["medium", "high", "xhigh"],
+            ("gpt-5.2", "gpt-5.3", "gpt-5.4"): [
+                "none",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+            ],
             "gpt-5.1": ["none", "low", "medium", "high"],
             "gpt-5": ["minimal", "low", "medium", "high"],
             "": ["low", "medium", "high"],  # The default case
         }
 
-        for prefix, options in MODELS_REASONING_MAP.items():
+        for prefix, options in models_reasoning_map.items():
             if model.startswith(prefix):
                 return options
         return []  # pragma: no cover

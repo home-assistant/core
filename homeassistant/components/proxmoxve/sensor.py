@@ -18,8 +18,10 @@ from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
+from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -320,18 +322,6 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
 
     entity_description: ProxmoxNodeSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxNodeSensorEntityDescription,
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, node_data)
-        self.entity_description = entity_description
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
@@ -343,19 +333,6 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
 
     entity_description: ProxmoxVMSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxVMSensorEntityDescription,
-        vm_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox VM sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, vm_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
-
     @property
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
@@ -366,19 +343,6 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     """Represents a Proxmox VE container sensor."""
 
     entity_description: ProxmoxContainerSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ProxmoxCoordinator,
-        entity_description: ProxmoxContainerSensorEntityDescription,
-        container_data: dict[str, Any],
-        node_data: ProxmoxNodeData,
-    ) -> None:
-        """Initialize the Proxmox container sensor."""
-        self.entity_description = entity_description
-        super().__init__(coordinator, container_data, node_data)
-
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

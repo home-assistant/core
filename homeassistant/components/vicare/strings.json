@@ -160,6 +160,16 @@
         "name": "Reduced temperature"
       }
     },
+    "select": {
+      "dhw_operating_mode": {
+        "name": "DHW operating mode",
+        "state": {
+          "efficient": "Efficient",
+          "efficient_with_min_comfort": "Efficient with minimum comfort",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
@@ -288,6 +298,12 @@
       },
       "energy_consumption_cooling_today": {
         "name": "Cooling electricity consumption today"
+      },
+      "energy_consumption_dhw_this_year": {
+        "name": "DHW energy consumption this year"
+      },
+      "energy_consumption_heating_this_year": {
+        "name": "Heating energy consumption this year"
       },
       "energy_dhw_summary_consumption_heating_currentday": {
         "name": "DHW electricity consumption today"

@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
-from typing import Final
+from typing import Any, Final, cast
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
@@ -106,7 +106,7 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
             translation_domain=DOMAIN,
             translation_key="not_ready_connection_error",
         ) from err
-    return oauth_session.token[CONF_ACCESS_TOKEN]
+    return cast(str, oauth_session.token[CONF_ACCESS_TOKEN])
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -227,7 +227,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
-                    firmware=firmware,
+                    firmware=firmware or "",
                     device=device,
                 )
             )
@@ -398,10 +398,12 @@ async def async_migrate_entry(
     return True
 
 
-def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
+def create_handle_vehicle_stream(
+    vin: str, coordinator: TeslemetryVehicleDataCoordinator
+) -> Callable[[dict[str, Any]], None]:
     """Create a handle vehicle stream function."""
 
-    def handle_vehicle_stream(data: dict) -> None:
+    def handle_vehicle_stream(data: dict[str, Any]) -> None:
         """Handle vehicle data from the stream."""
         if "vehicle_data" in data:
             LOGGER.debug("Streaming received vehicle data from %s", vin)
@@ -450,7 +452,7 @@ def async_setup_energy_device(
 
 async def async_setup_stream(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, vehicle: TeslemetryVehicleData
-):
+) -> None:
     """Set up the stream for a vehicle."""
 
     await vehicle.stream_vehicle.get_config()

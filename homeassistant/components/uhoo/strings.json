@@ -23,6 +23,9 @@
   },
   "entity": {
     "sensor": {
+      "influenza_index": {
+        "name": "Influenza index"
+      },
       "mold_index": {
         "name": "Mold index"
       },
