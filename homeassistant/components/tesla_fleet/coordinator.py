@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
 from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any
@@ -18,14 +19,15 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
 
-from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 600
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -45,6 +47,9 @@ ENDPOINTS = [
 ]
 
 
+STORE_VERSION = 1
+
+
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
@@ -58,7 +63,42 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
-class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class RestoreDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator that persists data to Store and restores it on startup."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        *,
+        config_entry: TeslaFleetConfigEntry,
+        name: str,
+        update_interval: timedelta,
+        storage_key: str,
+    ) -> None:
+        """Initialize RestoreDataUpdateCoordinator."""
+        super().__init__(
+            hass,
+            logger,
+            config_entry=config_entry,
+            name=name,
+            update_interval=update_interval,
+        )
+        self._store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, storage_key)
+
+    async def _async_setup(self) -> None:
+        """Load stored data before first refresh."""
+        if stored := await self._store.async_load():
+            self.data = stored
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Persist data to store after a successful refresh."""
+        if self.last_update_success and self.data is not None:
+            self._store.async_delay_save(lambda: self.data)
+
+
+class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator):
     """Class to manage fetching data from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -82,6 +122,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
             name="Tesla Fleet Vehicle",
             update_interval=VEHICLE_INTERVAL,
+            storage_key=f"{DOMAIN}.{api.vin}",
         )
         self.api = api
         self.data = flatten(product)
