@@ -1,8 +1,12 @@
 """Test Litter-Robot setup process."""
 
+from __future__ import annotations
+
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pylitterbot import LitterRobot4
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 
@@ -19,7 +23,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import ACCOUNT_USER_ID, CONFIG, DOMAIN, VACUUM_ENTITY_ID
-from .conftest import setup_integration
+from .conftest import ROBOT_4_DATA, setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -225,7 +229,7 @@ async def test_update_auth_error_triggers_reauth(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate an authentication error during update
-    mock_account.refresh_robots.side_effect = LitterRobotLoginException(
+    mock_account.load_robots.side_effect = LitterRobotLoginException(
         "Invalid credentials"
     )
     freezer.tick(UPDATE_INTERVAL)
@@ -244,3 +248,27 @@ async def test_update_auth_error_triggers_reauth(
     assert flow["handler"] == DOMAIN
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
+
+
+async def test_dynamic_devices(
+    hass: HomeAssistant,
+    mock_account: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test new device found."""
+    delta_time = timedelta(seconds=305)  # 5 minutes + 5 delta seconds
+
+    entry = await setup_integration(hass, mock_account)
+
+    # First check -> there is 1 device in total
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+
+    mock_account.robots.extend([LitterRobot4(data=ROBOT_4_DATA, account=mock_account)])
+
+    freezer.tick(delta_time)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Second check -> added one device
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2

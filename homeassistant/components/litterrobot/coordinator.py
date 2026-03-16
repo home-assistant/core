@@ -47,7 +47,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
         try:
-            await self.account.refresh_robots()
+            await self.account.load_robots(subscribe_for_updates=True)
             await self.account.load_pets()
             for pet in self.account.pets:
                 # Need to fetch weight history for `get_visits_since`

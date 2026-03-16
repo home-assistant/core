@@ -191,7 +191,7 @@ async def test_vacuum_unavailable_on_update_error(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate an API error during update
-    mock_account.refresh_robots.side_effect = LitterRobotException("Unable to connect")
+    mock_account.load_robots.side_effect = LitterRobotException("Unable to connect")
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -200,7 +200,7 @@ async def test_vacuum_unavailable_on_update_error(
     assert state.state == STATE_UNAVAILABLE
 
     # Recover
-    mock_account.refresh_robots.side_effect = None
+    mock_account.load_robots.side_effect = None
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
