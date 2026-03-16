@@ -26,6 +26,10 @@
       "macaddress": "286D97*"
     },
     {
+      "hostname": "smarthub",
+      "macaddress": "683A48*"
+    },
+    {
       "hostname": "samsung-*"
     }
   ],
