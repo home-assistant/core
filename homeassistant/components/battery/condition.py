@@ -17,45 +17,27 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 
+BATTERY_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.BATTERY)
+}
+BATTERY_CHARGING_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING
+    )
+}
+BATTERY_PERCENTAGE_DOMAIN_SPECS = {
+    SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
+    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.BATTERY),
+}
+
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_low": make_entity_state_condition(
-        {
-            BINARY_SENSOR_DOMAIN: DomainSpec(
-                device_class=BinarySensorDeviceClass.BATTERY
-            )
-        },
-        STATE_ON,
-    ),
-    "is_not_low": make_entity_state_condition(
-        {
-            BINARY_SENSOR_DOMAIN: DomainSpec(
-                device_class=BinarySensorDeviceClass.BATTERY
-            )
-        },
-        STATE_OFF,
-    ),
-    "is_charging": make_entity_state_condition(
-        {
-            BINARY_SENSOR_DOMAIN: DomainSpec(
-                device_class=BinarySensorDeviceClass.BATTERY_CHARGING
-            )
-        },
-        STATE_ON,
-    ),
+    "is_low": make_entity_state_condition(BATTERY_DOMAIN_SPECS, STATE_ON),
+    "is_not_low": make_entity_state_condition(BATTERY_DOMAIN_SPECS, STATE_OFF),
+    "is_charging": make_entity_state_condition(BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON),
     "is_not_charging": make_entity_state_condition(
-        {
-            BINARY_SENSOR_DOMAIN: DomainSpec(
-                device_class=BinarySensorDeviceClass.BATTERY_CHARGING
-            )
-        },
-        STATE_OFF,
+        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF
     ),
-    "percentage": make_entity_numerical_condition(
-        {
-            SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
-            NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.BATTERY),
-        },
-    ),
+    "percentage": make_entity_numerical_condition(BATTERY_PERCENTAGE_DOMAIN_SPECS),
 }
 
 
