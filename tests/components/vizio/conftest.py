@@ -198,6 +198,14 @@ def vizio_cant_connect_fixture() -> Generator[None]:
             "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=None,
         ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
+            return_value=None,
+        ),
     ):
         yield
 
