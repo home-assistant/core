@@ -401,7 +401,7 @@
     {
       "creationTime": 1521964729000,
       "lastUpdateTime": 1521964729000,
-      "label": "* *",
+      "label": "Main Garage Door",
       "deviceURL": "io://1234-1234-6233/1166863",
       "shortcut": false,
       "controllableName": "io:GarageOpenerIOComponent",
@@ -591,7 +591,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Main Garage Door"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -647,7 +647,7 @@
     {
       "creationTime": 1552163547000,
       "lastUpdateTime": 1552163547000,
-      "label": "* *&*",
+      "label": "Garden House Shutter",
       "deviceURL": "io://1234-1234-6233/12184029",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -879,7 +879,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *&*"
+          "value": "Garden House Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -972,7 +972,7 @@
     {
       "creationTime": 1547156714000,
       "lastUpdateTime": 1547156714000,
-      "label": "* à *",
+      "label": "Bedroom Blinds",
       "deviceURL": "io://1234-1234-6233/13064380",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -1204,7 +1204,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* à *"
+          "value": "Bedroom Blinds"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -1297,7 +1297,7 @@
     {
       "creationTime": 1537640682000,
       "lastUpdateTime": 1537640682000,
-      "label": "* *",
+      "label": "Kitchen Shutter",
       "deviceURL": "io://1234-1234-6233/13136078",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -1529,7 +1529,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Kitchen Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -1622,7 +1622,7 @@
     {
       "creationTime": 1535908328000,
       "lastUpdateTime": 1535908328000,
-      "label": "* * *",
+      "label": "Office Shutter",
       "deviceURL": "io://1234-1234-6233/13911608",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -1854,7 +1854,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Office Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2204,7 +2204,7 @@
     {
       "creationTime": 1538225691000,
       "lastUpdateTime": 1538225691000,
-      "label": "* * *",
+      "label": "Patio Shutter",
       "deviceURL": "io://1234-1234-6233/180461",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -2436,7 +2436,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Patio Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2736,7 +2736,7 @@
     {
       "creationTime": 1538767702000,
       "lastUpdateTime": 1538767702000,
-      "label": "* * *",
+      "label": "Dining Room Shutter",
       "deviceURL": "io://1234-1234-6233/2487349",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -2968,7 +2968,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Dining Room Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3061,7 +3061,7 @@
     {
       "creationTime": 1521829867000,
       "lastUpdateTime": 1521829867000,
-      "label": "* *",
+      "label": "Side Garage Door",
       "deviceURL": "io://1234-1234-6233/3880877",
       "shortcut": false,
       "controllableName": "io:GarageOpenerIOComponent",
@@ -3251,7 +3251,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Side Garage Door"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3506,7 +3506,7 @@
     {
       "creationTime": 1549752813000,
       "lastUpdateTime": 1549752813000,
-      "label": "* *",
+      "label": "Studio Shutter",
       "deviceURL": "io://1234-1234-6233/7019474",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -3738,7 +3738,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Studio Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3831,7 +3831,7 @@
     {
       "creationTime": 1536436626000,
       "lastUpdateTime": 1536436626000,
-      "label": "* * *",
+      "label": "Guest Room Shutter",
       "deviceURL": "io://1234-1234-6233/8170693",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -4063,7 +4063,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Guest Room Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -4156,7 +4156,7 @@
     {
       "creationTime": 1561232093000,
       "lastUpdateTime": 1561232093000,
-      "label": "* *",
+      "label": "Living Room Shutter",
       "deviceURL": "io://1234-1234-6233/8939545",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -4388,7 +4388,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Living Room Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -4685,7 +4685,7 @@
     {
       "creationTime": 1558642434000,
       "lastUpdateTime": 1558642434000,
-      "label": "* *é*",
+      "label": "Kids Room Shutter",
       "deviceURL": "io://1234-1234-6233/9749383",
       "shortcut": false,
       "controllableName": "io:RollerShutterGenericIOComponent",
@@ -4917,7 +4917,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Kids Room Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -6822,14 +6822,14 @@
   "rootPlace": {
     "creationTime": 1501224054000,
     "lastUpdateTime": 1501226112000,
-    "label": "*",
+    "label": "Willow House",
     "type": 200,
     "oid": "91ba6fe7-704e-4ee3-ab7f-1cb7eb2549a4",
     "subPlaces": [
       {
         "creationTime": 1501226112000,
         "lastUpdateTime": 1501226112000,
-        "label": "*",
+        "label": "Front Patio",
         "type": 108,
         "metadata": "{\"tahoma\":{\"position\":0.75,\"decor\":[]}}",
         "oid": "f8321fb7-ba88-4acd-85ab-651cc15b0997",
@@ -6838,7 +6838,7 @@
       {
         "creationTime": 1501226112000,
         "lastUpdateTime": 1501226112000,
-        "label": "*",
+        "label": "Entry Hall",
         "type": 106,
         "metadata": "{\"tahoma\":{\"position\":0.25,\"decor\":[]}}",
         "oid": "9f691996-a9bc-410a-b501-d3154de77e38",
@@ -6847,7 +6847,7 @@
       {
         "creationTime": 1501226112000,
         "lastUpdateTime": 1501226112000,
-        "label": "*",
+        "label": "Living Room",
         "type": 28,
         "metadata": "{\"tahoma\":{\"position\":-0.25,\"decor\":[]}}",
         "oid": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
@@ -6856,14 +6856,14 @@
       {
         "creationTime": 1501226112000,
         "lastUpdateTime": 1501226112000,
-        "label": "* é*",
+        "label": "Upstairs",
         "type": 102,
         "oid": "50b9c516-c47a-4e19-bb09-771869349f3f",
         "subPlaces": [
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "*",
+            "label": "Reading Nook",
             "type": 16,
             "metadata": "{\"tahoma\":{\"order\":0}}",
             "oid": "4c6de3bc-4f72-486c-853c-12ac36833a11",
@@ -6872,7 +6872,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1572685264000,
-            "label": "* * * *&*",
+            "label": "Music Room",
             "type": 8,
             "metadata": "{\"tahoma\":{\"order\":3}}",
             "oid": "eb7f2ac0-953c-4a35-a511-afad8865e3e1",
@@ -6881,7 +6881,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1572685264000,
-            "label": "* * * *",
+            "label": "Home Library",
             "type": 8,
             "metadata": "{\"tahoma\":{\"order\":2}}",
             "oid": "a4482540-0184-42d5-828f-6a5585371025",
@@ -6890,7 +6890,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "*",
+            "label": "Kitchen",
             "type": 22,
             "metadata": "{\"tahoma\":{\"order\":1}}",
             "oid": "ce6e30e6-a8d1-4285-83f6-3fb56cc0d8c9",
@@ -6899,7 +6899,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "* *",
+            "label": "Dining Room",
             "type": 5,
             "metadata": "{\"tahoma\":{\"order\":5}}",
             "oid": "52459599-50ab-4a8e-ac20-72a40209b922",
@@ -6908,7 +6908,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "* *",
+            "label": "Office",
             "type": 6,
             "metadata": "{\"tahoma\":{\"order\":4}}",
             "oid": "f4f6bdb1-3228-4da2-8312-7a19f4ef3b55",
@@ -6917,7 +6917,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "* *",
+            "label": "Guest Bedroom",
             "type": 12,
             "metadata": "{\"tahoma\":{\"order\":6}}",
             "oid": "1f1d57f8-1471-4737-9498-4c8e312db332",
@@ -6928,14 +6928,14 @@
       {
         "creationTime": 1501226112000,
         "lastUpdateTime": 1501226112000,
-        "label": "*é*",
+        "label": "Family Wing",
         "type": 101,
         "oid": "48200981-d96f-4a75-bcf0-a3c6f0b692dc",
         "subPlaces": [
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "* à *",
+            "label": "Main Bedroom",
             "type": 2,
             "metadata": "{\"tahoma\":{\"order\":2}}",
             "oid": "972455eb-4f91-4095-bf42-55c234bb6238",
@@ -6944,7 +6944,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "*",
+            "label": "Garage",
             "type": 1,
             "metadata": "{\"tahoma\":{\"order\":1}}",
             "oid": "23eeca0a-9dbc-4e93-ae3d-c8ffe7e3464b",
@@ -6953,7 +6953,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "*",
+            "label": "Kids Room",
             "type": 14,
             "metadata": "{\"tahoma\":{\"order\":0}}",
             "oid": "9b4aeb55-07b3-4088-920e-c08405000ce6",
@@ -6962,7 +6962,7 @@
           {
             "creationTime": 1501226112000,
             "lastUpdateTime": 1501226112000,
-            "label": "*",
+            "label": "Bathroom",
             "type": 22,
             "metadata": "{\"tahoma\":{\"order\":3}}",
             "oid": "e01ee506-b6fb-45d9-98b6-e652508a06e9",

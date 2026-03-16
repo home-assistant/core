@@ -171,7 +171,7 @@
     {
       "creationTime": 1613676516000,
       "lastUpdateTime": 1613676516000,
-      "label": "*",
+      "label": "Patio Shutter",
       "deviceURL": "rts://1234-1234-6362/16730022",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
@@ -249,7 +249,7 @@
     {
       "creationTime": 1613676640000,
       "lastUpdateTime": 1613676640000,
-      "label": "*",
+      "label": "Kitchen Shutter",
       "deviceURL": "rts://1234-1234-6362/16749917",
       "shortcut": false,
       "controllableName": "rts:RollerShutterRTSComponent",
@@ -331,7 +331,7 @@
   "rootPlace": {
     "creationTime": 1613674982000,
     "lastUpdateTime": 1613674982000,
-    "label": "* *",
+    "label": "Palm Court",
     "type": 0,
     "oid": "6133b4a0-f514-4553-b635-d1b7beb7e7b2",
     "subPlaces": []

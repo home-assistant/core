@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.unknown-entry]
+# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.kitchen_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,60 +12,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
-    'unique_id': 'rts://1234-1234-6362/16730022',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.unknown-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'shutter',
-      'friendly_name': '*',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.unknown_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_2',
+    'entity_id': 'cover.kitchen_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,24 +35,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.unknown_2-state]
+# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.kitchen_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'device_class': 'shutter',
-      'friendly_name': '*',
+      'friendly_name': 'Kitchen Shutter',
       'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_2',
+    'entity_id': 'cover.kitchen_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local.json][cover.unknown-entry]
+# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.patio_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -118,7 +65,60 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.patio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16730022',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_hi_kumo.json][cover.patio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'shutter',
+      'friendly_name': 'Patio Shutter',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local.json][cover.terrace_awning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.terrace_awning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -141,24 +141,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local.json][cover.unknown-state]
+# name: test_cover_entities_snapshot[setup_local.json][cover.terrace_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'awning',
-      'friendly_name': '*',
+      'friendly_name': 'Terrace Awning',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.terrace_awning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown-entry]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.bedroom_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -171,7 +171,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.bedroom_screen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -194,24 +194,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown-state]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.bedroom_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'blind',
-      'friendly_name': '** **',
+      'friendly_name': 'Bedroom Screen',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.bedroom_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_2-entry]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.dining_room_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -224,113 +224,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-3293/3541212',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': '** **',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 240>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-3293/7614902',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_tilt_position': 0,
-      'device_class': 'awning',
-      'friendly_name': '** **',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 240>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_4',
+    'entity_id': 'cover.dining_room_screen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -353,24 +247,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.unknown_4-state]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.dining_room_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'blind',
-      'friendly_name': '** **',
+      'friendly_name': 'Dining Room Screen',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_4',
+    'entity_id': 'cover.dining_room_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown-entry]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.garden_pergola-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -383,7 +277,60 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.garden_pergola',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.AWNING: 'awning'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 240>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-3293/7614902',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.garden_pergola-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_tilt_position': 0,
+      'device_class': 'awning',
+      'friendly_name': 'Garden Pergola',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 240>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.garden_pergola',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.office_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_screen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -402,28 +349,28 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'io://****-****-9373/15097783',
+    'unique_id': 'io://1234-5678-3293/3541212',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown-state]
+# name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.office_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'blind',
-      'friendly_name': '** ** **',
+      'friendly_name': 'Office Screen',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.office_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_2-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bathroom_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -436,113 +383,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://****-****-9373/3904805',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 86,
-      'device_class': 'blind',
-      'friendly_name': '** **',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 11>,
-    'translation_key': None,
-    'unique_id': 'rts://****-****-9373/16757362',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'device_class': 'curtain',
-      'friendly_name': '** ** **',
-      'is_closed': None,
-      'supported_features': <CoverEntityFeature: 11>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_4',
+    'entity_id': 'cover.bathroom_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -561,28 +402,28 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'io://****-****-9373/10202865',
+    'unique_id': 'io://1234-5678--9373/10202865',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_4-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bathroom_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'window',
-      'friendly_name': '** **',
+      'friendly_name': 'Bathroom Window',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_4',
+    'entity_id': 'cover.bathroom_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_5-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bedroom_blinds-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -595,7 +436,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_5',
+    'entity_id': 'cover.bedroom_blinds',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -614,28 +455,28 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'io://****-****-9373/3868695',
+    'unique_id': 'io://1234-5678--9373/15097783',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_5-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 86,
+      'current_position': 100,
       'device_class': 'blind',
-      'friendly_name': '** **',
+      'friendly_name': 'Bedroom Blinds',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_5',
+    'entity_id': 'cover.bedroom_blinds',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_6-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.guest_room_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -648,7 +489,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_6',
+    'entity_id': 'cover.guest_room_screen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -667,28 +508,28 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'io://****-****-9373/5632438',
+    'unique_id': 'io://1234-5678--9373/3904805',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.unknown_6-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.guest_room_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 86,
       'device_class': 'blind',
-      'friendly_name': '** **',
+      'friendly_name': 'Guest Room Screen',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_6',
+    'entity_id': 'cover.guest_room_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.e-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kids_room_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -701,7 +542,166 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.e',
+    'entity_id': 'cover.kids_room_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-5678--9373/16757362',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kids_room_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'device_class': 'curtain',
+      'friendly_name': 'Kids Room Curtain',
+      'is_closed': None,
+      'supported_features': <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kids_room_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kitchen_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/3868695',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kitchen_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Kitchen Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.living_room_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/5632438',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.living_room_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Living Room Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.hallway_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.hallway_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -724,24 +724,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.e-state]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.hallway_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'shutter',
-      'friendly_name': '**É** *',
+      'friendly_name': 'Hallway Shutter',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.e',
+    'entity_id': 'cover.hallway_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.e_low_speed-entry]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.hallway_shutter_low_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -754,7 +754,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.e_low_speed',
+    'entity_id': 'cover.hallway_shutter_low_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -777,24 +777,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.e_low_speed-state]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.hallway_shutter_low_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'shutter',
-      'friendly_name': '**É** * Low speed',
+      'friendly_name': 'Hallway Shutter Low speed',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.e_low_speed',
+    'entity_id': 'cover.hallway_shutter_low_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.low_speed-entry]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.nursery_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -807,113 +807,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.low_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Low speed',
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': 'Low speed',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/141613_low_speed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.low_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': '** ** Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.low_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.low_speed_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.low_speed_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Low speed',
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': 'Low speed',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/9740264_low_speed',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.low_speed_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': '** ** Low speed',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.low_speed_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.unknown-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.nursery_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -936,24 +830,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.unknown-state]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.nursery_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'shutter',
-      'friendly_name': '** **',
+      'friendly_name': 'Nursery Shutter',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown',
+    'entity_id': 'cover.nursery_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.unknown_2-entry]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.nursery_shutter_low_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -966,7 +860,60 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_2',
+    'entity_id': 'cover.nursery_shutter_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/141613_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.nursery_shutter_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Nursery Shutter Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.nursery_shutter_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.office_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -989,24 +936,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.unknown_2-state]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.office_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'shutter',
-      'friendly_name': '** **',
+      'friendly_name': 'Office Shutter',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_2',
+    'entity_id': 'cover.office_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.a-entry]
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.office_shutter_low_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1019,7 +966,60 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.a',
+    'entity_id': 'cover.office_shutter_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/9740264_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_nexity_2.json][cover.office_shutter_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Office Shutter Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_shutter_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.bedroom_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_blinds',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1042,24 +1042,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.a-state]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.bedroom_blinds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'shutter',
-      'friendly_name': '* à *',
+      'friendly_name': 'Bedroom Blinds',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.a',
+    'entity_id': 'cover.bedroom_blinds',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.e-entry]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.dining_room_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1072,378 +1072,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.e',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/9749383',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.e-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': '* *é*',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.e',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/1166863',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'garage',
-      'friendly_name': '* *',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_10-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_10',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/8939545',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_10-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': '* *',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/12184029',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': '* *&*',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/13136078',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': '* *',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/13911608',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': '* * *',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/180461',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shutter',
-      'friendly_name': '* * *',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_6-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_6',
+    'entity_id': 'cover.dining_room_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1466,24 +1095,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_6-state]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.dining_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'shutter',
-      'friendly_name': '* * *',
+      'friendly_name': 'Dining Room Shutter',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_6',
+    'entity_id': 'cover.dining_room_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_7-entry]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.garden_house_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1496,60 +1125,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_7',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/3880877',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_7-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'garage',
-      'friendly_name': '* *',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.unknown_7',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_8-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.unknown_8',
+    'entity_id': 'cover.garden_house_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1568,28 +1144,28 @@
     'suggested_object_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': 'io://1234-1234-6233/7019474',
+    'unique_id': 'io://1234-1234-6233/12184029',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_8-state]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.garden_house_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'shutter',
-      'friendly_name': '* *',
+      'friendly_name': 'Garden House Shutter',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_8',
+    'entity_id': 'cover.garden_house_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_9-entry]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.guest_room_shutter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1602,7 +1178,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.unknown_9',
+    'entity_id': 'cover.guest_room_shutter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1625,17 +1201,441 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.unknown_9-state]
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.guest_room_shutter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'shutter',
-      'friendly_name': '* * *',
+      'friendly_name': 'Guest Room Shutter',
       'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.unknown_9',
+    'entity_id': 'cover.guest_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.kids_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kids_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/9749383',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.kids_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Kids Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kids_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.kitchen_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/13136078',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.kitchen_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'shutter',
+      'friendly_name': 'Kitchen Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.living_room_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.living_room_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/8939545',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.living_room_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Living Room Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.living_room_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.main_garage_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.main_garage_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/1166863',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.main_garage_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'garage',
+      'friendly_name': 'Main Garage Door',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.main_garage_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.office_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.office_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/13911608',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.office_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Office Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.office_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.patio_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.patio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/180461',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.patio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Patio Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.side_garage_door-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.side_garage_door',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/3880877',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.side_garage_door-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'garage',
+      'friendly_name': 'Side Garage Door',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.side_garage_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.studio_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.studio_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-1234-6233/7019474',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_tahoma_3.json][cover.studio_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Studio Shutter',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.studio_shutter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1006,10 +1006,10 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** ** **"
+          "value": "Bedroom Blinds"
         }
       ],
-      "label": "** ** **",
+      "label": "Bedroom Blinds",
       "subsystemId": 0,
       "attributes": [
         {
@@ -4346,7 +4346,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Guest Room Screen"
         },
         {
           "type": 1,
@@ -4354,7 +4354,7 @@
           "value": 50
         }
       ],
-      "label": "** **",
+      "label": "Guest Room Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -6351,7 +6351,7 @@
       "synced": true,
       "type": 1,
       "states": [],
-      "label": "** ** **",
+      "label": "Kids Room Curtain",
       "definition": {
         "states": [],
         "widgetName": "UpDownDualCurtain",
@@ -6613,10 +6613,10 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Bathroom Window"
         }
       ],
-      "label": "** **",
+      "label": "Bathroom Window",
       "subsystemId": 0,
       "attributes": [
         {
@@ -7048,7 +7048,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Kitchen Screen"
         },
         {
           "type": 1,
@@ -7056,7 +7056,7 @@
           "value": 50
         }
       ],
-      "label": "** **",
+      "label": "Kitchen Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -9388,7 +9388,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Living Room Screen"
         },
         {
           "type": 1,
@@ -9396,7 +9396,7 @@
           "value": 50
         }
       ],
-      "label": "** **",
+      "label": "Living Room Screen",
       "subsystemId": 0,
       "attributes": [
         {

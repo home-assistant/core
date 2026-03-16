@@ -70,10 +70,10 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Bedroom Screen"
         }
       ],
-      "label": "** **",
+      "label": "Bedroom Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -305,7 +305,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Office Screen"
         },
         {
           "type": 11,
@@ -335,7 +335,7 @@
           "value": false
         }
       ],
-      "label": "** **",
+      "label": "Office Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -542,7 +542,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Garden Pergola"
         },
         {
           "type": 3,
@@ -575,7 +575,7 @@
           "value": "available"
         }
       ],
-      "label": "** **",
+      "label": "Garden Pergola",
       "subsystemId": 0,
       "attributes": [
         {
@@ -972,7 +972,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "** **"
+          "value": "Dining Room Screen"
         },
         {
           "type": 11,
@@ -997,7 +997,7 @@
           "value": 0
         }
       ],
-      "label": "** **",
+      "label": "Dining Room Screen",
       "subsystemId": 0,
       "attributes": [
         {

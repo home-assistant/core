@@ -172,7 +172,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "*"
+          "value": "Terrace Awning"
         },
         {
           "type": 1,
@@ -180,7 +180,7 @@
           "value": 105
         }
       ],
-      "label": "*",
+      "label": "Terrace Awning",
       "subsystemId": 0,
       "attributes": [
         {

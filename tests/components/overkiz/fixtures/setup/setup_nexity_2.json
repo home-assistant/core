@@ -434,7 +434,7 @@
     {
       "creationTime": 1628156909000,
       "lastUpdateTime": 1628156909000,
-      "label": "** **",
+      "label": "Nursery Shutter",
       "deviceURL": "io://1234-5678-1698/141613",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
@@ -667,7 +667,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** **"
+          "value": "Nursery Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2118,7 +2118,7 @@
     {
       "creationTime": 1628156814000,
       "lastUpdateTime": 1628156814000,
-      "label": "**É** *",
+      "label": "Hallway Shutter",
       "deviceURL": "io://1234-5678-1698/4080031",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
@@ -2351,7 +2351,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**É**"
+          "value": "Hallway Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -4927,7 +4927,7 @@
     {
       "creationTime": 1628156988000,
       "lastUpdateTime": 1628156988000,
-      "label": "** **",
+      "label": "Office Shutter",
       "deviceURL": "io://1234-5678-1698/9740264",
       "shortcut": false,
       "controllableName": "io:RollerShutterWithLowSpeedManagementIOComponent",
@@ -5160,7 +5160,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "** **"
+          "value": "Office Shutter"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -5549,7 +5549,7 @@
   "rootPlace": {
     "creationTime": 1582277965000,
     "lastUpdateTime": 1582277965000,
-    "label": "** **",
+    "label": "Maple Residence",
     "type": 0,
     "oid": "0d6a3908-f08d-446a-bd88-5a9f4849c526",
     "subPlaces": []

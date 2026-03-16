@@ -32,6 +32,7 @@ class MockOverkizClient(OverkizClient):
             name="Somfy",
             endpoint="https://example.test/enduser-mobile-web/enduserAPI",
             manufacturer="Somfy",
+            configuration_url=None,
         )
     )
 
