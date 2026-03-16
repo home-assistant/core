@@ -138,6 +138,9 @@ from .ingress import async_setup_ingress_view
 from .issues import SupervisorIssues
 from .websocket_api import async_load_websocket_api
 
+# Expose the future safe name now so integrations can use it
+# All references to addons will eventually be refactored and deprecated
+get_apps_list = get_addons_list
 __all__ = [
     "AddonError",
     "AddonInfo",
@@ -150,6 +153,7 @@ __all__ = [
     "get_addons_info",
     "get_addons_list",
     "get_addons_stats",
+    "get_apps_list",
     "get_core_info",
     "get_core_stats",
     "get_host_info",

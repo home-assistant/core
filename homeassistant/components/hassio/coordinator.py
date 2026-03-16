@@ -512,7 +512,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             }
         )
 
-        add_addons = {addon.slug for addon in installed_addons}
+        all_addons = {addon.slug for addon in installed_addons}
         started_addons = {
             addon.slug
             for addon in installed_addons
@@ -542,7 +542,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 DATA_ADDONS_INFO,
                 self._update_addon_info,
                 CONTAINER_INFO,
-                add_addons,
+                all_addons,
                 True,
             ),
         ):
