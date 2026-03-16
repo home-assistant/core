@@ -15,7 +15,12 @@ from tuya_device_handlers.device_wrapper.fan import (
 )
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -44,6 +49,19 @@ TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
     DeviceCategory.KJ,
     DeviceCategory.KS,
 }
+
+
+class _DirectionEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for fan direction DP code."""
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device status and return the direction string."""
+        if (value := self._read_dpcode_value(device)) and value in {
+            DIRECTION_FORWARD,
+            DIRECTION_REVERSE,
+        }:
+            return value
+        return None
 
 
 def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
@@ -89,7 +107,7 @@ async def async_setup_entry(
                     TuyaFanEntity(
                         device,
                         manager,
-                        direction_wrapper=DPCodeEnumWrapper.find_dpcode(
+                        direction_wrapper=_DirectionEnumWrapper.find_dpcode(
                             device, _DIRECTION_DPCODES, prefer_function=True
                         ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
