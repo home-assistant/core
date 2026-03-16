@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zha.application import Platform as ZhaPlatform
 from zha.zigbee.device import DeviceEntityAddedEvent, DeviceEntityRemovedEvent
 from zigpy.device import Device
 from zigpy.profiles import zha
@@ -16,7 +17,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -103,7 +104,10 @@ async def test_handle_device_entity_added(
         "homeassistant.components.zha.helpers.async_dispatcher_send"
     ) as mock_dispatch:
         zha_device_proxy.handle_zha_device_entity_added_event(
-            DeviceEntityAddedEvent(unique_id=platform_entity.unique_id)
+            DeviceEntityAddedEvent(
+                platform=ZhaPlatform(platform_entity.PLATFORM),
+                unique_id=platform_entity.unique_id,
+            )
         )
 
         # Verify EntityData was appended to the platform list
@@ -137,7 +141,10 @@ async def test_handle_device_entity_added_unknown_unique_id(
         "homeassistant.components.zha.helpers.async_dispatcher_send"
     ) as mock_dispatch:
         zha_device_proxy.handle_zha_device_entity_added_event(
-            DeviceEntityAddedEvent(unique_id="nonexistent_unique_id")
+            DeviceEntityAddedEvent(
+                platform=ZhaPlatform.SWITCH,
+                unique_id="nonexistent_unique_id",
+            )
         )
 
         # Nothing should be added and no signal dispatched
@@ -150,37 +157,30 @@ async def test_handle_device_entity_removed(
     setup_zha: Callable[..., Coroutine[None]],
     zigpy_device_mock: Callable[..., Device],
 ) -> None:
-    """Test that a runtime DeviceEntityRemovedEvent unloads the HA entity."""
-    zha_device_proxy, gateway_proxy, _ = await _create_switch_device(
+    """Test that a runtime DeviceEntityRemovedEvent removes the HA entity."""
+    zha_device_proxy, _, _ = await _create_switch_device(
         hass, setup_zha, zigpy_device_mock
     )
 
-    # Verify entity exists and has a state
+    # Verify entity exists
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
 
     registry = er.async_get(hass)
-    assert registry.async_get(entity_id) is not None
-    assert hass.states.get(entity_id) is not None
-
-    # Get the unique_id of the platform entity backing this HA entity
-    entity_refs = gateway_proxy.ha_entity_refs[zha_device_proxy.device.ieee]
-    target_ref = next(ref for ref in entity_refs if ref.ha_entity_id == entity_id)
-    target_unique_id = target_ref.entity_data.entity.unique_id
+    entry = registry.async_get(entity_id)
+    assert entry is not None
 
     # Fire the entity removed event
     zha_device_proxy.handle_zha_device_entity_removed_event(
-        DeviceEntityRemovedEvent(unique_id=target_unique_id)
+        DeviceEntityRemovedEvent(
+            platform=ZhaPlatform.SWITCH,
+            unique_id=entry.unique_id,
+        )
     )
     await hass.async_block_till_done()
 
-    # The registry entry is preserved so the user can manually delete it
-    assert registry.async_get(entity_id) is not None
-
-    # The entity state is set to unavailable
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    # Verify the entity was removed from the entity registry
+    assert registry.async_get(entity_id) is None
 
 
 async def test_handle_device_entity_removed_unknown_unique_id(
@@ -196,9 +196,12 @@ async def test_handle_device_entity_removed_unknown_unique_id(
     entity_id = find_entity_id(Platform.SWITCH, zha_device_proxy, hass)
     assert entity_id is not None
 
-    # Fire event with a unique_id that doesn't match any entity ref
+    # Fire event with a unique_id that doesn't match any entity
     zha_device_proxy.handle_zha_device_entity_removed_event(
-        DeviceEntityRemovedEvent(unique_id="nonexistent_unique_id")
+        DeviceEntityRemovedEvent(
+            platform=ZhaPlatform.SWITCH,
+            unique_id="nonexistent_unique_id",
+        )
     )
     await hass.async_block_till_done()
 

@@ -121,10 +121,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
-from homeassistant.helpers.entity_platform import (
-    DATA_DOMAIN_ENTITIES,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
@@ -505,37 +502,25 @@ class ZHADeviceProxy(EventBase):
         self, event: DeviceEntityAddedEvent
     ) -> None:
         """Handle a new entity being added to a device at runtime."""
+        key = (event.platform, event.unique_id)
+        if (entity := self.device.platform_entities.get(key)) is None:
+            return
         ha_zha_data = get_zha_data(self.gateway_proxy.hass)
-        for entity in self.device.platform_entities.values():
-            if entity.unique_id == event.unique_id:
-                ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
-                    EntityData(entity=entity, device_proxy=self, group_proxy=None)
-                )
-                async_dispatcher_send(self.gateway_proxy.hass, SIGNAL_ADD_ENTITIES)
-                break
+        ha_zha_data.platforms[Platform(event.platform)].append(
+            EntityData(entity=entity, device_proxy=self, group_proxy=None)
+        )
+        async_dispatcher_send(self.gateway_proxy.hass, SIGNAL_ADD_ENTITIES)
 
     @callback
     def handle_zha_device_entity_removed_event(
         self, event: DeviceEntityRemovedEvent
     ) -> None:
         """Handle an entity being removed from a device at runtime."""
-        entity_refs = self.gateway_proxy.ha_entity_refs.get(self.device.ieee, [])
-        for entity_ref in entity_refs:
-            if entity_ref.entity_data.entity.unique_id == event.unique_id:
-                self.gateway_proxy.hass.async_create_task(
-                    self._async_remove_entity(entity_ref.ha_entity_id),
-                    f"ZHA remove entity {entity_ref.ha_entity_id}",
-                )
-                break
-
-    async def _async_remove_entity(self, entity_id: str) -> None:
-        """Remove a single entity from its platform without deleting the registry entry."""
-        domain = entity_id.partition(".")[0]
-        domain_entities = self.gateway_proxy.hass.data.get(
-            DATA_DOMAIN_ENTITIES, {}
-        ).get(domain, {})
-        if (entity := domain_entities.get(entity_id)) is not None:
-            await entity.async_remove()
+        entity_registry = er.async_get(self.gateway_proxy.hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            Platform(event.platform), DOMAIN, event.unique_id
+        ):
+            entity_registry.async_remove(entity_id)
 
 
 class EntityReference(NamedTuple):
