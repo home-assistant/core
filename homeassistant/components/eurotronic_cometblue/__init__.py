@@ -11,7 +11,7 @@ from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
             except Exception as ex:
                 # need to use broad exception as different exceptions are raised
                 # based on the underlying OS and backend
-                raise ConfigEntryNotReady(
+                raise ConfigEntryError(
                     "Failed to read battery level, likely due to incorrect PIN"
                 ) from ex
     except BleakError as ex:
