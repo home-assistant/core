@@ -19,11 +19,11 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="192.168.1.100",
     macaddress="aabbccddeeff",
-    hostname="Litter-Robot4",
+    hostname="litter-robot4",
 )
 
 
-async def test_dhcp_discovery(hass: HomeAssistant, mock_account: Account) -> None:
+async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     """Test DHCP discovery triggers user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
