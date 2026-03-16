@@ -408,7 +408,7 @@ class MoldIndicator(SensorEntity):
             * 100.0
         )
 
-        # check bounds and format
+        # truncate humidity
         if crit_humidity > 100:
             self._attr_native_value = 100
         elif crit_humidity < 0:
