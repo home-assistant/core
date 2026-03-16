@@ -138,7 +138,7 @@ async def test_async_step_zeroconf_success(mock_hass: HomeAssistant) -> None:
 
 
 async def test_async_step_zeroconf_cannot_connect(
-    flow: tuple[WiimConfigFlow, HomeAssistant]
+    flow: tuple[WiimConfigFlow, HomeAssistant],
 ) -> None:
     """Test zeroconf discovery when connection fails."""
     _flow, _ = flow
@@ -157,7 +157,7 @@ async def test_async_step_zeroconf_cannot_connect(
 
 
 async def test_async_step_discovery_confirm_create_entry(
-    flow: tuple[WiimConfigFlow, HomeAssistant]
+    flow: tuple[WiimConfigFlow, HomeAssistant],
 ) -> None:
     """Test discovery confirm step creates entry with user input."""
     _flow, _ = flow
@@ -179,7 +179,7 @@ async def test_async_step_discovery_confirm_create_entry(
 
 
 async def test_async_step_discovery_confirm_show_form(
-    flow: tuple[WiimConfigFlow, HomeAssistant]
+    flow: tuple[WiimConfigFlow, HomeAssistant],
 ) -> None:
     """Test discovery confirm step shows form when no user input."""
     _flow, _ = flow

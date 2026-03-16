@@ -624,9 +624,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @media_player_exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
+        repeat = self._attr_repeat or WiimRepeatMode.OFF
         await self._device.async_set_loop_mode(
             self._device.build_loop_mode(
-                WiimRepeatMode(self._attr_repeat),
+                WiimRepeatMode(repeat),
                 shuffle,
             )
         )

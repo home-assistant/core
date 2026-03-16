@@ -899,8 +899,8 @@ async def test_async_play_media_source(hass: HomeAssistant) -> None:
 
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.runtime_data = mock_device
-    mock_entry.async_create_background_task.side_effect = (
-        lambda hass, coro, name=None: hass.async_create_task(coro)
+    mock_entry.async_create_background_task.side_effect = lambda hass, coro, name=None: (
+        hass.async_create_task(coro)
     )
 
     entity = WiimMediaPlayerEntity(mock_device, mock_entry)
@@ -940,8 +940,8 @@ async def test_async_play_media_source_requires_http_api(
 
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.runtime_data = mock_wiim_device
-    mock_entry.async_create_background_task.side_effect = (
-        lambda hass, coro, name=None: hass.async_create_task(coro)
+    mock_entry.async_create_background_task.side_effect = lambda hass, coro, name=None: (
+        hass.async_create_task(coro)
     )
 
     entity = WiimMediaPlayerEntity(mock_wiim_device, mock_entry)
