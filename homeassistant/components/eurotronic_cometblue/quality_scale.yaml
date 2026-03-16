@@ -72,7 +72,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Not required.
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: Not required.

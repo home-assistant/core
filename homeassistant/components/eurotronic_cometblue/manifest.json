@@ -11,6 +11,7 @@
   "config_flow": true,
   "dependencies": ["bluetooth"],
   "documentation": "https://www.home-assistant.io/integrations/eurotronic_cometblue",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["eurotronic_cometblue_ha"],
   "quality_scale": "bronze",
