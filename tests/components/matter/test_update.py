@@ -104,7 +104,7 @@ async def test_update_check_service(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("installed_version") == "v1.0"
+    assert state.attributes.get("installed_version") == "v1.0 (1)"
 
     await async_setup_component(hass, HA_DOMAIN, {})
 
@@ -134,7 +134,7 @@ async def test_update_check_service(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("latest_version") == "v2.0"
+    assert state.attributes.get("latest_version") == "v2.0 (2)"
     assert (
         state.attributes.get("release_url")
         == "http://home-assistant.io/non-existing-product"
@@ -153,7 +153,7 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("installed_version") == "v1.0"
+    assert state.attributes.get("installed_version") == "v1.0 (1)"
 
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
@@ -176,7 +176,7 @@ async def test_update_install(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("latest_version") == "v2.0"
+    assert state.attributes.get("latest_version") == "v2.0 (2)"
     assert (
         state.attributes.get("release_url")
         == "http://home-assistant.io/non-existing-product"
@@ -241,7 +241,7 @@ async def test_update_install(
 
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state.state == STATE_OFF
-    assert state.attributes.get("installed_version") == "v2.0"
+    assert state.attributes.get("installed_version") == "v2.0 (2)"
 
 
 @pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
@@ -257,7 +257,7 @@ async def test_update_install_failure(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("installed_version") == "v1.0"
+    assert state.attributes.get("installed_version") == "v1.0 (1)"
 
     check_node_update.return_value = MatterSoftwareVersion(
         vid=65521,
@@ -280,7 +280,7 @@ async def test_update_install_failure(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("latest_version") == "v2.0"
+    assert state.attributes.get("latest_version") == "v2.0 (2)"
     assert (
         state.attributes.get("release_url")
         == "http://home-assistant.io/non-existing-product"
@@ -326,7 +326,7 @@ async def test_update_state_save_and_restore(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("installed_version") == "v1.0"
+    assert state.attributes.get("installed_version") == "v1.0 (1)"
 
     check_node_update.return_value = TEST_SOFTWARE_VERSION
 
@@ -339,7 +339,7 @@ async def test_update_state_save_and_restore(
     state = hass.states.get("update.mock_dimmable_light_firmware")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("latest_version") == "v2.0"
+    assert state.attributes.get("latest_version") == "v2.0 (2)"
     await hass.async_block_till_done()
     await async_mock_restore_state_shutdown_restart(hass)
 
