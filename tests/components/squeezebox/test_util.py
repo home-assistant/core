@@ -8,7 +8,6 @@ from homeassistant.components.squeezebox.util import safe_library_call
 from homeassistant.exceptions import HomeAssistantError
 
 
-@pytest.fixture(autouse=True)
 async def test_safe_library_call_success() -> None:
     """Test successful sync and async calls."""
     # Test sync
