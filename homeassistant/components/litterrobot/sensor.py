@@ -482,15 +482,29 @@ def _build_activity_list(
         if (duration := activity.get("duration")) is not None:
             entry["duration"] = _format_duration(duration)
 
-        # Match to recording file if available
+        # Match to recording file if available (within 30 min window)
+        # Activity timestamps are UTC; recording filenames use local time
         if recording_map and activity.get("timestamp"):
             try:
                 ts = datetime.fromisoformat(activity["timestamp"])
-                prefix = ts.strftime("%Y%m%d_%H%M")
+                # Convert UTC activity timestamp to naive local time
+                ts_local = ts.astimezone().replace(tzinfo=None)
+                best_match: tuple[float, str] | None = None
                 for fname, url in recording_map.items():
-                    if fname.startswith(prefix):
-                        entry["recording_url"] = url
-                        break
+                    # Parse YYYYMMDD_HHMMSS from filename (naive local time)
+                    try:
+                        file_dt = datetime.strptime(
+                            fname[:15], "%Y%m%d_%H%M%S"
+                        )
+                        diff = abs((file_dt - ts_local).total_seconds())
+                        if diff < 1800 and (
+                            best_match is None or diff < best_match[0]
+                        ):
+                            best_match = (diff, url)
+                    except ValueError:
+                        continue
+                if best_match:
+                    entry["recording_url"] = best_match[1]
             except (ValueError, TypeError):
                 pass
 
