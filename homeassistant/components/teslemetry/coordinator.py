@@ -15,7 +15,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.teslemetry import EnergySite, Vehicle
+from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -48,6 +48,7 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
+METADATA_INTERVAL = timedelta(hours=1)
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -57,6 +58,50 @@ ENDPOINTS = [
     VehicleDataEndpoint.VEHICLE_STATE,
     VehicleDataEndpoint.VEHICLE_CONFIG,
 ]
+
+
+class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Coordinator to poll for subscription changes via metadata."""
+
+    config_entry: TeslemetryConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslemetryConfigEntry,
+        teslemetry: Teslemetry,
+    ) -> None:
+        """Initialize Teslemetry Metadata coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Teslemetry Metadata",
+            update_interval=METADATA_INTERVAL,
+        )
+        self.teslemetry = teslemetry
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch latest metadata for subscription status."""
+        try:
+            data = await self.teslemetry.metadata()
+        except (InvalidToken, SubscriptionRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except RETRY_EXCEPTIONS as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+                retry_after=_get_retry_after(e),
+            ) from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"message": e.message},
+            ) from e
+
+        return data
 
 
 class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
