@@ -78,6 +78,7 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
     },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
     "xiaomi_miio": {
         "python-miio": {"zeroconf"},
     },
@@ -122,7 +123,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools

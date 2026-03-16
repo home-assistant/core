@@ -100,6 +100,13 @@
       "connection_quality": {
         "name": "Connection quality"
       },
+      "control_mode": {
+        "name": "Control mode",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
+      },
       "downtime": {
         "name": "Downtime"
       },
@@ -114,6 +121,13 @@
       },
       "ipv4_address": {
         "name": "IP address"
+      },
+      "read_mode": {
+        "name": "Read mode",
+        "state": {
+          "cloud": "Cloud",
+          "local": "Local"
+        }
       },
       "target_temp": {
         "name": "Target temperature"
@@ -131,6 +145,30 @@
       },
       "pilot_light": {
         "name": "Pilot light"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cloud_unavailable": "Cloud connectivity is not available",
+      "local_unavailable": "Local connectivity is not available"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "control_mode": "Send commands to",
+          "read_mode": "Read data from"
+        },
+        "description": "Some users find that their fireplace hardware prioritizes `Cloud` communication and may experience timeouts with `Local` control. If you encounter connectivity issues, try switching to `Cloud` for the affected endpoint.",
+        "title": "Endpoint selection"
+      }
+    }
+  },
+  "selector": {
+    "api_mode": {
+      "options": {
+        "cloud": "Cloud",
+        "local": "Local"
       }
     }
   }
