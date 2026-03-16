@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from inspect import iscoroutinefunction
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
@@ -17,9 +18,12 @@ async def safe_library_call(
     translation_placeholders: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
-    """Call a player method safely and raise HomeAssistantError on failure."""
+    """Call a player method (sync or async) safely and raise HomeAssistantError on failure."""
     try:
-        result = await method(*args, **kwargs)
+        if iscoroutinefunction(method):
+            result = await method(*args, **kwargs)
+        else:
+            result = method(*args, **kwargs)
     except ValueError:
         result = None
 
