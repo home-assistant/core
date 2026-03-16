@@ -82,6 +82,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.account = Account(websession=async_get_clientsession(hass))
         self.camera_activities: dict[str, list[dict[str, Any]]] = {}
         self.camera_thumbnails: dict[str, bytes] = {}
+        self.recording_maps: dict[str, dict[str, str]] = {}
 
         self.recording_manager: RecordingManager | None = None
         self._recording_event_types: list[str] = []
@@ -186,6 +187,25 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.debug(
                 "Failed to download thumbnail for %s", robot.name, exc_info=True
             )
+
+        # Refresh recording map (filesystem I/O, run in executor)
+        self.recording_maps[robot.serial] = await self.hass.async_add_executor_job(
+            self._build_recording_map, robot.serial
+        )
+
+    def _build_recording_map(self, serial: str) -> dict[str, str]:
+        """Build filename -> URL map for recordings (runs in executor)."""
+        media_dir = Path(self.hass.config.path("media")) / "litterrobot" / serial
+        if not media_dir.is_dir():
+            return {}
+        try:
+            return {
+                fp.name: f"/api/litterrobot/recordings/{serial}/{fp.name}"
+                for fp in media_dir.iterdir()
+                if fp.suffix == ".mp4"
+            }
+        except OSError:
+            return {}
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -593,16 +613,8 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self.recording_manager = None
 
     def get_recording_map(self, serial: str) -> dict[str, str]:
-        """Return a map of filename -> URL for recordings of this robot."""
-        media_dir = Path(self.hass.config.path("media")) / "litterrobot" / serial
-        if not media_dir.is_dir():
-            return {}
-        result: dict[str, str] = {}
-        for filepath in media_dir.iterdir():
-            if filepath.suffix == ".mp4":
-                url = f"/api/litterrobot/recordings/{serial}/{filepath.name}"
-                result[filepath.name] = url
-        return result
+        """Return the cached filename -> URL map for recordings of this robot."""
+        return self.recording_maps.get(serial, {})
 
     def rename_recording_for_reassign(
         self,
