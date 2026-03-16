@@ -514,11 +514,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
+        # Check if any open() commands are currently running for this device
         if (command := self.entity_description.open_command) and self.is_running(
             command
         ):
             return True
 
+        # Check if any open_tilt() commands are currently running for this device
         if (command := self.entity_description.open_tilt_command) and self.is_running(
             command
         ):
@@ -527,6 +529,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if self.moving_offset is None:
             return None
 
+        # Check if the cover is moving in a direction consistent with opening
         if self.entity_description.invert_position:
             return self.moving_offset > 0
         return self.moving_offset < 0
@@ -534,11 +537,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
+        # Check if any close() commands are currently running for this device
         if (command := self.entity_description.close_command) and self.is_running(
             command
         ):
             return True
 
+        # Check if any close_tilt() commands are currently running for this device
         if (command := self.entity_description.close_tilt_command) and self.is_running(
             command
         ):
@@ -547,6 +552,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if self.moving_offset is None:
             return None
 
+        # Check if the cover is moving in a direction consistent with closing
         if self.entity_description.invert_position:
             return self.moving_offset < 0
         return self.moving_offset > 0
