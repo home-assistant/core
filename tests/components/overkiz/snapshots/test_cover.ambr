@@ -1018,7 +1018,7 @@
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bathroom_window-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.attic_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1031,166 +1031,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.bathroom_window',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678--9373/10202865',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bathroom_window-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'window',
-      'friendly_name': 'Bathroom Window',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.bathroom_window',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bedroom_blinds-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.bedroom_blinds',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678--9373/15097783',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.bedroom_blinds-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'device_class': 'blind',
-      'friendly_name': 'Bedroom Blinds',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.bedroom_blinds',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.guest_room_screen-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.guest_room_screen',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 15>,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678--9373/3904805',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.guest_room_screen-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_position': 86,
-      'device_class': 'blind',
-      'friendly_name': 'Guest Room Screen',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'cover.guest_room_screen',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'open',
-  })
-# ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kids_room_curtain-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'cover',
-    'entity_category': None,
-    'entity_id': 'cover.kids_room_curtain',
+    'entity_id': 'cover.attic_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1213,24 +1054,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kids_room_curtain-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.attic_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'device_class': 'curtain',
-      'friendly_name': 'Kids Room Curtain',
+      'friendly_name': 'Attic Curtain',
       'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kids_room_curtain',
+    'entity_id': 'cover.attic_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kitchen_screen-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.conservatory_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1243,7 +1084,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.kitchen_screen',
+    'entity_id': 'cover.conservatory_screen',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1266,24 +1107,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.kitchen_screen-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.conservatory_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 86,
       'device_class': 'blind',
-      'friendly_name': 'Kitchen Screen',
+      'friendly_name': 'Conservatory Screen',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kitchen_screen',
+    'entity_id': 'cover.conservatory_screen',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.living_room_screen-entry]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.library_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1296,7 +1137,166 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.living_room_screen',
+    'entity_id': 'cover.library_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/3904805',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.library_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 86,
+      'device_class': 'blind',
+      'friendly_name': 'Library Screen',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.library_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.patio_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.patio_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/10202865',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.patio_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'window',
+      'friendly_name': 'Patio Window',
+      'is_closed': True,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.patio_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.sunroom_shades-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.sunroom_shades',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678--9373/15097783',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.sunroom_shades-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Sunroom Shades',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.sunroom_shades',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.terrace_awning-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.terrace_awning',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1319,17 +1319,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.living_room_screen-state]
+# name: test_cover_entities_snapshot[setup_local_with_climate.json][cover.terrace_awning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 86,
       'device_class': 'blind',
-      'friendly_name': 'Living Room Screen',
+      'friendly_name': 'Terrace Awning',
       'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.living_room_screen',
+    'entity_id': 'cover.terrace_awning',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

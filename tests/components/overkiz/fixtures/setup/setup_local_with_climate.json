@@ -1006,10 +1006,10 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "Bedroom Blinds"
+          "value": "Sunroom Shades"
         }
       ],
-      "label": "Bedroom Blinds",
+      "label": "Sunroom Shades",
       "subsystemId": 0,
       "attributes": [
         {
@@ -4346,7 +4346,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "Guest Room Screen"
+          "value": "Library Screen"
         },
         {
           "type": 1,
@@ -4354,7 +4354,7 @@
           "value": 50
         }
       ],
-      "label": "Guest Room Screen",
+      "label": "Library Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -6351,7 +6351,7 @@
       "synced": true,
       "type": 1,
       "states": [],
-      "label": "Kids Room Curtain",
+      "label": "Attic Curtain",
       "definition": {
         "states": [],
         "widgetName": "UpDownDualCurtain",
@@ -6613,10 +6613,10 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "Bathroom Window"
+          "value": "Patio Window"
         }
       ],
-      "label": "Bathroom Window",
+      "label": "Patio Window",
       "subsystemId": 0,
       "attributes": [
         {
@@ -7048,7 +7048,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "Kitchen Screen"
+          "value": "Conservatory Screen"
         },
         {
           "type": 1,
@@ -7056,7 +7056,7 @@
           "value": 50
         }
       ],
-      "label": "Kitchen Screen",
+      "label": "Conservatory Screen",
       "subsystemId": 0,
       "attributes": [
         {
@@ -9388,7 +9388,7 @@
         {
           "type": 3,
           "name": "core:NameState",
-          "value": "Living Room Screen"
+          "value": "Terrace Awning"
         },
         {
           "type": 1,
@@ -9396,7 +9396,7 @@
           "value": 50
         }
       ],
-      "label": "Living Room Screen",
+      "label": "Terrace Awning",
       "subsystemId": 0,
       "attributes": [
         {
