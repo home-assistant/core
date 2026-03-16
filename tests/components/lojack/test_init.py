@@ -1,12 +1,14 @@
 """Tests for the LoJack integration setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from lojack_api import ApiError, AuthenticationError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lojack.const import DOMAIN
+from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -14,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from . import setup_integration
 from .const import TEST_DEVICE_ID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
@@ -108,20 +110,33 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_reload(
+async def test_coordinator_update_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lojack_client: MagicMock,
+    mock_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test integration reloads successfully."""
+    """Test entry stays loaded and reauth is triggered on auth error during polling."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_device.get_location = AsyncMock(
+        side_effect=AuthenticationError("Token expired")
+    )
+
+    freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # Entry stays loaded; HA initiates a reauth flow
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    flow = hass.config_entries.flow.async_progress()[0]
+    assert flow["flow_id"] is not None
+    assert flow["handler"] == DOMAIN
+    assert flow["context"]["source"] == "reauth"
 
 
 async def test_device_info(
