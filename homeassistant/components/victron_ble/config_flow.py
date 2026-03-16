@@ -70,14 +70,9 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # see if we can create a device with the access token
             device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
-            try:
-                key_valid = device.validate_advertisement_key(
-                    discovery_info.manufacturer_data[VICTRON_IDENTIFIER]
-                )
-            except (ValueError, IndexError):
-                _LOGGER.debug("Error validating advertisement key", exc_info=True)
-                key_valid = False
-            if key_valid:
+            if device.validate_advertisement_key(
+                discovery_info.manufacturer_data[VICTRON_IDENTIFIER]
+            ):
                 return self.async_create_entry(
                     title=title,
                     data=user_input,
