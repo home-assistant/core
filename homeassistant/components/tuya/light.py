@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-import json
 from typing import Any, cast
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
@@ -12,9 +11,15 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
 )
-from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.device_wrapper.light import (
+    DEFAULT_H_TYPE_V2,
+    DEFAULT_S_TYPE_V2,
+    DEFAULT_V_TYPE_V2,
+    BrightnessWrapper,
+    ColorDataWrapper,
+    ColorTempWrapper,
+)
 from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
@@ -33,175 +38,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads_object
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
-
-
-class _BrightnessWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for brightness DP code.
-
-    Handles brightness value conversion between device scale and Home Assistant's
-    0-255 scale. Supports optional dynamic brightness_min and brightness_max
-    wrappers that allow the device to specify runtime brightness range limits.
-    """
-
-    brightness_min: DPCodeIntegerWrapper | None = None
-    brightness_max: DPCodeIntegerWrapper | None = None
-    brightness_min_remap: RemapHelper | None = None
-    brightness_max_remap: RemapHelper | None = None
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 255)
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        if (brightness := device.status.get(self.dpcode)) is None:
-            return None
-
-        # Remap value to our scale
-        brightness = self._remap_helper.remap_value_to(brightness)
-
-        # If there is a min/max value, the brightness is actually limited.
-        # Meaning it is actually not on a 0-255 scale.
-        if (
-            self.brightness_max is not None
-            and self.brightness_min is not None
-            and self.brightness_max_remap is not None
-            and self.brightness_min_remap is not None
-            and (brightness_max := device.status.get(self.brightness_max.dpcode))
-            is not None
-            and (brightness_min := device.status.get(self.brightness_min.dpcode))
-            is not None
-        ):
-            # Remap values onto our scale
-            brightness_max = self.brightness_max_remap.remap_value_to(brightness_max)
-            brightness_min = self.brightness_min_remap.remap_value_to(brightness_min)
-
-            # Remap the brightness value from their min-max to our 0-255 scale
-            brightness = RemapHelper.remap_value(
-                brightness,
-                from_min=brightness_min,
-                from_max=brightness_max,
-                to_min=0,
-                to_max=255,
-            )
-
-        return round(brightness)
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value (0..255) back to a raw device value."""
-        # If there is a min/max value, the brightness is actually limited.
-        # Meaning it is actually not on a 0-255 scale.
-        if (
-            self.brightness_max is not None
-            and self.brightness_min is not None
-            and self.brightness_max_remap is not None
-            and self.brightness_min_remap is not None
-            and (brightness_max := device.status.get(self.brightness_max.dpcode))
-            is not None
-            and (brightness_min := device.status.get(self.brightness_min.dpcode))
-            is not None
-        ):
-            # Remap values onto our scale
-            brightness_max = self.brightness_max_remap.remap_value_to(brightness_max)
-            brightness_min = self.brightness_min_remap.remap_value_to(brightness_min)
-
-            # Remap the brightness value from our 0-255 scale to their min-max
-            value = RemapHelper.remap_value(
-                value,
-                from_min=0,
-                from_max=255,
-                to_min=brightness_min,
-                to_max=brightness_max,
-            )
-        return round(self._remap_helper.remap_value_from(value))
-
-
-class _ColorTempWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for color temperature DP code."""
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(
-            type_information, MIN_MIREDS, MAX_MIREDS
-        )
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        """Return the color temperature value in Kelvin."""
-        if (temperature := device.status.get(self.dpcode)) is None:
-            return None
-
-        return color_util.color_temperature_mired_to_kelvin(
-            self._remap_helper.remap_value_to(temperature, reverse=True)
-        )
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        """Convert a Home Assistant value (Kelvin) back to a raw device value."""
-        return round(
-            self._remap_helper.remap_value_from(
-                color_util.color_temperature_kelvin_to_mired(value), reverse=True
-            )
-        )
-
-
-DEFAULT_H_TYPE = RemapHelper(source_min=1, source_max=360, target_min=0, target_max=360)
-DEFAULT_S_TYPE = RemapHelper(source_min=1, source_max=255, target_min=0, target_max=100)
-DEFAULT_V_TYPE = RemapHelper(source_min=1, source_max=255, target_min=0, target_max=255)
-
-
-DEFAULT_H_TYPE_V2 = RemapHelper(
-    source_min=1, source_max=360, target_min=0, target_max=360
-)
-DEFAULT_S_TYPE_V2 = RemapHelper(
-    source_min=1, source_max=1000, target_min=0, target_max=100
-)
-DEFAULT_V_TYPE_V2 = RemapHelper(
-    source_min=1, source_max=1000, target_min=0, target_max=255
-)
-
-
-class _ColorDataWrapper(DPCodeJsonWrapper[tuple[float, float, float]]):
-    """Wrapper for color data DP code."""
-
-    h_type = DEFAULT_H_TYPE
-    s_type = DEFAULT_S_TYPE
-    v_type = DEFAULT_V_TYPE
-
-    def read_device_status(
-        self, device: CustomerDevice
-    ) -> tuple[float, float, float] | None:
-        """Return a tuple (H, S, V) from this color data."""
-        if (status := self._read_dpcode_value(device)) is None:
-            return None
-        return (
-            self.h_type.remap_value_to(status["h"]),
-            self.s_type.remap_value_to(status["s"]),
-            self.v_type.remap_value_to(status["v"]),
-        )
-
-    def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: tuple[float, float, float]
-    ) -> Any:
-        """Convert a Home Assistant tuple (H, S, V) back to a raw device value."""
-        hue, saturation, brightness = value
-        return json.dumps(
-            {
-                "h": round(self.h_type.remap_value_from(hue)),
-                "s": round(self.s_type.remap_value_from(saturation)),
-                "v": round(self.v_type.remap_value_from(brightness)),
-            }
-        )
-
-
-MAX_MIREDS = 500  # 2000 K
-MIN_MIREDS = 153  # 6500 K
 
 
 class FallbackColorDataMode(StrEnum):
@@ -551,9 +392,9 @@ LIGHTS[DeviceCategory.TDQ] = LIGHTS[DeviceCategory.TGQ]
 
 def _get_brightness_wrapper(
     device: CustomerDevice, description: TuyaLightEntityDescription
-) -> _BrightnessWrapper | None:
+) -> BrightnessWrapper | None:
     if (
-        brightness_wrapper := _BrightnessWrapper.find_dpcode(
+        brightness_wrapper := BrightnessWrapper.find_dpcode(
             device, description.brightness, prefer_function=True
         )
     ) is None:
@@ -578,10 +419,10 @@ def _get_brightness_wrapper(
 def _get_color_data_wrapper(
     device: CustomerDevice,
     description: TuyaLightEntityDescription,
-    brightness_wrapper: _BrightnessWrapper | None,
-) -> _ColorDataWrapper | None:
+    brightness_wrapper: BrightnessWrapper | None,
+) -> ColorDataWrapper | None:
     if (
-        color_data_wrapper := _ColorDataWrapper.find_dpcode(
+        color_data_wrapper := ColorDataWrapper.find_dpcode(
             device, description.color_data, prefer_function=True
         )
     ) is None:
@@ -643,7 +484,7 @@ async def async_setup_entry(
                         color_mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, description.color_mode, prefer_function=True
                         ),
-                        color_temp_wrapper=_ColorTempWrapper.find_dpcode(
+                        color_temp_wrapper=ColorTempWrapper.find_dpcode(
                             device, description.color_temp, prefer_function=True
                         ),
                         switch_wrapper=switch_wrapper,
