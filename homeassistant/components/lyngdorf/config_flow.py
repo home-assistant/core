@@ -147,6 +147,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
         assert self._host
+        assert self._device_model
         if self._location:
             title = (
                 self._name or urlparse(self._location).hostname or DEFAULT_DEVICE_NAME
