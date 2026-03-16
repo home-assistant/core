@@ -615,6 +615,18 @@ async def test_agent_upload(
     client = await hass_client()
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
+    received_bytes = bytearray()
+
+    async def mock_upload(
+        stream: AsyncIterator[bytes], *args: Any, **kwargs: Any
+    ) -> str:
+        """Mock upload that consumes the wrapped stream."""
+        async for chunk in stream:
+            received_bytes.extend(chunk)
+        return "test_slug"
+
+    supervisor_client.backups.upload_backup.side_effect = mock_upload
+
     supervisor_client.backups.reload.assert_not_called()
     resp = await client.post(
         "/api/backup/upload?agent_id=hassio.local",
@@ -622,6 +634,7 @@ async def test_agent_upload(
     )
 
     assert resp.status == 201
+    assert received_bytes == b"test"
     supervisor_client.backups.reload.assert_not_called()
     supervisor_client.backups.download_backup.assert_not_called()
     supervisor_client.backups.remove_backup.assert_not_called()
