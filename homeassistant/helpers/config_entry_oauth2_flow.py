@@ -806,6 +806,7 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
 
         self.login_task: asyncio.Task | None = None
         self.device_token: dict[str, str] | None = None
+        self.device_flow_error: BaseException | None = None
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -835,13 +836,8 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
 
         if self.login_task.done():
             if self.login_task.exception():
-                match self.login_task.exception():
-                    case DeviceFlowTimeout():
-                        return self.async_abort(reason="oauth_timeout")
-                    case DeviceFlowUnauthorized():
-                        return self.async_abort(reason="user_rejected_authorize")
-                    case DeviceFlowError():
-                        return self.async_abort(reason="oauth_error")
+                self.device_flow_error = self.login_task.exception()
+                return self.async_show_progress_done(next_step_id="device_flow_error")
             # The idea is that once the task is done, we move to the next step
             # A generic one so integrations can follow up with their desired logic
             # Open for suggestions here
@@ -865,6 +861,21 @@ class AbstractOAuth2DeviceFlowHandler(AbstractOAuth2FlowHandler, metaclass=ABCMe
         return await self.async_oauth_create_entry(
             {"auth_implementation": self.flow_impl.domain, "token": self.device_token}
         )
+
+    async def async_step_device_flow_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle errors raised during device flow login."""
+        match self.device_flow_error:
+            case DeviceFlowTimeout():
+                reason = "oauth_timeout"
+            case DeviceFlowUnauthorized():
+                reason = "user_rejected_authorize"
+            case DeviceFlowError():
+                reason = "oauth_error"
+            case _:
+                reason = "oauth_error"
+        return self.async_abort(reason=reason)
 
     async def async_step_device_flow(
         self, user_input: dict[str, Any] | None = None

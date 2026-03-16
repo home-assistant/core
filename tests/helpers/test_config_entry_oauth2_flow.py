@@ -1,5 +1,6 @@
 """Tests for the Somfy config flow."""
 
+import asyncio
 from collections.abc import AsyncGenerator, Generator
 from http import HTTPStatus
 import logging
@@ -29,13 +30,13 @@ CLIENT_ID = "1234"
 REFRESH_TOKEN = "mock-refresh-token"
 ACCESS_TOKEN_1 = "mock-access-token-1"
 ACCESS_TOKEN_2 = "mock-access-token-2"
-AUTHORIZE_URL = "https://example.como/auth/authorize"
-TOKEN_URL = "https://example.como/auth/token"
 MOCK_SECRET_TOKEN_URLSAFE = (
     "token-"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
+AUTHORIZE_URL = "https://example.como/auth/authorize"
+TOKEN_URL = "https://example.como/auth/token"
 
 
 @pytest.fixture
@@ -90,6 +91,41 @@ def flow_handler(
 
     with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestFlowHandler}):
         yield TestFlowHandler
+
+
+@pytest.fixture
+def device_flow_handler(
+    hass: HomeAssistant,
+) -> Generator[type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler]]:
+    """Return a registered device config flow."""
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    class TestDeviceFlowHandler(
+        config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler
+    ):
+        """Test device flow handler."""
+
+        DOMAIN = TEST_DOMAIN
+
+        @property
+        def logger(self) -> logging.Logger:
+            """Return logger."""
+            return logging.getLogger(__name__)
+
+    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: TestDeviceFlowHandler}):
+        yield TestDeviceFlowHandler
+
+
+@pytest.fixture
+async def device_impl(
+    hass: HomeAssistant,
+) -> config_entry_oauth2_flow.DeviceFlowImplementation:
+    """Device flow implementation."""
+    assert await setup.async_setup_component(hass, "auth", {})
+    return config_entry_oauth2_flow.DeviceFlowImplementation(
+        hass, TEST_DOMAIN, CLIENT_ID, AUTHORIZE_URL, TOKEN_URL
+    )
 
 
 class MockOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
@@ -743,6 +779,179 @@ async def test_full_flow(
         )
         is local_impl
     )
+
+
+async def test_device_flow_full_flow(
+    hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+) -> None:
+    """Check full device flow."""
+    mock_integration(
+        hass,
+        MockModule(
+            domain=TEST_DOMAIN,
+            async_setup_entry=AsyncMock(return_value=True),
+        ),
+    )
+
+    token_response = {
+        "refresh_token": REFRESH_TOKEN,
+        "access_token": ACCESS_TOKEN_1,
+        "type": "bearer",
+        "expires_in": 60,
+    }
+    login_event = asyncio.Event()
+
+    async def _wait_for_activation(device: dict[str, str]) -> dict[str, str]:
+        await login_event.wait()
+        return token_response
+
+    device_impl.async_register_device = AsyncMock(
+        return_value={
+            "device_code": "device-code",
+            "user_code": "user-code",
+            "verification_uri": "https://example.com/device",
+            "expires_in": 60,
+            "interval": 1,
+        }
+    )
+    device_impl.async_check_device_activation = AsyncMock(
+        side_effect=_wait_for_activation
+    )
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "device_flow"
+    assert result["progress_action"] == "wait_for_device"
+    assert result["description_placeholders"] == {
+        "url": "https://example.com/device",
+        "code": "user-code",
+    }
+
+    login_event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "auth_implementation": TEST_DOMAIN,
+        "token": token_response,
+    }
+
+    device_impl.async_register_device.assert_awaited()
+    device_impl.async_check_device_activation.assert_awaited_with(
+        {
+            "device_code": "device-code",
+            "user_code": "user-code",
+            "verification_uri": "https://example.com/device",
+            "expires_in": 60,
+            "interval": 1,
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (config_entry_oauth2_flow.DeviceFlowTimeout(), "oauth_timeout"),
+        (config_entry_oauth2_flow.DeviceFlowUnauthorized(), "user_rejected_authorize"),
+        (config_entry_oauth2_flow.DeviceFlowError(), "oauth_error"),
+        (Exception("some other error"), "oauth_error"),  # Just to hit the default
+    ],
+)
+async def test_device_flow_login_task_exceptions(
+    hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Check device flow handles login task exceptions."""
+    login_event = asyncio.Event()
+
+    async def _wait_then_raise(device: dict[str, str]) -> dict[str, str]:
+        """Wait then raise the exception."""
+        await login_event.wait()
+        raise exception
+
+    device_impl.async_register_device = AsyncMock(
+        return_value={
+            "device_code": "device-code",
+            "user_code": "user-code",
+            "verification_uri": "https://example.com/device",
+            "expires_in": 60,
+            "interval": 1,
+        }
+    )
+    device_impl.async_check_device_activation = AsyncMock(side_effect=_wait_then_raise)
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+
+    login_event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    if result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+async def test_device_flow_register_timeout(
+    hass: HomeAssistant,
+    device_flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2DeviceFlowHandler],
+    device_impl: config_entry_oauth2_flow.DeviceFlowImplementation,
+) -> None:
+    """Check device flow aborts when device registration times out."""
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, device_impl
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "authorize_url_timeout"
 
 
 async def test_local_refresh_token(
