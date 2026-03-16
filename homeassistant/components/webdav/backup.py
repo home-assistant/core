@@ -156,6 +156,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
             content_length=backup.size,
+            progress=lambda current, total: on_progress(bytes_uploaded=current),
         )
 
         _LOGGER.debug(

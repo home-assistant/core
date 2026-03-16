@@ -342,6 +342,7 @@ homeassistant.components.lookin.*
 homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.lunatone.*
+homeassistant.components.lutron.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.mastodon.*
@@ -569,6 +570,7 @@ homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.transmission.*
 homeassistant.components.trend.*
+homeassistant.components.trmnl.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
 homeassistant.components.unifi.*
