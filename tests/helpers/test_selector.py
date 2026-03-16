@@ -383,7 +383,7 @@ def test_entity_selector_schema_error(schema) -> None:
             (None,),
         ),
         (
-            {"multiple": True},
+            {"multiple": True, "reorder": True},
             ((["abc123", "def456"],)),
             (None, "abc123", ["abc123", None]),
         ),

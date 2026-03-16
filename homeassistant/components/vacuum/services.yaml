@@ -81,6 +81,7 @@ clean_area:
       selector:
         area:
           multiple: true
+          reorder: true
 
 send_command:
   target:

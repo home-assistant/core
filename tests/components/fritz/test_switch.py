@@ -396,6 +396,11 @@ async def test_switch_device_no_ip_address(
             "async_set_deflection_enable",
             STATE_ON,
         ),
+        (
+            "switch.mock_title_wi_fi_mywifi",
+            "async_set_wlan_configuration",
+            STATE_ON,
+        ),
     ],
 )
 async def test_switch_turn_on_off(
