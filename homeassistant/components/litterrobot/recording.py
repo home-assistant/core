@@ -141,10 +141,11 @@ class RecordingManager:
         self._active_recordings[serial] = task
 
     def trigger_visit_recording(self, robot: LitterRobot5) -> None:
-        """Start a continuous visit recording (front → globe camera switch).
+        """Start a continuous motion recording (front → globe camera switch).
 
-        Triggered by cat_detect events. Records until PET_VISIT signals
-        completion or MAX_VISIT_DURATION timeout is reached.
+        Triggered by cat_detect/motion events. Records until PET_VISIT signals
+        completion or MAX_VISIT_DURATION timeout is reached. Motion-triggered
+        recordings never carry pet names since camera AI detection is unreliable.
         """
         serial = robot.serial
         now = datetime.now()
@@ -154,18 +155,18 @@ class RecordingManager:
             task = self._active_recordings[serial]
             if not task.done():
                 _LOGGER.debug(
-                    "Skipping visit recording for %s: already recording",
+                    "Skipping motion recording for %s: already recording",
                     robot.name,
                 )
                 return
             del self._active_recordings[serial]
 
-        # Cooldown for cat_detect
-        cooldown_key: tuple[str, str] = (serial, "cat_detect")
+        # Cooldown for motion events
+        cooldown_key: tuple[str, str] = (serial, "motion")
         last_trigger = self._last_trigger_times.get(cooldown_key)
         if last_trigger and (now - last_trigger).total_seconds() < COOLDOWN_SECONDS:
             _LOGGER.debug(
-                "Skipping visit recording for %s: cooldown active", robot.name
+                "Skipping motion recording for %s: cooldown active", robot.name
             )
             return
 
@@ -175,7 +176,7 @@ class RecordingManager:
         self._visit_contexts[serial] = visit_ctx
 
         timestamp = now.strftime("%Y%m%d_%H%M%S")
-        filename = f"{timestamp}_VISIT.mp4"
+        filename = f"{timestamp}_MOTION.mp4"
 
         robot_dir = self._media_dir / serial
         robot_dir.mkdir(parents=True, exist_ok=True)
@@ -568,14 +569,9 @@ class RecordingManager:
             if serial in self._active_recordings:
                 del self._active_recordings[serial]
 
-        # Rename file with pet name if visit was completed with pet info
-        final_filepath = filepath
-        if visit_ctx.pet_name != "unknown":
-            new_name = filepath.name.replace("_VISIT.", f"_VISIT_{visit_ctx.pet_name}.")
-            final_filepath = filepath.with_name(new_name)
-
+        # Motion-triggered recordings never carry pet names
         await self._finalize_recording(
-            robot.name, tmp_path, final_filepath, encoder_error
+            robot.name, tmp_path, filepath, encoder_error
         )
 
     async def _finalize_recording(
