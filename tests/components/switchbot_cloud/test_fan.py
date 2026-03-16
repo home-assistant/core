@@ -1,4 +1,4 @@
-"""Test for the Switchbot Battery Circulator Fan."""
+"""Test for the Switchbot (Battery) Circulator Fan."""
 
 from unittest.mock import patch
 

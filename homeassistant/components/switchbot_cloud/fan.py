@@ -1,4 +1,4 @@
-"""Support for the Switchbot Battery Circulator fan."""
+"""Support for the Switchbot (Battery) Circulator fan."""
 
 import asyncio
 import logging
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
-    """Representation of a SwitchBot Battery Circulator Fan."""
+    """Representation of a SwitchBot (Battery) Circulator Fan."""
 
     _attr_name = None
 
