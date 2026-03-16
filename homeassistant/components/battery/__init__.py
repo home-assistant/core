@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-__all__ = []
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "battery"
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+__all__ = []
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

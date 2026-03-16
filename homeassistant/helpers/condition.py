@@ -488,7 +488,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
-            value = float(entity_state.state)
+            value = float(self._get_tracked_value(entity_state))
         except TypeError, ValueError:
             return False
 
