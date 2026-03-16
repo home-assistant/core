@@ -6,7 +6,7 @@ from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.victron_ble import REAUTH_AFTER_FAILURES
+from homeassistant.components.victron_ble.const import REAUTH_AFTER_FAILURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

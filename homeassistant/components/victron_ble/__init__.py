@@ -19,9 +19,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
-_LOGGER = logging.getLogger(__name__)
+from .const import REAUTH_AFTER_FAILURES
 
-REAUTH_AFTER_FAILURES = 3
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
