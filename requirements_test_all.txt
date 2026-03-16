@@ -215,7 +215,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==2.0.0
+aiocomelit==2.0.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -242,7 +242,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==44.3.1
+aioesphomeapi==44.5.2
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -264,7 +264,7 @@ aioguardian==2026.01.1
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.3
+aiohasupervisor==0.4.1
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.30.0
@@ -306,7 +306,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.2.1
+aiomealie==1.2.2
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1043,7 +1043,7 @@ ha-silabs-firmware-client==0.3.0
 habiticalib==0.4.6
 
 # homeassistant.components.bluetooth
-habluetooth==5.9.1
+habluetooth==5.10.2
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1092,6 +1092,9 @@ home-assistant-frontend==20260312.0
 # homeassistant.components.conversation
 home-assistant-intents==2026.3.3
 
+# homeassistant.components.homekit
+homekit-audio-proxy==1.2.1
+
 # homeassistant.components.gentex_homelink
 homelink-integration-api==0.0.1
 
@@ -1126,7 +1129,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.2.0
+ical==13.2.2
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1253,7 +1256,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.10.1
+librehardwaremonitor-api==1.11.1
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -1925,7 +1928,7 @@ pylitterbot==2025.1.0
 pylutron-caseta==0.27.0
 
 # homeassistant.components.lutron
-pylutron==0.3.0
+pylutron==0.4.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2132,7 +2135,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.16
+pysmlight==0.3.0
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2235,7 +2238,7 @@ python-overseerr==0.9.0
 python-picnic-api2==1.3.1
 
 # homeassistant.components.pooldose
-python-pooldose==0.8.5
+python-pooldose==0.8.6
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2262,7 +2265,7 @@ python-tado==0.18.16
 python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot[socks]==22.1
+python-telegram-bot[socks]==22.6
 
 # homeassistant.components.xbox
 python-xbox==0.2.0
@@ -2642,7 +2645,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.12
+tuya-device-handlers==0.0.13
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.8
@@ -2710,7 +2713,7 @@ velbus-aio==2026.2.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_ble
-victron-ble-ha-parser==0.4.10
+victron-ble-ha-parser==0.6.1
 
 # homeassistant.components.victron_remote_monitoring
 victron-vrm==0.1.8
