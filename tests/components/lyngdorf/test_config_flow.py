@@ -270,3 +270,65 @@ async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
     assert config_entry.title == "Living Room"
     assert config_entry.data[CONF_HOST] == "192.168.1.100"
     assert CONF_SERIAL_NUMBER not in config_entry.data
+
+
+async def test_ssdp_discovery_unsupported_model(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when model is not supported."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+                ATTR_UPNP_MODEL_NAME: "UNKNOWN-MODEL",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
+
+
+async def test_ssdp_discovery_missing_model(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when model name is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.100/desc.xml",
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
+
+
+async def test_ssdp_discovery_no_location(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when no hostname can be determined."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=None,
+            upnp={
+                ATTR_UPNP_FRIENDLY_NAME: "Living Room",
+                ATTR_UPNP_MANUFACTURER: "Lyngdorf",
+                ATTR_UPNP_MODEL_NAME: "MP-60",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

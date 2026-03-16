@@ -50,6 +50,32 @@ async def test_setup_entry_connection_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_entry_os_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
+) -> None:
+    """Test setup retries when OS-level socket error occurs."""
+    mock_config_entry.add_to_hass(hass)
+
+    receiver = MagicMock()
+    receiver.async_connect = AsyncMock(side_effect=OSError("Network unreachable"))
+    receiver.async_disconnect = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.lyngdorf.lookup_receiver_model",
+            return_value=mock_lyngdorf_model,
+        ),
+        patch(
+            "homeassistant.components.lyngdorf.async_create_receiver",
+            return_value=receiver,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_entry_timeout(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lyngdorf_model
 ) -> None:

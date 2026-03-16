@@ -171,7 +171,8 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if not self._location:
             self._location = discovery_info.ssdp_location
-            assert isinstance(self._location, str)
+            if not isinstance(self._location, str):
+                raise AbortFlow("cannot_connect")
 
         if hostname := (
             discovery_info.ssdp_headers.get("_host")
