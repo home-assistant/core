@@ -13,43 +13,47 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_entry_v1_to_v2(
+async def test_migrate_entry_v1_1_to_v1_2(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1 to v2 removes heating_type."""
+    """Test migration of config entry from v1.1 to v1.2 removes heating_type."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
         data={**ENTRY_CONFIG, "heating_type": "auto"},
         version=1,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.version == 2
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
     assert "heating_type" not in config_entry.data
 
 
-async def test_migrate_entry_v1_to_v2_no_heating_type(
+async def test_migrate_entry_v1_1_to_v1_2_no_heating_type(
     hass: HomeAssistant,
     mock_setup_entry: None,
 ) -> None:
-    """Test migration of config entry from v1 to v2 when heating_type is absent."""
+    """Test migration of config entry from v1.1 to v1.2 when heating_type is absent."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="ViCare",
         data=ENTRY_CONFIG,
         version=1,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.version == 2
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
     assert "heating_type" not in config_entry.data
 
 

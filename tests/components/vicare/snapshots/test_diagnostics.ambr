@@ -4732,7 +4732,7 @@
       }),
       'domain': 'vicare',
       'entry_id': '1234',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -4742,7 +4742,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 2,
+      'version': 1,
     }),
   })
 # ---

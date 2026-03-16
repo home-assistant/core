@@ -36,15 +36,17 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ViCareConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 2:
+    if config_entry.version > 1:
         return False
 
-    if config_entry.version == 1:
-        _LOGGER.debug("Migrating ViCare config entry from version 1 to 2")
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        _LOGGER.debug("Migrating ViCare config entry from version 1.1 to 1.2")
         data = {**config_entry.data}
         data.pop("heating_type", None)
-        hass.config_entries.async_update_entry(config_entry, data=data, version=2)
-        _LOGGER.debug("Migration to version 2 successful")
+        hass.config_entries.async_update_entry(
+            config_entry, data=data, minor_version=2
+        )
+        _LOGGER.debug("Migration to version 1.2 successful")
 
     return True
 
