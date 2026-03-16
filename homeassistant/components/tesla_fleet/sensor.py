@@ -535,8 +535,9 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
                 new_value, float | int
             ):
                 if self._previous_value is not None and (
-                    new_value == 0
-                    or new_value < self._previous_value - CHARGE_ENERGY_RESET_THRESHOLD
+                    (new_value == 0 and self._previous_value != 0)
+                    or new_value
+                    < self._previous_value - CHARGE_ENERGY_RESET_THRESHOLD
                 ):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_value = float(new_value)
