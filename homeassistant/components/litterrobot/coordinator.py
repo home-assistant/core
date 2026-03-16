@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -43,11 +44,22 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
         self.account = Account(websession=async_get_clientsession(hass))
+        self.previous_members: set[str] = set()
+
+        # Initialize previous_members from the device registry so that
+        # stale devices can be detected on the first update after restart.
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            for domain, identifier in device.identifiers:
+                if domain == DOMAIN:
+                    self.previous_members.add(identifier)
 
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
         try:
-            await self.account.refresh_robots()
+            await self.account.load_robots(subscribe_for_updates=True)
             await self.account.load_pets()
             for pet in self.account.pets:
                 # Need to fetch weight history for `get_visits_since`
@@ -62,6 +74,22 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="cannot_connect",
                 translation_placeholders={"error": str(ex)},
             ) from ex
+
+        current_members = {robot.serial for robot in self.account.robots} | {
+            pet.id for pet in self.account.pets
+        }
+        if stale_members := self.previous_members - current_members:
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_members:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        self.previous_members = current_members
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""

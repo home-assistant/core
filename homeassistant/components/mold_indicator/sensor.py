@@ -156,17 +156,15 @@ class MoldIndicator(SensorEntity):
         """Initialize the sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._indoor_temp_sensor = indoor_temp_sensor
-        self._indoor_humidity_sensor = indoor_humidity_sensor
-        self._outdoor_temp_sensor = outdoor_temp_sensor
+
+        self._entities = {
+            CONF_INDOOR_TEMP: indoor_temp_sensor,
+            CONF_OUTDOOR_TEMP: outdoor_temp_sensor,
+            CONF_INDOOR_HUMIDITY: indoor_humidity_sensor,
+        }
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._attr_available = False
-        self._entities = {
-            indoor_temp_sensor,
-            indoor_humidity_sensor,
-            outdoor_temp_sensor,
-        }
         self._dewpoint: float | None = None
         self._indoor_temp: float | None = None
         self._outdoor_temp: float | None = None
@@ -186,12 +184,7 @@ class MoldIndicator(SensorEntity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
         # Abort early if there is no source entity_id's or calibration factor
-        if (
-            not self._outdoor_temp_sensor
-            or not self._indoor_temp_sensor
-            or not self._indoor_humidity_sensor
-            or not self._calib_factor
-        ):
+        if not all((*self._entities.values(), self._calib_factor)):
             self._attr_available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
@@ -241,22 +234,24 @@ class MoldIndicator(SensorEntity):
             _LOGGER.debug("Startup for %s", self.entity_id)
 
             async_track_state_change_event(
-                self.hass, list(self._entities), mold_indicator_sensors_state_listener
+                self.hass,
+                list(self._entities.values()),
+                mold_indicator_sensors_state_listener,
             )
 
             # Read initial state
-            indoor_temp = self.hass.states.get(self._indoor_temp_sensor)
-            outdoor_temp = self.hass.states.get(self._outdoor_temp_sensor)
-            indoor_hum = self.hass.states.get(self._indoor_humidity_sensor)
+            indoor_temp = self.hass.states.get(self._entities[CONF_INDOOR_TEMP])
+            outdoor_temp = self.hass.states.get(self._entities[CONF_OUTDOOR_TEMP])
+            indoor_hum = self.hass.states.get(self._entities[CONF_INDOOR_HUMIDITY])
 
             schedule_update = self._update_sensor(
-                self._indoor_temp_sensor, None, indoor_temp
+                self._entities[CONF_INDOOR_TEMP], None, indoor_temp
             )
 
             schedule_update = (
                 False
                 if not self._update_sensor(
-                    self._outdoor_temp_sensor, None, outdoor_temp
+                    self._entities[CONF_OUTDOOR_TEMP], None, outdoor_temp
                 )
                 else schedule_update
             )
@@ -264,7 +259,7 @@ class MoldIndicator(SensorEntity):
             schedule_update = (
                 False
                 if not self._update_sensor(
-                    self._indoor_humidity_sensor, None, indoor_hum
+                    self._entities[CONF_INDOOR_HUMIDITY], None, indoor_hum
                 )
                 else schedule_update
             )
@@ -299,92 +294,87 @@ class MoldIndicator(SensorEntity):
         if old_state is None and new_state.state == STATE_UNKNOWN:
             return False
 
-        if entity == self._indoor_temp_sensor:
-            self._indoor_temp = self._update_temp_sensor(new_state)
-        elif entity == self._outdoor_temp_sensor:
-            self._outdoor_temp = self._update_temp_sensor(new_state)
-        elif entity == self._indoor_humidity_sensor:
-            self._indoor_hum = self._update_hum_sensor(new_state)
+        if entity == self._entities[CONF_INDOOR_TEMP]:
+            self._indoor_temp = self._get_temperature_from_state(new_state)
+        elif entity == self._entities[CONF_OUTDOOR_TEMP]:
+            self._outdoor_temp = self._get_temperature_from_state(new_state)
+        elif entity == self._entities[CONF_INDOOR_HUMIDITY]:
+            self._indoor_hum = self._get_humidity_from_state(new_state)
 
         return True
 
-    @staticmethod
-    def _update_temp_sensor(state: State) -> float | None:
-        """Parse temperature sensor value."""
-        _LOGGER.debug("Updating temp sensor with value %s", state.state)
+    def _get_value_from_state(
+        self,
+        state: State | None,
+        validator: Callable[[float, str | None], float | None],
+    ) -> float | None:
+        """Get and validate a sensor value from state."""
+        if state is None:
+            return None
 
-        # Return an error if the sensor change its state to Unknown.
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             _LOGGER.debug(
-                "Unable to parse temperature sensor %s with state: %s",
+                "Unable to get sensor %s, state: %s",
                 state.entity_id,
                 state.state,
             )
             return None
 
-        if (temp := util.convert(state.state, float)) is None:
-            _LOGGER.error(
-                "Unable to parse temperature sensor %s with state: %s",
-                state.entity_id,
-                state.state,
-            )
-            return None
-
-        # convert to celsius if necessary
-        if (
-            unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        ) in UnitOfTemperature:
-            return TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
-        _LOGGER.error(
-            "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
-            state.entity_id,
-            unit,
-            UnitOfTemperature.CELSIUS,
-            UnitOfTemperature.FAHRENHEIT,
-        )
-
-        return None
-
-    @staticmethod
-    def _update_hum_sensor(state: State) -> float | None:
-        """Parse humidity sensor value."""
-        _LOGGER.debug("Updating humidity sensor with value %s", state.state)
-
-        # Return an error if the sensor change its state to Unknown.
-        if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        if (value := util.convert(state.state, float)) is None:
             _LOGGER.debug(
-                "Unable to parse humidity sensor %s, state: %s",
+                "Unable to parse sensor value %s, state: %s to float",
                 state.entity_id,
                 state.state,
             )
             return None
 
-        if (hum := util.convert(state.state, float)) is None:
-            _LOGGER.error(
-                "Unable to parse humidity sensor %s, state: %s",
-                state.entity_id,
-                state.state,
-            )
-            return None
+        return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
-        if (unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) != PERCENTAGE:
-            _LOGGER.error(
-                "Humidity sensor %s has unsupported unit: %s (allowed: %s)",
-                state.entity_id,
-                unit,
-                PERCENTAGE,
-            )
-            return None
+    def _get_temperature_from_state(self, state: State | None) -> float | None:
+        """Get temperature value in Celsius from state."""
 
-        if hum > 100 or hum < 0:
-            _LOGGER.error(
-                "Humidity sensor %s is out of range: %s (allowed: 0-100)",
-                state.entity_id,
-                hum,
-            )
-            return None
+        def validate_temperature(value: float, unit: str | None) -> float | None:
+            if TYPE_CHECKING:
+                assert state is not None
 
-        return hum
+            if unit not in UnitOfTemperature:
+                _LOGGER.warning(
+                    "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
+                    state.entity_id,
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                    UnitOfTemperature.FAHRENHEIT,
+                )
+                return None
+            return TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
+
+        return self._get_value_from_state(state, validate_temperature)
+
+    def _get_humidity_from_state(self, state: State | None) -> float | None:
+        """Get humidity value from state."""
+
+        def validate_humidity(value: float, unit: str | None) -> float | None:
+            if TYPE_CHECKING:
+                assert state is not None
+
+            if unit != PERCENTAGE:
+                _LOGGER.warning(
+                    "Humidity sensor %s has unsupported unit: %s (allowed: %s)",
+                    state.entity_id,
+                    unit,
+                    PERCENTAGE,
+                )
+                return None
+            if not 0 <= value <= 100:
+                _LOGGER.warning(
+                    "Humidity sensor %s is out of range: %s (allowed: 0-100)",
+                    state.entity_id,
+                    value,
+                )
+                return None
+            return value
+
+        return self._get_value_from_state(state, validate_humidity)
 
     async def async_update(self) -> None:
         """Calculate latest state."""
@@ -425,7 +415,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, UnitOfTemperature.CELSIUS)
 
     def _calc_moldindicator(self) -> None:
-        """Calculate the humidity at the (cold) calibration point."""
+        """Calculate the mold indicator value."""
         if TYPE_CHECKING:
             assert self._outdoor_temp and self._indoor_temp and self._dewpoint
 
@@ -436,7 +426,6 @@ class MoldIndicator(SensorEntity):
                 self._calib_factor,
             )
             self._attr_native_value = None
-            self._attr_available = False
             self._crit_temp = None
             return
 
@@ -464,13 +453,13 @@ class MoldIndicator(SensorEntity):
             * 100.0
         )
 
-        # check bounds and format
+        # truncate humidity
         if crit_humidity > 100:
-            self._attr_native_value = "100"
+            self._attr_native_value = 100
         elif crit_humidity < 0:
-            self._attr_native_value = "0"
+            self._attr_native_value = 0
         else:
-            self._attr_native_value = f"{int(crit_humidity):d}"
+            self._attr_native_value = int(crit_humidity)
 
         _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 

@@ -22,6 +22,8 @@ from .const import DOMAIN, LOGGER
 
 STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
+TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
+
 
 class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
     """TRMNL config flow."""
@@ -66,6 +68,7 @@ class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_SCHEMA,
             errors=errors,
+            description_placeholders={"account_url": TRMNL_ACCOUNT_URL},
         )
 
     async def async_step_reauth(
