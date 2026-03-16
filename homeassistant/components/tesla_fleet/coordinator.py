@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -73,10 +73,39 @@ def _get_last_statistics_for_statistic_ids(
                 1,
                 statistic_id,
                 True,
-                {"sum"},
+                {"state", "sum"},
             ).get(statistic_id)
         )
     }
+
+
+def _aggregate_energy_history_by_hour(
+    time_series: list[dict[str, Any]],
+) -> list[tuple[datetime, float, dict[str, float]]]:
+    """Aggregate energy history samples into recorder-compatible hourly buckets."""
+    hourly_periods: dict[datetime, dict[str, float]] = {}
+
+    for period in time_series:
+        timestamp_str = period.get("timestamp")
+        if not timestamp_str:
+            continue
+
+        parsed_time = dt_util.parse_datetime(timestamp_str)
+        if parsed_time is None:
+            continue
+
+        start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
+        hour_values = hourly_periods.setdefault(start, {})
+
+        for key in ENERGY_HISTORY_FIELDS:
+            if (value := period.get(key)) is None:
+                continue
+            hour_values[key] = hour_values.get(key, 0.0) + float(value)
+
+    return [
+        (start, start.timestamp(), values)
+        for start, values in sorted(hourly_periods.items())
+    ]
 
 
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
@@ -321,30 +350,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
     async def _insert_statistics(self, time_series: list[dict[str, Any]]) -> None:
         """Insert energy history statistics at their actual historical timestamps."""
-        if not time_series:
-            return
-
-        # Pre-parse and deduplicate timestamps once for all fields
-        parsed_periods: list[tuple[datetime, float, dict[str, Any]]] = []
-        seen_starts: set[float] = set()
-        for period in time_series:
-            timestamp_str = period.get("timestamp")
-            if not timestamp_str:
-                continue
-            parsed_time = dt_util.parse_datetime(timestamp_str)
-            if parsed_time is None:
-                continue
-            # Normalize to top of the hour (statistics require minutes=0, seconds=0)
-            start = dt_util.as_utc(parsed_time).replace(
-                minute=0, second=0, microsecond=0
-            )
-            start_ts = start.timestamp()
-            if start_ts in seen_starts:
-                continue
-            seen_starts.add(start_ts)
-            parsed_periods.append((start, start_ts, period))
-
-        if not parsed_periods:
+        if not (hourly_periods := _aggregate_energy_history_by_hour(time_series)):
             return
 
         site_id = self.api.energy_site_id
@@ -381,20 +387,27 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             else:
                 latest_stat = existing_stats[0]
                 last_stats_time = latest_stat["start"]
-                running_sum = cast(float, latest_stat.get("sum", 0.0))
+                latest_sum = latest_stat.get("sum", 0.0) or 0.0
+                if any(
+                    start_ts == last_stats_time and key in hour_values
+                    for _, start_ts, hour_values in hourly_periods
+                ):
+                    # Re-import the latest hour if new samples have appeared for it;
+                    # recorder updates the existing row in place for the same start.
+                    latest_state = latest_stat.get("state", 0.0) or 0.0
+                    running_sum = latest_sum - latest_state
+                else:
+                    running_sum = latest_sum
 
             statistics: list[StatisticData] = []
 
-            for start, start_ts, period in parsed_periods:
-                # Skip if we already have this statistic
-                if last_stats_time is not None and start_ts <= last_stats_time:
+            for start, start_ts, hour_values in hourly_periods:
+                if last_stats_time is not None and start_ts < last_stats_time:
                     continue
 
-                value = period.get(key)
-                if value is None:
+                if (state := hour_values.get(key)) is None:
                     continue
 
-                state = float(value)
                 running_sum += state
 
                 statistics.append(

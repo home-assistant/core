@@ -293,7 +293,7 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     mock_config_entry: MockConfigEntry,
     mock_energy_site: AsyncMock,
 ) -> None:
-    """Test the coordinator normalizes timestamps to the top of the hour."""
+    """Test the coordinator aggregates same-hour samples at the top of the hour."""
     mock_config_entry.add_to_hass(hass)
 
     raw_timestamp = "2023-06-01T08:12:34-07:00"
@@ -308,6 +308,10 @@ async def test_coordinator_normalizes_timestamps_to_hour(
                 {
                     "timestamp": raw_timestamp,
                     "solar_energy_exported": 1234,
+                },
+                {
+                    "timestamp": "2023-06-01T08:45:00-07:00",
+                    "solar_energy_exported": 66,
                 },
             ],
         }
@@ -338,8 +342,88 @@ async def test_coordinator_normalizes_timestamps_to_hour(
     assert len(stats["tesla_fleet:123456_solar_energy_exported"]) == 1
     stat = stats["tesla_fleet:123456_solar_energy_exported"][0]
     assert stat["start"] == dt_util.as_utc(expected_start).timestamp()
-    assert stat["state"] == 1234.0
-    assert stat["sum"] == 1234.0
+    assert stat["state"] == 1300.0
+    assert stat["sum"] == 1300.0
+
+
+async def test_coordinator_updates_latest_hour_statistic(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energy_site: AsyncMock,
+) -> None:
+    """Test the coordinator updates the latest hourly statistic bucket."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tesla_fleet.coordinator.get_instance"
+    ) as mock_get_instance:
+        mock_get_instance.return_value = recorder_mock
+        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+            hass, mock_config_entry, mock_energy_site
+        )
+
+        mock_energy_site.energy_history.return_value = {
+            "response": {
+                "period": "day",
+                "time_series": [
+                    {
+                        "timestamp": "2023-06-01T08:00:00-07:00",
+                        "solar_energy_exported": 1000,
+                    },
+                    {
+                        "timestamp": "2023-06-01T08:05:00-07:00",
+                        "solar_energy_exported": 200,
+                    },
+                ],
+            }
+        }
+        await coordinator._async_update_data()
+        await async_wait_recording_done(hass)
+
+        mock_energy_site.energy_history.return_value = {
+            "response": {
+                "period": "day",
+                "time_series": [
+                    {
+                        "timestamp": "2023-06-01T08:00:00-07:00",
+                        "solar_energy_exported": 1000,
+                    },
+                    {
+                        "timestamp": "2023-06-01T08:05:00-07:00",
+                        "solar_energy_exported": 200,
+                    },
+                    {
+                        "timestamp": "2023-06-01T08:10:00-07:00",
+                        "solar_energy_exported": 300,
+                    },
+                    {
+                        "timestamp": "2023-06-01T09:00:00-07:00",
+                        "solar_energy_exported": 400,
+                    },
+                ],
+            }
+        }
+        await coordinator._async_update_data()
+        await async_wait_recording_done(hass)
+
+    stats = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        dt_util.utc_from_timestamp(0),
+        None,
+        {"tesla_fleet:123456_solar_energy_exported"},
+        "hour",
+        None,
+        STATISTIC_TYPES,
+    )
+
+    assert len(stats["tesla_fleet:123456_solar_energy_exported"]) == 2
+    first_stat, second_stat = stats["tesla_fleet:123456_solar_energy_exported"]
+    assert first_stat["state"] == 1500.0
+    assert first_stat["sum"] == 1500.0
+    assert second_stat["state"] == 400.0
+    assert second_stat["sum"] == 1900.0
 
 
 async def test_coordinator_handles_rate_limiting(
