@@ -65,10 +65,6 @@ def setup_platform(
 
     coordinator: NSWFuelStationCoordinator = hass.data[DATA_NSW_FUEL_STATION]
 
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
-
     entities = []
     for fuel_type in fuel_types:
         if coordinator.data.prices.get((station_id, fuel_type)) is None:
@@ -110,9 +106,6 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
-            return None
-
         prices = self.coordinator.data.prices
         return prices.get((self._station_id, self._fuel_type))
 
@@ -129,7 +122,7 @@ class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEnt
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
+    def _get_station_name(self) -> str:
         default_name = f"station {self._station_id}"
         if self.coordinator.data is None:
             return default_name
