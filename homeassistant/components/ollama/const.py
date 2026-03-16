@@ -4,6 +4,7 @@ DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
 
+CONF_BEARER_TOKEN = "bearer_token"
 CONF_MODEL = "model"
 CONF_PROMPT = "prompt"
 CONF_THINK = "think"

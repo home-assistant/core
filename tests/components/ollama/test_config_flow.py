@@ -1,7 +1,7 @@
 """Test the Ollama config flow."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from httpx import ConnectError
 import pytest
@@ -557,3 +557,106 @@ async def test_ai_task_subentry_not_loaded(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "entry_not_loaded"
+
+
+async def test_form_with_bearer_token(hass: HomeAssistant) -> None:
+    """Test flow when configuring URL with a bearer token."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with (
+        patch(
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient",
+        ) as mock_client_cls,
+        patch(
+            "homeassistant.components.ollama.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_client = MagicMock()
+        mock_client.list = MagicMock(return_value={"models": []})
+        mock_client_cls.return_value = mock_client
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                ollama.CONF_URL: "http://localhost:11434",
+                ollama.CONF_BEARER_TOKEN: "my-secret-token",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        ollama.CONF_URL: "http://localhost:11434",
+        ollama.CONF_BEARER_TOKEN: "my-secret-token",
+    }
+
+    # Verify the client was constructed with the Authorization header
+    mock_client_cls.assert_called_once()
+    call_kwargs = mock_client_cls.call_args.kwargs
+    assert (
+        call_kwargs.get("headers", {}).get("Authorization") == "Bearer my-secret-token"
+    )
+
+
+async def test_form_without_bearer_token_omits_key(hass: HomeAssistant) -> None:
+    """Test that omitting the bearer token results in no bearer_token key in entry data."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+            return_value={"models": []},
+        ),
+        patch(
+            "homeassistant.components.ollama.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {ollama.CONF_URL: "http://localhost:11434"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    # bearer_token should NOT be present in entry data when not provided
+    assert ollama.CONF_BEARER_TOKEN not in result2["data"]
+
+
+async def test_form_empty_bearer_token_omits_key(hass: HomeAssistant) -> None:
+    """Test that an empty bearer token is treated as absent."""
+    result = await hass.config_entries.flow.async_init(
+        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+            return_value={"models": []},
+        ),
+        patch(
+            "homeassistant.components.ollama.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                ollama.CONF_URL: "http://localhost:11434",
+                ollama.CONF_BEARER_TOKEN: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    # Empty bearer_token should NOT be persisted
+    assert ollama.CONF_BEARER_TOKEN not in result2["data"]

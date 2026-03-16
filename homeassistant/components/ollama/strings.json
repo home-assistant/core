@@ -11,7 +11,11 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::url%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "bearer_token": "Bearer token"
+        },
+        "data_description": {
+          "bearer_token": "Optional Bearer token for authentication. Required when Ollama runs behind an authenticated proxy (e.g., LiteLLM)."
         }
       }
     }
