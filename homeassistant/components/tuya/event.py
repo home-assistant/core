@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import (
-    DPCodeEnumWrapper,
-    DPCodeRawWrapper,
-    DPCodeStringWrapper,
-    DPCodeTypeInformationWrapper,
+from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
+from tuya_device_handlers.device_wrapper.event import (
+    Base64Utf8RawWrapper,
+    Base64Utf8StringWrapper,
+    SimpleEventEnumWrapper,
 )
 from tuya_sharing import CustomerDevice, Manager
 
@@ -29,58 +28,11 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _EventEnumWrapper(DPCodeEnumWrapper[tuple[str, None]]):
-    """Wrapper for event enum DP codes."""
-
-    def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
-        """Return the event details."""
-        if (raw_value := self._read_dpcode_value(device)) is None:
-            return None
-        return (raw_value, None)
-
-
-class _AlarmMessageWrapper(DPCodeStringWrapper[tuple[str, dict[str, Any]]]):
-    """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
-
-    def __init__(self, dpcode: str, type_information: Any) -> None:
-        """Init _AlarmMessageWrapper."""
-        super().__init__(dpcode, type_information)
-        self.options = ["triggered"]
-
-    def read_device_status(
-        self, device: CustomerDevice
-    ) -> tuple[str, dict[str, Any]] | None:
-        """Return the event attributes for the alarm message."""
-        if (raw_value := self._read_dpcode_value(device)) is None:
-            return None
-        return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
-
-
-class _DoorbellPicWrapper(DPCodeRawWrapper[tuple[str, dict[str, Any]]]):
-    """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
-
-    It is expected that the RAW data is base64/utf8 encoded URL of the picture.
-    """
-
-    def __init__(self, dpcode: str, type_information: Any) -> None:
-        """Init _DoorbellPicWrapper."""
-        super().__init__(dpcode, type_information)
-        self.options = ["triggered"]
-
-    def read_device_status(
-        self, device: CustomerDevice
-    ) -> tuple[str, dict[str, Any]] | None:
-        """Return the event attributes for the doorbell picture."""
-        if (status := self._read_dpcode_value(device)) is None:
-            return None
-        return ("triggered", {"message": status.decode("utf-8")})
-
-
 @dataclass(frozen=True)
 class TuyaEventEntityDescription(EventEntityDescription):
     """Describe a Tuya Event entity."""
 
-    wrapper_class: type[DPCodeTypeInformationWrapper] = _EventEnumWrapper
+    wrapper_class: type[DPCodeTypeInformationWrapper] = SimpleEventEnumWrapper
 
 
 # All descriptions can be found here. Mostly the Enum data types in the
@@ -92,13 +44,13 @@ EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
             key=DPCode.ALARM_MESSAGE,
             device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_message",
-            wrapper_class=_AlarmMessageWrapper,
+            wrapper_class=Base64Utf8StringWrapper,
         ),
         TuyaEventEntityDescription(
             key=DPCode.DOORBELL_PIC,
             device_class=EventDeviceClass.DOORBELL,
             translation_key="doorbell_picture",
-            wrapper_class=_DoorbellPicWrapper,
+            wrapper_class=Base64Utf8RawWrapper,
         ),
     ),
     DeviceCategory.WXKG: (
