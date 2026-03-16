@@ -161,7 +161,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             device_reg.async_update_device(
                 device_entry.id, remove_config_entry_id=self.config_entry.entry_id
             )
-            self._firmware_list.pop(device_id, None)
             LOGGER.debug(
                 "%s %s %s removed from device_registry",
                 DOMAIN,
