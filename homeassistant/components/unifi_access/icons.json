@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "button": {
+      "unlock": {
+        "default": "mdi:lock-open"
+      }
+    },
+    "event": {
+      "access": {
+        "default": "mdi:door"
+      }
+    },
+    "switch": {
+      "evacuation": {
+        "default": "mdi:exit-run"
+      },
+      "lockdown": {
+        "default": "mdi:lock-alert"
+      }
+    }
+  }
+}

@@ -44,7 +44,7 @@ dependencies = [
   "certifi>=2021.5.30",
   "ciso8601==2.3.3",
   "cronsim==2.7",
-  "fnv-hash-fast==1.6.0",
+  "fnv-hash-fast==2.0.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.0.0",
@@ -72,7 +72,7 @@ dependencies = [
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
-  "ulid-transform==1.5.2",
+  "ulid-transform==2.0.2",
   "urllib3>=2.0",
   "uv==0.10.6",
   "voluptuous==0.15.2",
