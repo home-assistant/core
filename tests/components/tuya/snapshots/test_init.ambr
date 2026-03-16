@@ -51,7 +51,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart multi-channel weather station',
+    'model': 'Smart multi-channel weather station (unsupported)',
     'model_id': 'xpxdr5q6vc8aztq0',
     'name': 'Weather station',
     'name_by_user': None,
@@ -113,7 +113,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Interruptor Zigbee',
+    'model': 'Interruptor Zigbee (unsupported)',
     'model_id': 'hmabvy81',
     'name': 'Interruptor',
     'name_by_user': None,
@@ -175,7 +175,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug-EU',
+    'model': 'Smart Plug-EU (unsupported)',
     'model_id': 'cuhokdii7ojyw8k2',
     'name': 'Buitenverlichting',
     'name_by_user': None,
@@ -206,7 +206,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Arete® Two 12L Dehumidifier/Air Purifier',
+    'model': 'Arete® Two 12L Dehumidifier/Air Purifier (unsupported)',
     'model_id': 'zibqa9dutqyaxym2',
     'name': 'Dehumidifier',
     'name_by_user': None,
@@ -237,7 +237,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Multifunction alarm',
+    'model': 'Multifunction alarm (unsupported)',
     'model_id': 'gyitctrjj1kefxp2',
     'name': 'Multifunction alarm',
     'name_by_user': None,
@@ -268,7 +268,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch',
+    'model': 'Curtain switch (unsupported)',
     'model_id': 'nhyj64w2',
     'name': 'Tapparelle studio',
     'name_by_user': None,
@@ -299,7 +299,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '5GHz plug',
+    'model': '5GHz plug (unsupported)',
     'model_id': '6fa7odsufen374x2',
     'name': 'Office',
     'name_by_user': None,
@@ -330,7 +330,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug+',
+    'model': 'Smart Plug+ (unsupported)',
     'model_id': 'vxqn72kwtosoy4d3',
     'name': 'Garage Socket',
     'name_by_user': None,
@@ -361,7 +361,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T&H Sensor',
+    'model': 'T&H Sensor (unsupported)',
     'model_id': 'xflodz7oja0pndk3',
     'name': 'Sensor T & H Server Home',
     'name_by_user': None,
@@ -392,7 +392,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Meter',
+    'model': 'Smart Meter (unsupported)',
     'model_id': 'v5jlnn5hwyffkhp3',
     'name': 'Production',
     'name_by_user': None,
@@ -423,7 +423,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Contact Sensor',
+    'model': 'Contact Sensor (unsupported)',
     'model_id': 'qxu3flpqjsc1kqu3',
     'name': 'Garage Contact Sensor',
     'name_by_user': None,
@@ -454,7 +454,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'smart meter with CT-2',
+    'model': 'smart meter with CT-2 (unsupported)',
     'model_id': 'tf6qp8t3hl9h7m94',
     'name': 'Consommation',
     'name_by_user': None,
@@ -485,7 +485,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'YINMIK Water Quality Tester',
+    'model': 'YINMIK Water Quality Tester (unsupported)',
     'model_id': 'u5xgcpcngk3pfxb4',
     'name': 'YINMIK Water Quality Tester',
     'name_by_user': None,
@@ -516,7 +516,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Bulb',
+    'model': 'Smart Bulb (unsupported)',
     'model_id': 'AqHUMdcbYzIq1Of4',
     'name': 'Landing',
     'name_by_user': None,
@@ -547,7 +547,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'VIVIDSTORM SCREEN',
+    'model': 'VIVIDSTORM SCREEN (unsupported)',
     'model_id': '669wsr2w4cvinbh4',
     'name': 'VIVIDSTORM SCREEN',
     'name_by_user': None,
@@ -578,7 +578,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'atmosphere',
+    'model': 'atmosphere (unsupported)',
     'model_id': 'dbou1ap4',
     'name': 'Lumy Garage',
     'name_by_user': None,
@@ -609,7 +609,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WIFI 插座',
+    'model': 'WIFI 插座 (unsupported)',
     'model_id': 'sb6bwb1n8ma2c5q4',
     'name': 'Socket4',
     'name_by_user': None,
@@ -640,7 +640,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Konyks Priska USB',
+    'model': 'Konyks Priska USB (unsupported)',
     'model_id': 'yku9wsimasckdt15',
     'name': 'Framboisier',
     'name_by_user': None,
@@ -671,7 +671,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ET-44W',
+    'model': 'ET-44W (unsupported)',
     'model_id': 'gc1bxoq2hafxpa35',
     'name': 'Полотенцосушитель',
     'name_by_user': None,
@@ -702,7 +702,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Camera ',
+    'model': 'Smart Camera  (unsupported)',
     'model_id': 'nzauwyj3mcnjnf35',
     'name': 'Garage Camera',
     'name_by_user': None,
@@ -733,7 +733,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Automatic Cat Litter Box',
+    'model': 'Automatic Cat Litter Box (unsupported)',
     'model_id': '5t7esmqqh92ssbe5',
     'name': 'Slimme kattenbak',
     'name_by_user': None,
@@ -764,7 +764,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Plug Base 6210HA',
+    'model': 'Plug Base 6210HA (unsupported)',
     'model_id': 'jnbbxsb84gvvyfg5',
     'name': 'Bathroom Fan',
     'name_by_user': None,
@@ -826,7 +826,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Temperature Humidity Sensor',
+    'model': 'Temperature Humidity Sensor (unsupported)',
     'model_id': 'xr3htd96',
     'name': 'Humy toilettes RDC',
     'name_by_user': None,
@@ -888,7 +888,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED SMART',
+    'model': 'LED SMART (unsupported)',
     'model_id': 'nlxvjzy1hoeiqsg6',
     'name': 'hall 💡 ',
     'name_by_user': None,
@@ -950,7 +950,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'A60 GOLD',
+    'model': 'A60 GOLD (unsupported)',
     'model_id': 'd4g0fbsoaal841o6',
     'name': 'WC D1',
     'name_by_user': None,
@@ -981,7 +981,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Metering_3PN_ZB',
+    'model': 'Metering_3PN_ZB (unsupported)',
     'model_id': 'dikb3dp6',
     'name': 'Medidor de Energia',
     'name_by_user': None,
@@ -1012,7 +1012,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'BR 7-in-1 WLAN Wetterstation Anthrazit',
+    'model': 'BR 7-in-1 WLAN Wetterstation Anthrazit (unsupported)',
     'model_id': 'fsea1lat3vuktbt6',
     'name': 'BR 7-in-1 WLAN Wetterstation Anthrazit',
     'name_by_user': None,
@@ -1043,7 +1043,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ceiling fan/Light v2',
+    'model': 'ceiling fan/Light v2 (unsupported)',
     'model_id': '9ecs16c53uqskxw6',
     'name': 'ceiling fan/Light v2',
     'name_by_user': None,
@@ -1074,7 +1074,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Water Timer',
+    'model': 'Smart Water Timer (unsupported)',
     'model_id': 'rzklytdei8i8vo37',
     'name': 'balkonbewässerung',
     'name_by_user': None,
@@ -1105,7 +1105,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'RGB Smart Plug',
+    'model': 'RGB Smart Plug (unsupported)',
     'model_id': 'hpc8ddyfv85haxa7',
     'name': 'Garage',
     'name_by_user': None,
@@ -1136,7 +1136,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED Strip RGB+W',
+    'model': 'LED Strip RGB+W (unsupported)',
     'model_id': 'iayz2jmtlipjnxj7',
     'name': 'LED Porch 2',
     'name_by_user': None,
@@ -1167,7 +1167,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Door Sensor',
+    'model': 'Door Sensor (unsupported)',
     'model_id': '8yhypbo7',
     'name': 'Boîte aux lettres - arrière',
     'name_by_user': None,
@@ -1198,7 +1198,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch',
+    'model': 'Curtain switch (unsupported)',
     'model_id': 'y7j64p60glp8qpx7',
     'name': 'Fenster Küche',
     'name_by_user': None,
@@ -1229,7 +1229,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug +',
+    'model': 'Smart Plug + (unsupported)',
     'model_id': 'pu8uhxhwcp3tgoz7',
     'name': 'Socket3',
     'name_by_user': None,
@@ -1260,7 +1260,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED SMART',
+    'model': 'LED SMART (unsupported)',
     'model_id': 'ilddqqih3tucdk68',
     'name': 'Ieskas',
     'name_by_user': None,
@@ -1291,7 +1291,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Ceiling Light RGBTW',
+    'model': 'Ceiling Light RGBTW (unsupported)',
     'model_id': 'zav1pa32pyxray78',
     'name': 'Gengske 💡 ',
     'name_by_user': None,
@@ -1322,7 +1322,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SGS01',
+    'model': 'SGS01 (unsupported)',
     'model_id': 'gvygg3m8',
     'name': 'humid pelargonia',
     'name_by_user': None,
@@ -1353,7 +1353,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Arida Stavern ',
+    'model': 'Arida Stavern  (unsupported)',
     'model_id': 'eguoms25tkxtf5u8',
     'name': 'Arida Stavern ',
     'name_by_user': None,
@@ -1384,7 +1384,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'atmosphere',
+    'model': 'atmosphere (unsupported)',
     'model_id': 'riwp3k79',
     'name': 'LED KEUKEN 2',
     'name_by_user': None,
@@ -1415,7 +1415,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mini Smart Plug',
+    'model': 'Mini Smart Plug (unsupported)',
     'model_id': 'qxJSyTLEtX5WrzA9',
     'name': 'LivR',
     'name_by_user': None,
@@ -1446,7 +1446,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ITC-308-WIFI Thermostat',
+    'model': 'ITC-308-WIFI Thermostat (unsupported)',
     'model_id': 'B0eP8qYAdpUo4yR9',
     'name': 'ITC-308-WIFI Thermostat',
     'name_by_user': None,
@@ -1477,7 +1477,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Contact Sensor',
+    'model': 'Contact Sensor (unsupported)',
     'model_id': 'oxslv1c9',
     'name': 'Window downstairs',
     'name_by_user': None,
@@ -1508,7 +1508,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'XOCA-DAC212XC V2-S1',
+    'model': 'XOCA-DAC212XC V2-S1 (unsupported)',
     'model_id': '4ggkyflayu1h1ho9',
     'name': 'XOCA-DAC212XC V2-S1',
     'name_by_user': None,
@@ -1539,7 +1539,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'IFS-STD002',
+    'model': 'IFS-STD002 (unsupported)',
     'model_id': 'krlcihrpzpc8olw9',
     'name': 'IFS-STD002',
     'name_by_user': None,
@@ -1570,7 +1570,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Door Sensor',
+    'model': 'Door Sensor (unsupported)',
     'model_id': 'oSQljE9YDqwCwTUA',
     'name': 'Kippenluik',
     'name_by_user': None,
@@ -1601,7 +1601,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Dimmer switch',
+    'model': 'Dimmer switch (unsupported)',
     'model_id': 'bSXSSFArVKtc4DyC',
     'name': 'bedroom',
     'name_by_user': None,
@@ -1632,7 +1632,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Socket',
+    'model': 'Socket (unsupported)',
     'model_id': 'n8iVBAPLFKAAAszH',
     'name': 'Steckdose 2',
     'name_by_user': None,
@@ -1694,7 +1694,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mini Smart Socket',
+    'model': 'Mini Smart Socket (unsupported)',
     'model_id': 'hA2GsgMfTQFTz9JL',
     'name': 'Spot 4',
     'name_by_user': None,
@@ -1725,7 +1725,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Rewireable Plug 6930HA',
+    'model': 'Rewireable Plug 6930HA (unsupported)',
     'model_id': 'HBRBzv1UVBVfF6SL',
     'name': 'Rewireable Plug 6930HA',
     'name_by_user': None,
@@ -1756,7 +1756,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'thermostat',
+    'model': 'thermostat (unsupported)',
     'model_id': 'IAYz2WK1th0cMLmL',
     'name': 'El termostato de la cocina',
     'name_by_user': None,
@@ -1787,7 +1787,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug',
+    'model': 'Smart Plug (unsupported)',
     'model_id': 'CHLZe9HQ6QIXujVN',
     'name': 'schuur',
     'name_by_user': None,
@@ -1818,7 +1818,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SWITCH1',
+    'model': 'SWITCH1 (unsupported)',
     'model_id': '4nqs33emdwJxpQ8O',
     'name': 'office lights',
     'name_by_user': None,
@@ -1849,7 +1849,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Dimmer Switch',
+    'model': 'Smart Dimmer Switch (unsupported)',
     'model_id': 'h4aX2JkHZNByQ4AV',
     'name': 'Entry Stairs',
     'name_by_user': None,
@@ -1880,7 +1880,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mini Smart Plug',
+    'model': 'Mini Smart Plug (unsupported)',
     'model_id': 'AiHXxAyyn7eAkLQY',
     'name': 'Solar Heater Pump',
     'name_by_user': None,
@@ -1911,7 +1911,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket-16A',
+    'model': 'Smart Socket-16A (unsupported)',
     'model_id': 'fbvia0apnlnattcy',
     'name': 'AK1',
     'name_by_user': None,
@@ -1942,7 +1942,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Temperature and humidity sensor',
+    'model': 'Temperature and humidity sensor (unsupported)',
     'model_id': 'vtA4pDd6PLUZzXgZ',
     'name': 'Humy bain',
     'name_by_user': None,
@@ -1973,7 +1973,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Din Rail Switch with metering',
+    'model': 'WiFi Din Rail Switch with metering (unsupported)',
     'model_id': 'jdj6ccklup7btq3a',
     'name': 'Eau Chaude',
     'name_by_user': None,
@@ -2004,7 +2004,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Valve',
+    'model': 'Smart Valve (unsupported)',
     'model_id': 'gbm9ata1zrzaez4a',
     'name': 'QT-Switch',
     'name_by_user': None,
@@ -2035,7 +2035,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Lampada Wi-Fi+bluetooth',
+    'model': 'Lampada Wi-Fi+bluetooth (unsupported)',
     'model_id': 'oj4fqh3fo3obgu6a',
     'name': 'L├ímpara Ati',
     'name_by_user': None,
@@ -2066,7 +2066,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'z3rpyvznfcch99aa',
     'name': 'PIXI Smart Drinking Fountain',
     'name_by_user': None,
@@ -2097,7 +2097,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SWS 16600 WiFi SH',
+    'model': 'SWS 16600 WiFi SH (unsupported)',
     'model_id': 'xbwbniyt6bgws9ia',
     'name': 'SWS 16600 WiFi SH',
     'name_by_user': None,
@@ -2128,7 +2128,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'VIVIDSTORM SCREEN',
+    'model': 'VIVIDSTORM SCREEN (unsupported)',
     'model_id': 'lfkr93x0ukp5gaia',
     'name': 'Projector Screen',
     'name_by_user': None,
@@ -2159,7 +2159,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug',
+    'model': 'Smart Plug (unsupported)',
     'model_id': 'iqhidxhhmgxk5eja',
     'name': 'Powerplug 5',
     'name_by_user': None,
@@ -2190,7 +2190,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ST64 Clear',
+    'model': 'ST64 Clear (unsupported)',
     'model_id': 'fuupmcr2mb1odkja',
     'name': 'Slaapkamer',
     'name_by_user': None,
@@ -2221,7 +2221,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Pro Breeze 20L Compressor Dehumidifier',
+    'model': 'Pro Breeze 20L Compressor Dehumidifier (unsupported)',
     'model_id': 'u0wirz487erb0eka',
     'name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
     'name_by_user': None,
@@ -2283,7 +2283,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Lamp',
+    'model': 'Smart Lamp (unsupported)',
     'model_id': 'idnfq7xbx8qewyoa',
     'name': 'AB1',
     'name_by_user': None,
@@ -2314,7 +2314,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T & H Sensor with external probe',
+    'model': 'T & H Sensor with external probe (unsupported)',
     'model_id': 'is2indt9nlth6esa',
     'name': 'Frysen',
     'name_by_user': None,
@@ -2345,7 +2345,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '1-433',
+    'model': '1-433 (unsupported)',
     'model_id': '1aegphq4yfd50e6b',
     'name': 'jardin Fraises',
     'name_by_user': None,
@@ -2376,7 +2376,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Door Sensor',
+    'model': 'Door Sensor (unsupported)',
     'model_id': '7jIGJAymiH8OsFFb',
     'name': 'Door Garage ',
     'name_by_user': None,
@@ -2407,7 +2407,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Light Strip-RGBCW ',
+    'model': 'Light Strip-RGBCW  (unsupported)',
     'model_id': 'vqwcnabamzrc2kab',
     'name': 'Strip 2',
     'name_by_user': None,
@@ -2438,7 +2438,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Breaker ',
+    'model': 'Breaker  (unsupported)',
     'model_id': 'r9kg2g1uhhyicycb',
     'name': 'P1 Energia Elettrica',
     'name_by_user': None,
@@ -2500,7 +2500,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'BlissRadia ',
+    'model': 'BlissRadia  (unsupported)',
     'model_id': 'ssimhf6r8kgwepfb',
     'name': 'BlissRadia ',
     'name_by_user': None,
@@ -2531,7 +2531,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'A60 Clear',
+    'model': 'A60 Clear (unsupported)',
     'model_id': 'amx1bgdrfab6jngb',
     'name': 'Lumy Hall',
     'name_by_user': None,
@@ -2562,7 +2562,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '接HA双向计量插座',
+    'model': '接HA双向计量插座 (unsupported)',
     'model_id': 'vrbpx6h7fsi5mujb',
     'name': '接HA双向计量插座',
     'name_by_user': None,
@@ -2593,7 +2593,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Water Timer',
+    'model': 'Smart Water Timer (unsupported)',
     'model_id': 'nxquc5lb',
     'name': 'Smart Water Timer',
     'name_by_user': None,
@@ -2624,7 +2624,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'KLARTA HUMEA',
+    'model': 'KLARTA HUMEA (unsupported)',
     'model_id': 'r492ifwk6f2ssptb',
     'name': 'KLARTA HUMEA',
     'name_by_user': None,
@@ -2686,7 +2686,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC Smart Ceiling Light',
+    'model': 'LSC Smart Ceiling Light (unsupported)',
     'model_id': 'j1bgp31cffutizub',
     'name': 'Ceiling Portal',
     'name_by_user': None,
@@ -2717,7 +2717,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket ',
+    'model': 'Smart Socket  (unsupported)',
     'model_id': 'anwgf2xugjxpkfxb',
     'name': 'Security Light',
     'name_by_user': None,
@@ -2779,7 +2779,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'White Noise Machine',
+    'model': 'White Noise Machine (unsupported)',
     'model_id': 'tkqgkrutewrmbn9c',
     'name': 'White Noise Machine',
     'name_by_user': None,
@@ -2841,7 +2841,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '接HA水阀',
+    'model': '接HA水阀 (unsupported)',
     'model_id': 'ed7frwissyqrejic',
     'name': '接HA水阀',
     'name_by_user': None,
@@ -2872,7 +2872,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Aubess Smart\xa0Socket 20A/EM',
+    'model': 'Aubess Smart\xa0Socket 20A/EM (unsupported)',
     'model_id': '2iepauebcvo74ujc',
     'name': 'Aubess Cooker',
     'name_by_user': None,
@@ -2903,7 +2903,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Rain sensor',
+    'model': 'Rain sensor (unsupported)',
     'model_id': 'tgvtvdoc',
     'name': 'Tournesol',
     'name_by_user': None,
@@ -2934,7 +2934,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Solar flood light  App panel',
+    'model': 'Solar flood light  App panel (unsupported)',
     'model_id': 'pyakuuoc',
     'name': 'Solar zijpad',
     'name_by_user': None,
@@ -2965,7 +2965,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart plug',
+    'model': 'Smart plug (unsupported)',
     'model_id': 'qm0iq4nqnrlzh4qc',
     'name': 'Elivco Kitchen Socket',
     'name_by_user': None,
@@ -2996,7 +2996,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PTH-9CW(QC)',
+    'model': 'PTH-9CW(QC) (unsupported)',
     'model_id': 'yakol79dibtswovc',
     'name': 'PTH-9CW 32',
     'name_by_user': None,
@@ -3027,7 +3027,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Gas sensor',
+    'model': 'Gas sensor (unsupported)',
     'model_id': '4iqe2hsfyd86kwwc',
     'name': 'Gas sensor',
     'name_by_user': None,
@@ -3058,7 +3058,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Breaker',
+    'model': 'WiFi Breaker (unsupported)',
     'model_id': 'emb5khohohihmbxc',
     'name': 'Server Fan',
     'name_by_user': None,
@@ -3089,7 +3089,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket',
+    'model': 'Smart Socket (unsupported)',
     'model_id': 'mQUhiTg9kwydBFBd',
     'name': 'Waschmaschine',
     'name_by_user': None,
@@ -3120,7 +3120,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SP22-10A',
+    'model': 'SP22-10A (unsupported)',
     'model_id': '0fHWRe8ULjtmnBNd',
     'name': 'Weihnachten3',
     'name_by_user': None,
@@ -3151,7 +3151,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Switch',
+    'model': 'Smart Switch (unsupported)',
     'model_id': 'uenof8jd',
     'name': 'Smart Switch',
     'name_by_user': None,
@@ -3182,7 +3182,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'AM43拉绳电机-Zigbee',
+    'model': 'AM43拉绳电机-Zigbee (unsupported)',
     'model_id': 'zah67ekd',
     'name': 'Kitchen Blinds',
     'name_by_user': None,
@@ -3213,7 +3213,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Thermostat Tervix Pro Line ZigBee color',
+    'model': 'Thermostat Tervix Pro Line ZigBee color (unsupported)',
     'model_id': '6kijc7nd',
     'name': 'Кабінет',
     'name_by_user': None,
@@ -3244,7 +3244,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'YFA-05C',
+    'model': 'YFA-05C (unsupported)',
     'model_id': 'vdadlnmsorlhw4td',
     'name': 'Sove',
     'name_by_user': None,
@@ -3368,7 +3368,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Inline Switch 6000HA',
+    'model': 'Inline Switch 6000HA (unsupported)',
     'model_id': 'raceucn29wk2yawe',
     'name': 'Bathroom Mirror',
     'name_by_user': None,
@@ -3430,7 +3430,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Sunbeam Bedding',
+    'model': 'Sunbeam Bedding (unsupported)',
     'model_id': 'pjvxl1wsyqxivsaf',
     'name': 'Sunbeam Bedding',
     'name_by_user': None,
@@ -3461,7 +3461,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Tank A Level',
+    'model': 'Tank A Level (unsupported)',
     'model_id': 'h8lvyoahr6s6aybf',
     'name': 'Rainwater Tank Level',
     'name_by_user': None,
@@ -3492,7 +3492,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SmartTRV',
+    'model': 'SmartTRV (unsupported)',
     'model_id': 'cpmgn2cf',
     'name': 'Bathroom radiator',
     'name_by_user': None,
@@ -3523,7 +3523,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Geti Solar PV Water Heater',
+    'model': 'Geti Solar PV Water Heater (unsupported)',
     'model_id': 'd7woucobqi8ncacf',
     'name': 'Geti Solar PV Water Heater',
     'name_by_user': None,
@@ -3554,7 +3554,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '一路带计量磁保持通断器',
+    'model': '一路带计量磁保持通断器 (unsupported)',
     'model_id': '0tnvg2xaisqdadcf',
     'name': '一路带计量磁保持通断器',
     'name_by_user': None,
@@ -3585,7 +3585,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Security Camera',
+    'model': 'Security Camera (unsupported)',
     'model_id': 'sdd5f5f2dl5wydjf',
     'name': 'C9',
     'name_by_user': None,
@@ -3647,7 +3647,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Blinds',
+    'model': 'Smart Blinds (unsupported)',
     'model_id': 'ebt12ypvexnixvtf',
     'name': 'Kitchen Blinds',
     'name_by_user': None,
@@ -3678,7 +3678,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Wireless Switch',
+    'model': 'Wireless Switch (unsupported)',
     'model_id': 'l8yaz4um5b3pwyvf',
     'name': 'Bathroom Smart Switch',
     'name_by_user': None,
@@ -3709,7 +3709,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart plug',
+    'model': 'Smart plug (unsupported)',
     'model_id': 'w0qqde0g',
     'name': 'Lave linge',
     'name_by_user': None,
@@ -3740,7 +3740,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Blinds Controller',
+    'model': 'Blinds Controller (unsupported)',
     'model_id': '3r8gc33pnqsxfe1g',
     'name': 'Lounge Dark Blind',
     'name_by_user': None,
@@ -3771,7 +3771,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T platform model-USB ',
+    'model': 'T platform model-USB  (unsupported)',
     'model_id': 'ibmmirhhq62mmf1g',
     'name': 'Master Bedroom AC',
     'name_by_user': None,
@@ -3802,7 +3802,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Dehumidifier ',
+    'model': 'Dehumidifier  (unsupported)',
     'model_id': 'b9oyi2yofflroq1g',
     'name': 'Living room dehumidifier',
     'name_by_user': None,
@@ -3833,7 +3833,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZC-YED-一键无线开关',
+    'model': 'ZC-YED-一键无线开关 (unsupported)',
     'model_id': 'ja5osu5g',
     'name': 'Bouton tempo extérieur',
     'name_by_user': None,
@@ -3864,7 +3864,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Power Strip',
+    'model': 'Smart Power Strip (unsupported)',
     'model_id': 'tsbguim4trl6fa7g',
     'name': 'Keller',
     'name_by_user': None,
@@ -3926,7 +3926,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'CBE Pro',
+    'model': 'CBE Pro (unsupported)',
     'model_id': 'pb0tc75khaik8qbg',
     'name': 'CBE Pro 2',
     'name_by_user': None,
@@ -3957,7 +3957,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Valve Controller',
+    'model': 'Valve Controller (unsupported)',
     'model_id': 'd4vpmigg',
     'name': 'Garden Valve Yard',
     'name_by_user': None,
@@ -3988,7 +3988,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T & H Sensor',
+    'model': 'T & H Sensor (unsupported)',
     'model_id': 'lf36y5nwb8jkxwgg',
     'name': 'Greenhouse',
     'name_by_user': None,
@@ -4019,7 +4019,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'smart plug',
+    'model': 'smart plug (unsupported)',
     'model_id': 'fencxse0bnut96ig',
     'name': 'Spa',
     'name_by_user': None,
@@ -4050,7 +4050,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Lighting',
+    'model': 'Smart Lighting (unsupported)',
     'model_id': 'oe0cpnjg',
     'name': 'Front right Lighting trap',
     'name_by_user': None,
@@ -4081,7 +4081,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'POWERASIA',
+    'model': 'POWERASIA (unsupported)',
     'model_id': '8ugheslg',
     'name': 'POWERASIA R2',
     'name_by_user': None,
@@ -4112,7 +4112,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '1Gang Zigbee Switch',
+    'model': '1Gang Zigbee Switch (unsupported)',
     'model_id': '5ftkaulg',
     'name': 'bathroom light',
     'name_by_user': None,
@@ -4143,7 +4143,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZX-5442',
+    'model': 'ZX-5442 (unsupported)',
     'model_id': 'tfbhw0mg',
     'name': 'Salon',
     'name_by_user': None,
@@ -4174,7 +4174,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug',
+    'model': 'Smart Plug (unsupported)',
     'model_id': 'PGEkBctAbtzKOZng',
     'name': 'Din',
     'name_by_user': None,
@@ -4205,7 +4205,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mr. Pure',
+    'model': 'Mr. Pure (unsupported)',
     'model_id': '5ls2jw49hpczwqng',
     'name': 'Mr. Pure',
     'name_by_user': None,
@@ -4236,7 +4236,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Garden Spike(FR)',
+    'model': 'Garden Spike(FR) (unsupported)',
     'model_id': 'trjopo1vdlt9q1tg',
     'name': 'Terras',
     'name_by_user': None,
@@ -4267,7 +4267,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain Switch',
+    'model': 'Curtain Switch (unsupported)',
     'model_id': 'n3xgr5pdmpinictg',
     'name': 'Estore Sala',
     'name_by_user': None,
@@ -4298,7 +4298,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Door Detector',
+    'model': 'Door Detector (unsupported)',
     'model_id': 'hx5ztlztij4yxxvg',
     'name': 'Steel cage door',
     'name_by_user': None,
@@ -4329,7 +4329,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'SP111',
+    'model': 'SP111 (unsupported)',
     'model_id': '37mnhia3pojleqfh',
     'name': 'Sapphire ',
     'name_by_user': None,
@@ -4360,7 +4360,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Motion Sensor',
+    'model': 'Smart Motion Sensor (unsupported)',
     'model_id': '3amxzozho9xp4mkh',
     'name': 'rat trap hedge',
     'name_by_user': None,
@@ -4391,7 +4391,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '【通用接入】1路插座',
+    'model': '【通用接入】1路插座 (unsupported)',
     'model_id': 'y4jnobxh',
     'name': 'AuVeLiCo',
     'name_by_user': None,
@@ -4422,7 +4422,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Sous Vide',
+    'model': 'Sous Vide (unsupported)',
     'model_id': 'qavcakohisj5adyh',
     'name': 'Sous Vide',
     'name_by_user': None,
@@ -4484,7 +4484,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart DoorBell （WiFi）',
+    'model': 'Smart DoorBell （WiFi） (unsupported)',
     'model_id': '6bmk1remyscwyx6i',
     'name': 'Mirilla puerta',
     'name_by_user': None,
@@ -4515,7 +4515,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Temperature Sensor',
+    'model': 'Temperature Sensor (unsupported)',
     'model_id': 'iq4ygaai',
     'name': 'Bassin',
     'name_by_user': None,
@@ -4577,7 +4577,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Emma Dehumidifier - eeese air care',
+    'model': 'Emma Dehumidifier - eeese air care (unsupported)',
     'model_id': 'ka2wfrdoogpvgzfi',
     'name': 'Dehumidifer',
     'name_by_user': None,
@@ -4608,7 +4608,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Wi-Fi Pet Feeder',
+    'model': 'Wi-Fi Pet Feeder (unsupported)',
     'model_id': 'lxfvx41gqdotrkgi',
     'name': 'Cat Feeder',
     'name_by_user': None,
@@ -4639,7 +4639,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC smart GU10',
+    'model': 'LSC smart GU10 (unsupported)',
     'model_id': 'nbumqpv8vz61enji',
     'name': 'b2',
     'name_by_user': None,
@@ -4670,7 +4670,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Ceiling Fan With Light',
+    'model': 'Ceiling Fan With Light (unsupported)',
     'model_id': 'g0ewlb1vmwqljzji',
     'name': 'Ceiling Fan With Light',
     'name_by_user': None,
@@ -4701,7 +4701,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart roller blinds',
+    'model': 'Smart roller blinds (unsupported)',
     'model_id': 'g1cp07dsqnbdbbki',
     'name': 'Persiana do Quarto',
     'name_by_user': None,
@@ -4732,7 +4732,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'AIR_DETECTOR ',
+    'model': 'AIR_DETECTOR  (unsupported)',
     'model_id': 'yrr3eiyiacm31ski',
     'name': 'AQI',
     'name_by_user': None,
@@ -4794,7 +4794,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'kgaob37tz2muf3mi',
     'name': 'Parker Ceiling Fan 1',
     'name_by_user': None,
@@ -4825,7 +4825,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mesh-Gateway',
+    'model': 'Mesh-Gateway (unsupported)',
     'model_id': '2gowdgni',
     'name': 'Mesh-Gateway',
     'name_by_user': None,
@@ -4856,7 +4856,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Cleverio PF100',
+    'model': 'Cleverio PF100 (unsupported)',
     'model_id': 'wfkzyy0evslzsmoi',
     'name': 'Cleverio PF100',
     'name_by_user': None,
@@ -4887,7 +4887,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Smart Gas Boiler Thermostat ',
+    'model': 'WiFi Smart Gas Boiler Thermostat  (unsupported)',
     'model_id': 'fi6dne5tu4t1nm6j',
     'name': 'WiFi Smart Gas Boiler Thermostat ',
     'name_by_user': None,
@@ -4918,7 +4918,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'RGBstriplight',
+    'model': 'RGBstriplight (unsupported)',
     'model_id': 'c3nsqogqovapdpfj',
     'name': 'Arbeitszimmer led',
     'name_by_user': None,
@@ -4949,7 +4949,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Smoke Alarm',
+    'model': 'Smart Smoke Alarm (unsupported)',
     'model_id': 'gf9dejhmzffgdyfj',
     'name': ' Smoke detector upstairs ',
     'name_by_user': None,
@@ -4980,7 +4980,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Osprey Smart Plug',
+    'model': 'Osprey Smart Plug (unsupported)',
     'model_id': 'jti3ce2hzvsposgj',
     'name': 'Dehumidifier ',
     'name_by_user': None,
@@ -5011,7 +5011,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Bluetooth Temperature Humidity Sensor',
+    'model': 'Bluetooth Temperature Humidity Sensor (unsupported)',
     'model_id': 'iv7hudlj',
     'name': 'Basement temperature',
     'name_by_user': None,
@@ -5042,7 +5042,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart',
+    'model': 'Smart (unsupported)',
     'model_id': 'y5obtqhuztqsf2mj',
     'name': 'Term - Prizemi',
     'name_by_user': None,
@@ -5073,7 +5073,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch',
+    'model': 'Curtain switch (unsupported)',
     'model_id': 'wltqkykhni0papzj',
     'name': 'Roller shutter Living Room',
     'name_by_user': None,
@@ -5135,7 +5135,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart plug',
+    'model': 'Smart plug (unsupported)',
     'model_id': 'nx8rv6jpe1tsnffk',
     'name': 'Spot 1',
     'name_by_user': None,
@@ -5166,7 +5166,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Siren Sensor',
+    'model': 'Siren Sensor (unsupported)',
     'model_id': 'ulv4nnue7gqp0rjk',
     'name': 'Siren veranda ',
     'name_by_user': None,
@@ -5197,7 +5197,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC-G125-Gold ',
+    'model': 'LSC-G125-Gold  (unsupported)',
     'model_id': 'xokdfs6kh5ednakk',
     'name': 'ERKER 1-Gold ',
     'name_by_user': None,
@@ -5228,7 +5228,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Temperature Humidity Sensor',
+    'model': 'Temperature Humidity Sensor (unsupported)',
     'model_id': 'vlzqwckk',
     'name': 'Temperature Humidity Sensor abelhas pasillo',
     'name_by_user': None,
@@ -5259,7 +5259,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PIR',
+    'model': 'PIR (unsupported)',
     'model_id': 'o1l76njefmksbgkk',
     'name': 'PIR',
     'name_by_user': None,
@@ -5290,7 +5290,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Light Bulb',
+    'model': 'Smart Light Bulb (unsupported)',
     'model_id': '8szt7whdvwpmxglk',
     'name': 'Porch light E',
     'name_by_user': None,
@@ -5383,7 +5383,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Konyks Pluviose Easy EU',
+    'model': 'Konyks Pluviose Easy EU (unsupported)',
     'model_id': 'nkb0fmtlfyqosnvk',
     'name': 'Bassin',
     'name_by_user': None,
@@ -5414,7 +5414,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Valve Controller',
+    'model': 'Valve Controller (unsupported)',
     'model_id': '1fcnd8xk',
     'name': 'Valve Controller 2',
     'name_by_user': None,
@@ -5445,7 +5445,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Human presence sensor',
+    'model': 'Human presence sensor (unsupported)',
     'model_id': '2aaelwxk',
     'name': 'Human presence Office',
     'name_by_user': None,
@@ -5476,7 +5476,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '6 Switch Smart RetroFit Module',
+    'model': '6 Switch Smart RetroFit Module (unsupported)',
     'model_id': 'nockvv2k39vbrxxk',
     'name': 'Seating side 6-ch Smart Switch ',
     'name_by_user': None,
@@ -5507,7 +5507,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart plug',
+    'model': 'Smart plug (unsupported)',
     'model_id': 'hj0a5c7ckzzexu8l',
     'name': 'droger',
     'name_by_user': None,
@@ -5538,7 +5538,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Tower Fan CA-407G Smart',
+    'model': 'Tower Fan CA-407G Smart (unsupported)',
     'model_id': 'j9fa8ahzac8uvlfl',
     'name': 'Tower Fan CA-407G Smart',
     'name_by_user': None,
@@ -5600,7 +5600,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WIFI Dual Meter',
+    'model': 'WIFI Dual Meter (unsupported)',
     'model_id': 'z95s7p3z54xbsjnl',
     'name': 'WIFI Dual Meter',
     'name_by_user': None,
@@ -5631,7 +5631,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Indoor camera ',
+    'model': 'Indoor camera  (unsupported)',
     'model_id': 'drezasavompxpcgm',
     'name': 'CAM GARAGE',
     'name_by_user': None,
@@ -5662,7 +5662,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'setmxeqgs63xwopm',
     'name': 'Gateway',
     'name_by_user': None,
@@ -5693,7 +5693,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '移动空调 YPK--（双模+蓝牙）低功耗',
+    'model': '移动空调 YPK--（双模+蓝牙）低功耗 (unsupported)',
     'model_id': '5wnlzekkstwcdsvm',
     'name': 'Air Conditioner',
     'name_by_user': None,
@@ -5724,7 +5724,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'E20',
+    'model': 'E20 (unsupported)',
     'model_id': 'i6hyjg3af7doaswm',
     'name': 'Hoover',
     'name_by_user': None,
@@ -5755,7 +5755,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'BW-SHP6',
+    'model': 'BW-SHP6 (unsupported)',
     'model_id': 'EYfNTuTPZln9e4cn',
     'name': 'ZAS-01',
     'name_by_user': None,
@@ -5786,7 +5786,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Mini Smart Plug',
+    'model': 'Mini Smart Plug (unsupported)',
     'model_id': '0g1fmqh6d5io7lcn',
     'name': 'Apollo light',
     'name_by_user': None,
@@ -5817,7 +5817,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'G95-Filament',
+    'model': 'G95-Filament (unsupported)',
     'model_id': 'tmsloaroqavbucgn',
     'name': 'Pokerlamp 1',
     'name_by_user': None,
@@ -5848,7 +5848,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PJ2101A 1P WiFi Smart Meter ',
+    'model': 'PJ2101A 1P WiFi Smart Meter  (unsupported)',
     'model_id': 'ze8faryrxr0glqnn',
     'name': 'Meter',
     'name_by_user': None,
@@ -5879,7 +5879,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'curtain robot',
+    'model': 'curtain robot (unsupported)',
     'model_id': 'cpbo62rn',
     'name': 'blinds',
     'name_by_user': None,
@@ -5910,7 +5910,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Colorful PIR Night Light',
+    'model': 'Colorful PIR Night Light (unsupported)',
     'model_id': 'lgekqfxdabipm3tn',
     'name': 'Colorful PIR Night Light',
     'name_by_user': None,
@@ -5941,7 +5941,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED SMART',
+    'model': 'LED SMART (unsupported)',
     'model_id': 'zakhnlpdiu0ycdxn',
     'name': 'Stoel',
     'name_by_user': None,
@@ -5972,7 +5972,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Poopy Nano 2',
+    'model': 'Poopy Nano 2 (unsupported)',
     'model_id': 'mzuro9jgjs7uiryn',
     'name': 'Poopy Nano 2',
     'name_by_user': None,
@@ -6034,7 +6034,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smoke Alarm',
+    'model': 'Smoke Alarm (unsupported)',
     'model_id': 'cjlutkuuvxnie17o',
     'name': 'Rauchmelder Alexsandro ',
     'name_by_user': None,
@@ -6065,7 +6065,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Metering_3PN_WiFi',
+    'model': 'Metering_3PN_WiFi (unsupported)',
     'model_id': 'kxdr6su0c55p7bbo',
     'name': 'Metering_3PN_WiFi_stable',
     'name_by_user': None,
@@ -6096,7 +6096,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Luminance sensor',
+    'model': 'Luminance sensor (unsupported)',
     'model_id': '9kbbfeho',
     'name': 'Luminosité',
     'name_by_user': None,
@@ -6127,7 +6127,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Outdoor siren',
+    'model': 'Outdoor siren (unsupported)',
     'model_id': 'im2eqqhj72suwwko',
     'name': 'Siren',
     'name_by_user': None,
@@ -6158,7 +6158,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Heat Pump',
+    'model': 'Heat Pump (unsupported)',
     'model_id': 'db81ge24jctwx8lo',
     'name': 'Hot Water Heat Pump',
     'name_by_user': None,
@@ -6189,7 +6189,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Knob Thermostat',
+    'model': 'WiFi Knob Thermostat (unsupported)',
     'model_id': 't94pit6zjbask9qo',
     'name': 'Floor Thermostat Kitchen',
     'name_by_user': None,
@@ -6220,7 +6220,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Soil moisture sensor',
+    'model': 'Soil moisture sensor (unsupported)',
     'model_id': 'wqashyqo',
     'name': 'Soil moisture sensor #1',
     'name_by_user': None,
@@ -6251,7 +6251,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'X5',
+    'model': 'X5 (unsupported)',
     'model_id': 'nwxr8qcu4seltoro',
     'name': 'X5 Zigbee Gateway',
     'name_by_user': None,
@@ -6282,7 +6282,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 's4uzibibgzdxzowo',
     'name': 'ION1000PRO',
     'name_by_user': None,
@@ -6313,7 +6313,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'JRBULB',
+    'model': 'JRBULB (unsupported)',
     'model_id': 'p06rbu0a9jp37ixo',
     'name': 'Jardim Casa',
     'name_by_user': None,
@@ -6406,7 +6406,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smoke Alarm',
+    'model': 'Smoke Alarm (unsupported)',
     'model_id': 'rccxox8p',
     'name': 'Smoke Alarm',
     'name_by_user': None,
@@ -6437,7 +6437,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Radiator Thermostat Controller',
+    'model': 'Smart Radiator Thermostat Controller (unsupported)',
     'model_id': '9xfjixap',
     'name': 'Empore',
     'name_by_user': None,
@@ -6468,7 +6468,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug ',
+    'model': 'Smart Plug  (unsupported)',
     'model_id': 't0a4hwsf8anfsadp',
     'name': 'wallwasher front',
     'name_by_user': None,
@@ -6499,7 +6499,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Bulb',
+    'model': 'Smart Bulb (unsupported)',
     'model_id': 'k3okx0w3bsgmindp',
     'name': 'Portal Casa Carro Jalimy',
     'name_by_user': None,
@@ -6530,7 +6530,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Garden Spike(EU)',
+    'model': 'Garden Spike(EU) (unsupported)',
     'model_id': 't2afic7i3v1bwhfp',
     'name': 'Bubbelbad',
     'name_by_user': None,
@@ -6561,7 +6561,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '40" Bladeless Tower Fan',
+    'model': '40" Bladeless Tower Fan (unsupported)',
     'model_id': 'yrzylxax1qspdgpp',
     'name': 'Bree',
     'name_by_user': None,
@@ -6592,7 +6592,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug+',
+    'model': 'Smart Plug+ (unsupported)',
     'model_id': 'gbtxrqfy9xcsakyp',
     'name': '3DPrinter',
     'name_by_user': None,
@@ -6623,7 +6623,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Plug',
+    'model': 'WiFi Plug (unsupported)',
     'model_id': 'wrz6vzch8htux2zp',
     'name': 'Elivco TV',
     'name_by_user': None,
@@ -6654,7 +6654,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Pet Water Fountain',
+    'model': 'Smart Pet Water Fountain (unsupported)',
     'model_id': 'akln8rb04cav403q',
     'name': 'Water Fountain',
     'name_by_user': None,
@@ -6685,7 +6685,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Garage door ',
+    'model': 'Garage door  (unsupported)',
     'model_id': '1yyqfw4djv9eii3q',
     'name': 'Garage door ',
     'name_by_user': None,
@@ -6716,7 +6716,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '6294HA',
+    'model': '6294HA (unsupported)',
     'model_id': 'z6pht25s3p0gs26q',
     'name': '6294HA',
     'name_by_user': None,
@@ -6747,7 +6747,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '30L Dehumidifier with Max Extraction',
+    'model': '30L Dehumidifier with Max Extraction (unsupported)',
     'model_id': 'ipmyy4nigpqcnd8q',
     'name': 'Pro Breeze 30L Compressor Dehumidifier',
     'name_by_user': None,
@@ -6809,7 +6809,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Bulb RGBCW',
+    'model': 'Smart Bulb RGBCW (unsupported)',
     'model_id': 'qoqolwtqzfuhgghq',
     'name': 'Smart Bulb RGBCW',
     'name_by_user': None,
@@ -6840,7 +6840,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Breaker',
+    'model': 'Breaker (unsupported)',
     'model_id': 'cnpkf4xdmd9v49iq',
     'name': '断路器HA',
     'name_by_user': None,
@@ -6871,7 +6871,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Wi-Fi solar grid micro inverter （GT）',
+    'model': 'Wi-Fi solar grid micro inverter （GT） (unsupported)',
     'model_id': '6b3pbbuqbfabhfiq',
     'name': 'Wi-Fi solar grid micro inverter （GT）',
     'name_by_user': None,
@@ -6902,7 +6902,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Security Camera ',
+    'model': 'Security Camera  (unsupported)',
     'model_id': 'csr2fqitalj5o0tq',
     'name': 'Intercom',
     'name_by_user': None,
@@ -6933,7 +6933,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'GU10 Smart Bulb',
+    'model': 'GU10 Smart Bulb (unsupported)',
     'model_id': 'xdvitmhhmgefaeuq',
     'name': 'druckerhell',
     'name_by_user': None,
@@ -6964,7 +6964,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WATER SENSOR',
+    'model': 'WATER SENSOR (unsupported)',
     'model_id': 'rzeSU2h9uoklxEwq',
     'name': 'Inondation',
     'name_by_user': None,
@@ -6995,7 +6995,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'AC charging control box',
+    'model': 'AC charging control box (unsupported)',
     'model_id': '7bvgooyjhiua1yyq',
     'name': 'AC charging control box',
     'name_by_user': None,
@@ -7026,7 +7026,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Light Bulb',
+    'model': 'Smart Light Bulb (unsupported)',
     'model_id': 'mki13ie507rlry4r',
     'name': 'Garage light',
     'name_by_user': None,
@@ -7057,7 +7057,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Ceiling Lamp',
+    'model': 'Smart Ceiling Lamp (unsupported)',
     'model_id': 'ufq2xwuzd4nb0qdr',
     'name': 'Sjiethoes',
     'name_by_user': None,
@@ -7088,9 +7088,40 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart White Noise Machine',
+    'model': 'Smart White Noise Machine (unsupported)',
     'model_id': '45idzfufidgee7ir',
     'name': 'Smart White Noise Machine',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[rirsc4vhpbv2whkp2gw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'rirsc4vhpbv2whkp2gw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'C30 (unsupported)',
+    'model_id': 'pkhw2vbphv4csrir',
+    'name': 'C30',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -7119,7 +7150,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Odor Eliminator-Pro',
+    'model': 'Smart Odor Eliminator-Pro (unsupported)',
     'model_id': 'agwu93lr',
     'name': 'Smart Odor Eliminator-Pro',
     'name_by_user': None,
@@ -7181,7 +7212,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Remote controller',
+    'model': 'Remote controller (unsupported)',
     'model_id': 'bngwdjsr',
     'name': 'Télécommande lumières ZigBee',
     'name_by_user': None,
@@ -7212,7 +7243,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Signal repeater',
+    'model': 'Signal repeater (unsupported)',
     'model_id': 'piuensvr',
     'name': 'Signal repeater',
     'name_by_user': None,
@@ -7243,7 +7274,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket ',
+    'model': 'Smart Socket  (unsupported)',
     'model_id': 'tkn2s79mzedk6pwr',
     'name': 'Weihnachtsmann ',
     'name_by_user': None,
@@ -7274,7 +7305,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'MT15/MT29',
+    'model': 'MT15/MT29 (unsupported)',
     'model_id': '9f8pjxsmaqnk2tzr',
     'name': 'MT15/MT29',
     'name_by_user': None,
@@ -7305,7 +7336,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Motion sensor',
+    'model': 'Motion sensor (unsupported)',
     'model_id': 'fcdjzz3s',
     'name': 'Motion sensor lidl zigbee',
     'name_by_user': None,
@@ -7336,7 +7367,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'smart thermostats',
+    'model': 'smart thermostats (unsupported)',
     'model_id': 'gogb05wrtredz3bs',
     'name': 'smart thermostats',
     'name_by_user': None,
@@ -7367,7 +7398,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Multi-mode Gateway',
+    'model': 'Multi-mode Gateway (unsupported)',
     'model_id': 'haclbl0qkqlf2qds',
     'name': 'Home Gateway',
     'name_by_user': None,
@@ -7398,7 +7429,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Curtain switch',
+    'model': 'Curtain switch (unsupported)',
     'model_id': 'xqvhthwkbmp3aghs',
     'name': 'Pergola',
     'name_by_user': None,
@@ -7429,7 +7460,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': '0gyaslysqfp4gfis',
     'name': 'Study 1',
     'name_by_user': None,
@@ -7460,7 +7491,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC Smart Connect GU10 RGB+CCT',
+    'model': 'LSC Smart Connect GU10 RGB+CCT (unsupported)',
     'model_id': 'ekwolitfjhxn55js',
     'name': 'ab6',
     'name_by_user': None,
@@ -7491,7 +7522,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'smart motor',
+    'model': 'smart motor (unsupported)',
     'model_id': 'qtemqjy7axczkkls',
     'name': 'Dining 1',
     'name_by_user': None,
@@ -7522,7 +7553,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Tank A Level',
+    'model': 'Tank A Level (unsupported)',
     'model_id': 'wtzwyhkev3b4ubns',
     'name': 'House Water Level',
     'name_by_user': None,
@@ -7553,7 +7584,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Radiator Thermostat',
+    'model': 'Smart Radiator Thermostat (unsupported)',
     'model_id': 'p3dbf6qs',
     'name': 'Anbau',
     'name_by_user': None,
@@ -7584,7 +7615,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart multi-channel weather station ',
+    'model': 'Smart multi-channel weather station  (unsupported)',
     'model_id': 's5l7qidyapl1rbrs',
     'name': 'Ventus test',
     'name_by_user': None,
@@ -7646,7 +7677,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC PTZ Camera',
+    'model': 'LSC PTZ Camera (unsupported)',
     'model_id': 'rudejjigkywujjvs',
     'name': 'Bürocam',
     'name_by_user': None,
@@ -7677,7 +7708,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'ipabufmlmodje1ws',
     'name': 'Värmelampa',
     'name_by_user': None,
@@ -7708,7 +7739,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WIFI smart CO alarm',
+    'model': 'WIFI smart CO alarm (unsupported)',
     'model_id': 'hcdy5zrq3ikzthws',
     'name': 'Smogo',
     'name_by_user': None,
@@ -7739,7 +7770,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '10A Metering Socket',
+    'model': '10A Metering Socket (unsupported)',
     'model_id': 'guitoc9iylae4axs',
     'name': 'HA Socket Delta Test',
     'name_by_user': None,
@@ -7801,7 +7832,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smoke Alarm ',
+    'model': 'Smoke Alarm  (unsupported)',
     'model_id': 'arywmw6h6vesoz5t',
     'name': 'Rauchmelder Drucker',
     'name_by_user': None,
@@ -7863,7 +7894,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Five way ceiling lamp',
+    'model': 'Five way ceiling lamp (unsupported)',
     'model_id': 'shx9mmadyyeaq88t',
     'name': 'Plafond bureau ',
     'name_by_user': None,
@@ -7894,7 +7925,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Dual channel metering',
+    'model': 'Dual channel metering (unsupported)',
     'model_id': '2jxesipczks0kdct',
     'name': 'HVAC Meter',
     'name_by_user': None,
@@ -7925,7 +7956,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Blinds Drive-BLE',
+    'model': 'Blinds Drive-BLE (unsupported)',
     'model_id': 'qqdxfdht',
     'name': 'bedroom blinds',
     'name_by_user': None,
@@ -7956,7 +7987,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED SMART',
+    'model': 'LED SMART (unsupported)',
     'model_id': 'lmnt3uyltk1xffrt',
     'name': 'DirectietKamer',
     'name_by_user': None,
@@ -7987,7 +8018,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Valve Controller',
+    'model': 'Valve Controller (unsupported)',
     'model_id': 'o6dagifntoafakst',
     'name': 'Sprinkler Cesare',
     'name_by_user': None,
@@ -8018,7 +8049,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WIFI Smoke alarm',
+    'model': 'WIFI Smoke alarm (unsupported)',
     'model_id': 'kscbebaf3s1eogvt',
     'name': 'WIFI Smoke alarm',
     'name_by_user': None,
@@ -8049,7 +8080,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Indoor cam Pan/Tilt ',
+    'model': 'Indoor cam Pan/Tilt  (unsupported)',
     'model_id': 'rjKXWRohlvOTyLBu',
     'name': 'CAM PORCH',
     'name_by_user': None,
@@ -8111,7 +8142,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket',
+    'model': 'Smart Socket (unsupported)',
     'model_id': 'IGzCi97RpN2Lf9cu',
     'name': 'N4-Auto',
     'name_by_user': None,
@@ -8142,7 +8173,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Soil sensor',
+    'model': 'Soil sensor (unsupported)',
     'model_id': 'myd45weu',
     'name': 'Patates',
     'name_by_user': None,
@@ -8173,7 +8204,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Temperature & Humidity Sensor',
+    'model': 'WiFi Temperature & Humidity Sensor (unsupported)',
     'model_id': 'yqiqbaldtr0i7mru',
     'name': 'WiFi Temperature & Humidity Sensor',
     'name_by_user': None,
@@ -8204,7 +8235,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket',
+    'model': 'Smart Socket (unsupported)',
     'model_id': 'wifvoilfrqeo6hvu',
     'name': 'Licht drucker',
     'name_by_user': None,
@@ -8235,7 +8266,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug',
+    'model': 'Smart Plug (unsupported)',
     'model_id': '4mbgrfotyNzMxDAv',
     'name': 'Air Purifier ',
     'name_by_user': None,
@@ -8266,7 +8297,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '温湿度传感器wifi',
+    'model': '温湿度传感器wifi (unsupported)',
     'model_id': 'g2y6z3p3ja2qhyav',
     'name': 'NP DownStairs North',
     'name_by_user': None,
@@ -8297,7 +8328,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Breaker',
+    'model': 'Breaker (unsupported)',
     'model_id': 'z3jngbyubvwgfrcv',
     'name': 'Edesanya Energy',
     'name_by_user': None,
@@ -8328,7 +8359,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Temperature and humidity sensor',
+    'model': 'Temperature and humidity sensor (unsupported)',
     'model_id': 'qrztc3ev',
     'name': 'Temperature and humidity sensor',
     'name_by_user': None,
@@ -8359,7 +8390,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED Strip Lights',
+    'model': 'LED Strip Lights (unsupported)',
     'model_id': 'hp6orhaqm6as3jnv',
     'name': 'Master bedroom TV lights',
     'name_by_user': None,
@@ -8390,7 +8421,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'geniodesk',
+    'model': 'geniodesk (unsupported)',
     'model_id': 'ftbc8rp8ipksdfpv',
     'name': 'mesa',
     'name_by_user': None,
@@ -8421,7 +8452,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '1-433',
+    'model': '1-433 (unsupported)',
     'model_id': '9htyiowaf5rtdhrv',
     'name': 'Framboisiers',
     'name_by_user': None,
@@ -8452,7 +8483,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Ineox SP2',
+    'model': 'Ineox SP2 (unsupported)',
     'model_id': '39sy2g68gsjwo2xv',
     'name': 'Ineox SP2',
     'name_by_user': None,
@@ -8514,7 +8545,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'A60 Clear',
+    'model': 'A60 Clear (unsupported)',
     'model_id': '8y0aquaa8v6tho8w',
     'name': 'dressoir spot',
     'name_by_user': None,
@@ -8545,7 +8576,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'WiFi Breaker',
+    'model': 'WiFi Breaker (unsupported)',
     'model_id': '1ctrc5jx88mtdh9w',
     'name': 'Puerta Casa ',
     'name_by_user': None,
@@ -8576,7 +8607,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket',
+    'model': 'Smart Socket (unsupported)',
     'model_id': '9ivirni8wemum6cw',
     'name': 'Garáž čerpadlo',
     'name_by_user': None,
@@ -8638,7 +8669,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC Party String Light RGBIC+CCT ',
+    'model': 'LSC Party String Light RGBIC+CCT  (unsupported)',
     'model_id': 'l3bpgg8ibsagon4x',
     'name': 'LSC Party String Light RGBIC+CCT ',
     'name_by_user': None,
@@ -8669,7 +8700,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'T7-Air conditioner thermostat（ZIGBEE)',
+    'model': 'T7-Air conditioner thermostat（ZIGBEE) (unsupported)',
     'model_id': 'aqoouq7x',
     'name': 'Clima cucina',
     'name_by_user': None,
@@ -8700,7 +8731,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Wi-Fi Curtian Switch',
+    'model': 'Wi-Fi Curtian Switch (unsupported)',
     'model_id': 'rD7uqAAgQOpSA2Rx',
     'name': 'Kit-Blinds',
     'name_by_user': None,
@@ -8731,7 +8762,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '4-433',
+    'model': '4-433 (unsupported)',
     'model_id': 'cq1p0nt0a4rixnex',
     'name': '4-433',
     'name_by_user': None,
@@ -8762,7 +8793,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Switch Module',
+    'model': 'Smart Switch Module (unsupported)',
     'model_id': 'gdknjvdpiwoq6smx',
     'name': 'Jardim frontal ',
     'name_by_user': None,
@@ -8793,7 +8824,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Shop Light',
+    'model': 'Shop Light (unsupported)',
     'model_id': 'yfqmcabsid3gkd1y',
     'name': 'Shop Light 5',
     'name_by_user': None,
@@ -8824,7 +8855,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Soria',
+    'model': 'Soria (unsupported)',
     'model_id': '0kllybtbzftaee7y',
     'name': 'Soria',
     'name_by_user': None,
@@ -8855,7 +8886,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PZ003',
+    'model': 'PZ003 (unsupported)',
     'model_id': 'ExGgQmjt0SHMdlDZ',
     'name': 'Casa1',
     'name_by_user': None,
@@ -8886,7 +8917,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LSC Floodlight',
+    'model': 'LSC Floodlight (unsupported)',
     'model_id': 'zputiamzanuk6yky',
     'name': 'Floodlight',
     'name_by_user': None,
@@ -8917,7 +8948,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'fsxtzzhujkrak2oy',
     'name': 'Kalado Air Purifier',
     'name_by_user': None,
@@ -8948,7 +8979,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'ZEDAR K1200',
+    'model': 'ZEDAR K1200 (unsupported)',
     'model_id': '3ddulzljdjjwkhoy',
     'name': 'Kattenbak',
     'name_by_user': None,
@@ -8979,7 +9010,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Contact Sensor',
+    'model': 'Contact Sensor (unsupported)',
     'model_id': '6ywsnauy',
     'name': 'Fenêtre cuisine',
     'name_by_user': None,
@@ -9010,7 +9041,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Cooking Thermometer',
+    'model': 'Cooking Thermometer (unsupported)',
     'model_id': '3rzngbyy',
     'name': 'Grillhőmérő',
     'name_by_user': None,
@@ -9041,7 +9072,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'LED SMART',
+    'model': 'LED SMART (unsupported)',
     'model_id': 'baf9tt9lb8t5uc7z',
     'name': 'Pokerlamp 2',
     'name_by_user': None,
@@ -9072,7 +9103,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Candle RGB-CCT',
+    'model': 'Candle RGB-CCT (unsupported)',
     'model_id': 'djnozmdyqyriow8z',
     'name': 'Fakkel 8',
     'name_by_user': None,
@@ -9103,7 +9134,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart plug',
+    'model': 'Smart plug (unsupported)',
     'model_id': 'gjnozsaz',
     'name': 'Raspy4 - Home Assistant',
     'name_by_user': None,
@@ -9134,7 +9165,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'RGBC Smart Bulb',
+    'model': 'RGBC Smart Bulb (unsupported)',
     'model_id': 'tgewj70aowigv8fz',
     'name': 'Stairs',
     'name_by_user': None,
@@ -9165,7 +9196,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'air purifier',
+    'model': 'air purifier (unsupported)',
     'model_id': 'CAjWAxBUZt7QZHfz',
     'name': 'HL400',
     'name_by_user': None,
@@ -9196,7 +9227,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Intelligent temperature controller',
+    'model': 'Intelligent temperature controller (unsupported)',
     'model_id': 'ccpwojhalfxryigz',
     'name': 'Boiler Temperature Controller',
     'name_by_user': None,
@@ -9227,7 +9258,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Aubess Smart\xa0Socket EM',
+    'model': 'Aubess Smart\xa0Socket EM (unsupported)',
     'model_id': 'ik9sbig3mthx9hjz',
     'name': 'Aubess Washing Machine',
     'name_by_user': None,
@@ -9258,7 +9289,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart PIR sensor',
+    'model': 'Smart PIR sensor (unsupported)',
     'model_id': 'wqz93nrdomectyoz',
     'name': 'PIR outside stairs',
     'name_by_user': None,
@@ -9289,7 +9320,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'V20',
+    'model': 'V20 (unsupported)',
     'model_id': 'lr33znaodtyarrrz',
     'name': 'V20',
     'name_by_user': None,
@@ -9320,7 +9351,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Wi-Fi hub',
+    'model': 'Wi-Fi hub (unsupported)',
     'model_id': 'yncyws7tu1q4cpsz',
     'name': 'Wi-Fi hub',
     'name_by_user': None,
@@ -9351,7 +9382,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Plug',
+    'model': 'Smart Plug (unsupported)',
     'model_id': 'dntgh2ngvshfxpsz',
     'name': 'fakkel veranda ',
     'name_by_user': None,
@@ -9413,7 +9444,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '4-TH',
+    'model': '4-TH (unsupported)',
     'model_id': 'gc4b1mdw7kebtuyz',
     'name': 'pid_relay_2',
     'name_by_user': None,
@@ -9444,7 +9475,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Air Conditioner',
+    'model': 'Air Conditioner (unsupported)',
     'model_id': 'wxqdp6ecfkd78zzz',
     'name': 'Mini-Split',
     'name_by_user': None,
