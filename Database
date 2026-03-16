@@ -1,0 +1,1700 @@
+Terima kasih atas tawaran untuk membantu membangunkan projek lengkap menggunakan teknologi yang telah kita bincangkan. Saya akan hasilkan satu panduan langkah demi langkah untuk membina aplikasi **React + Node.js + Express** dengan integrasi **GitHub Actions** untuk CI/CD, menggunakan nama projek **codepaul** sebagai placeholder. Panduan ini merangkumi kod sumber penuh, struktur direktori, dan penerangan terperinci.
+
+---
+
+## 📁 **Struktur Projek `codepaul`**
+
+```
+codepaul/
+├── client/                 # Frontend React
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── App.css
+│   │   ├── index.js
+│   │   └── components/
+│   │       └── Hello.js
+│   ├── package.json
+│   └── README.md
+├── server/                 # Backend Node.js/Express
+│   ├── routes/
+│   │   └── api.js
+│   ├── server.js
+│   ├── package.json
+│   └── .env
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml
+├── .gitignore
+├── README.md
+└── LICENSE
+```
+
+---
+
+## 🛠 **Langkah 1: Persediaan Awal**
+
+Pastikan anda telah memasang:
+- **Node.js** (versi 18 atau lebih baru)
+- **npm** atau **yarn**
+- **Git**
+
+Buka terminal dan cipta direktori projek:
+
+```bash
+mkdir codepaul
+cd codepaul
+git init
+```
+
+---
+
+## 🔧 **Langkah 2: Backend (Node.js + Express)**
+
+### 2.1 Inisialisasi backend
+
+```bash
+mkdir server
+cd server
+npm init -y
+```
+
+### 2.2 Pasang dependencies
+
+```bash
+npm install express cors dotenv
+npm install --save-dev nodemon
+```
+
+### 2.3 Buat fail `server.js`
+
+```javascript
+// server/server.js
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use('/api', require('./routes/api'));
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Server is running' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+```
+
+### 2.4 Buat fail `routes/api.js`
+
+```javascript
+// server/routes/api.js
+const express = require('express');
+const router = express.Router();
+
+// Contoh data
+const items = [
+  { id: 1, name: 'Item 1' },
+  { id: 2, name: 'Item 2' },
+];
+
+router.get('/items', (req, res) => {
+  res.json(items);
+});
+
+router.post('/items', (req, res) => {
+  const newItem = { id: items.length + 1, name: req.body.name };
+  items.push(newItem);
+  res.status(201).json(newItem);
+});
+
+module.exports = router;
+```
+
+### 2.5 Ubah `package.json` untuk menambah skrip
+
+```json
+"scripts": {
+  "start": "node server.js",
+  "dev": "nodemon server.js"
+}
+```
+
+### 2.6 Buat fail `.env` (pilihan)
+
+```
+PORT=5000
+```
+
+---
+
+## ⚛️ **Langkah 3: Frontend (React)**
+
+### 3.1 Inisialisasi React dengan `create-react-app`
+
+```bash
+cd ..
+npx create-react-app client
+cd client
+```
+
+### 3.2 Ubah suai `src/App.js`
+
+```javascript
+// client/src/App.js
+import React, { useState, useEffect } from 'react';
+import './App.css';
+
+function App() {
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState('');
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const response = await fetch('/api/items');
+      const data = await response.json();
+      setItems(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addItem = async (e) => {
+    e.preventDefault();
+    if (!newItem.trim()) return;
+    try {
+      const response = await fetch('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newItem }),
+      });
+      const item = await response.json();
+      setItems([...items, item]);
+      setNewItem('');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>Senarai Item</h1>
+      <ul>
+        {items.map(item => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
+      <form onSubmit={addItem}>
+        <input
+          type="text"
+          value={newItem}
+          onChange={(e) => setNewItem(e.target.value)}
+          placeholder="Nama item baru"
+        />
+        <button type="submit">Tambah</button>
+      </form>
+    </div>
+  );
+}
+
+export default App;
+```
+
+### 3.3 Konfigurasi proxy (untuk pembangunan)
+
+Dalam `client/package.json`, tambah:
+
+```json
+"proxy": "http://localhost:5000"
+```
+
+Ini akan membolehkan React menggunakan `/api/items` tanpa perlu menulis URL penuh semasa pembangunan.
+
+### 3.4 Uji aplikasi
+
+- Jalankan backend: `cd server && npm run dev`
+- Di terminal lain: `cd client && npm start`
+- Buka `http://localhost:3000` – sepatutnya dapat melihat dan menambah item.
+
+---
+
+## 📦 **Langkah 4: Git dan GitHub**
+
+### 4.1 Buat fail `.gitignore` di root projek
+
+```gitignore
+# dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# environment
+.env
+.env.local
+
+# build
+dist/
+build/
+
+# logs
+*.log
+npm-debug.log*
+```
+
+### 4.2 Commit dan push ke GitHub
+
+```bash
+git add .
+git commit -m "Initial commit: React + Node.js + Express"
+git branch -M main
+git remote add origin https://github.com/codepaul/my-app.git   # ganti dengan URL repositori anda
+git push -u origin main
+```
+
+---
+
+## 🔄 **Langkah 5: CI/CD dengan GitHub Actions**
+
+Buat direktori `.github/workflows` dan fail `ci-cd.yml`.
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./client
+        run: npm run build
+
+      - name: Run backend tests (jika ada)
+        working-directory: ./server
+        run: npm test || echo "No tests yet"
+
+      - name: Run frontend tests
+        working-directory: ./client
+        run: npm test -- --watchAll=false || echo "No tests yet"
+
+      # Optional: Deploy to hosting service
+      # - name: Deploy to Vercel
+      #   run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+```
+
+Fail ini akan:
+- Checkout kod
+- Setup Node.js
+- Pasang dependencies untuk backend dan frontend
+- Build frontend
+- Jalankan ujian (jika ada)
+- (Pilihan) Deploy automatik jika anda sediakan token.
+
+---
+
+## 🚀 **Langkah 6: Deployment (Pilihan)**
+
+### 6.1 Deploy backend ke **Render** atau **Railway**
+- Buat akaun di [Render](https://render.com) atau [Railway](https://railway.app).
+- Hubungkan repositori GitHub.
+- Tetapkan arahan mula: `npm start` (dalam direktori `server`).
+- Tetapkan pemboleh ubah persekitaran (jika perlu).
+
+### 6.2 Deploy frontend ke **Vercel** atau **Netlify**
+- Di Vercel, import repositori dan tetapkan direktori root ke `client`.
+- Pastikan pemboleh ubah persekitaran `REACT_APP_API_URL` ditetapkan ke URL backend yang telah dideploy.
+
+### 6.3 Kemas kini GitHub Actions untuk deploy automatik
+Anda boleh tambah langkah deploy selepas build, menggunakan token rahsia (secrets) GitHub.
+
+---
+
+## 📄 **Langkah 7: Dokumentasi dan Lesen**
+
+### 7.1 Buat fail `README.md` di root projek
+
+```markdown
+# codepaul – Full‑Stack React + Node.js + Express
+
+Aplikasi contoh yang menunjukkan integrasi React frontend dengan Node.js/Express backend, serta CI/CD menggunakan GitHub Actions.
+
+## Teknologi
+- React (create-react-app)
+- Node.js + Express
+- GitHub Actions
+
+## Cara menjalankan
+1. Klon repositori: `git clone ...`
+2. Pasang dependencies backend: `cd server && npm install`
+3. Pasang dependencies frontend: `cd ../client && npm install`
+4. Jalankan backend: `cd server && npm run dev`
+5. Jalankan frontend: `cd client && npm start`
+6. Buka http://localhost:3000
+
+## CI/CD
+Setiap push ke branch `main` akan mencetuskan pipeline GitHub Actions yang membina dan menguji projek.
+
+## Lesen
+MIT
+```
+
+### 7.2 Tambah lesen MIT
+Buat fail `LICENSE` dan salin teks lesen MIT dari [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT). Gantikan tahun dan nama pemilik.
+
+---
+
+## 🧩 **Kesimpulan**
+
+Anda kini mempunyai projek lengkap **codepaul** yang menggunakan React, Node.js, Express, dan GitHub Actions. Anda boleh mengembangkan lagi dengan:
+- Menambah pangkalan data (MongoDB, PostgreSQL)
+- Autentikasi pengguna (JWT, Firebase)
+- Ujian unit dan integrasi
+- Penggunaan Docker untuk kontena
+- Deploy ke pelbagai platform
+
+Sekiranya anda memerlukan bantuan untuk mana-mana bahagian tertentu (contohnya integrasi database, atau mengkonfigurasi GitHub Actions untuk deploy sebenar), sila beritahu. Saya sedia membantu!
+
+**Nota:** Jika "codepaul" merujuk kepada sesuatu yang khusus (seperti nama pengguna GitHub atau tutorial), sila nyatakan supaya saya dapat menyesuaikan panduan ini dengan lebih tepat.
+# SLSA (Supply-chain Levels for Software Artifacts) - Dokumentasi Lengkap
+
+Saya akan membuat halaman HTML yang komprehensif tentang SLSA, framework keamanan supply chain software dari Google.
+
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLSA - Supply-chain Levels for Software Artifacts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #0288D1;
+            --accent: #7c4dff;
+            --dark: #1e1e1e;
+            --light: #f5f5f5;
+            --gray: #757575;
+            --danger: #d32f2f;
+            --warning: #ff8f00;
+            --success: #2e7d32;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            color: var(--primary-light);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            color: #e8eaed;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-light);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: var(--primary-light);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 0 100px;
+            text-align: center;
+            background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.1"><polygon fill="white" points="0,1000 1000,0 1000,1000"/></svg>');
+            background-size: cover;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero h1 span {
+            color: #a5d6a7;
+            font-style: italic;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto 2.5rem;
+            opacity: 0.9;
+        }
+
+        .pronounce {
+            background: rgba(0, 0, 0, 0.2);
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+        }
+
+        .pronounce i {
+            margin-right: 0.5rem;
+        }
+
+        /* Documentation Layout */
+        .doc-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 3rem;
+            margin: 3rem 0;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+        }
+
+        .sidebar h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .sidebar ul {
+            list-style: none;
+        }
+
+        .sidebar li {
+            margin-bottom: 0.8rem;
+        }
+
+        .sidebar a {
+            color: var(--dark);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar a:hover {
+            color: var(--primary);
+        }
+
+        .sidebar a i {
+            width: 20px;
+            color: var(--primary-light);
+        }
+
+        .content {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 4rem;
+            scroll-margin-top: 120px;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .section-title i {
+            margin-right: 15px;
+            font-size: 2rem;
+            color: var(--primary-light);
+        }
+
+        /* Cards */
+        .card {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* Level Tables */
+        .level-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .level-table th {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .level-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .level-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .level-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .level-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .level-badge.l1 { background: #ff8f00; }
+        .level-badge.l2 { background: #1976d2; }
+        .level-badge.l3 { background: #7b1fa2; }
+        .level-badge.l4 { background: #2e7d32; }
+
+        /* Track Cards */
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .track-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid var(--primary);
+        }
+
+        .track-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .track-card.build { border-top-color: #1976d2; }
+        .track-card.source { border-top-color: #7b1fa2; }
+
+        /* Code Container */
+        .code-container {
+            background: #1a1a1a;
+            color: #abb2bf;
+            border-radius: 10px;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .code-container pre {
+            margin: 0;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Threat Grid */
+        .threat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .threat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--danger);
+        }
+
+        .threat-card h4 {
+            color: var(--danger);
+            margin-bottom: 0.5rem;
+        }
+
+        .threat-card .example {
+            background: #f5f5f5;
+            padding: 0.8rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--gray);
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(30, 30, 30, 0.95);
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-links a:hover {
+            color: var(--primary-light);
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .doc-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+                order: 2;
+            }
+            
+            .content {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 150px 0 80px;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .content {
+                padding: 2rem;
+            }
+
+            .level-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SLSA Framework</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#about">Tentang SLSA</a>
+                    <a href="#levels">Security Levels</a>
+                    <a href="#tracks">Build & Source Track</a>
+                    <a href="#threats">Ancaman</a>
+                    <a href="#implementation">Implementasi</a>
+                    <a href="#website">Website SLSA</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>SLSA <span>(Supply-chain Levels for Software Artifacts)</span></h1>
+            <p>Framework keamanan end-to-end untuk integrity software supply chain</p>
+            <div class="pronounce">
+                <i class="fas fa-volume-up"></i> Dilafalkan "salsa" — seperti saus Meksiko!
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="doc-container">
+            <!-- Sidebar Navigation -->
+            <div class="sidebar">
+                <h3><i class="fas fa-bookmark"></i> Navigasi Cepat</h3>
+                <ul>
+                    <li><a href="#about"><i class="fas fa-info-circle"></i> Apa itu SLSA?</a></li>
+                    <li><a href="#levels"><i class="fas fa-chart-line"></i> Security Levels</a></li>
+                    <li><a href="#build-track"><i class="fas fa-cogs"></i> Build Track</a></li>
+                    <li><a href="#source-track"><i class="fas fa-code"></i> Source Track</a></li>
+                    <li><a href="#threats"><i class="fas fa-exclamation-triangle"></i> Ancaman & Mitigasi</a></li>
+                    <li><a href="#provenance"><i class="fas fa-file-signature"></i> Provenance</a></li>
+                    <li><a href="#terminology"><i class="fas fa-book"></i> Terminologi</a></li>
+                    <li><a href="#website"><i class="fas fa-globe"></i> Website Infrastructure</a></li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="content">
+                <!-- About Section -->
+                <section id="about">
+                    <h2 class="section-title"><i class="fas fa-info-circle"></i> Apa itu SLSA?</h2>
+                    
+                    <div class="card">
+                        <h3>Supply-chain Levels for Software Artifacts</h3>
+                        <p>SLSA (dilafalkan "salsa") adalah framework keamanan yang komprehensif untuk software supply chains. Dikembangkan oleh Google Open Source Security Team pada Juni 2021, SLSA bertujuan memastikan integritas software artifacts di seluruh siklus hidup supply chain .</p>
+                        
+                        <p>SLSA menyediakan :</p>
+                        <ul style="margin-top: 1rem; margin-left: 1.5rem;">
+                            <li><strong>Common vocabulary</strong> untuk berbicara tentang keamanan supply chain software</li>
+                            <li><strong>Cara mengamankan incoming supply chain</strong> dengan mengevaluasi trustworthiness artifacts yang dikonsumsi</li>
+                            <li><strong>Actionable checklist</strong> untuk meningkatkan keamanan software Anda sendiri</li>
+                            <li><strong>Cara mengukur upaya</strong> menuju kepatuhan dengan Secure Software Development Framework (SSDF)</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3>Mengapa SLSA Penting?</h3>
+                        <p>Setelah serangan besar seperti SolarWinds, pemerintah AS mengeluarkan Executive Order 14028 tentang Cybersecurity. Namun, perintah eksekutif dan standar NIST/ISO seringkali terlalu abstrak .</p>
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>Contoh persyaratan EO 14028 yang abstrak</span>
+                            </div>
+                            <pre><code class="language-text">
+PO.5.1: Separate and protect each environment involved in software development
+PO.5.2: Secure and harden development endpoints
+PW.6.1: Use compiler, interpreter, and build tools that offer security features
+PS.3.2: Collect, safeguard, maintain, and share provenance data for all software components
+                            </code></pre>
+                        </div>
+                        
+                        <p>SLSA menerjemahkan persyaratan abstrak ini menjadi langkah-langkah implementasi teknis yang konkret dan terukur .</p>
+                    </div>
+                </section>
+
+                <!-- Security Levels Section -->
+                <section id="levels">
+                    <h2 class="section-title"><i class="fas fa-chart-line"></i> SLSA Security Levels</h2>
+                    
+                    <div class="card">
+                        <h3>Empat Level Keamanan</h3>
+                        <p>SLSA diorganisasikan ke dalam serangkaian level yang menggambarkan peningkatan jaminan keamanan. Setiap level memberikan tingkat kepercayaan yang semakin tinggi bahwa software tidak dirusak dan dapat dilacak kembali ke sumbernya .</p>
+                        
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Level</th>
+                                    <th>Deskripsi</th>
+                                    <th>Contoh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="level-badge l1">SLSA 1</span></td>
+                                    <td>Dokumentasi proses build. Provenance tanpa perlindungan tamper.</td>
+                                    <td>Unsigned provenance</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="level-badge l2">SLSA 2</span></td>
+                                    <td>Menggunakan version control dan hosted build service dengan authenticated provenance.</td>
+                                    <td>Hosted source/build, signed provenance</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="level-badge l3">SLSA 3</span></td>
+                                    <td>Source dan build platforms memenuhi standar khusus untuk auditability dan integrity.</td>
+                                    <td>Security controls, non-falsifiable provenance</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="level-badge l4">SLSA 4</span></td>
+                                    <td>Two-person review dari semua perubahan dan hermetic/reproducible build.</td>
+                                    <td>Two-party review + hermetic builds</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="card">
+                        <h3>Persyaratan per Level</h3>
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Requirement</th>
+                                    <th>SLSA 1</th>
+                                    <th>SLSA 2</th>
+                                    <th>SLSA 3</th>
+                                    <th>SLSA 4</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Source - Version controlled</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Source - Verified history</td>
+                                    <td></td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Source - Two-person reviewed</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Build - Scripted build</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Build - Build service</td>
+                                    <td></td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Build - Hermetic</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Provenance - Available</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Provenance - Authenticated</td>
+                                    <td></td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Provenance - Non-falsifiable</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--gray);">Sumber: SLSA v0.1 levels documentation </p>
+                    </div>
+                </section>
+
+                <!-- Tracks Section -->
+                <section id="tracks">
+                    <h2 class="section-title"><i class="fas fa-code-branch"></i> Build Track & Source Track</h2>
+                    
+                    <div class="track-grid">
+                        <div class="track-card build" id="build-track">
+                            <h3><i class="fas fa-cogs"></i> Build Track</h3>
+                            <p><strong>Level:</strong> L0 - L3</p>
+                            <p>Build Track menggunakan provenance sebagai "receipt" untuk build software Anda. Menjawab tiga pertanyaan kritis :</p>
+                            <ul style="margin: 1rem 0 1rem 1.5rem;">
+                                <li><strong>Identity of the builder</strong> - Siapa yang membangun?</li>
+                                <li><strong>Build process used</strong> - Bagaimana dibangun?</li>
+                                <li><strong>Inputs used</strong> - Material apa yang digunakan?</li>
+                            </ul>
+                            
+                            <h4 style="margin-top: 1rem;">Level Build Track:</h4>
+                            <ul style="margin: 0.5rem 0 0 1.5rem;">
+                                <li><strong>L0</strong>: No guarantees</li>
+                                <li><strong>L1</strong>: Provenance exists (mencegah kesalahan)</li>
+                                <li><strong>L2</strong>: Hosted build platform (authenticated provenance)</li>
+                                <li><strong>L3</strong>: Hardened builds (isolasi kuat, tamper protection)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="track-card source" id="source-track">
+                            <h3><i class="fas fa-code"></i> Source Track</h3>
+                            <p><strong>Level:</strong> L1 - L4</p>
+                            <p>Source Track menjawab "Bagaimana kita tahu source code ini sesuai dengan yang diinginkan organisasi?" Fokus pada change management process .</p>
+                            
+                            <h4 style="margin-top: 1rem;">Level Source Track:</h4>
+                            <ul style="margin: 0.5rem 0 0 1.5rem;">
+                                <li><strong>L1</strong>: Version controlled (foundation)</li>
+                                <li><strong>L2</strong>: Source attestations and controls</li>
+                                <li><strong>L3</strong>: Protected references with continuous enforcement</li>
+                                <li><strong>L4</strong>: Two-party review (gold standard untuk production code)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Future Tracks</h3>
+                        <p>SLSA terus berkembang dengan penambahan track baru :</p>
+                        <ul style="margin-left: 1.5rem;">
+                            <li><strong>Build Environment Track</strong> - Dalam pengembangan</li>
+                            <li><strong>Dependency Track</strong> - Dalam pengembangan</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Threats Section -->
+                <section id="threats">
+                    <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Ancaman & Mitigasi</h2>
+                    
+                    <div class="threat-grid">
+                        <div class="threat-card">
+                            <h4>Submit bad code ke repository</h4>
+                            <p><strong>Contoh:</strong> Linux hypocrite commits - Researcher mencoba menyuntikkan kerentanan ke kernel Linux via patch .</p>
+                            <div class="example">
+                                <strong>Mitigasi SLSA:</strong> Two-person review di level 4
+                            </div>
+                        </div>
+                        
+                        <div class="threat-card">
+                            <h4>Compromise build platform</h4>
+                            <p><strong>Contoh:</strong> SolarWinds - Attacker mengkompromikan build platform dan memasang implant .</p>
+                            <div class="example">
+                                <strong>Mitigasi SLSA:</strong> Higher SLSA levels memerlukan security controls yang lebih kuat
+                            </div>
+                        </div>
+                        
+                        <div class="threat-card">
+                            <h4>Upload artifact yang tidak dibangun oleh CI/CD</h4>
+                            <p><strong>Contoh:</strong> CodeCov - Attacker menggunakan leaked credentials untuk upload malicious artifact ke GCS bucket .</p>
+                            <div class="example">
+                                <strong>Mitigasi SLSA:</strong> Provenance menunjukkan apakah artifact dibangun dengan cara yang diharapkan
+                            </div>
+                        </div>
+                        
+                        <div class="threat-card">
+                            <h4>Use bad dependency</h4>
+                            <p><strong>Contoh:</strong> event-stream - Attacker menambahkan dependency polos lalu memperbaruinya dengan kode malicious .</p>
+                            <div class="example">
+                                <strong>Mitigasi SLSA:</strong> Menerapkan SLSA secara rekursif ke semua dependencies
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Trust Boundaries</h3>
+                        <p>SLSA menetapkan tiga trust boundaries yang mendorong standar, attestation, dan technical controls yang tepat untuk mengamankan sistem dari ancaman .</p>
+                    </div>
+                </section>
+
+                <!-- Provenance Section -->
+                <section id="provenance">
+                    <h2 class="section-title"><i class="fas fa-file-signature"></i> Provenance</h2>
+                    
+                    <div class="card">
+                        <h3>Apa itu Provenance?</h3>
+                        <p>Provenance adalah metadata tentang bagaimana suatu artifact dibuat, termasuk proses build, top-level source, dan dependencies. Mengetahui provenance memungkinkan konsumen software membuat keputusan keamanan berbasis risiko .</p>
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>Contoh Provenance Format (JSON)</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                            <pre><code class="language-json">
+{
+  "_type": "https://in-toto.io/Statement/v0.1",
+  "subject": [{"name": "_", "digest": {"sha256": "..."}}],
+  "predicateType": "https://slsa.dev/provenance/v0.2",
+  "predicate": {
+    "builder": { "id": "https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@refs/tags/v1.5.0" },
+    "buildType": "https://github.com/slsa-framework/slsa-github-generator/generic@v1",
+    "invocation": {
+      "configSource": {
+        "uri": "git+https://github.com/owner/repo@refs/heads/main",
+        "digest": { "sha1": "..." },
+        "entryPoint": ".github/workflows/release.yml"
+      }
+    },
+    "materials": [
+      {
+        "uri": "git+https://github.com/owner/repo@refs/heads/main",
+        "digest": { "sha1": "..." }
+      }
+    ]
+  }
+}
+                            </code></pre>
+                        </div>
+                        
+                        <p>Untuk SLSA Build L2+, control plane menghasilkan provenance yang mendeskripsikan seluruh proses .</p>
+                    </div>
+                </section>
+
+                <!-- Terminology Section -->
+                <section id="terminology">
+                    <h2 class="section-title"><i class="fas fa-book"></i> Terminologi SLSA</h2>
+                    
+                    <div class="card">
+                        <h3>Core Terminology</h3>
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Term</th>
+                                    <th>Deskripsi</th>
+                                    <th>Contoh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Artifact</strong></td>
+                                    <td>Blob data yang immutable; terutama merujuk pada software</td>
+                                    <td>File, git commit, container image</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Attestation</strong></td>
+                                    <td>Pernyataan terautentikasi tentang software artifact</td>
+                                    <td>Signed SLSA Provenance file</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Source</strong></td>
+                                    <td>Artifact yang langsung dibuat atau direview oleh orang, tanpa modifikasi</td>
+                                    <td>Git commit hosted di GitHub</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Build</strong></td>
+                                    <td>Proses yang mentransformasi input artifacts menjadi output artifacts</td>
+                                    <td>Travis CI process</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Package</strong></td>
+                                    <td>Artifact yang didistribusikan</td>
+                                    <td>Docker image di DockerHub</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dependency</strong></td>
+                                    <td>Artifact yang menjadi input build process tapi bukan source</td>
+                                    <td>Alpine package</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 1rem;">Sumber: SLSA Build Terminology </p>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Build Model Terms</h3>
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Term</th>
+                                    <th>Deskripsi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Platform</strong></td>
+                                    <td>System yang mengizinkan tenant menjalankan builds</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Admin</strong></td>
+                                    <td>Privileged user dengan administrative access ke platform</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tenant</strong></td>
+                                    <td>Untrusted user yang membangun artifact di platform</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Control plane</strong></td>
+                                    <td>Komponen platform yang mengatur build execution dan menghasilkan provenance</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Build environment</strong></td>
+                                    <td>Independent execution context tempat build berjalan</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>External parameters</strong></td>
+                                    <td>Top-level, independent inputs ke build</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Website Infrastructure Section -->
+                <section id="website">
+                    <h2 class="section-title"><i class="fas fa-globe"></i> Website SLSA (slsa.dev)</h2>
+                    
+                    <div class="card">
+                        <h3>Infrastruktur Teknis</h3>
+                        <p>Website SLSA (slsa.dev) dibangun dengan teknologi berikut :</p>
+                        
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Komponen</th>
+                                    <th>Versi</th>
+                                    <th>Purpose</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Jekyll</td>
+                                    <td>3.9.5</td>
+                                    <td>Static site generator</td>
+                                </tr>
+                                <tr>
+                                    <td>github-pages</td>
+                                    <td>231</td>
+                                    <td>GitHub Pages compatibility</td>
+                                </tr>
+                                <tr>
+                                    <td>kramdown</td>
+                                    <td>2.4.0</td>
+                                    <td>Markdown processing</td>
+                                </tr>
+                                <tr>
+                                    <td>Netlify</td>
+                                    <td>-</td>
+                                    <td>Hosting dan deployment</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Layout Structure</h3>
+                        <p>Tiga main layout types :</p>
+                        <ul style="margin-left: 1.5rem;">
+                            <li><strong>default.html</strong>: Basic layout dengan minimal styling</li>
+                            <li><strong>standard.html</strong>: Digunakan untuk regular documentation pages</li>
+                            <li><strong>specifications.html</strong>: Specialized layout untuk specification pages</li>
+                        </ul>
+                        
+                        <h4 style="margin-top: 1.5rem;">Styling System</h4>
+                        <p>Styling diimplementasikan menggunakan SASS dengan customized Minima theme, fitur :</p>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Responsive layout dengan breakpoints</li>
+                            <li>Custom color scheme dengan hijau sebagai primary color</li>
+                            <li>Specialized styling untuk tables, code blocks, dan definition lists</li>
+                            <li>Dark background untuk navigation sidebar</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>CI/CD Pipeline</h3>
+                        <p>Deployment otomatis via Netlify :</p>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Automatic production builds dari <code>main</code> branch</li>
+                            <li>Automatic preview builds untuk pull requests</li>
+                            <li>DNS configuration: slsa.dev → Netlify</li>
+                            <li>Rollback capability via Netlify dashboard</li>
+                        </ul>
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>DNS Configuration</span>
+                            </div>
+                            <pre><code class="language-text">
+Domain: slsa.dev
+Type: ALIAS
+Target: apex-loadbalancer.netlify.com
+
+Domain: www.slsa.dev
+Type: CNAME
+Target: slsa.netlify.app
+                            </code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Local Development</h3>
+                        <p>Setup untuk local development environment :</p>
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>Setup Commands</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                            <pre><code class="language-bash">
+# Clone repository dan navigate ke /docs directory
+git clone https://github.com/slsa-framework/slsa.git
+cd slsa/docs
+
+# Install dependencies
+bundle install
+
+# Start development server
+netlify dev
+
+# Akses di http://localhost:8888
+                            </code></pre>
+                        </div>
+                        <p>Local development mendukung live reload, incremental builds, dan Netlify functions .</p>
+                    </div>
+                </section>
+
+                <!-- Implementation Section -->
+                <section id="implementation">
+                    <h2 class="section-title"><i class="fas fa-code"></i> Implementasi SLSA</h2>
+                    
+                    <div class="card">
+                        <h3>SLSA GitHub Generator</h3>
+                        <p>SLSA menyediakan generator untuk GitHub Actions yang secara otomatis menghasilkan provenance .</p>
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>.github/workflows/slsa.yml</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                            <pre><code class="language-yaml">
+name: SLSA provenance generator
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests }}"
+                            </code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>SLSA Verifier</h3>
+                        <p>SLSA Verifier digunakan untuk memverifikasi provenance artifacts .</p>
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <span>Verifikasi Provenance</span>
+                                <button class="copy-btn" onclick="copyCode(this)"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                            <pre><code class="language-bash">
+# Install SLSA Verifier
+go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@v2.4.0
+
+# Verifikasi artifact
+slsa-verifier verify-artifact artifact.bin \
+  --provenance-path artifact.intoto.jsonl \
+  --source-uri github.com/owner/repo \
+  --source-tag v1.2.3
+                            </code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>SLSA untuk Machine Learning</h3>
+                        <p>SLSA juga dapat diterapkan untuk ML models. Contoh implementasi untuk TensorFlow dan PyTorch models :</p>
+                        
+                        <table class="level-table">
+                            <thead>
+                                <tr>
+                                    <th>Workflow Argument</th>
+                                    <th>Training Framework</th>
+                                    <th>Model Format</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>tensorflow_model.keras</td><td>TensorFlow</td><td>Keras format</td></tr>
+                                <tr><td>tensorflow_hdf5_model.h5</td><td>TensorFlow</td><td>Legacy HDF5 format</td></tr>
+                                <tr><td>pytorch_model.pth</td><td>PyTorch</td><td>PyTorch default format</td></tr>
+                                <tr><td>pytorch_jitted_model.pt</td><td>PyTorch</td><td>PyTorch TorchScript format</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Single Page View Discussion -->
+                <section>
+                    <h2 class="section-title"><i class="fas fa-file"></i> Single Page View</h2>
+                    
+                    <div class="card">
+                        <h3>Teknis Single Page View di SLSA</h3>
+                        <p>Proyek SLSA menghadapi tantangan dalam mempertahankan "single page view" - menggabungkan seluruh spesifikasi dalam satu halaman HTML. Beberapa pertimbangan teknis :</p>
+                        
+                        <h4 style="margin-top: 1rem;">Keuntungan Single Page View:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Full-text search dengan browser find functionality</li>
+                            <li>Standard compatibility untuk ISO requirements</li>
+                            <li>Offline-friendly (satu file HTML)</li>
+                        </ul>
+                        
+                        <h4 style="margin-top: 1rem;">Tantangan:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Anchor conflicts - multiple chapters menggunakan ID yang sama (contoh: "Provenance")</li>
+                            <li>Multi-track scalability - panjang halaman membengkak dengan bertambahnya tracks</li>
+                            <li>Build complexity - perlu special handling untuk merge multiple Markdown files</li>
+                        </ul>
+                        
+                        <h4 style="margin-top: 1rem;">Solusi:</h4>
+                        <ul style="margin-left: 1.5rem;">
+                            <li>Anchor prefixing untuk menghindari naming conflicts</li>
+                            <li>CI validation untuk memeriksa duplicate anchors</li>
+                            <li>Selective single-paging - generate per track, bukan full spec</li>
+                        </ul>
+                        
+                        <p>Keputusan akhir: mempertahankan single page view dengan optimasi bertahap .</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <h3 style="font-size: 2rem; margin-bottom: 1rem;">SLSA Framework</h3>
+            <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.8;">Supply-chain Levels for Software Artifacts</p>
+            
+            <div class="social-links">
+                <a href="https://slsa.dev"><i class="fas fa-globe"></i></a>
+                <a href="https://github.com/slsa-framework"><i class="fab fa-github"></i></a>
+                <a href="https://twitter.com/slsa_framework"><i class="fab fa-twitter"></i></a>
+                <a href="https://slsa.dev/feed.xml"><i class="fas fa-rss"></i></a>
+            </div>
+            
+            <p style="margin-top: 2rem; opacity: 0.7;">&copy; 2025 SLSA Framework. Dokumentasi ini disusun berdasarkan spesifikasi resmi SLSA v1.1, v1.2, dan v0.1.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.6;">"SLSA" adalah merek dagang dari OpenSSF / Linux Foundation.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize code highlighting
+        hljs.highlightAll();
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(30, 30, 30, 0.98)';
+            } else {
+                header.style.background = 'rgba(30, 30, 30, 0.95)';
+            }
+        });
+
+        // Copy code functionality
+        function copyCode(button) {
+            const codeContainer = button.closest('.code-container');
+            const codeElement = codeContainer.querySelector('code');
+            const textArea = document.createElement('textarea');
+            textArea.value = codeElement.textContent;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Visual feedback
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }
+
+        // Animation for cards on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe cards for animation
+        document.querySelectorAll('.card, .track-card, .threat-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
+```
+
+## Fitur Lengkap Dokumentasi SLSA:
+
+### 📋 **Ringkasan SLSA**
+- **Apa itu SLSA?**: Framework keamanan supply chain dari Google
+- **Mengapa Penting?**: Menjawab kebutuhan keamanan pasca serangan SolarWinds
+- **Pronunication**: Dilafalkan "salsa" seperti saus Meksiko
+
+### 🔐 **Security Levels**
+- Level 0 hingga 4 dengan penjelasan detail
+- Tabel persyaratan per level (source, build, provenance)
+- Contoh implementasi setiap level
+
+### 🏗️ **Build Track & Source Track**
+- Build Track (L0-L3): Provenance untuk build integrity
+- Source Track (L1-L4): Keamanan source code dan change management
+- Perbandingan kedua track
+
+### 🛡️ **Ancaman & Mitigasi**
+- Contoh serangan nyata: Linux hypocrite commits, SolarWinds, CodeCov, event-stream
+- Cara SLSA memitigasi setiap ancaman
+- Trust boundaries dalam supply chain
+
+### 📄 **Provenance**
+- Definisi dan pentingnya provenance
+- Contoh format JSON provenance
+- Build provenance untuk SLSA L2+
+
+### 📚 **Terminologi Lengkap**
+- Core terms: artifact, attestation, source, build, package, dependency
+- Build model terms: platform, admin, tenant, control plane
+- Mapping ke real-world ecosystems
+
+### 🌐 **Website Infrastructure**
+- Teknologi: Jekyll, Netlify, GitHub Pages
+- Layout structure dan styling system
+- CI/CD pipeline dan DNS configuration
+- Local development setup
+
+### ⚙️ **Implementasi Praktis**
+- SLSA GitHub Generator untuk GitHub Actions
+- SLSA Verifier untuk memverifikasi provenance
+- SLSA untuk Machine Learning models (TensorFlow/PyTorch)
+
+Dokumentasi ini menyediakan panduan lengkap tentang SLSA framework, dari konsep dasar hingga implementasi teknis, berdasarkan spesifikasi resmi v1.1, v1.2, dan v0.1 .
