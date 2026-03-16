@@ -287,6 +287,39 @@ async def test_coordinator_handles_invalid_data(
         await coordinator._async_update_data()
 
 
+async def test_coordinator_skips_statistics_without_recorder(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_energy_site: AsyncMock,
+) -> None:
+    """Test the coordinator still updates state when recorder is unavailable."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_energy_site.energy_history.return_value = {
+        "response": {
+            "period": "day",
+            "time_series": [
+                {
+                    "timestamp": "2023-06-01T08:00:00-07:00",
+                    "solar_energy_exported": 1000,
+                },
+                {
+                    "timestamp": "2023-06-01T09:00:00-07:00",
+                    "solar_energy_exported": 500,
+                },
+            ],
+        }
+    }
+
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site
+    )
+    data = await coordinator._async_update_data()
+
+    assert coordinator.updated_once is True
+    assert data["solar_energy_exported"] == 1500
+
+
 async def test_coordinator_normalizes_timestamps_to_hour(
     recorder_mock: Recorder,
     hass: HomeAssistant,

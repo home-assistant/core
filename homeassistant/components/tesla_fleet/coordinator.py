@@ -32,11 +32,14 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 if TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
+
     from . import TeslaFleetConfigEntry
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
@@ -106,6 +109,13 @@ def _aggregate_energy_history_by_hour(
         (start, start.timestamp(), values)
         for start, values in sorted(hourly_periods.items())
     ]
+
+
+def _get_recorder_instance(hass: HomeAssistant) -> Recorder | None:
+    """Return the recorder instance if it is loaded."""
+    if DATA_INSTANCE not in hass.data:
+        return None
+    return get_instance(hass)
 
 
 def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
@@ -354,7 +364,13 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             return
 
         site_id = self.api.energy_site_id
-        recorder = get_instance(self.hass)
+        if (recorder := _get_recorder_instance(self.hass)) is None:
+            LOGGER.debug(
+                "Recorder not loaded, skipping external statistics for energy site %s",
+                site_id,
+            )
+            return
+
         statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
 
         # Fetch all existing last statistics in a single executor call.

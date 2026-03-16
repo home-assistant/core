@@ -29,6 +29,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.recorder import DATA_INSTANCE
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS
 from .coordinator import (
@@ -254,5 +255,5 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
         for key in ENERGY_HISTORY_FIELDS
     ]
 
-    if statistic_ids:
+    if statistic_ids and DATA_INSTANCE in hass.data:
         get_recorder_instance(hass).async_clear_statistics(statistic_ids)
