@@ -462,9 +462,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         resp = await session.post(
             self.authorize_url,
             data=self._device_authorization_data(),
-            headers={
-                "Accept": "application/json"
-            },  # Enforce JSON response. Github by default returns x-www-form-urlencoded. How flexible should we make this?
+            headers={"Accept": "application/json"},
         )
         if resp.status >= 400:
             try:
@@ -505,7 +503,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
 
     async def async_check_device_activation(self, device: dict) -> dict[str, str]:
         """Wait for the user to activate the device."""
-        expires_in = datetime.timestamp(datetime.now()) + device["expires_in"]
+        expires_at = datetime.timestamp(datetime.now()) + device["expires_in"]
         jitter = randint(1, 3)  # Jitter to avoid being throttled
         token_request = {
             "client_id": self.client_id,
@@ -515,7 +513,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
         session = async_get_clientsession(self.hass)
         interval = device.get("interval", 5)
         while True:
-            if expires_in < datetime.timestamp(datetime.now()):
+            if expires_at < datetime.timestamp(datetime.now()):
                 raise DeviceFlowTimeout
 
             try:
@@ -524,7 +522,7 @@ class DeviceFlowImplementation(AbstractOAuth2Implementation):
                         self.token_url,
                         data=token_request,
                         headers={"Accept": "application/json"},
-                    )  # Again, Github by default returns a form. Need flexibility or standard enforce?
+                    )
                     response = await resp.json()
             except TimeoutError as err:
                 _LOGGER.error("Timeout resolving OAuth token: %s", err)
