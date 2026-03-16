@@ -259,7 +259,7 @@ async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = result["result"]
-    assert config_entry.unique_id == "MP-60:192.168.1.100"
+    assert config_entry.unique_id == "mp-60:192.168.1.100"
     assert config_entry.title == "Living Room"
     assert config_entry.data[CONF_HOST] == "192.168.1.100"
     assert CONF_SERIAL_NUMBER not in config_entry.data

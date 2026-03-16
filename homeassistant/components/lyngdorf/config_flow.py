@@ -180,9 +180,9 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("cannot_connect")
 
         device_model_name = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
-        if not lookup_receiver_model(device_model_name):
+        if not (model := lookup_receiver_model(device_model_name)):
             raise AbortFlow("unsupported_model")
-        self._device_model = device_model_name
+        self._device_model = model.model_name
         self._device_serial_number = (
             discovery_info.upnp.get(ATTR_UPNP_SERIAL) or ""
         ).lower() or None
