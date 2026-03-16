@@ -410,6 +410,11 @@ async def test_browse_media(
         "children_media_class": None,
     }
 
+    assert response["success"]
+    assert response["result"]["media_content_id"] == "SERIES-UUID"
+    assert response["result"]["title"] == "SERIES"
+    assert response["result"]["children"][0] == expected_child_item
+
     # browse for season
     await client.send_json(
         {
