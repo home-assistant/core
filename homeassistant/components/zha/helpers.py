@@ -121,7 +121,10 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    DATA_DOMAIN_ENTITIES,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.logging import HomeAssistantQueueHandler
 
@@ -517,10 +520,18 @@ class ZHADeviceProxy(EventBase):
     ) -> None:
         """Handle an entity being removed from a device at runtime."""
         entity_registry = er.async_get(self.gateway_proxy.hass)
+        domain = Platform(event.platform)
         if entity_id := entity_registry.async_get_entity_id(
-            Platform(event.platform), DOMAIN, event.unique_id
+            domain, DOMAIN, event.unique_id
         ):
-            entity_registry.async_remove(entity_id)
+            domain_entities = self.gateway_proxy.hass.data.get(
+                DATA_DOMAIN_ENTITIES, {}
+            ).get(domain, {})
+            if (entity := domain_entities.get(entity_id)) is not None:
+                self.gateway_proxy.hass.async_create_task(
+                    entity.async_remove(),
+                    f"ZHA remove entity {entity_id}",
+                )
 
 
 class EntityReference(NamedTuple):
