@@ -34,10 +34,10 @@
       "fields": {
         "config_entry_id": {
           "name": "[%key:common::config_flow::data::config_entry%]",
-          "description": "The Apple TV to send text to."
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]"
         },
         "text": {
-          "name": "Text",
+          "name": "[%key:component::apple_tv::services::set_keyboard_text::fields::text::name%]",
           "description": "The text to append."
         }
       }
@@ -48,7 +48,7 @@
       "fields": {
         "config_entry_id": {
           "name": "[%key:common::config_flow::data::config_entry%]",
-          "description": "The Apple TV to clear text on."
+          "description": "[%key:component::apple_tv::services::set_keyboard_text::fields::config_entry_id::description%]"
         }
       }
     }
