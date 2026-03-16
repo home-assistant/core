@@ -40,7 +40,6 @@ _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 def is_closed(device: Device) -> bool | None:
     """Return if the cover is closed."""
-
     if state := device.states[OverkizState.CORE_OPEN_CLOSED]:
         return state.value == OverkizCommandParam.CLOSED
 
@@ -49,7 +48,6 @@ def is_closed(device: Device) -> bool | None:
 
 def is_closed_upper(device: Device) -> bool | None:
     """Return if the cover is closed."""
-
     if state := device.states[OverkizState.CORE_UPPER_OPEN_CLOSED]:
         return state.value == OverkizCommandParam.CLOSED
 
@@ -58,7 +56,6 @@ def is_closed_upper(device: Device) -> bool | None:
 
 def is_closed_slats(device: Device) -> bool | None:
     """Return if the cover slats are closed."""
-
     if state := device.states.get(OverkizState.CORE_SLATS_OPEN_CLOSED):
         return state.value == OverkizCommandParam.CLOSED
 
@@ -401,47 +398,45 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_position_state
 
-        if state_name and (state := self.device.states[state_name]):
-            position = state.value_as_int
+        if not state_name or not (state := self.device.states[state_name]):
+            return None
 
-            # Fallback for "My position" preset
-            if position == _POSITION_MY:
-                LOGGER.debug(
-                    "Overkiz cover position is invalid (%s). Device: %s, State: %s",
-                    _POSITION_MY,
-                    self.device.device_url,
-                    state_name,
-                )
+        position = state.value_as_int
 
-                if fallback_state := self.device.states[
-                    OverkizState.CORE_MEMORIZED_1_POSITION
-                ]:
-                    position = fallback_state.value_as_int
+        # Fallback for "My position" preset
+        if position == _POSITION_MY:
+            LOGGER.debug(
+                "Overkiz cover position is invalid (%s). Device: %s, State: %s",
+                _POSITION_MY,
+                self.device.device_url,
+                state_name,
+            )
 
-            # Fallback for "Unknown position" preset
-            if position == _POSITION_UNKNOWN:
-                LOGGER.debug(
-                    "Overkiz cover position is invalid (%s). Device: %s, State: %s",
-                    _POSITION_UNKNOWN,
-                    self.device.device_url,
-                    state_name,
-                )
+            if fallback_state := self.device.states[
+                OverkizState.CORE_MEMORIZED_1_POSITION
+            ]:
+                position = fallback_state.value_as_int
 
-                if fallback_state := self.device.states[
-                    OverkizState.CORE_TARGET_CLOSURE
-                ]:
-                    position = fallback_state.value_as_int
+        # Fallback for "Unknown position" preset
+        if position == _POSITION_UNKNOWN:
+            LOGGER.debug(
+                "Overkiz cover position is invalid (%s). Device: %s, State: %s",
+                _POSITION_UNKNOWN,
+                self.device.device_url,
+                state_name,
+            )
 
-            if position is None:
-                return None
+            if fallback_state := self.device.states[OverkizState.CORE_TARGET_CLOSURE]:
+                position = fallback_state.value_as_int
 
-            # Invert position if needed (some devices report 0 as open and 100 as closed)
-            if self.entity_description.invert_position:
-                position = 100 - position
+        if position is None:
+            return None
 
-            return position
+        # Invert position if needed (some devices report 0 as open and 100 as closed)
+        if self.entity_description.invert_position:
+            position = 100 - position
 
-        return None
+        return position
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -519,13 +514,15 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
-        if command := self.entity_description.open_command:
-            if self.is_running(command):
-                return True
+        if (command := self.entity_description.open_command) and self.is_running(
+            command
+        ):
+            return True
 
-        if command := self.entity_description.open_tilt_command:
-            if self.is_running(command):
-                return True
+        if (command := self.entity_description.open_tilt_command) and self.is_running(
+            command
+        ):
+            return True
 
         if self.moving_offset is None:
             return None
@@ -537,13 +534,15 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
-        if command := self.entity_description.close_command:
-            if self.is_running(command):
-                return True
+        if (command := self.entity_description.close_command) and self.is_running(
+            command
+        ):
+            return True
 
-        if command := self.entity_description.close_tilt_command:
-            if self.is_running(command):
-                return True
+        if (command := self.entity_description.close_tilt_command) and self.is_running(
+            command
+        ):
+            return True
 
         if self.moving_offset is None:
             return None
@@ -597,22 +596,20 @@ class OverkizLowSpeedCover(OverkizCover):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.async_set_cover_position_low_speed(**kwargs)
+        await self._async_set_cover_position_low_speed(kwargs[ATTR_POSITION])
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 100})
+        await self._async_set_cover_position_low_speed(100)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.async_set_cover_position_low_speed(**{ATTR_POSITION: 0})
+        await self._async_set_cover_position_low_speed(0)
 
-    async def async_set_cover_position_low_speed(self, **kwargs: Any) -> None:
+    async def _async_set_cover_position_low_speed(self, position: int) -> None:
         """Move the cover to a specific position with a low speed."""
-        position = 100 - kwargs.get(ATTR_POSITION, 0)
-
         await self.executor.async_execute_command(
             OverkizCommand.SET_CLOSURE_AND_LINEAR_SPEED,
-            position,
+            100 - position,
             OverkizCommandParam.LOWSPEED,
         )
