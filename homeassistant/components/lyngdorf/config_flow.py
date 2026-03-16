@@ -97,7 +97,9 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                     self._device_serial_number or f"{self._device_model}:{self._host}"
                 )
                 await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: self._host},
+                )
                 return await self._create_entry()
 
         return self.async_show_form(
