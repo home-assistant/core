@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     ATTR_MEDIA,
     ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MP_DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -18,7 +17,6 @@ from homeassistant.helpers import config_validation as cv, service
 from .const import DOMAIN
 
 JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
-    vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
 }
 
@@ -26,14 +24,12 @@ JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA = {
 def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     """If 'media' key exists, promote its fields to the top level."""
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
-        if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
+        if ATTR_MEDIA_CONTENT_ID in data:
             raise vol.Invalid(
-                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+                f"Play media cannot contain both '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}'"
             )
         media_data = data[ATTR_MEDIA]
 
-        if ATTR_MEDIA_CONTENT_TYPE in media_data:
-            data[ATTR_MEDIA_CONTENT_TYPE] = media_data[ATTR_MEDIA_CONTENT_TYPE]
         if ATTR_MEDIA_CONTENT_ID in media_data:
             data[ATTR_MEDIA_CONTENT_ID] = media_data[ATTR_MEDIA_CONTENT_ID]
 

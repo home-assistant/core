@@ -258,7 +258,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.session_id, [media_id], command
         )
 
-    def play_media_shuffle(self, media_content_type: MediaType | str, media_content_id: str) -> None:
+    def play_media_shuffle(self, media_content_id: str) -> None:
         """Play a piece of media on shuffle."""
         self.coordinator.api_client.jellyfin.remote_play_media(
             self.session_id, [media_content_id], "PlayShuffle"
