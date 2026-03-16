@@ -1,4 +1,4 @@
-"""Test for the Switchbot Battery Circulator Fan."""
+"""Test for the Switchbot (Battery) Circulator Fan."""
 
 from unittest.mock import patch
 
@@ -28,7 +28,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import AIR_PURIFIER_INFO, CIRCULATOR_FAN_INFO, configure_integration
+from . import (
+    AIR_PURIFIER_INFO,
+    BATTERY_CIRCULATOR_FAN_INFO,
+    CIRCULATOR_FAN_INFO,
+    configure_integration,
+)
 
 from tests.common import async_load_json_object_fixture, snapshot_platform
 
@@ -37,7 +42,8 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
     ("device_info", "entry_id"),
     [
         (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
-        (CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
     ],
 )
 async def test_coordinator_data_is_none(
@@ -58,10 +64,23 @@ async def test_coordinator_data_is_none(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+    ],
+)
+async def test_turn_on(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
+) -> None:
     """Test turning on the fan."""
     mock_list_devices.return_value = [
-        CIRCULATOR_FAN_INFO,
+        device_info,
     ]
     mock_get_status.side_effect = [
         {"power": "off", "mode": "direct", "fanSpeed": "0"},
@@ -70,7 +89,7 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = entry_id
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_OFF
@@ -87,12 +106,23 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+    ],
+)
 async def test_turn_off(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
 ) -> None:
     """Test turning off the fan."""
     mock_list_devices.return_value = [
-        CIRCULATOR_FAN_INFO,
+        device_info,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -101,7 +131,7 @@ async def test_turn_off(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = entry_id
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
@@ -118,12 +148,23 @@ async def test_turn_off(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+    ],
+)
 async def test_set_percentage(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
 ) -> None:
     """Test set percentage."""
     mock_list_devices.return_value = [
-        CIRCULATOR_FAN_INFO,
+        device_info,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -132,7 +173,7 @@ async def test_set_percentage(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = entry_id
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
@@ -149,12 +190,23 @@ async def test_set_percentage(
     mock_send_command.assert_called()
 
 
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+    ],
+)
 async def test_set_preset_mode(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
 ) -> None:
     """Test set preset mode."""
     mock_list_devices.return_value = [
-        CIRCULATOR_FAN_INFO,
+        device_info,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -163,7 +215,7 @@ async def test_set_preset_mode(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
+    entity_id = entry_id
     state = hass.states.get(entity_id)
 
     assert state.state == STATE_ON
