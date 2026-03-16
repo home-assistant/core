@@ -624,8 +624,8 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         description_placeholders["most_recent_chat"] = "Not available"
         try:
             most_recent_chat = await _get_most_recent_chat(service)
-        except TelegramError:
-            _LOGGER.warning("Error occurred while fetching recent chat", exc_info=True)
+        except TelegramError as err:
+            _LOGGER.warning("Error occurred while fetching recent chat: %s", err)
             most_recent_chat = None
         if most_recent_chat is not None:
             suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
@@ -659,10 +659,11 @@ async def _get_most_recent_chat(
         if service.app.most_recent_chat_id is None:
             return None
 
-        most_recent_chat_name = await _async_get_chat_name(
-            service.bot, service.app.most_recent_chat_id
-        )
-        return (service.app.most_recent_chat_id, most_recent_chat_name)
+        chat = await service.bot.get_chat(service.app.most_recent_chat_id)
+        assert (
+            chat.effective_name is not None
+        )  # value is based on title for group chats and full_name for private chats, either of which should always be present
+        return (service.app.most_recent_chat_id, chat.effective_name)
 
     # broadcast bot
     updates = await service.bot.get_updates(offset=0)
