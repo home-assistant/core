@@ -139,6 +139,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
     """Mock stream response."""
 
     async def mock_generator(events, **kwargs):
+        if isinstance(events, Exception):
+            raise events
         response = Response(
             id="resp_A",
             created_at=1700000000,
