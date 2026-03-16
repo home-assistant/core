@@ -1340,6 +1340,12 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "fetch_program_error": {
+      "message": "Error obtaining the selected or active program: {error}"
+    },
+    "no_program_to_start": {
+      "message": "No program to start"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
@@ -2072,6 +2078,24 @@
           "name": "Washer options"
         }
       }
+    },
+    "start_selected_program": {
+      "description": "Starts the already selected program. You can update start-only options to start the program with them or modify them on a program that is already active with a delayed start.",
+      "fields": {
+        "b_s_h_common_option_finish_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_finish_in_relative::name%]"
+        },
+        "b_s_h_common_option_start_in_relative": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::b_s_h_common_option_start_in_relative::name%]"
+        },
+        "device_id": {
+          "description": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::description%]",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::device_id::name%]"
+        }
+      },
+      "name": "Start selected program"
     }
   }
 }

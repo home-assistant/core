@@ -16,6 +16,7 @@ from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
+    TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
 
@@ -28,6 +29,7 @@ class TeslemetryData:
     energysites: list[TeslemetryEnergyData]
     scopes: list[Scope]
     stream: TeslemetryStream | None
+    metadata_coordinator: TeslemetryMetadataCoordinator
 
 
 @dataclass
