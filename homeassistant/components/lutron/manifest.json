@@ -7,6 +7,6 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pylutron"],
-  "requirements": ["pylutron==0.3.0"],
+  "requirements": ["pylutron==0.4.0"],
   "single_config_entry": true
 }
