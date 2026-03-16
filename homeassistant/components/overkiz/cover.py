@@ -40,9 +40,6 @@ def is_closed(device: Device) -> bool | None:
     if state := device.states[OverkizState.CORE_OPEN_CLOSED]:
         return state.value == OverkizCommandParam.CLOSED
 
-    if state := device.states.get(OverkizState.CORE_OPEN_CLOSED_UNKNOWN):
-        return state.value == OverkizCommandParam.CLOSED
-
     return None
 
 
