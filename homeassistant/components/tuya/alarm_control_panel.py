@@ -33,7 +33,13 @@ ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
             key=DPCode.MASTER_MODE,
             name="Alarm",
         ),
-    )
+    ),
+    DeviceCategory.WG2: (
+        AlarmControlPanelEntityDescription(
+            key=DPCode.MASTER_MODE,
+            name="Alarm",
+        ),
+    ),
 }
 
 
