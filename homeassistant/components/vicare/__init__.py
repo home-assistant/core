@@ -43,9 +43,7 @@ async def async_migrate_entry(
         _LOGGER.debug("Migrating ViCare config entry from version 1.1 to 1.2")
         data = {**config_entry.data}
         data.pop("heating_type", None)
-        hass.config_entries.async_update_entry(
-            config_entry, data=data, minor_version=2
-        )
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
         _LOGGER.debug("Migration to version 1.2 successful")
 
     return True
