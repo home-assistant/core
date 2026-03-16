@@ -127,6 +127,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_top_bottom_heating
             - cooking_oven_program_heating_mode_top_bottom_heating_eco
             - cooking_oven_program_heating_mode_bottom_heating
+            - cooking_oven_program_heating_mode_bread_baking
             - cooking_oven_program_heating_mode_pizza_setting
             - cooking_oven_program_heating_mode_slow_cook
             - cooking_oven_program_heating_mode_intensive_heat
@@ -135,6 +136,7 @@ set_program_and_options:
             - cooking_oven_program_heating_mode_frozen_heatup_special
             - cooking_oven_program_heating_mode_desiccation
             - cooking_oven_program_heating_mode_defrost
+            - cooking_oven_program_heating_mode_dough_proving
             - cooking_oven_program_heating_mode_proof
             - cooking_oven_program_heating_mode_hot_air_30_steam
             - cooking_oven_program_heating_mode_hot_air_60_steam
