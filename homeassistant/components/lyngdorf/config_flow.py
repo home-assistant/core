@@ -42,7 +42,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         self._device_model: str | None = None
         self._device_serial_number: str | None = None
         self._name: str | None = None
-        self._host: str
+        self._host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -146,6 +146,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
+        assert self._host
         if self._location:
             title = (
                 self._name or urlparse(self._location).hostname or DEFAULT_DEVICE_NAME
