@@ -156,6 +156,7 @@ async def test_cover_open(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
@@ -195,6 +196,7 @@ async def test_cover_close(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert get_state(hass, entity_id).state == expected_state
     assert_command_call(
@@ -322,6 +324,7 @@ async def test_cover_tilt_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert get_state(hass, entity_id).state == CoverState.OPENING
     assert_command_call(
         mock_client,
@@ -350,6 +353,7 @@ async def test_cover_tilt_services(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert get_state(hass, entity_id).state == CoverState.CLOSING
     assert_command_call(
         mock_client,
@@ -725,6 +729,7 @@ async def test_execution_tracking_sets_opening_state(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert get_state(hass, entity_id).state == CoverState.OPENING
 
     await async_deliver_events(
