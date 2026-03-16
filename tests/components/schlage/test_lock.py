@@ -64,7 +64,7 @@ async def test_lock_disconnected(
     mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
     mock_lock: Mock,
 ) -> None:
-    """Test lock jammed state."""
+    """Test lock disconnected/unavailable state."""
     mock_lock.connected = False
     with patch("homeassistant.components.schlage.PLATFORMS", [Platform.LOCK]):
         await mock_add_config_entry()

@@ -34,7 +34,7 @@ def mock_config_entry() -> MockSchlageConfigEntry:
 async def mock_added_config_entry(
     mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
 ) -> MockSchlageConfigEntry:
-    """Return a callback that adds and sets up a mock ConfigEntry in HA when awaited."""
+    """Return a mock ConfigEntry that has been added to and set up in Home Assistant."""
     return await mock_add_config_entry()
 
 

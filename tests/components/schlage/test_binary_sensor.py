@@ -45,12 +45,12 @@ async def test_keypad_disabled_binary_sensor(
         mock_lock.keypad_disabled.assert_called_once_with([])
 
 
-async def test_keypad_disabled_binary_sensor_use_previous_logs_on_failure(
+async def test_keypad_disabled_binary_sensor_logs_failure(
     hass: HomeAssistant,
     mock_lock: Mock,
     mock_add_config_entry: Callable[[], Awaitable[MockSchlageConfigEntry]],
 ) -> None:
-    """Test the keypad_disabled binary_sensor."""
+    """Test the keypad_disabled binary_sensor when loading logs fails."""
     mock_lock.keypad_disabled.reset_mock()
     mock_lock.keypad_disabled.return_value = True
     mock_lock.logs.reset_mock()
