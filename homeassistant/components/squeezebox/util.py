@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
-from inspect import iscoroutinefunction
 from typing import Any
 
 from homeassistant.exceptions import HomeAssistantError
@@ -20,10 +20,10 @@ async def safe_library_call(
 ) -> Any:
     """Call a player method (sync or async) safely and raise HomeAssistantError on failure."""
     try:
-        if iscoroutinefunction(method):
-            result = await method(*args, **kwargs)
-        else:
-            result = method(*args, **kwargs)
+        result = method(*args, **kwargs)
+        if asyncio.iscoroutine(result):
+            result = await result
+
     except ValueError:
         result = None
 
