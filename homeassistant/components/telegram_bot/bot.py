@@ -2,12 +2,11 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 import io
 import logging
 import os
 from pathlib import Path
-from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -48,8 +47,8 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.json import JsonValueType
-from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
     ATTR_ARGS,
@@ -73,9 +72,9 @@ from .const import (
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
+    ATTR_MESSAGE_ID,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
-    ATTR_MESSAGEID,
     ATTR_MSG,
     ATTR_MSGID,
     ATTR_ONE_TIME_KEYBOARD,
@@ -319,8 +318,8 @@ class TelegramNotificationService:
         """
         message_id: Any | None = None
         inline_message_id: int | None = None
-        if ATTR_MESSAGEID in msg_data:
-            message_id = msg_data[ATTR_MESSAGEID]
+        if ATTR_MESSAGE_ID in msg_data:
+            message_id = msg_data[ATTR_MESSAGE_ID]
             if (
                 isinstance(message_id, str)
                 and (message_id == "last")
@@ -430,48 +429,35 @@ class TelegramNotificationService:
             params[ATTR_PARSER] = None
         return params
 
-    async def _send_msgs(
+    async def _send_msg_formatted(
         self,
-        func_send: Callable,
+        func_send: Callable[..., Awaitable[Message]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
         **kwargs_msg: Any,
     ) -> dict[str, JsonValueType]:
-        """Sends a message to each of the targets.
-
-        If there is only 1 targtet, an error is raised if the send fails.
-        For multiple targets, errors are logged and the caller is responsible for checking which target is successful/failed based on the return value.
+        """Sends a message and formats the response.
 
         :return: dict with chat_id keys and message_id values for successful sends
         """
-        chat_ids = [kwargs_msg.pop(ATTR_CHAT_ID)]
-        msg_ids: dict[str, JsonValueType] = {}
-        for chat_id in chat_ids:
-            _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
+        chat_id: int = kwargs_msg.pop(ATTR_CHAT_ID)
+        _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
-            for file_type in _FILE_TYPES:
-                if file_type in kwargs_msg and isinstance(
-                    kwargs_msg[file_type], io.BytesIO
-                ):
-                    kwargs_msg[file_type].seek(0)
+        response: Message = await self._send_msg(
+            func_send,
+            message_tag,
+            chat_id,
+            *args_msg,
+            context=context,
+            **kwargs_msg,
+        )
 
-            response: Message = await self._send_msg(
-                func_send,
-                message_tag,
-                chat_id,
-                *args_msg,
-                context=context,
-                **kwargs_msg,
-            )
-            if response:
-                msg_ids[str(chat_id)] = response.id
-
-        return msg_ids
+        return {str(chat_id): response.id}
 
     async def _send_msg(
         self,
-        func_send: Callable,
+        func_send: Callable[..., Awaitable[Any]],
         message_tag: str | None,
         *args_msg: Any,
         context: Context | None = None,
@@ -491,7 +477,7 @@ class TelegramNotificationService:
 
             event_data: dict[str, Any] = {
                 ATTR_CHAT_ID: chat_id,
-                ATTR_MESSAGEID: message_id,
+                ATTR_MESSAGE_ID: message_id,
             }
             if message_tag is not None:
                 event_data[ATTR_MESSAGE_TAG] = message_tag
@@ -518,7 +504,7 @@ class TelegramNotificationService:
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_message,
             params[ATTR_MESSAGE_TAG],
             text,
@@ -579,11 +565,7 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         media: InputMedia
@@ -751,15 +733,11 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME, ""),
             password=kwargs.get(ATTR_PASSWORD, ""),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=(
-                get_default_context()
-                if kwargs.get(ATTR_VERIFY_SSL, False)
-                else get_default_no_verify_context()
-            ),
+            verify_ssl=kwargs.get(ATTR_VERIFY_SSL, False),
         )
 
         if file_type == SERVICE_SEND_PHOTO:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_photo,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -775,7 +753,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_STICKER:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -789,7 +767,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_VIDEO:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_video,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -805,7 +783,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_DOCUMENT:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_document,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -821,7 +799,7 @@ class TelegramNotificationService:
             )
 
         if file_type == SERVICE_SEND_VOICE:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_voice,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -836,7 +814,7 @@ class TelegramNotificationService:
             )
 
         # SERVICE_SEND_ANIMATION
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_animation,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
@@ -861,7 +839,7 @@ class TelegramNotificationService:
         stickerid = kwargs.get(ATTR_STICKER_ID)
 
         if stickerid:
-            return await self._send_msgs(
+            return await self._send_msg_formatted(
                 self.bot.send_sticker,
                 params[ATTR_MESSAGE_TAG],
                 chat_id=kwargs[ATTR_CHAT_ID],
@@ -886,7 +864,7 @@ class TelegramNotificationService:
         latitude = float(latitude)
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_location,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
@@ -911,7 +889,7 @@ class TelegramNotificationService:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
-        return await self._send_msgs(
+        return await self._send_msg_formatted(
             self.bot.send_poll,
             params[ATTR_MESSAGE_TAG],
             chat_id=kwargs[ATTR_CHAT_ID],
@@ -1041,12 +1019,14 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = HTTPXRequest(proxy=proxy)
     else:
         request = HTTPXRequest(
             connection_pool_size=8,
             read_timeout=read_timeout,
             media_write_timeout=media_write_timeout,
         )
+        get_updates_request = None
 
     base_url: str = p_config[CONF_API_ENDPOINT]
 
@@ -1055,6 +1035,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
         base_url=f"{base_url}/bot",
         base_file_url=f"{base_url}/file/bot",
         request=request,
+        get_updates_request=get_updates_request,
     )
 
 
@@ -1065,7 +1046,7 @@ async def load_data(
     username: str,
     password: str,
     authentication: str | None,
-    verify_ssl: SSLContext,
+    verify_ssl: bool,
     num_retries: int = 5,
 ) -> io.BytesIO:
     """Load data into ByteIO/File container from a source."""
@@ -1081,33 +1062,29 @@ async def load_data(
         elif authentication == HTTP_BASIC_AUTHENTICATION:
             params["auth"] = httpx.BasicAuth(username, password)
 
-        if verify_ssl is not None:
-            params["verify"] = verify_ssl
-
         retry_num = 0
-        async with httpx.AsyncClient(
-            timeout=DEFAULT_TIMEOUT_SECONDS, headers=headers, **params
-        ) as client:
+        async with get_async_client(hass, verify_ssl) as client:
             while retry_num < num_retries:
                 try:
-                    req = await client.get(url)
+                    response = await client.get(
+                        url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
+                    )
                 except (httpx.HTTPError, httpx.InvalidURL) as err:
                     raise HomeAssistantError(
-                        f"Failed to load URL: {err!s}",
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
                         translation_placeholders={"error": str(err)},
                     ) from err
 
-                if req.status_code != 200:
+                if response.status_code != 200:
                     _LOGGER.warning(
                         "Status code %s (retry #%s) loading %s",
-                        req.status_code,
+                        response.status_code,
                         retry_num + 1,
                         url,
                     )
                 else:
-                    data = io.BytesIO(req.content)
+                    data = io.BytesIO(response.content)
                     if data.read():
                         data.seek(0)
                         data.name = url
@@ -1120,23 +1097,20 @@ async def load_data(
                         1
                     )  # Add a sleep to allow other async operations to proceed
             raise HomeAssistantError(
-                f"Failed to load URL: {req.status_code}",
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(req.status_code)},
+                translation_placeholders={"error": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
             return await hass.async_add_executor_job(_read_file_as_bytesio, filepath)
 
         raise ServiceValidationError(
-            "File path has not been configured in allowlist_external_dirs.",
             translation_domain=DOMAIN,
             translation_key="allowlist_external_dirs_error",
         )
     else:
         raise ServiceValidationError(
-            "URL or File is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "URL or File"},
@@ -1151,7 +1125,6 @@ def _validate_credentials_input(
         and not username
     ):
         raise ServiceValidationError(
-            "Username is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Username"},
@@ -1167,7 +1140,6 @@ def _validate_credentials_input(
         and not password
     ):
         raise ServiceValidationError(
-            "Password is required.",
             translation_domain=DOMAIN,
             translation_key="missing_input",
             translation_placeholders={"field": "Password"},
@@ -1183,7 +1155,6 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
             return data
     except OSError as err:
         raise HomeAssistantError(
-            f"Failed to load file: {err!s}",
             translation_domain=DOMAIN,
             translation_key="failed_to_load_file",
             translation_placeholders={"error": str(err)},

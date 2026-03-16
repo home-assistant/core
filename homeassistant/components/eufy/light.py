@@ -75,7 +75,7 @@ class EufyHomeLight(LightEntity):
         self._attr_is_on = self._bulb.power
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(self._brightness * 255 / 100)
 
@@ -88,7 +88,7 @@ class EufyHomeLight(LightEntity):
         )
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color of this light."""
         return self._hs
 

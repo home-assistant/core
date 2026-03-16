@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfElectricPotential, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -58,6 +63,15 @@ SENSORS: tuple[EgaugeSensorEntityDescription, ...] = (
         native_value_fn=lambda data, register: data.measurements[register],
         available_fn=lambda data, register: register in data.measurements,
         supported_fn=lambda register_info: register_info.type == RegisterType.VOLTAGE,
+    ),
+    EgaugeSensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_value_fn=lambda data, register: data.measurements[register],
+        available_fn=lambda data, register: register in data.measurements,
+        supported_fn=lambda register_info: register_info.type == RegisterType.CURRENT,
     ),
 )
 

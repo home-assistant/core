@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:gate"
+    },
+    "opened": {
+      "trigger": "mdi:gate-open"
+    }
+  }
+}

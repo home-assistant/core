@@ -25,7 +25,9 @@ from homeassistant.helpers.issue_registry import (
 
 from .const import DOMAIN
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -135,10 +137,12 @@ class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
         """Return true if switch is on."""
         return self.entity_description.value_fn(self.robot)
 
+    @whisker_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.entity_description.set_fn(self.robot, True)
 
+    @whisker_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.robot, False)

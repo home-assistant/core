@@ -678,6 +678,49 @@ async def test_hmip_light_hs(
     }
 
 
+async def test_hmip_light_hs_monochrome(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipLight with monochrome mode (no hue/saturation support)."""
+    entity_id = "light.rgbw_controller_channel1"
+    entity_name = "RGBW Controller Channel1"
+    device_model = "HmIP-RGBW"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["RGBW Controller"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    # Simulate monochrome mode by setting hue and saturationLevel to None
+    await async_manipulate_test_data(hass, hmip_device, "hue", None, channel=1)
+    await async_manipulate_test_data(
+        hass, hmip_device, "saturationLevel", None, channel=1
+    )
+    await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0.5, channel=1)
+
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+
+    service_call_counter = len(hmip_device.functionalChannels[1].mock_calls)
+
+    # Test turning on in monochrome mode - should use set_dim_level_async
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": entity_id, ATTR_BRIGHTNESS: 200},
+        blocking=True,
+    )
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
+    assert hmip_device.functionalChannels[1].mock_calls[-1][0] == "set_dim_level_async"
+    assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {
+        "dim_level": 0.78,
+    }
+
+
 async def test_hmip_wired_push_button_led(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:

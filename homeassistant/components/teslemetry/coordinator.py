@@ -70,7 +70,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: Vehicle,
-        product: dict,
+        product: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
@@ -104,6 +104,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
+
         return flatten(data)
 
 
@@ -118,7 +119,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: EnergySite,
-        data: dict,
+        data: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
@@ -139,7 +140,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
-            data = (await self.api.live_status())["response"]
+            data: dict[str, Any] = (await self.api.live_status())["response"]
         except (InvalidToken, SubscriptionRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
@@ -170,7 +171,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         hass: HomeAssistant,
         config_entry: TeslemetryConfigEntry,
         api: EnergySite,
-        product: dict,
+        product: dict[str, Any],
     ) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
@@ -200,7 +201,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from e
-        return flatten(data)
+
+        return flatten(
+            data,
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+        )
 
 
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):

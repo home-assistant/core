@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pysaunum import SaunumClient, SaunumConnectionError
+from pysaunum import SaunumClient, SaunumConnectionError, SaunumTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
 
     try:
         client = await SaunumClient.create(host)
-    except SaunumConnectionError as exc:
+    except (SaunumConnectionError, SaunumTimeoutError) as exc:
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 
     entry.async_on_unload(client.async_close)

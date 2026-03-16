@@ -6,24 +6,24 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.satel_integra import (
+from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
     CONF_SWITCHABLE_OUTPUT_NUMBER,
     CONF_ZONE_NUMBER,
     CONF_ZONE_TYPE,
+    DEFAULT_PORT,
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_PARTITION,
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
-from homeassistant.components.satel_integra.const import DEFAULT_PORT
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_CODE = "1234"
 MOCK_CONFIG_DATA = {CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT}
@@ -79,11 +79,14 @@ MOCK_SWITCHABLE_OUTPUT_SUBENTRY = ConfigSubentry(
 )
 
 
+@pytest.mark.usefixtures("patch_debounce")
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Set up the component."""
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 

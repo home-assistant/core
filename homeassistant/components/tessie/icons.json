@@ -217,9 +217,6 @@
       "energy_left": {
         "default": "mdi:battery"
       },
-      "energy_remaining": {
-        "default": "mdi:battery-medium"
-      },
       "generator_power": {
         "default": "mdi:generator-stationary"
       },

@@ -406,6 +406,12 @@
       "paired_camera": {
         "name": "Paired camera"
       },
+      "ptz_patrol": {
+        "name": "PTZ patrol",
+        "state": {
+          "stop": "[%key:common::state::stopped%]"
+        }
+      },
       "recording_mode": {
         "name": "Recording mode",
         "state": {
@@ -668,6 +674,9 @@
     "not_authorized": {
       "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
+    "not_ptz_camera": {
+      "message": "Camera {camera_name} does not support PTZ"
+    },
     "only_music_supported": {
       "message": "Only music media type is supported"
     },
@@ -676,6 +685,9 @@
     },
     "protect_version": {
       "message": "Your UniFi Protect version ({current_version}) is too old. Minimum required: {min_version}"
+    },
+    "ptz_preset_not_found": {
+      "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
     },
     "service_error": {
       "message": "Error calling UniFi Protect service, check the logs for more details"
@@ -775,6 +787,20 @@
         }
       },
       "name": "Get user keyring info"
+    },
+    "ptz_goto_preset": {
+      "description": "Moves a PTZ camera to a saved preset position.",
+      "fields": {
+        "device_id": {
+          "description": "The PTZ camera to move.",
+          "name": "[%key:component::camera::title%]"
+        },
+        "preset": {
+          "description": "The name of the preset position to move to. Use 'Home' for the home position.",
+          "name": "Preset"
+        }
+      },
+      "name": "PTZ go to preset"
     },
     "remove_doorbell_text": {
       "description": "Removes an existing custom message for doorbells.",

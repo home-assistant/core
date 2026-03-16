@@ -5758,7 +5758,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -5770,7 +5770,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.qi94v9dmdx4fkpncqldphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_current-state]
@@ -5779,7 +5779,7 @@
       'device_class': 'current',
       'friendly_name': '断路器HA Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.duan_lu_qi_ha_phase_a_current',
@@ -5818,7 +5818,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -5830,7 +5830,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.qi94v9dmdx4fkpncqldphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_power-state]
@@ -5839,7 +5839,7 @@
       'device_class': 'power',
       'friendly_name': '断路器HA Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.duan_lu_qi_ha_phase_a_power',
@@ -5887,7 +5887,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.qi94v9dmdx4fkpncqldphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.duan_lu_qi_ha_phase_a_voltage-state]
@@ -5896,7 +5896,7 @@
       'device_class': 'voltage',
       'friendly_name': '断路器HA Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.duan_lu_qi_ha_phase_a_voltage',
@@ -6279,7 +6279,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -6291,7 +6291,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_current-state]
@@ -6300,7 +6300,7 @@
       'device_class': 'current',
       'friendly_name': 'Edesanya Energy Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_a_current',
@@ -6339,7 +6339,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -6351,7 +6351,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_power-state]
@@ -6360,7 +6360,7 @@
       'device_class': 'power',
       'friendly_name': 'Edesanya Energy Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_a_power',
@@ -6408,7 +6408,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_a_voltage-state]
@@ -6417,7 +6417,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Edesanya Energy Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_a_voltage',
@@ -6456,7 +6456,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -6468,7 +6468,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_current',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_belectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_current-state]
@@ -6477,7 +6477,7 @@
       'device_class': 'current',
       'friendly_name': 'Edesanya Energy Phase B current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_b_current',
@@ -6516,7 +6516,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -6528,7 +6528,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_power',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_bpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_power-state]
@@ -6537,7 +6537,7 @@
       'device_class': 'power',
       'friendly_name': 'Edesanya Energy Phase B power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_b_power',
@@ -6585,7 +6585,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_bvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_b_voltage-state]
@@ -6594,7 +6594,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Edesanya Energy Phase B voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_b_voltage',
@@ -6633,7 +6633,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -6645,7 +6645,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_current',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_celectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_current-state]
@@ -6654,7 +6654,7 @@
       'device_class': 'current',
       'friendly_name': 'Edesanya Energy Phase C current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_c_current',
@@ -6693,7 +6693,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -6705,7 +6705,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_power',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_cpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_power-state]
@@ -6714,7 +6714,7 @@
       'device_class': 'power',
       'friendly_name': 'Edesanya Energy Phase C power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_c_power',
@@ -6762,7 +6762,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
     'unique_id': 'tuya.vcrfgwvbuybgnj3zqldphase_cvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.edesanya_energy_phase_c_voltage-state]
@@ -6771,7 +6771,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Edesanya Energy Phase C voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.edesanya_energy_phase_c_voltage',
@@ -12497,7 +12497,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -12509,7 +12509,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.6pd3bkidqldphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_current-state]
@@ -12518,7 +12518,7 @@
       'device_class': 'current',
       'friendly_name': 'Medidor de Energia Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_a_current',
@@ -12557,7 +12557,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -12569,7 +12569,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.6pd3bkidqldphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_power-state]
@@ -12578,7 +12578,7 @@
       'device_class': 'power',
       'friendly_name': 'Medidor de Energia Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_a_power',
@@ -12626,7 +12626,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.6pd3bkidqldphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_a_voltage-state]
@@ -12635,7 +12635,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Medidor de Energia Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_a_voltage',
@@ -12674,7 +12674,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -12686,7 +12686,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_current',
     'unique_id': 'tuya.6pd3bkidqldphase_belectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_current-state]
@@ -12695,7 +12695,7 @@
       'device_class': 'current',
       'friendly_name': 'Medidor de Energia Phase B current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_b_current',
@@ -12734,7 +12734,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -12746,7 +12746,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_power',
     'unique_id': 'tuya.6pd3bkidqldphase_bpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_power-state]
@@ -12755,7 +12755,7 @@
       'device_class': 'power',
       'friendly_name': 'Medidor de Energia Phase B power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_b_power',
@@ -12803,7 +12803,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
     'unique_id': 'tuya.6pd3bkidqldphase_bvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_b_voltage-state]
@@ -12812,7 +12812,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Medidor de Energia Phase B voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_b_voltage',
@@ -12851,7 +12851,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -12863,7 +12863,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_current',
     'unique_id': 'tuya.6pd3bkidqldphase_celectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_current-state]
@@ -12872,7 +12872,7 @@
       'device_class': 'current',
       'friendly_name': 'Medidor de Energia Phase C current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_c_current',
@@ -12911,7 +12911,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -12923,7 +12923,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_power',
     'unique_id': 'tuya.6pd3bkidqldphase_cpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_power-state]
@@ -12932,7 +12932,7 @@
       'device_class': 'power',
       'friendly_name': 'Medidor de Energia Phase C power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_c_power',
@@ -12980,7 +12980,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
     'unique_id': 'tuya.6pd3bkidqldphase_cvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.medidor_de_energia_phase_c_voltage-state]
@@ -12989,7 +12989,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Medidor de Energia Phase C voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.medidor_de_energia_phase_c_voltage',
@@ -13199,7 +13199,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -13211,7 +13211,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.meter_phase_a_current-state]
@@ -13220,7 +13220,7 @@
       'device_class': 'current',
       'friendly_name': 'Meter Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meter_phase_a_current',
@@ -13259,7 +13259,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -13271,7 +13271,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.meter_phase_a_power-state]
@@ -13280,7 +13280,7 @@
       'device_class': 'power',
       'friendly_name': 'Meter Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meter_phase_a_power',
@@ -13328,7 +13328,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.meter_phase_a_voltage-state]
@@ -13337,7 +13337,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Meter Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.meter_phase_a_voltage',
@@ -13490,7 +13490,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -13502,7 +13502,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_current-state]
@@ -13511,7 +13511,7 @@
       'device_class': 'current',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_current',
@@ -13550,7 +13550,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -13562,7 +13562,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_power-state]
@@ -13571,7 +13571,7 @@
       'device_class': 'power',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_power',
@@ -13619,7 +13619,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_a_voltage-state]
@@ -13628,7 +13628,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_a_voltage',
@@ -13667,7 +13667,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -13679,7 +13679,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_current',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_belectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_current-state]
@@ -13688,7 +13688,7 @@
       'device_class': 'current',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase B current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_current',
@@ -13727,7 +13727,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -13739,7 +13739,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_power',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_bpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_power-state]
@@ -13748,7 +13748,7 @@
       'device_class': 'power',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase B power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_power',
@@ -13796,7 +13796,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_bvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_b_voltage-state]
@@ -13805,7 +13805,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase B voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_b_voltage',
@@ -13844,7 +13844,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -13856,7 +13856,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_current',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_celectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_current-state]
@@ -13865,7 +13865,7 @@
       'device_class': 'current',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase C current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_current',
@@ -13904,7 +13904,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -13916,7 +13916,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_power',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_cpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_power-state]
@@ -13925,7 +13925,7 @@
       'device_class': 'power',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase C power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_power',
@@ -13973,7 +13973,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
     'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_cvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.metering_3pn_wifi_stable_phase_c_voltage-state]
@@ -13982,7 +13982,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Metering_3PN_WiFi_stable Phase C voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.metering_3pn_wifi_stable_phase_c_voltage',
@@ -15292,7 +15292,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -15304,7 +15304,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_current-state]
@@ -15313,7 +15313,7 @@
       'device_class': 'current',
       'friendly_name': 'P1 Energia Elettrica Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_a_current',
@@ -15352,7 +15352,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -15364,7 +15364,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_power-state]
@@ -15373,7 +15373,7 @@
       'device_class': 'power',
       'friendly_name': 'P1 Energia Elettrica Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_a_power',
@@ -15421,7 +15421,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_voltage-state]
@@ -15430,7 +15430,7 @@
       'device_class': 'voltage',
       'friendly_name': 'P1 Energia Elettrica Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_a_voltage',
@@ -15469,7 +15469,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -15481,7 +15481,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_current',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_belectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_current-state]
@@ -15490,7 +15490,7 @@
       'device_class': 'current',
       'friendly_name': 'P1 Energia Elettrica Phase B current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_b_current',
@@ -15529,7 +15529,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -15541,7 +15541,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_power',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_bpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_power-state]
@@ -15550,7 +15550,7 @@
       'device_class': 'power',
       'friendly_name': 'P1 Energia Elettrica Phase B power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_b_power',
@@ -15598,7 +15598,7 @@
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_bvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_voltage-state]
@@ -15607,7 +15607,7 @@
       'device_class': 'voltage',
       'friendly_name': 'P1 Energia Elettrica Phase B voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_b_voltage',
@@ -15646,7 +15646,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+        'suggested_unit_of_measurement': 'A',
       }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
@@ -15658,7 +15658,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_current',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_celectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_current-state]
@@ -15667,7 +15667,7 @@
       'device_class': 'current',
       'friendly_name': 'P1 Energia Elettrica Phase C current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_c_current',
@@ -15706,7 +15706,7 @@
         'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+        'suggested_unit_of_measurement': 'kW',
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
@@ -15718,7 +15718,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_power',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_cpower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_power-state]
@@ -15727,7 +15727,7 @@
       'device_class': 'power',
       'friendly_name': 'P1 Energia Elettrica Phase C power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_c_power',
@@ -15775,7 +15775,7 @@
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
     'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_cvoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_voltage-state]
@@ -15784,7 +15784,7 @@
       'device_class': 'voltage',
       'friendly_name': 'P1 Energia Elettrica Phase C voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.p1_energia_elettrica_phase_c_voltage',
@@ -24209,7 +24209,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_current',
     'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_aelectriccurrent',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    'unit_of_measurement': 'A',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_current-state]
@@ -24218,7 +24218,7 @@
       'device_class': 'current',
       'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      'unit_of_measurement': 'A',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_current',
@@ -24266,7 +24266,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_power',
     'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_apower',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'kW',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_power-state]
@@ -24275,7 +24275,7 @@
       'device_class': 'power',
       'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'kW',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_power',
@@ -24323,7 +24323,7 @@
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
     'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_avoltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'unit_of_measurement': 'V',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_voltage-state]
@@ -24332,7 +24332,7 @@
       'device_class': 'voltage',
       'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': 'V',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_voltage',
