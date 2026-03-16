@@ -1,0 +1,99 @@
+# serializer version: 1
+# name: test_entities[scene.test_gateway_kitchen_bright-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.test_gateway_kitchen_bright',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Kitchen Bright',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Kitchen Bright',
+    'platform': 'sunricher_dali',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'scene_0002_0000_6A242121110E',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[scene.test_gateway_kitchen_bright-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Gateway Kitchen Bright',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.test_gateway_kitchen_bright',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_entities[scene.test_gateway_living_room_evening-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'scene',
+    'entity_category': None,
+    'entity_id': 'scene.test_gateway_living_room_evening',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Living Room Evening',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Living Room Evening',
+    'platform': 'sunricher_dali',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'scene_0001_0000_6A242121110E',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[scene.test_gateway_living_room_evening-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Gateway Living Room Evening',
+    }),
+    'context': <ANY>,
+    'entity_id': 'scene.test_gateway_living_room_evening',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

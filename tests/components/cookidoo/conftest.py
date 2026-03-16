@@ -11,6 +11,7 @@ from cookidoo_api import (
     CookidooSubscription,
     CookidooUserInfo,
 )
+from cookidoo_api.types import CookidooCalendarDay, CookidooCalendarDayRecipe
 import pytest
 
 from homeassistant.components.cookidoo.const import DOMAIN
@@ -65,6 +66,21 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
         client.login.return_value = CookidooAuthResponse(
             **load_json_object_fixture("login.json", DOMAIN)
         )
+        client.get_recipes_in_calendar_week.return_value = [
+            CookidooCalendarDay(
+                id=day["id"],
+                title=day["title"],
+                recipes=[
+                    CookidooCalendarDayRecipe(
+                        id=recipe["id"],
+                        name=recipe["name"],
+                        total_time=recipe["total_time"],
+                    )
+                    for recipe in day["recipes"]
+                ],
+            )
+            for day in load_json_object_fixture("calendar_week.json", DOMAIN)["data"]
+        ]
         yield client
 
 

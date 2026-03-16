@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -193,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -249,6 +253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -305,6 +310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -361,6 +367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -417,6 +424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiation level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -472,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

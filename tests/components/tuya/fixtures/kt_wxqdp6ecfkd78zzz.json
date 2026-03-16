@@ -1,0 +1,152 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Mini-Split",
+  "category": "kt",
+  "product_id": "wxqdp6ecfkd78zzz",
+  "product_name": "Air Conditioner",
+  "online": true,
+  "sub": false,
+  "time_zone": "-07:00",
+  "active_time": "2024-07-06T03:42:10+00:00",
+  "create_time": "2024-07-06T03:42:10+00:00",
+  "update_time": "2024-07-06T03:42:10+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103/F",
+        "min": 160,
+        "max": 900,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["cold", "hot", "wet", "wind", "auto"]
+      }
+    },
+    "mode_eco": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "heat": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_horizontal": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sleep": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "health": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103/F",
+        "min": 160,
+        "max": 900,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103/F",
+        "min": -300,
+        "max": 1760,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["cold", "hot", "wet", "wind", "auto"]
+      }
+    },
+    "mode_eco": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "heat": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "power_consumption": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 255,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "switch_horizontal": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sleep": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "health": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": false,
+    "temp_set": 660,
+    "temp_current": 690,
+    "mode": "cold",
+    "mode_eco": false,
+    "heat": false,
+    "light": false,
+    "lock": false,
+    "power_consumption": 0,
+    "switch_horizontal": false,
+    "sleep": false,
+    "health": false
+  },
+  "set_up": true,
+  "support_local": true
+}

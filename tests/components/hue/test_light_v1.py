@@ -249,7 +249,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1: Mock) -> N
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
-    assert lamp_1.attributes["color_temp"] is None
+    assert lamp_1.attributes["color_temp_kelvin"] is None
     assert lamp_1.attributes["color_mode"] == ColorMode.HS
     assert lamp_1.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -273,7 +273,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1: Mock) -> N
     assert lamp_1 is not None
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
-    assert lamp_1.attributes["color_temp"] == 467
+    assert lamp_1.attributes["color_temp_kelvin"] == 2141
     assert "hs_color" in lamp_1.attributes
     assert lamp_1.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert lamp_1.attributes["supported_color_modes"] == [
@@ -298,7 +298,7 @@ async def test_groups(
     assert lamp_1 is not None
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 255
-    assert lamp_1.attributes["color_temp"] == 250
+    assert lamp_1.attributes["color_temp_kelvin"] == 4000
 
     lamp_2 = hass.states.get("light.group_2")
     assert lamp_2 is not None
@@ -352,7 +352,7 @@ async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -
     assert new_group is not None
     assert new_group.state == "on"
     assert new_group.attributes["brightness"] == 154
-    assert new_group.attributes["color_temp"] == 250
+    assert new_group.attributes["color_temp_kelvin"] == 4000
 
 
 async def test_new_light_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
@@ -476,7 +476,7 @@ async def test_other_group_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> 
     assert group_2.name == "Group 2"
     assert group_2.state == "on"
     assert group_2.attributes["brightness"] == 154
-    assert group_2.attributes["color_temp"] == 250
+    assert group_2.attributes["color_temp_kelvin"] == 4000
 
     updated_group_response = dict(GROUP_RESPONSE)
     updated_group_response["2"] = {
@@ -602,7 +602,7 @@ async def test_light_turn_on_service(hass: HomeAssistant, mock_bridge_v1: Mock) 
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp": 300},
+        {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp_kelvin": 3333},
         blocking=True,
     )
     # 2x light update, 1x group update, 1 turn on request

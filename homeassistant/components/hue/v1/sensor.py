@@ -1,5 +1,7 @@
 """Hue sensor entities."""
 
+from typing import Any
+
 from aiohue.v1.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
     TYPE_ZLL_ROTARY,
@@ -64,7 +66,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attributes = super().extra_state_attributes
         attributes.update(

@@ -4,18 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from dataclasses import dataclass
-from datetime import timedelta
-from typing import Any
 
-from pyairvisual.node import (
-    InvalidAuthenticationError,
-    NodeConnectionError,
-    NodeProError,
-    NodeSamba,
-)
+from pyairvisual.node import NodeProError, NodeSamba
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -23,24 +14,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import LOGGER
+from .coordinator import (
+    AirVisualProConfigEntry,
+    AirVisualProCoordinator,
+    AirVisualProData,
+)
 
 PLATFORMS = [Platform.SENSOR]
-
-UPDATE_INTERVAL = timedelta(minutes=1)
-
-type AirVisualProConfigEntry = ConfigEntry[AirVisualProData]
-
-
-@dataclass
-class AirVisualProData:
-    """Define a data class."""
-
-    coordinator: DataUpdateCoordinator
-    node: NodeSamba
 
 
 async def async_setup_entry(
@@ -54,48 +36,15 @@ async def async_setup_entry(
     except NodeProError as err:
         raise ConfigEntryNotReady from err
 
-    reload_task: asyncio.Task | None = None
-
-    async def async_get_data() -> dict[str, Any]:
-        """Get data from the device."""
-        try:
-            data = await node.async_get_latest_measurements()
-            data["history"] = {}
-            if data["settings"].get("follow_mode") == "device":
-                history = await node.async_get_history(include_trends=False)
-                data["history"] = history.get("measurements", [])[-1]
-        except InvalidAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Invalid Samba password") from err
-        except NodeConnectionError as err:
-            nonlocal reload_task
-            if not reload_task:
-                reload_task = hass.async_create_task(
-                    hass.config_entries.async_reload(entry.entry_id)
-                )
-            raise UpdateFailed(f"Connection to Pro unit lost: {err}") from err
-        except NodeProError as err:
-            raise UpdateFailed(f"Error while retrieving data: {err}") from err
-
-        return data
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        config_entry=entry,
-        name="Node/Pro data",
-        update_interval=UPDATE_INTERVAL,
-        update_method=async_get_data,
-    )
-
+    coordinator = AirVisualProCoordinator(hass, entry, node)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = AirVisualProData(coordinator=coordinator, node=node)
 
     async def async_shutdown(_: Event) -> None:
         """Define an event handler to disconnect from the websocket."""
-        nonlocal reload_task
-        if reload_task:
+        if coordinator.reload_task:
             with suppress(asyncio.CancelledError):
-                reload_task.cancel()
+                coordinator.reload_task.cancel()
         await node.async_disconnect()
 
     entry.async_on_unload(

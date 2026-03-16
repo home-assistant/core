@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -143,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -261,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.HUMIDITY: 'humidity'>,
@@ -320,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature calibration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

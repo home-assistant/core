@@ -15,8 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -47,6 +46,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, devices["parent"][0]["device_id"])},
+        name=devices["parent"][0]["hiveName"],
+        model=devices["parent"][0]["deviceData"]["model"],
+        sw_version=devices["parent"][0]["deviceData"]["version"],
+        manufacturer=devices["parent"][0]["deviceData"]["manufacturer"],
+    )
+
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
@@ -74,7 +83,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True

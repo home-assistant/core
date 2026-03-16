@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP Flur',
     'options': dict({
     }),
     'original_device_class': None,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP light level sensor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -124,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light level sensor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -180,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light level sensor Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -234,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -284,6 +289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -384,6 +391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BOSCH Air quality sensor PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -434,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FSM_STATE Motion stair',
     'options': dict({
     }),
     'original_device_class': None,
@@ -485,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -542,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -596,6 +607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil Sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -652,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil Sensor Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -706,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -762,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor 4 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -818,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'STARKVIND AirPurifier PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -871,6 +887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power 16',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -930,6 +947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -987,6 +1005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1041,6 +1060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1098,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mi temperature 1 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1150,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eTRV Séjour',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1201,6 +1223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'eTRV Séjour Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1255,6 +1278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm 10 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1310,6 +1334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm 10 Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1366,6 +1391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1419,6 +1445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1472,6 +1499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1525,6 +1553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1577,6 +1606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmer switch 3 Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1630,6 +1660,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IKEA Starkvind Filter time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1688,6 +1719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1741,6 +1773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1794,6 +1827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1847,6 +1881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1899,6 +1934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CH2O',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,
@@ -1952,6 +1988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 CO2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -2005,6 +2042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PM25',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -2058,6 +2096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AirQuality 1 PPB',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2110,6 +2149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FYRTUR block-out roller blind Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2164,6 +2204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CarbonDioxide 35',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -2217,6 +2258,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Consumption 15',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2273,6 +2315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daylight',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2326,6 +2369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Formaldehyde 34',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: 'volatile_organic_compounds'>,

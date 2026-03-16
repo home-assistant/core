@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Advice code',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air quality index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
@@ -136,6 +138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

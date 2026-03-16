@@ -19,22 +19,23 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize(
-    ("node_fixture", "name"),
+    ("node_fixture", "unique_id", "name"),
     [
-        ("onoff_light", "Mock OnOff Light"),
-        ("onoff_light_alt_name", "Mock OnOff Light"),
-        ("onoff_light_no_name", "Mock Light"),
+        ("mock_onoff_light", "000000000000001E", "Mock OnOff Light"),
+        ("mock_onoff_light_alt_name", "000000000000001B", "Mock OnOff Light"),
+        ("mock_onoff_light_no_name", "000000000000001C", "Mock Light"),
     ],
 )
 async def test_device_registry_single_node_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    unique_id: str,
     name: str,
 ) -> None:
     """Test bridge devices are set up correctly with via_device."""
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, f"deviceid_00000000000004D2-{unique_id}-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -52,7 +53,7 @@ async def test_device_registry_single_node_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -60,7 +61,7 @@ async def test_device_registry_single_node_device_alt(
     """Test additional device with different attribute values."""
     entry = device_registry.async_get_device(
         identifiers={
-            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+            (DOMAIN, "deviceid_00000000000004D2-000000000000001A-MatterNodeDevice")
         }
     )
     assert entry is not None
@@ -133,7 +134,7 @@ async def test_node_added_subscription(
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
@@ -146,25 +147,13 @@ async def test_node_added_subscription(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that a composed device within a standalone node only creates one HA device entry."""
     assert len(device_registry.devices) == 1
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["multi_endpoint_light"])
-async def test_multi_endpoint_name(hass: HomeAssistant) -> None:
-    """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
-    entity_state = hass.states.get("light.inovelli_light_1")
-    assert entity_state
-    assert entity_state.name == "Inovelli Light (1)"
-    entity_state = hass.states.get("light.inovelli_light_6")
-    assert entity_state
-    assert entity_state.name == "Inovelli Light (6)"
 
 
 async def test_get_clean_name() -> None:
@@ -187,8 +176,8 @@ async def test_bad_node_not_crash_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a bad node does not crash the integration."""
-    good_node = create_node_from_fixture("onoff_light")
-    bad_node = create_node_from_fixture("onoff_light")
+    good_node = create_node_from_fixture("mock_onoff_light")
+    bad_node = create_node_from_fixture("mock_onoff_light")
     del bad_node.endpoints[0].node
     matter_client.get_nodes.return_value = [good_node, bad_node]
     config_entry = MockConfigEntry(

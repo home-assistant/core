@@ -1,0 +1,224 @@
+[
+  {
+    "locationInfo": {
+      "locationId": "7647411",
+      "name": "Kl********",
+      "streetAddress": "********** **",
+      "city": "**********",
+      "country": "Netherlands",
+      "postcode": "******",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "WEuropeStandardTime",
+        "displayName": "(UTC+01:00) Amsterdam, Berlijn, Bern, Rome, Stockholm, Wenen",
+        "offsetMinutes": 60,
+        "currentOffsetMinutes": 60,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "6297358",
+        "username": "nobody@nowhere.com",
+        "firstname": "Da***",
+        "lastname": "Sp*****"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "7539089",
+          "mac": "************",
+          "crc": "****",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "10090510",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "10090505",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Ba******",
+                "zoneType": "UnderfloorHeating"
+              },
+              {
+                "zoneId": "10090506",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Sl********",
+                "zoneType": "UnderfloorHeating"
+              },
+              {
+                "zoneId": "10090507",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Ka*********",
+                "zoneType": "UnderfloorHeating"
+              },
+              {
+                "zoneId": "10090508",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Ka*****",
+                "zoneType": "UnderfloorHeating"
+              },
+              {
+                "zoneId": "10090509",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Wo*******",
+                "zoneType": "ZoneValves"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "AutoWithReset",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "DayOff",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              },
+              {
+                "systemMode": "HeatingOff",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              },
+              {
+                "systemMode": "Custom",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

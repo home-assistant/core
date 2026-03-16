@@ -5,11 +5,11 @@ import logging
 from motionblindsble.const import MotionBlindType
 from motionblindsble.device import MotionDevice
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
+from . import MotionConfigEntry
 from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,13 +21,10 @@ class MotionblindsBLEEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    device: MotionDevice
-    entry: ConfigEntry
-
     def __init__(
         self,
         device: MotionDevice,
-        entry: ConfigEntry,
+        entry: MotionConfigEntry,
         entity_description: EntityDescription,
         unique_id_suffix: str | None = None,
     ) -> None:

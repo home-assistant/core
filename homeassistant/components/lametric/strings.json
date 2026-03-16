@@ -10,6 +10,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
@@ -211,7 +212,7 @@
           "name": "[%key:common::config_flow::data::device%]"
         },
         "icon": {
-          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons.",
+          "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: {icons_url}.",
           "name": "Icon ID"
         },
         "icon_type": {

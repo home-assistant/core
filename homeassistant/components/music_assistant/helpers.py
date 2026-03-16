@@ -4,11 +4,18 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from music_assistant_models.errors import MusicAssistantError
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+
+if TYPE_CHECKING:
+    from music_assistant_client import MusicAssistantClient
+
+    from . import MusicAssistantConfigEntry
 
 
 def catch_musicassistant_error[**_P, _R](
@@ -26,3 +33,16 @@ def catch_musicassistant_error[**_P, _R](
             raise HomeAssistantError(error_msg) from err
 
     return wrapper
+
+
+@callback
+def get_music_assistant_client(
+    hass: HomeAssistant, config_entry_id: str
+) -> MusicAssistantClient:
+    """Get the Music Assistant client for the given config entry."""
+    entry: MusicAssistantConfigEntry | None
+    if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
+        raise ServiceValidationError("Entry not found")
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError("Entry not loaded")
+    return entry.runtime_data.mass

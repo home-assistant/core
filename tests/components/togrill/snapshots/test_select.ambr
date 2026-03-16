@@ -39,6 +39,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -114,6 +115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,
@@ -189,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -414,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,
@@ -489,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,
@@ -639,6 +647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -714,6 +723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,
@@ -789,6 +799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grill type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -864,6 +875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Taste',
     'options': dict({
     }),
     'original_device_class': None,

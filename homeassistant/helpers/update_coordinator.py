@@ -25,12 +25,13 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
 )
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .frame import report_usage
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -41,6 +42,16 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
+
+    def __init__(
+        self,
+        *args: Any,
+        retry_after: float | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(*args, **kwargs)
+        self.retry_after = retry_after
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -119,8 +130,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
+        self._retry_after: float | None = None
         self.last_update_success = True
-        self.last_exception: Exception | None = None
+        self.last_exception: BaseException | None = None
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -250,9 +262,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass = self.hass
         loop = hass.loop
 
-        next_refresh = (
-            int(loop.time()) + self._microsecond + self._update_interval_seconds
-        )
+        update_interval = self._update_interval_seconds
+        if self._retry_after is not None:
+            update_interval = self._retry_after
+            self._retry_after = None
+
+        next_refresh = int(loop.time()) + self._microsecond + update_interval
         self._unsub_refresh = loop.call_at(
             next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
@@ -319,15 +334,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
+                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
-                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+                log_failures=False,
+                raise_on_auth_failed=True,
+                raise_on_entry_error=True,
             )
             if self.last_update_success:
                 return
@@ -339,6 +354,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Error handling for _async_setup."""
         try:
             await self._async_setup()
+
+        except OAuth2TokenRequestError as err:
+            self.last_exception = err
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                self.last_update_success = False
+                # Non-recoverable error
+                raise ConfigEntryAuthFailed from err
+
         except (
             TimeoutError,
             requests.exceptions.Timeout,
@@ -407,6 +430,33 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Timeout fetching %s data", self.name)
+                    self.logger.debug("Full error:", exc_info=True)
+                self.last_update_success = False
+
+        except (OAuth2TokenRequestError,) as err:
+            self.last_exception = err
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                # Non-recoverable error
+                auth_failed = True
+                if self.last_update_success:
+                    if log_failures:
+                        self.logger.error(
+                            "Authentication failed while fetching %s data: %s",
+                            self.name,
+                            err,
+                        )
+                    self.last_update_success = False
+                if raise_on_auth_failed:
+                    raise ConfigEntryAuthFailed from err
+
+                if self.config_entry:
+                    self.config_entry.async_start_reauth(self.hass)
+                return
+
+            # Recoverable error
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:
@@ -414,6 +464,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error requesting %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except urllib.error.URLError as err:
@@ -426,13 +477,25 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.logger.error(
                             "Error requesting %s data: %s", self.name, err
                         )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except UpdateFailed as err:
             self.last_exception = err
+            # We can only honor a retry_after, after the config entry has been set up
+            # Basically meaning that the retry after can't be used when coming
+            # from an async_config_entry_first_refresh
+            if err.retry_after is not None and not raise_on_entry_error:
+                self._retry_after = err.retry_after
+                self.logger.debug(
+                    "Retry after triggered. Scheduling next update in %s second(s)",
+                    err.retry_after,
+                )
+
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
 
         except ConfigEntryError as err:
@@ -444,6 +507,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_entry_error:
                 raise
@@ -458,6 +522,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                         self.name,
                         err,
                     )
+                    self.logger.debug("Full error:", exc_info=True)
                 self.last_update_success = False
             if raise_on_auth_failed:
                 raise
@@ -466,7 +531,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
+            self.last_update_success = False
             raise
+
+        except asyncio.CancelledError as err:
+            self.last_exception = err
+            self.last_update_success = False
+
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                raise
 
         except Exception as err:
             self.last_exception = err

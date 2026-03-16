@@ -46,11 +46,22 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
-        await self.account.refresh_robots()
-        await self.account.load_pets()
-        for pet in self.account.pets:
-            # Need to fetch weight history for `get_visits_since`
-            await pet.fetch_weight_history()
+        try:
+            await self.account.refresh_robots()
+            await self.account.load_pets()
+            for pet in self.account.pets:
+                # Need to fetch weight history for `get_visits_since`
+                await pet.fetch_weight_history()
+        except LitterRobotLoginException as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
+        except LitterRobotException as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -63,9 +74,15 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 load_pets=True,
             )
         except LitterRobotLoginException as ex:
-            raise ConfigEntryAuthFailed("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
         except LitterRobotException as ex:
-            raise UpdateFailed("Unable to connect to Litter-Robot API") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""

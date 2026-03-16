@@ -12,6 +12,9 @@
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "kamereon": {
         "data": {
@@ -70,6 +73,12 @@
       }
     },
     "button": {
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
       "start_air_conditioner": {
         "name": "Start air conditioner"
       },
@@ -130,6 +139,14 @@
       },
       "charging_remaining_time": {
         "name": "Charging remaining time"
+      },
+      "charging_settings_mode": {
+        "name": "Charging mode",
+        "state": {
+          "always": "Always",
+          "delayed": "Delayed",
+          "scheduled": "Scheduled"
+        }
       },
       "front_left_pressure": {
         "name": "Front left tyre pressure"

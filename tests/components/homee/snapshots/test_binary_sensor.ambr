@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -412,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -460,6 +469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -509,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.COLD: 'cold'>,
@@ -558,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Malfunction',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -607,6 +619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -656,6 +669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -705,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -754,6 +769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor blocked',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -803,6 +819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -852,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -901,6 +919,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -950,6 +969,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -999,6 +1019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -1048,6 +1069,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -1097,6 +1119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1146,6 +1169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Replace filter',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1195,6 +1219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1244,6 +1269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1293,6 +1319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Surge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1342,6 +1369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1391,6 +1419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage drop',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1440,6 +1469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1489,6 +1519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1538,6 +1569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Blackout',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1587,6 +1619,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1636,6 +1669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -1685,6 +1719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1734,6 +1769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
@@ -1783,6 +1819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1832,6 +1869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1880,6 +1918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lock',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -1929,6 +1968,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low temperature',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.COLD: 'cold'>,
@@ -1978,6 +2018,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Malfunction',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2027,6 +2068,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2076,6 +2118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum level',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2125,6 +2168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -2174,6 +2218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motor blocked',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2223,6 +2268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opening',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -2272,6 +2318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overcurrent',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2321,6 +2368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2370,6 +2418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -2419,6 +2468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -2468,6 +2518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
@@ -2517,6 +2568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -2566,6 +2618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Replace filter',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2615,6 +2668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2664,6 +2718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storage',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2713,6 +2768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Surge',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2762,6 +2818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2811,6 +2868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage drop',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2860,6 +2918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,

@@ -38,6 +38,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -127,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -225,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zen-01',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -382,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CLIP thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -449,6 +454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat',
     'options': dict({
     }),
     'original_device_class': None,
@@ -517,6 +523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'thermostat',
     'options': dict({
     }),
     'original_device_class': None,

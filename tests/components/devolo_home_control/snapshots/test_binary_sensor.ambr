@@ -34,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overload',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button 1',
     'options': dict({
     }),
     'original_device_class': None,

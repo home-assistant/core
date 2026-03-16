@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'B/W pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Belt unit remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -230,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -282,6 +287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Black toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,6 +340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Color pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -438,6 +446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -490,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,6 +552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cyan toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -594,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -646,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -698,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -750,6 +764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duplex unit page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuser remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -852,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -903,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -955,6 +973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1007,6 +1026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1059,6 +1079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Magenta toner remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1111,6 +1132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1163,6 +1185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PF Kit 1 remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1213,6 +1236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1263,6 +1287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum page counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1315,6 +1340,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum remaining lifetime',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1367,6 +1393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow drum remaining pages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1419,6 +1446,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yellow toner remaining',
     'options': dict({
     }),
     'original_device_class': None,

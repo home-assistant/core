@@ -47,6 +47,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "generic": {
+        "name": "Generic"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
@@ -73,6 +78,60 @@
           }
         }
       }
+    },
+    "sensor": {
+      "acceleration": {
+        "name": "Acceleration"
+      },
+      "channel": {
+        "name": "Channel"
+      },
+      "count": {
+        "name": "Count"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "direction": {
+        "name": "Direction"
+      },
+      "gyroscope": {
+        "name": "Gyroscope"
+      },
+      "packet_id": {
+        "name": "Packet ID"
+      },
+      "raw": {
+        "name": "Raw"
+      },
+      "rotation": {
+        "name": "Rotation"
+      },
+      "rotational_speed": {
+        "name": "Rotational speed"
+      },
+      "text": {
+        "name": "Text"
+      },
+      "uv_index": {
+        "name": "UV Index"
+      }
+    }
+  },
+  "issues": {
+    "encryption_removed": {
+      "fix_flow": {
+        "abort": {
+          "entry_removed": "The device has been removed"
+        },
+        "step": {
+          "confirm": {
+            "description": "The BTHome device **{name}** was configured with encryption but is now broadcasting unencrypted data. Data from this device is being ignored until this is resolved.\n\nIf you disabled encryption on the device, select **Submit** to remove the encryption key and resume receiving data.\n\nIf you did not disable encryption, someone may be attempting to spoof your device. Do not submit this form and the unencrypted data will continue to be ignored.",
+            "title": "Remove encryption key for {name}"
+          }
+        }
+      },
+      "title": "Encryption disabled on {name}"
     }
   }
 }

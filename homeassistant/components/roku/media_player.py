@@ -8,7 +8,6 @@ import mimetypes
 from typing import Any
 
 from rokuecp.helpers import guess_stream_format
-import voluptuous as vol
 import yarl
 
 from homeassistant.components import media_source
@@ -25,19 +24,15 @@ from homeassistant.components.media_player import (
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
-    ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     ATTR_THUMBNAIL,
-    SERVICE_SEARCH,
 )
 from .coordinator import RokuConfigEntry, RokuDataUpdateCoordinator
 from .entity import RokuEntity
@@ -76,8 +71,6 @@ ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
     ATTR_THUMBNAIL: "albumArtUrl",
 }
 
-SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
-
 PARALLEL_UPDATES = 1
 
 
@@ -94,14 +87,6 @@ async def async_setup_entry(
             )
         ],
         True,
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SEARCH,
-        SEARCH_SCHEMA,
-        "search",
     )
 
 

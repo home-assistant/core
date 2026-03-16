@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_all_entities[camera.vivotek_camera-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.vivotek_camera',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vivotek Camera',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Vivotek Camera',
+    'platform': 'vivotek',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': '11:22:33:44:55:66',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[camera.vivotek_camera-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'brand': 'VIVOTEK',
+      'entity_picture': '/api/camera_proxy/camera.vivotek_camera?token=1caab5c3b3',
+      'friendly_name': 'Vivotek Camera',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.vivotek_camera',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---

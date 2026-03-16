@@ -1,6 +1,6 @@
 """Tests for the LibreHardwareMonitor init."""
 
-import logging
+import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -11,9 +11,8 @@ from .conftest import VALID_CONFIG
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 
-
+@pytest.mark.usefixtures("mock_lhm_client")
 async def test_migration_to_unique_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -30,7 +29,7 @@ async def test_migration_to_unique_ids(
     legacy_config_entry_v1.add_to_hass(hass)
 
     # Set up devices with legacy device ID
-    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
+    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "motherboard"]
     for device_id in legacy_device_ids:
         device_registry.async_get_or_create(
             config_entry_id=legacy_config_entry_v1.entry_id,
@@ -89,3 +88,8 @@ async def test_migration_to_unique_ids(
     assert (
         entity_registry.async_get_entity_id("sensor", DOMAIN, legacy_entity_id) is None
     )
+
+    updated_config_entry = hass.config_entries.async_get_entry(
+        legacy_config_entry_v1.entry_id
+    )
+    assert updated_config_entry.version == 2

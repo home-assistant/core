@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -412,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -559,6 +567,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -708,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -762,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -810,6 +821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -869,6 +881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -930,6 +943,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -986,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1042,6 +1057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1098,6 +1114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1154,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1210,6 +1228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1266,6 +1285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1322,6 +1342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1378,6 +1399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency phase average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1432,6 +1454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1488,6 +1511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1546,6 +1570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1598,6 +1623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1650,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1702,6 +1729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -1754,6 +1782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy consumed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1806,6 +1835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy produced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1858,6 +1888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1914,6 +1945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1970,6 +2002,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2026,6 +2059,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2082,6 +2116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2138,6 +2173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy minus',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2194,6 +2230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy plus',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2250,6 +2287,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2306,6 +2344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2362,6 +2401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2418,6 +2458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2474,6 +2515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2530,6 +2572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2586,6 +2629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1-2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2642,6 +2686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2698,6 +2743,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2-3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2754,6 +2800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2810,6 +2857,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3-1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2864,6 +2912,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2914,6 +2963,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2970,6 +3020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3026,6 +3077,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3082,6 +3134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3138,6 +3191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3194,6 +3248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3250,6 +3305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3306,6 +3362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3358,6 +3415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3410,6 +3468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3466,6 +3525,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3522,6 +3582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3576,6 +3637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Designed capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3625,6 +3687,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum capacity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3676,6 +3739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3729,6 +3793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3785,6 +3850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3841,6 +3907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3897,6 +3964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3953,6 +4021,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4009,6 +4078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4065,6 +4135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4121,6 +4192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4175,6 +4247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4322,6 +4395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4471,6 +4545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4525,6 +4600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4573,6 +4649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4632,6 +4709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4693,6 +4771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4749,6 +4828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4805,6 +4885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4859,6 +4940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4916,6 +4998,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4975,6 +5058,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5031,6 +5115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5087,6 +5172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5143,6 +5229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5199,6 +5286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apparent power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5255,6 +5343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5311,6 +5400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5367,6 +5457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5423,6 +5514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency phase average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5477,6 +5569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5533,6 +5626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5591,6 +5685,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5643,6 +5738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5695,6 +5791,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5747,6 +5844,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power factor phase 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -5799,6 +5897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy consumed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5851,6 +5950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive energy produced',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5903,6 +6003,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5959,6 +6060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6015,6 +6117,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6071,6 +6174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reactive power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6127,6 +6231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6183,6 +6288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy minus',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6239,6 +6345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy plus',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6295,6 +6402,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real energy produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6351,6 +6459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6407,6 +6516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6463,6 +6573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6519,6 +6630,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6575,6 +6687,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6631,6 +6744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 1-2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6687,6 +6801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6743,6 +6858,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 2-3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6799,6 +6915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6855,6 +6972,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase 3-1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6909,6 +7027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6959,6 +7078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7015,6 +7135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery charge',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7071,6 +7192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power battery discharge',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7127,6 +7249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7183,6 +7306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7239,6 +7363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7295,6 +7420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7351,6 +7477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7407,6 +7534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7463,6 +7591,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7519,6 +7648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7571,6 +7701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7623,6 +7754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7679,6 +7811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7735,6 +7868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7791,6 +7925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7847,6 +7982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7903,6 +8039,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7959,6 +8096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8015,6 +8153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8069,6 +8208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8216,6 +8356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8365,6 +8506,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8419,6 +8561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED color',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8467,6 +8610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8515,6 +8659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8574,6 +8719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8635,6 +8781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8691,6 +8838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8747,6 +8895,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8803,6 +8952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8859,6 +9009,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8915,6 +9066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8971,6 +9123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9027,6 +9180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9081,6 +9235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9228,6 +9383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9377,6 +9533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frequency',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9431,6 +9588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED color',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9479,6 +9637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9527,6 +9686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9586,6 +9746,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status message',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9647,6 +9808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9701,6 +9863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9757,6 +9920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter location description',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9815,6 +9979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Real power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9871,6 +10036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO₂ factor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9923,6 +10089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy day',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -9979,6 +10146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy year',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10035,6 +10203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid export tariff',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10087,6 +10256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid import tariff',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10137,6 +10307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Meter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10187,6 +10358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10243,6 +10415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid export',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10299,6 +10472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power grid import',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10355,6 +10529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10411,6 +10586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10467,6 +10643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power load generated',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10523,6 +10700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power photovoltaics',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -10579,6 +10757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative autonomy',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10631,6 +10810,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative self-consumption',
     'options': dict({
     }),
     'original_device_class': None,
@@ -10683,6 +10863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

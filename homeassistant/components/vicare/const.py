@@ -12,6 +12,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
@@ -35,6 +36,7 @@ CONF_HEATING_TYPE = "heating_type"
 DEFAULT_CACHE_DURATION = 60
 
 VICARE_BAR = "bar"
+VICARE_CELSIUS = "celsius"
 VICARE_CUBIC_METER = "cubicMeter"
 VICARE_KW = "kilowatt"
 VICARE_KWH = "kilowattHour"

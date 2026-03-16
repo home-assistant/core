@@ -14,6 +14,7 @@ from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.auth.permissions.events import SUBSCRIBE_ALLOWLIST
 from homeassistant.const import (
+    CONF_EXTERNAL_URL,
     EVENT_STATE_CHANGED,
     MATCH_ALL,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -41,8 +42,11 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.condition import (
+    async_from_config as async_condition_from_config,
     async_get_all_descriptions as async_get_all_condition_descriptions,
     async_subscribe_platform_events as async_subscribe_condition_platform_events,
+    async_validate_condition_config,
+    async_validate_conditions_config,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
@@ -66,7 +70,9 @@ from homeassistant.helpers.service import (
 )
 from homeassistant.helpers.trigger import (
     async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_initialize_triggers,
     async_subscribe_platform_events as async_subscribe_trigger_platform_events,
+    async_validate_trigger_config,
 )
 from homeassistant.loader import (
     IntegrationNotFound,
@@ -82,6 +88,11 @@ from homeassistant.setup import (
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
+from .automation import (
+    async_get_conditions_for_target,
+    async_get_services_for_target,
+    async_get_triggers_for_target,
+)
 from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
@@ -103,9 +114,12 @@ def async_register_commands(
     async_reg(hass, handle_execute_script)
     async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
+    async_reg(hass, handle_get_conditions_for_target)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_services_for_target)
     async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_triggers_for_target)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
@@ -318,6 +332,7 @@ async def handle_call_service(
         connection.logger.error(
             "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
         )
+        connection.logger.debug("", exc_info=True)
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -356,7 +371,7 @@ def handle_get_states(
 
     try:
         serialized_states = [state.as_dict_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_get_states_response(connection, msg["id"], serialized_states)
@@ -367,7 +382,7 @@ def handle_get_states(
     for state in states:
         try:
             serialized_states.append(state.as_dict_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -464,7 +479,7 @@ def handle_subscribe_entities(
         else:
             # Fast path when not filtering
             serialized_states = [state.as_compressed_state_json for state in states]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         pass
     else:
         _send_handle_entities_init_response(
@@ -480,7 +495,7 @@ def handle_subscribe_entities(
             continue
         try:
             serialized_states.append(state.as_compressed_state_json)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             connection.logger.error(
                 "Unable to serialize to JSON. Bad data found at %s",
                 format_unserializable_data(
@@ -637,7 +652,12 @@ def handle_get_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get config command."""
-    connection.send_result(msg["id"], hass.config.as_dict())
+    config = hass.config.as_dict()
+
+    if connection.user.local_only:
+        config.pop(CONF_EXTERNAL_URL)
+
+    connection.send_result(msg["id"], config)
 
 
 @decorators.websocket_command(
@@ -852,9 +872,9 @@ def handle_extract_from_target(
 ) -> None:
     """Handle extract from target command."""
 
-    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=msg["expand_group"]
+        hass, target_selection, expand_group=msg["expand_group"]
     )
 
     extracted_dict = {
@@ -874,6 +894,75 @@ def handle_extract_from_target(
 
 @decorators.websocket_command(
     {
+        vol.Required("type"): "get_triggers_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_triggers_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get triggers for target command.
+
+    This command returns all triggers that can be used with any entities that are currently
+    part of a target.
+    """
+    triggers = await async_get_triggers_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], triggers)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_conditions_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_conditions_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get conditions for target command.
+
+    This command returns all conditions that can be used with any entities that are currently
+    part of a target.
+    """
+    conditions = await async_get_conditions_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], conditions)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_services_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_services_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get services for target command.
+
+    This command returns all services that can be used with any entities that are currently
+    part of a target.
+    """
+    services = await async_get_services_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], services)
+
+
+@decorators.websocket_command(
+    {
         vol.Required("type"): "subscribe_trigger",
         vol.Required("trigger"): cv.TRIGGER_SCHEMA,
         vol.Optional("variables"): dict,
@@ -885,10 +974,7 @@ async def handle_subscribe_trigger(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe trigger command."""
-    # Circular dep
-    from homeassistant.helpers import trigger  # noqa: PLC0415
-
-    trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
+    trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
 
     @callback
     def forward_triggers(
@@ -905,7 +991,7 @@ async def handle_subscribe_trigger(
         )
 
     connection.subscriptions[msg["id"]] = (
-        await trigger.async_initialize_triggers(
+        await async_initialize_triggers(
             hass,
             trigger_config,
             forward_triggers,
@@ -935,13 +1021,10 @@ async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle test condition command."""
-    # Circular dep
-    from homeassistant.helpers import condition  # noqa: PLC0415
-
     # Do static + dynamic validation of the condition
-    config = await condition.async_validate_condition_config(hass, msg["condition"])
+    config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await condition.async_from_config(hass, config)
+    check_condition = await async_condition_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
@@ -1028,16 +1111,16 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    from homeassistant.helpers import condition, script, trigger  # noqa: PLC0415
+    from homeassistant.helpers import script  # noqa: PLC0415
 
     result = {}
 
     for key, schema, validator in (
-        ("triggers", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
+        ("triggers", cv.TRIGGER_SCHEMA, async_validate_trigger_config),
         (
             "conditions",
             cv.CONDITIONS_SCHEMA,
-            condition.async_validate_conditions_config,
+            async_validate_conditions_config,
         ),
         ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):

@@ -255,13 +255,6 @@ turn_on:
           example: "[0.52, 0.43]"
           selector:
             object:
-        color_temp: &color_temp
-          filter: *color_temp_support
-          selector:
-            color_temp:
-              unit: "mired"
-              min: 153
-              max: 500
         brightness: &brightness
           filter: *brightness_support
           selector:
@@ -327,7 +320,6 @@ toggle:
         color_name: *color_name
         hs_color: *hs_color
         xy_color: *xy_color
-        color_temp: *color_temp
         brightness: *brightness
         white: *white
         profile: *profile

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -39,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'entity_picture': '/api/brands/integration/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
       'installed_version': '7.29',
@@ -80,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -99,7 +101,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'entity_picture': '/api/brands/integration/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
       'installed_version': '7.29',
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FRITZ!OS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -159,7 +162,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
+      'entity_picture': '/api/brands/integration/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
       'installed_version': '7.29',

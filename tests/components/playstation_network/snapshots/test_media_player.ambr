@@ -21,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -72,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -128,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -181,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -234,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -285,6 +290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -341,6 +347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -394,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,
@@ -445,6 +453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <MediaPlayerDeviceClass.RECEIVER: 'receiver'>,

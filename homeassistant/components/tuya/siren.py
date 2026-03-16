@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.siren import (
@@ -64,9 +66,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, manager, description)
+                    TuyaSirenEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -89,21 +95,37 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SirenEntityDescription,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if siren is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._read_wrapper(self._dpcode_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

@@ -82,6 +82,10 @@ def patch_doorbird_api_entry_points(api: MagicMock) -> Generator[DoorBird]:
             "homeassistant.components.doorbird.config_flow.DoorBird",
             return_value=api,
         ),
+        patch(
+            "homeassistant.components.doorbird.device.get_url",
+            return_value="http://127.0.0.1:8123",
+        ),
     ):
         yield api
 

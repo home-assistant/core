@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
+import inspect
 from pathlib import Path
 import re
 import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohasupervisor import SupervisorNotFoundError
 from aiohasupervisor.models import (
     Discovery,
     GreenInfo,
@@ -34,7 +36,17 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceRegistry,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -45,6 +57,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -95,17 +108,6 @@ def entity_registry_enabled_by_default() -> Generator[None]:
         ),
     ):
         yield
-
-
-# Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None]:
-    """Stub copying the blueprints to the config folder."""
-    from .blueprint.common import (  # noqa: PLC0415
-        stub_blueprint_populate_fixture_helper,
-    )
-
-    yield from stub_blueprint_populate_fixture_helper()
 
 
 # TTS test fixtures
@@ -170,7 +172,7 @@ def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     return mock_conversation_agent_fixture_helper(hass)
 
 
-@pytest.fixture(scope="session", autouse=find_spec("ffmpeg") is not None)
+@pytest.fixture(scope="session", autouse=find_spec("haffmpeg") is not None)
 def prevent_ffmpeg_subprocess() -> Generator[None]:
     """If installed, prevent ffmpeg from creating a subprocess."""
     with patch(
@@ -312,6 +314,7 @@ def addon_not_installed_fixture(
     """Mock add-on not installed."""
     from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
+    addon_info.side_effect = SupervisorNotFoundError
     return mock_addon_not_installed(addon_store_info, addon_info)
 
 
@@ -547,6 +550,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
     supervisor_client.jobs = AsyncMock()
+    supervisor_client.jobs.info.return_value = MagicMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
@@ -623,7 +627,7 @@ async def _validate_translation(
     category: str,
     component: str,
     key: str,
-    description_placeholders: dict[str, str] | None,
+    description_placeholders: Mapping[str, str] | None,
     *,
     translation_required: bool = True,
 ) -> None:
@@ -648,6 +652,13 @@ async def _validate_translation(
 
     translations = await async_get_translations(hass, "en", category, [component])
 
+    if full_key.endswith("."):
+        for subkey, translation in translations.items():
+            if subkey.startswith(full_key):
+                _validate_translation_placeholders(
+                    subkey, translation, description_placeholders, translation_errors
+                )
+        return
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -657,8 +668,13 @@ async def _validate_translation(
     if not translation_required:
         return
 
+    if full_key not in translation_errors:
+        for k in translation_errors:
+            if k.endswith(".") and full_key.startswith(k):
+                full_key = k
+                break
     if translation_errors.get(full_key) in {"used", "unused"}:
-        # If the does not integration exist, translation errors should be ignored
+        # If the integration does not exist, translation errors should be ignored
         # via the ignore_translations_for_mock_domains fixture instead of the
         # ignore_missing_translations fixture.
         try:
@@ -792,6 +808,7 @@ async def _check_config_flow_result_translations(
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -803,7 +820,16 @@ async def _check_config_flow_result_translations(
         integration = flow.handler
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        if issue is None:
+            # Issue was deleted mid-flow (e.g., config entry removed), skip check
+            return
         key_prefix = f"{issue.translation_key}.fix_flow."
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
@@ -819,7 +845,7 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
                 ignore_translations_for_mock_domains,
             )
@@ -833,7 +859,7 @@ async def _check_config_flow_result_translations(
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -849,7 +875,7 @@ async def _check_config_flow_result_translations(
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
@@ -920,6 +946,55 @@ async def _check_exception_translation(
     )
 
 
+_DYNAMIC_SERVICE_DOMAINS = {
+    "esphome",
+    "notify",
+    "rest_command",
+    "script",
+    "shell_command",
+    "tts",
+}
+"""These domains create services dynamically.
+
+name/description translations are not required.
+"""
+
+
+async def _check_service_registration_translation(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str,
+    description_placeholders: Mapping[str, str] | None,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
+        description_placeholders,
+    )
+    # Service `name` and `description` should be compulsory
+    # unless for specific domains where the services are dynamically created
+    if domain not in _DYNAMIC_SERVICE_DOMAINS:
+        for subkey in ("name", "description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "services",
+                domain,
+                f"{service_name}.{subkey}",
+                description_placeholders,
+                translation_required=True,
+            )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -950,6 +1025,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_service_registry_async_register = ServiceRegistry.async_register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -963,7 +1039,7 @@ async def check_translations(
 
     def _issue_registry_async_create_issue(
         self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
-    ) -> None:
+    ) -> ir.IssueEntry:
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
@@ -1007,6 +1083,59 @@ async def check_translations(
             )
             raise
 
+    @callback
+    def _service_registry_async_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: VolSchemaType | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        if (
+            (current_frame := inspect.currentframe()) is None
+            or (caller := current_frame.f_back) is None
+            or (
+                # async_mock_service is used in tests to register test services
+                caller.f_code.co_name != "async_mock_service"
+                # ServiceRegistry.async_register can also be called directly in
+                # a test module
+                and not caller.f_code.co_filename.startswith(
+                    str(Path(__file__).parents[0])
+                )
+            )
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    description_placeholders,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
+        _original_service_registry_async_register(
+            self,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders=description_placeholders,
+        )
+
     # Use override functions
     with (
         patch(
@@ -1020,6 +1149,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_register",
+            _service_registry_async_register,
         ),
     ):
         yield
@@ -1037,3 +1170,13 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

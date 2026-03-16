@@ -8,5 +8,10 @@
     "set_value": {
       "service": "mdi:form-textbox"
     }
+  },
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:form-textbox"
+    }
   }
 }

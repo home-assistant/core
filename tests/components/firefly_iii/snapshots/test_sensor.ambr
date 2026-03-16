@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Budget',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -225,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earned/Spent',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -278,6 +283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -329,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -377,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -428,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -479,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -527,6 +537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,

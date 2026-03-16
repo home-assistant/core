@@ -4,6 +4,7 @@
   "codeowners": ["@thecode"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webostv",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aiowebostv"],
   "quality_scale": "platinum",

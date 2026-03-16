@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -72,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -124,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -176,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -228,6 +232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -332,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -384,6 +391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -436,6 +444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -488,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -540,6 +550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -592,6 +603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -644,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -696,6 +709,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -748,6 +762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -800,6 +815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -852,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -904,6 +921,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -956,6 +974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1008,6 +1027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1060,6 +1080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1112,6 +1133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1164,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1216,6 +1239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1268,6 +1292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1320,6 +1345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1372,6 +1398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1424,6 +1451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1476,6 +1504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1528,6 +1557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1580,6 +1610,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1632,6 +1663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1684,6 +1716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1736,6 +1769,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1788,6 +1822,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1840,6 +1875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -1892,6 +1928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -1944,6 +1981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1996,6 +2034,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2048,6 +2087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2100,6 +2140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2152,6 +2193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2204,6 +2246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2256,6 +2299,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2308,6 +2352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2360,6 +2405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2412,6 +2458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2464,6 +2511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2516,6 +2564,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2568,6 +2617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2620,6 +2670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2672,6 +2723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2724,6 +2776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2776,6 +2829,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2828,6 +2882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -2880,6 +2935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -2932,6 +2988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -2984,6 +3041,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3036,6 +3094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -3088,6 +3147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -3140,6 +3200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3192,6 +3253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -3244,6 +3306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -3296,6 +3359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3348,6 +3412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -3400,6 +3465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -3452,6 +3518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -3502,6 +3569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon monoxide',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -3552,6 +3620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Police emergency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3601,6 +3670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -3651,6 +3721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3701,6 +3772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -3751,6 +3823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3803,6 +3876,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -3855,6 +3929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -3907,6 +3982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -3959,6 +4035,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4011,6 +4088,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -4063,6 +4141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -4115,6 +4194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4167,6 +4247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -4219,6 +4300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -4271,6 +4353,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4323,6 +4406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -4375,6 +4459,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -4427,6 +4512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4479,6 +4565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -4531,6 +4618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -4583,6 +4671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4635,6 +4724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -4687,6 +4777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -4739,6 +4830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -4791,6 +4883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,

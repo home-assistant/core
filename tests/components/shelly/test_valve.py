@@ -50,6 +50,8 @@ async def test_block_device_gas_valve(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-valve_0-valve"
+    assert entry.name is None
+    assert entry.translation_key == "gas_valve"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == ValveState.CLOSED

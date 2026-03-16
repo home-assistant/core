@@ -47,11 +47,10 @@ CONF_FUNCTION = "function"
 CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
-CONF_BATCH_BUFFER_SIZE = "batch_buffer_size"
-CONF_BATCH_TIMEOUT = "batch_timeout"
-
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST = "localhost"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_PORT = 8086
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
@@ -62,9 +61,6 @@ DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
 DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
 DEFAULT_MEASUREMENT_ATTR = "unit_of_measurement"
-
-DEFAULT_BATCH_BUFFER_SIZE = 100
-DEFAULT_BATCH_TIMEOUT = 1
 
 INFLUX_CONF_MEASUREMENT = "measurement"
 INFLUX_CONF_TAGS = "tags"
@@ -82,6 +78,8 @@ TIMEOUT = 10  # seconds
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 RETRY_INTERVAL = 60  # seconds
+BATCH_TIMEOUT = 1
+BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW DATABASES;"
@@ -134,8 +132,8 @@ RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
         vol.Coerce(str),
         vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
@@ -157,9 +155,13 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
 
-COMPONENT_CONFIG_SCHEMA_BATCH = {
-    vol.Optional(
-        CONF_BATCH_BUFFER_SIZE, default=DEFAULT_BATCH_BUFFER_SIZE
-    ): cv.positive_int,
-    vol.Optional(CONF_BATCH_TIMEOUT, default=DEFAULT_BATCH_TIMEOUT): cv.positive_float,
+# Same keys without defaults, used in CONFIG_SCHEMA to validate
+# without injecting default values (so we can detect explicit keys).
+COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS = {
+    (
+        vol.Optional(k.schema)
+        if isinstance(k, vol.Optional) and k.default is not vol.UNDEFINED
+        else k
+    ): v
+    for k, v in COMPONENT_CONFIG_SCHEMA_CONNECTION.items()
 }

@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gateway mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -35,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'gateway_mode',
+    'translation_key': 'select_gateway_mode',
     'unique_id': 'da224107914542988a88561b4452b0f6-select_gateway_mode',
     'unit_of_measurement': None,
   })
@@ -65,10 +66,10 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'bleeding_hot',
         'bleeding_cold',
-        'off',
         'heating',
+        'off',
+        'bleeding_hot',
         'cooling',
       ]),
     }),
@@ -87,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Regulation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -96,7 +98,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'regulation_mode',
+    'translation_key': 'select_regulation_mode',
     'unique_id': 'da224107914542988a88561b4452b0f6-select_regulation_mode',
     'unit_of_measurement': None,
   })
@@ -106,10 +108,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Adam Regulation mode',
       'options': list([
-        'bleeding_hot',
         'bleeding_cold',
-        'off',
         'heating',
+        'off',
+        'bleeding_hot',
         'cooling',
       ]),
     }),
@@ -129,9 +131,9 @@
     'capabilities': dict({
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -150,6 +152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -170,9 +173,9 @@
       'friendly_name': 'Bathroom Thermostat schedule',
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -181,7 +184,67 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Badkamer',
+    'state': 'off',
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_zone_profile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'active',
+        'off',
+        'passive',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.bathroom_zone_profile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone profile',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone profile',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_zone_profile',
+    'unique_id': 'f871b8c4d63549319221e294e4f88074-select_zone_profile',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_zone_profile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bathroom Zone profile',
+      'options': list([
+        'active',
+        'off',
+        'passive',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.bathroom_zone_profile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'passive',
   })
 # ---
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-entry]
@@ -192,9 +255,9 @@
     'capabilities': dict({
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -213,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,9 +297,9 @@
       'friendly_name': 'Living room Thermostat schedule',
       'options': list([
         'Badkamer',
-        'Test',
         'Vakantie',
         'Weekschema',
+        'Test',
         'off',
       ]),
     }),
@@ -245,6 +309,66 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_zone_profile-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'active',
+        'off',
+        'passive',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.living_room_zone_profile',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Zone profile',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Zone profile',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_zone_profile',
+    'unique_id': 'f2bf9048bef64cc5b6d5110154e33c81-select_zone_profile',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_zone_profile-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living room Zone profile',
+      'options': list([
+        'active',
+        'off',
+        'passive',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.living_room_zone_profile',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'active',
   })
 # ---
 # name: test_adam_select_entities[platforms0][select.badkamer_thermostat_schedule-entry]
@@ -277,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -342,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -407,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -472,6 +599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,

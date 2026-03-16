@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,16 +53,17 @@
       'event_types': list([
         'Title: Hello',
       ]),
-      'expires': datetime.datetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
+      'expires': HAFakeDatetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
       'friendly_name': 'mytopic',
       'icon': 'https://example.com/icon.png',
       'id': 'h6Y2hKA5sy0U',
       'message': 'Hello',
       'priority': 3,
+      'sequence_id': 'Mc3otamDNcpJ',
       'tags': list([
         'octopus',
       ]),
-      'time': datetime.datetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
+      'time': HAFakeDatetime(2025, 3, 28, 17, 58, 46, tzinfo=datetime.timezone.utc),
       'title': 'Title',
       'topic': 'mytopic',
     }),

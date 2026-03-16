@@ -54,6 +54,10 @@ async def test_user_api_key(
             CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+            },
         },
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
@@ -85,6 +89,7 @@ async def test_user_web_login(
         {
             CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: ""},
             CONF_SECTION_WEB_AUTH: {
                 CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: PASSWORD,

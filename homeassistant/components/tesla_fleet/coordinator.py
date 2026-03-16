@@ -178,13 +178,15 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.live_status())["response"]
         except RateLimited as e:
-            LOGGER.warning(
-                "%s rate limited, will retry in %s seconds",
-                self.name,
-                e.data.get("after"),
-            )
-            if "after" in e.data:
+            if isinstance(e.data, dict) and "after" in e.data:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    e.data["after"],
+                )
                 self.update_interval = timedelta(seconds=int(e.data["after"]))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
@@ -240,13 +242,15 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
-            LOGGER.warning(
-                "%s rate limited, will retry in %s seconds",
-                self.name,
-                e.data.get("after"),
-            )
-            if "after" in e.data:
+            if isinstance(e.data, dict) and "after" in e.data:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    e.data["after"],
+                )
                 self.update_interval = timedelta(seconds=int(e.data["after"]))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
@@ -303,13 +307,15 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         try:
             data = (await self.api.site_info())["response"]
         except RateLimited as e:
-            LOGGER.warning(
-                "%s rate limited, will retry in %s seconds",
-                self.name,
-                e.data.get("after"),
-            )
-            if "after" in e.data:
+            if isinstance(e.data, dict) and "after" in e.data:
+                LOGGER.warning(
+                    "%s rate limited, will retry in %s seconds",
+                    self.name,
+                    e.data["after"],
+                )
                 self.update_interval = timedelta(seconds=int(e.data["after"]))
+            else:
+                LOGGER.warning("%s rate limited, will skip refresh", self.name)
             return self.data
         except (InvalidToken, OAuthExpired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e

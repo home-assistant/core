@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Comfort temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -179,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current scheduled preset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -227,6 +231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Eco temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next scheduled change time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -329,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next scheduled preset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -377,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next scheduled temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -432,6 +440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -488,6 +497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -541,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -594,6 +605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -650,6 +662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -706,6 +719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -762,6 +776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -818,6 +833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -874,6 +890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

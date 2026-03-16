@@ -60,6 +60,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Clean count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pan degrees',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -231,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth off',
     'options': dict({
     }),
     'original_device_class': None,
@@ -288,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth on',
     'options': dict({
     }),
     'original_device_class': None,
@@ -345,6 +350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE_DELTA: 'temperature_delta'>,
@@ -403,6 +409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tilt degrees',
     'options': dict({
     }),
     'original_device_class': None,
@@ -460,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Turn off in',
     'options': dict({
     }),
     'original_device_class': None,

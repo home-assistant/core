@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.components.usb import (
     usb_service_info_from_device,
@@ -78,6 +79,20 @@ class SkyConnectFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant SkyConnect firmware methods."""
 
     context: ConfigFlowContext
+
+    ZIGBEE_BAUDRATE = 115200
+    # There is no hardware bootloader trigger
+    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
+        (ApplicationType.SPINEL, 460800),
+        # CPC baudrates can be removed once multiprotocol is removed
+        (ApplicationType.CPC, 115200),
+        (ApplicationType.CPC, 230400),
+        (ApplicationType.CPC, 460800),
+        (ApplicationType.ROUTER, 115200),
+    ]
 
     def _get_translation_placeholders(self) -> dict[str, str]:
         """Shared translation placeholders."""
@@ -275,17 +290,17 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
-        self._usb_info = get_usb_service_info(self.config_entry)
+        self._usb_info = get_usb_service_info(self._config_entry)
         self._hw_variant = HardwareVariant.from_usb_product_name(
-            self.config_entry.data[PRODUCT]
+            self._config_entry.data[PRODUCT]
         )
         self._hardware_name = self._hw_variant.full_name
         self._device = self._usb_info.device
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data[FIRMWARE]),
-            firmware_version=self.config_entry.data[FIRMWARE_VERSION],
+            firmware_type=ApplicationType(self._config_entry.data[FIRMWARE]),
+            firmware_version=self._config_entry.data[FIRMWARE_VERSION],
             source="guess",
             owners=[],
         )

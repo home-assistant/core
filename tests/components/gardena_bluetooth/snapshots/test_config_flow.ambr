@@ -28,6 +28,7 @@
         'key': '00000000-0000-0000-0000-000000000001',
         'version': 1,
       }),
+      'dismiss_protected': True,
       'source': 'bluetooth',
       'title_placeholders': dict({
         'name': 'Gardena Water Computer',

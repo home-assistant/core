@@ -136,11 +136,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
         vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRECISION): vol.In(
-            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        vol.Optional(CONF_PRECISION): vol.All(
+            vol.Coerce(float),
+            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_TEMP_INITIAL): cv.positive_int,
+        vol.Optional(CONF_TEMP_INITIAL): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MIN): vol.Coerce(float),
         vol.Optional(CONF_TEMP_MAX): vol.Coerce(float),
         vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,

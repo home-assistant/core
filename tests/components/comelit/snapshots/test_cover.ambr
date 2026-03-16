@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
@@ -39,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'shutter',
       'friendly_name': 'Cover0',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -39,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Test Garage 1',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -70,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -89,6 +92,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Test Garage 2',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -120,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GATE: 'gate'>,
@@ -139,6 +144,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'gate',
       'friendly_name': 'Test Garage 3',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -170,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
@@ -189,6 +196,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Test Garage 4',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,

@@ -104,6 +104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off schedule (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -139,6 +140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off schedule (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,

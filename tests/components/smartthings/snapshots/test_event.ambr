@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button1',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -87,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button2',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -148,6 +150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button3',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -209,6 +212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button4',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -270,6 +274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button5',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -331,6 +336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'button6',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,

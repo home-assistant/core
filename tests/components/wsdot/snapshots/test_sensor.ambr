@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_travel_sensor_details[sensor.seattle_bellevue_via_i_90_eb_am-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.seattle_bellevue_via_i_90_eb_am',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Seattle-Bellevue via I-90 (EB AM)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:car',
+    'original_name': 'Seattle-Bellevue via I-90 (EB AM)',
+    'platform': 'wsdot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'travel_time-96',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_travel_sensor_details[sensor.seattle_bellevue_via_i_90_eb_am-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'AverageTime': 11,
+      'CurrentTime': 11,
+      'Description': 'Downtown Seattle to Downtown Bellevue via I-90',
+      'Distance': 10.6,
+      'EndPoint': dict({
+        'Description': 'I-405 @ NE 8th St in Bellevue',
+        'Direction': 'N',
+        'Latitude': 47.61361,
+        'Longitude': -122.18797,
+        'MilePost': 13.6,
+        'RoadName': 'I-405',
+      }),
+      'Name': 'Seattle-Bellevue via I-90 (EB AM)',
+      'StartPoint': dict({
+        'Description': 'I-5 @ University St in Seattle',
+        'Direction': 'S',
+        'Latitude': 47.609294,
+        'Longitude': -122.331759,
+        'MilePost': 165.83,
+        'RoadName': 'I-5',
+      }),
+      'TimeUpdated': datetime.datetime(2017, 1, 21, 15, 10, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=57600))),
+      'TravelTimeID': 96,
+      'attribution': 'Data provided by WSDOT',
+      'friendly_name': 'Seattle-Bellevue via I-90 (EB AM)',
+      'icon': 'mdi:car',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.seattle_bellevue_via_i_90_eb_am',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11',
+  })
+# ---

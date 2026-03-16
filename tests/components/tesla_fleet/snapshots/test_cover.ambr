@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -39,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -70,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -89,6 +92,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -120,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -139,6 +144,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -170,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -189,6 +196,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -220,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -239,6 +248,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -270,6 +280,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -289,6 +300,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -320,6 +332,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -339,6 +352,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -370,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -389,6 +404,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -420,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -439,6 +456,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -470,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -489,6 +508,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -520,6 +540,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge port door',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -539,6 +560,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Charge port door',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -570,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -589,6 +612,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Frunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -620,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sunroof',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -639,6 +664,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Sunroof',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -670,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trunk',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.DOOR: 'door'>,
@@ -689,6 +716,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'door',
       'friendly_name': 'Test Trunk',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -720,6 +748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
@@ -739,6 +768,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'window',
       'friendly_name': 'Test Windows',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 0>,
     }),
     'context': <ANY>,

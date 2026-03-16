@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -142,6 +144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -200,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -258,6 +262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -316,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice times',
     'options': dict({
     }),
     'original_device_class': None,
@@ -374,6 +380,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery backup reserve',
     'options': dict({
     }),
     'original_device_class': None,
@@ -432,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inverter output power limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER: 'power'>,
@@ -491,6 +499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -549,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -607,6 +617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -665,6 +676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -724,6 +736,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -782,6 +795,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -840,6 +854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -899,6 +914,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -958,6 +974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Far detection',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -1017,6 +1034,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Near detection',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -1076,6 +1094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensitivity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1134,6 +1153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 1',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1193,6 +1213,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 2',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1252,6 +1273,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 3',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1311,6 +1333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 4',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1370,6 +1393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 5',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1429,6 +1453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 6',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1488,6 +1513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 7',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1547,6 +1573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irrigation duration 8',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1606,6 +1633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1638,6 +1666,66 @@
     'state': '-2.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 600.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.kattenbak_delay_clean_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Delay clean time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Delay clean time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay_clean_time',
+    'unique_id': 'tuya.yohkwjjdjlzludd3psmdelay_clean_time',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Kattenbak Delay clean time',
+      'max': 600.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kattenbak_delay_clean_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1664,6 +1752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1722,6 +1811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1781,6 +1871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Arm delay',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1840,6 +1931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren duration',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1873,6 +1965,66 @@
     'state': '3.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 600.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.poopy_nano_2_delay_clean_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Delay clean time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Delay clean time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay_clean_time',
+    'unique_id': 'tuya.nyriu7sjgj9oruzmpsmdelay_clean_time',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Poopy Nano 2 Delay clean time',
+      'max': 600.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.poopy_nano_2_delay_clean_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1899,6 +2051,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm maximum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1957,6 +2110,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm minimum',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2015,6 +2169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation height',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -2074,6 +2229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum liquid depth',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -2133,6 +2289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2191,6 +2348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2249,6 +2407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2307,6 +2466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2365,6 +2525,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2423,6 +2584,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2481,6 +2643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2513,6 +2676,65 @@
     'state': '95.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[number.white_noise_machine_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_noise_machine_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': 'tuya.c9nbmrweturkgqktdyzbvolume_set',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.white_noise_machine_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Noise Machine Volume',
+      'max': 100.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_noise_machine_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2539,6 +2761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature correction',
     'options': dict({
     }),
     'original_device_class': None,

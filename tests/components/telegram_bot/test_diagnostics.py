@@ -12,9 +12,7 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    webhook_platform,
-    mock_external_calls: None,
-    mock_generate_secret_token,
+    webhook_bot,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""

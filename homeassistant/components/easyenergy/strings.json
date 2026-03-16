@@ -44,14 +44,8 @@
     }
   },
   "exceptions": {
-    "invalid_config_entry": {
-      "message": "Invalid config entry provided. Got {config_entry}"
-    },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
-    },
-    "unloaded_config_entry": {
-      "message": "Invalid config entry provided. {config_entry} is not loaded."
     }
   },
   "services": {

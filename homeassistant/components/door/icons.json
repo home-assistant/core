@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:door-closed"
+    },
+    "opened": {
+      "trigger": "mdi:door-open"
+    }
+  }
+}

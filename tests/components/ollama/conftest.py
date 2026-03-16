@@ -69,6 +69,23 @@ def mock_config_entry_with_assist(
 
 
 @pytest.fixture
+def mock_config_entry_with_assist_invalid_api(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST, "invalid_api"],
+        },
+    )
+    return mock_config_entry
+
+
+@pytest.fixture
 async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     """Initialize integration."""
     assert await async_setup_component(hass, "homeassistant", {})

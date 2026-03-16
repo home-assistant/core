@@ -1,0 +1,201 @@
+# serializer version: 1
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_device_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Charging',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'tibber',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device-id_charging.status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'Test Device Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_device_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_connectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_device_connectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connectivity',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'tibber',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device-id_isOnline',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Test Device Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_device_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_plug-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_device_plug',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Plug',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Plug',
+    'platform': 'tibber',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device-id_connector.status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_plug-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'Test Device Plug',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_device_plug',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.test_device_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tibber',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'device-id_onOff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_snapshot[binary_sensor.test_device_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Test Device Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_device_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

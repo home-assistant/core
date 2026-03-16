@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date, datetime
+from decimal import Decimal
 import logging
 from typing import Any
 
@@ -18,11 +20,7 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorStateClass,
-)
-from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
-    async_parse_date_datetime,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,8 +33,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_STATE,
-    CONF_TRIGGER,
-    CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -44,16 +40,16 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as template_validators
+from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
     async_setup_template_platform,
@@ -136,33 +132,8 @@ SENSOR_LEGACY_YAML_SCHEMA = vol.All(
     .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
 
-
-def extra_validation_checks(val):
-    """Run extra validation checks."""
-    if CONF_TRIGGERS in val or CONF_TRIGGER in val:
-        raise vol.Invalid(
-            "You can only add triggers to template entities if they are defined under"
-            " `template:`. See the template documentation for more information:"
-            " https://www.home-assistant.io/integrations/template/"
-        )
-
-    if CONF_SENSORS not in val and SENSOR_DOMAIN not in val:
-        raise vol.Invalid(f"Required key {SENSOR_DOMAIN} not defined")
-
-    return val
-
-
-PLATFORM_SCHEMA = vol.All(
-    SENSOR_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
-            vol.Optional(CONF_TRIGGERS): cv.match_all,  # to raise custom warning
-            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(
-                SENSOR_LEGACY_YAML_SCHEMA
-            ),
-        }
-    ),
-    extra_validation_checks,
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_LEGACY_YAML_SCHEMA)}
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -213,7 +184,94 @@ def async_create_preview_sensor(
     )
 
 
-class StateSensorEntity(TemplateEntity, SensorEntity):
+def validate_datetime(
+    entity: AbstractTemplateSensor,
+    attribute: str,
+    resolve_as: SensorDeviceClass,
+    **kwargs,
+) -> Callable[[Any], datetime | date | None]:
+    """Converts the template result into a datetime or date."""
+
+    def convert(result: Any) -> datetime | date | None:
+        if resolve_as == SensorDeviceClass.TIMESTAMP:
+            if isinstance(result, datetime):
+                return result
+
+            if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
+                template_validators.log_validation_result_error(
+                    entity, attribute, result, "expected a valid timestamp"
+                )
+                return None
+
+            if kwargs.get("require_tzinfo", True) and parsed_timestamp.tzinfo is None:
+                template_validators.log_validation_result_error(
+                    entity,
+                    attribute,
+                    result,
+                    "expected a valid timestamp with a timezone",
+                )
+                return None
+
+            return parsed_timestamp
+
+        if (parsed_date := dt_util.parse_date(result)) is not None:
+            return parsed_date
+
+        template_validators.log_validation_result_error(
+            entity, attribute, result, "expected a valid date"
+        )
+        return None
+
+    return convert
+
+
+class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
+    """Representation of a template sensor features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
+
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: ConfigType) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._attr_last_reset = None
+
+        self.setup_state_template(
+            CONF_STATE,
+            "_attr_native_value",
+            self._validate_state,
+        )
+        self.setup_template(
+            ATTR_LAST_RESET,
+            "_attr_last_reset",
+            validate_datetime(
+                self, ATTR_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
+            ),
+        )
+
+    def _validate_state(
+        self, result: Any
+    ) -> StateType | date | datetime | Decimal | None:
+        """Validate the state."""
+        if self._numeric_state_expected:
+            if not isinstance(result, bool) and isinstance(result, (int, float)):
+                return result
+
+            return template_validators.number(self, CONF_STATE)(result)
+
+        if result is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            return result
+
+        return validate_datetime(self, CONF_STATE, self.device_class)(result)
+
+
+class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):
     """Representation of a Template Sensor."""
 
     _attr_should_poll = False
@@ -226,60 +284,14 @@ class StateSensorEntity(TemplateEntity, SensorEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config, unique_id)
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._template: template.Template = config[CONF_STATE]
-        self._attr_last_reset_template: template.Template | None = config.get(
-            ATTR_LAST_RESET
-        )
-
-    @callback
-    def _async_setup_templates(self) -> None:
-        """Set up templates."""
-        self.add_template_attribute(
-            "_attr_native_value", self._template, None, self._update_state
-        )
-        if self._attr_last_reset_template is not None:
-            self.add_template_attribute(
-                "_attr_last_reset",
-                self._attr_last_reset_template,
-                cv.datetime,
-                self._update_last_reset,
-            )
-
-        super()._async_setup_templates()
-
-    @callback
-    def _update_last_reset(self, result):
-        self._attr_last_reset = result
-
-    @callback
-    def _update_state(self, result):
-        super()._update_state(result)
-        if isinstance(result, TemplateError):
-            self._attr_native_value = None
-            return
-
-        if result is None or self.device_class not in (
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        ):
-            self._attr_native_value = result
-            return
-
-        self._attr_native_value = async_parse_date_datetime(
-            result, self.entity_id, self.device_class
-        )
+        TemplateEntity.__init__(self, hass, config, unique_id)
+        AbstractTemplateSensor.__init__(self, config)
 
 
-class TriggerSensorEntity(TriggerEntity, RestoreSensor):
+class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
     """Sensor entity based on trigger data."""
 
-    _entity_id_format = ENTITY_ID_FORMAT
     domain = SENSOR_DOMAIN
-    extra_template_keys = (CONF_STATE,)
 
     def __init__(
         self,
@@ -288,17 +300,8 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
         config: ConfigType,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, coordinator, config)
-
-        self._parse_result.add(CONF_STATE)
-        if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:
-            if last_reset_template.is_static:
-                self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template
-            else:
-                self._to_render_simple.append(ATTR_LAST_RESET)
-
-        self._attr_state_class = config.get(CONF_STATE_CLASS)
-        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateSensor.__init__(self, config)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -311,39 +314,5 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
             # then we should not restore state
             and CONF_STATE not in self._rendered
         ):
-            self._rendered[CONF_STATE] = extra_data.native_value
+            self._attr_native_value = extra_data.native_value
             self.restore_attributes(last_state)
-
-    @property
-    def native_value(self) -> str | datetime | date | None:
-        """Return state of the sensor."""
-        return self._rendered.get(CONF_STATE)
-
-    @callback
-    def _process_data(self) -> None:
-        """Process new data."""
-        super()._process_data()
-
-        # Update last_reset
-        if ATTR_LAST_RESET in self._rendered:
-            parsed_timestamp = dt_util.parse_datetime(self._rendered[ATTR_LAST_RESET])
-            if parsed_timestamp is None:
-                _LOGGER.warning(
-                    "%s rendered invalid timestamp for last_reset attribute: %s",
-                    self.entity_id,
-                    self._rendered.get(ATTR_LAST_RESET),
-                )
-            else:
-                self._attr_last_reset = parsed_timestamp
-
-        if (
-            state := self._rendered.get(CONF_STATE)
-        ) is None or self.device_class not in (
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        ):
-            return
-
-        self._rendered[CONF_STATE] = async_parse_date_datetime(
-            state, self.entity_id, self.device_class
-        )

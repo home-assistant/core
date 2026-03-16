@@ -133,8 +133,8 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_mass",
-                    "friendly_name": "Test Device 18B2 Mass",
+                    "sensor_entity": "sensor.test_device_18b2_weight",
+                    "friendly_name": "Test Device 18B2 Weight",
                     "unit_of_measurement": "kg",
                     "state_class": "measurement",
                     "expected_state": "80.3",
@@ -150,8 +150,8 @@ _LOGGER = logging.getLogger(__name__)
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_mass",
-                    "friendly_name": "Test Device 18B2 Mass",
+                    "sensor_entity": "sensor.test_device_18b2_weight",
+                    "friendly_name": "Test Device 18B2 Weight",
                     "unit_of_measurement": "lb",
                     "state_class": "measurement",
                     "expected_state": "74.86",
@@ -168,7 +168,7 @@ _LOGGER = logging.getLogger(__name__)
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_dew_point",
-                    "friendly_name": "Test Device 18B2 Dew Point",
+                    "friendly_name": "Test Device 18B2 Dew point",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "17.38",
@@ -252,14 +252,14 @@ _LOGGER = logging.getLogger(__name__)
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
-                    "friendly_name": "Test Device 18B2 Pm10",
+                    "friendly_name": "Test Device 18B2 PM10",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
-                    "sensor_entity": "sensor.test_device_18b2_pm25",
-                    "friendly_name": "Test Device 18B2 Pm25",
+                    "sensor_entity": "sensor.test_device_18b2_pm2_5",
+                    "friendly_name": "Test Device 18B2 PM2.5",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
@@ -276,7 +276,7 @@ _LOGGER = logging.getLogger(__name__)
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_carbon_dioxide",
-                    "friendly_name": "Test Device 18B2 Carbon Dioxide",
+                    "friendly_name": "Test Device 18B2 Carbon dioxide",
                     "unit_of_measurement": "ppm",
                     "state_class": "measurement",
                     "expected_state": "1250",
@@ -295,7 +295,7 @@ _LOGGER = logging.getLogger(__name__)
                     "sensor_entity": (
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
-                    "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
+                    "friendly_name": "Test Device 18B2 Volatile organic compounds",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
@@ -487,8 +487,8 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_mass",
-                    "friendly_name": "Test Device 18B2 Mass",
+                    "sensor_entity": "sensor.test_device_18b2_weight",
+                    "friendly_name": "Test Device 18B2 Weight",
                     "unit_of_measurement": "kg",
                     "state_class": "measurement",
                     "expected_state": "80.3",
@@ -504,8 +504,8 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_mass",
-                    "friendly_name": "Test Device 18B2 Mass",
+                    "sensor_entity": "sensor.test_device_18b2_weight",
+                    "friendly_name": "Test Device 18B2 Weight",
                     "unit_of_measurement": "lb",
                     "state_class": "measurement",
                     "expected_state": "74.86",
@@ -522,7 +522,7 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_dew_point",
-                    "friendly_name": "Test Device 18B2 Dew Point",
+                    "friendly_name": "Test Device 18B2 Dew point",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "17.38",
@@ -606,14 +606,14 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_pm10",
-                    "friendly_name": "Test Device 18B2 Pm10",
+                    "friendly_name": "Test Device 18B2 PM10",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "7170",
                 },
                 {
-                    "sensor_entity": "sensor.test_device_18b2_pm25",
-                    "friendly_name": "Test Device 18B2 Pm25",
+                    "sensor_entity": "sensor.test_device_18b2_pm2_5",
+                    "friendly_name": "Test Device 18B2 PM2.5",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "3090",
@@ -630,7 +630,7 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_carbon_dioxide",
-                    "friendly_name": "Test Device 18B2 Carbon Dioxide",
+                    "friendly_name": "Test Device 18B2 Carbon dioxide",
                     "unit_of_measurement": "ppm",
                     "state_class": "measurement",
                     "expected_state": "1250",
@@ -649,7 +649,7 @@ async def test_v1_sensors(
                     "sensor_entity": (
                         "sensor.test_device_18b2_volatile_organic_compounds"
                     ),
-                    "friendly_name": "Test Device 18B2 Volatile Organic Compounds",
+                    "friendly_name": "Test Device 18B2 Volatile organic compounds",
                     "unit_of_measurement": "μg/m³",
                     "state_class": "measurement",
                     "expected_state": "307",
@@ -802,7 +802,7 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_uv_index",
-                    "friendly_name": "Test Device 18B2 Uv Index",
+                    "friendly_name": "Test Device 18B2 UV Index",
                     "state_class": "measurement",
                     "expected_state": "5.0",
                 },
@@ -852,7 +852,7 @@ async def test_v1_sensors(
             [
                 {
                     "sensor_entity": "sensor.test_device_18b2_volume_flow_rate",
-                    "friendly_name": "Test Device 18B2 Volume Flow Rate",
+                    "friendly_name": "Test Device 18B2 Volume flow rate",
                     "unit_of_measurement": "m³/h",
                     "state_class": "measurement",
                     "expected_state": "34.78",
@@ -982,8 +982,8 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_volume_storage",
-                    "friendly_name": "Test Device 18B2 Volume Storage",
+                    "sensor_entity": "sensor.test_device_18b2_stored_volume",
+                    "friendly_name": "Test Device 18B2 Stored volume",
                     "unit_of_measurement": "L",
                     "state_class": "measurement",
                     "expected_state": "19551.879",
@@ -999,15 +999,15 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_temperature_1",
-                    "friendly_name": "Test Device 18B2 Temperature 1",
+                    "sensor_entity": "sensor.test_device_18b2_temperature",
+                    "friendly_name": "Test Device 18B2 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "25.06",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_temperature_2",
-                    "friendly_name": "Test Device 18B2 Temperature 2",
+                    "friendly_name": "Test Device 18B2 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "25.11",
@@ -1023,36 +1023,36 @@ async def test_v1_sensors(
             None,
             [
                 {
-                    "sensor_entity": "sensor.test_device_18b2_temperature_1",
-                    "friendly_name": "Test Device 18B2 Temperature 1",
+                    "sensor_entity": "sensor.test_device_18b2_temperature",
+                    "friendly_name": "Test Device 18B2 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "25.06",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_temperature_2",
-                    "friendly_name": "Test Device 18B2 Temperature 2",
+                    "friendly_name": "Test Device 18B2 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "25.11",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_temperature_3",
-                    "friendly_name": "Test Device 18B2 Temperature 3",
+                    "friendly_name": "Test Device 18B2 Temperature",
                     "unit_of_measurement": "°C",
                     "state_class": "measurement",
                     "expected_state": "22.55",
                 },
                 {
-                    "sensor_entity": "sensor.test_device_18b2_humidity_1",
-                    "friendly_name": "Test Device 18B2 Humidity 1",
+                    "sensor_entity": "sensor.test_device_18b2_humidity",
+                    "friendly_name": "Test Device 18B2 Humidity",
                     "unit_of_measurement": "%",
                     "state_class": "measurement",
                     "expected_state": "63.27",
                 },
                 {
                     "sensor_entity": "sensor.test_device_18b2_humidity_2",
-                    "friendly_name": "Test Device 18B2 Humidity 2",
+                    "friendly_name": "Test Device 18B2 Humidity",
                     "unit_of_measurement": "%",
                     "state_class": "measurement",
                     "expected_state": "60.71",

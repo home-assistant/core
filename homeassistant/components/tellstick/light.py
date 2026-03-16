@@ -52,7 +52,7 @@ class TellstickLight(TellstickDevice, LightEntity):
         self._brightness = 255
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
@@ -74,11 +74,11 @@ class TellstickLight(TellstickDevice, LightEntity):
 
             # _brightness is not defined when called from super
             try:
-                self._state = self._brightness > 0
+                self._attr_is_on = self._brightness > 0
             except AttributeError:
-                self._state = True
+                self._attr_is_on = True
         else:
-            self._state = False
+            self._attr_is_on = False
 
     def _send_device_command(self, requested_state, requested_data):
         """Let tellcore update the actual device to the requested state."""

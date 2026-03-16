@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -143,6 +146,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button[ex30_2024][button.volvo_ex30_lock_reduced_guard-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.volvo_ex30_lock_reduced_guard',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock reduced guard',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock reduced guard',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_reduced_guard',
+    'unique_id': 'yv1abcdefg1234567_lock_reduced_guard',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[ex30_2024][button.volvo_ex30_lock_reduced_guard-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo EX30 Lock reduced guard',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.volvo_ex30_lock_reduced_guard',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[ex30_2024][button.volvo_ex30_start_climatization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -164,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -383,6 +440,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button[s90_diesel_2018][button.volvo_s90_lock_reduced_guard-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.volvo_s90_lock_reduced_guard',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock reduced guard',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock reduced guard',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_reduced_guard',
+    'unique_id': 'yv1abcdefg1234567_lock_reduced_guard',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[s90_diesel_2018][button.volvo_s90_lock_reduced_guard-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo S90 Lock reduced guard',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.volvo_s90_lock_reduced_guard',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[s90_diesel_2018][button.volvo_s90_start_climatization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -404,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -500,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -548,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -596,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -623,6 +734,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button[xc40_electric_2024][button.volvo_xc40_lock_reduced_guard-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.volvo_xc40_lock_reduced_guard',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock reduced guard',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock reduced guard',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_reduced_guard',
+    'unique_id': 'yv1abcdefg1234567_lock_reduced_guard',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[xc40_electric_2024][button.volvo_xc40_lock_reduced_guard-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Lock reduced guard',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.volvo_xc40_lock_reduced_guard',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[xc40_electric_2024][button.volvo_xc40_start_climatization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -644,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk',
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk & flash',
     'options': dict({
     }),
     'original_device_class': None,
@@ -863,6 +1028,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_button[xc90_petrol_2019][button.volvo_xc90_lock_reduced_guard-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.volvo_xc90_lock_reduced_guard',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lock reduced guard',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lock reduced guard',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lock_reduced_guard',
+    'unique_id': 'yv1abcdefg1234567_lock_reduced_guard',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button[xc90_petrol_2019][button.volvo_xc90_lock_reduced_guard-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Lock reduced guard',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.volvo_xc90_lock_reduced_guard',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_button[xc90_petrol_2019][button.volvo_xc90_start_climatization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -884,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start engine',
     'options': dict({
     }),
     'original_device_class': None,
@@ -980,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1028,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stop engine',
     'options': dict({
     }),
     'original_device_class': None,

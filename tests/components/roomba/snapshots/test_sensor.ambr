@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average mission time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -121,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -172,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Canceled missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -222,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -273,6 +278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Failed missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -323,6 +329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last mission start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -374,6 +381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scrubs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -426,6 +434,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Successful missions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -476,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tank level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -525,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaned area',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -577,6 +588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -628,6 +640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total missions',
     'options': dict({
     }),
     'original_device_class': None,

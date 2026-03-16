@@ -78,7 +78,7 @@ async def update_node_fixture(matter_client: MagicMock) -> AsyncMock:
     return matter_client.update_node
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_update_entity(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -93,7 +93,7 @@ async def test_update_entity(
     assert matter_client.check_node_update.call_count == 1
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_update_check_service(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -141,7 +141,7 @@ async def test_update_check_service(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_update_install(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -244,7 +244,7 @@ async def test_update_install(
     assert state.attributes.get("installed_version") == "v2.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_update_install_failure(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -313,7 +313,7 @@ async def test_update_install_failure(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_update_state_save_and_restore(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -389,7 +389,9 @@ async def test_update_state_restore(
             ),
         ),
     )
-    await setup_integration_with_node_fixture(hass, "dimmable_light", matter_client)
+    await setup_integration_with_node_fixture(
+        hass, "mock_dimmable_light", matter_client
+    )
 
     assert check_node_update.call_count == 0
 

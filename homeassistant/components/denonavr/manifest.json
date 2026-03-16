@@ -4,9 +4,10 @@
   "codeowners": ["@ol-iver", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["denonavr"],
-  "requirements": ["denonavr==1.2.0"],
+  "requirements": ["denonavr==1.3.2"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Allow charging from grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Storm watch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Defrost mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -214,6 +218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sentry mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steering wheel heater',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valet mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
