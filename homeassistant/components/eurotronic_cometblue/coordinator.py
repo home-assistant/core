@@ -15,7 +15,6 @@ from eurotronic_cometblue_ha import AsyncCometBlue, InvalidByteValueError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import MAX_RETRIES
@@ -45,7 +44,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
         hass: HomeAssistant,
         entry: CometBlueConfigEntry,
         cometblue: AsyncCometBlue,
-        device_info: DeviceInfo,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
@@ -57,7 +55,6 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
         )
         self.device = cometblue
         self.address = cometblue.client.address
-        self.device_info = device_info
 
     async def send_command(
         self,

@@ -13,7 +13,7 @@
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "PIN"
+          "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
           "pin": "6-digit device PIN"

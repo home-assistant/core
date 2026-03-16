@@ -66,7 +66,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Initialize CometBlueClimateEntity."""
 
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.address}"
+        self._attr_unique_id = coordinator.address
 
     @property
     def current_temperature(self) -> float | None:

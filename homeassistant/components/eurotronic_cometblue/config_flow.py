@@ -75,9 +75,8 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
                 try:
                     # Device only returns battery level if PIN is correct
                     await cometblue_device.get_battery_async()
-                except Exception:
-                    # need to use broad exception as different exceptions are raised
-                    # based on the underlying OS and backend
+                except TimeoutError:
+                    # This likely means PIN was incorrect on Linux and ESPHome backends
                     LOGGER.exception(
                         "Failed to read battery level, likely due to incorrect PIN"
                     )
