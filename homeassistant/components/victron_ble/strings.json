@@ -34,6 +34,9 @@
   },
   "entity": {
     "sensor": {
+      "ac_current": {
+        "name": "AC current"
+      },
       "ac_in_power": {
         "name": "AC-in power"
       },
@@ -234,6 +237,12 @@
           "switched_off_register": "Switched off by register",
           "switched_off_switch": "Switched off by switch"
         }
+      },
+      "output_phase_current": {
+        "name": "Output phase {phase} current"
+      },
+      "output_phase_voltage": {
+        "name": "Output phase {phase} voltage"
       },
       "output_voltage": {
         "name": "Output voltage"
