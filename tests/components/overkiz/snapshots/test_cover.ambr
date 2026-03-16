@@ -806,6 +806,218 @@
     'state': 'opening',
   })
 # ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.back_door_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.back_door_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3897767',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.back_door_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -24,
+      'device_class': 'shutter',
+      'friendly_name': 'Back Door Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.back_door_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.front_door_shutter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.front_door_shutter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/3656107',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.front_door_shutter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': -24,
+      'device_class': 'shutter',
+      'friendly_name': 'Front Door Shutter',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.front_door_shutter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.roof_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.roof_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/77700',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.roof_window-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'window',
+      'friendly_name': 'Roof Window',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.roof_window',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.roof_window_low_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.roof_window_low_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Low speed',
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.WINDOW: 'window'>,
+    'original_icon': None,
+    'original_name': 'Low speed',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1516/77700_low_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[setup_local_somfy_europe_2.json][cover.roof_window_low_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'window',
+      'friendly_name': 'Roof Window Low speed',
+      'is_closed': False,
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.roof_window_low_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
 # name: test_cover_entities_snapshot[setup_local_tahoma.json][cover.bedroom_screen-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

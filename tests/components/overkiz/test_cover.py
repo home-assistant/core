@@ -68,6 +68,10 @@ TILTED_WINDOW = FixtureDevice(
 DYNAMIC_EXTERIOR_VENETIAN_BLIND = FixtureDevice(
     "setup/setup_local_somfy_europe.json", "io://1234-5678-6508/4877511"
 )
+# Device with ClosureState=124
+POSITIONABLE_ROLLER_SHUTTER_UNO = FixtureDevice(
+    "setup/setup_local_somfy_europe_2.json", "io://1234-5678-1516/3656107"
+)
 
 SNAPSHOT_FIXTURES = [
     AWNING,
@@ -77,6 +81,7 @@ SNAPSHOT_FIXTURES = [
     SHUTTER,
     TILTED_WINDOW,
     DYNAMIC_EXTERIOR_VENETIAN_BLIND,
+    POSITIONABLE_ROLLER_SHUTTER_UNO,
 ]
 
 
