@@ -47,6 +47,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.unique_id)},
         manufacturer=lyngdorf_model.manufacturer,
+        name=config_entry.title,
         serial_number=config_entry.data.get(CONF_SERIAL_NUMBER),
         model=lyngdorf_model.model_name,
     )

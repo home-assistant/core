@@ -76,22 +76,22 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._device_model = model.model_name
                 self._name = model.model_name
 
-                # Resolve MAC address from ARP table to use as serial
-                if mac := await self.hass.async_add_executor_job(
-                    partial(getmac.get_mac_address, ip=self._host)
-                ):
-                    self._device_serial_number = mac.replace(":", "").lower()
-
-                # Check SSDP discoveries for matching host to get name
+                # Check SSDP discoveries for matching host to get serial/name
                 discovery = await self._async_find_discovery_by_host(self._host)
                 if discovery:
-                    if not self._device_serial_number:
-                        self._device_serial_number = (
-                            discovery.upnp.get(ATTR_UPNP_SERIAL) or ""
-                        ).lower() or None
+                    self._device_serial_number = (
+                        discovery.upnp.get(ATTR_UPNP_SERIAL) or ""
+                    ).lower() or None
                     self._name = (
                         discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._name
                     )
+
+                # Fall back to MAC address if no serial from SSDP
+                if not self._device_serial_number:
+                    if mac := await self.hass.async_add_executor_job(
+                        partial(getmac.get_mac_address, ip=self._host)
+                    ):
+                        self._device_serial_number = mac.replace(":", "").lower()
 
                 unique_id = (
                     self._device_serial_number or f"{self._device_model}:{self._host}"
