@@ -332,7 +332,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
 
     @property
     def icon(self) -> str:
-        """Return name."""
+        """Return icon."""
         return self._icon
 
     @property
