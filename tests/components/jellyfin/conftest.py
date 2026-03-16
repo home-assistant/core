@@ -172,8 +172,6 @@ def api_user_items_side_effect(*args, **kwargs):
     if "parentId" in params:
         if params["parentId"] == "SERIES-UUID":
             return load_json_fixture("seasons.json")
-        if params["parentId"] == "SEASON-UUID":
-            return load_json_fixture("episodes.json")
         return load_json_fixture("episodes.json")
 
     return load_json_fixture("user-items.json")
