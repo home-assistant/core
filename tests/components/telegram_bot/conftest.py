@@ -104,7 +104,7 @@ def mock_external_calls() -> Generator[None]:
         type="PRIVATE",
         max_reaction_count=100,
         accent_color_id=0,
-        accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
+        accepted_gift_types=AcceptedGiftTypes(True, True, True, True, True),
     )
     test_user = User(123456, "Testbot", True, "mock last name", "mock_bot")
     message = Message(

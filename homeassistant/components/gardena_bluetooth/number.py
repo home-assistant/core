@@ -46,7 +46,7 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
 
 DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
-        key=Valve.manual_watering_time.uuid,
+        key=Valve.manual_watering_time.unique_id,
         translation_key="manual_watering_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         mode=NumberMode.BOX,
@@ -58,7 +58,7 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=Valve.remaining_open_time.uuid,
+        key=Valve.remaining_open_time.unique_id,
         translation_key="remaining_open_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0.0,
@@ -69,7 +69,7 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.rain_pause.uuid,
+        key=DeviceConfiguration.rain_pause.unique_id,
         translation_key="rain_pause",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         mode=NumberMode.BOX,
@@ -81,7 +81,7 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.seasonal_adjust.uuid,
+        key=DeviceConfiguration.seasonal_adjust.unique_id,
         translation_key="seasonal_adjust",
         native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
@@ -93,7 +93,7 @@ DESCRIPTIONS = (
         device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=Sensor.threshold.uuid,
+        key=Sensor.threshold.unique_id,
         translation_key="sensor_threshold",
         native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.BOX,
@@ -117,9 +117,9 @@ async def async_setup_entry(
     entities: list[NumberEntity] = [
         GardenaBluetoothNumber(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
-    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+    if Valve.remaining_open_time.unique_id in coordinator.characteristics:
         entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
     async_add_entities(entities)
 

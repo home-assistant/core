@@ -40,7 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
       'friendly_name': 'Test Occupancy Occupancy',
-      'lutron_integration_id': 'occ_id',
+      'lutron_integration_id': 5,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_occupancy_occupancy',

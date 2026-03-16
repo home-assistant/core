@@ -119,6 +119,18 @@
         "name": "Stop program"
       }
     },
+    "fan": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "manual": "[%key:common::state::manual%]"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "ambient_light": {
         "name": "Ambient light"
