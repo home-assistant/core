@@ -10,6 +10,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,14 +23,14 @@ TEST_MODEL = "test_model:latest"
 async def test_form(hass: HomeAssistant) -> None:
     """Test flow when configuring URL only."""
     # Pretend we already set up a config entry.
-    hass.config.components.add(ollama.DOMAIN)
+    hass.config.components.add(DOMAIN)
     MockConfigEntry(
-        domain=ollama.DOMAIN,
+        domain=DOMAIN,
         state=config_entries.ConfigEntryState.LOADED,
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -61,7 +62,7 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we abort on duplicate config entry."""
     MockConfigEntry(
-        domain=ollama.DOMAIN,
+        domain=DOMAIN,
         data={
             ollama.CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model",
@@ -69,7 +70,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -143,7 +144,7 @@ async def test_creating_new_conversation_subentry(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -183,7 +184,7 @@ async def test_creating_conversation_subentry_not_loaded(
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "conversation"),
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -211,7 +212,7 @@ async def test_subentry_need_download(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM, new_flow
@@ -273,7 +274,7 @@ async def test_subentry_download_error(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -443,7 +444,7 @@ async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> No
 async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
@@ -468,7 +469,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
 async def test_form_errors_recovery(hass: HomeAssistant, side_effect, error) -> None:
     """Test that the user flow recovers after an error and completes successfully."""
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # First attempt fails
@@ -501,7 +502,7 @@ async def test_form_errors_recovery(hass: HomeAssistant, side_effect, error) -> 
 async def test_form_invalid_url(hass: HomeAssistant) -> None:
     """Test we handle invalid URL."""
     result = await hass.config_entries.flow.async_init(
-        ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -524,7 +525,7 @@ async def test_subentry_connection_error(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
     assert new_flow["type"] is FlowResultType.ABORT
@@ -546,7 +547,7 @@ async def test_subentry_model_check_exception(
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
         assert new_flow["type"] is FlowResultType.FORM
@@ -666,7 +667,7 @@ async def test_creating_ai_task_subentry(
     ):
         result = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "ai_task_data"),
-            context={"source": config_entries.SOURCE_USER},
+            context={"source": SOURCE_USER},
         )
 
     assert result.get("type") is FlowResultType.FORM
@@ -718,7 +719,7 @@ async def test_ai_task_subentry_not_loaded(
     # Don't call mock_init_component to simulate not loaded state
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
 
     assert result.get("type") is FlowResultType.ABORT
@@ -763,7 +764,7 @@ async def test_user_step_async_client_headers(
         mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
 
@@ -841,7 +842,7 @@ async def test_user_step_errors(
         )
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
 
@@ -863,7 +864,7 @@ async def test_user_step_trim_url(hass: HomeAssistant) -> None:
         mock_async_client.return_value.list = AsyncMock(return_value={"models": []})
 
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
 
