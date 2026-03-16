@@ -689,13 +689,40 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
 def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Check whether any integration supplies custom equivalent units for its entities."""
     custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
-    for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
-        if custom_equivalent_units := getattr(
+    for domain, platform in hass.data[DATA_RECORDER].recorder_platforms.items():
+        custom_equivalent_units = getattr(
             platform, INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS, None
-        ):
-            custom_equivalent_units_per_entity |= run_callback_threadsafe(
+        )
+
+        if not custom_equivalent_units:
+            continue
+
+        try:
+            platform_custom_equivalent_units = run_callback_threadsafe(
                 hass.loop, custom_equivalent_units, hass
             ).result()
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.warning(
+                "Error calling %s for recorder platform domain %s: %s",
+                INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                domain,
+                exc,
+            )
+            continue
+
+        if not platform_custom_equivalent_units:
+            continue
+
+        try:
+            custom_equivalent_units_per_entity |= platform_custom_equivalent_units
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.warning(
+                "Error processing result of %s for recorder platform domain %s: %s",
+                INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
+                domain,
+                exc,
+            )
+
     return custom_equivalent_units_per_entity
 
 
