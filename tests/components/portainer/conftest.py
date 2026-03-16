@@ -11,11 +11,9 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint
-from pyportainer.watcher import PortainerImageWatcherResult
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
 from pyportainer.models.stacks import Stack
+from pyportainer.watcher import PortainerImageWatcherResult
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN

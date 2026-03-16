@@ -129,7 +129,7 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
     ) -> None:
         """Initialize the Portainer update entity."""
         self.entity_description = entity_description
-        super().__init__(device_info, coordinator, via_device)
+        super().__init__(coordinator, entity_description, device_info, via_device)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
         self._in_progress_old_version: str | None = None

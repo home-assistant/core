@@ -6,7 +6,6 @@ from datetime import timedelta
 import logging
 
 from pyportainer import Portainer, PortainerImageWatcher
-from pyportainer import Portainer
 from pyportainer.exceptions import PortainerError
 
 from homeassistant.config_entries import ConfigEntry

@@ -216,6 +216,8 @@ async def test_watcher_start_stop(
     await hass.async_block_till_done()
 
     mock_portainer_watcher.stop.assert_called_once()
+
+
 async def test_migration_v4_to_v5(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
