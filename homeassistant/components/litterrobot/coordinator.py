@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -43,6 +44,7 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
         self.account = Account(websession=async_get_clientsession(hass))
+        self.previous_members: set[str] = set()
 
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
@@ -62,6 +64,22 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="cannot_connect",
                 translation_placeholders={"error": str(ex)},
             ) from ex
+
+        current_members = {robot.serial for robot in self.account.robots} | {
+            pet.id for pet in self.account.pets
+        }
+        if stale_members := self.previous_members - current_members:
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_members:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        self.previous_members = current_members
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""

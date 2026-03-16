@@ -64,12 +64,7 @@ rules:
     status: done
     comment: |
       This integration doesn't have any cases where raising an issue is needed
-  stale-devices:
-    status: todo
-    comment: |
-      Currently handled via async_remove_config_entry_device,
-      but we should be able to remove devices automatically
-
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done
