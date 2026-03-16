@@ -95,13 +95,15 @@ async def test_timestamp_event_conversion(hass: HomeAssistant) -> None:
         raw_events=[
             (
                 "tns1:Monitoring/LastReset",
-                EventEntity(
-                    uid=LAST_RESET_UID,
-                    name="Last Reset",
-                    platform="sensor",
-                    device_class="timestamp",
-                    value="2023-10-01T12:00:00Z",
-                ),
+                [
+                    EventEntity(
+                        uid=LAST_RESET_UID,
+                        name="Last Reset",
+                        platform="sensor",
+                        device_class="timestamp",
+                        value="2023-10-01T12:00:00Z",
+                    ),
+                ],
             ),
         ],
     )
@@ -121,13 +123,15 @@ async def test_timestamp_event_invalid_value(hass: HomeAssistant) -> None:
         raw_events=[
             (
                 "tns1:Monitoring/LastReset",
-                EventEntity(
-                    uid=LAST_RESET_UID,
-                    name="Last Reset",
-                    platform="sensor",
-                    device_class="timestamp",
-                    value="0000-00-00T00:00:00Z",
-                ),
+                [
+                    EventEntity(
+                        uid=LAST_RESET_UID,
+                        name="Last Reset",
+                        platform="sensor",
+                        device_class="timestamp",
+                        value="0000-00-00T00:00:00Z",
+                    ),
+                ],
             ),
         ],
     )
@@ -135,3 +139,40 @@ async def test_timestamp_event_invalid_value(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.testcamera_last_reset")
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_multiple_events_same_topic(hass: HomeAssistant) -> None:
+    """Test that multiple events with the same topic are all processed."""
+    await setup_onvif_integration(
+        hass,
+        capabilities=Capabilities(events=True, imaging=True, ptz=True),
+        raw_events=[
+            (
+                "tns1:VideoSource/MotionAlarm",
+                [
+                    EventEntity(
+                        uid=f"{MOTION_ALARM_UID}_1",
+                        name="Motion Alarm 1",
+                        platform="binary_sensor",
+                        device_class="motion",
+                        value=True,
+                    ),
+                    EventEntity(
+                        uid=f"{MOTION_ALARM_UID}_2",
+                        name="Motion Alarm 2",
+                        platform="binary_sensor",
+                        device_class="motion",
+                        value=False,
+                    ),
+                ],
+            ),
+        ],
+    )
+
+    state1 = hass.states.get("binary_sensor.testcamera_motion_alarm_1")
+    assert state1 is not None
+    assert state1.state == STATE_ON
+
+    state2 = hass.states.get("binary_sensor.testcamera_motion_alarm_2")
+    assert state2 is not None
+    assert state2.state == STATE_OFF

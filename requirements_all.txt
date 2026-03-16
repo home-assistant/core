@@ -1688,7 +1688,7 @@ onedrive-personal-sdk==0.1.7
 onvif-zeep-async==4.0.4
 
 # homeassistant.components.onvif
-onvif_parsers==1.2.2
+onvif_parsers==2.3.0
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
