@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import VEHICLE_DATA, VEHICLE_DATA_ALT
+from .const import ENERGY_HISTORY, VEHICLE_DATA, VEHICLE_DATA_ALT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -126,6 +126,18 @@ async def test_charge_energy_reset(
     state = hass.states.get(entity_id)
     assert state.state == "0"
     assert state.attributes.get("last_reset") is not None
+    last_reset = state.attributes["last_reset"]
+
+    # Additional 0 updates should not move last_reset forward
+    freezer.move_to("2024-01-01 01:30:00+00:00")
+    mock_vehicle_data.return_value = reset_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+    assert state.attributes["last_reset"] == last_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -192,3 +204,34 @@ async def test_energy_history_last_reset(
     state = hass.states.get(entity_id)
     # The first timestamp in the fixture is "2023-06-01T01:00:00-07:00"
     assert state.attributes.get("last_reset") == "2023-06-01T01:00:00-07:00"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_energy_history_invalid_first_period(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test that malformed first-period history data makes sensors unavailable."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    await setup_platform(hass, normal_config_entry, [Platform.SENSOR])
+
+    entity_id = "sensor.energy_site_battery_discharged"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    invalid_history = deepcopy(ENERGY_HISTORY)
+    invalid_history["response"]["time_series"][0].pop("timestamp")
+    mock_energy_history.return_value = invalid_history
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

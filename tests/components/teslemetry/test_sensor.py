@@ -14,7 +14,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, assert_entities_alt, setup_platform
+from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
 from .const import ENERGY_HISTORY, ENERGY_HISTORY_EMPTY, VEHICLE_DATA, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
@@ -166,6 +166,15 @@ async def test_streaming_charge_energy_reset(
     state = hass.states.get(entity_id)
     assert state.state == "0"
     assert state.attributes.get("last_reset") is not None
+    last_reset = state.attributes["last_reset"]
+
+    # Additional 0 updates should not move last_reset forward
+    freezer.move_to("2024-01-01 01:30:00+00:00")
+    mock_add_listener.send({"vin": vin, "data": {Signal.AC_CHARGING_ENERGY_IN: 0}})
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+    assert state.attributes["last_reset"] == last_reset
 
     # Large drop (> 1 kWh) should trigger reset
     mock_add_listener.send({"vin": vin, "data": {Signal.AC_CHARGING_ENERGY_IN: 20.0}})
@@ -210,6 +219,46 @@ async def test_streaming_charge_energy_restore_last_reset(
     # last_reset should be restored
     state = hass.states.get(entity_id)
     assert state.attributes["last_reset"] == "2024-01-01T01:00:00+00:00"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_polling_charge_energy_restore_last_reset(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test that last_reset is restored after reload for polling sensors."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    initial_data = deepcopy(VEHICLE_DATA)
+    initial_data["response"]["charge_state"]["charge_energy_added"] = 10.0
+    mock_vehicle_data.return_value = initial_data
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    entity_id = "sensor.test_charge_energy_added"
+
+    freezer.move_to("2024-01-01 01:00:00+00:00")
+    reset_data = deepcopy(VEHICLE_DATA)
+    reset_data["response"]["charge_state"]["charge_energy_added"] = 0
+    mock_vehicle_data.return_value = reset_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    last_reset = state.attributes["last_reset"]
+    assert last_reset is not None
+
+    mock_vehicle_data.return_value = VEHICLE_DATA
+    await reload_platform(hass, entry, [Platform.SENSOR])
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["last_reset"] == last_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -260,6 +309,18 @@ async def test_polling_charge_energy_reset(
     state = hass.states.get(entity_id)
     assert state.state == "0"
     assert state.attributes.get("last_reset") is not None
+    last_reset = state.attributes["last_reset"]
+
+    # Additional 0 updates should not move last_reset forward
+    freezer.move_to("2024-01-01 01:30:00+00:00")
+    mock_vehicle_data.return_value = reset_data
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+    assert state.attributes["last_reset"] == last_reset
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -289,3 +350,34 @@ async def test_energy_history_last_reset(
     state = hass.states.get(entity_id)
     # The first timestamp in the fixture is "2024-09-18T00:00:00+10:00"
     assert state.attributes.get("last_reset") == "2024-09-18T00:00:00+10:00"
+
+
+async def test_energy_history_invalid_first_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test energy history coordinator when the first period is malformed."""
+
+    freezer.move_to("2024-01-01 00:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entry = await setup_platform(hass, [Platform.SENSOR])
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "sensor.energy_site_battery_discharged"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+    invalid_history = deepcopy(ENERGY_HISTORY)
+    invalid_history["response"]["time_series"][0].pop("timestamp")
+    mock_energy_history.return_value = invalid_history
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE

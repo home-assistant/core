@@ -54,6 +54,15 @@ CHARGE_ENERGY_RESET_KEYS = frozenset(
 )
 CHARGE_ENERGY_RESET_THRESHOLD = 1.0  # kWh
 
+
+def _is_charge_energy_reset(previous_value: float | None, new_value: float) -> bool:
+    """Return if a charge energy value indicates a reset."""
+    return previous_value is not None and (
+        (new_value == 0 and previous_value != 0)
+        or new_value < previous_value - CHARGE_ENERGY_RESET_THRESHOLD
+    )
+
+
 BMS_STATES = {
     "Standby": "standby",
     "Drive": "drive",
@@ -1694,17 +1703,14 @@ class TeslemetryStreamSensorEntity(TeslemetryVehicleStreamEntity, RestoreSensor)
         if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS and isinstance(
             value, float | int
         ):
-            if self._previous_value is not None and (
-                value == 0
-                or value < self._previous_value - CHARGE_ENERGY_RESET_THRESHOLD
-            ):
+            if _is_charge_energy_reset(self._previous_value, float(value)):
                 self._attr_last_reset = dt_util.utcnow()
             self._previous_value = float(value)
         self._attr_native_value = value
         self.async_write_ha_state()
 
 
-class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity):
+class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, RestoreSensor):
     """Base class for Teslemetry vehicle metric sensors."""
 
     entity_description: TeslemetryVehicleSensorEntityDescription
@@ -1719,6 +1725,17 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
         self.entity_description = description
         super().__init__(data, description.key)
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (
+            self.entity_description.key in CHARGE_ENERGY_RESET_KEYS
+            and (last_state := await self.async_get_last_state()) is not None
+            and (last_reset := last_state.attributes.get("last_reset")) is not None
+        ):
+            self._attr_last_reset = dt_util.parse_datetime(str(last_reset))
+
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self.entity_description.nullable or self._value is not None:
@@ -1727,10 +1744,7 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehiclePollingEntity, SensorEntity
             if self.entity_description.key in CHARGE_ENERGY_RESET_KEYS and isinstance(
                 new_value, float | int
             ):
-                if self._previous_value is not None and (
-                    new_value == 0
-                    or new_value < self._previous_value - CHARGE_ENERGY_RESET_THRESHOLD
-                ):
+                if _is_charge_energy_reset(self._previous_value, float(new_value)):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_value = float(new_value)
             self._attr_native_value = new_value

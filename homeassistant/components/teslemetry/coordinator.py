@@ -253,7 +253,31 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         time_series = data["time_series"]
         if not time_series:
-            raise UpdateFailed("Empty time series data")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_invalid_data",
+            )
+
+        first_period = time_series[0]
+        if not isinstance(first_period, dict):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_invalid_data",
+            )
+
+        timestamp = first_period.get("timestamp")
+        if not isinstance(timestamp, str):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_invalid_data",
+            )
+
+        period_start = dt_util.parse_datetime(timestamp)
+        if period_start is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_invalid_data",
+            )
 
         # Add all time periods together
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
@@ -265,6 +289,6 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     else:
                         output[key] += period[key]
 
-        output["_period_start"] = dt_util.parse_datetime(time_series[0]["timestamp"])
+        output["_period_start"] = period_start
 
         return output

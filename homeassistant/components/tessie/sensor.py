@@ -383,6 +383,14 @@ CHARGE_ENERGY_RESET_KEYS = frozenset({"charge_state_charge_energy_added"})
 CHARGE_ENERGY_RESET_THRESHOLD = 1.0  # kWh
 
 
+def _is_charge_energy_reset(previous_value: float | None, new_value: float) -> bool:
+    """Return if a charge energy value indicates a reset."""
+    return previous_value is not None and (
+        (new_value == 0 and previous_value != 0)
+        or new_value < previous_value - CHARGE_ENERGY_RESET_THRESHOLD
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
@@ -455,11 +463,7 @@ class TessieVehicleSensorEntity(TessieEntity, RestoreSensor):
             raw_value = self.get()
             if isinstance(raw_value, float | int):
                 new_value = float(raw_value)
-                if self._previous_native_value is not None and (
-                    new_value == 0
-                    or new_value
-                    < self._previous_native_value - CHARGE_ENERGY_RESET_THRESHOLD
-                ):
+                if _is_charge_energy_reset(self._previous_native_value, new_value):
                     self._attr_last_reset = dt_util.utcnow()
                 self._previous_native_value = new_value
 

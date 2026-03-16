@@ -265,7 +265,19 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         time_series = data["time_series"]
         if not time_series:
-            raise UpdateFailed("Empty time series data")
+            raise UpdateFailed("Received invalid data")
+
+        first_period = time_series[0]
+        if not isinstance(first_period, dict):
+            raise UpdateFailed("Received invalid data")
+
+        timestamp = first_period.get("timestamp")
+        if not isinstance(timestamp, str):
+            raise UpdateFailed("Received invalid data")
+
+        period_start = dt_util.parse_datetime(timestamp)
+        if period_start is None:
+            raise UpdateFailed("Received invalid data")
 
         # Add all time periods together
         output: dict[str, Any] = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
@@ -277,7 +289,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                     else:
                         output[key] += period[key]
 
-        output["_period_start"] = dt_util.parse_datetime(time_series[0]["timestamp"])
+        output["_period_start"] = period_start
 
         return output
 

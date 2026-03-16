@@ -74,6 +74,18 @@ async def test_charge_energy_reset(
     state = hass.states.get(entity_id)
     assert state.state == "0"
     assert state.attributes.get("last_reset") is not None
+    last_reset = state.attributes["last_reset"]
+
+    # Additional 0 updates should not move last_reset forward
+    freezer.move_to("2024-01-01 01:30:00+00:00")
+    mock_get_state.return_value = reset_data
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+    assert state.attributes["last_reset"] == last_reset
 
     # Large drop (> 1 kWh) should trigger reset
     increase_data = deepcopy(TEST_VEHICLE_STATE_ONLINE)

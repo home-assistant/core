@@ -2791,7 +2791,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Test Charge energy added',
-      'last_reset': '2024-01-01T00:01:00+00:00',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
