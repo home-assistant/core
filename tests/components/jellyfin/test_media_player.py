@@ -377,7 +377,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
-        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
 
@@ -430,7 +430,7 @@ async def test_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
-        "thumbnail": "http://localhost/Items/c22fd826-17fc-44f4-9b04-1eb3e8fb9173/Images/Backdrop.jpg",
+        "thumbnail": "http://localhost/Items/21af9851-8e39-43a9-9c47-513d3b9e99fc/Images/Primary.jpg",
         "children_media_class": None,
     }
 
