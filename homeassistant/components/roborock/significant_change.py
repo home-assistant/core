@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.vacuum import ATTR_FAN_SPEED
+from homeassistant.components.vacuum import ATTR_FAN_SPEED, VacuumActivity
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
@@ -15,6 +15,15 @@ from homeassistant.helpers.significant_change import (
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
+}
+
+VACUUM_STATES: set[str] = {
+    VacuumActivity.CLEANING,
+    VacuumActivity.DOCKED,
+    VacuumActivity.ERROR,
+    VacuumActivity.IDLE,
+    VacuumActivity.PAUSED,
+    VacuumActivity.RETURNING,
 }
 
 
@@ -37,8 +46,10 @@ def async_check_significant_change(
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     if old_state != new_state:
-        if old_attrs_s == new_attrs_s:
+        if new_state not in VACUUM_STATES:
             # This is a map-only update and is not worth logging.
+            return False
+        if old_attrs_s == new_attrs_s:
             return False
         return True
 
