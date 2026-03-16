@@ -609,10 +609,12 @@ async def test_agent_download_unavailable_backup(
 async def test_agent_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
+    ws_client = await hass_ws_client(hass)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
     received_bytes = bytearray()
@@ -627,17 +629,38 @@ async def test_agent_upload(
 
     supervisor_client.backups.upload_backup.side_effect = mock_upload
 
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await ws_client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await ws_client.receive_json()
+    assert response["success"] is True
+
     supervisor_client.backups.reload.assert_not_called()
     resp = await client.post(
         "/api/backup/upload?agent_id=hassio.local",
         data={"file": StringIO("test")},
     )
+    await hass.async_block_till_done()
 
     assert resp.status == 201
     assert received_bytes == b"test"
     supervisor_client.backups.reload.assert_not_called()
     supervisor_client.backups.download_backup.assert_not_called()
     supervisor_client.backups.remove_backup.assert_not_called()
+
+    # Verify upload progress events were emitted
+    upload_progress_events: list[dict[str, Any]] = []
+    for _ in range(20):
+        response = await ws_client.receive_json()
+        event = response.get("event")
+        if event is None:
+            continue
+        if "uploaded_bytes" in event and event.get("agent_id") == "hassio.local":
+            upload_progress_events.append(event)
+        if event == {"manager_state": "idle"}:
+            break
+
+    assert len(upload_progress_events) > 0
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
