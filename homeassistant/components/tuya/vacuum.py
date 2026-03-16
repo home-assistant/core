@@ -9,6 +9,8 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
 )
+from tuya_device_handlers.device_wrapper.vacuum import VacuumActivityWrapper
+from tuya_device_handlers.helpers.homeassistant import TuyaVacuumActivity
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
@@ -24,65 +26,17 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-
-class _VacuumActivityWrapper(DeviceWrapper[VacuumActivity]):
-    """Wrapper for the state of a device."""
-
-    _TUYA_STATUS_TO_HA = {
-        "charge_done": VacuumActivity.DOCKED,
-        "chargecompleted": VacuumActivity.DOCKED,
-        "chargego": VacuumActivity.DOCKED,
-        "charging": VacuumActivity.DOCKED,
-        "cleaning": VacuumActivity.CLEANING,
-        "docking": VacuumActivity.RETURNING,
-        "goto_charge": VacuumActivity.RETURNING,
-        "goto_pos": VacuumActivity.CLEANING,
-        "mop_clean": VacuumActivity.CLEANING,
-        "part_clean": VacuumActivity.CLEANING,
-        "paused": VacuumActivity.PAUSED,
-        "pick_zone_clean": VacuumActivity.CLEANING,
-        "pos_arrived": VacuumActivity.CLEANING,
-        "pos_unarrive": VacuumActivity.CLEANING,
-        "random": VacuumActivity.CLEANING,
-        "sleep": VacuumActivity.IDLE,
-        "smart_clean": VacuumActivity.CLEANING,
-        "smart": VacuumActivity.CLEANING,
-        "spot_clean": VacuumActivity.CLEANING,
-        "standby": VacuumActivity.IDLE,
-        "wall_clean": VacuumActivity.CLEANING,
-        "wall_follow": VacuumActivity.CLEANING,
-        "zone_clean": VacuumActivity.CLEANING,
-    }
-
-    def __init__(
-        self,
-        pause_wrapper: DPCodeBooleanWrapper | None = None,
-        status_wrapper: DPCodeEnumWrapper | None = None,
-    ) -> None:
-        """Init _VacuumActivityWrapper."""
-        self._pause_wrapper = pause_wrapper
-        self._status_wrapper = status_wrapper
-
-    @classmethod
-    def find_dpcode(cls, device: CustomerDevice) -> Self | None:
-        """Find and return a _VacuumActivityWrapper for the given DP codes."""
-        pause_wrapper = DPCodeBooleanWrapper.find_dpcode(device, DPCode.PAUSE)
-        status_wrapper = DPCodeEnumWrapper.find_dpcode(device, DPCode.STATUS)
-        if pause_wrapper or status_wrapper:
-            return cls(pause_wrapper=pause_wrapper, status_wrapper=status_wrapper)
-        return None
-
-    def read_device_status(self, device: CustomerDevice) -> VacuumActivity | None:
-        """Read the device status."""
-        if (
-            self._status_wrapper
-            and (status := self._status_wrapper.read_device_status(device)) is not None
-        ):
-            return self._TUYA_STATUS_TO_HA.get(status)
-
-        if self._pause_wrapper and self._pause_wrapper.read_device_status(device):
-            return VacuumActivity.PAUSED
-        return None
+_TUYA_TO_HA_ACTIVITY_MAPPINGS: dict[
+    TuyaVacuumActivity | None, VacuumActivity | None
+] = {
+    None: None,
+    TuyaVacuumActivity.CLEANING: VacuumActivity.CLEANING,
+    TuyaVacuumActivity.DOCKED: VacuumActivity.DOCKED,
+    TuyaVacuumActivity.IDLE: VacuumActivity.IDLE,
+    TuyaVacuumActivity.PAUSED: VacuumActivity.PAUSED,
+    TuyaVacuumActivity.RETURNING: VacuumActivity.RETURNING,
+    TuyaVacuumActivity.ERROR: VacuumActivity.ERROR,
+}
 
 
 class _VacuumActionWrapper(DeviceWrapper):
@@ -178,7 +132,7 @@ async def async_setup_entry(
                         device,
                         manager,
                         action_wrapper=_VacuumActionWrapper.find_dpcode(device),
-                        activity_wrapper=_VacuumActivityWrapper.find_dpcode(device),
+                        activity_wrapper=VacuumActivityWrapper.find_dpcode(device),
                         fan_speed_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, DPCode.SUCTION, prefer_function=True
                         ),
@@ -204,7 +158,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         device_manager: Manager,
         *,
         action_wrapper: DeviceWrapper[str] | None,
-        activity_wrapper: DeviceWrapper[VacuumActivity] | None,
+        activity_wrapper: DeviceWrapper[TuyaVacuumActivity] | None,
         fan_speed_wrapper: DeviceWrapper[str] | None,
     ) -> None:
         """Init Tuya vacuum."""
@@ -243,7 +197,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
-        return self._read_wrapper(self._activity_wrapper)
+        return _TUYA_TO_HA_ACTIVITY_MAPPINGS.get(
+            self._read_wrapper(self._activity_wrapper)
+        )
 
     async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""

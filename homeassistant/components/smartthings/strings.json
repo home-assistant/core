@@ -49,6 +49,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "cooktop_operating_state": {
+        "name": "[%key:component::smartthings::entity::sensor::cooktop_operating_state::name%]"
+      },
       "cool_select_plus_door": {
         "name": "CoolSelect+ door"
       },
