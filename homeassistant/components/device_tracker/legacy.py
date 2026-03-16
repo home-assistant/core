@@ -389,10 +389,7 @@ async def async_extract_config(
 
         if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
-        else:
-            raise ValueError(
-                f"Unable to determine type for {platform.name}: {platform.type}"
-            )
+        # Non-legacy platforms are handled by the entity component
 
     return legacy
 
