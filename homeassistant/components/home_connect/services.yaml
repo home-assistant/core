@@ -678,3 +678,29 @@ change_setting:
       required: true
       selector:
         object:
+
+start_selected_program:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    b_s_h_common_option_finish_in_relative:
+      example: 3600
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+          unit_of_measurement: s
+    b_s_h_common_option_start_in_relative:
+      example: 3600
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+          unit_of_measurement: s
