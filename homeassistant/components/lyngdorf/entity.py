@@ -22,7 +22,7 @@ class LyngdorfEntity(Entity):
     def __init__(self, receiver: Receiver) -> None:
         """Initialize the entity."""
         self._receiver = receiver
-        self._unavailable_logged: bool = False
+        self._was_connected: bool = True
 
     async def async_added_to_hass(self) -> None:
         """Register notification callback when added to hass."""
@@ -47,8 +47,8 @@ class LyngdorfEntity(Entity):
         connected = self._receiver.connected
         self._attr_available = connected
 
-        if connected == self._unavailable_logged:
-            self._unavailable_logged = not connected
+        if connected != self._was_connected:
+            self._was_connected = connected
             if connected:
                 _LOGGER.info("Device is back online: %s", self.name)
             else:

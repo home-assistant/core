@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -299,8 +300,8 @@ async def test_availability(
     zone_b_state = hass.states.get(zone_b_entity_id)
     assert main_state is not None
     assert zone_b_state is not None
-    assert main_state.state == "unavailable"
-    assert zone_b_state.state == "unavailable"
+    assert main_state.state == STATE_UNAVAILABLE
+    assert zone_b_state.state == STATE_UNAVAILABLE
 
     mock_receiver.connected = True
     for cb in callbacks:
@@ -311,8 +312,8 @@ async def test_availability(
     zone_b_state = hass.states.get(zone_b_entity_id)
     assert main_state is not None
     assert zone_b_state is not None
-    assert main_state.state != "unavailable"
-    assert zone_b_state.state != "unavailable"
+    assert main_state.state != STATE_UNAVAILABLE
+    assert zone_b_state.state != STATE_UNAVAILABLE
 
 
 async def test_service_selects(
