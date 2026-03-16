@@ -26,7 +26,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_XUID, DOMAIN
+from .const import (
+    CONF_TITLE_ID,
+    CONF_XUID,
+    DOMAIN,
+    SUBENTRY_TYPE_FRIEND,
+    SUBENTRY_TYPE_GAME,
+)
 from .coordinator import XboxConfigEntry
 
 
@@ -56,7 +62,10 @@ class OAuth2FlowHandler(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"friend": FriendSubentryFlowHandler}
+        return {
+            SUBENTRY_TYPE_FRIEND: FriendSubentryFlowHandler,
+            SUBENTRY_TYPE_GAME: GameSubentryFlowHandler,
+        }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -162,6 +171,61 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Schema(
                     {
                         vol.Required(CONF_XUID): SelectSelector(
+                            SelectSelectorConfig(options=options)
+                        )
+                    }
+                ),
+                user_input,
+            ),
+        )
+
+
+class GameSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding a game title."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+        config_entry: XboxConfigEntry = self._get_entry()
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_not_loaded")
+
+        if not (title_history := config_entry.runtime_data.title_history.data):
+            return self.async_abort(reason="no_game_titles")
+
+        if user_input is not None:
+            selected_title = title_history[user_input[CONF_TITLE_ID]]
+            return self.async_create_entry(
+                title=selected_title.name,
+                data={},
+                unique_id=user_input[CONF_TITLE_ID],
+            )
+
+        options = [
+            SelectOptionDict(
+                value=game_title.title_id,
+                label=game_title.name,
+            )
+            for game_title in title_history.values()
+            if game_title.achievement
+            and game_title.achievement.source_version != 0
+            and game_title.title_id
+            not in {
+                t.unique_id
+                for t in config_entry.subentries.values()
+                if t.subentry_type == SUBENTRY_TYPE_GAME
+            }
+        ]
+        if not options:
+            return self.async_abort(reason="no_game_titles")
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_TITLE_ID): SelectSelector(
                             SelectSelectorConfig(options=options)
                         )
                     }

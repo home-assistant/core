@@ -6,3 +6,7 @@ OAUTH2_AUTHORIZE = "https://login.live.com/oauth20_authorize.srf"
 OAUTH2_TOKEN = "https://login.live.com/oauth20_token.srf"
 
 CONF_XUID = "xuid"
+CONF_TITLE_ID = "title_id"
+
+SUBENTRY_TYPE_FRIEND = "friend"
+SUBENTRY_TYPE_GAME = "game"
