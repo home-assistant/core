@@ -3,11 +3,11 @@
 from aiodns.error import DNSError
 from aiohttp.client_exceptions import ClientConnectionError
 from uhooapi import Client
-from uhooapi.errors import UhooError, UnauthorizedError
+from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import PLATFORMS
@@ -28,8 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: UhooConfigEntry) 
         await client.setup_devices()
     except (ClientConnectionError, DNSError) as err:
         raise ConfigEntryNotReady(f"Cannot connect to uHoo servers: {err}") from err
-    except UnauthorizedError as err:
-        raise ConfigEntryError(f"Invalid API credentials: {err}") from err
+    except (UnauthorizedError, ForbiddenError) as err:
+        raise ConfigEntryAuthFailed(f"Invalid API credentials: {err}") from err
     except UhooError as err:
         raise ConfigEntryNotReady(err) from err
 
