@@ -245,35 +245,14 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
             ) from e
 
-        if not data or not isinstance(data.get("time_series"), list):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_invalid_data",
-            )
-
-        time_series = data["time_series"]
-        if not time_series:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_invalid_data",
-            )
-
-        first_period = time_series[0]
-        if not isinstance(first_period, dict):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_invalid_data",
-            )
-
-        timestamp = first_period.get("timestamp")
-        if not isinstance(timestamp, str):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed_invalid_data",
-            )
-
-        period_start = dt_util.parse_datetime(timestamp)
-        if period_start is None:
+        if (
+            not data
+            or not isinstance(time_series := data.get("time_series"), list)
+            or not time_series
+            or not isinstance(first_period := time_series[0], dict)
+            or not isinstance(timestamp := first_period.get("timestamp"), str)
+            or (period_start := dt_util.parse_datetime(timestamp)) is None
+        ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed_invalid_data",
