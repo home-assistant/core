@@ -28,7 +28,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WaterFurnace."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,13 +53,14 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error connecting to WaterFurnace")
                 errors["base"] = "unknown"
 
-            gwid = client.gwid
-            if not gwid:
-                errors["base"] = "cannot_connect"
+            if not errors and not client.devices:
+                errors["base"] = "no_devices"
+
+            if not errors and client.account_id is None:
+                errors["base"] = "unknown"
 
             if not errors:
-                # Set unique ID based on GWID
-                await self.async_set_unique_id(gwid)
+                await self.async_set_unique_id(str(client.account_id))
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -102,12 +103,11 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error during reauthentication")
                 errors["base"] = "unknown"
 
-            # Treat no gwid as a connection failure
-            if not errors and not client.gwid:
+            if not errors and client.account_id is None:
                 errors["base"] = "cannot_connect"
 
             if not errors:
-                await self.async_set_unique_id(client.gwid)
+                await self.async_set_unique_id(str(client.account_id))
                 self._abort_if_unique_id_mismatch(reason="wrong_account")
 
                 return self.async_update_reload_and_abort(
@@ -143,13 +143,13 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected error importing WaterFurnace configuration")
             return self.async_abort(reason="unknown")
 
-        gwid = client.gwid
-        if not gwid:
-            # This likely indicates a server-side change, or an implementation bug
-            return self.async_abort(reason="cannot_connect")
+        if not client.devices:
+            return self.async_abort(reason="no_devices")
 
-        # Set unique ID based on GWID
-        await self.async_set_unique_id(gwid)
+        if client.account_id is None:
+            return self.async_abort(reason="unknown")
+
+        await self.async_set_unique_id(str(client.account_id))
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
