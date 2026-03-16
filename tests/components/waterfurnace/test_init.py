@@ -34,6 +34,7 @@ async def test_setup_multi_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_waterfurnace_client_multi_device: Mock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test setup with multiple devices creates multiple coordinators."""
     mock_config_entry.add_to_hass(hass)
@@ -42,7 +43,6 @@ async def test_setup_multi_device(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
