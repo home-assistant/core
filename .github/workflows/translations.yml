@@ -33,6 +33,6 @@ jobs:
 
       - name: Upload Translations
         env:
-          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }}
+          LOKALISE_TOKEN: ${{ secrets.LOKALISE_TOKEN }} # zizmor: ignore[secrets-outside-env]
         run: |
           python3 -m script.translations upload
