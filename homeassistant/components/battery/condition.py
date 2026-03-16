@@ -10,6 +10,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDevic
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     make_entity_numerical_condition,
@@ -18,30 +19,41 @@ from homeassistant.helpers.condition import (
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_low": make_entity_state_condition(
-        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: DomainSpec(
+                device_class=BinarySensorDeviceClass.BATTERY
+            )
+        },
         STATE_ON,
-        device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY},
     ),
     "is_not_low": make_entity_state_condition(
-        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: DomainSpec(
+                device_class=BinarySensorDeviceClass.BATTERY
+            )
+        },
         STATE_OFF,
-        device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY},
     ),
     "is_charging": make_entity_state_condition(
-        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: DomainSpec(
+                device_class=BinarySensorDeviceClass.BATTERY_CHARGING
+            )
+        },
         STATE_ON,
-        device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY_CHARGING},
     ),
     "is_not_charging": make_entity_state_condition(
-        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: DomainSpec(
+                device_class=BinarySensorDeviceClass.BATTERY_CHARGING
+            )
+        },
         STATE_OFF,
-        device_classes={BINARY_SENSOR_DOMAIN: BinarySensorDeviceClass.BATTERY_CHARGING},
     ),
     "percentage": make_entity_numerical_condition(
-        SENSOR_DOMAIN,
-        device_classes={
-            SENSOR_DOMAIN: SensorDeviceClass.BATTERY,
-            NUMBER_DOMAIN: NumberDeviceClass.BATTERY,
+        {
+            SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.BATTERY),
+            NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.BATTERY),
         },
     ),
 }

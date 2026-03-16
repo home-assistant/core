@@ -54,7 +54,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -74,12 +74,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
-from . import (
-    config_validation as cv,
-    entity as entity_helper,
-    entity_registry as er,
-    selector,
-)
+from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
     DomainSpec,
     filter_by_domain_specs,
@@ -366,6 +361,13 @@ class EntityConditionBase[DomainSpecT: DomainSpec = DomainSpec](Condition):
         """Filter entities matching any of the domain specs."""
         return filter_by_domain_specs(self._hass, self._domain_specs, entities)
 
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked value from a state based on the DomainSpec."""
+        domain_spec = self._domain_specs[split_entity_id(entity_state.entity_id)[0]]
+        if domain_spec.value_source is None:
+            return entity_state.state
+        return entity_state.attributes.get(domain_spec.value_source)
+
     @abc.abstractmethod
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
@@ -415,84 +417,39 @@ class EntityStateConditionBase(EntityConditionBase):
 
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
-        return entity_state.state in self._states
+        return self._get_tracked_value(entity_state) in self._states
 
 
-def _filter_by_device_classes(
-    hass: HomeAssistant, entities: set[str], device_classes: dict[str, str]
-) -> set[str]:
-    """Filter entities by device class, matching domain to expected device class."""
-    result: set[str] = set()
-    for entity_id in entities:
-        domain = split_entity_id(entity_id)[0]
-        if domain not in device_classes:
-            continue
-        try:
-            device_class = entity_helper.get_device_class(hass, entity_id)
-        except HomeAssistantError:
-            continue
-        if device_class == device_classes[domain]:
-            result.add(entity_id)
-    return result
+def _normalize_domain_specs(
+    domain_specs: Mapping[str, DomainSpec] | str,
+) -> Mapping[str, DomainSpec]:
+    """Normalize domain_specs argument to a Mapping."""
+    if isinstance(domain_specs, str):
+        return {domain_specs: DomainSpec()}
+    return domain_specs
 
 
 def make_entity_state_condition(
-    domain: str,
+    domain_specs: Mapping[str, DomainSpec] | str,
     states: str | set[str],
-    *,
-    device_classes: dict[str, str] | None = None,
 ) -> type[EntityStateConditionBase]:
-    """Create a condition for entity state changes to specific state(s)."""
+    """Create a condition for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
 
     if isinstance(states, str):
         states_set = {states}
     else:
         states_set = states
 
-    _device_classes = device_classes
-
     class CustomCondition(EntityStateConditionBase):
         """Condition for entity state."""
 
-        _domain_specs = {domain: DomainSpec()}
+        _domain_specs = specs
         _states = states_set
-
-        def entity_filter(self, entities: set[str]) -> set[str]:
-            """Filter entities by domain and device class."""
-            if _device_classes is not None:
-                return _filter_by_device_classes(self._hass, entities, _device_classes)
-            return super().entity_filter(entities)
-
-    return CustomCondition
-
-
-class EntityStateAttributeConditionBase(EntityConditionBase):
-    """State attribute condition."""
-
-    _attribute: str
-    _attribute_states: set[str]
-
-    def is_valid_state(self, entity_state: State) -> bool:
-        """Check if the state matches the expected state(s)."""
-        return entity_state.attributes.get(self._attribute) in self._attribute_states
-
-
-def make_entity_state_attribute_condition(
-    domain: str, attribute: str, attribute_states: str | set[str]
-) -> type[EntityStateAttributeConditionBase]:
-    """Create a condition for entity attribute matching specific state(s)."""
-
-    if isinstance(attribute_states, str):
-        attribute_states_set = {attribute_states}
-    else:
-        attribute_states_set = attribute_states
-
-    class CustomCondition(EntityStateAttributeConditionBase):
-        """Condition for entity attribute."""
-
-        _domain_specs = {domain: DomainSpec()}
-        _attribute = attribute
-        _attribute_states = attribute_states_set
 
     return CustomCondition
 
@@ -543,24 +500,15 @@ class EntityNumericalConditionBase(EntityConditionBase):
 
 
 def make_entity_numerical_condition(
-    domain: str,
-    *,
-    device_classes: dict[str, str] | None = None,
+    domain_specs: Mapping[str, DomainSpec] | str,
 ) -> type[EntityNumericalConditionBase]:
     """Create a condition for numerical state comparisons."""
-
-    _device_classes = device_classes
+    specs = _normalize_domain_specs(domain_specs)
 
     class CustomCondition(EntityNumericalConditionBase):
         """Condition for numerical state."""
 
-        _domain = domain
-
-        def entity_filter(self, entities: set[str]) -> set[str]:
-            """Filter entities by domain and device class."""
-            if _device_classes is not None:
-                return _filter_by_device_classes(self._hass, entities, _device_classes)
-            return super().entity_filter(entities)
+        _domain_specs = specs
 
     return CustomCondition
 
