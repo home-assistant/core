@@ -53,10 +53,14 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # Need to fetch weight history for `get_visits_since`
                 await pet.fetch_weight_history()
         except LitterRobotLoginException as ex:
-            raise ConfigEntryAuthFailed("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
         except LitterRobotException as ex:
             raise UpdateFailed(
-                f"Unable to fetch data from the Whisker API: {ex}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(ex)},
             ) from ex
 
     async def _async_setup(self) -> None:
@@ -70,9 +74,15 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 load_pets=True,
             )
         except LitterRobotLoginException as ex:
-            raise ConfigEntryAuthFailed("Invalid credentials") from ex
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="invalid_credentials"
+            ) from ex
         except LitterRobotException as ex:
-            raise UpdateFailed("Unable to connect to Whisker API") from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
     def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""
