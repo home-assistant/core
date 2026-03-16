@@ -47,10 +47,14 @@ def async_redact_data[_T](data: _T, to_redact: Iterable[Any]) -> _T:
     return cast(_T, redacted)
 
 
+def _entity_entry_filter(a: attr.Attribute, _: Any) -> bool:
+    return a.name != "_cache"
+
+
 @callback
 def entity_entry_as_dict(entry: RegistryEntry) -> dict[str, Any]:
     """Convert an entity registry entry to a dict for diagnostics.
 
     This excludes internal fields that should not be exposed in diagnostics.
     """
-    return {k: v for k, v in attr.asdict(entry).items() if k != "_cache"}
+    return attr.asdict(entry, filter=_entity_entry_filter)
