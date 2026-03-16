@@ -1,10 +1,9 @@
 """Switch platform for Prana integration."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
-
-from aioesphomeapi import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
