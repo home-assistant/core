@@ -16,6 +16,7 @@ class MockYouTube:
     """Service which returns mock objects."""
 
     _thrown_error: Exception | None = None
+    _is_short: bool = False
 
     def __init__(
         self,
@@ -23,12 +24,14 @@ class MockYouTube:
         channel_fixture: str = "get_channel.json",
         playlist_items_fixture: str = "get_playlist_items.json",
         subscriptions_fixture: str = "get_subscriptions.json",
+        is_short: bool = False,
     ) -> None:
         """Initialize mock service."""
         self.hass = hass
         self._channel_fixture = channel_fixture
         self._playlist_items_fixture = playlist_items_fixture
         self._subscriptions_fixture = subscriptions_fixture
+        self._is_short = is_short
 
     async def set_user_authentication(
         self, token: str, scopes: list[AuthScope]
@@ -76,3 +79,7 @@ class MockYouTube:
     def set_thrown_exception(self, exception: Exception) -> None:
         """Set thrown exception for testing purposes."""
         self._thrown_error = exception
+
+    async def is_short(self, video_id: str) -> bool:
+        """Return whether the video is a Short."""
+        return self._is_short
