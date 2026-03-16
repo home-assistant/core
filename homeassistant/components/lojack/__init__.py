@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from lojack_api import ApiError, AuthenticationError, LoJackClient
+from lojack_api import ApiError, AuthenticationError, LoJackClient, Vehicle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -57,9 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bo
 
     try:
         for vehicle in vehicles or []:
-            coordinator = LoJackCoordinator(hass, client, entry, vehicle)
-            await coordinator.async_config_entry_first_refresh()
-            data.coordinators.append(coordinator)
+            if isinstance(vehicle, Vehicle):
+                coordinator = LoJackCoordinator(hass, client, entry, vehicle)
+                await coordinator.async_config_entry_first_refresh()
+                data.coordinators.append(coordinator)
     except Exception:
         await client.close()
         raise

@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry
@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LoJackConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LoJack device tracker from a config entry."""
     async_add_entities(
@@ -36,16 +36,17 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
     def __init__(self, coordinator: LoJackCoordinator) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator)
-        vehicle = coordinator.vehicle
-        self._attr_unique_id = vehicle.id
-        device_name = get_device_name(vehicle)
+        self._attr_unique_id = coordinator.vehicle.id
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, vehicle.id)},
-            name=device_name,
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.vehicle.id)},
+            name=get_device_name(self.coordinator.vehicle),
             manufacturer="Spireon LoJack",
-            model=vehicle.model,
-            serial_number=vehicle.vin,
+            model=self.coordinator.vehicle.model,
+            serial_number=self.coordinator.vehicle.vin,
         )
 
     @property
