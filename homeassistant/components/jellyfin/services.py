@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA,
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, service
@@ -50,4 +51,5 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             cv.make_entity_service_schema(JELLYFIN_PLAY_MEDIA_SHUFFLE_SCHEMA),
         ),
         func="play_media_shuffle",
+        required_features=MediaPlayerEntityFeature.PLAY_MEDIA,
     )
