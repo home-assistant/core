@@ -6,16 +6,18 @@ from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.device_wrapper.base import DeviceWrapper
-from tuya_device_handlers.device_wrapper.common import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
+from tuya_device_handlers.device_wrapper.cover import (
+    ControlBackModePercentageMappingWrapper,
+    CoverClosedEnumWrapper,
+    CoverInstructionBooleanWrapper,
+    CoverInstructionEnumWrapper,
+    CoverInstructionSpecialEnumWrapper,
 )
-from tuya_device_handlers.type_information import (
-    EnumTypeInformation,
-    IntegerTypeInformation,
+from tuya_device_handlers.device_wrapper.extended import (
+    DPCodeInvertedBooleanWrapper,
+    DPCodeInvertedPercentageWrapper,
+    DPCodePercentageWrapper,
 )
-from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -35,123 +37,17 @@ from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
 
-class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper[int]):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
-        """Init DPCodeIntegerWrapper."""
-        super().__init__(dpcode, type_information)
-        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 100)
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return False
-
-    def read_device_status(self, device: CustomerDevice) -> int | None:
-        if (value := device.status.get(self.dpcode)) is None:
-            return None
-
-        return round(
-            self._remap_helper.remap_value_to(
-                value, reverse=self._position_reversed(device)
-            )
-        )
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
-        return round(
-            self._remap_helper.remap_value_from(
-                value, reverse=self._position_reversed(device)
-            )
-        )
-
-
-class _InvertedPercentageMappingWrapper(_DPCodePercentageMappingWrapper):
-    """Wrapper for DPCode position values mapping to 0-100 range."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return True
-
-
-class _ControlBackModePercentageMappingWrapper(_DPCodePercentageMappingWrapper):
-    """Wrapper for DPCode position values with control_back_mode support."""
-
-    def _position_reversed(self, device: CustomerDevice) -> bool:
-        """Check if the position and direction should be reversed."""
-        return device.status.get(DPCode.CONTROL_BACK_MODE) != "back"
-
-
-class _InstructionBooleanWrapper(DPCodeBooleanWrapper):
-    """Wrapper for boolean-based open/close instructions."""
-
-    options = ["open", "close"]
-    _ACTION_MAPPINGS = {"open": True, "close": False}
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:
-        return self._ACTION_MAPPINGS[value]
-
-
-class _InstructionEnumWrapper(DPCodeEnumWrapper):
-    """Wrapper for enum-based open/close/stop instructions."""
-
-    _ACTION_MAPPINGS = {"open": "open", "close": "close", "stop": "stop"}
-
-    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
-        super().__init__(dpcode, type_information)
-        self.options = [
-            ha_action
-            for ha_action, tuya_action in self._ACTION_MAPPINGS.items()
-            if tuya_action in type_information.range
-        ]
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> str:
-        return self._ACTION_MAPPINGS[value]
-
-
-class _SpecialInstructionEnumWrapper(_InstructionEnumWrapper):
-    """Wrapper for enum-based instructions with special values (FZ/ZZ/STOP)."""
-
-    _ACTION_MAPPINGS = {"open": "FZ", "close": "ZZ", "stop": "STOP"}
-
-
-class _IsClosedInvertedWrapper(DPCodeBooleanWrapper):
-    """Boolean wrapper for checking if cover is closed (inverted)."""
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return not value
-
-
-class _IsClosedEnumWrapper(DPCodeEnumWrapper[bool]):
-    """Enum wrapper for checking if state is closed."""
-
-    _MAPPINGS = {
-        "close": True,
-        "fully_close": True,
-        "open": False,
-        "fully_open": False,
-    }
-
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
-        if (value := self._read_dpcode_value(device)) is None:
-            return None
-        return self._MAPPINGS.get(value)
-
-
 @dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe a Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
-    current_state_wrapper: type[_IsClosedInvertedWrapper | _IsClosedEnumWrapper] = (
-        _IsClosedEnumWrapper
-    )
+    current_state_wrapper: type[
+        DPCodeInvertedBooleanWrapper | CoverClosedEnumWrapper
+    ] = CoverClosedEnumWrapper
     current_position: DPCode | tuple[DPCode, ...] | None = None
-    instruction_wrapper: type[_InstructionEnumWrapper] = _InstructionEnumWrapper
-    position_wrapper: type[_DPCodePercentageMappingWrapper] = (
-        _InvertedPercentageMappingWrapper
-    )
+    instruction_wrapper: type[CoverInstructionEnumWrapper] = CoverInstructionEnumWrapper
+    position_wrapper: type[DPCodePercentageWrapper] = DPCodeInvertedPercentageWrapper
     set_position: DPCode | None = None
 
 
@@ -162,7 +58,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "1"},
             current_state=DPCode.DOORCONTACT_STATE,
-            current_state_wrapper=_IsClosedInvertedWrapper,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -170,7 +66,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "2"},
             current_state=DPCode.DOORCONTACT_STATE_2,
-            current_state_wrapper=_IsClosedInvertedWrapper,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
@@ -178,7 +74,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_door",
             translation_placeholders={"index": "3"},
             current_state=DPCode.DOORCONTACT_STATE_3,
-            current_state_wrapper=_IsClosedInvertedWrapper,
+            current_state_wrapper=DPCodeInvertedBooleanWrapper,
             device_class=CoverDeviceClass.GARAGE,
         ),
     ),
@@ -213,7 +109,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
-            instruction_wrapper=_SpecialInstructionEnumWrapper,
+            instruction_wrapper=CoverInstructionSpecialEnumWrapper,
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -230,7 +126,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_position=DPCode.PERCENT_CONTROL,
-            position_wrapper=_ControlBackModePercentageMappingWrapper,
+            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -239,7 +135,7 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             translation_key="indexed_curtain",
             translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
-            position_wrapper=_ControlBackModePercentageMappingWrapper,
+            position_wrapper=ControlBackModePercentageMappingWrapper,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
@@ -266,7 +162,7 @@ def _get_instruction_wrapper(
         return enum_wrapper
 
     # Fallback to a boolean wrapper if available
-    return _InstructionBooleanWrapper.find_dpcode(
+    return CoverInstructionBooleanWrapper.find_dpcode(
         device, description.key, prefer_function=True
     )
 
