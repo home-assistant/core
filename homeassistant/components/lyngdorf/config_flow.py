@@ -198,7 +198,9 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id, raise_on_progress=abort_if_configured)
 
         if abort_if_configured:
-            self._abort_if_unique_id_configured(reload_on_update=False)
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: self._host},
+            )
 
     async def _async_find_discovery_by_host(self, host: str) -> SsdpServiceInfo | None:
         """Find an SSDP discovery matching the given host."""

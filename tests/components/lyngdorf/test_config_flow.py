@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -56,7 +56,9 @@ async def test_manual_flow(hass: HomeAssistant) -> None:
             "homeassistant.components.lyngdorf.config_flow.getmac.get_mac_address",
             return_value=MOCK_MAC,
         ),
-        patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]),
+        patch.object(
+            ssdp, "async_get_discovery_info_by_st", new=AsyncMock(return_value=[])
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -84,7 +86,9 @@ async def test_manual_flow_no_mac(hass: HomeAssistant) -> None:
             "homeassistant.components.lyngdorf.config_flow.getmac.get_mac_address",
             return_value=None,
         ),
-        patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]),
+        patch.object(
+            ssdp, "async_get_discovery_info_by_st", new=AsyncMock(return_value=[])
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +122,9 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
             "homeassistant.components.lyngdorf.config_flow.getmac.get_mac_address",
             return_value=MOCK_MAC,
         ),
-        patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]),
+        patch.object(
+            ssdp, "async_get_discovery_info_by_st", new=AsyncMock(return_value=[])
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -230,6 +236,7 @@ async def test_ssdp_discovery_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert existing_entry.data[CONF_HOST] == "192.168.1.100"
 
 
 async def test_ssdp_discovery_no_serial(hass: HomeAssistant) -> None:
