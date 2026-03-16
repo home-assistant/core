@@ -48,6 +48,11 @@ from .const import (
     MANUFACTURER,
     MODEL,
 )
+from .coordinator import (
+    MeteoFranceAlertUpdateCoordinator,
+    MeteoFranceForecastUpdateCoordinator,
+    MeteoFranceRainUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -188,9 +193,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Meteo-France sensor platform."""
     data = hass.data[DOMAIN][entry.entry_id]
-    coordinator_forecast: DataUpdateCoordinator[Forecast] = data[COORDINATOR_FORECAST]
-    coordinator_rain: DataUpdateCoordinator[Rain] | None = data.get(COORDINATOR_RAIN)
-    coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data.get(
+    coordinator_forecast: MeteoFranceForecastUpdateCoordinator = data[
+        COORDINATOR_FORECAST
+    ]
+    coordinator_rain: MeteoFranceRainUpdateCoordinator | None = data.get(
+        COORDINATOR_RAIN
+    )
+    coordinator_alert: MeteoFranceAlertUpdateCoordinator | None = data.get(
         COORDINATOR_ALERT
     )
 
@@ -316,7 +325,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor[CurrentPhenomenons]):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[CurrentPhenomenons],
+        coordinator: MeteoFranceAlertUpdateCoordinator,
         description: MeteoFranceSensorEntityDescription,
     ) -> None:
         """Initialize the Meteo-France sensor."""
