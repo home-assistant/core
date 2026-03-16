@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register any custom service actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      Coordinator sets update_interval=timedelta(seconds=15) in coordinator.py:39.
+  brands:
+    status: done
+    comment: |
+      Brand entry exists at https://github.com/home-assistant/brands/tree/master/core_integrations/intellifire
+  common-modules:
+    status: done
+    comment: |
+      Coordinator logic is in coordinator.py, constants in const.py, and the
+      shared entity base class is in entity.py.
+  config-flow-test-coverage:
+    status: done
+    comment: |
+      test_config_flow.py covers: single-fireplace happy path, pre-configured
+      abort, bad credentials recovery, multi-fireplace selection, DHCP
+      discovery (good and bad device), reauth flow, and all options flow
+      error branches (local/cloud unavailable for read and control).
+  config-flow:
+    status: done
+    comment: |
+      config_flow.py implements ConfigFlow with async_step_user, async_step_dhcp,
+      async_step_reauth, and an OptionsFlow. strings.json provides data_description
+      for the cloud_api step (lines 18-21). ConfigEntry.data stores credentials and
+      device identifiers; ConfigEntry.options stores read_mode/control_mode.
+  dependency-transparency:
+    status: done
+    comment: |
+      manifest.json lists the single third-party dependency:
+      intellifire4py==4.4.0.
+  docs-actions:
+    status: exempt
+    comment: |
+      No service actions are registered by this integration.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup:
+    status: done
+    comment: |
+      All entities extend IntellifireEntity which extends CoordinatorEntity.
+      CoordinatorEntity handles subscription setup/teardown in
+      async_added_to_hass / async_will_remove_from_hass internally. No
+      entities subscribe to events directly outside of that base class.
+  entity-unique-id:
+    status: done
+    comment: |
+      entity.py:25 sets _attr_unique_id = f"{description.key}_{coordinator.fireplace.serial}"
+      for all entities via the shared base class.
+  has-entity-name:
+    status: done
+    comment: |
+      entity.py:15 sets _attr_has_entity_name = True on the shared base class.
+      All platform entities inherit this. Note: climate.py:22 uses a hardcoded
+      name="Thermostat" in its entity description — this should be replaced with
+      a translation_key to be fully compliant, but has-entity-name itself is set.
+  runtime-data:
+    status: done
+    comment: |
+      entry.runtime_data is assigned in __init__.py:165 and read via
+      entry.runtime_data in all platform async_setup_entry functions and in
+      async_update_options. No hass.data[DOMAIN] usage found.
+  test-before-configure:
+    status: done
+    comment: |
+      config_flow.py:125-130 calls cloud_interface.login_with_credentials()
+      inside async_step_cloud_api before creating the entry. LoginError is
+      caught and reported as "api_error". DHCP flow polls the local fireplace
+      via _async_poll_local_fireplace_for_serial (line 261) before proceeding.
+  test-before-setup:
+    status: done
+    comment: |
+      async_setup_entry in __init__.py raises ConfigEntryAuthFailed at line 141
+      when credentials are missing, and raises ConfigEntryNotReady at line 155
+      when the fireplace initialization times out.
+  unique-config-entry:
+    status: done
+    comment: |
+      config_flow.py:168-169 calls async_set_unique_id(serial) followed by
+      _abort_if_unique_id_configured(). DHCP flow also calls
+      _async_abort_entries_match({CONF_IP_ADDRESS: ip_address}) at line 259.
