@@ -77,6 +77,8 @@ from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReport
 from zha.zigbee.device import (
     ClusterHandlerConfigurationComplete,
     Device,
+    DeviceEntityAddedEvent,
+    DeviceEntityRemovedEvent,
     DeviceFirmwareInfoUpdatedEvent,
     ZHAEvent,
 )
@@ -494,6 +496,32 @@ class ZHADeviceProxy(EventBase):
                 },
             },
         )
+
+    @callback
+    def handle_zha_device_entity_added_event(
+        self, event: DeviceEntityAddedEvent
+    ) -> None:
+        """Handle a new entity being added to a device at runtime."""
+        ha_zha_data = get_zha_data(self.gateway_proxy.hass)
+        for entity in self.device.platform_entities.values():
+            if entity.unique_id == event.unique_id:
+                ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
+                    EntityData(entity=entity, device_proxy=self, group_proxy=None)
+                )
+                async_dispatcher_send(self.gateway_proxy.hass, SIGNAL_ADD_ENTITIES)
+                break
+
+    @callback
+    def handle_zha_device_entity_removed_event(
+        self, event: DeviceEntityRemovedEvent
+    ) -> None:
+        """Handle an entity being removed from a device at runtime."""
+        entity_registry = er.async_get(self.gateway_proxy.hass)
+        entity_refs = self.gateway_proxy.ha_entity_refs.get(self.device.ieee, [])
+        for entity_ref in entity_refs:
+            if entity_ref.entity_data.entity.unique_id == event.unique_id:
+                entity_registry.async_remove(entity_ref.ha_entity_id)
+                break
 
 
 class EntityReference(NamedTuple):
