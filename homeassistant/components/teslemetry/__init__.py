@@ -282,7 +282,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 sw_version=firmware,
             )
 
-            firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             poll = vehicle_metadata[vin].get("polling", False)
 
             entry.async_on_unload(
@@ -302,7 +301,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     stream=stream,
                     stream_vehicle=stream_vehicle,
                     vin=vin,
-                    firmware=firmware or "",
+                    firmware=firmware or "Unknown",
                     device=device,
                 )
             )
