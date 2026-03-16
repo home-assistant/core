@@ -11,7 +11,7 @@ from attr import asdict
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -111,8 +111,7 @@ async def async_get_config_entry_diagnostics(
             if state := hass.states.get(entity.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
-            entity_dict = asdict(entity)
-            entity_dict.pop("_cache", None)
+            entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
