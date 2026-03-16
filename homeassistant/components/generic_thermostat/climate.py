@@ -629,7 +629,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         # Create a new context for this service call so we can identify
         # the resulting state change event as originating from us
-        new_context = Context(parent_id=self._context.id if self._context else None)
+        new_context = Context(
+            user_id=self._context.user_id if self._context else None,
+            parent_id=self._context.id if self._context else None,
+        )
         self.async_set_context(new_context)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
@@ -656,7 +659,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         # Create a new context for this service call so we can identify
         # the resulting state change event as originating from us
-        new_context = Context(parent_id=self._context.id if self._context else None)
+        new_context = Context(
+            user_id=self._context.user_id if self._context else None,
+            parent_id=self._context.id if self._context else None,
+        )
         self.async_set_context(new_context)
         self._last_context_id = new_context.id
         await self.hass.services.async_call(
