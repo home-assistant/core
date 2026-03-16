@@ -218,12 +218,6 @@
       "message": "Invalid credentials. Please check your username and password, then try again"
     }
   },
-  "issues": {
-    "deprecated_entity": {
-      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
-      "title": "{name} is deprecated"
-    }
-  },
   "services": {
     "set_sleep_mode": {
       "description": "Sets the sleep mode and start time.",
