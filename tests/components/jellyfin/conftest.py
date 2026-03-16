@@ -158,6 +158,8 @@ def api_video_url_side_effect(*args, **kwargs):
 
 def api_get_item_side_effect(*args):
     """Handle variable responses for get_item method."""
+    if args[0] == "SERIES-UUID":
+        return load_json_fixture("get-item-series.json")
     return load_json_fixture("get-item-collection.json")
 
 
@@ -166,6 +168,8 @@ def api_user_items_side_effect(*args, **kwargs):
     params = kwargs.get("params", {}) if kwargs else {}
 
     if "parentId" in params:
+        if params["parentId"] == "SERIES-UUID":
+            return load_json_fixture("user-items-series.json")
         return load_json_fixture("user-items-parent-id.json")
 
     return load_json_fixture("user-items.json")
