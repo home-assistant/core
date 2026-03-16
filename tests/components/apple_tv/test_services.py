@@ -1,6 +1,6 @@
 """Tests for Apple TV keyboard services."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from pyatv.const import KeyboardFocusState
 from pyatv.exceptions import NotSupportedError, ProtocolError
@@ -127,12 +127,12 @@ async def test_set_keyboard_text_not_supported(
     mock_manager: MagicMock,
 ) -> None:
     """Test error when keyboard is not supported by device."""
-    type(mock_manager.atv.keyboard).text_focus_state = property(
-        lambda self: (_ for _ in ()).throw(
-            NotSupportedError("text_focus_state is not supported")
-        )
-    )
-    with pytest.raises(ServiceValidationError):
+    with patch.object(
+        type(mock_manager.atv.keyboard),
+        "text_focus_state",
+        new_callable=PropertyMock,
+        side_effect=NotSupportedError("text_focus_state is not supported"),
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
