@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.consts import InputMode, PlayingStatus
-from wiim.exceptions import WiimRequestException
+from wiim.exceptions import WiimException, WiimRequestException
 from wiim.models import (
     WiimGroupRole,
     WiimMediaMetadata,
@@ -39,9 +39,9 @@ from homeassistant.components.wiim.media_player import (
 )
 from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity import EntityPlatformState
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity import Entity, EntityPlatformState
 
 
 def _set_wiim_data(
@@ -150,6 +150,31 @@ async def test_media_player_update_ha_state_from_sdk_cache(
         assert entity.state == MediaPlayerState.PLAYING
         assert entity.volume_level == 0.6
         assert entity.media_title == "New Song"
+
+
+async def test_media_player_update_ha_state_from_sdk_cache_unavailable(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test unavailable devices clear state and write HA state."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    entity._attr_media_title = "Old"
+    entity._attr_source = "Old Source"
+    entity._transport_capabilities = WiimTransportCapabilities(can_next=True)
+    mock_wiim_device.available = False  # type: ignore[misc]
+
+    with patch.object(entity, "async_write_ha_state", new=MagicMock()) as mock_write:
+        entity._update_ha_state_from_sdk_cache()
+
+    assert entity.state is None
+    assert entity.media_title is None
+    assert entity.source is None
+    assert entity._transport_capabilities is None
+    mock_write.assert_called_once()
 
 
 async def test_media_player_update_ha_state_from_sdk_cache_follower_uses_leader_device(
@@ -382,6 +407,162 @@ async def test_media_player_update_supported_features_skips_write_when_unchanged
     mock_write.assert_not_called()
 
 
+async def test_media_player_update_supported_features_follower_clears_on_none(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test follower clears cached capabilities when leader returns none."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.follower"
+    _set_wiim_data(mock_hass)
+    entity._transport_capabilities = WiimTransportCapabilities(can_next=True)
+
+    leader_device = MagicMock(spec=WiimDevice)
+    leader_device.udn = "uuid:leader-5678"
+
+    entity._wiim_data.controller.get_group_snapshot.return_value = MagicMock(
+        role=WiimGroupRole.FOLLOWER,
+        leader_udn=leader_device.udn,
+        member_udns=(leader_device.udn, mock_wiim_device.udn),
+    )
+    entity._wiim_data.controller.get_device.return_value = leader_device
+
+    with patch.object(
+        entity,
+        "_async_get_transport_capabilities_for_device",
+        new=AsyncMock(return_value=None),
+    ):
+        await entity._from_device_update_supported_features(write_state=False)
+
+    assert entity._transport_capabilities is None
+
+
+async def test_media_player_schedule_update_skips_when_in_flight(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+) -> None:
+    """Test scheduling skips when an update is already in flight."""
+    entity = mock_wiim_media_player_entity
+    entity._supported_features_update_in_flight = True
+
+    with patch.object(
+        entity._entry,
+        "async_create_background_task",
+        new=MagicMock(),
+    ) as mock_create_task:
+        entity._async_schedule_update_supported_features()
+
+    mock_create_task.assert_not_called()
+
+
+async def test_media_player_registry_update_syncs_entity_id(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test registry updates sync the UDN map for renamed entities."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    _set_wiim_data(
+        mock_hass,
+        entity_id_to_udn_map={"media_player.old": entity._device.udn},
+    )
+
+    event = Event(
+        "entity_registry_updated",
+        {
+            "action": "update",
+            "old_entity_id": "media_player.old",
+            "entity_id": "media_player.new",
+        },
+    )
+
+    with patch.object(Entity, "_async_registry_updated", new=MagicMock()):
+        entity._async_registry_updated(event)
+
+    assert "media_player.old" not in entity._wiim_data.entity_id_to_udn_map
+    assert (
+        entity._wiim_data.entity_id_to_udn_map["media_player.new"] == entity._device.udn
+    )
+
+
+async def test_media_player_async_will_remove_clears_callbacks(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test removal clears callbacks and unregisters entity mapping."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    _set_wiim_data(
+        mock_hass,
+        entity_id_to_udn_map={entity.entity_id: entity._device.udn},
+    )
+    entity._device.general_event_callback = entity._handle_sdk_general_device_update
+    entity._device.av_transport_event_callback = entity._handle_sdk_av_transport_event
+    entity._device.rendering_control_event_callback = entity._handle_sdk_refresh_event
+    entity._device.play_queue_event_callback = entity._handle_sdk_refresh_event
+
+    with patch.object(
+        Entity, "async_will_remove_from_hass", new=AsyncMock()
+    ) as mock_super:
+        await entity.async_will_remove_from_hass()
+
+    assert entity._device.general_event_callback is None
+    assert entity._device.av_transport_event_callback is None
+    assert entity._device.rendering_control_event_callback is None
+    assert entity._device.play_queue_event_callback is None
+    assert entity.entity_id not in entity._wiim_data.entity_id_to_udn_map
+    mock_super.assert_awaited_once()
+
+
+async def test_media_player_async_handle_critical_error_marks_unavailable(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test critical errors mark device unavailable and refresh state."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    mock_wiim_device.available = True  # type: ignore[misc]
+    mock_wiim_device.set_available = MagicMock()
+    _set_wiim_data(mock_hass)
+    entity._wiim_data.controller.async_update_all_multiroom_status = AsyncMock()
+
+    with patch.object(
+        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+    ) as mock_update_state:
+        await entity._async_handle_critical_error(WiimException("boom"))
+
+    mock_wiim_device.set_available.assert_called_once_with(False)
+    mock_update_state.assert_called_once()
+    entity._wiim_data.controller.async_update_all_multiroom_status.assert_awaited_once()
+
+
+async def test_media_player_async_handle_critical_error_already_unavailable(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test critical errors still trigger multiroom refresh when offline."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    mock_wiim_device.available = False  # type: ignore[misc]
+    mock_wiim_device.set_available = MagicMock()
+    _set_wiim_data(mock_hass)
+    entity._wiim_data.controller.async_update_all_multiroom_status = AsyncMock()
+
+    with patch.object(
+        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+    ) as mock_update_state:
+        await entity._async_handle_critical_error(WiimException("offline"))
+
+    mock_wiim_device.set_available.assert_not_called()
+    mock_update_state.assert_not_called()
+    entity._wiim_data.controller.async_update_all_multiroom_status.assert_awaited_once()
+
+
 async def test_media_player_handle_invalid_transport_state_event(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -409,6 +590,36 @@ async def test_media_player_handle_invalid_transport_state_event(
 
     assert mock_wiim_device.playing_status == original_status
     mock_create_task.assert_not_called()
+    mock_update_state.assert_called_once()
+
+
+async def test_media_player_handle_stopped_transport_state_event(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test STOPPED transport state clears media position metadata."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity.entity_id = "media_player.test_device"
+    entity._device = mock_wiim_device
+    mock_wiim_device.event_data = {"TransportState": PlayingStatus.STOPPED.value}
+    mock_wiim_device.current_position = 10
+    mock_wiim_device.current_track_duration = 120
+    entity._attr_media_position = 10
+    entity._attr_media_duration = 120
+    entity._attr_media_position_updated_at = object()
+
+    with patch.object(
+        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+    ) as mock_update_state:
+        entity._handle_sdk_av_transport_event(MagicMock(), [])
+
+    assert mock_wiim_device.current_position == 0
+    assert mock_wiim_device.current_track_duration == 0
+    assert entity._attr_media_position is None
+    assert entity._attr_media_duration is None
+    assert entity._attr_media_position_updated_at is None
     mock_update_state.assert_called_once()
 
 
@@ -447,6 +658,121 @@ async def test_media_player_handle_playing_transport_state_event(
     mock_create_task.assert_called_once()
     assert mock_create_task.call_args.args[1] is sync_task
     mock_update_state.assert_called_once()
+
+
+async def test_media_player_handle_refresh_event(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+) -> None:
+    """Test refresh events only trigger a state update."""
+    entity = mock_wiim_media_player_entity
+
+    with patch.object(
+        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+    ) as mock_update_state:
+        entity._handle_sdk_refresh_event(MagicMock(), [])
+
+    mock_update_state.assert_called_once()
+
+
+async def test_media_player_general_update_unavailable(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test general update handles device going unavailable."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    mock_wiim_device.available = False  # type: ignore[misc]
+
+    with (
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        patch.object(
+            entity._entry,
+            "async_create_background_task",
+            new=MagicMock(side_effect=lambda _hass, coro, name=None: coro.close()),
+        ) as mock_create_task,
+    ):
+        entity._handle_sdk_general_device_update(mock_wiim_device)
+
+    mock_update_state.assert_called_once()
+    mock_create_task.assert_called_once()
+
+
+async def test_media_player_general_update_http_api_refreshes(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test general update schedules a subscription refresh for HTTP devices."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    mock_wiim_device.available = True  # type: ignore[misc]
+    mock_wiim_device.supports_http_api = True
+    mock_wiim_device.ensure_subscriptions = AsyncMock()
+    _set_wiim_data(mock_hass)
+
+    with (
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        patch.object(
+            entity._entry,
+            "async_create_background_task",
+            new=MagicMock(),
+        ) as mock_create_task,
+    ):
+        entity._handle_sdk_general_device_update(mock_wiim_device)
+
+        coro = mock_create_task.call_args.args[1]
+        await coro
+
+        mock_wiim_device.ensure_subscriptions.assert_awaited_once()
+        mock_update_state.assert_called_once()
+
+
+async def test_media_player_general_update_non_http_api_updates_immediately(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test general update refreshes immediately for non-HTTP devices."""
+    entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
+    entity._device = mock_wiim_device
+    mock_wiim_device.available = True  # type: ignore[misc]
+    mock_wiim_device.supports_http_api = False
+
+    with (
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        patch.object(
+            entity._entry,
+            "async_create_background_task",
+            new=MagicMock(),
+        ) as mock_create_task,
+    ):
+        entity._handle_sdk_general_device_update(mock_wiim_device)
+
+    mock_update_state.assert_called_once()
+    mock_create_task.assert_not_called()
+
+
+async def test_media_player_async_get_transport_capabilities_runtime_error(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+) -> None:
+    """Test runtime errors in capability fetch return None."""
+    entity = mock_wiim_media_player_entity
+    mock_wiim_device.async_get_transport_capabilities.side_effect = RuntimeError("boom")
+
+    result = await entity._async_get_transport_capabilities_for_device(mock_wiim_device)
+
+    assert result is None
 
 
 async def test_media_player_play(
@@ -530,6 +856,33 @@ async def test_media_player_pause(
         mock_pause.assert_awaited_once()
 
 
+async def test_media_player_pause_wraps_runtime_error(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test runtime errors are wrapped as HomeAssistantError."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    mock_wiim_device.async_pause = AsyncMock(side_effect=RuntimeError("boom"))
+
+    with (
+        patch.object(
+            entity, "_async_handle_critical_error", new_callable=AsyncMock
+        ) as mock_handle,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_media_pause()
+
+    mock_handle.assert_not_awaited()
+    mock_update_state.assert_not_called()
+
+
 async def test_media_player_stop(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -562,6 +915,35 @@ async def test_media_player_set_volume(
     ) as mock_set_volume:
         await entity.async_set_volume_level(0.75)
         mock_set_volume.assert_awaited_once_with(75)
+
+
+async def test_media_player_set_volume_handles_sdk_error(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test SDK errors are wrapped and trigger critical handling."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    mock_wiim_device.async_set_volume = AsyncMock(
+        side_effect=WiimRequestException("boom")
+    )
+
+    with (
+        patch.object(
+            entity, "_async_handle_critical_error", new_callable=AsyncMock
+        ) as mock_handle,
+        patch.object(
+            entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
+        ) as mock_update_state,
+        pytest.raises(HomeAssistantError),
+    ):
+        await entity.async_set_volume_level(0.5)
+
+    mock_handle.assert_awaited_once()
+    mock_update_state.assert_not_called()
 
 
 async def test_media_player_mute_volume(
@@ -740,6 +1122,26 @@ async def test_media_player_set_repeat_mode(
         mock_loop_mode.reset_mock()
 
 
+async def test_media_player_set_shuffle_uses_default_repeat(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test shuffle uses OFF repeat when repeat is unset."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+    entity._attr_repeat = None
+
+    with patch.object(
+        mock_wiim_device, "async_set_loop_mode", new_callable=AsyncMock
+    ) as mock_loop_mode:
+        await entity.async_set_shuffle(True)
+
+    mock_wiim_device.build_loop_mode.assert_called_once_with(WiimRepeatMode.OFF, True)
+    mock_loop_mode.assert_awaited_once()
+
+
 async def test_media_player_browse_media_root(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -786,6 +1188,48 @@ async def test_media_player_browse_media_root(
     assert browse_result.children[0].title == "Presets"
     assert browse_result.children[1].title == "Queue"
     mock_browse_media.assert_not_awaited()
+
+
+async def test_media_player_browse_media_root_includes_media_sources(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test root browse includes media sources when HTTP API is available."""
+    entity = mock_wiim_media_player_entity
+    mock_wiim_device.supports_http_api = True
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    media_source_child = BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="media-source://audio",
+        media_content_type=MediaType.MUSIC,
+        title="Media Source",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    media_sources_item = BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="media-source://root",
+        media_content_type=MediaType.MUSIC,
+        title="Root",
+        can_play=False,
+        can_expand=True,
+        children=[media_source_child],
+    )
+
+    with patch(
+        "homeassistant.components.media_source.async_browse_media",
+        AsyncMock(return_value=media_sources_item),
+    ):
+        browse_result = await entity.async_browse_media(MEDIA_CONTENT_ID_ROOT)
+
+    assert browse_result.children is not None
+    assert len(browse_result.children) == 3
+    assert browse_result.children[2].title == "Media Source"
 
 
 async def test_media_player_browse_media_favorites(
@@ -840,6 +1284,42 @@ async def test_media_player_browse_media_source_requires_http_api(
         await entity.async_browse_media(media_content_id="media-source://some-source")
 
 
+async def test_media_player_browse_media_source_with_http_api(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test media source browse is delegated when HTTP API is available."""
+    entity = mock_wiim_media_player_entity
+    mock_wiim_device.supports_http_api = True
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    media_source_item = BrowseMedia(
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="media-source://root",
+        media_content_type=MediaType.MUSIC,
+        title="Media Source Root",
+        can_play=False,
+        can_expand=True,
+        children=[],
+    )
+
+    with (
+        patch(
+            "homeassistant.components.media_source.is_media_source_id",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.media_source.async_browse_media",
+            AsyncMock(return_value=media_source_item),
+        ),
+    ):
+        result = await entity.async_browse_media(media_content_id="media-source://root")
+
+    assert result is media_source_item
+
+
 async def test_media_player_browse_media_playlists_queue(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
 ) -> None:
@@ -882,6 +1362,31 @@ async def test_media_player_browse_media_playlists_queue(
         assert child_item.can_play is True
         assert child_item.can_expand is False
         mock_get_queue_snapshot.assert_awaited_once()
+
+
+async def test_media_player_browse_media_queue_inactive(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+) -> None:
+    """Test browsing queue when inactive returns empty children."""
+    entity = mock_wiim_media_player_entity
+
+    with patch.object(
+        mock_wiim_device, "async_get_queue_snapshot", new_callable=AsyncMock
+    ) as mock_get_queue_snapshot:
+        mock_get_queue_snapshot.return_value = WiimQueueSnapshot(
+            items=(),
+            source_name="",
+            play_medium="",
+            track_source="",
+            is_active=False,
+        )
+
+        browse_result = await entity.async_browse_media(
+            MediaType.PLAYLIST, MEDIA_CONTENT_ID_PLAYLISTS
+        )
+
+    assert browse_result.children == []
+    mock_get_queue_snapshot.assert_awaited_once()
 
 
 async def test_async_play_media_source(hass: HomeAssistant) -> None:
@@ -962,6 +1467,65 @@ async def test_async_play_media_source_requires_http_api(
         )
 
 
+async def test_async_play_media_invalid_preset_id(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test invalid preset ID raises validation error."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    with pytest.raises(ServiceValidationError, match="Invalid preset ID"):
+        await entity.async_play_media(MediaType.MUSIC, "not-a-number")
+
+
+async def test_async_play_media_track_invalid_index(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test invalid track index raises validation error."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    with pytest.raises(ServiceValidationError, match="Expected a valid track index"):
+        await entity.async_play_media(MediaType.TRACK, "track-1")
+
+
+async def test_async_play_media_track_valid_index(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test valid track index plays queue and updates attributes."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+    mock_wiim_device.async_play_queue_with_index = AsyncMock()
+
+    with patch.object(entity, "_update_ha_state_from_sdk_cache", new=MagicMock()):
+        await entity.async_play_media(MediaType.TRACK, "2")
+
+    mock_wiim_device.async_play_queue_with_index.assert_awaited_once_with(2)
+    assert entity._attr_media_content_id == "wiim_track_2"
+    assert entity._attr_media_content_type == MediaType.TRACK
+    assert entity._attr_state == MediaPlayerState.PLAYING
+
+
+async def test_async_play_media_unsupported_type(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test unsupported media type raises validation error."""
+    entity = mock_wiim_media_player_entity
+    _set_wiim_data(mock_hass)
+    entity.hass = mock_hass
+
+    with pytest.raises(ServiceValidationError, match="Unsupported media type"):
+        await entity.async_play_media("video", "1")
+
+
 async def test_media_player_play_media_routes_follower_to_leader(
     mock_wiim_media_player_entity: WiimMediaPlayerEntity,
     mock_wiim_device: WiimDevice,
@@ -992,3 +1556,13 @@ async def test_media_player_play_media_routes_follower_to_leader(
     mock_update_state.assert_called_once()
     leader_device.play_preset.assert_awaited_once_with(1)
     mock_wiim_device.play_preset.assert_not_awaited()
+
+
+async def test_media_player_browse_media_invalid_path(
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+) -> None:
+    """Test invalid browse path raises BrowseError."""
+    entity = mock_wiim_media_player_entity
+
+    with pytest.raises(BrowseError, match="Invalid browse path"):
+        await entity.async_browse_media(MediaType.MUSIC, "invalid_path")

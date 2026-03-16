@@ -36,3 +36,17 @@ async def test_wiim_base_entity_device_info(mock_wiim_device: WiimDevice) -> Non
     assert device_info["manufacturer"] == mock_wiim_device.manufacturer
     assert device_info["model"] == mock_wiim_device.model_name
     assert device_info["sw_version"] == mock_wiim_device.firmware_version
+
+
+async def test_wiim_base_entity_device_info_uses_http_api_url(
+    mock_wiim_device: WiimDevice,
+) -> None:
+    """Test device_info uses http_api_url when presentation_url is missing."""
+    mock_wiim_device.presentation_url = None
+    mock_wiim_device.http_api_url = "http://192.168.1.100:8080"
+
+    entity = MockWiimBaseEntity(mock_wiim_device)
+
+    device_info = entity.device_info
+    assert device_info is not None
+    assert device_info["configuration_url"] == "http://192.168.1.100:8080"

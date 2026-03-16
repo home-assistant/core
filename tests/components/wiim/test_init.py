@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wiim.controller import WiimController
-from wiim.exceptions import WiimDeviceException
+from wiim.exceptions import WiimDeviceException, WiimRequestException
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.wiim import async_setup_entry, async_unload_entry
@@ -13,6 +13,7 @@ from homeassistant.components.wiim.models import WiimData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.network import NoURLAvailableError
 
 
 async def test_async_setup_entry_success(
@@ -97,6 +98,114 @@ async def test_async_setup_entry_device_init_failure(
             await async_setup_entry(mock_hass, mock_config_entry)
 
 
+async def test_async_setup_entry_request_exception(
+    mock_hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test async_setup_entry when HTTP API request fails."""
+    mock_config_entry.add_to_hass(mock_hass)
+    mock_session = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.wiim.async_create_wiim_device",
+            side_effect=WiimRequestException("HTTP failure"),
+        ),
+        patch(
+            "homeassistant.components.wiim.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch("homeassistant.components.wiim.WiimController") as mock_controller_class,
+        patch(
+            "homeassistant.components.wiim.get_url",
+            return_value="http://192.168.1.10:8123",
+        ),
+    ):
+        mock_controller_instance = AsyncMock()
+        mock_controller_class.return_value = mock_controller_instance
+
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(mock_hass, mock_config_entry)
+
+
+async def test_async_setup_entry_no_url_available(
+    mock_hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test async_setup_entry raises when Home Assistant URL is unavailable."""
+    mock_config_entry.add_to_hass(mock_hass)
+    mock_session = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.wiim.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch("homeassistant.components.wiim.WiimController") as mock_controller_class,
+        patch(
+            "homeassistant.components.wiim.get_url",
+            side_effect=NoURLAvailableError,
+        ),
+    ):
+        mock_controller_instance = AsyncMock()
+        mock_controller_class.return_value = mock_controller_instance
+
+        with pytest.raises(ConfigEntryNotReady):
+            await async_setup_entry(mock_hass, mock_config_entry)
+
+
+async def test_async_setup_entry_unregisters_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test async_setup_entry registers cleanup that removes and disconnects."""
+    mock_config_entry.add_to_hass(hass)
+    mock_session = AsyncMock()
+    hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
+
+    unload_callbacks: list[object] = []
+
+    def _capture_callback(cb):
+        unload_callbacks.append(cb)
+
+    mock_config_entry.async_on_unload = MagicMock(side_effect=_capture_callback)
+
+    with (
+        patch("homeassistant.components.wiim.WiimController") as mock_controller_cls,
+        patch(
+            "homeassistant.components.wiim.async_create_wiim_device"
+        ) as mock_create_wiim_device,
+        patch(
+            "homeassistant.components.wiim.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch(
+            "homeassistant.components.wiim.get_url",
+            return_value="http://192.168.1.10:8123",
+        ),
+    ):
+        mock_controller = MagicMock()
+        mock_controller.add_device = AsyncMock()
+        mock_controller.remove_device = AsyncMock()
+        mock_controller_cls.return_value = mock_controller
+
+        mock_device = MagicMock()
+        mock_device.udn = "test-udn"
+        mock_device.name = "Test Device"
+        mock_device.disconnect = AsyncMock()
+        mock_create_wiim_device.return_value = mock_device
+
+        result = await async_setup_entry(hass, mock_config_entry)
+
+    assert result is True
+    assert len(unload_callbacks) == 2
+
+    await unload_callbacks[1]()
+
+    mock_controller.remove_device.assert_awaited_once_with("test-udn")
+    mock_device.disconnect.assert_awaited_once()
+
+
 async def test_async_unload_entry_success(
     mock_hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
@@ -127,3 +236,15 @@ async def test_async_unload_entry_success(
     mock_hass.config_entries.async_unload_platforms.assert_awaited_once_with(
         mock_config_entry, PLATFORMS
     )
+
+
+async def test_async_unload_entry_returns_false(
+    mock_hass: HomeAssistant,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test async_unload_entry returns False when platform unload fails."""
+    mock_hass.config_entries.async_unload_platforms = AsyncMock(return_value=False)
+
+    result = await async_unload_entry(mock_hass, mock_config_entry)
+
+    assert result is False

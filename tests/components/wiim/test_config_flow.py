@@ -60,6 +60,21 @@ async def test_async_step_user_success(mock_hass: HomeAssistant) -> None:
         mock_abort.assert_called_once()
 
 
+async def test_async_step_user_cannot_connect(mock_hass: HomeAssistant) -> None:
+    """Test user step shows error form on connection failure."""
+    flow = WiimConfigFlow()
+    flow.hass = mock_hass
+
+    with patch(
+        "homeassistant.components.wiim.config_flow._async_probe_wiim_host",
+        side_effect=CannotConnect,
+    ):
+        result = await flow.async_step_user({CONF_HOST: "192.168.1.250"})
+
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_async_step_user_already_configured(
     hass: HomeAssistant,
     flow: tuple[WiimConfigFlow, HomeAssistant],
@@ -213,3 +228,31 @@ async def test_async_probe_wiim_host_success(
     ):
         result = await _async_probe_wiim_host(mock_hass, "192.168.1.100")
         assert result == expected_result
+
+
+async def test_async_probe_wiim_host_timeout_error(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test probing a host handles timeout errors."""
+    with (
+        patch(
+            "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
+            side_effect=TimeoutError,
+        ),
+        pytest.raises(CannotConnect),
+    ):
+        await _async_probe_wiim_host(mock_hass, "192.168.1.200")
+
+
+async def test_async_probe_wiim_host_returns_none(
+    mock_hass: HomeAssistant,
+) -> None:
+    """Test probing a host handles empty probe results."""
+    with (
+        patch(
+            "homeassistant.components.wiim.config_flow.async_probe_wiim_device",
+            return_value=None,
+        ),
+        pytest.raises(CannotConnect),
+    ):
+        await _async_probe_wiim_host(mock_hass, "192.168.1.201")
