@@ -14,7 +14,6 @@ class PranaBaseEntity(CoordinatorEntity[PranaCoordinator]):
     """Defines a base Prana entity."""
 
     _attr_has_entity_name = True
-    _attr_entity_description: EntityDescription
 
     def __init__(
         self,
