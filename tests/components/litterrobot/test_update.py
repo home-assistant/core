@@ -76,7 +76,7 @@ async def test_robot_with_update(
 
     robot.update_firmware = AsyncMock(return_value=False)
 
-    with pytest.raises(HomeAssistantError, match="firmware_update_failed"):
+    with pytest.raises(HomeAssistantError, match="Unable to start firmware update"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
@@ -131,7 +131,7 @@ async def test_update_command_exception(
         side_effect=InvalidCommandException("Invalid command: oops")
     )
 
-    with pytest.raises(HomeAssistantError, match="command_failed"):
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,

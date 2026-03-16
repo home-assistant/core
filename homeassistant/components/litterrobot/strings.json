@@ -15,16 +15,6 @@
           "recording_event_types": "Select which camera event types will trigger a recording."
         }
       }
-    },
-    "selector": {
-      "recording_event_types": {
-        "options": {
-          "pet_visit": "Pet visit",
-          "cat_detect": "Cat detected",
-          "cycle_completed": "Cycle completed",
-          "cycle_interrupted": "Cycle interrupted"
-        }
-      }
     }
   },
   "config": {
@@ -361,7 +351,7 @@
       "message": "No Litter-Robot 5 cameras found"
     },
     "activity_not_found": {
-      "message": "Activity with event ID '{event_id}' was not found"
+      "message": "Activity with event ID {event_id} was not found"
     }
   },
   "issues": {
@@ -384,6 +374,20 @@
         }
       },
       "name": "Set sleep mode"
+    },
+    "start_recording": {
+      "description": "Manually trigger a video recording for a Litter-Robot 5 Pro camera.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Whisker config entry.",
+          "name": "Config entry"
+        },
+        "serial": {
+          "description": "Optional serial number to record a specific robot.",
+          "name": "Serial"
+        }
+      },
+      "name": "Start recording"
     },
     "reassign_visit": {
       "description": "Reassign or unassign a pet visit to a different pet.",

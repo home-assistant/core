@@ -125,6 +125,12 @@
   "services": {
     "set_sleep_mode": {
       "service": "mdi:sleep"
+    },
+    "start_recording": {
+      "service": "mdi:record-rec"
+    },
+    "reassign_visit": {
+      "service": "mdi:swap-horizontal"
     }
   }
 }

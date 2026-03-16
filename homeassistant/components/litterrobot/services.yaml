@@ -16,6 +16,18 @@ set_sleep_mode:
       selector:
         time:
 
+start_recording:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: litterrobot
+    serial:
+      required: false
+      selector:
+        text:
+
 reassign_visit:
   fields:
     config_entry_id:

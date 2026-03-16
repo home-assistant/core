@@ -24,6 +24,8 @@ from .entity import (
     whisker_command,
 )
 
+PARALLEL_UPDATES = 1
+
 NIGHT_LIGHT_DESCRIPTION = LightEntityDescription(
     key="night_light",
     translation_key="night_light",
