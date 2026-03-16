@@ -46,6 +46,16 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.account = Account(websession=async_get_clientsession(hass))
         self.previous_members: set[str] = set()
 
+        # Initialize previous_members from the device registry so that
+        # stale devices can be detected on the first update after restart.
+        device_registry = dr.async_get(hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            for domain, identifier in device.identifiers:
+                if domain == DOMAIN:
+                    self.previous_members.add(identifier)
+
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
         try:

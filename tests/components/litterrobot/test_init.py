@@ -281,3 +281,15 @@ async def test_dynamic_devices(
 
     # Third check -> removed 1 device
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+
+    mock_account.robots.pop(0)
+
+    with patch(
+        "homeassistant.components.litterrobot.coordinator.Account",
+        return_value=mock_account,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Fourth check -> removed 1 device after reload
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 0
