@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import (
     OverkizCommand,
@@ -32,6 +32,10 @@ from . import OverkizDataConfigEntry
 from .const import LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
+
+# Special position values reported by some Overkiz devices
+_POSITION_MY = 108  # "My position" preset
+_POSITION_UNKNOWN = 124  # "Unknown position" preset
 
 
 def is_closed(device: Device) -> bool | None:
@@ -73,7 +77,7 @@ class OverkizCoverDescription(CoverEntityDescription):
     set_position_command: OverkizCommand | None = None
     is_closed_fn: Callable[[Device], bool | None] | None = None
     current_tilt_position_state: OverkizState | None = None
-    invert_tilt_position: bool | None = None
+    invert_tilt_position: bool = False
     set_tilt_position_command: OverkizCommand | None = None
     open_tilt_command: OverkizCommand | None = None
     open_tilt_command_args: OverkizStateType | list[OverkizStateType] = None
@@ -86,7 +90,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ##
     ## Overrides via UIWidget
     ##
-    # Needs override to support position (and remove support for tilt position which is not supported by this device))
+    # Needs override to support position (and remove support for tilt position which is not supported by this device)
     # uiClass is Pergola
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING,
@@ -332,9 +336,6 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """Initialize the device."""
         super().__init__(device_url, coordinator, description)
 
-        # Use device url as unique ID for backwards compatibility
-        self._attr_unique_id = self.device.device_url
-
         # Overkiz does support covers where only tilt commands are supported
         # and HA sets by default open/close as supported feature which conflicts
         supported_features = CoverEntityFeature(0)
@@ -403,10 +404,11 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if state_name and (state := self.device.states[state_name]):
             position = state.value_as_int
 
-            # Fallback for position 108 (My position)
-            if position == 108:
+            # Fallback for "My position" preset
+            if position == _POSITION_MY:
                 LOGGER.debug(
-                    "Overkiz cover position is invalid (108). Device: %s, State: %s",
+                    "Overkiz cover position is invalid (%s). Device: %s, State: %s",
+                    _POSITION_MY,
                     self.device.device_url,
                     state_name,
                 )
@@ -416,10 +418,11 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 ]:
                     position = fallback_state.value_as_int
 
-            # Fallback for position 124 (Target position)
-            if position == 124:
+            # Fallback for "Unknown position" preset
+            if position == _POSITION_UNKNOWN:
                 LOGGER.debug(
-                    "Overkiz cover position is invalid (124). Device: %s, State: %s",
+                    "Overkiz cover position is invalid (%s). Device: %s, State: %s",
+                    _POSITION_UNKNOWN,
                     self.device.device_url,
                     state_name,
                 )
@@ -477,11 +480,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             if position is None:
                 return None
 
-            if (
-                self.entity_description.invert_tilt_position
-                if self.entity_description.invert_tilt_position is not None
-                else self.entity_description.invert_position
-            ):
+            if self.entity_description.invert_tilt_position:
                 position = 100 - position
 
             return position
@@ -491,11 +490,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
-        if (
-            self.entity_description.invert_tilt_position
-            if self.entity_description.invert_tilt_position is not None
-            else self.entity_description.invert_position
-        ):
+
+        if self.entity_description.invert_tilt_position:
             position = 100 - position
 
         if command := self.entity_description.set_tilt_position_command:
@@ -540,7 +536,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
     @property
     def is_closing(self) -> bool | None:
-        """Return if the cover is opening or not."""
+        """Return if the cover is closing or not."""
         if command := self.entity_description.close_command:
             if self.is_running(command):
                 return True
@@ -575,13 +571,17 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if not current_closure or not target_closure:
             return None
 
-        return cast(int, current_closure.value) - cast(int, target_closure.value)
+        current_value = current_closure.value_as_int
+        target_value = target_closure.value_as_int
+
+        if current_value is None or target_value is None:
+            return None
+
+        return current_value - target_value
 
 
 class OverkizLowSpeedCover(OverkizCover):
     """Representation of an Overkiz Low Speed cover."""
-
-    entity_description: OverkizCoverDescription
 
     def __init__(
         self,
