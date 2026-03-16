@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PranaConfigEntry
-from .entity import PranaBaseEntity, PranaCoordinator, PranaEntityDescription, StrEnum
+from .entity import PranaBaseEntity, PranaCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -40,9 +41,10 @@ class PranaSensorType(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class PranaSensorEntityDescription(SensorEntityDescription, PranaEntityDescription):
+class PranaSensorEntityDescription(SensorEntityDescription):
     """Description of a Prana sensor entity."""
 
+    key: PranaSensorType
     state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     value_fn: Callable[[PranaCoordinator], StateType | None]
 
@@ -50,28 +52,24 @@ class PranaSensorEntityDescription(SensorEntityDescription, PranaEntityDescripti
 ENTITIES: tuple[PranaSensorEntityDescription, ...] = (
     PranaSensorEntityDescription(
         key=PranaSensorType.HUMIDITY,
-        translation_key="humidity",
         value_fn=lambda coord: coord.data.humidity,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     PranaSensorEntityDescription(
         key=PranaSensorType.VOC,
-        translation_key="voc",
         value_fn=lambda coord: coord.data.voc,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
     ),
     PranaSensorEntityDescription(
         key=PranaSensorType.AIR_PRESSURE,
-        translation_key="air_pressure",
         value_fn=lambda coord: coord.data.air_pressure,
         native_unit_of_measurement=UnitOfPressure.MMHG,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     PranaSensorEntityDescription(
         key=PranaSensorType.CO2,
-        translation_key="co2",
         value_fn=lambda coord: coord.data.co2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,

@@ -9,15 +9,6 @@
       }
     },
     "sensor": {
-      "air_pressure": {
-        "default": "mdi:gauge"
-      },
-      "co2": {
-        "default": "mdi:molecule-co2"
-      },
-      "humidity": {
-        "default": "mdi:water-percent"
-      },
       "inside_temperature": {
         "default": "mdi:home-thermometer"
       },
@@ -29,9 +20,6 @@
       },
       "outside_temperature_2": {
         "default": "mdi:thermometer"
-      },
-      "voc": {
-        "default": "mdi:molecule"
       }
     },
     "switch": {
