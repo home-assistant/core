@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "An account with this email address is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
