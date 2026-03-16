@@ -1,15 +1,4 @@
 {
-  "services": {
-    "set_keyboard_text": {
-      "service": "mdi:keyboard"
-    },
-    "append_keyboard_text": {
-      "service": "mdi:keyboard"
-    },
-    "clear_keyboard_text": {
-      "service": "mdi:keyboard-off"
-    }
-  },
   "entity": {
     "binary_sensor": {
       "keyboard_focused": {
@@ -18,6 +7,17 @@
           "off": "mdi:keyboard-off"
         }
       }
+    }
+  },
+  "services": {
+    "append_keyboard_text": {
+      "service": "mdi:keyboard"
+    },
+    "clear_keyboard_text": {
+      "service": "mdi:keyboard-off"
+    },
+    "set_keyboard_text": {
+      "service": "mdi:keyboard"
     }
   }
 }

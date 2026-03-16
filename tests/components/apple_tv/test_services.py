@@ -147,12 +147,15 @@ async def test_set_keyboard_text_not_supported(
     mock_atv: MagicMock,
 ) -> None:
     """Test error when keyboard is not supported by device."""
-    with patch.object(
-        type(mock_atv.keyboard),
-        "text_focus_state",
-        new_callable=PropertyMock,
-        side_effect=NotSupportedError("text_focus_state is not supported"),
-    ), pytest.raises(ServiceValidationError):
+    with (
+        patch.object(
+            type(mock_atv.keyboard),
+            "text_focus_state",
+            new_callable=PropertyMock,
+            side_effect=NotSupportedError("text_focus_state is not supported"),
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
         await hass.services.async_call(
             DOMAIN,
             "set_keyboard_text",
