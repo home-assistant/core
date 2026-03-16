@@ -1,7 +1,10 @@
 """Test the OMIE - Spain and Portugal electricity prices integration."""
 
+from unittest.mock import MagicMock
+
 import aiohttp
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -77,3 +80,40 @@ async def test_coordinator_unavailability_logging(
 
     assert mock_pyomie.spot_price.call_count == 4
     assert "Fetching omie data recovered" in caplog.text
+
+
+@pytest.mark.freeze_time("2025-11-11T10:17:32.153544Z")
+async def test_update_interval(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_pyomie: MagicMock,
+) -> None:
+    """Test that the coordinator schedules updates at the correct 15-minute intervals."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_pyomie.spot_price.reset_mock()
+
+    # The next update should be scheduled for 12:30:01 (15-minute boundary +1 second)
+    freezer.move_to("2025-11-11T10:30:00.000000Z")
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_pyomie.spot_price.call_count == 0
+
+    freezer.tick(1)  # Move to 10:30:01
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_pyomie.spot_price.call_count == 1
+    mock_pyomie.spot_price.reset_mock()
+
+    freezer.tick(14 * 60)  # Move to 10:44:01
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_pyomie.spot_price.call_count == 0
+
+    freezer.tick(60)  # Move to 10:45:01
+    async_fire_time_changed(hass, dt_util.utcnow())
+    await hass.async_block_till_done()
+    assert mock_pyomie.spot_price.call_count == 1
