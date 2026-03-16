@@ -5,7 +5,7 @@ rules:
     comment: Integration does not register Home Assistant actions or services.
   appropriate-polling:
     status: done
-    comment: Passive multicast listener with no configurable polling interval.
+    comment: Passive multicast listener with user-configurable polling interval via options flow.
   brands: done
   common-modules: done
   config-flow-test-coverage:
