@@ -15,7 +15,7 @@ from homeassistant.components.recorder.models.statistics import (
 )
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.waterfurnace.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -162,5 +162,21 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_climate(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_waterfurnace_client: Mock,
+) -> MockConfigEntry:
+    """Set up only the climate platform for testing."""
+    with patch("homeassistant.components.waterfurnace.PLATFORMS", [Platform.CLIMATE]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

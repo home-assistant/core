@@ -90,7 +90,7 @@ class WaterFurnaceCoordinator(DataUpdateCoordinator[WFReading]):
                 (device for device in client.devices if device.gwid == self.unit), None
             )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> WFReading:
         """Fetch data from WaterFurnace API with built-in retry logic."""
         try:
             return await self.hass.async_add_executor_job(self.client.read_with_retry)
