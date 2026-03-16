@@ -202,7 +202,7 @@ async def make_device_data(
 
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
+            hass, entry, api, device, coordinators_by_id, True
         )
         devices_data.sensors.append((device, coordinator))
         if coordinator.data is not None:
@@ -400,7 +400,6 @@ async def _initialize_webhook(
             hass,
             entry.data[CONF_WEBHOOK_ID],
         )
-
         # check if webhook is configured in switchbot cloud
         check_webhook_result = None
         with contextlib.suppress(Exception):
