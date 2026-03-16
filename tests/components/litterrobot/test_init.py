@@ -225,7 +225,7 @@ async def test_update_auth_error_triggers_reauth(
     assert state.state != STATE_UNAVAILABLE
 
     # Simulate an authentication error during update
-    mock_account.refresh_robots.side_effect = LitterRobotLoginException(
+    mock_account.load_robots.side_effect = LitterRobotLoginException(
         "Invalid credentials"
     )
     freezer.tick(UPDATE_INTERVAL)
