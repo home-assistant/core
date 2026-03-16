@@ -199,37 +199,6 @@ async def test_bluetooth_flow_no_device(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_reconfigure(hass: HomeAssistant) -> None:
-    """Test the reconfiguration form."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ADDRESS: FIXTURE_MAC,
-            **FIXTURE_USER_INPUT,
-        },
-        unique_id=format_mac(FIXTURE_MAC),
-    )
-    entry.add_to_hass(hass)
-
-    assert entry.data[CONF_PIN] == "000000"
-
-    result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-    assert set(result["data_schema"].schema) == set(FIXTURE_USER_INPUT)
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {**FIXTURE_USER_INPUT, CONF_PIN: "010101"}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    assert entry.data["address"] is not None
-    assert entry.data[CONF_PIN] == "010101"
-
-
 async def test_name_from_discovery() -> None:
     """Test we can create a name from discovery info."""
     # If for some reason no name can be derived, just return the default name

@@ -10,13 +10,13 @@ from eurotronic_cometblue_ha import AsyncCometBlue
 from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
-from .coordinator import CometBlueDataUpdateCoordinator
+from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS: list[Platform] = [
@@ -24,31 +24,9 @@ PLATFORMS: list[Platform] = [
 ]
 LOGGER = logging.getLogger(__name__)
 
-type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
-
-
-@callback
-def _async_migrate_config_if_missing(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    data = dict(entry.data)
-
-    changed = False
-
-    for k in entry.data:
-        if k not in {CONF_ADDRESS, CONF_PIN}:
-            _ = data.pop(k, None)
-            changed = True
-    if CONF_PIN in entry.data and isinstance(entry.data[CONF_PIN], int):
-        data[CONF_PIN] = f"{entry.data[CONF_PIN]:06d}"
-        changed = True
-
-    if changed:
-        hass.config_entries.async_update_entry(entry, data=data)
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) -> bool:
     """Set up Eurotronic Comet Blue from a config entry."""
-
-    _async_migrate_config_if_missing(hass, entry)
 
     address = entry.data[CONF_ADDRESS]
 

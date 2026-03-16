@@ -17,13 +17,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import CometBlueDataUpdateCoordinator
+from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 from .entity import CometBlueBluetoothEntity
 
 LOGGER = logging.getLogger(__name__)
@@ -37,12 +36,12 @@ DEFAULT_PRESETS = {PRESET_COMFORT, PRESET_ECO}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CometBlueConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the client entities."""
 
-    coordinator: CometBlueDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
     async_add_entities([CometBlueClimateEntity(coordinator)])
 
 
@@ -53,12 +52,6 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_name = None
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-    _attr_preset_modes = [
-        PRESET_NONE,
-        PRESET_ECO,
-        PRESET_AWAY,
-        PRESET_COMFORT,
-    ]
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -73,27 +66,27 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         """Initialize CometBlueClimateEntity."""
 
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.address}-climate"
+        self._attr_unique_id = f"{coordinator.address}"
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.coordinator.data["currentTemp"]
+        return self.coordinator.data.temperatures["currentTemp"]
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        return self.coordinator.data["manualTemp"]
+        return self.coordinator.data.temperatures["manualTemp"]
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
-        return self.coordinator.data["targetTempHigh"]
+        return self.coordinator.data.temperatures["targetTempHigh"]
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
-        return self.coordinator.data["targetTempLow"]
+        return self.coordinator.data.temperatures["targetTempLow"]
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -122,10 +115,10 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
         # presets have an order in which they are displayed on TRV:
         # away, comfort, eco, none (manual)
         if (
-            self.coordinator.data["holiday"].get("start") is None
-            and self.coordinator.data["holiday"].get("end") is not None
+            self.coordinator.data.holiday.get("start") is None
+            and self.coordinator.data.holiday.get("end") is not None
             and self.target_temperature
-            == self.coordinator.data["holiday"].get("temperature")
+            == self.coordinator.data.holiday.get("temperature")
         ):
             return PRESET_AWAY
         if self.target_temperature == self.target_temperature_high:
@@ -153,7 +146,7 @@ class CometBlueClimateEntity(CometBlueBluetoothEntity, ClimateEntity):
             )
 
         await self.coordinator.send_command(
-            "set_temperature_async",
+            self.coordinator.device.set_temperature_async,
             {
                 "values": {
                     # manual temperature always needs to be set, otherwise TRV will turn OFF

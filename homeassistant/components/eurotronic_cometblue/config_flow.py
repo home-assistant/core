@@ -14,11 +14,7 @@ from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import (
-    SOURCE_RECONFIGURE,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_PIN
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -60,15 +56,10 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_addresses: list[str] = []
-        self._existing_entry_data: dict[str, Any] = {}
 
     async def _try_connect(self, user_input: dict[str, Any]) -> dict[str, str]:
         """Verify connection to the device with the provided PIN and read initial data."""
-        device_address = (
-            self._discovery_info.address
-            if self._discovery_info
-            else self._existing_entry_data[CONF_ADDRESS]
-        )
+        device_address = self._discovery_info.address if self._discovery_info else ""
         try:
             ble_device = async_ble_device_from_address(self.hass, device_address)
             LOGGER.info("Testing connection for device at address %s", device_address)
@@ -114,13 +105,6 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PIN: pin,
         }
 
-        if self.source == SOURCE_RECONFIGURE:
-            entry_data[CONF_ADDRESS] = self._existing_entry_data[CONF_ADDRESS]
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data=entry_data,
-            )
-
         return self.async_create_entry(
             title=name_from_discovery(self._discovery_info), data=entry_data
         )
@@ -137,14 +121,8 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self._create_entry(user_input[CONF_PIN])
 
-        schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA,
-            self._existing_entry_data,
-        )
-
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=schema,
             errors=errors,
         )
 
@@ -216,10 +194,3 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         return await self.async_step_pick_device()
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        self._existing_entry_data = dict(self._get_reconfigure_entry().data)
-        return await self.async_step_bluetooth_confirm()

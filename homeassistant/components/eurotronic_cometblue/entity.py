@@ -14,7 +14,6 @@ LOGGER = logging.getLogger(__name__)
 class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]):
     """Coordinator entity for CometBlue."""
 
-    coordinator: CometBlueDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: CometBlueDataUpdateCoordinator) -> None:
@@ -31,8 +30,3 @@ class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]
                 self.hass, self.coordinator.address, True
             )
         )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()

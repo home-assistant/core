@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import Any
@@ -16,13 +18,24 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ALL_TEMPERATURES, MAX_RETRIES
+from .const import MAX_RETRIES
 
 SCAN_INTERVAL = timedelta(minutes=5)
 LOGGER = logging.getLogger(__name__)
+COMMAND_RETRY_INTERVAL = 2.5
+
+type CometBlueConfigEntry = ConfigEntry[CometBlueDataUpdateCoordinator]
 
 
-class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+@dataclass
+class CometBlueCoordinatorData:
+    """Data stored by the coordinator."""
+
+    temperatures: dict[str, float | int] = field(default_factory=dict)
+    holiday: dict = field(default_factory=dict)
+
+
+class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorData]):
     """Class to manage fetching data."""
 
     failed_update_count: int = 0
@@ -30,7 +43,7 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: CometBlueConfigEntry,
         cometblue: AsyncCometBlue,
         device_info: DeviceInfo,
     ) -> None:
@@ -42,13 +55,14 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             name=f"Comet Blue {cometblue.client.address}",
             update_interval=SCAN_INTERVAL,
         )
-        self.device: AsyncCometBlue = cometblue
+        self.device = cometblue
         self.address = cometblue.client.address
-        self.data: dict[str, Any] = {}
         self.device_info = device_info
 
     async def send_command(
-        self, function: str, payload: dict[str, Any]
+        self,
+        function: Callable[..., Awaitable[dict[str, Any] | None]],
+        payload: dict[str, Any],
     ) -> dict[str, Any] | None:
         """Send command to device."""
 
@@ -57,50 +71,42 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         while retry_count < MAX_RETRIES:
             try:
                 async with self.device:
-                    return await getattr(self.device, function)(**payload)
+                    return await function(**payload)
             except (InvalidByteValueError, TimeoutError, BleakError) as ex:
                 retry_count += 1
                 if retry_count >= MAX_RETRIES:
                     raise HomeAssistantError(
-                        f"Error sending command {function}({payload}) to '{self.name}': {ex}"
+                        f"Error sending command to '{self.name}': {ex}"
                     ) from ex
                 LOGGER.info(
-                    "Retry sending command %s(%s) to %s after %s (%s)",
-                    function,
-                    payload,
+                    "Retry sending command to %s after %s (%s)",
                     self.name,
                     type(ex).__name__,
                     ex,
                 )
-                await asyncio.sleep(2.5)
+                await asyncio.sleep(COMMAND_RETRY_INTERVAL)
             except ValueError as ex:
                 raise ServiceValidationError(
                     f"Invalid payload '{payload}' for '{self.name}': {ex}"
                 ) from ex
         return None
 
-    async def _async_update_data(self) -> dict[str, bytes]:
+    async def _async_update_data(self) -> CometBlueCoordinatorData:
         """Poll the device."""
-        data: dict = {}
+        data: CometBlueCoordinatorData = CometBlueCoordinatorData()
 
         retry_count = 0
-        retrieved_temperatures: dict = {}
-        holiday: dict | None = None
 
-        while (
-            retry_count < MAX_RETRIES and not retrieved_temperatures and holiday is None
-        ):
+        while retry_count < MAX_RETRIES and not data.temperatures and not data.holiday:
             async with self.device:
                 try:
                     # temperatures are required and must trigger a retry if not available
-                    if not retrieved_temperatures:
-                        retrieved_temperatures = (
-                            await self.device.get_temperature_async()
-                        )
+                    if not data.temperatures:
+                        data.temperatures = await self.device.get_temperature_async()
                     # holiday is optional and should not trigger a retry
                     try:
-                        if not holiday:
-                            holiday = await self.device.get_holiday_async(1) or {}
+                        if not data.holiday:
+                            data.holiday = await self.device.get_holiday_async(1) or {}
                     except InvalidByteValueError as ex:
                         LOGGER.warning(
                             "Failed to retrieve optional data for %s: %s (%s)",
@@ -121,20 +127,13 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
                         type(ex).__name__,
                         ex,
                     )
-                    await asyncio.sleep(2.5)
+                    await asyncio.sleep(COMMAND_RETRY_INTERVAL)
                 except Exception as ex:
                     raise UpdateFailed(
                         f"({type(ex).__name__}) {ex}", retry_after=30
                     ) from ex
 
         # If one value was not retrieved correctly, keep the old value
-        data = {
-            "holiday": holiday if holiday is not None else self.data.get("holiday", {}),
-            **{
-                k: retrieved_temperatures.get(k) or self.data.get(k)
-                for k in CONF_ALL_TEMPERATURES
-            },
-        }
         LOGGER.debug("Received data for %s: %s", self.name, data)
         self.failed_update_count = 0
         return data
