@@ -14,7 +14,7 @@ from .coordinator import PranaConfigEntry, PranaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.FAN, Platform.SWITCH]
+PLATFORMS = [Platform.FAN, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:
