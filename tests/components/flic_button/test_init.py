@@ -28,7 +28,7 @@ from . import (
     TWIST_ADDRESS,
     TWIST_SERIAL,
     create_flic2_service_info,
-    create_mock_coordinator,
+    create_mock_flic_client,
 )
 
 from tests.common import MockConfigEntry
@@ -42,7 +42,7 @@ async def test_setup_entry_success(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = create_mock_coordinator()
+    mock_client = create_mock_flic_client()
 
     with (
         patch(
@@ -51,24 +51,19 @@ async def test_setup_entry_success(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
             return_value=lambda: None,
         ),
     ):
-        mock_client = mock_client_class.return_value
-        mock_client.address = FLIC2_ADDRESS
-
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data is mock_coordinator
+    assert mock_config_entry.runtime_data.client is mock_client
+    mock_client.start.assert_called_once()
 
 
 async def test_setup_entry_device_not_available(
@@ -78,7 +73,7 @@ async def test_setup_entry_device_not_available(
     """Test setup entry when device is not available (BLE device not found)."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_coordinator = create_mock_coordinator()
+    mock_client = create_mock_flic_client()
 
     with (
         patch(
@@ -87,24 +82,20 @@ async def test_setup_entry_device_not_available(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
             return_value=lambda: None,
         ),
     ):
-        mock_client = mock_client_class.return_value
-        mock_client.address = FLIC2_ADDRESS
-
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # Entry should still load (device will connect when available)
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    # start() should not be called when no BLE device available
+    mock_client.start.assert_not_called()
 
 
 async def test_setup_entry_initial_connection_fails(
@@ -115,10 +106,8 @@ async def test_setup_entry_initial_connection_fails(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = create_mock_coordinator()
-    mock_coordinator.async_connect = AsyncMock(
-        side_effect=BleakError("Connection failed")
-    )
+    mock_client = create_mock_flic_client()
+    mock_client.start = AsyncMock(side_effect=BleakError("Connection failed"))
 
     with (
         patch(
@@ -127,19 +116,13 @@ async def test_setup_entry_initial_connection_fails(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
             return_value=lambda: None,
         ),
     ):
-        mock_client = mock_client_class.return_value
-        mock_client.address = FLIC2_ADDRESS
-
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -155,7 +138,7 @@ async def test_unload_entry(
     mock_config_entry.add_to_hass(hass)
 
     service_info = create_flic2_service_info()
-    mock_coordinator = create_mock_coordinator()
+    mock_client = create_mock_flic_client()
 
     with (
         patch(
@@ -164,19 +147,13 @@ async def test_unload_entry(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
             return_value=lambda: None,
         ),
     ):
-        mock_client = mock_client_class.return_value
-        mock_client.address = FLIC2_ADDRESS
-
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -187,7 +164,7 @@ async def test_unload_entry(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_coordinator.async_disconnect.assert_called_once()
+    mock_client.stop.assert_called_once()
 
 
 async def test_setup_entry_with_twist_device(
@@ -210,10 +187,9 @@ async def test_setup_entry_with_twist_device(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = create_mock_coordinator(
+    mock_client = create_mock_flic_client(
         address=TWIST_ADDRESS,
         serial_number=TWIST_SERIAL,
-        device_type=DeviceType.TWIST,
         is_twist=True,
     )
 
@@ -224,10 +200,7 @@ async def test_setup_entry_with_twist_device(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ),
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
@@ -260,7 +233,7 @@ async def test_setup_entry_with_invalid_device_type(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = create_mock_coordinator()
+    mock_client = create_mock_flic_client()
 
     with (
         patch(
@@ -269,10 +242,7 @@ async def test_setup_entry_with_invalid_device_type(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ),
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",
@@ -306,7 +276,7 @@ async def test_setup_entry_without_device_type(
     )
     entry.add_to_hass(hass)
 
-    mock_coordinator = create_mock_coordinator()
+    mock_client = create_mock_flic_client()
 
     with (
         patch(
@@ -315,10 +285,7 @@ async def test_setup_entry_without_device_type(
         ),
         patch(
             "homeassistant.components.flic_button.FlicClient",
-        ),
-        patch(
-            "homeassistant.components.flic_button.FlicCoordinator",
-            return_value=mock_coordinator,
+            return_value=mock_client,
         ),
         patch(
             "homeassistant.components.flic_button.bluetooth.async_register_callback",

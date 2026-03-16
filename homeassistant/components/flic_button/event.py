@@ -10,10 +10,9 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FlicButtonConfigEntry
+from . import FlicButtonConfigEntry, FlicButtonData
 from .const import (
     CONF_PUSH_TWIST_MODE,
     EVENT_CLASS_BUTTON,
@@ -34,11 +33,6 @@ from .const import (
     EVENT_TYPE_TWIST_INCREMENT,
     EVENT_TYPE_UP,
     PushTwistMode,
-)
-from .coordinator import (
-    FlicCoordinator,
-    format_event_dispatcher_name,
-    format_rotate_dispatcher_name,
 )
 from .entity import FlicButtonEntity
 
@@ -129,8 +123,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Flic Button event entity."""
-    coordinator = entry.runtime_data
-    capabilities = coordinator.capabilities
+    data = entry.runtime_data
+    capabilities = data.client.capabilities
     entities: list[FlicButtonEventEntity] = []
 
     push_twist_mode = PushTwistMode(
@@ -141,7 +135,7 @@ async def async_setup_entry(
         # Single button device (Flic 2 or Twist)
         entities.append(
             FlicButtonEventEntity(
-                coordinator,
+                data,
                 is_twist=capabilities.has_selector,  # Twist has selector
                 push_twist_mode=push_twist_mode,
             )
@@ -149,7 +143,7 @@ async def async_setup_entry(
     else:
         # Multi-button device (Duo)
         entities.extend(
-            FlicButtonEventEntity(coordinator, button_index=i)
+            FlicButtonEventEntity(data, button_index=i)
             for i in range(capabilities.button_count)
         )
 
@@ -159,17 +153,15 @@ async def async_setup_entry(
 class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
     """Representation of a Flic button event entity."""
 
-    _attr_should_poll = False
-
     def __init__(
         self,
-        coordinator: FlicCoordinator,
+        data: FlicButtonData,
         button_index: int | None = None,
         is_twist: bool = False,
         push_twist_mode: PushTwistMode = PushTwistMode.DEFAULT,
     ) -> None:
         """Initialize the event entity."""
-        super().__init__(coordinator)
+        super().__init__(data)
         self._button_index = button_index
         self._is_twist = is_twist
 
@@ -200,34 +192,30 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
             self._attr_translation_key = "button_small"
             unique_suffix = f"{EVENT_CLASS_BUTTON}_small"
 
-        self._attr_unique_id = f"{coordinator.client.address}-{unique_suffix}"
+        self._attr_unique_id = f"{self._client.address}-{unique_suffix}"
 
     async def async_added_to_hass(self) -> None:
         """Register event callbacks when entity is added."""
         await super().async_added_to_hass()
 
-        # Subscribe to button events via dispatcher
+        # Subscribe to button events via direct callback
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                format_event_dispatcher_name(self.coordinator.client.address),
+            self._client.register_button_event_callback(
                 self._async_handle_event,
             )
         )
 
         # Subscribe to rotate events if device supports rotation
-        if self.coordinator.capabilities.has_rotation:
+        if self._client.capabilities.has_rotation:
             self.async_on_remove(
-                async_dispatcher_connect(
-                    self.hass,
-                    format_rotate_dispatcher_name(self.coordinator.client.address),
+                self._client.register_rotate_event_callback(
                     self._async_handle_rotate_event,
                 )
             )
 
     @callback
     def _async_handle_event(self, event_type: str, event_data: dict[str, Any]) -> None:
-        """Handle button event from coordinator."""
+        """Handle button event from client."""
         # For Duo buttons, filter events by button_index
         if self._button_index is not None:
             event_button_index = event_data.get("button_index")
@@ -242,7 +230,7 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
     def _async_handle_rotate_event(
         self, event_type: str, event_data: dict[str, Any]
     ) -> None:
-        """Handle rotate event from coordinator."""
+        """Handle rotate event from client."""
         # Only trigger if the event type is in this entity's allowed event types
         if (
             self.entity_description.event_types is not None

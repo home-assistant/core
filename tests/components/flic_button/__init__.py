@@ -175,10 +175,28 @@ def create_mock_flic_client(
     mock_capabilities.has_frame_header = not is_twist
     mock_client.capabilities = mock_capabilities
 
-    # Mock pairing methods
-    mock_client.connect = MagicMock(return_value=None)
-    mock_client.disconnect = MagicMock(return_value=None)
-    mock_client.full_verify_pairing = MagicMock(
+    # Mock device type
+    if is_duo:
+        mock_client.device_type = DeviceType.DUO
+    elif is_twist:
+        mock_client.device_type = DeviceType.TWIST
+    else:
+        mock_client.device_type = DeviceType.FLIC2
+
+    # Mock state
+    mock_state = MagicMock()
+    mock_state.connected = connected
+    mock_state.battery_voltage = 3.3 if connected else None
+    mock_state.firmware_version = None
+    mock_state.device_name = None
+    mock_client.state = mock_state
+
+    # Mock async methods
+    mock_client.start = AsyncMock()
+    mock_client.stop = AsyncMock()
+    mock_client.connect = AsyncMock()
+    mock_client.disconnect = AsyncMock()
+    mock_client.full_verify_pairing = AsyncMock(
         return_value=(
             TEST_PAIRING_ID,
             TEST_PAIRING_KEY,
@@ -189,70 +207,20 @@ def create_mock_flic_client(
             10,
         )
     )
-    mock_client.quick_verify = MagicMock(return_value=None)
-    mock_client.init_button_events = MagicMock(return_value=None)
+    mock_client.quick_verify = AsyncMock()
+    mock_client.init_button_events = AsyncMock()
+    mock_client.get_firmware_version = AsyncMock(return_value=10)
+    mock_client.get_battery_level = AsyncMock(return_value=TEST_BATTERY_LEVEL)
+    mock_client.get_battery_voltage = AsyncMock(
+        return_value=TEST_BATTERY_LEVEL * 3.6 / 1024.0
+    )
+    mock_client.get_name = AsyncMock(return_value=("", 0))
+    mock_client.set_name = AsyncMock(return_value=("", 0))
+    mock_client.set_ble_device = MagicMock()
+
+    # Mock callback registration methods - capture registered callbacks
+    mock_client.register_button_event_callback = MagicMock(return_value=lambda: None)
+    mock_client.register_rotate_event_callback = MagicMock(return_value=lambda: None)
+    mock_client.register_state_callback = MagicMock(return_value=lambda: None)
 
     return mock_client
-
-
-def create_mock_coordinator(
-    address: str = FLIC2_ADDRESS,
-    serial_number: str = FLIC2_SERIAL,
-    device_type: DeviceType = DeviceType.FLIC2,
-    connected: bool = True,
-    is_duo: bool = False,
-    is_twist: bool = False,
-    battery_voltage: float | None = 3.3,
-) -> MagicMock:
-    """Create a mock FlicCoordinator for testing."""
-    mock_coordinator = MagicMock()
-    mock_coordinator.client = create_mock_flic_client(
-        address=address,
-        serial_number=serial_number,
-        is_duo=is_duo,
-        is_twist=is_twist,
-        connected=connected,
-    )
-    mock_coordinator.connected = connected
-    mock_coordinator.serial_number = serial_number
-    mock_coordinator.is_duo = is_duo
-    mock_coordinator.is_twist = is_twist
-    mock_coordinator.device_type = device_type
-    mock_coordinator.last_update_success = True
-    mock_coordinator.async_connect = AsyncMock()
-    mock_coordinator.async_disconnect = AsyncMock()
-    mock_coordinator.async_add_listener = MagicMock(return_value=lambda: None)
-
-    # Mock capabilities
-    mock_capabilities = MagicMock()
-    mock_capabilities.button_count = 2 if is_duo else 1
-    mock_capabilities.has_rotation = is_duo or is_twist
-    mock_capabilities.has_selector = is_twist
-    mock_capabilities.has_gestures = is_duo
-    mock_coordinator.capabilities = mock_capabilities
-
-    # Model name
-    if is_duo:
-        mock_coordinator.model_name = "Flic Duo"
-    elif is_twist:
-        mock_coordinator.model_name = "Flic Twist"
-    else:
-        mock_coordinator.model_name = "Flic 2"
-
-    # Mock handler
-    mock_handler = MagicMock()
-    mock_handler.capabilities = mock_capabilities
-    mock_coordinator.handler = mock_handler
-
-    # Mock data
-    mock_coordinator.data = (
-        {"battery_voltage": battery_voltage} if battery_voltage else {}
-    )
-
-    # Firmware state
-    mock_coordinator.firmware_version = None
-
-    # Mock methods
-    mock_coordinator.async_reconnect_if_needed = AsyncMock()
-
-    return mock_coordinator

@@ -70,6 +70,7 @@ def mock_flic_client() -> Generator[MagicMock]:
         mock_client.is_duo = False
         mock_client.is_twist = False
         mock_client.ble_device = create_flic2_service_info().device
+        mock_client.device_type = DeviceType.FLIC2
 
         # Mock capabilities
         mock_capabilities = MagicMock()
@@ -84,7 +85,17 @@ def mock_flic_client() -> Generator[MagicMock]:
         mock_handler.capabilities = mock_capabilities
         mock_client.handler = mock_handler
 
+        # Mock state
+        mock_state = MagicMock()
+        mock_state.connected = True
+        mock_state.battery_voltage = TEST_BATTERY_LEVEL * 3.6 / 1024.0
+        mock_state.firmware_version = 10
+        mock_state.device_name = None
+        mock_client.state = mock_state
+
         # Async methods
+        mock_client.start = AsyncMock()
+        mock_client.stop = AsyncMock()
         mock_client.connect = AsyncMock()
         mock_client.disconnect = AsyncMock()
         mock_client.full_verify_pairing = AsyncMock(
@@ -107,13 +118,16 @@ def mock_flic_client() -> Generator[MagicMock]:
         )
         mock_client.get_name = AsyncMock(return_value=("", 0))
         mock_client.set_name = AsyncMock(return_value=("", 0))
-        mock_client.device_type = DeviceType.FLIC2
+        mock_client.set_ble_device = MagicMock()
 
-        # Event callbacks
-        mock_client.on_button_event = None
-        mock_client.on_rotate_event = None
-        mock_client.on_selector_change = None
-        mock_client.on_disconnect = None
+        # Callback registration methods
+        mock_client.register_button_event_callback = MagicMock(
+            return_value=lambda: None
+        )
+        mock_client.register_rotate_event_callback = MagicMock(
+            return_value=lambda: None
+        )
+        mock_client.register_state_callback = MagicMock(return_value=lambda: None)
 
         yield mock_client
 
