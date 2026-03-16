@@ -244,6 +244,11 @@ DEFAULT_INTEGRATIONS = {
     "battery",
     "door",
     "garage_door",
+    "gate",
+    "humidity",
+    "motion",
+    "occupancy",
+    "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.

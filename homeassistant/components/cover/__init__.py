@@ -45,7 +45,7 @@ from .const import (
     CoverEntityFeature,
     CoverState,
 )
-from .trigger import CoverClosedTriggerBase, CoverOpenedTriggerBase
+from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,13 +74,13 @@ __all__ = [
     "INTENT_OPEN_COVER",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
-    "CoverClosedTriggerBase",
     "CoverDeviceClass",
     "CoverEntity",
     "CoverEntityDescription",
     "CoverEntityFeature",
-    "CoverOpenedTriggerBase",
     "CoverState",
+    "make_cover_closed_trigger",
+    "make_cover_opened_trigger",
 ]
 
 

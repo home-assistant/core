@@ -204,11 +204,5 @@
       "name": "Set"
     }
   },
-  "title": "Number",
-  "triggers": {
-    "changed": {
-      "description": "Triggers when a number value changes.",
-      "name": "Number changed"
-    }
-  }
+  "title": "Number"
 }

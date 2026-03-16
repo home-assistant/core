@@ -218,7 +218,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
                     self.properties_api.smart_wash_params,
                     self.properties_api.sound_volume,
                     self.properties_api.child_lock,
-                    self.properties_api.dust_collection_mode,
                     self.properties_api.flow_led_status,
                     self.properties_api.valley_electricity_timer,
                 )
