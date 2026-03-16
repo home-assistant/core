@@ -15,3 +15,35 @@ set_sleep_mode:
       example: '"22:30:00"'
       selector:
         time:
+
+start_recording:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: litterrobot
+    serial:
+      required: false
+      selector:
+        text:
+
+reassign_visit:
+  fields:
+    config_entry_id:
+      required: false
+      selector:
+        config_entry:
+          integration: litterrobot
+    event_id:
+      required: true
+      selector:
+        text:
+    from_pet_id:
+      required: false
+      selector:
+        text:
+    to_pet_id:
+      required: false
+      selector:
+        text:

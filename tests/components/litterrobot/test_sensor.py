@@ -10,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, STATE_UNKNOWN, UnitOfMass
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    STATE_UNKNOWN,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -147,6 +152,16 @@ async def test_pet_visits_today_sensor(
     assert sensor.state == "2"
 
 
+@pytest.mark.freeze_time("2025-06-15 12:00:00+00:00")
+async def test_pet_visits_this_week_sensor(
+    hass: HomeAssistant, mock_account_with_pet: MagicMock
+) -> None:
+    """Tests pet visits this week sensor."""
+    await setup_integration(hass, mock_account_with_pet, SENSOR_DOMAIN)
+    sensor = hass.states.get("sensor.kitty_visits_this_week")
+    assert sensor.state == "7"
+
+
 async def test_litterhopper_sensor(
     hass: HomeAssistant, mock_account_with_litterhopper: MagicMock
 ) -> None:
@@ -154,3 +169,53 @@ async def test_litterhopper_sensor(
     await setup_integration(hass, mock_account_with_litterhopper, SENSOR_DOMAIN)
     sensor = hass.states.get("sensor.test_hopper_status")
     assert sensor.state == "enabled"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_sensor(
+    hass: HomeAssistant, mock_account_with_litterrobot_5: MagicMock
+) -> None:
+    """Tests Litter-Robot 5 sensors."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, SENSOR_DOMAIN)
+
+    sensor = hass.states.get("sensor.test_litter_level")
+    assert sensor
+    assert sensor.state == "70.0"
+    assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
+
+    sensor = hass.states.get("sensor.test_pet_weight")
+    assert sensor
+    assert sensor.state == "12.0"
+    assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+
+    sensor = hass.states.get("sensor.test_wi_fi_signal")
+    assert sensor
+    assert sensor.state == "-53"
+    assert (
+        sensor.attributes["unit_of_measurement"] == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+    )
+
+    sensor = hass.states.get("sensor.test_firmware")
+    assert sensor
+    assert "ESP:" in sensor.state
+    assert "MCU:" in sensor.state
+
+    sensor = hass.states.get("sensor.test_setup_date")
+    assert sensor
+    assert sensor.state == "2022-08-28T17:01:12+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
+    sensor = hass.states.get("sensor.test_scoops_saved")
+    assert sensor
+    assert sensor.state == "3769"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+
+    sensor = hass.states.get("sensor.test_next_filter_replacement")
+    assert sensor
+    assert sensor.state == "2023-02-28T17:01:12+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
+    sensor = hass.states.get("sensor.test_total_cycles")
+    assert sensor
+    assert sensor.state == "158"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING

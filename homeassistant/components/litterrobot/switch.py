@@ -4,9 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import (
+    FeederRobot,
+    LitterRobot,
+    LitterRobot3,
+    LitterRobot4,
+    LitterRobot5,
+    Robot,
+)
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -24,10 +32,12 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import DOMAIN
-from .coordinator import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
 
 PARALLEL_UPDATES = 1
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,7 +87,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     coordinator = entry.runtime_data
-    entities = [
+    entities: list[SwitchEntity] = [
         RobotSwitchEntity(robot=robot, coordinator=coordinator, description=description)
         for robot in coordinator.account.robots
         for robot_type, entity_descriptions in SWITCH_MAP.items()
@@ -124,6 +134,16 @@ async def async_setup_entry(
             robot, NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION, RobotSwitchEntity
         )
 
+    # Add camera switches for LR5 Pro robots with cameras
+    for robot in coordinator.account.robots:
+        if isinstance(robot, LitterRobot5) and robot.has_camera:
+            entities.append(
+                LitterRobotCameraMicrophoneSwitch(robot=robot, coordinator=coordinator)
+            )
+            entities.append(
+                LitterRobotCameraSwitch(robot=robot, coordinator=coordinator)
+            )
+
     async_add_entities(entities)
 
 
@@ -146,3 +166,95 @@ class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.entity_description.set_fn(self.robot, False)
+
+
+class LitterRobotCameraMicrophoneSwitch(LitterRobotEntity[LitterRobot5], SwitchEntity):
+    """Switch entity for toggling the camera microphone on LR5 Pro.
+
+    State is managed locally because the robot API's
+    ``soundSettings.cameraAudioEnabled`` does not reflect changes made via
+    the camera settings API.  The initial value is read from the camera
+    settings API at startup.
+    """
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "camera_microphone"
+    _attr_is_on: bool = False
+
+    def __init__(
+        self,
+        robot: LitterRobot5,
+        coordinator: LitterRobotDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the camera microphone switch entity."""
+        super().__init__(
+            robot,
+            coordinator,
+            SwitchEntityDescription(key="camera_microphone"),
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Fetch initial camera microphone state from the camera settings API."""
+        await super().async_added_to_hass()
+        try:
+            client = self.robot.get_camera_client()
+            settings = await client.get_audio_settings()
+            if settings:
+                reported = settings.get("reportedSettings", [{}])
+                data = reported[0].get("data", {}) if reported else {}
+                muted = data.get("audio_in", {}).get("global", {}).get("mute", True)
+                self._attr_is_on = not muted
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug(
+                "Failed to fetch camera microphone state for %s",
+                self.robot.name,
+                exc_info=True,
+            )
+
+    @whisker_command
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable camera microphone."""
+        if await self.robot.set_camera_audio(True):
+            self._attr_is_on = True
+            self.async_write_ha_state()
+
+    @whisker_command
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable camera microphone."""
+        if await self.robot.set_camera_audio(False):
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
+
+class LitterRobotCameraSwitch(LitterRobotEntity[LitterRobot5], SwitchEntity):
+    """Switch entity for turning the camera on/off via privacy mode on LR5 Pro."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "camera"
+
+    def __init__(
+        self,
+        robot: LitterRobot5,
+        coordinator: LitterRobotDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the camera switch entity."""
+        super().__init__(
+            robot,
+            coordinator,
+            SwitchEntityDescription(key="camera"),
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if camera is on (not in privacy mode)."""
+        return self.robot.privacy_mode != "Privacy"
+
+    @whisker_command
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn camera on (exit privacy mode)."""
+        await self.robot.set_privacy_mode(False)
+
+    @whisker_command
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn camera off (enter privacy mode)."""
+        await self.robot.set_privacy_mode(True)

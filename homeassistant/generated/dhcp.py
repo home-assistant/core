@@ -402,6 +402,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "litterrobot",
+        "hostname": "litter-robot5*",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",

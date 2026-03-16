@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
@@ -15,15 +15,26 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _WhiskerEntityT
 
 PARALLEL_UPDATES = 0
+
+
+def _start_of_local_week() -> datetime:
+    """Return the start of the current local week (Monday)."""
+    today = dt_util.start_of_local_day()
+    return today - timedelta(days=today.weekday())
 
 
 def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
@@ -168,6 +179,45 @@ ROBOT_SENSOR_MAP: dict[
             value_fn=lambda robot: robot.pet_weight,
         ),
     ],
+    LitterRobot5: [
+        RobotSensorEntityDescription[LitterRobot5](
+            key="wifi_rssi",
+            translation_key="wifi_rssi",
+            native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.wifi_rssi,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="firmware",
+            translation_key="firmware",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.firmware,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="setup_date",
+            translation_key="setup_date",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.setup_date,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="scoops_saved_count",
+            translation_key="scoops_saved_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.scoops_saved_count,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="next_filter_replacement",
+            translation_key="next_filter_replacement",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.next_filter_replacement_date,
+        ),
+    ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
             key="food_dispensed_today",
@@ -222,7 +272,35 @@ PET_SENSORS: list[RobotSensorEntityDescription] = [
         last_reset_fn=dt_util.start_of_local_day,
         value_fn=lambda pet: pet.get_visits_since(dt_util.start_of_local_day()),
     ),
+    RobotSensorEntityDescription[Pet](
+        key="visits_this_week",
+        translation_key="visits_this_week",
+        state_class=SensorStateClass.TOTAL,
+        last_reset_fn=_start_of_local_week,
+        value_fn=lambda pet: pet.get_visits_since(_start_of_local_week()),
+    ),
 ]
+
+
+CAMERA_EVENT_TYPES = [
+    "pet_visit",
+    "cat_detect",
+    "motion",
+    "cycle_completed",
+    "cycle_interrupted",
+    "litter_low",
+    "offline",
+]
+
+ACTIVITY_TYPE_MAP: dict[str, str] = {
+    "PET_VISIT": "pet_visit",
+    "CAT_DETECT": "cat_detect",
+    "MOTION": "motion",
+    "CYCLE_COMPLETED": "cycle_completed",
+    "CYCLE_INTERRUPTED": "cycle_interrupted",
+    "LITTER_LOW": "litter_low",
+    "OFFLINE": "offline",
+}
 
 
 async def async_setup_entry(
@@ -232,7 +310,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     coordinator = entry.runtime_data
-    entities: list[LitterRobotSensorEntity] = [
+    entities: list[SensorEntity] = [
         LitterRobotSensorEntity(
             robot=robot, coordinator=coordinator, description=description
         )
@@ -247,6 +325,15 @@ async def async_setup_entry(
         )
         for pet in coordinator.account.pets
         for description in PET_SENSORS
+    )
+    entities.extend(
+        LitterRobotLastEventSensor(robot=robot, coordinator=coordinator)
+        for robot in coordinator.account.robots
+        if isinstance(robot, LitterRobot5) and robot.has_camera
+    )
+    entities.extend(
+        LitterRobotPetLastVisitSensor(pet=pet, coordinator=coordinator)
+        for pet in coordinator.account.pets
     )
     async_add_entities(entities)
 
@@ -272,3 +359,206 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self.entity_description.last_reset_fn() or super().last_reset
+
+
+EVENT_TYPE_LABELS: dict[str, str] = {
+    "pet_visit": "Pet visit",
+    "cat_detect": "Cat detected",
+    "motion": "Motion",
+    "cycle_completed": "Cycle completed",
+    "cycle_interrupted": "Cycle interrupted",
+    "litter_low": "Litter low",
+    "offline": "Offline",
+}
+
+
+class LitterRobotLastEventSensor(LitterRobotEntity[LitterRobot5], SensorEntity):
+    """Sensor showing the most recent camera event with pet name."""
+
+    _attr_translation_key = "last_camera_event"
+
+    def __init__(
+        self,
+        robot: LitterRobot5,
+        coordinator: LitterRobotDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the last camera event sensor."""
+        super().__init__(
+            robot,
+            coordinator,
+            SensorEntityDescription(key="last_camera_event"),
+        )
+
+    @property
+    def native_value(self) -> str | None:
+        """Return a descriptive string for the most recent camera activity."""
+        activities = self.coordinator.camera_activities.get(self.robot.serial, [])
+        if not activities:
+            return None
+        latest = activities[0]
+        raw_type = latest.get("type", "")
+        event_type = ACTIVITY_TYPE_MAP.get(raw_type, raw_type.lower())
+        label = EVENT_TYPE_LABELS.get(event_type, event_type)
+
+        pet_ids = latest.get("petIds") or []
+        if pet_ids:
+            name_map = self.coordinator.pet_name_map
+            pet_names = [name_map.get(pid, pid) for pid in pet_ids]
+            pet_str = ", ".join(pet_names)
+            return f"{pet_str} - {label}"
+
+        return label
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state attributes for the latest activity."""
+        activities = self.coordinator.camera_activities.get(self.robot.serial, [])
+        if not activities:
+            return None
+        latest = activities[0]
+        attrs: dict[str, Any] = {}
+        raw_type = latest.get("type", "")
+        attrs["event_type"] = ACTIVITY_TYPE_MAP.get(raw_type, raw_type.lower())
+        pet_ids = latest.get("petIds") or []
+        if pet_ids:
+            name_map = self.coordinator.pet_name_map
+            pet_names = [name_map.get(pid, pid) for pid in pet_ids]
+            attrs["pet_name"] = pet_names[0] if len(pet_names) == 1 else pet_names
+            attrs["pet_id"] = pet_ids[0] if len(pet_ids) == 1 else pet_ids
+        if (waste_type := latest.get("wasteType")) is not None:
+            attrs["waste_type"] = waste_type
+        if (waste_weight := latest.get("wasteWeight")) is not None:
+            attrs["waste_weight_oz"] = _waste_weight_oz(waste_weight)
+        if (duration := latest.get("duration")) is not None:
+            attrs["duration"] = _format_duration(duration)
+        if (pet_weight := latest.get("petWeight")) is not None:
+            attrs["pet_weight"] = round(pet_weight / 100, 1)
+        if (timestamp := latest.get("timestamp")) is not None:
+            attrs["timestamp"] = timestamp
+        if (event_id := latest.get("eventId")) is not None:
+            attrs["event_id"] = event_id
+        attrs["is_reassigned"] = latest.get("isReassigned", False)
+        return attrs or None
+
+
+def _waste_weight_oz(raw: float) -> float:
+    """Convert raw wasteWeight to ounces (same scale as petWeight ÷100 for lbs)."""
+    return round(raw / 100 * 16, 1)
+
+
+def _format_duration(seconds: int) -> str:
+    """Format seconds as 'Xm Ys' when >= 60, otherwise 'Xs'."""
+    if seconds >= 60:
+        m, s = divmod(seconds, 60)
+        return f"{m}m {s}s"
+    return f"{seconds}s"
+
+
+class LitterRobotPetLastVisitSensor(LitterRobotEntity[Pet], SensorEntity):
+    """Sensor showing the most recent litter box visit for a specific pet."""
+
+    _attr_translation_key = "last_visit"
+
+    def __init__(
+        self,
+        pet: Pet,
+        coordinator: LitterRobotDataUpdateCoordinator,
+    ) -> None:
+        """Initialize the per-pet last visit sensor."""
+        super().__init__(
+            pet,
+            coordinator,
+            SensorEntityDescription(key="last_visit"),
+        )
+        self._pet_id = pet.id
+
+    def _pet_activities(self) -> list[dict[str, Any]]:
+        """Return all activities for this pet across all robots."""
+        result: list[dict[str, Any]] = []
+        for activities in self.coordinator.camera_activities.values():
+            for activity in activities:
+                pet_ids = activity.get("petIds") or []
+                pet_id = activity.get("petId")
+                if self._pet_id in pet_ids or self._pet_id == pet_id:
+                    result.append(activity)
+        return result
+
+    def _today_activities(self) -> list[dict[str, Any]]:
+        """Return today's activities for this pet."""
+        start_of_day = dt_util.start_of_local_day()
+        result: list[dict[str, Any]] = []
+        for activity in self._pet_activities():
+            ts = activity.get("timestamp")
+            if not ts:
+                continue
+            try:
+                activity_dt = datetime.fromisoformat(ts)
+                if activity_dt >= start_of_day:
+                    result.append(activity)
+            except ValueError, TypeError:
+                continue
+        return result
+
+    @property
+    def native_value(self) -> str | None:
+        """Return a descriptive string for the pet's most recent visit."""
+        activities = self._pet_activities()
+        if not activities:
+            return None
+        raw_type = activities[0].get("type", "")
+        event_type = ACTIVITY_TYPE_MAP.get(raw_type, raw_type.lower())
+        return EVENT_TYPE_LABELS.get(event_type, event_type)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return last visit details and daily aggregates."""
+        activities = self._pet_activities()
+        if not activities:
+            return None
+        latest = activities[0]
+        attrs: dict[str, Any] = {}
+
+        # Last visit details
+        attrs["pet_id"] = self._pet_id
+        raw_type = latest.get("type", "")
+        attrs["event_type"] = ACTIVITY_TYPE_MAP.get(raw_type, raw_type.lower())
+        if (event_id := latest.get("eventId")) is not None:
+            attrs["event_id"] = event_id
+        if (waste_type := latest.get("wasteType")) is not None:
+            attrs["waste_type"] = waste_type
+        if (waste_weight := latest.get("wasteWeight")) is not None:
+            attrs["waste_weight_oz"] = _waste_weight_oz(waste_weight)
+        if (duration := latest.get("duration")) is not None:
+            attrs["duration"] = _format_duration(duration)
+        if (pet_weight := latest.get("petWeight")) is not None:
+            attrs["pet_weight"] = round(pet_weight / 100, 1)
+        if (timestamp := latest.get("timestamp")) is not None:
+            attrs["timestamp"] = timestamp
+        attrs["is_reassigned"] = latest.get("isReassigned", False)
+
+        # Daily aggregates
+        today = self._today_activities()
+        urine_count = 0
+        urine_weight = 0.0
+        feces_count = 0
+        feces_weight = 0.0
+        total_duration = 0
+        for act in today:
+            wt = (act.get("wasteType") or "").lower()
+            ww = act.get("wasteWeight") or 0.0
+            dur = act.get("duration") or 0
+            total_duration += dur
+            if wt == "urine":
+                urine_count += 1
+                urine_weight += ww
+            elif wt == "feces":
+                feces_count += 1
+                feces_weight += ww
+
+        attrs["urine_today"] = urine_count
+        attrs["urine_weight_today_oz"] = _waste_weight_oz(urine_weight)
+        attrs["feces_today"] = feces_count
+        attrs["feces_weight_today_oz"] = _waste_weight_oz(feces_weight)
+        attrs["total_duration_today"] = _format_duration(total_duration)
+
+        return attrs

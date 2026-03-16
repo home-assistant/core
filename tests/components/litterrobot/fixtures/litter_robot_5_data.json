@@ -1,0 +1,74 @@
+{
+  "name": "Test",
+  "serial": "LR5C010001",
+  "type": "LR5",
+  "timezone": "America/New_York",
+  "powerStatus": "AC",
+  "setupDateTime": "2022-08-28T17:01:12.644Z",
+  "nextFilterReplacementDate": "2023-02-28T17:01:12.644Z",
+  "state": {
+    "odometerCleanCycles": 158,
+    "odometerEmptyCycles": 1,
+    "odometerFilterCycles": 0,
+    "odometerPowerCycles": 8,
+    "lastResetOdometerCleanCycles": 42,
+    "DFINumberOfCycles": 104,
+    "dfiFullCounter": 3,
+    "catDetect": "CAT_DETECT_CLEAR",
+    "isBonnetRemoved": false,
+    "isDrawerRemoved": false,
+    "isDrawerFull": false,
+    "isLaserDirty": false,
+    "isOnline": true,
+    "isHopperInstalled": true,
+    "isSleeping": false,
+    "isNightLightOn": false,
+    "isFirmwareUpdating": false,
+    "isGasSensorFaultDetected": false,
+    "isUsbFaultDetected": false,
+    "weightSensor": 1200.0,
+    "globeMotorFaultStatus": "FAULT_CLEAR",
+    "globeMotorRetractFaultStatus": "FAULT_CLEAR",
+    "pinchStatus": "CLEAR",
+    "lastSeen": "2022-09-17T12:06:37.884Z",
+    "setupDateTime": "2022-08-28T17:01:12.644Z",
+    "firmwareVersions": {
+      "mcuVersion": "10512.2560.2.53",
+      "wifiVersion": "1.1.50"
+    },
+    "firmwareUpdateStatus": "NONE",
+    "litterLevelPercent": 70.0,
+    "globeLitterLevel": 460,
+    "globeLitterLevelIndicator": "OPTIMAL",
+    "robotState": "StRobotIdle",
+    "displayCode": "DcModeIdle",
+    "powerStatus": "AC",
+    "wifiRssi": -53.0,
+    "scoopsSaved": 3769
+  },
+  "litterRobotSettings": {
+    "cycleDelay": 15,
+    "isSmartWeightEnabled": true
+  },
+  "nightLightSettings": {
+    "brightness": 50,
+    "color": "#FFFFFF",
+    "mode": "Auto"
+  },
+  "panelSettings": {
+    "displayIntensity": "Medium",
+    "isKeypadLocked": false
+  },
+  "soundSettings": {
+    "volume": 75
+  },
+  "sleepSchedules": [
+    {"dayOfWeek": 0, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
+    {"dayOfWeek": 1, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
+    {"dayOfWeek": 2, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
+    {"dayOfWeek": 3, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
+    {"dayOfWeek": 4, "isEnabled": true, "sleepTime": 1320, "wakeTime": 420},
+    {"dayOfWeek": 5, "isEnabled": false, "sleepTime": 1380, "wakeTime": 480},
+    {"dayOfWeek": 6, "isEnabled": false, "sleepTime": 1380, "wakeTime": 480}
+  ]
+}

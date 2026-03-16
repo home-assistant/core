@@ -10,11 +10,32 @@ from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import DOMAIN
+from .const import (
+    CONF_RECORDING_DURATION,
+    CONF_RECORDING_ENABLED,
+    CONF_RECORDING_EVENT_TYPES,
+    CONF_RECORDING_RETENTION,
+    DEFAULT_RECORDING_DURATION,
+    DEFAULT_RECORDING_EVENT_TYPES,
+    DEFAULT_RECORDING_RETENTION_DAYS,
+    DOMAIN,
+)
+from .coordinator import LitterRobotConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +53,14 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     username: str
     _account_user_id: str | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: LitterRobotConfigEntry,
+    ) -> LitterRobotOptionsFlow:
+        """Get the options flow for this handler."""
+        return LitterRobotOptionsFlow()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -142,3 +171,70 @@ class LitterRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._account_user_id:
             return "unknown"
         return ""
+
+
+class LitterRobotOptionsFlow(OptionsFlowWithReload):
+    """Handle Litter-Robot options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage Litter-Robot recording options."""
+        if user_input is not None:
+            # Strip values matching defaults so code constants remain
+            # the single source of truth
+            data = dict(user_input)
+            _defaults: dict[str, Any] = {
+                CONF_RECORDING_DURATION: DEFAULT_RECORDING_DURATION,
+                CONF_RECORDING_RETENTION: DEFAULT_RECORDING_RETENTION_DAYS,
+                CONF_RECORDING_EVENT_TYPES: DEFAULT_RECORDING_EVENT_TYPES,
+            }
+            for key, default in _defaults.items():
+                if data.get(key) == default:
+                    data.pop(key, None)
+            return self.async_create_entry(title="", data=data)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_RECORDING_ENABLED,
+                        default=self.config_entry.options.get(
+                            CONF_RECORDING_ENABLED, False
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_RECORDING_DURATION,
+                        default=self.config_entry.options.get(
+                            CONF_RECORDING_DURATION, DEFAULT_RECORDING_DURATION
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=10, max=120)),
+                    vol.Optional(
+                        CONF_RECORDING_RETENTION,
+                        default=self.config_entry.options.get(
+                            CONF_RECORDING_RETENTION, DEFAULT_RECORDING_RETENTION_DAYS
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=90)),
+                    vol.Optional(
+                        CONF_RECORDING_EVENT_TYPES,
+                        default=self.config_entry.options.get(
+                            CONF_RECORDING_EVENT_TYPES,
+                            DEFAULT_RECORDING_EVENT_TYPES,
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                "pet_visit",
+                                "cat_detect",
+                                "cycle_completed",
+                                "cycle_interrupted",
+                            ],
+                            multiple=True,
+                            mode=SelectSelectorMode.LIST,
+                            translation_key=CONF_RECORDING_EVENT_TYPES,
+                        )
+                    ),
+                }
+            ),
+        )
