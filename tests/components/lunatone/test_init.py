@@ -143,7 +143,7 @@ async def test_config_entry_migrating_unique_ids(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a missing serial number."""
+    """Test migration of the Lunatone config entry unique_id from serial number to UUID."""
     config_entry = MockConfigEntry(
         title=BASE_URL,
         domain=DOMAIN,
