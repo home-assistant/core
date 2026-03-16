@@ -18,6 +18,7 @@ from tuya_device_handlers.device_wrapper.extended import (
     DPCodeInvertedPercentageWrapper,
     DPCodePercentageWrapper,
 )
+from tuya_device_handlers.helpers.homeassistant import TuyaCoverAction
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -234,7 +235,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         *,
         current_position: DeviceWrapper[int] | None,
         current_state_wrapper: DeviceWrapper[bool] | None,
-        instruction_wrapper: DeviceWrapper[str] | None,
+        instruction_wrapper: DeviceWrapper[TuyaCoverAction] | None,
         set_position: DeviceWrapper[int] | None,
         tilt_position: DeviceWrapper[int] | None,
     ) -> None:
@@ -251,11 +252,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._tilt_position = tilt_position
 
         if instruction_wrapper:
-            if "open" in instruction_wrapper.options:
+            if TuyaCoverAction.OPEN in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.OPEN
-            if "close" in instruction_wrapper.options:
+            if TuyaCoverAction.CLOSE in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.CLOSE
-            if "stop" in instruction_wrapper.options:
+            if TuyaCoverAction.STOP in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.STOP
 
         if set_position:
@@ -295,10 +296,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if (
             self._instruction_wrapper
-            and (options := self._instruction_wrapper.options)
-            and "open" in options
+            and TuyaCoverAction.OPEN in self._instruction_wrapper.options
         ):
-            await self._async_send_wrapper_updates(self._instruction_wrapper, "open")
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.OPEN
+            )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -310,10 +312,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if (
             self._instruction_wrapper
-            and (options := self._instruction_wrapper.options)
-            and "close" in options
+            and TuyaCoverAction.CLOSE in self._instruction_wrapper.options
         ):
-            await self._async_send_wrapper_updates(self._instruction_wrapper, "close")
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.CLOSE
+            )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -323,8 +326,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if self._instruction_wrapper and "stop" in self._instruction_wrapper.options:
-            await self._async_send_wrapper_updates(self._instruction_wrapper, "stop")
+        if (
+            self._instruction_wrapper
+            and TuyaCoverAction.STOP in self._instruction_wrapper.options
+        ):
+            await self._async_send_wrapper_updates(
+                self._instruction_wrapper, TuyaCoverAction.STOP
+            )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
