@@ -44,7 +44,6 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry, account) -> None
         CONF_PASSWORD: "test-password",
     }
     assert result["result"].unique_id == account.id
-    await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()
 
 
@@ -72,7 +71,6 @@ async def test_form_invalid_auth(
         result["flow_id"],
         {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
