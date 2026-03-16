@@ -196,15 +196,15 @@ async def test_async_step_reauth_valid_key(
 ) -> None:
     """Test reauth flow with a valid new key."""
     result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert (
         mock_config_entry_added_to_hass.data[CONF_ACCESS_TOKEN] == VICTRON_VEBUS_TOKEN
     )
@@ -217,25 +217,25 @@ async def test_async_step_reauth_invalid_key(
 ) -> None:
     """Test reauth flow with an invalid key shows error and allows retry."""
     result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     # Submit wrong key
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN},
     )
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-    assert result.get("errors") == {"base": "invalid_access_token"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_access_token"}
 
     # Now submit correct key
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_async_step_reauth_device_not_found(
@@ -249,13 +249,13 @@ async def test_async_step_reauth_device_not_found(
         return_value=[],
     ):
         result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("step_id") == "reauth_confirm"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_ACCESS_TOKEN: VICTRON_VEBUS_TOKEN},
         )
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("step_id") == "reauth_confirm"
-        assert result.get("errors") == {"base": "no_devices_found"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": "no_devices_found"}

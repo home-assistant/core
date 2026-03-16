@@ -142,18 +142,19 @@ class VictronBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            address = reauth_entry.unique_id
-            assert address is not None
-
             device = VictronBluetoothDeviceData(user_input[CONF_ACCESS_TOKEN])
 
             # Find the current advertisement data for this device
             for discovery_info in async_discovered_service_info(self.hass, False):
-                if discovery_info.address == address:
+                if discovery_info.address == reauth_entry.unique_id:
+                    mfr_data = discovery_info.manufacturer_data.get(
+                        VICTRON_IDENTIFIER
+                    )
+                    if mfr_data is None:
+                        errors["base"] = "invalid_access_token"
+                        break
                     try:
-                        key_valid = device.validate_advertisement_key(
-                            discovery_info.manufacturer_data[VICTRON_IDENTIFIER]
-                        )
+                        key_valid = device.validate_advertisement_key(mfr_data)
                     except (ValueError, IndexError):
                         _LOGGER.debug(
                             "Error validating advertisement key", exc_info=True
