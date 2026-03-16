@@ -31,6 +31,7 @@ from homeassistant.core import (
     Context,
     HomeAssistant,
     ServiceCall,
+    State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -56,6 +57,9 @@ from homeassistant.helpers.trigger import (
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
+    make_entity_origin_state_trigger,
+    make_entity_target_state_trigger,
+    make_entity_transition_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -1592,7 +1596,11 @@ def _make_trigger(
 
         _domain_specs = domain_specs
 
-        def is_valid_state(self, state):
+        def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+            """Accept any transition."""
+            return True
+
+        def is_valid_state(self, state: State) -> bool:
             """Accept any state."""
             return True
 
@@ -1695,11 +1703,193 @@ async def test_entity_filter_no_device_class_means_match_all_in_domain(
 async def test_numerical_domain_spec_converter(hass: HomeAssistant) -> None:
     """Test NumericalDomainSpec stores converter correctly."""
     converter = lambda v: float(v) / 255.0 * 100.0  # noqa: E731
-    nvs = NumericalDomainSpec(value_source="brightness", value_converter=converter)
-    assert nvs.value_source == "brightness"
-    assert nvs.value_converter is converter
-    assert nvs.device_class is ANY_DEVICE_CLASS
+    num_domain_spec = NumericalDomainSpec(
+        value_source="brightness", value_converter=converter
+    )
+    assert num_domain_spec.value_source == "brightness"
+    assert num_domain_spec.value_converter is converter
+    assert num_domain_spec.device_class is ANY_DEVICE_CLASS
 
     # Plain DomainSpec has no converter
-    vs = DomainSpec(value_source="brightness")
-    assert not isinstance(vs, NumericalDomainSpec)
+    domain_spec = DomainSpec(value_source="brightness")
+    assert not isinstance(domain_spec, NumericalDomainSpec)
+
+
+@pytest.mark.parametrize(
+    ("domain_specs", "to_states", "from_state", "to_state", "wrong_value_state"),
+    [
+        pytest.param(
+            {"light": DomainSpec()},
+            {"on"},
+            State("light.bed", "off"),
+            State("light.bed", "on"),
+            State("light.bed", "off"),
+            id="state_based",
+        ),
+        pytest.param(
+            {"light": DomainSpec(value_source="color_mode")},
+            {"hs"},
+            State("light.bed", "on", {"color_mode": "color_temp"}),
+            State("light.bed", "on", {"color_mode": "hs"}),
+            State("light.bed", "on", {"color_mode": "rgb"}),
+            id="attribute_based",
+        ),
+        pytest.param(
+            "light",
+            {"on"},
+            State("light.bed", "off"),
+            State("light.bed", "on"),
+            State("light.bed", "off"),
+            id="state_based_domain_string",
+        ),
+    ],
+)
+async def test_make_entity_target_state_trigger(
+    hass: HomeAssistant,
+    domain_specs: Mapping[str, DomainSpec] | str,
+    to_states: set[str],
+    from_state: State,
+    to_state: State,
+    wrong_value_state: State,
+) -> None:
+    """Test make_entity_target_state_trigger with state and attribute-based DomainSpec."""
+    trigger_cls = make_entity_target_state_trigger(domain_specs, to_states=to_states)
+
+    config = TriggerConfig(key="light.turned_on", target={"entity_id": "light.bed"})
+    trig = trigger_cls(hass, config)
+
+    # Value changed to target — valid
+    assert trig.is_valid_transition(from_state, to_state)
+    assert trig.is_valid_state(to_state)
+
+    # Value did not change — not a valid transition
+    assert not trig.is_valid_transition(from_state, from_state)
+
+    # From unavailable — not valid
+    unavailable = State("light.bed", STATE_UNAVAILABLE, {})
+    assert not trig.is_valid_transition(unavailable, to_state)
+
+    # Value not in to_states — not valid
+    assert not trig.is_valid_state(wrong_value_state)
+
+
+@pytest.mark.parametrize(
+    (
+        "domain_specs",
+        "from_states",
+        "to_states",
+        "from_state",
+        "to_state",
+        "wrong_from",
+        "wrong_to",
+    ),
+    [
+        pytest.param(
+            {"climate": DomainSpec()},
+            {"off"},
+            {"heat"},
+            State("climate.living", "off"),
+            State("climate.living", "heat"),
+            State("climate.living", "cool"),
+            State("climate.living", "cool"),
+            id="state_based",
+        ),
+        pytest.param(
+            {"climate": DomainSpec(value_source="hvac_action")},
+            {"idle"},
+            {"heating"},
+            State("climate.living", "heat", {"hvac_action": "idle"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
+            State("climate.living", "heat", {"hvac_action": "idle"}),
+            id="attribute_based",
+        ),
+    ],
+)
+async def test_make_entity_transition_trigger(
+    hass: HomeAssistant,
+    domain_specs: Mapping[str, DomainSpec],
+    from_states: set[str],
+    to_states: set[str],
+    from_state: State,
+    to_state: State,
+    wrong_from: State,
+    wrong_to: State,
+) -> None:
+    """Test make_entity_transition_trigger with state and attribute-based DomainSpec."""
+    trigger_cls = make_entity_transition_trigger(
+        domain_specs, from_states=from_states, to_states=to_states
+    )
+
+    config = TriggerConfig(
+        key="climate.hvac_action", target={"entity_id": "climate.living"}
+    )
+    trig = trigger_cls(hass, config)
+
+    # Valid transition
+    assert trig.is_valid_transition(from_state, to_state)
+    assert trig.is_valid_state(to_state)
+
+    # Wrong origin (not in from_states)
+    assert not trig.is_valid_transition(wrong_from, to_state)
+
+    # Wrong target (not in to_states)
+    assert not trig.is_valid_state(wrong_to)
+
+    # No change in tracked value — not a valid transition
+    assert not trig.is_valid_transition(from_state, from_state)
+
+    # From unavailable — not valid
+    unavailable = State("climate.living", STATE_UNAVAILABLE, {})
+    assert not trig.is_valid_transition(unavailable, to_state)
+
+
+@pytest.mark.parametrize(
+    ("domain_specs", "origin", "from_state", "to_state", "wrong_from"),
+    [
+        pytest.param(
+            {"climate": DomainSpec()},
+            "off",
+            State("climate.living", "off"),
+            State("climate.living", "heat"),
+            State("climate.living", "cool"),
+            id="state_based",
+        ),
+        pytest.param(
+            {"climate": DomainSpec(value_source="hvac_action")},
+            "idle",
+            State("climate.living", "heat", {"hvac_action": "idle"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
+            State("climate.living", "heat", {"hvac_action": "heating"}),
+            id="attribute_based",
+        ),
+    ],
+)
+async def test_make_entity_origin_state_trigger(
+    hass: HomeAssistant,
+    domain_specs: Mapping[str, DomainSpec],
+    origin: str,
+    from_state: State,
+    to_state: State,
+    wrong_from: State,
+) -> None:
+    """Test make_entity_origin_state_trigger with state and attribute-based DomainSpec."""
+    trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state=origin)
+
+    config = TriggerConfig(
+        key="climate.started_heating", target={"entity_id": "climate.living"}
+    )
+    trig = trigger_cls(hass, config)
+
+    # Valid: changed from expected origin to something else
+    assert trig.is_valid_transition(from_state, to_state)
+    assert trig.is_valid_state(to_state)
+
+    # Wrong origin (not the expected from_state)
+    assert not trig.is_valid_transition(wrong_from, to_state)
+
+    # No change in tracked value — not a valid transition
+    assert not trig.is_valid_transition(from_state, from_state)
+
+    # To-state still matches from_state — not valid
+    assert not trig.is_valid_state(from_state)

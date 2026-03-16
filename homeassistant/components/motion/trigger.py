@@ -7,36 +7,15 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
-from homeassistant.helpers.trigger import (
-    EntityTargetStateTriggerBase,
-    EntityTriggerBase,
-    Trigger,
-)
+from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
 
-
-class _MotionBinaryTriggerBase(EntityTriggerBase):
-    """Base trigger for motion binary sensor state changes."""
-
-    _domain_specs = {
-        BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
-    }
-
-
-class MotionDetectedTrigger(_MotionBinaryTriggerBase, EntityTargetStateTriggerBase):
-    """Trigger for motion detected (binary sensor ON)."""
-
-    _to_states = {STATE_ON}
-
-
-class MotionClearedTrigger(_MotionBinaryTriggerBase, EntityTargetStateTriggerBase):
-    """Trigger for motion cleared (binary sensor OFF)."""
-
-    _to_states = {STATE_OFF}
-
+_MOTION_DOMAIN_SPECS = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOTION)
+}
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "detected": MotionDetectedTrigger,
-    "cleared": MotionClearedTrigger,
+    "detected": make_entity_target_state_trigger(_MOTION_DOMAIN_SPECS, STATE_ON),
+    "cleared": make_entity_target_state_trigger(_MOTION_DOMAIN_SPECS, STATE_OFF),
 }
 
 
