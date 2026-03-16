@@ -1,18 +1,26 @@
 {
   "config": {
+    "error": {
+      "auth_key_required_for_priv": "Authentication Key is required when using a Privacy Key (SNMP v3)",
+      "cannot_connect": "Failed to connect to SNMP host",
+      "invalid_auth": "Invalid authentication credentials",
+      "unknown": "Unexpected error"
+    },
     "step": {
       "user": {
         "data": {
-          "host": "Host",
-          "baseoid": "Base OID",
-          "community": "Community String",
           "auth_key": "Authentication Key (v3)",
-          "priv_key": "Privacy Key (v3)"
+          "auth_protocol": "Authentication Protocol (v3)",
+          "baseoid": "Base OID",
+          "community": "Community String (v1/v2c)",
+          "host": "Host",
+          "port": "Port",
+          "priv_key": "Privacy Key (v3)",
+          "priv_protocol": "Privacy Protocol (v3)",
+          "username": "Username (v3)",
+          "version": "SNMP Version"
         }
       }
-    },
-    "error": {
-      "auth_key_required_for_priv": "Authentication Key is required when using a Privacy Key (SNMP v3)"
     }
   }
 }

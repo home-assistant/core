@@ -21,21 +21,21 @@ __all__ = ["async_get_snmp_engine"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SNMP from a config entry.
-    
+
     This function is called by Home Assistant whenever a Config Entry is loaded
     (e.g., during startup or when the user adds it via the UI).
     """
-    # This line tells Home Assistant to go and look for the platforms listed in 
+    # This line tells Home Assistant to go and look for the platforms listed in
     # the PLATFORMS variable (device_tracker.py) and set them up.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    
+
     # Return True to indicate that setup was successful.
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry.
-    
+
     This function is called when a user deletes the integration or disables it.
     It ensures that all associated entities are removed and resources cleaned up.
     """

@@ -1,92 +1,192 @@
-"""Config flow for SNMP.
+"""Config flow for SNMP."""
 
-A 'Config Flow' is a wizard that guides the user through setting up an integration
-in the Home Assistant UI. It handles the input, validation, and creation of a 
-'Config Entry' (a specific instance of this integration).
-"""
+from __future__ import annotations
 
+import logging
 from typing import Any
 
+from pysnmp.error import PySnmpError
+import pysnmp.hlapi.v3arch.asyncio as hlapi
+from pysnmp.hlapi.v3arch.asyncio import (
+    CommunityData,
+    Udp6TransportTarget,
+    UdpTransportTarget,
+    UsmUserData,
+    get_cmd,
+)
 import voluptuous as vol
 
-# ConfigFlow is the base class for all UI-based setup wizards.
-# ConfigFlowResult is the type returned by the wizard steps.
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_AUTH_KEY,
+    CONF_AUTH_PROTOCOL,
     CONF_BASEOID,
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
+    CONF_PRIV_PROTOCOL,
+    CONF_VERSION,
+    DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
+    DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_VERSION,
     DOMAIN,
+    MAP_AUTH_PROTOCOLS,
+    MAP_PRIV_PROTOCOLS,
+    SNMP_VERSIONS,
+)
+from .util import async_create_request_cmd_args
+
+_LOGGER = logging.getLogger(__name__)
+
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PORT, default=int(DEFAULT_PORT)): cv.port,
+        vol.Required(CONF_BASEOID): str,
+        vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In(
+            list(SNMP_VERSIONS)
+        ),
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_AUTH_KEY): str,
+        vol.Optional(CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL): vol.In(
+            list(MAP_AUTH_PROTOCOLS)
+        ),
+        vol.Optional(CONF_PRIV_KEY): str,
+        vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
+            list(MAP_PRIV_PROTOCOLS)
+        ),
+    }
 )
 
 
-class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for SNMP.
-    
-    This class manages the lifecycle of the setup wizard.
-    """
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate the user input allows us to connect.
 
-    # Version of the configuration data. If we change the data structure in the 
-    # future, we would increment this and write a migration.
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    # 1. Extract values from the 'data' dictionary provided by the Config Flow UI.
+    # CONF_HOST and CONF_BASEOID are required, others use defaults if missing.
+    host = data[CONF_HOST]
+    port = int(data.get(CONF_PORT, DEFAULT_PORT))
+    community = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)
+    version = data.get(CONF_VERSION, DEFAULT_VERSION)
+    baseoid = data[CONF_BASEOID]
+    username = data.get(CONF_USERNAME)
+    authkey = data.get(CONF_AUTH_KEY)
+    authproto = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
+    privkey = data.get(CONF_PRIV_KEY)
+    privproto = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+
+    # 2. Setup the 'Target' (where we are sending the SNMP request).
+    # We try IPv4 first (UdpTransportTarget), and if that fails due to a library error,
+    # we fallback to IPv6 (Udp6TransportTarget).
+    try:
+        target = await UdpTransportTarget.create((host, port))
+    except PySnmpError:
+        try:
+            target = Udp6TransportTarget((host, port))
+        except PySnmpError:
+            # If both fail, we raise our custom exception which shows 'cannot_connect' in the UI.
+            raise CannotConnect from None
+
+    # 3. Setup Authentication (SNMP v3 vs v1/v2c).
+    # SNMP v3 uses User-based Security (USM) with passwords and encryption keys.
+    # SNMP v1/v2c uses simple 'Community Strings' (like a shared password).
+    if version == "3":
+        # If keys are empty strings, we treat them as 'none' (unauthenticated/unencrypted).
+        if not authkey:
+            authproto = "none"
+        if not privkey:
+            privproto = "none"
+
+        # UsmUserData creates the secure identity for the SNMP v3 request.
+        auth_data = UsmUserData(
+            username,
+            authKey=authkey or None,
+            privKey=privkey or None,
+            # We map protocol names (like 'SHA') to the actual pysnmp library objects.
+            authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
+        )
+    else:
+        # For v1/v2c, we just need the community string and the 'mpModel' (version flag).
+        auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
+
+    # 4. Preparation for the actual request.
+    # This utility function combines the engine, auth, target, and OID into a standard format.
+    request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
+
+    # 5. Execute a 'smoke test' request.
+    # We perform a simple GET command. If the OID exists and the credentials are correct,
+    # it returns success. If not, we get an 'err_indication' or 'err_status'.
+    err_indication, err_status, _, _ = await get_cmd(*request_args)
+
+    # 6. Check for failure results.
+    if err_indication:
+        # A network-level error (timeout, host unreachable).
+        raise CannotConnect(err_indication) from None
+    if err_status:
+        # An SNMP-level error (wrong password, OID not authorized).
+        raise InvalidAuth(err_status.prettyPrint()) from None
+
+
+class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for SNMP."""
+
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step when a user clicks 'Add Integration' in the UI.
-        
-        If 'user_input' is None, we show the form.
-        If 'user_input' has data, we process it and create the entry.
-        """
+        """Handle the initial step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # VALIDATION: SNMP v3 requires an Auth Key if a Privacy Key is used.
             if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
                 errors["base"] = "auth_key_required_for_priv"
-            
-            if not errors:
-                # If the user submitted the form and it's valid, we create a 'Config Entry'.
-                # 'title' is what appears in the list of integrations (usually the IP address or name).
-                # 'data' is the actual configuration dictionary.
-                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-        # 'async_show_form' displays a form in the UI.
-        # 'data_schema' defines the fields the user needs to fill out.
+            if not errors:
+                try:
+                    await validate_input(self.hass, user_input)
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_HOST], data=user_input
+                    )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    # vol.Required means the user MUST provide this.
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_BASEOID): str,
-                    # vol.Optional provides a default value if left blank.
-                    vol.Optional(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
-                    vol.Optional(CONF_AUTH_KEY): str,
-                    vol.Optional(CONF_PRIV_KEY): str,
-                }
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from the old YAML configuration file.
-        
-        This step is invisible to the user. It is triggered automatically when Home 
-        Assistant finds old 'device_tracker: snmp' entries in configuration.yaml.
-        """
-        # We check the current list of 'Config Entries' to avoid creating duplicates.
+        """Handle import from the old YAML configuration file."""
         for entry in self._async_current_entries():
-            # If an entry already exists with the same Host and BaseOID, we stop.
-            if (
-                entry.data.get(CONF_HOST) == user_input.get(CONF_HOST)
-                and entry.data.get(CONF_BASEOID) == user_input.get(CONF_BASEOID)
-            ):
+            if entry.data.get(CONF_HOST) == user_input.get(
+                CONF_HOST
+            ) and entry.data.get(CONF_BASEOID) == user_input.get(CONF_BASEOID):
                 return self.async_abort(reason="already_configured")
 
-        # If it's a new entry, we save it into the system's database.
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(Exception):
+    """Error to indicate there is invalid auth."""

@@ -1,5 +1,9 @@
 """SNMP constants."""
 
+from __future__ import annotations
+
+from datetime import timedelta
+
 DOMAIN = "snmp"
 
 CONF_ACCEPT_ERRORS = "accept_errors"
@@ -22,6 +26,9 @@ DEFAULT_PRIV_PROTOCOL = "none"
 DEFAULT_TIMEOUT = 8
 DEFAULT_VERSION = "1"
 DEFAULT_VARTYPE = "none"
+
+SCAN_INTERVAL = timedelta(seconds=10)
+
 
 SNMP_VERSIONS = {"1": 0, "2c": 1, "3": None}
 
