@@ -274,6 +274,37 @@ async def test_stale_device_removal(
         assert updated_device is None
 
 
+async def test_skipped_energy_site_is_removed_as_stale_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test skipped energy sites do not block stale device removal."""
+    entry = await setup_platform(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "98765")},
+        manufacturer="Tesla",
+        name="Skipped Energy Site",
+    )
+
+    refreshed_metadata = deepcopy(METADATA)
+    refreshed_metadata["energy_sites"]["98765"] = {
+        "access": True,
+        "name": "Skipped Energy Site",
+    }
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=refreshed_metadata,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    updated_device = device_registry.async_get_device(identifiers={(DOMAIN, "98765")})
+    assert updated_device is None
+
+
 async def test_device_retention_during_reload(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -877,14 +908,6 @@ async def test_dynamic_device_discovery_triggers_reload(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    # Track if reload was called
-    reload_called = False
-
-    async def mock_reload(entry_id):
-        nonlocal reload_called
-        reload_called = True
-        return True
-
     # Update metadata to include a new vehicle with access
     new_metadata = deepcopy(METADATA)
     new_metadata["vehicles"]["5YJ3E1EA1NF000001"] = {
@@ -899,7 +922,7 @@ async def test_dynamic_device_discovery_triggers_reload(
             "tesla_fleet_api.teslemetry.Teslemetry.metadata",
             return_value=new_metadata,
         ),
-        patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
     ):
         # Advance time to trigger metadata coordinator refresh
         freezer.tick(METADATA_INTERVAL)
@@ -907,66 +930,29 @@ async def test_dynamic_device_discovery_triggers_reload(
         await hass.async_block_till_done()
 
     # Verify reload was triggered due to new vehicle
-    assert reload_called
+    mock_reload.assert_called_once_with(entry.entry_id)
 
 
-async def test_dynamic_device_discovery_no_reload_for_unscoped_energy_site(
+async def test_dynamic_device_discovery_no_reload_for_scope_only_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_metadata: AsyncMock,
 ) -> None:
-    """Test metadata refresh does not reload for energy sites without scope."""
-    mock_metadata.return_value = deepcopy(METADATA_NOSCOPE)
+    """Test metadata refresh does not reload when only scopes change."""
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
-
-    reload_called = False
-
-    async def mock_reload(entry_id):
-        nonlocal reload_called
-        reload_called = True
-        return True
-
-    with patch.object(hass.config_entries, "async_reload", side_effect=mock_reload):
-        freezer.tick(METADATA_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    assert not reload_called
-
-
-async def test_dynamic_device_discovery_triggers_reload_on_scope_change(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_metadata: AsyncMock,
-) -> None:
-    """Test metadata refresh reloads when a relevant scope is newly granted."""
-    mock_metadata.return_value = deepcopy(METADATA_NOSCOPE)
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.LOADED
-
-    reload_called = False
-
-    async def mock_reload(entry_id):
-        nonlocal reload_called
-        reload_called = True
-        return True
-
-    refreshed_metadata = deepcopy(METADATA_NOSCOPE)
-    refreshed_metadata["scopes"].append("energy_device_data")
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-            return_value=refreshed_metadata,
+            return_value=deepcopy(METADATA_NOSCOPE),
         ),
-        patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
     ):
         freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    assert reload_called
+    mock_reload.assert_not_called()
 
 
 async def test_dynamic_device_discovery_no_reload_without_changes(
@@ -977,22 +963,13 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    # Track if reload was called
-    reload_called = False
-
-    async def mock_reload(entry_id):
-        nonlocal reload_called
-        reload_called = True
-        # Don't actually reload to avoid test complications
-        return True
-
     # Patch to use the same metadata (no changes)
     with (
         patch(
             "tesla_fleet_api.teslemetry.Teslemetry.metadata",
             return_value=deepcopy(METADATA),
         ),
-        patch.object(hass.config_entries, "async_reload", side_effect=mock_reload),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
     ):
         # Advance time to trigger metadata coordinator refresh
         freezer.tick(METADATA_INTERVAL)
@@ -1000,4 +977,4 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
         await hass.async_block_till_done()
 
     # Verify reload was NOT triggered since no subscription changes
-    assert not reload_called
+    mock_reload.assert_not_called()
