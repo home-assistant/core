@@ -9998,7 +9998,7 @@ async def test_orphaned_ignored_entries_safe_recovery_mode(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    # No issue is allowed to be made by now
+    # No issue should be created at this point
     assert (
         issue_registry.async_get_issue(
             HOMEASSISTANT_DOMAIN, f"orphaned_ignored_entry.{entry.entry_id}"
