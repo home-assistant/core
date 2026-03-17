@@ -56,6 +56,11 @@ class EnOceanConfigStore:
                 len(self.data["entities"]),
             )
 
+    async def create_device(self, device_address: str, config: dict[str, Any]) -> None:
+        """Create a device in the config store."""
+        self.data["entities"][device_address] = config
+        await self._store.async_save(self.data)
+
 
 @dataclass(frozen=True)
 class EnOceanConfigEntryData:
