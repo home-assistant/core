@@ -1,7 +1,8 @@
 """Tests for the Indevolt button platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
+from indevolt_api import TimeOutException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,7 +11,9 @@ from homeassistant.components.indevolt.const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
+    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
+    RealtimeAction,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -62,9 +65,14 @@ async def test_button_press_standby(
         blocking=True,
     )
 
-    # Verify set_data was called for mode switch and stop() was called
-    mock_indevolt.set_data.assert_called_once_with(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE)
-    mock_indevolt.stop.assert_called_once()
+    # Verify set_data was called twice with correct parameters
+    assert mock_indevolt.set_data.call_count == 2
+    mock_indevolt.set_data.assert_has_calls(
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.STOP, 0, 0]),
+        ]
+    )
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -91,23 +99,22 @@ async def test_button_press_standby_already_in_realtime_mode(
         blocking=True,
     )
 
-    # Verify stop() was called and no mode switch was needed
-    mock_indevolt.set_data.assert_not_called()
-    mock_indevolt.stop.assert_called_once()
+    # Verify set_data was called once with correct parameters
+    mock_indevolt.set_data.assert_called_once_with(REALTIME_ACTION_KEY, [0, 0, 0])
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-async def test_button_press_standby_rejected_command(
+async def test_button_press_standby_timeout_error(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test pressing standby raises HomeAssistantError when the device rejects the command."""
+    """Test pressing standby raises HomeAssistantError when the device times out."""
     with patch("homeassistant.components.indevolt.PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, mock_config_entry)
 
-    # Simulate stop() returning False (e.g. device rejected the command)
-    mock_indevolt.stop.return_value = False
+    # Simulate an API push failure
+    mock_indevolt.set_data.side_effect = TimeOutException("Timed out")
 
     # Mock call to pause (dis)charging
     with pytest.raises(HomeAssistantError):
@@ -145,5 +152,8 @@ async def test_button_press_standby_portable_mode_error(
         )
 
     # Verify correct translation key is used for the error and confirm no call was made
-    assert exc_info.value.translation_key == "energy_mode_change_unavailable_outdoor_portable"
+    assert (
+        exc_info.value.translation_key
+        == "energy_mode_change_unavailable_outdoor_portable"
+    )
     mock_indevolt.set_data.assert_not_called()

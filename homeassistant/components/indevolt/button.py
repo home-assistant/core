@@ -5,13 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final
 
-from indevolt_api import IndevoltRealtimeAction
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import RealtimeAction
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -68,4 +67,7 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.coordinator.async_realtime_action(IndevoltRealtimeAction.STOP)
+
+        await self.coordinator.async_execute_realtime_action(
+            [RealtimeAction.STOP, 0, 0]
+        )
