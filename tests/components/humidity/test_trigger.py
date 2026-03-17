@@ -15,7 +15,7 @@ from homeassistant.components.weather import ATTR_WEATHER_HUMIDITY
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,

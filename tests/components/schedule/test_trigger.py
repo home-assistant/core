@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.common import async_fire_time_changed
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,

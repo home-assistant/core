@@ -8,7 +8,7 @@ from homeassistant.components.person.const import DOMAIN
 from homeassistant.const import CONF_ENTITY_ID, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,

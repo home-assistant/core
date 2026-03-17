@@ -8,7 +8,7 @@ from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from tests.components import (
+from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_any,
