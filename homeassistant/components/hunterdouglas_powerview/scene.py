@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import STATE_ATTRIBUTE_ROOM_NAME
+from .const import DOMAIN, STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import HDEntity
 from .model import PowerviewConfigEntry, PowerviewDeviceInfo
@@ -41,6 +41,7 @@ async def async_setup_entry(
                 room_name,
                 scene,
                 pv_entry.scene_to_shade_ids.get(scene.id, []),
+                pv_entry.scene_to_automation_ids.get(scene.id, []),
             )
         )
     async_add_entities(pvscenes)
@@ -58,11 +59,13 @@ class PowerViewScene(HDEntity, Scene):
         room_name: str,
         scene: PvScene,
         shade_ids: list[int],
+        automation_ids: list[int],
     ) -> None:
         """Initialize the scene."""
         super().__init__(coordinator, device_info, room_name, scene.id)
         self._scene: PvScene = scene
         self._shade_ids = shade_ids
+        self._automation_ids = automation_ids
         self._attr_name = scene.name
 
     @property
@@ -85,10 +88,22 @@ class PowerViewScene(HDEntity, Scene):
                 and (e.unique_id == prefix or e.unique_id.startswith(f"{prefix}_"))
             )
 
+        automation_entity_ids = [
+            entity_id
+            for automation_id in self._automation_ids
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    Platform.SWITCH, DOMAIN, f"{serial}_{automation_id}"
+                )
+            )
+        ]
+
         return {
             STATE_ATTRIBUTE_ROOM_NAME: self._room_name,
             "shade_ids": self._shade_ids,
             "shade_entity_ids": shade_entity_ids,
+            "scheduled_event_ids": self._automation_ids,
+            "scheduled_event_entity_ids": automation_entity_ids,
         }
 
     async def async_activate(self, **kwargs: Any) -> None:

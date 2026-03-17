@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
+from aiopvapi.resources.automation import Automation
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
 from aiopvapi.resources.shade import BaseShade
@@ -29,8 +30,10 @@ class PowerviewEntryData:
     shade_data: dict[str, BaseShade]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: PowerviewDeviceInfo
+    automation_data: dict[str, Automation]
     scene_to_shade_ids: dict[int, list[int]]
     shade_to_scene_ids: dict[int, list[int]]
+    scene_to_automation_ids: dict[int, list[int]]
 
 
 @dataclass(slots=True)

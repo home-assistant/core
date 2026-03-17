@@ -31,6 +31,7 @@ def mock_hunterdouglas_hub(
     rooms_json: str,
     scenes_json: str,
     shades_json: str,
+    scheduledevents_json: str | None,
     scenemembers_json: str | None,
 ) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
@@ -68,6 +69,13 @@ def mock_hunterdouglas_hub(
             return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
         ),
     ]
+    if api_version >= 2 and scheduledevents_json is not None:
+        patches.append(
+            patch(
+                "homeassistant.components.hunterdouglas_powerview.Automations.get_resources",
+                return_value=load_json_value_fixture(scheduledevents_json, DOMAIN),
+            ),
+        )
     if api_version == 2 and scenemembers_json is not None:
         patches.append(
             patch(
@@ -158,6 +166,16 @@ def shades_json(api_version: int) -> str:
         return "gen3/home/shades.json"
     # Add more conditions for different api_versions if needed
     raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def scheduledevents_json(api_version: int) -> str | None:
+    """Return the get_resources fixture for scheduled events, or None if unsupported."""
+    if api_version == 2:
+        return "gen2/scheduledevents.json"
+    if api_version == 3:
+        return "gen3/home/automations.json"
+    return None
 
 
 @pytest.fixture

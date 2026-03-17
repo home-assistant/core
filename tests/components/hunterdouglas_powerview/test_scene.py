@@ -181,3 +181,48 @@ async def test_scene_shade_cross_references_empty_for_v1(
     assert state is not None
     assert state.attributes["shade_ids"] == []
     assert state.attributes["shade_entity_ids"] == []
+    assert state.attributes["scheduled_event_ids"] == []
+    assert state.attributes["scheduled_event_entity_ids"] == []
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [2])
+async def test_scene_scheduled_event_cross_references_v2(
+    hass: HomeAssistant,
+    api_version: int,
+) -> None:
+    """Test scene entities expose scheduled event PV IDs and HA entity IDs for v2."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("scene.powerview_generation_2_open_kitchen")
+    assert state is not None
+    assert 37484 in state.attributes["scheduled_event_ids"]
+    assert (
+        "switch.powerview_generation_2_open_kitchen_schedule"
+        in state.attributes["scheduled_event_entity_ids"]
+    )
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [3])
+async def test_scene_scheduled_event_cross_references_v3(
+    hass: HomeAssistant,
+    api_version: int,
+) -> None:
+    """Test scene entities expose scheduled event PV IDs and HA entity IDs for v3."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Automation 437 references scene 220 ("Close Bed 4")
+    state = hass.states.get("scene.powerview_generation_3_close_bed_4")
+    assert state is not None
+    assert 437 in state.attributes["scheduled_event_ids"]
+    assert (
+        "switch.powerview_generation_3_close_bed_4_schedule"
+        in state.attributes["scheduled_event_entity_ids"]
+    )

@@ -3,6 +3,7 @@
 import logging
 from typing import TYPE_CHECKING
 
+from aiopvapi.automations import Automations
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.rooms import Rooms
@@ -30,6 +31,7 @@ PLATFORMS = [
     Platform.SCENE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,11 +94,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             f"Connection error to PowerView hub {hub_address}: {err}"
         ) from err
 
+    automation_data: PowerviewData | None = None
     scene_member_data: PowerviewData | None = None
-    if hub.api_version == 2:
+    if hub.api_version >= 2:
         try:
-            scene_members = SceneMembers(pv_request)
-            scene_member_data = await scene_members.get_scene_members()
+            automations = Automations(pv_request)
+            automation_data = await automations.get_automations(fetch_scene_data=False)
+            if hub.api_version == 2:
+                scene_members = SceneMembers(pv_request)
+                scene_member_data = await scene_members.get_scene_members()
         except HUB_EXCEPTIONS as err:
             raise ConfigEntryNotReady(
                 f"Connection error to PowerView hub {hub_address}: {err}"
@@ -116,6 +122,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             for sh_id in scene.raw_data.get("shadeIds", []):
                 scene_to_shade_ids.setdefault(scene.id, []).append(sh_id)
                 shade_to_scene_ids.setdefault(sh_id, []).append(scene.id)
+
+    scene_to_automation_ids: dict[int, list[int]] = {}
+    if automation_data:
+        for automation in automation_data.processed.values():
+            if automation.scene_id is not None:
+                scene_to_automation_ids.setdefault(automation.scene_id, []).append(
+                    automation.id
+                )
 
     if not device_info:
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
@@ -140,10 +154,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
         room_data=room_data.processed,
         scene_data=scene_data.processed,
         shade_data=shade_data.processed,
+        automation_data=automation_data.processed if automation_data else {},
         coordinator=coordinator,
         device_info=device_info,
         scene_to_shade_ids=scene_to_shade_ids,
         shade_to_scene_ids=shade_to_scene_ids,
+        scene_to_automation_ids=scene_to_automation_ids,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
