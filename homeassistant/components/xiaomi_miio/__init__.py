@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -74,7 +73,7 @@ from .const import (
     AuthException,
     SetupException,
 )
-from .coordinator import GatewayDeviceCoordinator
+from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
 from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
@@ -83,7 +82,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 POLLING_TIMEOUT_SEC = 10
-UPDATE_INTERVAL = timedelta(seconds=15)
 
 GATEWAY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
