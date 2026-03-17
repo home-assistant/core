@@ -4,18 +4,17 @@ from typing import Any
 
 import pytest
 
-from homeassistant.const import CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components.common import (
     TriggerStateDescription,
-    arm_trigger,
     assert_trigger_behavior_any,
     assert_trigger_behavior_first,
+    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     parametrize_target_entities,
     parametrize_trigger_states,
-    set_or_remove_state,
     target_entities,
 )
 
@@ -162,25 +161,14 @@ async def test_fan_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
-    other_entity_ids = set(target_fans["included"]) - {entity_id}
-
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == 0
-
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
+    await assert_trigger_behavior_last(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_fans,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )

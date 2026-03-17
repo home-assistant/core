@@ -953,3 +953,51 @@ async def assert_trigger_behavior_first(
             set_or_remove_state(hass, excluded_entity_id, excluded_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+async def assert_trigger_behavior_last(
+    hass: HomeAssistant,
+    *,
+    service_calls: list[ServiceCall],
+    target_entities: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test trigger fires in mode last."""
+    other_entity_ids = set(target_entities["included"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+
+    for eid in target_entities["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
