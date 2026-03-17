@@ -105,6 +105,9 @@
       "robot_cleaner_driving_mode": {
         "default": "mdi:car-cog"
       },
+      "robot_cleaner_sound_mode": {
+        "default": "mdi:bell-cog"
+      },
       "robot_cleaner_water_spray_level": {
         "default": "mdi:spray-bottle"
       },
