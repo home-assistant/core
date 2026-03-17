@@ -415,6 +415,7 @@ def _normalize_name(name: str) -> str:
 
 
 def _filter_by_name(
+    hass: HomeAssistant,
     name: str,
     candidates: Iterable[MatchTargetsCandidate],
 ) -> Iterable[MatchTargetsCandidate]:
@@ -422,31 +423,19 @@ def _filter_by_name(
     name_norm = _normalize_name(name)
 
     for candidate in candidates:
-        # Accept name or entity id
-        if (candidate.state.entity_id == name) or _normalize_name(
-            candidate.state.name
-        ) == name_norm:
+        # Accept entity id
+        if candidate.state.entity_id == name:
             candidate.matched_name = name
             yield candidate
             continue
 
-        if candidate.entity is None:
-            continue
-
-        if candidate.entity.name and (
-            _normalize_name(candidate.entity.name) == name_norm
+        for candidate_name in async_get_entity_aliases(
+            hass, candidate.entity, state=candidate.state
         ):
-            candidate.matched_name = name
-            yield candidate
-            continue
-
-        # Check aliases
-        if candidate.entity.aliases:
-            for alias in candidate.entity.aliases:
-                if _normalize_name(alias) == name_norm:
-                    candidate.matched_name = name
-                    yield candidate
-                    break
+            if _normalize_name(candidate_name) == name_norm:
+                candidate.matched_name = name
+                yield candidate
+                break
 
 
 def _filter_by_features(
@@ -583,7 +572,7 @@ def async_match_targets(  # noqa: C901
 
     if constraints.name:
         # Filter by entity name or alias
-        candidates = list(_filter_by_name(constraints.name, candidates))
+        candidates = list(_filter_by_name(hass, constraints.name, candidates))
         if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.NAME)
 
@@ -1501,3 +1490,25 @@ class IntentResponse:
         response_dict["data"] = response_data
 
         return response_dict
+
+
+@callback
+def async_get_entity_aliases(
+    hass: HomeAssistant,
+    entity_entry: er.RegistryEntry | None,
+    *,
+    state: State,
+    allow_empty: bool = True,
+) -> list[str]:
+    """Get all names/aliases for an entity.
+
+    If no entity registry entry is provided, returns a list with just the
+    state name. Otherwise, delegates to the entity registry to resolve aliases,
+    where COMPUTED_NAME aliases are replaced with the computed full entity name.
+
+    The returned list preserves the order set by the user.
+    """
+    if entity_entry is None:
+        return [state.name.strip()]
+
+    return er.async_get_entity_aliases(hass, entity_entry, allow_empty=allow_empty)

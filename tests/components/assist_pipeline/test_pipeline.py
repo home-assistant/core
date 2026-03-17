@@ -1825,11 +1825,15 @@ async def test_acknowledge(
     """Test that acknowledge sound is played when targets are in the same area."""
     area_1 = area_registry.async_get_or_create("area_1")
 
-    light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1"
+    )
     hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
     light_1 = entity_registry.async_update_entity(light_1.entity_id, area_id=area_1.id)
 
-    light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+    light_2 = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="light 2"
+    )
     hass.states.async_set(light_2.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 2"})
     light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_1.id)
 
@@ -2007,11 +2011,15 @@ async def test_acknowledge_other_agents(
     """Test that acknowledge sound is only played when intents are processed locally for other agents."""
     area_1 = area_registry.async_get_or_create("area_1")
 
-    light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    light_1 = entity_registry.async_get_or_create(
+        "light", "demo", "1234", original_name="light 1"
+    )
     hass.states.async_set(light_1.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 1"})
     light_1 = entity_registry.async_update_entity(light_1.entity_id, area_id=area_1.id)
 
-    light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+    light_2 = entity_registry.async_get_or_create(
+        "light", "demo", "5678", original_name="light 2"
+    )
     hass.states.async_set(light_2.entity_id, "off", {ATTR_FRIENDLY_NAME: "light 2"})
     light_2 = entity_registry.async_update_entity(light_2.entity_id, area_id=area_1.id)
 
