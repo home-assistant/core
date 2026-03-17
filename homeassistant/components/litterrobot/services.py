@@ -84,7 +84,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 (robot.serial, "manual"), None
             )
             coordinator.recording_manager.trigger_recording(
-                robot, {"type": "MANUAL", "messageId": "manual"}
+                robot, {"type": "MANUAL", "messageId": "manual"},
+                camera_view="front",
             )
             triggered += 1
 
@@ -180,8 +181,11 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 new_pet_name = None
                 if to_pet_id:
                     new_pet_name = coordinator.pet_name_map.get(to_pet_id)
-                coordinator.rename_recording_for_reassign(
-                    robot_serial, activity, new_pet_name
+                await hass.async_add_executor_job(
+                    coordinator.rename_recording_for_reassign,
+                    robot_serial,
+                    activity,
+                    new_pet_name,
                 )
                 break
 
