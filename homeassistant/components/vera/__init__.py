@@ -8,7 +8,6 @@ import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,8 +31,6 @@ from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
