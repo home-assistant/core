@@ -782,7 +782,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
             or (current_price := home_data.get("current_price")) is None
         ):
             self._attr_available = False
-            self._attr_native_value = None
             self.async_write_ha_state()
             return
 

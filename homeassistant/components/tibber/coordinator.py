@@ -291,7 +291,7 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         tibber_connection = await self.config_entry.runtime_data.async_get_client(
             self.hass
         )
-        active_homes = list(tibber_connection.get_homes(only_active=True))
+        active_homes = tibber_connection.get_homes(only_active=True)
         try:
             await asyncio.gather(
                 tibber_connection.fetch_consumption_data_active_homes(),
