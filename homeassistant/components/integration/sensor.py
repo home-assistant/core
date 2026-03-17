@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
+    DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -24,6 +25,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -98,6 +100,7 @@ PLATFORM_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MAX_SUB_INTERVAL): cv.positive_time_period,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
@@ -265,6 +268,7 @@ async def async_setup_entry(
         round_digits=round_digits,
         source_entity=source_entity_id,
         unique_id=config_entry.entry_id,
+        device_class=config_entry.options.get(CONF_DEVICE_CLASS),
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
@@ -287,6 +291,7 @@ async def async_setup_platform(
         round_digits=config.get(CONF_ROUND_DIGITS),
         source_entity=config[CONF_SOURCE_SENSOR],
         unique_id=config.get(CONF_UNIQUE_ID),
+        device_class=config.get(CONF_DEVICE_CLASS),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
@@ -310,6 +315,7 @@ class IntegrationSensor(RestoreSensor):
         round_digits: int | None,
         source_entity: str,
         unique_id: str | None,
+        device_class: SensorDeviceClass | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
@@ -320,6 +326,7 @@ class IntegrationSensor(RestoreSensor):
         self._round_digits = round_digits
         self._state: Decimal | None = None
         self._method = _IntegrationMethod.from_name(integration_method)
+        self._init_device_class: SensorDeviceClass | None = device_class
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
         self._unit_prefix_string = "" if unit_prefix is None else unit_prefix
@@ -369,7 +376,13 @@ class IntegrationSensor(RestoreSensor):
         source_device_class: SensorDeviceClass | None,
         unit_of_measurement: str | None,
     ) -> SensorDeviceClass | None:
-        """Deduce device class if possible from source device class and target unit."""
+        """Deduce device class if possible from source device class and target unit.
+
+        If a device class value has been set in the config, use that instead.
+        """
+        if self._init_device_class is not None:
+            return self._init_device_class
+
         if source_device_class is None:
             return None
 

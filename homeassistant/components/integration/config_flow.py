@@ -9,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     UnitOfTime,
@@ -103,6 +104,18 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
         ),
         vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
             selector.DurationSelectorConfig(allow_negative=False)
+        ),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_DEVICE_CLASS,
+                sort=True,
+            ),
         ),
     }
 
