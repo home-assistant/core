@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
     other_states,
@@ -83,31 +84,16 @@ async def test_lock_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the lock state condition with the 'any' behavior."""
-    other_entity_ids = set(target_locks["included"]) - {entity_id}
-
-    # Set all locks, including the tested lock, to the initial state
-    for eid in target_locks["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    condition = await create_target_condition(
+    await assert_condition_behavior_any(
         hass,
+        target_entities=target_locks,
+        condition_target_config=condition_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
         condition=condition,
-        target=condition_target_config,
-        behavior="any",
+        condition_options=condition_options,
+        states=states,
     )
-
-    for state in states:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
-
-        # Check if changing other locks also passes the condition
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
