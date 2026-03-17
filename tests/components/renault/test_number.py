@@ -1,6 +1,7 @@
 """Tests for Renault number entities."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.renault.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_load_fixture, snapshot_platform
@@ -105,18 +107,38 @@ async def test_number_not_supported(
 
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
-async def test_number_set_charge_limit_min(
-    hass: HomeAssistant, config_entry: ConfigEntry
+@pytest.mark.parametrize(
+    ("service_data", "expected_min", "expected_target"),
+    [
+        (
+            {
+                ATTR_ENTITY_ID: "number.reg_zoe_40_minimum_charge_level",
+                ATTR_VALUE: 20,
+            },
+            20,
+            80,
+        ),
+        (
+            {
+                ATTR_ENTITY_ID: "number.reg_zoe_40_target_charge_level",
+                ATTR_VALUE: 90,
+            },
+            15,
+            90,
+        ),
+    ],
+)
+async def test_number_action(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    service_data: dict[str, Any],
+    expected_min: int,
+    expected_target: int,
 ) -> None:
     """Test that service invokes renault_api with correct data for min charge limit."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    data = {
-        ATTR_ENTITY_ID: "number.reg_zoe_40_minimum_charge_level",
-        ATTR_VALUE: 20,
-    }
-
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_battery_soc",
         return_value=(
@@ -126,38 +148,52 @@ async def test_number_set_charge_limit_min(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            NUMBER_DOMAIN, SERVICE_SET_VALUE, service_data=data, blocking=True
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            service_data=service_data,
+            blocking=True,
         )
     assert len(mock_action.mock_calls) == 1
-    # Should be called with new min (20) and current target (80)
-    assert mock_action.mock_calls[0][2] == {"min": 20, "target": 80}
+    mock_action.assert_awaited_once_with(min=expected_min, target=expected_target)
+
+    # Verify optimistic update of coordinator data
+    assert hass.states.get("number.reg_zoe_40_minimum_charge_level").state == str(
+        expected_min
+    )
+    assert hass.states.get("number.reg_zoe_40_target_charge_level").state == str(
+        expected_target
+    )
 
 
-@pytest.mark.usefixtures("fixtures_with_data")
+@pytest.mark.usefixtures("fixtures_with_no_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
-async def test_number_set_charge_limit_target(
-    hass: HomeAssistant, config_entry: ConfigEntry
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {
+            ATTR_ENTITY_ID: "number.reg_zoe_40_minimum_charge_level",
+            ATTR_VALUE: 20,
+        },
+        {
+            ATTR_ENTITY_ID: "number.reg_zoe_40_target_charge_level",
+            ATTR_VALUE: 90,
+        },
+    ],
+)
+async def test_number_action_(
+    hass: HomeAssistant, config_entry: ConfigEntry, service_data: dict[str, Any]
 ) -> None:
-    """Test that service invokes renault_api with correct data for target charge limit."""
+    """Test that service invokes renault_api with correct data for min charge limit."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    data = {
-        ATTR_ENTITY_ID: "number.reg_zoe_40_target_charge_level",
-        ATTR_VALUE: 90,
-    }
-
-    with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_battery_soc",
-        return_value=(
-            schemas.KamereonVehicleBatterySocActionDataSchema.loads(
-                await async_load_fixture(hass, "action.set_battery_soc.json", DOMAIN)
-            )
-        ),
-    ) as mock_action:
+    with pytest.raises(
+        ServiceValidationError,
+        match="Battery state of charge data is currently unavailable",
+    ):
         await hass.services.async_call(
-            NUMBER_DOMAIN, SERVICE_SET_VALUE, service_data=data, blocking=True
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            service_data=service_data,
+            blocking=True,
         )
-    assert len(mock_action.mock_calls) == 1
-    # Should be called with current min (15) and new target (90)
-    assert mock_action.mock_calls[0][2] == {"min": 15, "target": 90}
