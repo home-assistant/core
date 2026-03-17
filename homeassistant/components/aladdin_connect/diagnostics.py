@@ -20,13 +20,13 @@ async def async_get_config_entry_diagnostics(
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "doors": {
             uid: {
-                "device_id": coordinator.data.device_id,
-                "door_number": coordinator.data.door_number,
-                "name": coordinator.data.name,
-                "status": coordinator.data.status,
-                "link_status": coordinator.data.link_status,
-                "battery_level": coordinator.data.battery_level,
+                "device_id": door.device_id,
+                "door_number": door.door_number,
+                "name": door.name,
+                "status": door.status,
+                "link_status": door.link_status,
+                "battery_level": door.battery_level,
             }
-            for uid, coordinator in config_entry.runtime_data.items()
+            for uid, door in config_entry.runtime_data.data.items()
         },
     }
