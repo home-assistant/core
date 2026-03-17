@@ -119,8 +119,8 @@ async def async_discover_authorization_server(
         _LOGGER.info("Authorization Server Metadata not found, using default paths")
         return OAuthConfig(
             authorization_server=AuthorizationServer(
-                authorize_url=str(parsed_url.with_path("/authorize")),
-                token_url=str(parsed_url.with_path("/token")),
+                authorize_url=str(parsed_url.with_path("/auth/authorize")),
+                token_url=str(parsed_url.with_path("/auth/token")),
             )
         )
 
