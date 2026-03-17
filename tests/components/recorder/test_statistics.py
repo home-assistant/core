@@ -4048,7 +4048,7 @@ async def test_recorder_platforms_with_custom_equivalent_units(
     ("invalid_custom_equivalent_units", "expected_warning"),
     [
         (
-            None,
+            None,  # raises an exception in our mock function
             "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error",
         ),
         (

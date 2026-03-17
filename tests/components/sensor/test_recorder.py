@@ -6543,7 +6543,7 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
     now = await one_hour_stats(now)
     assert_issues(hass, {})
 
-    # Statistics, valid state - no issues
+    # Statistics, unit not part of unit system but still a valid state - no issues
     hass.states.async_set(
         "sensor.test",
         10,
@@ -6554,7 +6554,7 @@ async def test_update_statistics_issues_with_custom_equivalent_units(
     now = await one_hour_stats(now)
     assert_issues(hass, {})
 
-    # State update with unsupported unit, statistics did not run again
+    # State update with equivalent supported unit, statistics did not run again
     hass.states.async_set(
         "sensor.test",
         12,
