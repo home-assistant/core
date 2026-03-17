@@ -351,26 +351,6 @@ class MoldIndicator(SensorEntity):
 
         return self._get_value_from_state(state, validate_humidity)
 
-    async def async_update(self) -> None:
-        """Calculate latest state."""
-        _LOGGER.debug("Update state for %s", self.entity_id)
-        # check all sensors
-        if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
-            self._attr_available = False
-            self._dewpoint = None
-            self._crit_temp = None
-            return
-
-        # re-calculate dewpoint and mold indicator
-        self._calc_dewpoint()
-        self._calc_moldindicator()
-        if self._attr_native_value is None:
-            self._attr_available = False
-            self._dewpoint = None
-            self._crit_temp = None
-        else:
-            self._attr_available = True
-
     def _calc_dewpoint(self) -> None:
         """Calculate the dewpoint for the indoor air."""
         # Use magnus approximation to calculate the dew point
