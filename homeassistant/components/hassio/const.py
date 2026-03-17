@@ -93,6 +93,7 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
+DATA_ADDONS_LIST = "hassio_addons_list"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
 
 ATTR_AUTO_UPDATE = "auto_update"
@@ -106,6 +107,7 @@ ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
+ATTR_REPOSITORIES = "repositories"
 
 DATA_KEY_ADDONS = "addons"
 DATA_KEY_OS = "os"

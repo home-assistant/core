@@ -1047,13 +1047,16 @@ async def test_supervisor_issues_free_space(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issues_free_space_host_info_fail(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
+    host_info: AsyncMock,
 ) -> None:
     """Test supervisor issue for too little free space remaining without host info."""
     mock_resolution_info(supervisor_client)
+    host_info.side_effect = SupervisorError()
 
     result = await async_setup_component(hass, "hassio", {})
     assert result

@@ -1986,19 +1986,18 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
+def hassio_env(
+    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
+) -> Generator[None]:
     """Fixture to inject hassio env."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
+    from aiohasupervisor import SupervisorError  # noqa: PLC0415
 
     from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
 
+    supervisor_root_info.side_effect = SupervisorError()
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
-        ),
     ):
         yield
 
@@ -2012,8 +2011,6 @@ async def hassio_stubs(
     supervisor_client: AsyncMock,
 ) -> RefreshToken:
     """Create mock hassio http client."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
-
     with (
         patch(
             "homeassistant.components.hassio.HassIO.update_hass_api",
@@ -2022,10 +2019,6 @@ async def hassio_stubs(
         patch(
             "homeassistant.components.hassio.HassIO.update_hass_config",
             return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            side_effect=HassioAPIError(),
         ),
         patch(
             "homeassistant.components.hassio.HassIO.get_ingress_panels",
