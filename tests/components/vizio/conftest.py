@@ -142,13 +142,36 @@ def vizio_bypass_setup_fixture() -> Generator[None]:
 
 @pytest.fixture(name="vizio_bypass_update")
 def vizio_bypass_update_fixture() -> Generator[None]:
-    """Mock component update."""
+    """Mock component update with minimal data."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=True,
         ),
-        patch("homeassistant.components.vizio.media_player.VizioDevice.async_update"),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
+            return_value=None,
+        ),
     ):
         yield
 
@@ -172,7 +195,15 @@ def vizio_cant_connect_fixture() -> Generator[None]:
             AsyncMock(return_value=False),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_version",
             return_value=None,
         ),
     ):
@@ -184,11 +215,7 @@ def vizio_update_fixture() -> Generator[None]:
     """Mock valid updates to vizio device."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
+            "homeassistant.components.vizio.VizioAsync.get_all_settings",
             return_value={
                 "volume": int(MAX_VOLUME[DEVICE_CLASS_SPEAKER] / 2),
                 "eq": CURRENT_EQ,
@@ -196,28 +223,32 @@ def vizio_update_fixture() -> Generator[None]:
             },
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_setting_options",
+            "homeassistant.components.vizio.VizioAsync.get_setting_options",
             return_value=EQ_LIST,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value=CURRENT_INPUT,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+            "homeassistant.components.vizio.VizioAsync.get_power_state",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_model_name",
+            "homeassistant.components.vizio.VizioAsync.get_model_name",
             return_value=MODEL,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_version",
+            "homeassistant.components.vizio.VizioAsync.get_version",
             return_value=VERSION,
+        ),
+        patch(
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
+            return_value=None,
         ),
     ):
         yield
@@ -228,15 +259,15 @@ def vizio_update_with_apps_fixture(vizio_update: None) -> Generator[None]:
     """Mock valid updates to vizio device that supports apps."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value="CAST",
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
             return_value=AppConfig(**CURRENT_APP_CONFIG),
         ),
     ):
@@ -248,15 +279,15 @@ def vizio_update_with_apps_on_input_fixture(vizio_update: None) -> Generator[Non
     """Mock valid updates to vizio device that supports apps but is on a TV input."""
     with (
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
+            "homeassistant.components.vizio.VizioAsync.get_inputs_list",
             return_value=get_mock_inputs(INPUT_LIST_WITH_APPS),
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+            "homeassistant.components.vizio.VizioAsync.get_current_input",
             return_value=CURRENT_INPUT,
         ),
         patch(
-            "homeassistant.components.vizio.media_player.VizioAsync.get_current_app_config",
+            "homeassistant.components.vizio.VizioAsync.get_current_app_config",
             return_value=AppConfig("unknown", 1, "app"),
         ),
     ):
