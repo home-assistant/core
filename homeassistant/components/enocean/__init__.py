@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
-from .types import EnOceanConfigEntry, EnOceanConfigEntryData
+from .types import EnOceanConfigEntry, EnOceanConfigEntryData, EnOceanConfigStore
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -58,7 +58,9 @@ async def async_setup_entry(
         gateway.stop()
         raise ConfigEntryNotReady(f"Failed to start EnOcean gateway: {err}") from err
 
-    config_entry.runtime_data = EnOceanConfigEntryData(gateway=gateway)
+    config_entry.runtime_data = EnOceanConfigEntryData(
+        gateway=gateway, config_store=EnOceanConfigStore(hass, config_entry)
+    )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_SEND_MESSAGE, gateway.send_esp3_packet)
