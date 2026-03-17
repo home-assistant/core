@@ -171,6 +171,7 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         if target_val is not None and current.value == target_val:
             self._attr_is_opening = False
             self._attr_is_closing = False
+            self._commanded_target_position = None
 
     @property
     def current_cover_position(self) -> int | None:
