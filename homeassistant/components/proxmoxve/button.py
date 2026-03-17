@@ -125,6 +125,14 @@ VM_BUTTONS: tuple[ProxmoxVMButtonEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    ProxmoxVMButtonEntityDescription(
+        key="shutdown",
+        translation_key="shutdown",
+        press_action=lambda coordinator, node, vmid: (
+            coordinator.proxmox.nodes(node).qemu(vmid).status.shutdown.post()
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 CONTAINER_BUTTONS: tuple[ProxmoxContainerButtonEntityDescription, ...] = (
@@ -284,7 +292,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
-        if not is_granted(self.coordinator.permissions, p_type="vms"):
+        if not is_granted(self.coordinator.permissions, p_type="vms", vmid=str(self.vm_data["vmid"])):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
@@ -305,7 +313,7 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
         # Container power actions fall under vms
-        if not is_granted(self.coordinator.permissions, p_type="vms"):
+        if not is_granted(self.coordinator.permissions, p_type="vms", vmid=str(self.vm_data["vmid"])):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_permission_vm_lxc_power",
