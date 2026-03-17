@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
+from enum import Enum
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
@@ -817,7 +818,7 @@ class StateAttrTranslated:
         """Initialize."""
         self._hass = hass
 
-    def __call__(self, entity_id: str, attribute: str) -> str | None:
+    def __call__(self, entity_id: str, attribute: str) -> Any:
         """Retrieve translated state attribute value if available."""
         state = _get_state_if_valid(self._hass, entity_id)
 
@@ -827,6 +828,9 @@ class StateAttrTranslated:
         attr_value = state.attributes.get(attribute)
         if attr_value is None:
             return None
+
+        if not isinstance(attr_value, str | Enum):
+            return attr_value
 
         domain = state.domain
         device_class = state.attributes.get("device_class")
