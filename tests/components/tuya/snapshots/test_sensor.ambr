@@ -3946,8 +3946,9 @@
 # ---
 # name: test_platform_setup_and_discovery[sensor.c30_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
