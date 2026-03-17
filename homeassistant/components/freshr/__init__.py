@@ -21,10 +21,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FreshrConfigEntry) -> bo
     await devices_coordinator.async_config_entry_first_refresh()
 
     readings: dict[str, FreshrReadingsCoordinator] = {
-        device.id: FreshrReadingsCoordinator(
+        device_id: FreshrReadingsCoordinator(
             hass, entry, device, devices_coordinator.client
         )
-        for device in devices_coordinator.data
+        for device_id, device in devices_coordinator.data.items()
     }
     await asyncio.gather(
         *(
