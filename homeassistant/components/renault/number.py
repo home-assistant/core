@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from renault_api.kamereon.models import KamereonVehicleBatterySocData
 
@@ -34,6 +35,51 @@ class RenaultNumberEntityDescription(
     """Class describing Renault number entities."""
 
     data_key: str
+    update_fn: Callable[[RenaultNumberEntity, float], Coroutine[Any, Any, None]]
+
+
+async def _set_charge_limit_min(entity: RenaultNumberEntity, value: float) -> None:
+    """Set the minimum SOC.
+
+    The target SOC is required to set the minimum SOC, so we need to fetch it first.
+    """
+    if (data := entity.coordinator.data) is None or (
+        target_soc := data.socTarget
+    ) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="battery_soc_unavailable",
+        )
+    await _set_charge_limits(entity, min_soc=round(value), target_soc=target_soc)
+
+
+async def _set_charge_limit_target(entity: RenaultNumberEntity, value: float) -> None:
+    """Set the target SOC.
+
+    The minimum SOC is required to set the target SOC, so we need to fetch it first.
+    """
+    if (data := entity.coordinator.data) is None or (min_soc := data.socMin) is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="battery_soc_unavailable",
+        )
+    await _set_charge_limits(entity, min_soc=min_soc, target_soc=round(value))
+
+
+async def _set_charge_limits(
+    entity: RenaultNumberEntity, min_soc: int, target_soc: int
+) -> None:
+    """Set the minimum and target SOC.
+
+    Optimistically update local coordinator data so the new
+    limits are reflected immediately without a remote refresh,
+    as Renault servers may still cache old values.
+    """
+    await entity.vehicle.set_battery_soc(min_soc=min_soc, target_soc=target_soc)
+
+    entity.coordinator.data.socMin = min_soc
+    entity.coordinator.data.socTarget = target_soc
+    entity.coordinator.async_set_updated_data(entity.coordinator.data)
 
 
 async def async_setup_entry(
@@ -65,39 +111,7 @@ class RenaultNumberEntity(
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        if self.entity_description.key not in {
-            "charge_limit_min",
-            "charge_limit_target",
-        }:
-            raise NotImplementedError(
-                f"Unsupported Renault number entity key: {self.entity_description.key}"
-            )
-
-        if (
-            self.coordinator.data is None
-            or (min_soc := self.coordinator.data.socMin) is None
-            or (target_soc := self.coordinator.data.socTarget) is None
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="battery_soc_unavailable",
-            )
-
-        if self.entity_description.key == "charge_limit_min":
-            min_soc = round(value)
-        elif self.entity_description.key == "charge_limit_target":
-            target_soc = round(value)
-
-        await self.vehicle.set_battery_soc(min_soc=min_soc, target_soc=target_soc)
-
-        # Optimistically update local coordinator data so the new
-        # limits are reflected immediately without a remote refresh.
-        self.coordinator.data.socMin = min_soc
-        self.coordinator.data.socTarget = target_soc
-
-        # Notify listeners about the updated SoC limits without triggering
-        # a remote refresh, as Renault servers may still cache old values.
-        self.coordinator.async_set_updated_data(self.coordinator.data)
+        await self.entity_description.update_fn(self, value)
 
 
 NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
@@ -105,6 +119,7 @@ NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
         key="charge_limit_min",
         coordinator="battery_soc",
         data_key="socMin",
+        update_fn=_set_charge_limit_min,
         device_class=NumberDeviceClass.BATTERY,
         native_min_value=15,
         native_max_value=45,
@@ -117,6 +132,7 @@ NUMBER_TYPES: tuple[RenaultNumberEntityDescription, ...] = (
         key="charge_limit_target",
         coordinator="battery_soc",
         data_key="socTarget",
+        update_fn=_set_charge_limit_target,
         device_class=NumberDeviceClass.BATTERY,
         native_min_value=55,
         native_max_value=100,
