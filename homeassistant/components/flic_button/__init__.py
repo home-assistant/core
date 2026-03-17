@@ -137,17 +137,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         )
     )
 
-    # Look up device_id for bus events
-    device_id: str | None = None
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, client.address)})
-    if device:
-        device_id = device.id
-
     # Register bus event callbacks (for automations)
     @callback
     def _fire_button_bus_event(event_type: str, event_data: dict[str, Any]) -> None:
         """Fire a Home Assistant bus event for button events."""
+        device_id: str | None = None
+        device_registry = dr.async_get(hass)
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, client.address)}
+        )
+        if device:
+            device_id = device.id
         hass.bus.async_fire(
             FLIC_BUTTON_EVENT,
             {
