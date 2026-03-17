@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Final, Self
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -382,8 +383,13 @@ class IntegrationSensor(RestoreSensor):
         """
         # If user supplied device class, use it if the unit is supported
         if (device_class := self._configured_device_class) is not None:
+            state_classes = DEVICE_CLASS_STATE_CLASSES.get(device_class)
             allowed_units = DEVICE_CLASS_UNITS.get(device_class)
-            if allowed_units is None or unit_of_measurement in allowed_units:
+            if (
+                state_classes is not None
+                and self._attr_state_class in state_classes
+                and (allowed_units is None or unit_of_measurement in allowed_units)
+            ):
                 return device_class
 
         # Otherwise try to infer device class from source sensor
