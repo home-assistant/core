@@ -25,7 +25,7 @@ from tests.components import (
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> list[str]:
     """Create multiple alarm control panel entities associated with different targets."""
-    return (await target_entities(hass, "alarm_control_panel"))["included"]
+    return await target_entities(hass, "alarm_control_panel")
 
 
 @pytest.mark.parametrize(
@@ -138,10 +138,10 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
-    other_entity_ids = set(target_alarm_control_panels) - {entity_id}
+    other_entity_ids = set(target_alarm_control_panels["included"]) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
-    for eid in target_alarm_control_panels:
+    for eid in target_alarm_control_panels["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -249,10 +249,10 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
-    other_entity_ids = set(target_alarm_control_panels) - {entity_id}
+    other_entity_ids = set(target_alarm_control_panels["included"]) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
-    for eid in target_alarm_control_panels:
+    for eid in target_alarm_control_panels["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -359,10 +359,10 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
-    other_entity_ids = set(target_alarm_control_panels) - {entity_id}
+    other_entity_ids = set(target_alarm_control_panels["included"]) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
-    for eid in target_alarm_control_panels:
+    for eid in target_alarm_control_panels["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

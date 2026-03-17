@@ -20,7 +20,7 @@ from tests.components import (
 @pytest.fixture
 async def target_fans(hass: HomeAssistant) -> list[str]:
     """Create multiple fan entities associated with different targets."""
-    return (await target_entities(hass, "fan"))["included"]
+    return await target_entities(hass, "fan")
 
 
 @pytest.mark.parametrize(
@@ -75,10 +75,10 @@ async def test_fan_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when any fan state changes to a specific state."""
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_fans["included"]) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    for eid in target_fans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -133,10 +133,10 @@ async def test_fan_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the first fan changes to a specific state."""
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_fans["included"]) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    for eid in target_fans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -190,10 +190,10 @@ async def test_fan_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
-    other_entity_ids = set(target_fans) - {entity_id}
+    other_entity_ids = set(target_fans["included"]) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    for eid in target_fans["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

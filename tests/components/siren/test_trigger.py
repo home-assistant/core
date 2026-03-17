@@ -21,7 +21,7 @@ from tests.components import (
 @pytest.fixture
 async def target_sirens(hass: HomeAssistant) -> list[str]:
     """Create multiple siren entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -76,10 +76,10 @@ async def test_siren_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when any siren state changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -134,10 +134,10 @@ async def test_siren_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the first siren changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -191,10 +191,10 @@ async def test_siren_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the siren state trigger fires when the last siren changes to a specific state."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    other_entity_ids = set(target_sirens["included"]) - {entity_id}
 
     # Set all sirens, including the tested one, to the initial state
-    for eid in target_sirens:
+    for eid in target_sirens["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

@@ -37,7 +37,7 @@ from tests.components import (
 @pytest.fixture
 async def target_schedules(hass: HomeAssistant) -> list[str]:
     """Create multiple schedule entities associated with different targets."""
-    return (await target_entities(hass, DOMAIN))["included"]
+    return await target_entities(hass, DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -92,10 +92,10 @@ async def test_schedule_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when any schedule state changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
+    other_entity_ids = set(target_schedules["included"]) - {entity_id}
 
     # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
+    for eid in target_schedules["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -150,10 +150,10 @@ async def test_schedule_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when the first schedule changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
+    other_entity_ids = set(target_schedules["included"]) - {entity_id}
 
     # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
+    for eid in target_schedules["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -207,10 +207,10 @@ async def test_schedule_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the schedule state trigger fires when the last schedule changes to a specific state."""
-    other_entity_ids = set(target_schedules) - {entity_id}
+    other_entity_ids = set(target_schedules["included"]) - {entity_id}
 
     # Set all schedules, including the tested one, to the initial state
-    for eid in target_schedules:
+    for eid in target_schedules["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

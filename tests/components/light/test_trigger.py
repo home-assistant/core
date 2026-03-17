@@ -34,7 +34,7 @@ from tests.components import (
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
     """Create multiple light entities associated with different targets."""
-    return (await target_entities(hass, "light"))["included"]
+    return await target_entities(hass, "light")
 
 
 def parametrize_brightness_changed_trigger_states(
@@ -216,10 +216,10 @@ async def test_light_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -270,10 +270,10 @@ async def test_light_state_attribute_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -328,10 +328,10 @@ async def test_light_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -378,10 +378,10 @@ async def test_light_state_attribute_trigger_behavior_first(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the light state trigger fires when the first light state changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -437,10 +437,10 @@ async def test_light_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -486,10 +486,10 @@ async def test_light_state_attribute_trigger_behavior_last(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the light state trigger fires when the last light state changes to a specific state."""
-    other_entity_ids = set(target_lights) - {entity_id}
+    other_entity_ids = set(target_lights["included"]) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
-    for eid in target_lights:
+    for eid in target_lights["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

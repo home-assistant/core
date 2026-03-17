@@ -36,25 +36,25 @@ from tests.components import (
 @pytest.fixture
 async def target_sensors(hass: HomeAssistant) -> list[str]:
     """Create multiple sensor entities associated with different targets."""
-    return (await target_entities(hass, "sensor"))["included"]
+    return await target_entities(hass, "sensor")
 
 
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> list[str]:
     """Create multiple climate entities associated with different targets."""
-    return (await target_entities(hass, "climate"))["included"]
+    return await target_entities(hass, "climate")
 
 
 @pytest.fixture
 async def target_humidifiers(hass: HomeAssistant) -> list[str]:
     """Create multiple humidifier entities associated with different targets."""
-    return (await target_entities(hass, "humidifier"))["included"]
+    return await target_entities(hass, "humidifier")
 
 
 @pytest.fixture
 async def target_weathers(hass: HomeAssistant) -> list[str]:
     """Create multiple weather entities associated with different targets."""
-    return (await target_entities(hass, "weather"))["included"]
+    return await target_entities(hass, "weather")
 
 
 @pytest.mark.parametrize(
@@ -108,9 +108,9 @@ async def test_humidity_trigger_sensor_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for sensor entities with device_class humidity."""
-    other_entity_ids = set(target_sensors) - {entity_id}
+    other_entity_ids = set(target_sensors["included"]) - {entity_id}
 
-    for eid in target_sensors:
+    for eid in target_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -157,9 +157,9 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires on the first sensor state change."""
-    other_entity_ids = set(target_sensors) - {entity_id}
+    other_entity_ids = set(target_sensors["included"]) - {entity_id}
 
-    for eid in target_sensors:
+    for eid in target_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -207,9 +207,9 @@ async def test_humidity_trigger_sensor_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last sensor changes state."""
-    other_entity_ids = set(target_sensors) - {entity_id}
+    other_entity_ids = set(target_sensors["included"]) - {entity_id}
 
-    for eid in target_sensors:
+    for eid in target_sensors["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -265,9 +265,9 @@ async def test_humidity_trigger_climate_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for climate entities."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -316,9 +316,9 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires on the first climate state change."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -368,9 +368,9 @@ async def test_humidity_trigger_climate_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last climate changes state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -426,9 +426,9 @@ async def test_humidity_trigger_humidifier_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for humidifier entities."""
-    other_entity_ids = set(target_humidifiers) - {entity_id}
+    other_entity_ids = set(target_humidifiers["included"]) - {entity_id}
 
-    for eid in target_humidifiers:
+    for eid in target_humidifiers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -477,9 +477,9 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires on the first humidifier state change."""
-    other_entity_ids = set(target_humidifiers) - {entity_id}
+    other_entity_ids = set(target_humidifiers["included"]) - {entity_id}
 
-    for eid in target_humidifiers:
+    for eid in target_humidifiers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -529,9 +529,9 @@ async def test_humidity_trigger_humidifier_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last humidifier changes state."""
-    other_entity_ids = set(target_humidifiers) - {entity_id}
+    other_entity_ids = set(target_humidifiers["included"]) - {entity_id}
 
-    for eid in target_humidifiers:
+    for eid in target_humidifiers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -587,9 +587,9 @@ async def test_humidity_trigger_weather_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity trigger fires for weather entities."""
-    other_entity_ids = set(target_weathers) - {entity_id}
+    other_entity_ids = set(target_weathers["included"]) - {entity_id}
 
-    for eid in target_weathers:
+    for eid in target_weathers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -638,9 +638,9 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires on the first weather state change."""
-    other_entity_ids = set(target_weathers) - {entity_id}
+    other_entity_ids = set(target_weathers["included"]) - {entity_id}
 
-    for eid in target_weathers:
+    for eid in target_weathers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -690,9 +690,9 @@ async def test_humidity_trigger_weather_crossed_threshold_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test humidity crossed_threshold trigger fires when the last weather changes state."""
-    other_entity_ids = set(target_weathers) - {entity_id}
+    other_entity_ids = set(target_weathers["included"]) - {entity_id}
 
-    for eid in target_weathers:
+    for eid in target_weathers["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

@@ -39,7 +39,7 @@ from tests.components import (
 @pytest.fixture
 async def target_climates(hass: HomeAssistant) -> list[str]:
     """Create multiple climate entities associated with different targets."""
-    return (await target_entities(hass, "climate"))["included"]
+    return await target_entities(hass, "climate")
 
 
 @pytest.mark.parametrize(
@@ -171,10 +171,10 @@ async def test_climate_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -248,10 +248,10 @@ async def test_climate_state_attribute_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -321,10 +321,10 @@ async def test_climate_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the first climate changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -393,10 +393,10 @@ async def test_climate_state_attribute_trigger_behavior_first(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when the first climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -467,10 +467,10 @@ async def test_climate_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the climate state trigger fires when the last climate changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -538,10 +538,10 @@ async def test_climate_state_attribute_trigger_behavior_last(
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
     """Test that the climate state trigger fires when the last climate state changes to a specific state."""
-    other_entity_ids = set(target_climates) - {entity_id}
+    other_entity_ids = set(target_climates["included"]) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
-    for eid in target_climates:
+    for eid in target_climates["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

@@ -22,7 +22,7 @@ from tests.components import (
 @pytest.fixture
 async def target_assist_satellites(hass: HomeAssistant) -> list[str]:
     """Create multiple assist satellite entities associated with different targets."""
-    return (await target_entities(hass, "assist_satellite"))["included"]
+    return await target_entities(hass, "assist_satellite")
 
 
 @pytest.mark.parametrize(
@@ -89,10 +89,10 @@ async def test_assist_satellite_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -157,10 +157,10 @@ async def test_assist_satellite_state_trigger_behavior_first(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -224,10 +224,10 @@ async def test_assist_satellite_state_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites) - {entity_id}
+    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites:
+    for eid in target_assist_satellites["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
