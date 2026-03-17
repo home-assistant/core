@@ -1060,21 +1060,6 @@ async def test_state_attr_translated(
         attributes={"some_attr": "some_value", "numeric_attr": 42, "bool_attr": True},
     )
 
-    config_entry = MockConfigEntry(domain="climate")
-    config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        "climate",
-        "test_platform",
-        "5678",
-        config_entry=config_entry,
-        translation_key="my_climate",
-    )
-    hass.states.async_set(
-        "climate.test_platform_5678",
-        "heat",
-        attributes={"fan_mode": "auto"},
-    )
-
     result = render(
         hass,
         '{{ state_attr_translated("switch.test", "some_attr") }}',
