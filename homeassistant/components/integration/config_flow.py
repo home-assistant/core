@@ -11,7 +11,6 @@ from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
-    DEVICE_CLASS_UNITS,
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
@@ -116,7 +115,7 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 options=[
                     cls.value
                     for cls in SensorDeviceClass
-                    if cls in DEVICE_CLASS_UNITS
+                    if cls != SensorDeviceClass.ENUM
                     and (state_cls := DEVICE_CLASS_STATE_CLASSES.get(cls)) is not None
                     and SensorStateClass.TOTAL in state_cls
                 ],
