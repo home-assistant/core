@@ -86,7 +86,7 @@ def _plugged_in_value_lambda(self: RenaultBinarySensor) -> bool | None:
     """Return true if the vehicle is plugged in."""
 
     data = self.coordinator.data
-    plug_status = self.coordinator.data.get_plug_status()
+    plug_status = data.get_plug_status()
 
     if plug_status is not None:
         return plug_status == PlugState.PLUGGED
