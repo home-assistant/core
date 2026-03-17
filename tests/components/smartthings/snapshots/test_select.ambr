@@ -725,6 +725,66 @@
     'state': 'medium',
   })
 # ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'mute',
+        'tone',
+        'voice',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.robot_vacuum_sound_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'robot_cleaner_sound_mode',
+    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerSystemSoundMode_soundMode_soundMode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot Vacuum Sound mode',
+      'options': list([
+        'mute',
+        'tone',
+        'voice',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.robot_vacuum_sound_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'tone',
+  })
+# ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
