@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
 
 
-class _MusicAssistantEntityBase(Entity):
+class MusicAssistantEntity(Entity):
     """Base Entity from Music Assistant Player."""
 
     _attr_has_entity_name = True
@@ -39,6 +39,21 @@ class _MusicAssistantEntityBase(Entity):
             configuration_url=f"{mass.server_url}/#/settings/editplayer/{player_id}",
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await self.async_on_update()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_mass_update, EventType.PLAYER_UPDATED, self.player_id
+            )
+        )
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_mass_update,
+                EventType.QUEUE_UPDATED,
+            )
+        )
+
     @property
     def player(self) -> Player:
         """Return the Mass Player attached to this HA entity."""
@@ -57,25 +72,6 @@ class _MusicAssistantEntityBase(Entity):
         """Return availability of entity."""
         return self.player.available and bool(self.mass.connection.connected)
 
-
-class MusicAssistantEntity(_MusicAssistantEntityBase):
-    """Base Entity from Music Assistant Player."""
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await self.async_on_update()
-        self.async_on_remove(
-            self.mass.subscribe(
-                self.__on_mass_update, EventType.PLAYER_UPDATED, self.player_id
-            )
-        )
-        self.async_on_remove(
-            self.mass.subscribe(
-                self.__on_mass_update,
-                EventType.QUEUE_UPDATED,
-            )
-        )
-
     async def __on_mass_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
         if event.event == EventType.QUEUE_UPDATED and event.object_id not in (
@@ -91,7 +87,7 @@ class MusicAssistantEntity(_MusicAssistantEntityBase):
         """Handle player updates."""
 
 
-class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
+class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
     """Base entity for Music Assistant Player Options."""
 
     def __init__(
@@ -110,6 +106,9 @@ class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        # need callbacks of parent to catch availability
+        await super().async_added_to_hass()
+
         # main callback for player options
         self.async_on_remove(
             self.mass.subscribe(
