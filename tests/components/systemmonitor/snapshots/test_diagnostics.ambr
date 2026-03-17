@@ -27,6 +27,44 @@
         }),
         'load': '(1, 2, 3)',
         'memory': 'VirtualMemory(total=104857600, available=41943040, percent=40.0, used=62914560, free=31457280)',
+        'pressure': dict({
+          'cpu': dict({
+            'some': dict({
+              'avg10': 1.1,
+              'avg300': 3.3,
+              'avg60': 2.2,
+              'total': 12345,
+            }),
+          }),
+          'io': dict({
+            'full': dict({
+              'avg10': 0.7,
+              'avg300': 0.9,
+              'avg60': 0.8,
+              'total': 789,
+            }),
+            'some': dict({
+              'avg10': 7.7,
+              'avg300': 9.9,
+              'avg60': 8.8,
+              'total': 67890,
+            }),
+          }),
+          'memory': dict({
+            'full': dict({
+              'avg10': 0.4,
+              'avg300': 0.6,
+              'avg60': 0.5,
+              'total': 432,
+            }),
+            'some': dict({
+              'avg10': 4.4,
+              'avg300': 6.6,
+              'avg60': 5.5,
+              'total': 54321,
+            }),
+          }),
+        }),
         'process_fds': dict({
           'pip': 15,
           'python3': 42,
@@ -93,6 +131,44 @@
         'io_counters': None,
         'load': '(1, 2, 3)',
         'memory': 'VirtualMemory(total=104857600, available=41943040, percent=40.0, used=62914560, free=31457280)',
+        'pressure': dict({
+          'cpu': dict({
+            'some': dict({
+              'avg10': 1.1,
+              'avg300': 3.3,
+              'avg60': 2.2,
+              'total': 12345,
+            }),
+          }),
+          'io': dict({
+            'full': dict({
+              'avg10': 0.7,
+              'avg300': 0.9,
+              'avg60': 0.8,
+              'total': 789,
+            }),
+            'some': dict({
+              'avg10': 7.7,
+              'avg300': 9.9,
+              'avg60': 8.8,
+              'total': 67890,
+            }),
+          }),
+          'memory': dict({
+            'full': dict({
+              'avg10': 0.4,
+              'avg300': 0.6,
+              'avg60': 0.5,
+              'total': 432,
+            }),
+            'some': dict({
+              'avg10': 4.4,
+              'avg300': 6.6,
+              'avg60': 5.5,
+              'total': 54321,
+            }),
+          }),
+        }),
         'process_fds': dict({
           'pip': 15,
           'python3': 42,

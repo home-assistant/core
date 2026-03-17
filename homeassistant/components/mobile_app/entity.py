@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import State, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -95,7 +96,7 @@ class MobileAppEntity(RestoreEntity):
                 config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return device_info(self._registration)
 

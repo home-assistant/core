@@ -62,8 +62,8 @@ _LOGGER = logging.getLogger(__name__)
 DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "botfather_username": "@BotFather",
     "botfather_url": "https://t.me/botfather",
-    "getidsbot_username": "@GetIDs Bot",
-    "getidsbot_url": "https://t.me/getidsbot",
+    "id_bot_username": "@id_bot",
+    "id_bot_url": "https://t.me/id_bot",
     "socks_url": "socks5://username:password@proxy_ip:proxy_port",
     # used in advanced settings section
     "default_api_endpoint": DEFAULT_API_ENDPOINT,
@@ -237,9 +237,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        user_input[CONF_API_ENDPOINT] = (
-            user_input[SECTION_ADVANCED_SETTINGS][CONF_API_ENDPOINT],
-        )
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
@@ -410,7 +410,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
-        elif not url.startswith("https"):
+        elif (
+            not url.startswith("https")
+            and self._step_user_data[CONF_API_ENDPOINT] == DEFAULT_API_ENDPOINT
+        ):
             errors["base"] = "invalid_url"
             description_placeholders[ERROR_FIELD] = "URL"
             description_placeholders[ERROR_MESSAGE] = "URL must start with https"
@@ -588,6 +591,12 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
+        if self._get_entry().state != ConfigEntryState.LOADED:
+            return self.async_abort(
+                reason="entry_not_loaded",
+                description_placeholders={"telegram_bot": self._get_entry().title},
+            )
+
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -605,12 +614,69 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
 
             errors["base"] = "chat_not_found"
 
+        service: TelegramNotificationService = self._get_entry().runtime_data
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
+        description_placeholders["bot_username"] = f"@{service.bot.username}"
+        description_placeholders["bot_url"] = f"https://t.me/{service.bot.username}"
+
+        # suggest chat id based on the most recent chat
+        suggested_values = {}
+        description_placeholders["most_recent_chat"] = "Not available"
+        try:
+            most_recent_chat = await _get_most_recent_chat(service)
+        except TelegramError as err:
+            _LOGGER.warning("Error occurred while fetching recent chat: %s", err)
+            most_recent_chat = None
+        if most_recent_chat is not None:
+            suggested_values[CONF_CHAT_ID] = most_recent_chat[0]
+
+            description_placeholders["most_recent_chat"] = (
+                f"{most_recent_chat[1]} ({most_recent_chat[0]})"
+                if most_recent_chat[1]
+                else str(most_recent_chat[0])
+            )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
-            description_placeholders=DESCRIPTION_PLACEHOLDERS,
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+                suggested_values,
+            ),
+            description_placeholders=description_placeholders,
             errors=errors,
         )
+
+
+async def _get_most_recent_chat(
+    service: TelegramNotificationService,
+) -> tuple[int, str | None] | None:
+    """Get the most recent chat ID and name.
+
+    For broadcast bot, this is retrieved using get_updates() to find the most recent message received.
+    For polling or webhook bot, this is retrieved from the runtime data which is updated whenever a message is received.
+    """
+
+    if service.app is not None:
+        # this is either polling or webhook bot
+
+        if service.app.most_recent_chat_id is None:
+            return None
+
+        chat = await service.bot.get_chat(service.app.most_recent_chat_id)
+        return (service.app.most_recent_chat_id, chat.effective_name)
+
+    # broadcast bot
+    updates = await service.bot.get_updates(offset=0)
+    if updates:
+        last_update = updates[-1]
+        if last_update.effective_chat:
+            chat_name = last_update.effective_chat.effective_name
+            return (
+                last_update.effective_chat.id,
+                chat_name,
+            )
+
+    return None
 
 
 async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:

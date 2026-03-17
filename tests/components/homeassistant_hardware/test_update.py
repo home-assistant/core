@@ -11,6 +11,11 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.homeassistant_hardware import DOMAIN
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -227,8 +232,8 @@ async def mock_update_config_entry(
     hass: HomeAssistant,
 ) -> AsyncGenerator[ConfigEntry]:
     """Set up a mock Home Assistant Hardware firmware update entity."""
-    await async_setup_component(hass, "homeassistant", {})
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await async_setup_component(hass, DOMAIN, {})
 
     mock_integration(
         hass,
@@ -398,8 +403,8 @@ async def test_update_entity_installation_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )
@@ -442,8 +447,8 @@ async def test_update_entity_installation_probe_failure(
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {"entity_id": TEST_UPDATE_ENTITY_ID},
         blocking=True,
     )

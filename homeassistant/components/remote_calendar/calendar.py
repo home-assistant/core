@@ -1,9 +1,10 @@
 """Calendar platform for a Remote Calendar."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 
 from ical.event import Event
+from ical.timeline import Timeline, materialize_timeline
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -19,6 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+# Every coordinator update refresh, we materialize a timeline of upcoming
+# events for determining state. This is done in the background to avoid blocking
+# the event loop. When a state update happens we can scan for active events on
+# the materialized timeline. These parameters control the maximum lookahead
+# window and number of events we materialize from the calendar.
+MAX_LOOKAHEAD_EVENTS = 20
+MAX_LOOKAHEAD_TIME = timedelta(days=365)
 
 
 async def async_setup_entry(
@@ -48,12 +57,18 @@ class RemoteCalendarEntity(
         super().__init__(coordinator)
         self._attr_name = entry.data[CONF_CALENDAR_NAME]
         self._attr_unique_id = entry.entry_id
-        self._event: CalendarEvent | None = None
+        self._timeline: Timeline | None = None
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        if self._timeline is None:
+            return None
+        now = dt_util.now()
+        events = self._timeline.active_after(now)
+        if event := next(events, None):
+            return _get_calendar_event(event)
+        return None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -79,14 +94,18 @@ class RemoteCalendarEntity(
         """
         await super().async_update()
 
-        def next_event() -> CalendarEvent | None:
+        def _get_timeline() -> Timeline | None:
+            """Return a materialized timeline with upcoming events."""
             now = dt_util.now()
-            events = self.coordinator.data.timeline_tz(now.tzinfo).active_after(now)
-            if event := next(events, None):
-                return _get_calendar_event(event)
-            return None
+            timeline = self.coordinator.data.timeline_tz(now.tzinfo)
+            return materialize_timeline(
+                timeline,
+                start=now,
+                stop=now + MAX_LOOKAHEAD_TIME,
+                max_number_of_events=MAX_LOOKAHEAD_EVENTS,
+            )
 
-        self._event = await self.hass.async_add_executor_job(next_event)
+        self._timeline = await self.hass.async_add_executor_job(_get_timeline)
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

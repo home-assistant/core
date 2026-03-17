@@ -9,7 +9,6 @@ import logging
 from typing import Any
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import (
@@ -94,7 +93,6 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
@@ -138,16 +136,8 @@ from .services import async_setup_services
 CONNECT_TIMEOUT = 10
 DRIVER_READY_TIMEOUT = 60
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_INSTALLER_MODE, default=False): cv.boolean,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
@@ -171,7 +161,6 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    hass.data[DOMAIN] = config.get(DOMAIN, {})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if not isinstance(entry.unique_id, str):
             hass.config_entries.async_update_entry(
@@ -737,7 +726,7 @@ class ControllerEvents:
             name=node.name or node.device_config.description or f"Node {node.node_id}",
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
-            suggested_area=node.location if node.location else UNDEFINED,
+            suggested_area=node.location or UNDEFINED,
             via_device=via_identifier,
         )
 

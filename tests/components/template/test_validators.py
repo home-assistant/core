@@ -922,3 +922,100 @@ async def test_empty_items_in_list(
     value = cv.item_in_list(entity, "state", the_list, "bar")(value)
     assert value == expected
     check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"default_entity_id": "test.test"},
+            "Received invalid test state: {} for entity test.test, expected a url",
+        ),
+        (
+            {},
+            "Received invalid state: {} for entity Test, expected a url",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("http://foo.bar", "http://foo.bar"),
+        ("https://foo.bar", "https://foo.bar"),
+        *expect_none(
+            None,
+            "/local/thing",
+            "beeal;dfj",
+            "unknown",
+            "unavailable",
+            "tru",  # codespell:ignore tru
+            "7",
+            "-1",
+            True,
+            False,
+            1,
+            1.0,
+            {},
+            {"junk": "stuff"},
+            {"junk"},
+            [],
+            ["stuff"],
+        ),
+    ],
+)
+async def test_url(
+    hass: HomeAssistant,
+    config: dict,
+    error: str,
+    value: Any,
+    expected: bool | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enum validator."""
+    entity = create_test_entity(hass, config)
+    assert cv.url(entity, "state")(value) == expected
+    check_for_error(value, expected, caplog.text, error.format(value))
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"default_entity_id": "test.test"},
+            "Received invalid test state: {} for entity test.test, expected a string",
+        ),
+        (
+            {},
+            "Received invalid state: {} for entity Test, expected a string",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("a string", "a string"),
+        (True, "True"),
+        (False, "False"),
+        (1, "1"),
+        (1.0, "1.0"),
+        *expect_none(
+            None,
+            {},
+            {"junk": "stuff"},
+            [],
+            ["stuff"],
+        ),
+    ],
+)
+async def test_string(
+    hass: HomeAssistant,
+    config: dict,
+    error: str,
+    value: Any,
+    expected: bool | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enum validator."""
+    entity = create_test_entity(hass, config)
+    assert cv.string(entity, "state")(value) == expected
+    check_for_error(value, expected, caplog.text, error.format(value))

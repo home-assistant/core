@@ -74,7 +74,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         return max(0, min(255, round(self._device.brightness * 2.55)))
 
     @property
-    def color_mode(self) -> ColorMode | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         return SWITCHBOT_COLOR_MODE_TO_HASS.get(
             self._device.color_mode, ColorMode.UNKNOWN

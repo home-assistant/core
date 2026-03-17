@@ -1535,6 +1535,7 @@ async def test_entity_info_added_to_entity_registry(
         entity_id="test_domain.best_name",
         unique_id="default",
         platform="test_domain",
+        aliases=[er.COMPUTED_NAME],
         capabilities={"max": 100},
         config_entry_id=None,
         config_subentry_id=None,
@@ -1967,9 +1968,37 @@ async def test_invalid_entity_id(
     assert entity.hass is None
     assert entity.platform is None
     assert "Invalid entity ID: invalid_entity_id" in caplog.text
+
     # Ensure the valid entity was still added
     assert entity2.hass is not None
     assert entity2.platform is not None
+
+
+async def test_invalid_entity_id_report_usage(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that setting an invalid entity_id reports usage."""
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(entity_id="test_domain.INVALID-ENTITY-ID", unique_id="unique")
+
+    mock_integration = Mock(is_built_in=True, domain="test_platform")
+    with (
+        caplog.at_level(logging.WARNING),
+        patch(
+            "homeassistant.helpers.frame.async_get_issue_integration",
+            return_value=mock_integration,
+        ),
+    ):
+        await platform.async_add_entities([entity])
+
+    assert (
+        "Detected that integration 'test_platform' "
+        "sets an invalid entity ID: 'test_domain.INVALID-ENTITY-ID'"
+    ) in caplog.text
+
+    # Ensure the entity was still added
+    assert entity.hass is not None
+    assert entity.platform is not None
 
 
 class MockBlockingEntity(MockEntity):

@@ -58,14 +58,14 @@
       "name": "Enable motion detection"
     },
     "play_stream": {
-      "description": "Plays the camera stream on a supported media player.",
+      "description": "Plays a camera stream on a supported media player.",
       "fields": {
         "format": {
           "description": "Stream format supported by the media player.",
           "name": "Format"
         },
         "media_player": {
-          "description": "Media players to stream to.",
+          "description": "Media player to stream to.",
           "name": "Media player"
         }
       },

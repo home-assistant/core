@@ -1,14 +1,23 @@
 """Common fixtures for the liebherr tests."""
 
 from collections.abc import Generator
+import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
+    BioFreshPlusControl,
+    BioFreshPlusMode,
     Device,
     DeviceState,
     DeviceType,
+    HydroBreezeControl,
+    HydroBreezeMode,
+    IceMakerControl,
+    IceMakerMode,
     TemperatureControl,
     TemperatureUnit,
+    ToggleControl,
     ZonePosition,
 )
 import pytest
@@ -36,6 +45,9 @@ MOCK_DEVICE_STATE = DeviceState(
             name="Fridge",
             type="fridge",
             value=5,
+            target=4,
+            min=2,
+            max=8,
             unit=TemperatureUnit.CELSIUS,
         ),
         TemperatureControl(
@@ -44,10 +56,77 @@ MOCK_DEVICE_STATE = DeviceState(
             name="Freezer",
             type="freezer",
             value=-18,
+            target=-18,
+            min=-24,
+            max=-16,
             unit=TemperatureUnit.CELSIUS,
+        ),
+        ToggleControl(
+            name="supercool",
+            type="ToggleControl",
+            zone_id=1,
+            zone_position=ZonePosition.TOP,
+            value=False,
+        ),
+        ToggleControl(
+            name="superfrost",
+            type="ToggleControl",
+            zone_id=2,
+            zone_position=ZonePosition.BOTTOM,
+            value=True,
+        ),
+        ToggleControl(
+            name="partymode",
+            type="ToggleControl",
+            zone_id=None,
+            zone_position=None,
+            value=False,
+        ),
+        ToggleControl(
+            name="nightmode",
+            type="ToggleControl",
+            zone_id=None,
+            zone_position=None,
+            value=True,
+        ),
+        IceMakerControl(
+            name="icemaker",
+            type="IceMakerControl",
+            zone_id=2,
+            zone_position=ZonePosition.BOTTOM,
+            ice_maker_mode=IceMakerMode.OFF,
+            has_max_ice=True,
+        ),
+        HydroBreezeControl(
+            name="hydrobreeze",
+            type="HydroBreezeControl",
+            zone_id=1,
+            current_mode=HydroBreezeMode.LOW,
+        ),
+        BioFreshPlusControl(
+            name="biofreshplus",
+            type="BioFreshPlusControl",
+            zone_id=1,
+            current_mode=BioFreshPlusMode.ZERO_ZERO,
+            supported_modes=[
+                BioFreshPlusMode.ZERO_ZERO,
+                BioFreshPlusMode.ZERO_MINUS_TWO,
+                BioFreshPlusMode.MINUS_TWO_MINUS_TWO,
+                BioFreshPlusMode.MINUS_TWO_ZERO,
+            ],
         ),
     ],
 )
+
+
+@pytest.fixture(autouse=True)
+def patch_refresh_delay() -> Generator[None]:
+    """Patch REFRESH_DELAY to 0 to avoid delays in tests."""
+    with patch(
+        "homeassistant.components.liebherr.entity.REFRESH_DELAY",
+        timedelta(seconds=0),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -84,8 +163,18 @@ def mock_liebherr_client() -> Generator[MagicMock]:
     ):
         client = mock_client.return_value
         client.get_devices.return_value = [MOCK_DEVICE]
-        client.get_device_state.return_value = MOCK_DEVICE_STATE
+        # Return a fresh copy each call so mutations don't leak between calls.
+        client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
+            MOCK_DEVICE_STATE
+        )
         client.set_temperature = AsyncMock()
+        client.set_super_cool = AsyncMock()
+        client.set_super_frost = AsyncMock()
+        client.set_party_mode = AsyncMock()
+        client.set_night_mode = AsyncMock()
+        client.set_ice_maker = AsyncMock()
+        client.set_hydro_breeze = AsyncMock()
+        client.set_bio_fresh_plus = AsyncMock()
         yield client
 
 
@@ -100,11 +189,13 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_liebherr_client: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Liebherr integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry

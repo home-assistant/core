@@ -131,23 +131,29 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Process an action on the light."""
-        if not kwargs:
-            await self._device.turn_on()
+        converted_brightness: int | None = None
+        converted_color_temp: int | None = None
+        rgb: tuple[int, int, int] | None = None
 
-        elif kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
+        if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
             color_temp = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             converted_color_temp = self._normalize_color_temp(color_temp)
-
-            await self._device.set_color_temp(converted_color_temp)
         elif kwargs.get(ATTR_RGB_COLOR) is not None:
             rgb = kwargs.get(ATTR_RGB_COLOR)
+        elif self.color_mode == ColorMode.RGB:
+            rgb = self._device.rgb
+        elif self.color_mode == ColorMode.COLOR_TEMP:
+            converted_color_temp = self._device.color_temp
 
-            await self._device.set_rgb(rgb)
-        elif kwargs.get(ATTR_BRIGHTNESS) is not None:
+        if kwargs.get(ATTR_BRIGHTNESS) is not None:
             brightness = kwargs.get(ATTR_BRIGHTNESS)
             converted_brightness = self._normalize_brightness(brightness)
+        elif self.color_mode != ColorMode.ONOFF:
+            converted_brightness = self._device.brightness
 
-            await self._device.set_brightness(converted_brightness)
+        await self._device.set_combo(
+            True, converted_brightness, converted_color_temp, rgb
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""

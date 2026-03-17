@@ -34,18 +34,35 @@ CONTROL4_CATEGORY = "comfort"
 # Control4 variable names
 CONTROL4_HVAC_STATE = "HVAC_STATE"
 CONTROL4_HVAC_MODE = "HVAC_MODE"
-CONTROL4_CURRENT_TEMPERATURE = "TEMPERATURE_F"
 CONTROL4_HUMIDITY = "HUMIDITY"
-CONTROL4_COOL_SETPOINT = "COOL_SETPOINT_F"
-CONTROL4_HEAT_SETPOINT = "HEAT_SETPOINT_F"
+CONTROL4_SCALE = "SCALE"  # "FAHRENHEIT" or "CELSIUS"
+
+# Temperature variables - Fahrenheit
+CONTROL4_CURRENT_TEMPERATURE_F = "TEMPERATURE_F"
+CONTROL4_COOL_SETPOINT_F = "COOL_SETPOINT_F"
+CONTROL4_HEAT_SETPOINT_F = "HEAT_SETPOINT_F"
+
+# Temperature variables - Celsius
+CONTROL4_CURRENT_TEMPERATURE_C = "TEMPERATURE_C"
+CONTROL4_COOL_SETPOINT_C = "COOL_SETPOINT_C"
+CONTROL4_HEAT_SETPOINT_C = "HEAT_SETPOINT_C"
+
+CONTROL4_FAN_MODE = "FAN_MODE"
+CONTROL4_FAN_MODES_LIST = "FAN_MODES_LIST"
 
 VARIABLES_OF_INTEREST = {
     CONTROL4_HVAC_STATE,
     CONTROL4_HVAC_MODE,
-    CONTROL4_CURRENT_TEMPERATURE,
     CONTROL4_HUMIDITY,
-    CONTROL4_COOL_SETPOINT,
-    CONTROL4_HEAT_SETPOINT,
+    CONTROL4_CURRENT_TEMPERATURE_F,
+    CONTROL4_CURRENT_TEMPERATURE_C,
+    CONTROL4_COOL_SETPOINT_F,
+    CONTROL4_HEAT_SETPOINT_F,
+    CONTROL4_COOL_SETPOINT_C,
+    CONTROL4_HEAT_SETPOINT_C,
+    CONTROL4_SCALE,
+    CONTROL4_FAN_MODE,
+    CONTROL4_FAN_MODES_LIST,
 }
 
 # Map Control4 HVAC modes to Home Assistant
@@ -58,11 +75,12 @@ C4_TO_HA_HVAC_MODE = {
 
 HA_TO_C4_HVAC_MODE = {v: k for k, v in C4_TO_HA_HVAC_MODE.items()}
 
-# Map the five known Control4 HVAC states to Home Assistant HVAC actions
+# Map Control4 HVAC states to Home Assistant HVAC actions
 C4_TO_HA_HVAC_ACTION = {
     "off": HVACAction.OFF,
     "heat": HVACAction.HEATING,
     "cool": HVACAction.COOLING,
+    "idle": HVACAction.IDLE,
     "dry": HVACAction.DRYING,
     "fan": HVACAction.FAN,
 }
@@ -152,13 +170,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     """Control4 climate entity."""
 
     _attr_has_entity_name = True
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
+    _attr_translation_key = "thermostat"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     def __init__(
@@ -202,12 +214,57 @@ class Control4Climate(Control4Entity, ClimateEntity):
         return self.coordinator.data.get(self._idx)
 
     @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if self.fan_modes:
+            features |= ClimateEntityFeature.FAN_MODE
+        return features
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the temperature unit based on the thermostat's SCALE setting."""
+        data = self._thermostat_data
+        if data is None:
+            return UnitOfTemperature.CELSIUS  # Default per HA conventions
+        if data.get(CONTROL4_SCALE) == "FAHRENHEIT":
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
+
+    @property
+    def _cool_setpoint(self) -> float | None:
+        """Return the cooling setpoint from the appropriate variable."""
+        data = self._thermostat_data
+        if data is None:
+            return None
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return data.get(CONTROL4_COOL_SETPOINT_C)
+        return data.get(CONTROL4_COOL_SETPOINT_F)
+
+    @property
+    def _heat_setpoint(self) -> float | None:
+        """Return the heating setpoint from the appropriate variable."""
+        data = self._thermostat_data
+        if data is None:
+            return None
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return data.get(CONTROL4_HEAT_SETPOINT_C)
+        return data.get(CONTROL4_HEAT_SETPOINT_F)
+
+    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         data = self._thermostat_data
         if data is None:
             return None
-        return data.get(CONTROL4_CURRENT_TEMPERATURE)
+        if self.temperature_unit == UnitOfTemperature.CELSIUS:
+            return data.get(CONTROL4_CURRENT_TEMPERATURE_C)
+        return data.get(CONTROL4_CURRENT_TEMPERATURE_F)
 
     @property
     def current_humidity(self) -> int | None:
@@ -236,8 +293,14 @@ class Control4Climate(Control4Entity, ClimateEntity):
         c4_state = data.get(CONTROL4_HVAC_STATE)
         if c4_state is None:
             return None
-        # Convert state to lowercase for mapping
         action = C4_TO_HA_HVAC_ACTION.get(str(c4_state).lower())
+        # Substring match for multi-stage systems that report
+        # e.g. "Stage 1 Heat", "Stage 2 Cool"
+        if action is None:
+            if "heat" in str(c4_state).lower():
+                action = HVACAction.HEATING
+            elif "cool" in str(c4_state).lower():
+                action = HVACAction.COOLING
         if action is None:
             _LOGGER.debug("Unknown HVAC state received from Control4: %s", c4_state)
         return action
@@ -245,35 +308,48 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        data = self._thermostat_data
-        if data is None:
-            return None
         hvac_mode = self.hvac_mode
         if hvac_mode == HVACMode.COOL:
-            return data.get(CONTROL4_COOL_SETPOINT)
+            return self._cool_setpoint
         if hvac_mode == HVACMode.HEAT:
-            return data.get(CONTROL4_HEAT_SETPOINT)
+            return self._heat_setpoint
         return None
 
     @property
     def target_temperature_high(self) -> float | None:
         """Return the high target temperature for auto mode."""
-        data = self._thermostat_data
-        if data is None:
-            return None
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            return data.get(CONTROL4_COOL_SETPOINT)
+            return self._cool_setpoint
         return None
 
     @property
     def target_temperature_low(self) -> float | None:
         """Return the low target temperature for auto mode."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return self._heat_setpoint
+        return None
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode."""
         data = self._thermostat_data
         if data is None:
             return None
-        if self.hvac_mode == HVACMode.HEAT_COOL:
-            return data.get(CONTROL4_HEAT_SETPOINT)
-        return None
+        c4_fan_mode = data.get(CONTROL4_FAN_MODE)
+        if c4_fan_mode is None:
+            return None
+        return c4_fan_mode.lower()
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Return the list of available fan modes."""
+        data = self._thermostat_data
+        if data is None:
+            return None
+        modes = data.get(CONTROL4_FAN_MODES_LIST)
+        if not modes:
+            return None
+        return [m.strip().lower() for m in modes.split(",") if m.strip()]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
@@ -292,14 +368,32 @@ class Control4Climate(Control4Entity, ClimateEntity):
         # Handle temperature range for auto mode
         if self.hvac_mode == HVACMode.HEAT_COOL:
             if low_temp is not None:
-                await c4_climate.setHeatSetpointF(low_temp)
+                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                    await c4_climate.setHeatSetpointC(low_temp)
+                else:
+                    await c4_climate.setHeatSetpointF(low_temp)
             if high_temp is not None:
-                await c4_climate.setCoolSetpointF(high_temp)
+                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                    await c4_climate.setCoolSetpointC(high_temp)
+                else:
+                    await c4_climate.setCoolSetpointF(high_temp)
         # Handle single temperature setpoint
         elif temp is not None:
             if self.hvac_mode == HVACMode.COOL:
-                await c4_climate.setCoolSetpointF(temp)
+                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                    await c4_climate.setCoolSetpointC(temp)
+                else:
+                    await c4_climate.setCoolSetpointF(temp)
             elif self.hvac_mode == HVACMode.HEAT:
-                await c4_climate.setHeatSetpointF(temp)
+                if self.temperature_unit == UnitOfTemperature.CELSIUS:
+                    await c4_climate.setHeatSetpointC(temp)
+                else:
+                    await c4_climate.setHeatSetpointF(temp)
 
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        c4_climate = self._create_api_object()
+        await c4_climate.setFanMode(fan_mode.title())
         await self.coordinator.async_request_refresh()

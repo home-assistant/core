@@ -90,7 +90,7 @@ def log_triggered_template_error(
     elif attribute:
         target = f" {CONF_ATTRIBUTES}.{attribute}"
 
-    logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+    logging.getLogger(f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}").error(
         "Error rendering%s template for %s: %s",
         target,
         entity_id,
@@ -138,7 +138,9 @@ class ValueTemplate(Template):
             ).strip()
         except jinja2.TemplateError as ex:
             message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
-            logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
+            logger = logging.getLogger(
+                f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+            )
             logger.debug(message)
             return error_value
 

@@ -8,7 +8,6 @@ from typing import Any
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -21,22 +20,10 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_LATENCY,
-    CLIENT_PREFIX,
-    CLIENT_SUFFIX,
-    DOMAIN,
-    SERVICE_RESTORE,
-    SERVICE_SET_LATENCY,
-    SERVICE_SNAPSHOT,
-)
+from .const import CLIENT_PREFIX, CLIENT_SUFFIX, DOMAIN
 from .coordinator import SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
 
@@ -49,19 +36,6 @@ STREAM_STATUS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_services() -> None:
-    """Register snapcast services."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "async_snapshot")
-    platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
-    platform.async_register_entity_service(
-        SERVICE_SET_LATENCY,
-        {vol.Required(ATTR_LATENCY): cv.positive_int},
-        "async_set_latency",
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -71,8 +45,6 @@ async def async_setup_entry(
 
     # Fetch coordinator from global data
     coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    register_services()
 
     _known_client_ids: set[str] = set()
 
@@ -159,7 +131,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return f"{CLIENT_PREFIX}{host}_{id}"
 
     @property
-    def _current_group(self) -> Snapgroup:
+    def _current_group(self) -> Snapgroup | None:
         """Return the group the client is associated with."""
         return self._device.group
 
@@ -186,9 +158,17 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the player."""
         if self._device.connected:
-            if self.is_volume_muted or self._current_group.muted:
+            if (
+                self.is_volume_muted
+                or self._current_group is None
+                or self._current_group.muted
+            ):
                 return MediaPlayerState.IDLE
-            return STREAM_STATUS.get(self._current_group.stream_status)
+            try:
+                return STREAM_STATUS.get(self._current_group.stream_status)
+            except KeyError:
+                pass
+
         return MediaPlayerState.OFF
 
     @property
@@ -207,15 +187,31 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
+        if self._current_group is None:
+            return None
+
         return self._current_group.stream
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
+        if self._current_group is None:
+            return []
+
         return list(self._current_group.streams_by_name().keys())
 
     async def async_select_source(self, source: str) -> None:
         """Set input source."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="select_source_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "source": source,
+                },
+            )
+
         streams = self._current_group.streams_by_name()
         if source in streams:
             await self._current_group.set_stream(streams[source].identifier)
@@ -258,6 +254,9 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def group_members(self) -> list[str] | None:
         """List of player entities which are currently grouped together for synchronous playback."""
+        if self._current_group is None:
+            return None
+
         entity_registry = er.async_get(self.hass)
         return [
             entity_id
@@ -273,6 +272,15 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add `group_members` to this client's current group."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="join_players_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
         # Get the client entity for each group member excluding self
         entity_registry = er.async_get(self.hass)
         clients = [
@@ -296,17 +304,34 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     async def async_unjoin_player(self) -> None:
-        """Remove this client from it's current group."""
+        """Remove this client from its current group."""
+        if self._current_group is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unjoin_no_group",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                },
+            )
+
         await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
 
     @property
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
-        if metadata := self.coordinator.server.stream(
-            self._current_group.stream
-        ).metadata:
-            return metadata
+        if self._current_group is None:
+            return {}
+
+        try:
+            if metadata := self.coordinator.server.stream(
+                self._current_group.stream
+            ).metadata:
+                return metadata
+        except (
+            KeyError
+        ):  # the stream function raises KeyError if the stream does not exist
+            pass
 
         # Fallback to an empty dict
         return {}
@@ -361,11 +386,18 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        # Position is part of properties object, not metadata object
-        if properties := self.coordinator.server.stream(
-            self._current_group.stream
-        ).properties:
-            if (value := properties.get("position")) is not None:
-                return int(value)
+        if self._current_group is None:
+            return None
 
+        try:
+            # Position is part of properties object, not metadata object
+            if properties := self.coordinator.server.stream(
+                self._current_group.stream
+            ).properties:
+                if (value := properties.get("position")) is not None:
+                    return int(value)
+        except (
+            KeyError
+        ):  # the stream function raises KeyError if the stream does not exist
+            pass
         return None

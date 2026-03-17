@@ -26,19 +26,21 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.webostv.const import (
-    ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     DOMAIN,
     LIVE_TV_APP_ID,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
     WebOsTvCommandError,
 )
 from homeassistant.components.webostv.media_player import (
     SUPPORT_WEBOSTV,
     SUPPORT_WEBOSTV_VOLUME,
+)
+from homeassistant.components.webostv.services import (
+    ATTR_BUTTON,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
