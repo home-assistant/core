@@ -526,22 +526,34 @@ async def test_get_state_intent(
     # 1 light in kitchen (on)
     # 1 sensor in kitchen (50)
     # 2 binary sensors in the office (problem, moisture, on)
-    bedroom_light = entity_registry.async_get_or_create("light", "demo", "1")
+    bedroom_light = entity_registry.async_get_or_create(
+        "light", "demo", "1", original_name="bedroom light"
+    )
     entity_registry.async_update_entity(bedroom_light.entity_id, area_id=bedroom.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "2")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "2", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    kitchen_light = entity_registry.async_get_or_create("light", "demo", "3")
+    kitchen_light = entity_registry.async_get_or_create(
+        "light", "demo", "3", original_name="kitchen light"
+    )
     entity_registry.async_update_entity(kitchen_light.entity_id, area_id=kitchen.id)
 
-    kitchen_sensor = entity_registry.async_get_or_create("sensor", "demo", "4")
+    kitchen_sensor = entity_registry.async_get_or_create(
+        "sensor", "demo", "4", original_name="kitchen sensor"
+    )
     entity_registry.async_update_entity(kitchen_sensor.entity_id, area_id=kitchen.id)
 
-    problem_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "5")
+    problem_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "5", original_name="problem sensor"
+    )
     entity_registry.async_update_entity(problem_sensor.entity_id, area_id=office.id)
 
-    moisture_sensor = entity_registry.async_get_or_create("binary_sensor", "demo", "6")
+    moisture_sensor = entity_registry.async_get_or_create(
+        "binary_sensor", "demo", "6", original_name="moisture sensor"
+    )
     entity_registry.async_update_entity(moisture_sensor.entity_id, area_id=office.id)
 
     hass.states.async_set(
