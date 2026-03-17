@@ -137,16 +137,12 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self._is_hard_wired
 
     @property
-<<<<<<< HEAD
     def available(self) -> bool:
         """Return True if shade position data is available."""
         return super().available and self.positions.primary is not None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
-=======
     def extra_state_attributes(self) -> dict[str, Any]:
->>>>>>> 76557c9d467 (Add scene/cover cross-references to PowerView)
         """Return the state attributes."""
         scene_entity_ids: list[str] = []
         if self._scene_ids:
