@@ -13,10 +13,8 @@ rules:
   config-flow:
     status: done
     comment: |
-      PLANNED: Move _async_abort_entries_match before the try block so duplicate
-      entries are rejected before credentials are validated. Remove _LOGGER.error
-      call from config_flow.py — the error message is redundant with the errors
-      dict entry.
+      PLANNED: Remove _LOGGER.error call from config_flow.py — the error
+      message is redundant with the errors dict entry.
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -32,12 +30,7 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: done
-    comment: |
-      PLANNED: Move _async_abort_entries_match before the try block in
-      config_flow.py so duplicate entries are rejected before credentials are
-      validated.
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
