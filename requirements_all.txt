@@ -2494,7 +2494,7 @@ pysmappee==0.2.29
 pysmarlaapi==1.0.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.7.0
+pysmartthings==3.7.2
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2651,7 +2651,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==4.20.0
+python-roborock==4.25.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
