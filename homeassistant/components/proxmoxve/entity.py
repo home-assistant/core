@@ -140,7 +140,6 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._vm_data = vm_data
-        self._node_name = node_data.node["node"]
         self.device_id = vm_data["vmid"]
         self.device_name = vm_data["name"]
 
@@ -165,13 +164,20 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Dynamically resolve which node this VM is currently on."""
+        for node_name, node_data in self.coordinator.data.items():
+            if self.device_id in node_data.vms:
+                return node_name
+        raise RuntimeError(f"VM {self.device_id} not found on any node")
+
+    @property
     @override
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].vms
+        return super().available and any(
+            self.device_id in node_data.vms
+            for node_data in self.coordinator.data.values()
         )
 
     @property
@@ -194,7 +200,6 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._container_data = container_data
-        self._node_name = node_data.node["node"]
         self.device_id = container_data["vmid"]
         self.device_name = container_data["name"]
 
@@ -222,13 +227,20 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    def _node_name(self) -> str:
+        """Dynamically resolve which node this container is currently on."""
+        for node_name, node_data in self.coordinator.data.items():
+            if self.device_id in node_data.containers:
+                return node_name
+        raise RuntimeError(f"Container {self.device_id} not found on any node")
+
+    @property
     @override
     def available(self) -> bool:
         """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data
-            and self.device_id in self.coordinator.data[self._node_name].containers
+        return super().available and any(
+            self.device_id in node_data.containers
+            for node_data in self.coordinator.data.values()
         )
 
     @property
