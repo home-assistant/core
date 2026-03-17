@@ -71,11 +71,9 @@ rules:
     status: todo
     comment: Documentation page is missing a list of supported IntelliFire fireplace models.
   docs-supported-functions:
-    status: todo
-    comment: Documentation page is missing a section listing supported functions (flame on/off, thermostat, fan speed, pilot light, etc.).
+    status: done
   docs-troubleshooting:
-    status: todo
-    comment: Documentation page is missing a troubleshooting section (e.g. local vs cloud connectivity issues, re-authentication steps).
+    status: done
   docs-use-cases:
     status: todo
     comment: Documentation page is missing a use-cases section describing common automation scenarios.
