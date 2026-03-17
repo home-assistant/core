@@ -153,7 +153,7 @@ def get_node_binding_capabilities(node: MatterNode) -> NodeBindingCapabilities:
 
         # Source: has Binding cluster and bindable client clusters
         if endpoint.has_cluster(clusters.Binding):
-            source_cluster_ids = set(BINDABLE_CLUSTER_IDS & set(client_list))
+            source_cluster_ids = BINDABLE_CLUSTER_IDS.intersection(client_list)
             if source_cluster_ids:
                 source_endpoints.append(
                     EndpointBindingInfo(
@@ -163,7 +163,7 @@ def get_node_binding_capabilities(node: MatterNode) -> NodeBindingCapabilities:
                 )
 
         # Target: has bindable server clusters
-        target_cluster_ids = set(BINDABLE_CLUSTER_IDS & set(server_list))
+        target_cluster_ids = BINDABLE_CLUSTER_IDS.intersection(server_list)
         if target_cluster_ids:
             target_endpoints.append(
                 EndpointBindingInfo(

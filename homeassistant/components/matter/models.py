@@ -160,7 +160,7 @@ class EndpointBindingInfo:
     """Binding capability info for a single endpoint."""
 
     endpoint_id: int
-    cluster_ids: set[int]
+    cluster_ids: frozenset[int]
 
 
 @dataclass
