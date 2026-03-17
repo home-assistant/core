@@ -21,9 +21,9 @@ from tests.components.common import (
 
 
 @pytest.fixture
-async def target_locks(hass: HomeAssistant) -> list[str]:
+async def target_locks(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple lock entities associated with different targets."""
-    return (await target_entities(hass, "lock"))["included"]
+    return await target_entities(hass, "lock")
 
 
 @pytest.mark.parametrize(
@@ -74,7 +74,7 @@ async def test_lock_conditions_gated_by_labs_flag(
 )
 async def test_lock_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_locks: list[str],
+    target_locks: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -83,10 +83,10 @@ async def test_lock_state_condition_behavior_any(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the lock state condition with the 'any' behavior."""
-    other_entity_ids = set(target_locks) - {entity_id}
+    other_entity_ids = set(target_locks["included"]) - {entity_id}
 
     # Set all locks, including the tested lock, to the initial state
-    for eid in target_locks:
+    for eid in target_locks["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -142,7 +142,7 @@ async def test_lock_state_condition_behavior_any(
 )
 async def test_lock_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_locks: list[str],
+    target_locks: dict[str, list[str]],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -151,10 +151,10 @@ async def test_lock_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the lock state condition with the 'all' behavior."""
-    other_entity_ids = set(target_locks) - {entity_id}
+    other_entity_ids = set(target_locks["included"]) - {entity_id}
 
     # Set all locks, including the tested lock, to the initial state
-    for eid in target_locks:
+    for eid in target_locks["included"]:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
