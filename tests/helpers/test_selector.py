@@ -319,6 +319,9 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
         # supported_features should be used under the filter key
         {"supported_features": ["light.LightEntityFeature.EFFECT"]},
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
@@ -383,7 +386,7 @@ def test_entity_selector_schema_error(schema) -> None:
             (None,),
         ),
         (
-            {"multiple": True},
+            {"multiple": True, "reorder": True},
             ((["abc123", "def456"],)),
             (None, "abc123", ["abc123", None]),
         ),
@@ -392,6 +395,20 @@ def test_entity_selector_schema_error(schema) -> None:
 def test_area_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test area selector."""
     _test_selector("area", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # reorder can only be used when multiple is true
+        {"reorder": True},
+        {"reorder": True, "multiple": False},
+    ],
+)
+def test_area_selector_schema_error(schema) -> None:
+    """Test area selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"area": schema})
 
 
 @pytest.mark.parametrize(
