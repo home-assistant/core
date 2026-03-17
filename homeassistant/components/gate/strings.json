@@ -1,0 +1,38 @@
+{
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted gates to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "title": "Gate",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more gates close.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::gate::common::trigger_behavior_description%]",
+          "name": "[%key:component::gate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Gate closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more gates open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::gate::common::trigger_behavior_description%]",
+          "name": "[%key:component::gate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Gate opened"
+    }
+  }
+}

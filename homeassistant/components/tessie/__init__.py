@@ -13,17 +13,23 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tessie import Tessie
-from tessie_api import get_state_of_all_vehicles
+from tessie_api import get_battery, get_state_of_all_vehicles
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN, MODELS
 from .coordinator import (
+    TessieBatteryHealthCoordinator,
+    TessieEnergyHistoryCoordinator,
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
     TessieStateUpdateCoordinator,
@@ -64,8 +70,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
     except ClientResponseError as e:
         if e.status == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed from e
-        _LOGGER.error("Setup failed, unable to connect to Tessie: %s", e)
-        return False
+        raise ConfigEntryError("Setup failed, unable to connect to Tessie") from e
+    except ClientError as e:
+        raise ConfigEntryNotReady from e
+
+    try:
+        batteries = await asyncio.gather(
+            *(
+                get_battery(
+                    session=session,
+                    api_key=api_key,
+                    vin=vehicle["vin"],
+                )
+                for vehicle in state_of_all_vehicles["results"]
+                if vehicle["last_state"] is not None
+            )
+        )
+    except ClientResponseError as e:
+        if e.status == HTTPStatus.UNAUTHORIZED:
+            raise ConfigEntryAuthFailed from e
+        raise ConfigEntryError("Setup failed, unable to get battery data") from e
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
@@ -78,6 +102,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
+            ),
+            battery_coordinator=TessieBatteryHealthCoordinator(
+                hass,
+                entry,
+                api_key=api_key,
+                vin=vehicle["vin"],
+                data=battery,
             ),
             device=DeviceInfo(
                 identifiers={(DOMAIN, vehicle["vin"])},
@@ -95,8 +126,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 serial_number=vehicle["vin"],
             ),
         )
-        for vehicle in state_of_all_vehicles["results"]
-        if vehicle["last_state"] is not None
+        for vehicle, battery in zip(
+            (
+                v
+                for v in state_of_all_vehicles["results"]
+                if v["last_state"] is not None
+            ),
+            batteries,
+            strict=True,
+        )
     ]
 
     # Energy Sites
@@ -137,6 +175,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 except TeslaFleetError as e:
                     raise ConfigEntryNotReady(e.message) from e
 
+                powerwall = (
+                    product["components"]["battery"] or product["components"]["solar"]
+                )
+
                 energysites.append(
                     TessieEnergyData(
                         api=api,
@@ -150,6 +192,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                         ),
                         info_coordinator=TessieEnergySiteInfoCoordinator(
                             hass, entry, api
+                        ),
+                        history_coordinator=(
+                            TessieEnergyHistoryCoordinator(hass, entry, api)
+                            if powerwall
+                            else None
                         ),
                         device=DeviceInfo(
                             identifiers={(DOMAIN, str(site_id))},
@@ -169,6 +216,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             *(
                 energysite.info_coordinator.async_config_entry_first_refresh()
                 for energysite in energysites
+            ),
+            *(
+                energysite.history_coordinator.async_config_entry_first_refresh()
+                for energysite in energysites
+                if energysite.history_coordinator is not None
             ),
         )
 

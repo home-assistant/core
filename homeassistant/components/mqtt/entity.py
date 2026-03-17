@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
-    CONF_URL,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -49,6 +48,7 @@ from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
 )
+from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import (
@@ -79,13 +79,12 @@ from .const import (
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
+    CONF_GROUP,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
-    CONF_OBJECT_ID,
-    CONF_ORIGIN,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -136,6 +135,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "device_class",
     "device_info",
     "entity_category",
+    "entity_id",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -463,7 +463,7 @@ def async_setup_entity_entry_helper(
 
 
 class MqttAttributesMixin(Entity):
-    """Mixin used for platforms that support JSON attributes."""
+    """Mixin used for platforms that support JSON attributes and group entities."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
     _attr_tpl: Callable[[ReceivePayloadType], ReceivePayloadType] | None = None
@@ -471,10 +471,13 @@ class MqttAttributesMixin(Entity):
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
     _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
+    group: IntegrationSpecificGroup | None
 
     def __init__(self, config: ConfigType) -> None:
-        """Initialize the JSON attributes mixin."""
+        """Initialize the JSON attributes and handle group entities."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
+        if CONF_GROUP in config:
+            self.group = IntegrationSpecificGroup(self, config[CONF_GROUP])
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
@@ -485,6 +488,16 @@ class MqttAttributesMixin(Entity):
 
     def attributes_prepare_discovery_update(self, config: DiscoveryInfoType) -> None:
         """Handle updated discovery message."""
+        if CONF_GROUP in config:
+            if self.group is not None:
+                self.group.member_unique_ids = config[CONF_GROUP]
+            else:
+                _LOGGER.info(
+                    "Group member update received for entity %s, "
+                    "but this entity was not initialized with the `group` option. "
+                    "Reload the MQTT integration or restart Home Assistant to activate"
+                )
+
         self._attributes_config = config
         self._attributes_prepare_subscribe_topics()
 
@@ -546,7 +559,7 @@ class MqttAttributesMixin(Entity):
             _LOGGER.warning("Erroneous JSON: %s", payload)
         else:
             if isinstance(json_dict, dict):
-                filtered_dict = {
+                filtered_dict: dict[str, Any] = {
                     k: v
                     for k, v in json_dict.items()
                     if k not in MQTT_ATTRIBUTES_BLOCKED
@@ -1412,58 +1425,12 @@ class MqttEntity(
         """Set entity_id from default_entity_id if defined in config."""
         object_id: str
         default_entity_id: str | None
-        # Setting the default entity_id through the CONF_OBJECT_ID is deprecated
-        # Support will be removed with HA Core 2026.4
-        if (
-            CONF_DEFAULT_ENTITY_ID not in self._config
-            and CONF_OBJECT_ID not in self._config
-        ):
-            return
         if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
-            object_id = self._config[CONF_OBJECT_ID]
-        else:
-            _, _, object_id = default_entity_id.partition(".")
+            return
+        _, _, object_id = default_entity_id.partition(".")
         self.entity_id = async_generate_entity_id(
             self._entity_id_format, object_id, None, self.hass
         )
-        if CONF_OBJECT_ID in self._config:
-            domain = self.entity_id.split(".")[0]
-            if not self._discovery:
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    self.entity_id,
-                    issue_domain=DOMAIN,
-                    is_fixable=False,
-                    breaks_in_ha_version="2026.4",
-                    severity=IssueSeverity.WARNING,
-                    learn_more_url=f"{learn_more_url(domain)}#default_enity_id",
-                    translation_placeholders={
-                        "entity_id": self.entity_id,
-                        "object_id": self._config[CONF_OBJECT_ID],
-                        "domain": domain,
-                    },
-                    translation_key="deprecated_object_id",
-                )
-            elif CONF_DEFAULT_ENTITY_ID not in self._config:
-                if CONF_ORIGIN in self._config:
-                    origin_name = self._config[CONF_ORIGIN][CONF_NAME]
-                    url = self._config[CONF_ORIGIN].get(CONF_URL)
-                    origin = f"[{origin_name}]({url})" if url else origin_name
-                else:
-                    origin = "the integration"
-                _LOGGER.warning(
-                    "The configuration for entity %s uses the deprecated option "
-                    "`object_id` to set the default entity id. Replace the "
-                    '`"object_id": "%s"` option with `"default_entity_id": '
-                    '"%s"` in your published discovery configuration to fix this '
-                    "issue, or contact the maintainer of %s that published this config "
-                    "to fix this. This will stop working in Home Assistant Core 2026.4",
-                    self.entity_id,
-                    self._config[CONF_OBJECT_ID],
-                    f"{domain}.{self._config[CONF_OBJECT_ID]}",
-                    origin,
-                )
 
         if self.unique_id is None:
             return
@@ -1475,7 +1442,8 @@ class MqttEntity(
                 (entity_platform, DOMAIN, self.unique_id)
             )
         ) and deleted_entry.entity_id != self.entity_id:
-            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            # Plan to update the entity_id based on `default_entity_id`
+            # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
 
     @final

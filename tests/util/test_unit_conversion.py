@@ -413,6 +413,30 @@ _CONVERTED_VALUE: dict[
             62.744976,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1912.503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.062744976,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            100,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.1,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            0.5,
+            CONCENTRATION_PARTS_PER_MILLION,
+            500,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
     ],
     NitrogenMonoxideConcentrationConverter: [
         (
@@ -775,6 +799,18 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             60.1378,
             CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1995.417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.0601378,
+            CONCENTRATION_PARTS_PER_MILLION,
         ),
     ],
     PowerConverter: [

@@ -38,8 +38,18 @@ def mock_growatt_v1_api():
     Methods mocked for switch and number operations:
     - min_write_parameter: Called by switch/number entities to change settings
 
-    Methods mocked for service operations:
+    Methods mocked for MIN service operations:
     - min_write_time_segment: Called by time segment management services
+
+    Methods mocked for SPH device coordinator refresh:
+    - sph_detail: Provides device state and charge/discharge settings
+    - sph_energy: Provides energy data and last-update timestamp
+
+    Methods mocked for SPH service operations:
+    - sph_write_ac_charge_times: Called by write_ac_charge_times service
+    - sph_write_ac_discharge_times: Called by write_ac_discharge_times service
+    - sph_read_ac_charge_times: Called by read_ac_charge_times service
+    - sph_read_ac_discharge_times: Called by read_ac_discharge_times service
     """
     with patch(
         "homeassistant.components.growatt_server.config_flow.growattServer.OpenApiV1",
@@ -64,7 +74,8 @@ def mock_growatt_v1_api():
             "chargePowerCommand": 50,  # 50% charge power - read by number entity
             "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
             "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
-            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid) - read by number entity
+            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC - read by number entity
         }
 
         # Called by MIN device coordinator during refresh
@@ -135,7 +146,7 @@ def mock_growatt_v1_api():
         # Called by switch/number entities during turn_on/turn_off/set_value
         mock_v1_api.min_write_parameter.return_value = None
 
-        # Called by time segment management services
+        # Called by MIN time segment management services
         # Note: Don't use autospec for this method as it needs to accept variable arguments
         mock_v1_api.min_write_time_segment = Mock(
             return_value={
@@ -143,6 +154,131 @@ def mock_growatt_v1_api():
                 "error_msg": "Success",
             }
         )
+
+        # Called by SPH device coordinator during refresh
+        mock_v1_api.sph_detail.return_value = {
+            # Real-time data read by sensor entities
+            "bmsSOC": 75,
+            "vbat": 52.4,
+            "vpv1": 380.0,
+            "vpv2": 370.0,
+            "vac1": 230.0,
+            "pcharge1": 1200,
+            "pdischarge1": 0,
+            "pacToGridTotal": 0.5,
+            "pacToUserR": 0.2,
+            "fac": 50.0,
+            "temp1": 35.0,
+            "temp2": 36.0,
+            "temp3": 34.0,
+            "temp4": 33.0,
+            "temp5": 32.0,
+            # Charge settings (also used by sph_read_ac_charge_times)
+            "chargePowerCommand": 100,
+            "wchargeSOCLowLimit": 90,
+            "acChargeEnable": 1,
+            "forcedChargeTimeStart1": "01:00",
+            "forcedChargeTimeStop1": "05:00",
+            "forcedChargeStopSwitch1": 1,
+            "forcedChargeTimeStart2": "00:00",
+            "forcedChargeTimeStop2": "00:00",
+            "forcedChargeStopSwitch2": 0,
+            "forcedChargeTimeStart3": "00:00",
+            "forcedChargeTimeStop3": "00:00",
+            "forcedChargeStopSwitch3": 0,
+            # Discharge settings (also used by sph_read_ac_discharge_times)
+            "disChargePowerCommand": 100,
+            "wdisChargeSOCLowLimit": 10,
+            "forcedDischargeTimeStart1": "10:00",
+            "forcedDischargeTimeStop1": "16:00",
+            "forcedDischargeStopSwitch1": 1,
+            "forcedDischargeTimeStart2": "00:00",
+            "forcedDischargeTimeStop2": "00:00",
+            "forcedDischargeStopSwitch2": 0,
+            "forcedDischargeTimeStart3": "00:00",
+            "forcedDischargeTimeStop3": "00:00",
+            "forcedDischargeStopSwitch3": 0,
+        }
+
+        # Called by SPH device coordinator during refresh
+        mock_v1_api.sph_energy.return_value = {
+            "ppv1": 800,
+            "ppv2": 700,
+            "ppv": 1500,
+            "echarge1Today": 5.0,
+            "echarge1Total": 120.0,
+            "edischarge1Today": 3.0,
+            "edischarge1Total": 90.0,
+            "epvtoday": 8.0,
+            "epvTotal": 2000.0,
+            "esystemtoday": 10.0,
+            "eselfToday": 7.5,
+            "etoUserToday": 1.5,
+            "etoGridToday": 2.0,
+            "etogridTotal": 500.0,
+            "elocalLoadToday": 9.0,
+            "elocalLoadTotal": 1800.0,
+            "echarge1": 3.5,
+            "eChargeToday": 4.5,
+            "time": "2024-01-15 12:30:00",
+        }
+
+        # Called by read_ac_charge_times service (returns parsed data from cache)
+        mock_v1_api.sph_read_ac_charge_times.return_value = {
+            "charge_power": 100,
+            "charge_stop_soc": 90,
+            "mains_enabled": True,
+            "periods": [
+                {
+                    "period_id": 1,
+                    "start_time": "01:00",
+                    "end_time": "05:00",
+                    "enabled": True,
+                },
+                {
+                    "period_id": 2,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+                {
+                    "period_id": 3,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+            ],
+        }
+
+        # Called by read_ac_discharge_times service (returns parsed data from cache)
+        mock_v1_api.sph_read_ac_discharge_times.return_value = {
+            "discharge_power": 100,
+            "discharge_stop_soc": 10,
+            "periods": [
+                {
+                    "period_id": 1,
+                    "start_time": "10:00",
+                    "end_time": "16:00",
+                    "enabled": True,
+                },
+                {
+                    "period_id": 2,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+                {
+                    "period_id": 3,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+            ],
+        }
+
+        # Called by write_ac_charge_times / write_ac_discharge_times services
+        mock_v1_api.sph_write_ac_charge_times = Mock(return_value=None)
+        mock_v1_api.sph_write_ac_discharge_times = Mock(return_value=None)
 
         yield mock_v1_api
 
@@ -155,8 +291,8 @@ def mock_growatt_classic_api():
     Individual tests can override specific return values to test error conditions.
 
     Methods mocked for integration setup:
-    - login: Called during get_device_list_classic to authenticate
-    - plant_list: Called during setup if plant_id is default (to auto-select plant)
+    - login: Called during migration (to resolve DEFAULT_PLANT_ID) or async_setup_entry
+    - plant_list: Called during migration to resolve DEFAULT_PLANT_ID to actual plant_id
     - device_list: Called during async_setup_entry to discover devices
 
     Methods mocked for total coordinator refresh:
@@ -265,9 +401,10 @@ def mock_config_entry_classic() -> MockConfigEntry:
 def mock_config_entry_classic_default_plant() -> MockConfigEntry:
     """Return a mocked config entry for Classic API with DEFAULT_PLANT_ID.
 
-    This config entry uses plant_id="0" which triggers auto-plant-selection logic
-    in the Classic API path. This is legacy support for old config entries that
-    didn't have a specific plant_id set during initial configuration.
+    This config entry uses plant_id="0" which triggers migration logic in
+    async_setup_entry to resolve to the actual plant_id. This is legacy support
+    for old config entries that didn't have a specific plant_id set during initial
+    configuration.
     """
     return MockConfigEntry(
         domain=DOMAIN,
@@ -276,7 +413,7 @@ def mock_config_entry_classic_default_plant() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
             CONF_URL: "https://server.growatt.com/",
-            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" triggers auto-selection
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" - should trigger migration
         },
         unique_id="plant_default",
     )

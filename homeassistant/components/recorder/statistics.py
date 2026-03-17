@@ -1340,6 +1340,54 @@ def _reduce_statistics_per_month(
     )
 
 
+def reduce_year_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
+    """Return functions to match same year and year start end."""
+    _lower_bound: float = 0
+    _upper_bound: float = 0
+
+    # We have to recreate _local_from_timestamp in the closure in case the timezone changes
+    _local_from_timestamp = partial(
+        datetime.fromtimestamp, tz=dt_util.get_default_time_zone()
+    )
+
+    def _same_year_ts(time1: float, time2: float) -> bool:
+        """Return True if time1 and time2 are in the same year."""
+        nonlocal _lower_bound, _upper_bound
+        if not _lower_bound <= time1 < _upper_bound:
+            _lower_bound, _upper_bound = _year_start_end_ts_cached(time1)
+        return _lower_bound <= time2 < _upper_bound
+
+    def _year_start_end_ts(time: float) -> tuple[float, float]:
+        """Return the start and end of the period (year) time is within."""
+        start_local = _local_from_timestamp(time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        return (
+            start_local.timestamp(),
+            (start_local.replace(year=start_local.year + 1)).timestamp(),
+        )
+
+    # We create _year_start_end_ts_cached in the closure in case the timezone changes
+    _year_start_end_ts_cached = lru_cache(maxsize=6)(_year_start_end_ts)
+
+    return _same_year_ts, _year_start_end_ts_cached
+
+
+def _reduce_statistics_per_year(
+    stats: dict[str, list[StatisticsRow]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+) -> dict[str, list[StatisticsRow]]:
+    """Reduce hourly statistics to yearly statistics."""
+    _same_year_ts, _year_start_end_ts = reduce_year_ts_factory()
+    return _reduce_statistics(
+        stats, _same_year_ts, _year_start_end_ts, timedelta(days=366), types, metadata
+    )
+
+
 def _generate_statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
@@ -1978,7 +2026,7 @@ def _statistics_during_period_with_session(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     _types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:
@@ -2039,6 +2087,22 @@ def _statistics_during_period_with_session(
         if end_time is not None:
             end_time = _find_month_end_time(dt_util.as_local(end_time))
 
+    elif period == "year":
+        start_time = dt_util.as_local(start_time).replace(
+            month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        if end_time is not None:
+            end_local = dt_util.as_local(end_time)
+            end_time = end_local.replace(
+                year=end_local.year + 1,
+                month=1,
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
@@ -2072,6 +2136,9 @@ def _statistics_during_period_with_session(
     if period == "month":
         result = _reduce_statistics_per_month(result, types, metadata)
 
+    if period == "year":
+        result = _reduce_statistics_per_year(result, types, metadata)
+
     if "change" in _types:
         _augment_result_with_change(
             hass, session, start_time, units, _types, table, metadata, result
@@ -2092,7 +2159,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None,
     statistic_ids: set[str] | None,
-    period: Literal["5minute", "day", "hour", "week", "month"],
+    period: Literal["5minute", "day", "hour", "week", "month", "year"],
     units: dict[str, str] | None,
     types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
 ) -> dict[str, list[StatisticsRow]]:

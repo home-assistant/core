@@ -757,16 +757,16 @@ async def test_lock_actions_fail_with_invalid_code(
     ],
 )
 @pytest.mark.parametrize(
-    ("style", "attribute", "expected"),
+    ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template", 0),
-        (ConfigurationStyle.MODERN, "code_format", 0),
-        (ConfigurationStyle.TRIGGER, "code_format", 2),
+        (ConfigurationStyle.LEGACY, "code_format_template"),
+        (ConfigurationStyle.MODERN, "code_format"),
+        (ConfigurationStyle.TRIGGER, "code_format"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_attribute")
 async def test_lock_actions_dont_execute_with_code_template_rendering_error(
-    hass: HomeAssistant, calls: list[ServiceCall], expected: int
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test lock code format rendering fails block lock/unlock actions."""
 
@@ -786,10 +786,7 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
     )
     await hass.async_block_till_done()
 
-    # Trigger expects calls here because trigger based entities don't
-    # allow template exception resolutions into code_format property so
-    # the actions will fire using the previous code_format.
-    assert len(calls) == expected
+    assert len(calls) == 0
 
 
 @pytest.mark.parametrize(

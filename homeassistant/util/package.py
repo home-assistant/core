@@ -233,5 +233,5 @@ async def async_get_installed_packages() -> list[InstalledPackage]:
 
     try:
         return cast(list[InstalledPackage], json_loads_array(stdout.decode()))
-    except (*JSON_DECODE_EXCEPTIONS, ValueError):  # fmt: off
+    except (*JSON_DECODE_EXCEPTIONS, ValueError):
         return []

@@ -74,6 +74,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
+    CONF_SERVICE_TIER,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -92,6 +93,8 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_SERVICE_TIER,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -460,7 +463,7 @@ class OpenAIBaseLLMEntity(Entity):
     """OpenAI conversation agent."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
@@ -471,7 +474,12 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(
+                CONF_CHAT_MODEL,
+                RECOMMENDED_CHAT_MODEL
+                if subentry.subentry_type != "stt"
+                else RECOMMENDED_STT_MODEL,
+            ),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -481,6 +489,7 @@ class OpenAIBaseLLMEntity(Entity):
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
         force_image: bool = False,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -492,6 +501,7 @@ class OpenAIBaseLLMEntity(Entity):
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
+            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
             store=False,
             stream=True,
         )
@@ -632,7 +642,7 @@ class OpenAIBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
 
@@ -648,6 +658,15 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
             except openai.RateLimitError as err:
+                if (
+                    model_args["service_tier"] == "flex"
+                    and "resource unavailable" in (err.message or "").lower()
+                ):
+                    LOGGER.info(
+                        "Flex tier is not available at the moment, continuing with default tier"
+                    )
+                    model_args["service_tier"] = "default"
+                    continue
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:

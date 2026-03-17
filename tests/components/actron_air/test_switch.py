@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from actron_neo_api import ActronAirAPIError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -88,3 +90,37 @@ async def test_turbo_mode_not_supported(
     entity_id = "switch.test_system_turbo_mode"
     assert not hass.states.get(entity_id)
     assert not entity_registry.async_get(entity_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "method", "service"),
+    [
+        ("switch.test_system_away_mode", "set_away_mode", SERVICE_TURN_ON),
+        ("switch.test_system_continuous_fan", "set_continuous_mode", SERVICE_TURN_OFF),
+        ("switch.test_system_quiet_mode", "set_quiet_mode", SERVICE_TURN_ON),
+        ("switch.test_system_turbo_mode", "set_turbo_mode", SERVICE_TURN_OFF),
+    ],
+)
+async def test_switch_api_error(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    method: str,
+    service: str,
+) -> None:
+    """Test API error handling when toggling switches."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
+
+    status = mock_actron_api.state_manager.get_status.return_value
+    mock_method = getattr(status.user_aircon_settings, method)
+    mock_method.side_effect = ActronAirAPIError("Test error")
+
+    with pytest.raises(HomeAssistantError, match="Test error"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
