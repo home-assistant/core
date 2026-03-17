@@ -76,7 +76,8 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
             self.coordinator.last_exception = err
             self.coordinator.last_update_success = False
-        self.coordinator.async_update_listeners()
+        finally:
+            self.coordinator.async_update_listeners()
 
 
 class WemoBinaryStateEntity(WemoEntity):
