@@ -16,6 +16,12 @@
       }
     }
   },
+  "issues": {
+    "state_classes_not_matching": {
+      "description": "State classes `{state_classes}` on source entities `{source_entities}` need to be identical for min/max sensor `{entity_id}`.\n\nPlease correct the state classes on the source entities and reload the min/max sensor to fix this issue.",
+      "title": "State classes are not correct"
+    }
+  },
   "options": {
     "step": {
       "init": {

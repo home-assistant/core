@@ -28,12 +28,17 @@ from homeassistant.const import (
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity import get_device_class
+from homeassistant.helpers.entity import get_capability, get_device_class
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
@@ -210,7 +215,6 @@ class MinMaxSensor(SensorEntity):
 
     _attr_icon = ICON
     _attr_should_poll = False
-    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -263,6 +267,7 @@ class MinMaxSensor(SensorEntity):
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
         self._update_device_class()
+        self._update_state_class()
         self._calc_values()
 
     @property
@@ -374,6 +379,51 @@ class MinMaxSensor(SensorEntity):
             dc is not None and dc == device_classes[0] for dc in device_classes
         ):
             self._attr_device_class = device_classes[0]
+
+    @callback
+    def _update_state_class(self) -> None:
+        """Update state_class based on source entities.
+
+        If all source entities have the same state_class, inherit it.
+        If source entities have a different state_class, raise an issue.
+        """
+        state_classes: list[SensorStateClass] = []
+        source_entities: list[str] = []
+
+        if not self._entity_ids:
+            return
+
+        for entity_id in self._entity_ids:
+            try:
+                state_class = get_capability(self.hass, entity_id, "state_class")
+                if state_class:
+                    state_classes.append(SensorStateClass(state_class))
+                    source_entities.append(entity_id)
+            except HomeAssistantError, ValueError:
+                # If we can't get device class for any entity, don't set it
+                return
+
+        # Only inherit state_class if all entities have the same non-None state_class
+        if state_classes and all(sc == state_classes[0] for sc in state_classes):
+            async_delete_issue(
+                self.hass, DOMAIN, f"{self.entity_id}_state_classes_not_matching"
+            )
+            self._attr_state_class = state_classes[0]
+        else:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{self.entity_id}_state_classes_not_matching",
+                is_fixable=False,
+                is_persistent=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="state_classes_not_matching",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "source_entities": ", ".join(source_entities),
+                    "state_classes": ", ".join(state_classes),
+                },
+            )
 
     @callback
     def _calc_values(self) -> None:
