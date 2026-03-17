@@ -26,6 +26,21 @@
       "volume_level": 20,
       "volume_muted": false,
       "group_members": [],
+      "options": [
+        {
+          "key": "treble",
+          "name": "Treble",
+          "type": "integer",
+          "translation_key": "player_options.treble",
+          "translation_params": null,
+          "value": -6,
+          "read_only": false,
+          "min_value": -10,
+          "max_value": 10,
+          "step": 1,
+          "options": null
+        }
+      ],
       "active_source": "00:00:00:00:00:01",
       "active_group": null,
       "current_media": null,
@@ -95,6 +110,7 @@
       "volume_level": 20,
       "volume_muted": false,
       "group_members": [],
+      "options": [],
       "active_source": "spotify",
       "active_group": null,
       "current_media": {
@@ -158,6 +174,7 @@
       "volume_level": 6,
       "volume_muted": false,
       "group_members": ["00:00:00:00:00:01", "00:00:00:00:00:02"],
+      "options": [],
       "active_source": "test_group_player_1",
       "active_group": null,
       "current_media": {
