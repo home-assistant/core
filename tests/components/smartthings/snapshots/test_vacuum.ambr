@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_rvc_map_01011][vacuum.robot_vacuum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([
@@ -63,10 +64,11 @@
     'state': 'docked',
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-entry]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([
@@ -83,7 +85,7 @@
     'disabled_by': None,
     'domain': 'vacuum',
     'entity_category': None,
-    'entity_id': 'vacuum.robot_vacuum',
+    'entity_id': 'vacuum.robot_vacuum_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -106,7 +108,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum-state]
+# name: test_all_entities[da_rvc_normal_000001][vacuum.robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'fan_speed': 'smart',
@@ -116,11 +118,11 @@
         'smart',
         'quiet',
       ]),
-      'friendly_name': 'Robot vacuum',
+      'friendly_name': 'Robot vacuum 1',
       'supported_features': <VacuumEntityFeature: 12340>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.robot_vacuum',
+    'entity_id': 'vacuum.robot_vacuum_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

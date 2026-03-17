@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["telegram"],
-  "quality_scale": "silver",
-  "requirements": ["python-telegram-bot[socks]==22.1"]
+  "quality_scale": "gold",
+  "requirements": ["python-telegram-bot[socks]==22.6"]
 }
