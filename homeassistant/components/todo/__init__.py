@@ -283,7 +283,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     @deprecated_function("async_subscribe", breaks_in_ha_version="2026.10")
     def async_subscribe_updates(
-        self, listener: Callable[[list[JsonValueType]], None]
+        self, listener: Callable[[list[JsonValueType] | None], None]
     ) -> CALLBACK_TYPE:
         """Subscribe to To-do list item updates.
 
