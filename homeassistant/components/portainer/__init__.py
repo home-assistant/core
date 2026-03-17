@@ -90,15 +90,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         """Defer the first refresh of the slow coordinator until Home Assistant has started."""
         # It interlinks with the main coordinator, so a refresh is sufficient
         hass.async_create_task(
-            slow_coordinator.async_refresh(),
-            "portainer_slow_initial_refresh",
-            eager_start=True,
+            slow_coordinator.async_refresh(), "portainer_slow_initial_refresh"
         )
 
     # On lower-end hardware, the DF endpoint can take long
     # Do not block the setup, but defer the first refresh until HA  is fully started
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, _defer_slow_coordinator_refresh
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, _defer_slow_coordinator_refresh
+        )
     )
 
     entry.runtime_data = coordinator
