@@ -380,8 +380,13 @@ class IntegrationSensor(RestoreSensor):
 
         If a device class value has been set in the config, try to use that instead.
         """
-        device_class = self._configured_device_class
-        if device_class is None and (
+        # If user supplied device class, use it if the unit is supported
+        if (device_class := self._configured_device_class) is not None:
+            if unit_of_measurement in DEVICE_CLASS_UNITS.get(device_class, set()):
+                return device_class
+
+        # Otherwise try to infer device class from source sensor
+        if (
             source_device_class is None
             or (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None
         ):
