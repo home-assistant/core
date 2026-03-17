@@ -47,35 +47,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         target_soc: int = call.data["target_soc"]
         power: int = call.data["power"]
 
-        errors: list[str] = []
-
-        # Perform validations
-        for coordinator in coordinators:
-            try:
-                # Validate charge power based on device generation
-                max_power: int = POWER_LIMITS[coordinator.generation][
-                    "max_charge_power"
-                ]
-                if power > max_power:
-                    _raise_power_exceeds_max(power, max_power, coordinator.generation)
-
-                # Validate target SOC against emergency SOC threshold
-                emergency_soc = coordinator.get_emergency_soc()
-                if target_soc < emergency_soc:
-                    _raise_soc_below_emergency(target_soc, emergency_soc)
-
-            except ServiceValidationError as err:
-                if len(coordinators) == 1:
-                    raise
-
-                errors.append(f"{coordinator.friendly_name}: {err}")
-
-        if errors:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="multi_device_errors",
-                translation_placeholders={"errors": "; ".join(errors)},
-            )
+        _validate_realtime_action(
+            coordinators,
+            power,
+            target_soc,
+            power_key="max_charge_power",
+        )
 
         # Perform actions & process results
         await _execute_realtime_action(
@@ -89,35 +66,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         power: int = call.data["power"]
         target_soc: int = call.data["target_soc"]
 
-        errors: list[str] = []
-
-        # Perform validations
-        for coordinator in coordinators:
-            try:
-                # Validate discharge power based on device generation
-                max_power: int = POWER_LIMITS[coordinator.generation][
-                    "max_discharge_power"
-                ]
-                if power > max_power:
-                    _raise_power_exceeds_max(power, max_power, coordinator.generation)
-
-                # Validate target SOC against emergency SOC threshold
-                emergency_soc = coordinator.get_emergency_soc()
-                if target_soc < emergency_soc:
-                    _raise_soc_below_emergency(target_soc, emergency_soc)
-
-            except ServiceValidationError as err:
-                if len(coordinators) == 1:
-                    raise
-
-                errors.append(f"{coordinator.friendly_name}: {err}")
-
-        if errors:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="multi_device_errors",
-                translation_placeholders={"errors": "; ".join(errors)},
-            )
+        _validate_realtime_action(
+            coordinators,
+            power,
+            target_soc,
+            power_key="max_discharge_power",
+        )
 
         # Perform actions & process results
         await _execute_realtime_action(
@@ -179,6 +133,42 @@ async def _async_get_coordinators_from_call(
         _raise_no_target_entries()
 
     return coordinators
+
+
+def _validate_realtime_action(
+    coordinators: list[IndevoltCoordinator],
+    power: int,
+    target_soc: int,
+    power_key: str,
+) -> None:
+    """Validates parameters prior to calling async_execute_realtime_action."""
+
+    errors: list[str] = []
+
+    for coordinator in coordinators:
+        try:
+            # Validate discharge power based on device generation
+            max_power: int = POWER_LIMITS[coordinator.generation][power_key]
+            if power > max_power:
+                _raise_power_exceeds_max(power, max_power, coordinator.generation)
+
+            # Validate target SOC against emergency SOC threshold
+            emergency_soc = coordinator.get_emergency_soc()
+            if target_soc < emergency_soc:
+                _raise_soc_below_emergency(target_soc, emergency_soc)
+
+        except ServiceValidationError as err:
+            if len(coordinators) == 1:
+                raise
+
+            errors.append(f"{coordinator.friendly_name}: {err}")
+
+    if errors:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="multi_device_errors",
+            translation_placeholders={"errors": "; ".join(errors)},
+        )
 
 
 async def _execute_realtime_action(
