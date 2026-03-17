@@ -21,7 +21,8 @@ async def test_safe_library_call_success() -> None:
     )
 
     # Test a sync method that returns an asyncio.Future (WHICH IS an Awaitable)
-    future = asyncio.Future()
+    loop = asyncio.get_running_loop()
+    future = loop.create_future()
     future.set_result("future_success")
     future_method = MagicMock(return_value=future)
     assert (
