@@ -1,5 +1,5 @@
 """Test squeezebox util functions."""
-
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
