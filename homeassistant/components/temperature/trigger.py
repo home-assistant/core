@@ -38,9 +38,9 @@ from homeassistant.helpers.trigger import (
     CONF_THRESHOLD_TYPE,
     CONF_UPPER_LIMIT,
     ENTITY_STATE_TRIGGER_SCHEMA,
-    EntityNumericalStateAttributeChangedTriggerBase,
-    EntityNumericalStateAttributeCrossedThresholdTriggerBase,
-    EntityNumericalStateBase,
+    EntityNumericalStateChangedTriggerBase,
+    EntityNumericalStateCrossedThresholdTriggerBase,
+    EntityNumericalStateTriggerBase,
     ThresholdType,
     Trigger,
     TriggerConfig,
@@ -115,15 +115,9 @@ TEMPERATURE_DOMAIN_SPECS = {
 }
 
 
-class _TemperatureTriggerMixin(EntityNumericalStateBase):
+class _TemperatureTriggerMixin(EntityNumericalStateTriggerBase):
     """Mixin for temperature triggers providing entity filtering, value extraction, and unit conversion."""
 
-    _attributes = {
-        CLIMATE_DOMAIN: CLIMATE_ATTR_CURRENT_TEMPERATURE,
-        SENSOR_DOMAIN: None,  # Use state.state
-        WATER_HEATER_DOMAIN: WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
-        WEATHER_DOMAIN: ATTR_WEATHER_TEMPERATURE,
-    }
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -165,7 +159,7 @@ class _TemperatureTriggerMixin(EntityNumericalStateBase):
 
 
 class TemperatureChangedTrigger(
-    _TemperatureTriggerMixin, EntityNumericalStateAttributeChangedTriggerBase
+    _TemperatureTriggerMixin, EntityNumericalStateChangedTriggerBase
 ):
     """Trigger for temperature value changes across multiple domains."""
 
@@ -173,7 +167,7 @@ class TemperatureChangedTrigger(
 
 
 class TemperatureCrossedThresholdTrigger(
-    _TemperatureTriggerMixin, EntityNumericalStateAttributeCrossedThresholdTriggerBase
+    _TemperatureTriggerMixin, EntityNumericalStateCrossedThresholdTriggerBase
 ):
     """Trigger for temperature value crossing a threshold across multiple domains."""
 
