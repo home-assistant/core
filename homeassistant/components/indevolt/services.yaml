@@ -1,6 +1,6 @@
 charge:
   fields:
-    device_id:
+    device_ids:
       required: true
       selector:
         device:
@@ -25,7 +25,7 @@ charge:
 
 discharge:
   fields:
-    device_id:
+    device_ids:
       required: true
       selector:
         device:

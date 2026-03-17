@@ -223,9 +223,6 @@
       "dc_output_power": {
         "name": "DC output power"
       },
-      "discharge_limit": {
-        "name": "[%key:component::indevolt::entity::number::discharge_limit::name%]"
-      },
       "energy_mode": {
         "name": "Energy mode",
         "state": {
@@ -299,6 +296,9 @@
     }
   },
   "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Config entry {entry_title} is not ready"
+    },
     "energy_mode_change_unavailable_outdoor_portable": {
       "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
     },
@@ -320,18 +320,18 @@
     "power_exceeds_max": {
       "message": "Power ({power}W) exceeds maximum ({max_power}W) for generation ({generation}) devices"
     },
+    "service_call_failed": {
+      "message": "Indevolt service failed for one or more devices"
+    },
     "soc_below_emergency": {
       "message": "Target SOC ({target}%) is below emergency SOC ({emergency_soc}%)"
-    },
-    "soc_below_minimum": {
-      "message": "Target SOC ({target}%) is below the advised device minimum ({minimum_soc}%)"
     }
   },
   "services": {
     "charge": {
       "description": "Real-time control: Starts charging with configured power until the target SOC is reached.",
       "fields": {
-        "device_id": {
+        "device_ids": {
           "description": "The Indevolt device(s) to start charging.",
           "name": "Device(s)"
         },
@@ -349,9 +349,9 @@
     "discharge": {
       "description": "Real-time control: Starts discharging with configured power until the target SOC is reached.",
       "fields": {
-        "device_id": {
+        "device_ids": {
           "description": "The Indevolt device(s) to start discharging.",
-          "name": "[%key:component::indevolt::services::charge::fields::device_id::name%]"
+          "name": "[%key:component::indevolt::services::charge::fields::device_ids::name%]"
         },
         "power": {
           "description": "Maximum discharging power in watts.",

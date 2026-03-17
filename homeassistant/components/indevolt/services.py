@@ -3,26 +3,25 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Final, Never
 
-from indevolt_api import (
-    IndevoltRealtimeAction,
-    PowerExceedsMaxError,
-    SocBelowMinimumError,
-)
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.service import async_extract_config_entry_ids
+import homeassistant.helpers.device_registry as dr
 
-from .const import DOMAIN
-from .coordinator import IndevoltCoordinator
+from .const import DOMAIN, POWER_LIMITS, RealtimeAction
+from .coordinator import IndevoltConfigEntry, IndevoltCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
 
 RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required("device_id"): vol.All(
+        vol.Required("device_ids"): vol.All(
             cv.ensure_list,
             [cv.string],
         ),
@@ -43,12 +42,86 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def charge(call: ServiceCall) -> None:
         """Handle the service call to start charging."""
-        await _async_handle_realtime_action(hass, call, IndevoltRealtimeAction.CHARGE)
+        coordinators = await _async_get_coordinators_from_call(hass, call)
+
+        target_soc: int = call.data["target_soc"]
+        power: int = call.data["power"]
+
+        errors: list[str] = []
+
+        # Perform validations
+        for coordinator in coordinators:
+            try:
+                # Validate charge power based on device generation
+                max_power: int = POWER_LIMITS[coordinator.generation][
+                    "max_charge_power"
+                ]
+                if power > max_power:
+                    _raise_power_exceeds_max(power, max_power, coordinator.generation)
+
+                # Validate target SOC against emergency SOC threshold
+                emergency_soc = coordinator.get_emergency_soc()
+                if target_soc < emergency_soc:
+                    _raise_soc_below_emergency(target_soc, emergency_soc)
+
+            except ServiceValidationError as err:
+                if len(coordinators) == 1:
+                    raise
+
+                errors.append(f"{coordinator.friendly_name}: {err}")
+
+        if errors:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multi_device_errors",
+                translation_placeholders={"errors": "; ".join(errors)},
+            )
+
+        # Perform actions & process results
+        await _execute_realtime_action(
+            coordinators, RealtimeAction.CHARGE, power, target_soc
+        )
 
     async def discharge(call: ServiceCall) -> None:
         """Handle the service call to start discharging."""
-        await _async_handle_realtime_action(
-            hass, call, IndevoltRealtimeAction.DISCHARGE
+        coordinators = await _async_get_coordinators_from_call(hass, call)
+
+        power: int = call.data["power"]
+        target_soc: int = call.data["target_soc"]
+
+        errors: list[str] = []
+
+        # Perform validations
+        for coordinator in coordinators:
+            try:
+                # Validate discharge power based on device generation
+                max_power: int = POWER_LIMITS[coordinator.generation][
+                    "max_discharge_power"
+                ]
+                if power > max_power:
+                    _raise_power_exceeds_max(power, max_power, coordinator.generation)
+
+                # Validate target SOC against emergency SOC threshold
+                emergency_soc = coordinator.get_emergency_soc()
+                if target_soc < emergency_soc:
+                    _raise_soc_below_emergency(target_soc, emergency_soc)
+
+            except ServiceValidationError as err:
+                if len(coordinators) == 1:
+                    raise
+
+                errors.append(f"{coordinator.friendly_name}: {err}")
+
+        if errors:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multi_device_errors",
+                translation_placeholders={"errors": "; ".join(errors)},
+            )
+
+        # Perform actions & process results
+        await _execute_realtime_action(
+            coordinators, RealtimeAction.DISCHARGE, power, target_soc
         )
 
     hass.services.async_register(
@@ -59,33 +132,48 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-async def _async_handle_realtime_action(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    action: IndevoltRealtimeAction,
-) -> None:
-    """Validate and execute a realtime action for one or more coordinators."""
-    coordinators = await _async_get_coordinators_from_call(hass, call)
-
-    power: int = call.data["power"]
-    target_soc: int = call.data["target_soc"]
-
-    _validate_realtime_action(coordinators, action, power, target_soc)
-    await _execute_realtime_action(coordinators, action, power, target_soc)
-
-
 async def _async_get_coordinators_from_call(
     hass: HomeAssistant,
     call: ServiceCall,
 ) -> list[IndevoltCoordinator]:
     """Resolve coordinator(s) targeted by a service call."""
-    entry_ids = await async_extract_config_entry_ids(call)
+    coordinators: list[IndevoltCoordinator] = []
 
-    coordinators: list[IndevoltCoordinator] = [
-        entry.runtime_data
+    # Ensure targets are provided by user
+    device_ids: list[str] = call.data.get("device_ids") or []
+    if not device_ids:
+        _raise_no_target_entries()
+
+    loaded_entries: dict[str, IndevoltConfigEntry] = {
+        entry.entry_id: entry
         for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-        if entry.entry_id in entry_ids
-    ]
+    }
+
+    device_registry = dr.async_get(hass)
+    for device_id in device_ids:
+        # Retrieve device from registry
+        device = device_registry.async_get(device_id)
+        if device is None:
+            continue
+
+        for entry_id in device.config_entries:
+            # Check whether entry is loaded
+            if entry_id not in loaded_entries:
+                continue
+
+            entry = loaded_entries[entry_id]
+
+            # Validate coordinator presence within entry
+            if entry.runtime_data is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="config_entry_not_ready",
+                    translation_placeholders={"entry_title": entry.title},
+                )
+
+            # Append to the result list (found it)
+            if entry.runtime_data not in coordinators:
+                coordinators.append(entry.runtime_data)
 
     if not coordinators:
         _raise_no_target_entries()
@@ -93,84 +181,40 @@ async def _async_get_coordinators_from_call(
     return coordinators
 
 
-def _validate_realtime_action(
-    coordinators: list[IndevoltCoordinator],
-    action: IndevoltRealtimeAction,
-    power: int,
-    target_soc: int,
-) -> None:
-    """Validates parameters prior to calling async_execute_realtime_action."""
-
-    errors: list[str] = []
-
-    for coordinator in coordinators:
-        try:
-            try:
-                if action == IndevoltRealtimeAction.CHARGE:
-                    coordinator.api.check_charge_limits(
-                        power, target_soc, coordinator.generation
-                    )
-
-                else:
-                    coordinator.api.check_discharge_limits(
-                        power, target_soc, coordinator.generation
-                    )
-
-            except PowerExceedsMaxError as err:
-                _raise_power_exceeds_max(err.power, err.max_power, err.generation)
-
-            except SocBelowMinimumError as err:
-                _raise_soc_below_minimum(err.target_soc, err.minimum_soc)
-
-            # Validate target SOC against known emergency SOC (soft limit)
-            emergency_soc = coordinator.get_emergency_soc()
-            if target_soc < emergency_soc:
-                _raise_soc_below_emergency(target_soc, emergency_soc)
-
-        except ServiceValidationError as err:
-            if len(coordinators) == 1:
-                raise
-
-            errors.append(f"{coordinator.friendly_name}: {err}")
-
-    if errors:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="multi_device_errors",
-            translation_placeholders={"errors": "; ".join(errors)},
-        )
-
-
 async def _execute_realtime_action(
     coordinators: list[IndevoltCoordinator],
-    action: IndevoltRealtimeAction,
+    action_code: RealtimeAction,
     power: int,
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
     results: list[None | BaseException] = await asyncio.gather(
         *(
-            coordinator.async_realtime_action(action, power, target_soc)
+            coordinator.async_execute_realtime_action(
+                [action_code.value, power, target_soc]
+            )
             for coordinator in coordinators
         ),
         return_exceptions=True,
     )
 
-    errors: list[str] = []
-
+    exception: BaseException | None = None
     for coordinator, result in zip(coordinators, results, strict=True):
         if isinstance(result, BaseException):
-            if len(coordinators) == 1:
-                raise result
+            _LOGGER.error(
+                "Coordinator %s failed: %s", coordinator.friendly_name, result
+            )
+            if exception is None:
+                exception = result
 
-            errors.append(f"{coordinator.friendly_name}: {result}")
+    if exception:
+        if len(coordinators) == 1:
+            raise exception
 
-    if errors:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="multi_device_errors",
-            translation_placeholders={"errors": "; ".join(errors)},
-        )
+            translation_key="service_call_failed",
+        ) from exception
 
 
 def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Never:
@@ -182,18 +226,6 @@ def _raise_power_exceeds_max(power: int, max_power: int, generation: int) -> Nev
             "power": str(power),
             "max_power": str(max_power),
             "generation": str(generation),
-        },
-    )
-
-
-def _raise_soc_below_minimum(target_soc: int, minimum_soc: int) -> Never:
-    """Raise a translated validation error when SOC is below the device's hard minimum."""
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="soc_below_minimum",
-        translation_placeholders={
-            "target": str(target_soc),
-            "minimum_soc": str(minimum_soc),
         },
     )
 

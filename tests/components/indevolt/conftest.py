@@ -15,7 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_MODEL
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HOST = "192.168.1.100"
-ALT_TEST_HOST = "192.168.1.101"
 TEST_PORT = 8080
 TEST_DEVICE_SN_GEN1 = "BK1600-12345678"
 TEST_DEVICE_SN_GEN2 = "SolidFlex2000-87654321"
@@ -27,13 +26,11 @@ DEVICE_MAPPING = {
         "device": "BK1600",
         "generation": 1,
         "sn": TEST_DEVICE_SN_GEN1,
-        "host": ALT_TEST_HOST,
     },
     2: {
         "device": "CMS-SF2000",
         "generation": 2,
         "sn": TEST_DEVICE_SN_GEN2,
-        "host": TEST_HOST,
     },
 }
 
@@ -59,7 +56,7 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
         title=device_info["device"],
         version=1,
         data={
-            CONF_HOST: device_info["host"],
+            CONF_HOST: TEST_HOST,
             CONF_SERIAL_NUMBER: device_info["sn"],
             CONF_MODEL: device_info["device"],
             CONF_GENERATION: device_info["generation"],
@@ -77,7 +74,7 @@ def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
         title=device_info["device"],
         version=1,
         data={
-            CONF_HOST: device_info["host"],
+            CONF_HOST: TEST_HOST,
             CONF_SERIAL_NUMBER: device_info["sn"],
             CONF_MODEL: device_info["device"],
             CONF_GENERATION: device_info["generation"],
@@ -106,9 +103,6 @@ def mock_indevolt(generation: int) -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.fetch_data.return_value = fixture_data
         client.set_data.return_value = True
-        client.stop.return_value = True
-        client.charge.return_value = True
-        client.discharge.return_value = True
         client.get_config.return_value = {
             "device": {
                 "sn": device_info["sn"],

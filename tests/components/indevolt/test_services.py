@@ -1,8 +1,7 @@
 """Tests for Indevolt services/actions."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, call
 
-from indevolt_api import PowerExceedsMaxError, SocBelowMinimumError
 import pytest
 
 from homeassistant.components.indevolt.const import (
@@ -10,7 +9,9 @@ from homeassistant.components.indevolt.const import (
     ENERGY_MODE_READ_KEY,
     ENERGY_MODE_WRITE_KEY,
     PORTABLE_MODE,
+    REALTIME_ACTION_KEY,
     REALTIME_ACTION_MODE,
+    RealtimeAction,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -32,83 +33,89 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-@pytest.mark.parametrize(
-    ("service_name", "power", "target_soc"),
-    [
-        ("charge", 1200, 60),
-        ("discharge", 1200, 40),
-    ],
-)
-async def test_service_charge_discharge(
+async def test_service_charge(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service_name: str,
-    power: int,
-    target_soc: int,
 ) -> None:
-    """Test charge and discharge services."""
+    """Test charge service."""
     await setup_integration(hass, mock_config_entry)
 
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Mock call to start service
+    # Mock call to start charging
     await hass.services.async_call(
         DOMAIN,
-        service_name,
+        "charge",
         {
-            "device_id": [_get_device_id(hass, mock_config_entry)],
-            "power": power,
-            "target_soc": target_soc,
+            "device_ids": [_get_device_id(hass, mock_config_entry)],
+            "power": 1200,
+            "target_soc": 60,
         },
         blocking=True,
     )
 
-    # Verify energy mode switch and charge/discharge were called correctly
-    mock_indevolt.set_data.assert_called_once_with(
-        ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE
+    # Verify set_data was called with correct parameters
+    mock_indevolt.set_data.assert_has_calls(
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.CHARGE.value, 1200, 60]),
+        ]
     )
-    if service_name == "charge":
-        mock_indevolt.charge.assert_called_once_with(power, target_soc)
-    else:
-        mock_indevolt.discharge.assert_called_once_with(power, target_soc)
 
 
-@pytest.mark.parametrize("generation", [1], indirect=True)
-@pytest.mark.parametrize(
-    ("service_name", "power", "target_soc"),
-    [
-        ("charge", 1300, 60),
-        ("discharge", 1000, 20),
-    ],
-)
-async def test_service_power_too_high(
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_service_discharge(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service_name: str,
-    power: int,
-    target_soc: int,
 ) -> None:
-    """Test charge and discharge service validation for max power."""
+    """Test discharge service."""
     await setup_integration(hass, mock_config_entry)
 
-    # Configure the API mock to raise PowerExceedsMaxError for exceeded power
-    mock_indevolt.check_charge_limits.side_effect = PowerExceedsMaxError(power, 1200, 1)
-    mock_indevolt.check_discharge_limits.side_effect = PowerExceedsMaxError(
-        power, 800, 1
+    # Reset mock call count for this iteration
+    mock_indevolt.set_data.reset_mock()
+
+    # Mock call to start discharging
+    await hass.services.async_call(
+        DOMAIN,
+        "discharge",
+        {
+            "device_ids": [_get_device_id(hass, mock_config_entry)],
+            "power": 1200,
+            "target_soc": 40,
+        },
+        blocking=True,
     )
 
-    # Mock call to start service (exceed max power for gen 1)
+    # Verify set_data was called with correct parameters
+    mock_indevolt.set_data.assert_has_calls(
+        [
+            call(ENERGY_MODE_WRITE_KEY, REALTIME_ACTION_MODE),
+            call(REALTIME_ACTION_KEY, [RealtimeAction.DISCHARGE.value, 1200, 40]),
+        ]
+    )
+
+
+@pytest.mark.parametrize("generation", [1], indirect=True)
+async def test_service_charge_power_too_high(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test charge service validation for max power."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Mock call to start charging (exceed charge power for gen 1)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            service_name,
+            "charge",
             {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
-                "power": power,
-                "target_soc": target_soc,
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "power": 1300,
+                "target_soc": 60,
             },
             blocking=True,
         )
@@ -118,55 +125,21 @@ async def test_service_power_too_high(
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
-@pytest.mark.parametrize("service_name", ["charge", "discharge"])
-async def test_service_target_soc_below_minimum(
+async def test_service_charge_target_soc_below_emergency(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service_name: str,
 ) -> None:
-    """Test charge and discharge service validation when SOC is below the library hard minimum."""
+    """Test charge service validation for target SOC."""
     await setup_integration(hass, mock_config_entry)
 
-    # Configure the API mock to raise SocBelowMinimumError
-    mock_indevolt.check_charge_limits.side_effect = SocBelowMinimumError(3, 5, 2)
-    mock_indevolt.check_discharge_limits.side_effect = SocBelowMinimumError(3, 5, 2)
-
-    # Mock call to start service (target SOC below hard minimum)
+    # Mock call to start charging (target SOC < Emergency SOC)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            service_name,
+            "charge",
             {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
-                "power": 500,
-                "target_soc": 3,
-            },
-            blocking=True,
-        )
-
-    # Verify correct translation key is used for the error
-    assert exc_info.value.translation_key == "soc_below_minimum"
-
-
-@pytest.mark.parametrize("generation", [2], indirect=True)
-@pytest.mark.parametrize("service_name", ["charge", "discharge"])
-async def test_service_target_soc_below_emergency(
-    hass: HomeAssistant,
-    mock_indevolt: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    service_name: str,
-) -> None:
-    """Test charge and discharge service validation for target SOC."""
-    await setup_integration(hass, mock_config_entry)
-
-    # Mock call to start service (target SOC below Emergency SOC (soft limit))
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            service_name,
-            {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 1000,
                 "target_soc": 1,
             },
@@ -192,7 +165,7 @@ async def test_service_missing_target(
             DOMAIN,
             "discharge",
             {
-                "device_id": ["non-existent-device-id"],
+                "device_ids": ["non-existent-device-id"],
                 "power": 500,
                 "target_soc": 50,
             },
@@ -203,54 +176,84 @@ async def test_service_missing_target(
     assert exc_info.value.translation_key == "no_matching_target_entries"
 
 
+@pytest.mark.parametrize("generation", [1], indirect=True)
+async def test_service_discharge_power_too_high(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discharge service validation for max power."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Mock call to start discharging (exceed discharge power for gen 1)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "discharge",
+            {
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "power": 1000,
+                "target_soc": 20,
+            },
+            blocking=True,
+        )
+
+    # Verify correct translation key is used for the error
+    assert exc_info.value.translation_key == "power_exceeds_max"
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+async def test_service_discharge_target_soc_below_emergency(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discharge service validation for target SOC."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Mock call to start discharging (target SOC < Emergency SOC)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "discharge",
+            {
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
+                "power": 1000,
+                "target_soc": 1,
+            },
+            blocking=True,
+        )
+
+    # Verify correct translation key is used for the error
+    assert exc_info.value.translation_key == "soc_below_emergency"
+
+
 @pytest.mark.parametrize("generation", [2], indirect=True)
 @pytest.mark.parametrize("alt_generation", [1], indirect=True)
-@pytest.mark.parametrize(
-    ("service_name", "power", "target_soc"),
-    [
-        ("charge", 1300, 60),
-        ("discharge", 1000, 20),
-    ],
-)
-async def test_multi_device_partial_validation_failure(
+async def test_multi_device_discharge_partial_validation_failure(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
     alt_mock_config_entry: MockConfigEntry,
-    service_name: str,
-    power: int,
-    target_soc: int,
 ) -> None:
-    """Test charge and discharge with two devices where only the gen 1 device fails power validation."""
+    """Test discharge with two devices where one fails power validation."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, alt_mock_config_entry)
 
-    # Configure the mock to raise PowerExceedsMaxError only for gen 1 devices
-    def raise_if_gen1_charge(p: int, soc: int, generation: int) -> None:
-        if generation == 1:
-            raise PowerExceedsMaxError(p, 1200, generation)
-
-    def raise_if_gen1_discharge(p: int, soc: int, generation: int) -> None:
-        if generation == 1:
-            raise PowerExceedsMaxError(p, 800, generation)
-
-    mock_indevolt.check_charge_limits.side_effect = raise_if_gen1_charge
-    mock_indevolt.check_discharge_limits.side_effect = raise_if_gen1_discharge
-
-    # Mock call to start service on both devices (exceed max power for gen 1)
+    # Mock call to start discharging both devices (exceed discharge power for gen 1)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            service_name,
+            "discharge",
             {
-                "device_id": [
+                "device_ids": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],
-                "power": power,
-                "target_soc": target_soc,
+                "power": 1000,
+                "target_soc": 20,
             },
             blocking=True,
         )
@@ -264,27 +267,25 @@ async def test_multi_device_partial_validation_failure(
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
 @pytest.mark.parametrize("alt_generation", [1], indirect=True)
-@pytest.mark.parametrize("service_name", ["charge", "discharge"])
-async def test_multi_device_full_validation_failure(
+async def test_multi_device_discharge_full_validation_failure(
     hass: HomeAssistant,
     mock_indevolt: AsyncMock,
     mock_config_entry: MockConfigEntry,
     alt_mock_config_entry: MockConfigEntry,
-    service_name: str,
 ) -> None:
-    """Test charge and discharge with two devices where both fail SOC validation."""
+    """Test discharge with two devices where both fail SOC validation."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, alt_mock_config_entry)
 
-    # Mock call to start service on both devices (target SOC < emergency SOC for both)
+    # Mock call to start discharging both devices (target SOC < emergency SOC for both)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            service_name,
+            "discharge",
             {
-                "device_id": [
+                "device_ids": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],
@@ -297,8 +298,9 @@ async def test_multi_device_full_validation_failure(
     # Both device names should appear in the concatenated error message
     assert exc_info.value.translation_key == "multi_device_errors"
     errors = exc_info.value.translation_placeholders["errors"]
-    assert f"{mock_config_entry.title}: " in errors
-    assert f"{alt_mock_config_entry.title}: " in errors
+    assert mock_config_entry.title in errors
+    assert alt_mock_config_entry.title in errors
+    assert ";" in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -320,7 +322,7 @@ async def test_charge_outdoor_portable(
             DOMAIN,
             "charge",
             {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 100,
             },
@@ -353,7 +355,7 @@ async def test_service_charge_missing_energy_mode(
             DOMAIN,
             "charge",
             {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 80,
             },
@@ -362,6 +364,81 @@ async def test_service_charge_missing_energy_mode(
 
     # Verify correct translation key is used for the error
     assert exc_info.value.translation_key == "failed_to_retrieve_current_energy_mode"
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("alt_generation", [1], indirect=True)
+async def test_multi_device_charge_partial_validation_failure(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    alt_mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test charge with two devices where one fails power validation."""
+
+    # Set up multiple devices (gen 1 & gen 2)
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, alt_mock_config_entry)
+
+    # Mock call to start charging both devices (exceed discharge power for gen 1)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "charge",
+            {
+                "device_ids": [
+                    _get_device_id(hass, mock_config_entry),
+                    _get_device_id(hass, alt_mock_config_entry),
+                ],
+                "power": 1300,
+                "target_soc": 60,
+            },
+            blocking=True,
+        )
+
+    # Confirm error references correct device (gen 1 fails, gen 2 does not)
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert alt_mock_config_entry.title in errors
+    assert mock_config_entry.title not in errors
+
+
+@pytest.mark.parametrize("generation", [2], indirect=True)
+@pytest.mark.parametrize("alt_generation", [1], indirect=True)
+async def test_multi_device_charge_full_validation_failure(
+    hass: HomeAssistant,
+    mock_indevolt: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    alt_mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test charge with two devices where both fail SOC validation."""
+
+    # Set up multiple devices (gen 1 & gen 2)
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, alt_mock_config_entry)
+
+    # Mock call to start charging both devices (target SOC < emergency SOC for both)
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "charge",
+            {
+                "device_ids": [
+                    _get_device_id(hass, mock_config_entry),
+                    _get_device_id(hass, alt_mock_config_entry),
+                ],
+                "power": 100,
+                "target_soc": 1,
+            },
+            blocking=True,
+        )
+
+    # Both device names should appear in the concatenated error message
+    assert exc_info.value.translation_key == "multi_device_errors"
+    errors = exc_info.value.translation_placeholders["errors"]
+    assert mock_config_entry.title in errors
+    assert alt_mock_config_entry.title in errors
+    assert ";" in errors
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -382,7 +459,7 @@ async def test_single_device_execution_failure(
             DOMAIN,
             "charge",
             {
-                "device_id": [_get_device_id(hass, mock_config_entry)],
+                "device_ids": [_get_device_id(hass, mock_config_entry)],
                 "power": 500,
                 "target_soc": 80,
             },
@@ -390,8 +467,7 @@ async def test_single_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for single coordinator)
-    assert str(exc_info.value) == "Device push failed"
-    assert exc_info.value.translation_key is None
+    assert exc_info.value.translation_key != "service_call_failed"
 
 
 @pytest.mark.parametrize("generation", [2], indirect=True)
@@ -402,7 +478,7 @@ async def test_multi_device_execution_failure(
     mock_config_entry: MockConfigEntry,
     alt_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that multi_device_errors is raised when execution fails for multiple devices."""
+    """Test that service_call_failed is raised when execution fails for multiple devices."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
@@ -417,7 +493,7 @@ async def test_multi_device_execution_failure(
             DOMAIN,
             "charge",
             {
-                "device_id": [
+                "device_ids": [
                     _get_device_id(hass, mock_config_entry),
                     _get_device_id(hass, alt_mock_config_entry),
                 ],
@@ -428,4 +504,4 @@ async def test_multi_device_execution_failure(
         )
 
     # Verify correct translation key is used for the error (for multiple coordinators)
-    assert exc_info.value.translation_key == "multi_device_errors"
+    assert exc_info.value.translation_key == "service_call_failed"

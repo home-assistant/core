@@ -125,3 +125,9 @@ SENSOR_KEYS: Final[dict[int, list[str]]] = {
         "1505",
     ],
 }
+
+# The map of Power Limits per device generation
+POWER_LIMITS: Final[dict[int, dict[str, int]]] = {
+    1: {"max_discharge_power": 800, "max_charge_power": 1200},
+    2: {"max_discharge_power": 2400, "max_charge_power": 2400},
+}
