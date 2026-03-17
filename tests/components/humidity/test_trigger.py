@@ -64,7 +64,7 @@ async def test_humidity_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the humidity triggers are gated by the labs flag."""
-    assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 # --- Sensor domain tests (value in state.state) ---

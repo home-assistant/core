@@ -35,7 +35,7 @@ async def test_fan_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the fan triggers are gated by the labs flag."""
-    assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
