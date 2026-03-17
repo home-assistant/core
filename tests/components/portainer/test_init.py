@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -296,3 +297,25 @@ async def test_container_stack_device_links(
 
     assert standalone_container_device is not None
     assert standalone_container_device.via_device_id == endpoint_device.id
+
+
+async def test_slow_refresh_runs_on_ha_start(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test slow coordinator refreshes DF data on HA start."""
+    await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    slow_coordinator = coordinator.slow_coordinator
+    endpoints = list(coordinator.data.values())
+    assert endpoints
+
+    mock_portainer_client.docker_system_df.reset_mock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_portainer_client.docker_system_df.call_count == len(endpoints)
+    assert slow_coordinator.data

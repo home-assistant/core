@@ -238,7 +238,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="container_disk_usage_reclaimable",
         translation_key="container_disk_usage_reclaimable",
-        value_fn=lambda data: data.docker_system_df.container_disk_usage.reclaimable,
+        value_fn=lambda data: (
+            data.docker_system_df.container_disk_usage.reclaimable
+            if data.docker_system_df
+            else None
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -248,7 +252,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="container_disk_usage_total_size",
         translation_key="container_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.container_disk_usage.total_size,
+        value_fn=lambda data: (
+            data.docker_system_df.container_disk_usage.total_size
+            if data.docker_system_df
+            else None
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -258,7 +266,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="image_disk_usage_reclaimable",
         translation_key="image_disk_usage_reclaimable",
-        value_fn=lambda data: data.docker_system_df.image_disk_usage.reclaimable,
+        value_fn=lambda data: (
+            data.docker_system_df.image_disk_usage.reclaimable
+            if data.docker_system_df
+            else None
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -268,7 +280,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="image_disk_usage_total_size",
         translation_key="image_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.image_disk_usage.total_size,
+        value_fn=lambda data: (
+            data.docker_system_df.image_disk_usage.total_size
+            if data.docker_system_df
+            else None
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -278,7 +294,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="volume_disk_usage_total",
         translation_key="volume_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.volume_disk_usage.total_size,
+        value_fn=lambda data: (
+            data.docker_system_df.volume_disk_usage.total_size
+            if data.docker_system_df
+            else None
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -332,7 +352,6 @@ async def async_setup_entry(
             )
             for entity_description in ENDPOINT_SENSORS
             for endpoint in endpoints
-            if entity_description.value_fn(endpoint)
         )
 
     def _async_add_new_containers(

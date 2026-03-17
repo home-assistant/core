@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import logging
 
 from pyportainer import Portainer
@@ -14,9 +15,10 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_START,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -25,7 +27,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator
+from .coordinator import PortainerCoordinator, PortainerSlowCoordinator
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
@@ -51,12 +53,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         session=async_create_clientsession(
             hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
         ),
-        request_timeout=30,
+        request_timeout=10,
         max_retries=API_MAX_RETRIES,
     )
 
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
+
+    slow_client = Portainer(
+        api_url=entry.data[CONF_URL],
+        api_key=entry.data[CONF_API_TOKEN],
+        session=async_create_clientsession(
+            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+        ),
+        request_timeout=30,
+        max_retries=API_MAX_RETRIES,
+    )
+
+    slow_coordinator = PortainerSlowCoordinator(hass, entry, slow_client, coordinator)
+    coordinator.slow_coordinator = slow_coordinator
+
+    def _slow_data_updated() -> None:
+        """Push slow data into the main coordinator."""
+        coordinator.async_set_updated_data(
+            {
+                endpoint_id: replace(
+                    data, docker_system_df=slow_coordinator.data.get(endpoint_id)
+                )
+                for endpoint_id, data in coordinator.data.items()
+            }
+        )
+
+    entry.async_on_unload(slow_coordinator.async_add_listener(_slow_data_updated))
+
+    async def _defer_slow_coordinator_refresh(_: Event) -> None:
+        """Defer the first refresh of the slow coordinator until Home Assistant has started."""
+        # It interlinks with the main coordinator, so a refresh is sufficient
+        hass.async_create_task(
+            slow_coordinator.async_refresh(),
+            "portainer_slow_initial_refresh",
+            eager_start=True,
+        )
+
+    # On lower-end hardware, the DF endpoint can take long
+    # Do not block the setup, but defer the first refresh until HA  is fully started
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_START, _defer_slow_coordinator_refresh
+    )
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
