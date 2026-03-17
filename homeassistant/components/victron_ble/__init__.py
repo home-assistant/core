@@ -31,12 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     key = entry.data[CONF_ACCESS_TOKEN]
     data = VictronBluetoothDeviceData(key)
     consecutive_failures = 0
-    reauth_triggered = False
 
     def _update(
         service_info: BluetoothServiceInfoBleak,
     ) -> SensorUpdate:
-        nonlocal consecutive_failures, reauth_triggered
+        nonlocal consecutive_failures
         update = data.update(service_info)
 
         # If the device type was recognized (devices dict populated) but
@@ -44,17 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Unsupported devices have an empty devices dict and won't trigger this.
         if update.devices and len(update.entity_values) <= 1:
             consecutive_failures += 1
-            if consecutive_failures >= REAUTH_AFTER_FAILURES and not reauth_triggered:
+            if consecutive_failures >= REAUTH_AFTER_FAILURES:
                 _LOGGER.debug(
                     "Triggering reauth for %s after %d consecutive failures",
                     address,
                     consecutive_failures,
                 )
                 entry.async_start_reauth(hass)
-                reauth_triggered = True
         else:
             consecutive_failures = 0
-            reauth_triggered = False
 
         return update
 

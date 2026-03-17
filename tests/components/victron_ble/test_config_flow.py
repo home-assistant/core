@@ -191,11 +191,20 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
 
 async def test_async_step_reauth_valid_key(
     hass: HomeAssistant,
-    mock_config_entry_added_to_hass: MockConfigEntry,
     mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Test reauth flow with a valid new key."""
-    result = await mock_config_entry_added_to_hass.start_reauth_flow(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: VICTRON_VEBUS_SERVICE_INFO.address,
+            CONF_ACCESS_TOKEN: VICTRON_TEST_WRONG_TOKEN,
+        },
+        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -205,9 +214,7 @@ async def test_async_step_reauth_valid_key(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert (
-        mock_config_entry_added_to_hass.data[CONF_ACCESS_TOKEN] == VICTRON_VEBUS_TOKEN
-    )
+    assert entry.data[CONF_ACCESS_TOKEN] == VICTRON_VEBUS_TOKEN
 
 
 async def test_async_step_reauth_invalid_key(
