@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, TypedDict, cast
@@ -290,31 +291,33 @@ class TibberPriceCoordinator(DataUpdateCoordinator[dict[str, TibberHomeData]]):
         tibber_connection = await self.config_entry.runtime_data.async_get_client(
             self.hass
         )
+        active_homes = list(tibber_connection.get_homes(only_active=True))
         try:
-            await tibber_connection.fetch_consumption_data_active_homes()
-            await tibber_connection.fetch_production_data_active_homes()
+            await asyncio.gather(
+                tibber_connection.fetch_consumption_data_active_homes(),
+                tibber_connection.fetch_production_data_active_homes(),
+            )
+
             now = dt_util.now()
-            for home in tibber_connection.get_homes(only_active=True):
-                update_needed = False
-                last_data_timestamp = home.last_data_timestamp
+            homes_to_update = [
+                home
+                for home in active_homes
+                if (
+                    (last_data_timestamp := home.last_data_timestamp) is None
+                    or (last_data_timestamp - now).total_seconds() < 11 * 3600
+                )
+            ]
 
-                if last_data_timestamp is None:
-                    update_needed = True
-                else:
-                    remaining_seconds = (last_data_timestamp - now).total_seconds()
-                    if remaining_seconds < 11 * 3600:
-                        update_needed = True
-
-                if update_needed:
-                    await home.update_info_and_price_info()
+            if homes_to_update:
+                await asyncio.gather(
+                    *(home.update_info_and_price_info() for home in homes_to_update)
+                )
         except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
         except tibber.FatalHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
 
-        result: dict[str, TibberHomeData] = {}
-        for home in tibber_connection.get_homes(only_active=True):
-            result[home.home_id] = _build_home_data(home)
+        result = {home.home_id: _build_home_data(home) for home in active_homes}
 
         self.update_interval = timedelta(seconds=self._seconds_until_next_15_minute())
         return result

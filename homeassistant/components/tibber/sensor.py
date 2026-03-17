@@ -753,7 +753,7 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
-        self._attr_available = False
+        self._attr_native_unit_of_measurement = tibber_home.price_unit
         self._attr_extra_state_attributes = {
             "app_nickname": None,
             "grid_company": None,
@@ -775,17 +775,22 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        data = self.coordinator.data
-        if not data:
-            self._attr_available = False
+        if not self.coordinator.data:
+            self._attr_native_value = None
+            self.async_write_ha_state()
             return
 
-        home_data = data.get(self._tibber_home.home_id)
-        if home_data is None:
-            self._attr_available = False
+        if (
+            home_data := self.coordinator.data.get(self._tibber_home.home_id)
+        ) is None or (current_price := home_data.get("current_price")) is None:
+            self._attr_native_value = None
+            self.async_write_ha_state()
             return
 
-        self._attr_native_value = home_data.get("current_price")
+        self._attr_native_unit_of_measurement = home_data.get(
+            "price_unit", self._tibber_home.price_unit
+        )
+        self._attr_native_value = current_price
         self._attr_extra_state_attributes["intraday_price_ranking"] = home_data.get(
             "intraday_price_ranking"
         )
@@ -800,7 +805,6 @@ class TibberSensorElPrice(TibberSensor, CoordinatorEntity[TibberPriceCoordinator
         self._attr_extra_state_attributes["estimated_annual_consumption"] = home_data[
             "estimated_annual_consumption"
         ]
-        self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
 
