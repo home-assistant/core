@@ -15,6 +15,7 @@ import re
 from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
 
+from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import (
     Label,
     Select,
@@ -686,6 +687,9 @@ def _get_first_id_stmt(start: datetime) -> StatementLambdaElement:
     return lambda_stmt(lambda: select(StatisticsRuns.run_id).filter_by(start=start))
 
 
+_custom_equivalent_units_schema = TypeAdapter(dict[str, dict[str, str]])
+
+
 def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str]]:
     """Check whether any integration supplies custom equivalent units for its entities."""
     custom_equivalent_units_per_entity: dict[str, dict[str, str]] = {}
@@ -714,13 +718,16 @@ def _get_custom_equivalent_units(hass: HomeAssistant) -> dict[str, dict[str, str
             continue
 
         try:
-            custom_equivalent_units_per_entity |= platform_custom_equivalent_units
-        except Exception as exc:  # noqa: BLE001
+            validated_data = _custom_equivalent_units_schema.validate_python(
+                platform_custom_equivalent_units, strict=True
+            )
+            custom_equivalent_units_per_entity |= validated_data
+        except ValidationError as ve:
             _LOGGER.warning(
                 "Error processing result of %s for recorder platform domain %s: %s",
                 INTEGRATION_PLATFORM_CUSTOM_EQUIVALENT_UNITS,
                 domain,
-                exc,
+                ve,
             )
 
     return custom_equivalent_units_per_entity

@@ -4044,25 +4044,10 @@ async def test_recorder_platforms_with_custom_equivalent_units(
     assert recorder_platform_two.async_custom_equivalent_units.call_count == 3
 
 
-@pytest.mark.parametrize(
-    ("invalid_custom_equivalent_units", "expected_warning"),
-    [
-        (
-            None,  # raises an exception in our mock function
-            "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error",
-        ),
-        (
-            123,
-            "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one: 'int' object is not iterable",
-        ),
-    ],
-)
 async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exception(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
-    invalid_custom_equivalent_units: Any,
-    expected_warning: str,
 ) -> None:
     """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
     recorder_data = hass.data["recorder"]
@@ -4071,12 +4056,7 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
-    # First: test async_custom_equivalent_units raises an exception directly
-    # Second: test async_custom_equivalent_units returns an invalid type
-    # which triggers an exception when combining dicts - see below
     def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
-        if invalid_custom_equivalent_units:
-            return invalid_custom_equivalent_units
         raise Exception("test error")  # noqa: TRY002
 
     recorder_platform_one = Mock(
@@ -4133,7 +4113,100 @@ async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exce
     recorder_platform_one.async_custom_equivalent_units.assert_called_once()
     recorder_platform_two.async_custom_equivalent_units.assert_called_once()
 
-    assert expected_warning in caplog.text
+    assert (
+        "Error calling async_custom_equivalent_units for recorder platform domain some_domain_one: test error"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_custom_equivalent_units",
+    [
+        None,
+        {},
+        123,
+        {"invalid": "dict"},
+        {2: "dict"},
+        {"invalid": {"dict": 3}},
+        {"invalid": {"dict": b"four"}},
+        {"invalid": {"dict": {"five": "5"}}},
+    ],
+)
+async def test_recorder_platforms_with_custom_equivalent_units_continues_on_invalid_types(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    invalid_custom_equivalent_units: Any,
+) -> None:
+    """Test recorder platforms providing custom equivalent units are skipped if they raise an exception."""
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_custom_equivalent_units_one(*args: Any) -> dict[str, dict[str, str]]:
+        return invalid_custom_equivalent_units
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        "sensor.test_sensor_3": {"custom_unitC": "unitC"},
+    }
+
+    def _mock_custom_equivalent_units_two(*args: Any) -> dict[str, dict[str, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    if invalid_custom_equivalent_units:
+        assert (
+            "Error processing result of async_custom_equivalent_units for recorder platform domain some_domain_one"
+            in caplog.text
+        )
 
 
 @pytest.mark.parametrize(
