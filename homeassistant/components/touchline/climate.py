@@ -83,7 +83,7 @@ async def async_setup_platform(
     the import flow will attempt to import it and create a config entry.
     """
     _LOGGER.warning(
-        "Loading touchline via platform config is deprecated; The configuration"
+        "Loading touchline via platform config is deprecated; the configuration"
         " has been migrated to a config entry and can be safely removed"
     )
     if not hass.config_entries.async_entries(DOMAIN):
