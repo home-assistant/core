@@ -1,7 +1,13 @@
 """Provides triggers for counters."""
 
-from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM
+from homeassistant.const import (
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
     EntityTriggerBase,
@@ -14,12 +20,12 @@ from . import CONF_INITIAL, DOMAIN
 class CounterDecrementedTrigger(EntityTriggerBase):
     """Trigger for when a counter is decremented."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
-        if not super().is_valid_transition(from_state, to_state):
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
         return int(from_state.state) > int(to_state.state)
 
@@ -35,12 +41,12 @@ class CounterDecrementedTrigger(EntityTriggerBase):
 class CounterIncrementedTrigger(EntityTriggerBase):
     """Trigger for when a counter is incremented."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = ENTITY_STATE_TRIGGER_SCHEMA
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state is valid and the state has changed."""
-        if not super().is_valid_transition(from_state, to_state):
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return False
         return int(from_state.state) < int(to_state.state)
 
@@ -56,7 +62,13 @@ class CounterIncrementedTrigger(EntityTriggerBase):
 class CounterMaxReachedTrigger(EntityTriggerBase):
     """Trigger for when a counter reaches its maximum value."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -68,7 +80,13 @@ class CounterMaxReachedTrigger(EntityTriggerBase):
 class CounterMinReachedTrigger(EntityTriggerBase):
     """Trigger for when a counter reaches its minimum value."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
@@ -80,7 +98,13 @@ class CounterMinReachedTrigger(EntityTriggerBase):
 class CounterResetTrigger(EntityTriggerBase):
     """Trigger for reset of counter entities."""
 
-    _domains = {DOMAIN}
+    _domain_specs = {DOMAIN: DomainSpec()}
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+        return from_state.state != to_state.state
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state(s)."""
