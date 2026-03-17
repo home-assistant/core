@@ -179,24 +179,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except ClientConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Connection error connecting to Splunk at {host}:{port}: {err}"
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+            translation_placeholders={
+                "host": host,
+                "port": str(port),
+                "error": str(err),
+            },
         ) from err
     except TimeoutError as err:
         raise ConfigEntryNotReady(
-            f"Timeout connecting to Splunk at {host}:{port}"
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+            translation_placeholders={"host": host, "port": str(port)},
         ) from err
     except Exception as err:
         _LOGGER.exception("Unexpected error setting up Splunk")
         raise ConfigEntryNotReady(
-            f"Unexpected error connecting to Splunk: {err}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_error",
+            translation_placeholders={
+                "host": host,
+                "port": str(port),
+                "error": str(err),
+            },
         ) from err
 
     if not connectivity_ok:
         raise ConfigEntryNotReady(
-            f"Unable to connect to Splunk instance at {host}:{port}"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host, "port": str(port)},
         )
     if not token_ok:
-        raise ConfigEntryAuthFailed("Invalid Splunk token - please reauthenticate")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        )
 
     # Send startup event
     payload: dict[str, Any] = {

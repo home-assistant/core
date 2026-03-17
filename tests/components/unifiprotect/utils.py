@@ -244,6 +244,8 @@ async def adopt_devices(
 
         devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
         devices[ufp_device.id] = ufp_device
+        # Add to id_lookup so get_device_from_id works
+        add_device_ref(ufp.api.bootstrap, ufp_device)
 
         mock_msg = Mock()
         mock_msg.changed_data = {}

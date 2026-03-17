@@ -22,7 +22,6 @@ from .const import (
     DOMAIN,
     FEED_IN_CHANNEL,
     GENERAL_CHANNEL,
-    SERVICE_GET_FORECASTS,
 )
 from .coordinator import AmberConfigEntry
 from .helpers import format_cents_to_dollars, normalize_descriptor
@@ -101,7 +100,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_GET_FORECASTS,
+        "get_forecasts",
         handle_get_forecasts,
         GET_FORECASTS_SCHEMA,
         supports_response=SupportsResponse.ONLY,

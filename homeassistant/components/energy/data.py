@@ -173,6 +173,9 @@ class GasSourceType(TypedDict):
 
     stat_energy_from: str
 
+    # Instantaneous flow rate: m³/h, L/min, etc.
+    stat_rate: NotRequired[str]
+
     # statistic_id of costs ($) incurred from the gas meter
     # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
@@ -189,6 +192,9 @@ class WaterSourceType(TypedDict):
     type: Literal["water"]
 
     stat_energy_from: str
+
+    # Instantaneous flow rate: L/min, gal/min, m³/h, etc.
+    stat_rate: NotRequired[str]
 
     # statistic_id of costs ($) incurred from the water meter
     # If set to None and entity_energy_price or number_energy_price are configured,
@@ -440,6 +446,7 @@ GAS_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "gas",
         vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("stat_cost"): vol.Any(str, None),
         # entity_energy_from was removed in HA Core 2022.10
         vol.Remove("entity_energy_from"): vol.Any(str, None),
@@ -451,6 +458,7 @@ WATER_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "water",
         vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("stat_cost"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),

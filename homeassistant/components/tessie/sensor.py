@@ -34,7 +34,12 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TessieConfigEntry
-from .const import ENERGY_HISTORY_FIELDS, TessieChargeStates, TessieWallConnectorStates
+from .const import (
+    ENERGY_HISTORY_FIELDS,
+    TessieChargePortLatchStates,
+    TessieChargeStates,
+    TessieWallConnectorStates,
+)
 from .entity import (
     TessieBatteryEntity,
     TessieEnergyEntity,
@@ -144,6 +149,19 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_charge_port_latch",
+        options=list(TessieChargePortLatchStates.values()),
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda value: TessieChargePortLatchStates[cast(str, value)],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     TessieSensorEntityDescription(
         key="drive_state_speed",
@@ -280,14 +298,6 @@ BATTERY_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
-    ),
-    TessieSensorEntityDescription(
-        key="energy_remaining",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY_STORAGE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
         key="lifetime_energy_used",

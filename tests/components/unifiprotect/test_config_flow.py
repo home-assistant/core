@@ -524,6 +524,10 @@ async def test_form_reauth_auth(
             return_value=True,
         ) as mock_setup,
         patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
             return_value=None,
         ),
@@ -1917,9 +1921,15 @@ async def test_reauth_empty_credentials_keeps_existing(
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
-    with patch(
-        "homeassistant.components.unifiprotect.async_setup",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         # Submit with empty credentials - should keep existing
         result = await hass.config_entries.flow.async_configure(
@@ -2003,9 +2013,15 @@ async def test_reauth_credential_update(
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
-    with patch(
-        "homeassistant.components.unifiprotect.async_setup",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

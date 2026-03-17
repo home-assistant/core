@@ -15,6 +15,7 @@ from homeassistant.helpers.selector import ConfigEntrySelector
 from .const import ATTR_CONFIG_ENTRY, ATTR_TXT, DOMAIN, SERVICE_SET_TXT
 from .coordinator import DuckDnsConfigEntry
 from .helpers import update_duckdns
+from .issue import action_called_without_config_entry
 
 SERVICE_TXT_SCHEMA = vol.Schema(
     {
@@ -42,6 +43,7 @@ def get_config_entry(
     """Return config entry or raise if not found or not loaded."""
 
     if entry_id is None:
+        action_called_without_config_entry(hass)
         if len(entries := hass.config_entries.async_entries(DOMAIN)) != 1:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

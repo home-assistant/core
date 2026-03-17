@@ -798,6 +798,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
             self.async_start_reauth(hass)
         except ConfigEntryNotReady as exc:
             message = str(exc)
@@ -815,13 +816,14 @@ class ConfigEntry[_DataT = Any]:
             )
             self._tries += 1
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            _LOGGER.debug(
+            _LOGGER.info(
                 "Config entry '%s' for %s integration not %s; Retrying in %d seconds",
                 self.title,
                 self.domain,
                 ready_message,
                 wait_time,
             )
+            _LOGGER.debug("Full exception", exc_info=True)
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -2243,9 +2245,10 @@ class ConfigEntries:
         self._entries = entries
         self.async_update_issues()
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
-        )
+        if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+            )
 
     async def _async_scan_orphan_ignored_entries(
         self, event: Event[NoEventData]

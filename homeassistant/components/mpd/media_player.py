@@ -95,6 +95,7 @@ class MpdDevice(MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_volume_step = 0.05
 
     def __init__(
         self,
@@ -409,24 +410,6 @@ class MpdDevice(MediaPlayerEntity):
         async with self.connection():
             if "volume" in self._status:
                 await self._client.setvol(int(volume * 100))
-
-    async def async_volume_up(self) -> None:
-        """Service to send the MPD the command for volume up."""
-        async with self.connection():
-            if "volume" in self._status:
-                current_volume = int(self._status["volume"])
-
-                if current_volume <= 100:
-                    self._client.setvol(current_volume + 5)
-
-    async def async_volume_down(self) -> None:
-        """Service to send the MPD the command for volume down."""
-        async with self.connection():
-            if "volume" in self._status:
-                current_volume = int(self._status["volume"])
-
-                if current_volume >= 0:
-                    await self._client.setvol(current_volume - 5)
 
     async def async_media_play(self) -> None:
         """Service to send the MPD the command for play/pause."""

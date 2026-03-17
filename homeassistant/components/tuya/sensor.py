@@ -4,6 +4,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeTypeInformationWrapper,
+    DPCodeWrapper,
+)
+from tuya_device_handlers.device_wrapper.sensor import (
+    DeltaIntegerWrapper,
+    ElectricityCurrentJsonWrapper,
+    ElectricityCurrentRawWrapper,
+    ElectricityPowerJsonWrapper,
+    ElectricityPowerRawWrapper,
+    ElectricityVoltageJsonWrapper,
+    ElectricityVoltageRawWrapper,
+    WindDirectionEnumWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import (
@@ -38,138 +56,10 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeDeltaIntegerWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
-    DPCodeRawWrapper,
-    DPCodeTypeInformationWrapper,
-    DPCodeWrapper,
-)
-from .raw_data_models import ElectricityData
-from .type_information import EnumTypeInformation, IntegerTypeInformation
 
-
-class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
-    """Custom DPCode Wrapper for converting enum to wind direction."""
-
-    _DPTYPE = EnumTypeInformation
-
-    _WIND_DIRECTIONS = {
-        "north": 0.0,
-        "north_north_east": 22.5,
-        "north_east": 45.0,
-        "east_north_east": 67.5,
-        "east": 90.0,
-        "east_south_east": 112.5,
-        "south_east": 135.0,
-        "south_south_east": 157.5,
-        "south": 180.0,
-        "south_south_west": 202.5,
-        "south_west": 225.0,
-        "west_south_west": 247.5,
-        "west": 270.0,
-        "west_north_west": 292.5,
-        "north_west": 315.0,
-        "north_north_west": 337.5,
-    }
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := device.status.get(self.dpcode)) in self.type_information.range:
-            return self._WIND_DIRECTIONS.get(raw_value)
-        return None
-
-
-class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
-    """Custom DPCode Wrapper for extracting electricity current from JSON."""
-
-    native_unit = UnitOfElectricCurrent.AMPERE
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (status := super().read_device_status(device)) is None:
-            return None
-        return status.get("electricCurrent")
-
-
-class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
-    """Custom DPCode Wrapper for extracting electricity power from JSON."""
-
-    native_unit = UnitOfPower.KILO_WATT
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (status := super().read_device_status(device)) is None:
-            return None
-        return status.get("power")
-
-
-class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
-    """Custom DPCode Wrapper for extracting electricity voltage from JSON."""
-
-    native_unit = UnitOfElectricPotential.VOLT
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (status := super().read_device_status(device)) is None:
-            return None
-        return status.get("voltage")
-
-
-class _RawElectricityDataWrapper(DPCodeRawWrapper):
-    """Custom DPCode Wrapper for extracting ElectricityData from base64."""
-
-    def _convert(self, value: ElectricityData) -> float:
-        """Extract specific value from T."""
-        raise NotImplementedError
-
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_device_status(device)) is None or (
-            value := ElectricityData.from_bytes(raw_value)
-        ) is None:
-            return None
-        return self._convert(value)
-
-
-class _RawElectricityCurrentWrapper(_RawElectricityDataWrapper):
-    """Custom DPCode Wrapper for extracting electricity current from base64."""
-
-    native_unit = UnitOfElectricCurrent.MILLIAMPERE
-    suggested_unit = UnitOfElectricCurrent.AMPERE
-
-    def _convert(self, value: ElectricityData) -> float:
-        """Extract specific value from ElectricityData."""
-        return value.current
-
-
-class _RawElectricityPowerWrapper(_RawElectricityDataWrapper):
-    """Custom DPCode Wrapper for extracting electricity power from base64."""
-
-    native_unit = UnitOfPower.WATT
-    suggested_unit = UnitOfPower.KILO_WATT
-
-    def _convert(self, value: ElectricityData) -> float:
-        """Extract specific value from ElectricityData."""
-        return value.power
-
-
-class _RawElectricityVoltageWrapper(_RawElectricityDataWrapper):
-    """Custom DPCode Wrapper for extracting electricity voltage from base64."""
-
-    native_unit = UnitOfElectricPotential.VOLT
-
-    def _convert(self, value: ElectricityData) -> float:
-        """Extract specific value from ElectricityData."""
-        return value.voltage
-
-
-CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
-POWER_WRAPPER = (_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper)
-VOLTAGE_WRAPPER = (_RawElectricityVoltageWrapper, _JsonElectricityVoltageWrapper)
+CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
+POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
+VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
 
 
 @dataclass(frozen=True)
@@ -1070,7 +960,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="wind_direction",
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=(_WindDirectionWrapper,),
+            wrapper_class=(WindDirectionEnumWrapper,),
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DEW_POINT_TEMP,
@@ -1744,7 +1634,7 @@ def _get_dpcode_wrapper(
     # Check for integer type first, using delta wrapper only for sum report_type
     if type_information := IntegerTypeInformation.find_dpcode(device, dpcode):
         if type_information.report_type == "sum":
-            return DPCodeDeltaIntegerWrapper(type_information.dpcode, type_information)
+            return DeltaIntegerWrapper(type_information.dpcode, type_information)
         return DPCodeIntegerWrapper(type_information.dpcode, type_information)
 
     return DPCodeEnumWrapper.find_dpcode(device, dpcode)
@@ -1802,8 +1692,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
-        if description.state_class is None:
-            self._attr_state_class = dpcode_wrapper.state_class
+        if (
+            description.state_class is None
+            # For integer type DPs with "sum" report type, we can assume it's a total
+            # increasing sensor
+            and isinstance(dpcode_wrapper, DeltaIntegerWrapper)
+        ):
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self._validate_device_class_unit()
 
@@ -1856,14 +1751,16 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
 
-    async def _handle_state_update(
+    async def _process_device_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str],
         dp_timestamps: dict[str, int] | None,
-    ) -> None:
-        """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
             self.device, updated_status_properties, dp_timestamps
-        ):
-            return
-        self.async_write_ha_state()
+        )

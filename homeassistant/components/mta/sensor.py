@@ -11,12 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LINE, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
+from .const import CONF_LINE, CONF_ROUTE, CONF_STOP_NAME, DOMAIN, SUBENTRY_TYPE_BUS
 from .coordinator import MTAArrival, MTAConfigEntry, MTADataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -97,16 +98,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MTA sensor based on a config entry."""
-    coordinator = entry.runtime_data
-
-    async_add_entities(
-        MTASensor(coordinator, entry, description)
-        for description in SENSOR_DESCRIPTIONS
-    )
+    for subentry_id, coordinator in entry.runtime_data.items():
+        subentry = entry.subentries[subentry_id]
+        async_add_entities(
+            (
+                MTASensor(coordinator, subentry, description)
+                for description in SENSOR_DESCRIPTIONS
+            ),
+            config_subentry_id=subentry_id,
+        )
 
 
 class MTASensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
-    """Sensor for MTA train arrivals."""
+    """Sensor for MTA transit arrivals."""
 
     _attr_has_entity_name = True
     entity_description: MTASensorEntityDescription
@@ -114,24 +118,32 @@ class MTASensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: MTADataUpdateCoordinator,
-        entry: MTAConfigEntry,
+        subentry: ConfigSubentry,
         description: MTASensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        line = entry.data[CONF_LINE]
-        stop_id = entry.data[CONF_STOP_ID]
-        stop_name = entry.data.get(CONF_STOP_NAME, stop_id)
 
-        self._attr_unique_id = f"{entry.unique_id}-{description.key}"
+        is_bus = subentry.subentry_type == SUBENTRY_TYPE_BUS
+        if is_bus:
+            route = subentry.data[CONF_ROUTE]
+            model = "Bus"
+        else:
+            route = subentry.data[CONF_LINE]
+            model = "Subway"
+
+        stop_name = subentry.data.get(CONF_STOP_NAME, subentry.subentry_id)
+
+        unique_id = subentry.unique_id or subentry.subentry_id
+        self._attr_unique_id = f"{unique_id}-{description.key}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=f"{line} Line - {stop_name} ({stop_id})",
+            identifiers={(DOMAIN, unique_id)},
+            name=f"{route} - {stop_name}",
             manufacturer="MTA",
-            model="Subway",
+            model=model,
             entry_type=DeviceEntryType.SERVICE,
         )
 

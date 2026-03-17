@@ -9,7 +9,7 @@ from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components.application_credentials import (
-    DOMAIN as APPLICATION_CREDENTIALS,
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -32,7 +32,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, APPLICATION_CREDENTIALS, {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -120,8 +120,16 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.thermostat_room_temperature_setpoint = 21
     mock_heat_pump_instance.cop = 4.5
     mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
-    mock_heat_pump_instance.energy_total = 12345
-    mock_heat_pump_instance.energy_output = 56789
+    mock_heat_pump_instance.energy_in_heating = 12345
+    mock_heat_pump_instance.energy_in_dhw = 6789
+    mock_heat_pump_instance.energy_in_defrost = 555
+    mock_heat_pump_instance.energy_in_cooling = 9000
+    mock_heat_pump_instance.energy_total = 28689
+    mock_heat_pump_instance.energy_out_heating = 10000
+    mock_heat_pump_instance.energy_out_dhw = 6677
+    mock_heat_pump_instance.energy_out_defrost = -1200
+    mock_heat_pump_instance.energy_out_cooling = -876
+    mock_heat_pump_instance.energy_output = 14601
     mock_heat_pump_instance.compressor_rpm = 4500
     mock_heat_pump_instance.compressor_percentage = 100
     mock_heat_pump_instance.dhw_flow_volume = 1.12

@@ -1,11 +1,18 @@
 """Define services for the Mastodon integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 from functools import partial
+from math import isfinite
 from typing import Any
 
 from mastodon import Mastodon
-from mastodon.Mastodon import Account, MastodonAPIError, MediaAttachment
+from mastodon.Mastodon import (
+    Account,
+    MastodonAPIError,
+    MastodonNotFoundError,
+    MediaAttachment,
+)
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -17,11 +24,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import service
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
+    ATTR_DURATION,
+    ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
@@ -33,6 +42,8 @@ from .const import (
 )
 from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
+
+MAX_DURATION_SECONDS = 315360000  # 10 years
 
 
 class StatusVisibility(StrEnum):
@@ -46,6 +57,27 @@ class StatusVisibility(StrEnum):
 
 SERVICE_GET_ACCOUNT = "get_account"
 SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_ACCOUNT_NAME): str,
+    }
+)
+SERVICE_MUTE_ACCOUNT = "mute_account"
+SERVICE_MUTE_ACCOUNT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_ACCOUNT_NAME): str,
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period,
+            vol.Range(
+                min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
+            ),
+        ),
+        vol.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
+    }
+)
+SERVICE_UNMUTE_ACCOUNT = "unmute_account"
+SERVICE_UNMUTE_ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required(ATTR_ACCOUNT_NAME): str,
@@ -78,8 +110,37 @@ def async_setup_services(hass: HomeAssistant) -> None:
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
+        DOMAIN,
+        SERVICE_MUTE_ACCOUNT,
+        _async_mute_account,
+        schema=SERVICE_MUTE_ACCOUNT_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNMUTE_ACCOUNT,
+        _async_unmute_account,
+        schema=SERVICE_UNMUTE_ACCOUNT_SCHEMA,
+    )
+    hass.services.async_register(
         DOMAIN, SERVICE_POST, _async_post, schema=SERVICE_POST_SCHEMA
     )
+
+
+async def _async_account_lookup(
+    hass: HomeAssistant, client: Mastodon, account_name: str
+) -> Account:
+    """Lookup a Mastodon account by its username."""
+    try:
+        account: Account = await hass.async_add_executor_job(
+            partial(client.account_lookup, acct=account_name)
+        )
+    except MastodonNotFoundError:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="account_not_found",
+            translation_placeholders={"account_name": account_name},
+        ) from None
+    return account
 
 
 async def _async_get_account(call: ServiceCall) -> ServiceResponse:
@@ -92,9 +153,7 @@ async def _async_get_account(call: ServiceCall) -> ServiceResponse:
     account_name: str = call.data[ATTR_ACCOUNT_NAME]
 
     try:
-        account: Account = await call.hass.async_add_executor_job(
-            partial(client.account_lookup, acct=account_name)
-        )
+        account = await _async_account_lookup(call.hass, client, account_name)
     except MastodonAPIError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -103,6 +162,72 @@ async def _async_get_account(call: ServiceCall) -> ServiceResponse:
         ) from err
 
     return {"account": account}
+
+
+async def _async_mute_account(call: ServiceCall) -> ServiceResponse:
+    """Mute account."""
+    entry: MastodonConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    client = entry.runtime_data.client
+
+    account_name: str = call.data[ATTR_ACCOUNT_NAME]
+    hide_notifications: bool = call.data[ATTR_HIDE_NOTIFICATIONS]
+    duration: int | None = None
+    if call.data.get(ATTR_DURATION) is not None:
+        td: timedelta = call.data[ATTR_DURATION]
+        duration_seconds = td.total_seconds()
+
+        if not isfinite(duration_seconds) or duration_seconds > MAX_DURATION_SECONDS:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="mute_duration_too_long",
+            )
+
+        duration = int(duration_seconds)
+
+    try:
+        account = await _async_account_lookup(call.hass, client, account_name)
+        await call.hass.async_add_executor_job(
+            partial(
+                client.account_mute,
+                id=account.id,
+                notifications=hide_notifications,
+                duration=duration,
+            )
+        )
+    except MastodonAPIError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_mute_account",
+            translation_placeholders={"account_name": account_name},
+        ) from err
+
+    return None
+
+
+async def _async_unmute_account(call: ServiceCall) -> ServiceResponse:
+    """Unmute account."""
+    entry: MastodonConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    client = entry.runtime_data.client
+
+    account_name: str = call.data[ATTR_ACCOUNT_NAME]
+
+    try:
+        account = await _async_account_lookup(call.hass, client, account_name)
+        await call.hass.async_add_executor_job(
+            partial(client.account_unmute, id=account.id)
+        )
+    except MastodonAPIError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_unmute_account",
+            translation_placeholders={"account_name": account_name},
+        ) from err
+
+    return None
 
 
 async def _async_post(call: ServiceCall) -> ServiceResponse:
