@@ -38,7 +38,9 @@
         'block_client': list([
           '00:00:00:00:00:00',
         ]),
-        'track_clients': True,
+        'client_source': list([
+          '00:00:00:00:00:00',
+        ]),
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,

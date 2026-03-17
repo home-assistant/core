@@ -74,8 +74,6 @@ CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UN
 @callback
 def async_block_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.config.option_supported_clients:
-        return True
     return obj_id in hub.config.option_block_clients
 
 

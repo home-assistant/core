@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_CLIENT_SOURCE,
     CONF_SITE_ID,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
@@ -63,25 +64,53 @@ async def test_setup_entry_fails_trigger_reauth_flow(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_migrate_legacy_entry_preserves_track_clients_default(
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
+async def test_migrate_legacy_entry_without_tracking_options_seeds_client_selection(
     hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
-    """Legacy entries keep tracking clients enabled after migration."""
+    """Legacy entries seed client selection when tracking was implicitly enabled."""
     config_entry = await config_entry_factory()
 
     assert config_entry.minor_version == 2
-    assert config_entry.options[CONF_TRACK_CLIENTS] is True
+    assert config_entry.options[CONF_CLIENT_SOURCE] == ["00:00:00:00:00:01"]
+    assert CONF_TRACK_CLIENTS not in config_entry.options
 
 
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            }
+        ]
+    ],
+)
 @pytest.mark.parametrize("config_entry_options", [{CONF_TRACK_CLIENTS: False}])
-async def test_migrate_legacy_entry_preserves_explicit_track_clients_false(
+async def test_migrate_legacy_entry_preserves_explicit_track_clients_false_as_empty_whitelist(
     hass: HomeAssistant, config_entry_factory: ConfigEntryFactoryType
 ) -> None:
-    """Legacy entries keep an explicit disabled client tracking option."""
+    """Legacy entries with tracking disabled migrate to an empty whitelist."""
     config_entry = await config_entry_factory()
 
     assert config_entry.minor_version == 2
-    assert config_entry.options[CONF_TRACK_CLIENTS] is False
+    assert config_entry.options[CONF_CLIENT_SOURCE] == []
+    assert CONF_TRACK_CLIENTS not in config_entry.options
 
 
 @pytest.mark.parametrize(
@@ -98,7 +127,7 @@ async def test_migrate_legacy_entry_preserves_explicit_track_clients_false(
         ]
     ],
 )
-async def test_new_entry_defaults_track_clients_off(
+async def test_new_entry_defaults_to_empty_client_selection(
     hass: HomeAssistant,
     config_entry_data: dict[str, Any],
     mock_requests,

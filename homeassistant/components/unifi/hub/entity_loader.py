@@ -124,7 +124,7 @@ class UnifiEntityLoader:
             if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id
         ]
         api = self.hub.api
-        for mac in config.option_supported_clients + config.option_block_clients + macs:
+        for mac in config.option_tracked_clients + config.option_block_clients + macs:
             if mac not in api.clients and mac in api.clients_all:
                 api.clients.process_raw([dict(api.clients_all[mac].raw)])
 

@@ -67,17 +67,19 @@ from .hub import UnifiHub
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.config.option_supported_clients:
-        return True
-    return hub.config.option_allow_bandwidth_sensors
+    return (
+        obj_id in hub.config.option_tracked_clients
+        and hub.config.option_allow_bandwidth_sensors
+    )
 
 
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.config.option_supported_clients:
-        return True
-    return hub.config.option_allow_uptime_sensors
+    return (
+        obj_id in hub.config.option_tracked_clients
+        and hub.config.option_allow_uptime_sensors
+    )
 
 
 @callback
@@ -108,7 +110,11 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
 def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is wired and allowed."""
     client = hub.api.clients[obj_id]
-    if not client.is_wired or client.wired_rate_mbps <= 0:
+    if (
+        obj_id not in hub.config.option_tracked_clients
+        or not client.is_wired
+        or client.wired_rate_mbps <= 0
+    ):
         return False
     return True
 
