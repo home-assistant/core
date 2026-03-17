@@ -1,5 +1,6 @@
 """The tests for the Demo valve platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -17,6 +18,7 @@ from homeassistant.components.valve import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -25,10 +27,11 @@ from tests.common import async_capture_events, async_fire_time_changed
 FRONT_GARDEN = "valve.front_garden"
 ORCHARD = "valve.orchard"
 BACK_GARDEN = "valve.back_garden"
+TREES = "valve.trees"
 
 
 @pytest.fixture
-async def valve_only() -> None:
+def valve_only() -> Generator[None]:
     """Enable only the valve platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -50,6 +53,7 @@ async def setup_comp(hass: HomeAssistant, valve_only: None):
 async def test_closing(hass: HomeAssistant) -> None:
     """Test the closing of a valve."""
     state = hass.states.get(FRONT_GARDEN)
+    assert state is not None
     assert state.state == ValveState.OPEN
     await hass.async_block_till_done()
 
@@ -63,9 +67,11 @@ async def test_closing(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == FRONT_GARDEN
+    assert state_changes[0].data["new_state"] is not None
     assert state_changes[0].data["new_state"].state == ValveState.CLOSING
 
     assert state_changes[1].data["entity_id"] == FRONT_GARDEN
+    assert state_changes[1].data["new_state"] is not None
     assert state_changes[1].data["new_state"].state == ValveState.CLOSED
 
 
@@ -73,6 +79,7 @@ async def test_closing(hass: HomeAssistant) -> None:
 async def test_opening(hass: HomeAssistant) -> None:
     """Test the opening of a valve."""
     state = hass.states.get(ORCHARD)
+    assert state is not None
     assert state.state == ValveState.CLOSED
     await hass.async_block_till_done()
 
@@ -83,15 +90,18 @@ async def test_opening(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert state_changes[0].data["entity_id"] == ORCHARD
+    assert state_changes[0].data["new_state"] is not None
     assert state_changes[0].data["new_state"].state == ValveState.OPENING
 
     assert state_changes[1].data["entity_id"] == ORCHARD
+    assert state_changes[1].data["new_state"] is not None
     assert state_changes[1].data["new_state"].state == ValveState.OPEN
 
 
 async def test_set_valve_position(hass: HomeAssistant) -> None:
     """Test moving the valve to a specific position."""
     state = hass.states.get(BACK_GARDEN)
+    assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 70
 
     # close to 10%
@@ -102,6 +112,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(BACK_GARDEN)
+    assert state is not None
     assert state.state == ValveState.CLOSING
 
     for _ in range(6):
@@ -110,6 +121,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(BACK_GARDEN)
+    assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 10
     assert state.state == ValveState.OPEN
 
@@ -121,6 +133,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(BACK_GARDEN)
+    assert state is not None
     assert state.state == ValveState.OPENING
 
     for _ in range(7):
@@ -129,6 +142,7 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get(BACK_GARDEN)
+    assert state is not None
     assert state.attributes[ATTR_CURRENT_POSITION] == 80
     assert state.state == ValveState.OPEN
 
@@ -143,3 +157,16 @@ async def test_set_valve_position(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(state_changes) == 0
+
+
+async def test_valves_are_in_entity_registry(hass: HomeAssistant) -> None:
+    """Test demo valves create entity registry entries."""
+    entity_registry = er.async_get(hass)
+
+    back_garden = entity_registry.async_get(BACK_GARDEN)
+    trees = entity_registry.async_get(TREES)
+
+    assert back_garden is not None
+    assert back_garden.unique_id == "valve_3"
+    assert trees is not None
+    assert trees.unique_id == "valve_4"

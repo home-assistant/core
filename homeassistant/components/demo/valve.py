@@ -23,10 +23,10 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoValve("Front Garden", ValveState.OPEN),
-            DemoValve("Orchard", ValveState.CLOSED),
-            DemoValve("Back Garden", ValveState.CLOSED, position=70),
-            DemoValve("Trees", ValveState.CLOSED, position=30),
+            DemoValve("valve_1", "Front Garden", ValveState.OPEN),
+            DemoValve("valve_2", "Orchard", ValveState.CLOSED),
+            DemoValve("valve_3", "Back Garden", ValveState.CLOSED, position=70),
+            DemoValve("valve_4", "Trees", ValveState.CLOSED, position=30),
         ]
     )
 
@@ -38,12 +38,14 @@ class DemoValve(ValveEntity):
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         state: str,
         moveable: bool = True,
         position: int | None = None,
     ) -> None:
         """Initialize the valve."""
+        self._attr_unique_id = unique_id
         self._attr_name = name
         if moveable:
             self._attr_supported_features = (
