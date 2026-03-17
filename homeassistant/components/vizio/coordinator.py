@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import AppConfig
@@ -87,9 +87,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         model = await self.device.get_model_name(log_api_exception=False)
         version = await self.device.get_version(log_api_exception=False)
 
-        # Config flow always sets unique_id; guard is for type narrowing only
-        if not self.config_entry.unique_id:
-            return
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(

@@ -158,7 +158,9 @@ async def test_apps_coordinator_persists_until_last_tv_unloads(
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_update")
-async def test_device_registry_model_and_version(hass: HomeAssistant) -> None:
+async def test_device_registry_model_and_version(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that coordinator populates device registry with model and version."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
@@ -167,7 +169,6 @@ async def test_device_registry_model_and_version(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
     assert device is not None
     assert device.model == MODEL
@@ -176,7 +177,9 @@ async def test_device_registry_model_and_version(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
-async def test_device_registry_without_model_or_version(hass: HomeAssistant) -> None:
+async def test_device_registry_without_model_or_version(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test device registry when model and version are unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
@@ -185,24 +188,8 @@ async def test_device_registry_without_model_or_version(hass: HomeAssistant) -> 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, UNIQUE_ID)})
     assert device is not None
     assert device.model is None
     assert device.sw_version is None
     assert device.manufacturer == "VIZIO"
-
-
-@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_update")
-async def test_setup_without_unique_id(hass: HomeAssistant) -> None:
-    """Test setup succeeds without unique_id but skips device registry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=None
-    )
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
-    # No device should be created since there's no unique_id
-    assert not device_registry.devices
