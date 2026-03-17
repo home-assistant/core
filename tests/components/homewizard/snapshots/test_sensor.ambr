@@ -8007,8 +8007,11 @@
     'name': None,
     'object_id_base': 'Water usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Water usage',
     'platform': 'homewizard',
@@ -8023,6 +8026,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
@@ -11927,8 +11931,11 @@
     'name': None,
     'object_id_base': 'Water usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Water usage',
     'platform': 'homewizard',
@@ -11943,6 +11950,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
@@ -15408,8 +15416,11 @@
     'name': None,
     'object_id_base': 'Water usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Water usage',
     'platform': 'homewizard',
@@ -15424,6 +15435,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
@@ -17573,8 +17585,11 @@
     'name': None,
     'object_id_base': 'Water usage',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
     'original_icon': None,
     'original_name': 'Water usage',
     'platform': 'homewizard',
@@ -17589,6 +17604,7 @@
 # name: test_sensors[HWE-WTR-entity_ids4][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'volume_flow_rate',
       'friendly_name': 'Device Water usage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,

@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "closed": {
+      "trigger": "mdi:garage"
+    },
+    "opened": {
+      "trigger": "mdi:garage-open"
+    }
+  }
+}

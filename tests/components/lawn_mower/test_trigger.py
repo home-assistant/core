@@ -5,12 +5,13 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lawn_mower import LawnMowerActivity
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
+from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -32,19 +33,14 @@ async def target_lawn_mowers(hass: HomeAssistant) -> list[str]:
         "lawn_mower.errored",
         "lawn_mower.paused_mowing",
         "lawn_mower.started_mowing",
+        "lawn_mower.started_returning",
     ],
 )
 async def test_lawn_mower_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the lawn mower triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -74,6 +70,11 @@ async def test_lawn_mower_triggers_gated_by_labs_flag(
             trigger="lawn_mower.started_mowing",
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
         ),
     ],
 )
@@ -143,6 +144,11 @@ async def test_lawn_mower_state_trigger_behavior_any(
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
         ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
     ],
 )
 async def test_lawn_mower_state_trigger_behavior_first(
@@ -209,6 +215,11 @@ async def test_lawn_mower_state_trigger_behavior_first(
             trigger="lawn_mower.started_mowing",
             target_states=[LawnMowerActivity.MOWING],
             other_states=other_states(LawnMowerActivity.MOWING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.started_returning",
+            target_states=[LawnMowerActivity.RETURNING],
+            other_states=other_states(LawnMowerActivity.RETURNING),
         ),
     ],
 )

@@ -6,6 +6,12 @@
       }
     },
     "number": {
+      "audio_unmute": {
+        "default": "mdi:volume-high"
+      },
+      "earc_unmute": {
+        "default": "mdi:volume-high"
+      },
       "oled_fade": {
         "default": "mdi:cellphone-information"
       },

@@ -7,8 +7,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     HVACAction,
@@ -16,7 +14,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.climate.trigger import CONF_HVAC_MODE
 from homeassistant.const import (
-    ATTR_LABEL_ID,
     ATTR_TEMPERATURE,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
@@ -28,6 +25,7 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_gated_by_labs_flag,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
@@ -47,10 +45,6 @@ async def target_climates(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "climate.current_humidity_changed",
-        "climate.current_humidity_crossed_threshold",
-        "climate.current_temperature_changed",
-        "climate.current_temperature_crossed_threshold",
         "climate.hvac_mode_changed",
         "climate.target_humidity_changed",
         "climate.target_humidity_crossed_threshold",
@@ -65,13 +59,7 @@ async def test_climate_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
     """Test the climate triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
+    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -212,28 +200,10 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.current_humidity_changed", HVACMode.AUTO, ATTR_CURRENT_HUMIDITY
-        ),
-        *parametrize_numerical_attribute_changed_trigger_states(
-            "climate.current_temperature_changed",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
-        *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_humidity_changed", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_changed_trigger_states(
             "climate.target_temperature_changed", HVACMode.AUTO, ATTR_TEMPERATURE
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
@@ -381,16 +351,6 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
@@ -535,16 +495,6 @@ async def test_climate_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_humidity_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_HUMIDITY,
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "climate.current_temperature_crossed_threshold",
-            HVACMode.AUTO,
-            ATTR_CURRENT_TEMPERATURE,
-        ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
             "climate.target_humidity_crossed_threshold", HVACMode.AUTO, ATTR_HUMIDITY
         ),

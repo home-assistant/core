@@ -400,8 +400,8 @@ def _convert_content(
                 # If there is only one text block, simplify the content to a string
                 messages[-1]["content"] = messages[-1]["content"][0]["text"]
         else:
-            # Note: We don't pass SystemContent here as its passed to the API as the prompt
-            raise TypeError(f"Unexpected content type: {type(content)}")
+            # Note: We don't pass SystemContent here as it's passed to the API as the prompt
+            raise HomeAssistantError("Unexpected content type in chat log")
 
     return messages, container_id
 
@@ -442,8 +442,8 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
     Each message could contain multiple blocks of the same type.
     """
-    if stream is None:
-        raise TypeError("Expected a stream of messages")
+    if stream is None or not hasattr(stream, "__aiter__"):
+        raise HomeAssistantError("Expected a stream of messages")
 
     current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
     current_tool_args: str
@@ -456,8 +456,6 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
         LOGGER.debug("Received response: %s", response)
 
         if isinstance(response, RawMessageStartEvent):
-            if response.message.role != "assistant":
-                raise ValueError("Unexpected message role")
             input_usage = response.message.usage
             first_block = True
         elif isinstance(response, RawContentBlockStartEvent):
@@ -666,7 +664,7 @@ class AnthropicBaseLLMEntity(Entity):
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
-            raise TypeError("First message must be a system message")
+            raise HomeAssistantError("First message must be a system message")
 
         # System prompt with caching enabled
         system_prompt: list[TextBlockParam] = [

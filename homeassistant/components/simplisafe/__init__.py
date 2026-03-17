@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from datetime import timedelta
 from typing import Any, cast
 
 from simplipy import API
@@ -65,7 +64,7 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     ATTR_ALARM_DURATION,
@@ -86,6 +85,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .coordinator import SimpliSafeDataUpdateCoordinator
 from .typing import SystemType
 
 ATTR_CATEGORY = "category"
@@ -98,8 +98,6 @@ ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_TIMESTAMP = "timestamp"
-
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 WEBSOCKET_RECONNECT_RETRIES = 3
 WEBSOCKET_RETRY_DELAY = 2
@@ -428,7 +426,7 @@ class SimpliSafe:
         self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
-        self.coordinator: DataUpdateCoordinator[None] | None = None
+        self.coordinator: SimpliSafeDataUpdateCoordinator | None = None
 
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
@@ -588,13 +586,11 @@ class SimpliSafe:
                 LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
 
-        self.coordinator = DataUpdateCoordinator(
+        self.coordinator = SimpliSafeDataUpdateCoordinator(
             self._hass,
-            LOGGER,
+            self.entry,
             name=self.entry.title,
-            config_entry=self.entry,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-            update_method=self.async_update,
+            simplisafe=self,
         )
 
         @callback

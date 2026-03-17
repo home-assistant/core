@@ -40,7 +40,8 @@
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'friendly_name': 'Test Cover',
-      'lutron_integration_id': 'cover_id',
+      'is_closed': True,
+      'lutron_integration_id': 3,
       'supported_features': <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,

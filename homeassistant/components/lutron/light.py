@@ -45,12 +45,12 @@ async def async_setup_entry(
     )
 
 
-def to_lutron_level(level):
+def to_lutron_level(level: int) -> float:
     """Convert the given Home Assistant light level (0-255) to Lutron (0.0-100.0)."""
     return float((level * 100) / 255)
 
 
-def to_hass_level(level):
+def to_hass_level(level: float) -> int:
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 

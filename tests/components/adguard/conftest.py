@@ -1,6 +1,7 @@
 """Common fixtures for the adguard tests."""
 
-from unittest.mock import AsyncMock
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from adguardhome import AdGuardHome
 from adguardhome.filtering import AdGuardHomeFiltering
@@ -12,7 +13,7 @@ from adguardhome.stats import AdGuardHomeStats
 from adguardhome.update import AdGuardHomeAvailableUpdate, AdGuardHomeUpdate
 import pytest
 
-from homeassistant.components.adguard import DOMAIN
+from homeassistant.components.adguard import DOMAIN, PLATFORMS
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -20,7 +21,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -43,8 +46,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def mock_adguard() -> AsyncMock:
-    """Fixture for setting up the component."""
+def mock_adguard() -> Generator[AsyncMock]:
+    """Return a mocked AdGuard Home client."""
     adguard_mock = AsyncMock(spec=AdGuardHome)
     adguard_mock.filtering = AsyncMock(spec=AdGuardHomeFiltering)
     adguard_mock.parental = AsyncMock(spec=AdGuardHomeParental)
@@ -86,4 +89,31 @@ async def mock_adguard() -> AsyncMock:
         )
     )
 
-    return adguard_mock
+    with patch(
+        "homeassistant.components.adguard.AdGuardHome",
+        return_value=adguard_mock,
+    ):
+        yield adguard_mock
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return PLATFORMS
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_adguard: AsyncMock,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the AdGuard Home integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.adguard.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
