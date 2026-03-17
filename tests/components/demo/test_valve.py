@@ -25,7 +25,6 @@ from tests.common import MockConfigEntry, async_capture_events, async_fire_time_
 FRONT_GARDEN = "valve.front_garden"
 ORCHARD = "valve.orchard"
 BACK_GARDEN = "valve.back_garden"
-TREES = "valve.trees"
 
 
 @pytest.fixture
