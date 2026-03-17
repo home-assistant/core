@@ -615,19 +615,30 @@ async def test_agent_upload(
     """Test agent upload backup."""
     client = await hass_client()
     ws_client = await hass_ws_client(hass)
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    # First call: reader_writer gets backup details after receiving the file.
+    # Second call: agent's async_get_backup check raises not found so the
+    # agent proceeds with the upload instead of skipping it.
+    supervisor_client.backups.backup_info.side_effect = [
+        TEST_BACKUP_DETAILS,
+        SupervisorNotFoundError(),
+    ]
 
-    received_bytes = bytearray()
+    upload_call_bytes: list[bytearray] = []
 
     async def mock_upload(
         stream: AsyncIterator[bytes], *args: Any, **kwargs: Any
     ) -> str:
         """Mock upload that consumes the wrapped stream."""
+        received = bytearray()
         async for chunk in stream:
-            received_bytes.extend(chunk)
+            received.extend(chunk)
+        upload_call_bytes.append(received)
         return TEST_BACKUP_DETAILS.slug
 
     supervisor_client.backups.upload_backup.side_effect = mock_upload
+    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
+        iter((b"backup data",))
+    )
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await ws_client.receive_json()
@@ -643,9 +654,12 @@ async def test_agent_upload(
     await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert received_bytes == b"test"
+    # First upload call: reader_writer receives the raw upload stream.
+    assert upload_call_bytes[0] == b"test"
+    # Second upload call: agent uploads via stream_with_progress wrapper.
+    assert upload_call_bytes[1] == b"backup data"
     supervisor_client.backups.reload.assert_not_called()
-    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.download_backup.assert_called_once()
     supervisor_client.backups.remove_backup.assert_not_called()
 
     # Verify upload progress events were emitted
@@ -660,7 +674,12 @@ async def test_agent_upload(
         if event == {"manager_state": "idle"}:
             break
 
-    assert len(upload_progress_events) > 0
+    assert len(upload_progress_events) > 1
+    # Verify intermediate progress events (not just the final 100% event)
+    assert any(
+        event["uploaded_bytes"] < event["total_bytes"]
+        for event in upload_progress_events
+    )
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
