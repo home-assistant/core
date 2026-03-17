@@ -1110,44 +1110,82 @@ async def test_state_attr_translated(
     )
     assert result is None
 
-    def mock_get_cached_translations(
-        _hass: HomeAssistant,
-        _language: str,
-        category: str,
-        _integrations: Iterable[str] | None = None,
-    ):
-        if category == "entity":
-            return {
+
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "attribute",
+        "translations",
+        "expected_result",
+    ),
+    [
+        (
+            "climate.test_platform_5678",
+            "fan_mode",
+            {
                 "component.test_platform.entity.climate.my_climate.state_attributes.fan_mode.state.auto": "Platform Automatic",
-            }
-        if category == "entity_component":
-            return {
+            },
+            "Platform Automatic",
+        ),
+        (
+            "climate.living_room",
+            "fan_mode",
+            {
                 "component.climate.entity_component._.state_attributes.fan_mode.state.auto": "Automatic",
+            },
+            "Automatic",
+        ),
+        (
+            "climate.living_room",
+            "hvac_action",
+            {
                 "component.climate.entity_component._.state_attributes.hvac_action.state.heating": "Heating",
-            }
-        return {}
+            },
+            "Heating",
+        ),
+    ],
+)
+async def test_state_attr_translated_translation_lookups(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    attribute: str,
+    translations: dict[str, str],
+    expected_result: str,
+) -> None:
+    """Test state_attr_translated translation lookups."""
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        attributes={"fan_mode": "auto", "hvac_action": "heating"},
+    )
+
+    config_entry = MockConfigEntry(domain="climate")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "climate",
+        "test_platform",
+        "5678",
+        config_entry=config_entry,
+        translation_key="my_climate",
+    )
+    hass.states.async_set(
+        "climate.test_platform_5678",
+        "heat",
+        attributes={"fan_mode": "auto"},
+    )
 
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
-        side_effect=mock_get_cached_translations,
+        return_value=translations,
     ):
         result = render(
             hass,
-            '{{ state_attr_translated("climate.living_room", "fan_mode") }}',
+            f'{{{{ state_attr_translated("{entity_id}", "{attribute}") }}}}',
         )
-        assert result == "Automatic"
-
-        result = render(
-            hass,
-            '{{ state_attr_translated("climate.living_room", "hvac_action") }}',
-        )
-        assert result == "Heating"
-
-        result = render(
-            hass,
-            '{{ state_attr_translated("climate.test_platform_5678", "fan_mode") }}',
-        )
-        assert result == "Platform Automatic"
+        assert result == expected_result
 
 
 def test_has_value(hass: HomeAssistant) -> None:
