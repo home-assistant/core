@@ -8,6 +8,9 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -18,6 +21,27 @@
           "email": "The email of your Zinvolt account.",
           "password": "The password of your Zinvolt account."
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "on_grid": {
+        "name": "Grid connection"
+      }
+    },
+    "number": {
+      "lower_threshold": {
+        "name": "Minimum charge level"
+      },
+      "max_output": {
+        "name": "Maximum output"
+      },
+      "standby_time": {
+        "name": "Standby time"
+      },
+      "upper_threshold": {
+        "name": "Maximum charge level"
       }
     }
   },

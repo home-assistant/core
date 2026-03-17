@@ -33,6 +33,8 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
 )
 
 
