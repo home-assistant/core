@@ -137,7 +137,6 @@ async def async_setup_entry(
 class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
-    _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
@@ -345,7 +344,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     """General Representation of a Roborock vacuum."""
 
-    _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
@@ -491,7 +489,6 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
 class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     """Representation of a Roborock Q10 vacuum."""
 
-    _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
@@ -504,7 +501,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
-    coordinator: RoborockB01Q10UpdateCoordinator
+    _attr_fan_speed_list = list(Q10_FAN_SPEED_TO_LEVEL)
 
     def __init__(
         self,
@@ -524,11 +521,6 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01Q10, StateVacuumEntity):
         self.async_on_remove(
             self.coordinator.api.status.add_update_listener(self.async_write_ha_state)
         )
-
-    @property
-    def fan_speed_list(self) -> list[str]:
-        """Get the list of available fan speeds."""
-        return list(Q10_FAN_SPEED_TO_LEVEL)
 
     @property
     def activity(self) -> VacuumActivity | None:

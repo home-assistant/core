@@ -639,6 +639,9 @@
     "position_not_found": {
       "message": "Robot position not found"
     },
+    "request_fail": {
+      "message": "Failed to request data"
+    },
     "segment_id_parse_error": {
       "message": "Invalid segment ID format: {segment_id}"
     },
