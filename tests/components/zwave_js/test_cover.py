@@ -1697,7 +1697,8 @@ async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
     assert state.state == CoverState.CLOSED
 
     # Set cover to fully open position via an unsolicited device report.
-    # This mirrors the log sequence: currentValue 0 => 99
+    # while keeping targetValue unknown. This is the case when
+    # the device was never controlled.
     node.receive_event(
         Event(
             type="value updated",
@@ -1844,5 +1845,145 @@ async def test_multilevel_switch_cover_unsupervised_no_target_value_update(
     )
 
     # Cover must leave OPENING and report OPEN.
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPEN
+
+    # After controlling the device using set_value, targetValue gets populated
+    # in the Z-Wave JS value DB. Simulate a value updated event so the integration
+    # is in sync with Z-Wave JS.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 99,
+                    "prevValue": None,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    # Close cover again. The device will only send currentValue updates;
+    # targetValue stays stale at 99
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+    # Intermediate currentValue-only updates.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 50,
+                    "prevValue": 99,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSING
+
+    # Device reaches fully closed position (currentValue = 0).
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 0,
+                    "prevValue": 50,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    # Cover must be CLOSED, not stuck in CLOSING due to stale targetValue=99.
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.CLOSED
+
+    # Now test the reverse: open the cover while targetValue is stale at 0.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "targetValue",
+                    "newValue": 0,
+                    "prevValue": 99,
+                    "propertyName": "targetValue",
+                },
+            },
+        )
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
+        blocking=True,
+    )
+
+    state = hass.states.get(WINDOW_COVER_ENTITY)
+    assert state.state == CoverState.OPENING
+
+    # Device reaches fully open position, targetValue stays stale at 0.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Switch",
+                    "commandClass": 38,
+                    "endpoint": 0,
+                    "property": "currentValue",
+                    "newValue": 99,
+                    "prevValue": 0,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+
+    # Cover must be OPEN, not stuck in OPENING due to stale targetValue=0.
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state.state == CoverState.OPEN

@@ -159,13 +159,13 @@ class CoverPositionMixin(ZWaveBaseEntity, CoverEntity):
         if (current := self._current_position_value) is None or current.value is None:
             return
 
-        # Prefer the Z-Wave targetValue property when the device reports it.
-        # Legacy multilevel switches only report currentValue, so fall back to
-        # the target position we commanded when targetValue is not available.
+        # Prefer the target position we commanded, because legacy devices may
+        # leave a stale targetValue from a previous operation.  Fall back to
+        # the Z-Wave targetValue property only when no command is in flight.
         target_val = (
-            t.value
-            if (t := self._target_position_value) is not None and t.value is not None
-            else self._commanded_target_position
+            self._commanded_target_position
+            if self._commanded_target_position is not None
+            else (t.value if (t := self._target_position_value) is not None else None)
         )
 
         if target_val is not None and current.value == target_val:
