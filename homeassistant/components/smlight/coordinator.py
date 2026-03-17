@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import Any
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
@@ -13,7 +15,7 @@ from pysmlight.models import FirmwareList
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -120,6 +122,24 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     @abstractmethod
     async def _internal_update_data(self) -> _DataT:
         """Update coordinator data."""
+
+    async def async_execute_command(
+        self,
+        command: Callable[..., Coroutine[Any, Any, Any]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> Any:
+        """Execute an API command and handle connection errors."""
+        try:
+            return await command(*args, **kwargs)
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+        except SmlightConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_device",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
 
 class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
