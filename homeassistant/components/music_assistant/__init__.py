@@ -53,9 +53,6 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SWITCH,
-    Platform.TEXT,
 ]
 
 CONNECT_TIMEOUT = 10
