@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -12,6 +13,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomevoltConfigEntry, HomevoltDataUpdateCoordinator
 from .entity import HomevoltEntity, homevolt_exception_handler
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -106,6 +109,7 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
     """Representation of a Homevolt number entity."""
 
     entity_description: HomevoltNumberEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -113,10 +117,10 @@ class HomevoltNumberEntity(HomevoltEntity, NumberEntity):
         description: HomevoltNumberEntityDescription,
     ) -> None:
         """Initialize the number entity."""
+        super().__init__(coordinator, f"ems_{coordinator.data.unique_id}")
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.unique_id}_{description.key}"
-        device_id = coordinator.data.unique_id
-        super().__init__(coordinator, f"ems_{device_id}")
+        _LOGGER.error("Creating number entity with unique_id: %s", self._attr_unique_id)
 
     @property
     def native_value(self) -> float | None:
