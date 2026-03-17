@@ -27,10 +27,6 @@ CONF_MANUAL = "manual"
 # Options flow
 CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
-
-# Attributes
-ATTR_AVAILABLE = "available"
-
 # Status
 SUCCESS = ["ok"]
 
