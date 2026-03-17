@@ -675,11 +675,12 @@ async def test_agent_upload(
             break
 
     assert upload_progress_events
-    # Verify intermediate progress events (not just the final 100% event)
+    # Verify at least one event had uploaded_bytes less than total_bytes
     assert any(
         event["uploaded_bytes"] < event["total_bytes"]
         for event in upload_progress_events
     )
+    # Verify all events had uploaded_bytes less than or equal to total_bytes
     assert all(
         event["uploaded_bytes"] <= event["total_bytes"]
         for event in upload_progress_events
