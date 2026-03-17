@@ -8,6 +8,7 @@ import uuid
 import pytest
 
 from homeassistant.components.lovelace import dashboard, resources
+from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -276,6 +277,31 @@ async def test_storage_resources_import_invalid(
         "resources"
         in hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"]["config"]
     )
+
+
+async def test_storage_resources_loaded_on_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test resources are loaded eagerly during setup.
+
+    Custom integrations may call async_items() or async_create_item()
+    before the frontend triggers a resource listing. Without eager loading,
+    async_items() returns empty and async_create_item() overwrites existing
+    resources on disk.
+    """
+    resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
+    hass_storage[resources.RESOURCE_STORAGE_KEY] = {
+        "key": resources.RESOURCE_STORAGE_KEY,
+        "version": 1,
+        "data": {"items": resource_config},
+    }
+    assert await async_setup_component(hass, "lovelace", {})
+
+    # Resources should be available immediately without any websocket call
+    resource_collection = hass.data[LOVELACE_DATA].resources
+    assert resource_collection.loaded is True
+    assert resource_collection.async_items() == resource_config
 
 
 @pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])

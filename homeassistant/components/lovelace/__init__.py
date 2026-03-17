@@ -182,6 +182,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
 
+        await resource_collection.async_load()
+        resource_collection.loaded = True
+
         resources.ResourceStorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
