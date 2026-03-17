@@ -15,7 +15,7 @@ from . import init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "sensor.test_door_battery"
+ENTITY_ID = "sensor.test_door"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -49,7 +49,7 @@ async def test_sensor_unavailable(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    mock_aladdin_connect_api.update_door.side_effect = aiohttp.ClientError()
+    mock_aladdin_connect_api.get_doors.side_effect = aiohttp.ClientError()
     freezer.tick(15)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

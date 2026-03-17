@@ -170,14 +170,6 @@ async def test_dynamic_devices(
 
     existing_door = mock_aladdin_connect_api.get_doors.return_value[0]
     mock_aladdin_connect_api.get_doors.return_value = [existing_door, mock_door_2]
-    mock_aladdin_connect_api.get_door_status.side_effect = (
-        lambda device_id, door_number: (
-            "closed" if device_id == "test_device_id" else "open"
-        )
-    )
-    mock_aladdin_connect_api.get_battery_status.side_effect = (
-        lambda device_id, door_number: 100 if device_id == "test_device_id" else 80
-    )
 
     # Trigger coordinator refresh
     freezer.tick(15)

@@ -55,12 +55,6 @@ def mock_aladdin_connect_api() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.get_doors.return_value = [mock_door]
-        client.get_door_status.side_effect = lambda device_id, door_number: (
-            mock_door.status
-        )
-        client.get_battery_status.side_effect = lambda device_id, door_number: (
-            mock_door.battery_level
-        )
         yield client
 
 

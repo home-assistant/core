@@ -51,16 +51,4 @@ class AladdinConnectCoordinator(DataUpdateCoordinator[dict[str, GarageDoor]]):
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-        result: dict[str, GarageDoor] = {}
-        for door in doors:
-            try:
-                await self.client.update_door(door.device_id, door.door_number)
-            except aiohttp.ClientError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
-            door.status = self.client.get_door_status(door.device_id, door.door_number)
-            door.battery_level = self.client.get_battery_status(
-                door.device_id, door.door_number
-            )
-            result[door.unique_id] = door
-
-        return result
+        return {door.unique_id: door for door in doors}
