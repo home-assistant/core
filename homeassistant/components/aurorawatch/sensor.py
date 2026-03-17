@@ -28,7 +28,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the AuroraWatch sensor."""
-    coordinator = cast(AurowatchDataUpdateCoordinator, entry.runtime_data)
+    coordinator = cast(
+        AurowatchDataUpdateCoordinator,
+        hass.data[DOMAIN][entry.entry_id],
+    )
     async_add_entities(
         [
             AurowatchSensor(coordinator),
@@ -54,15 +57,13 @@ class AurowatchSensor(AurowatchEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if not self.coordinator.data:
-            return {}
-
+        data = self.coordinator.data or {}
         return {
-            ATTR_LAST_UPDATED: self.coordinator.data.get("last_updated"),
-            ATTR_PROJECT_ID: self.coordinator.data.get("project_id"),
-            ATTR_SITE_ID: self.coordinator.data.get("site_id"),
-            ATTR_SITE_URL: self.coordinator.data.get("site_url"),
-            ATTR_API_VERSION: self.coordinator.data.get("api_version"),
+            ATTR_LAST_UPDATED: data.get("last_updated"),
+            ATTR_PROJECT_ID: data.get("project_id"),
+            ATTR_SITE_ID: data.get("site_id"),
+            ATTR_SITE_URL: data.get("site_url"),
+            ATTR_API_VERSION: data.get("api_version"),
         }
 
 

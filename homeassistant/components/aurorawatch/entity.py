@@ -23,12 +23,22 @@ class AurowatchEntity(CoordinatorEntity[AurowatchDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
 
         self._attr_translation_key = translation_key
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{translation_key}"
-        )
+
+        # Try to obtain the config entry ID from the coordinator if available.
+        config_entry = getattr(coordinator, "config_entry", None)
+        entry_id = getattr(config_entry, "entry_id", None)
+
+        if entry_id is not None:
+            base_id = entry_id
+        else:
+            # Fallback base ID when the coordinator has no config_entry.
+            # This avoids AttributeError while still providing a stable ID.
+            base_id = translation_key
+
+        self._attr_unique_id = f"{base_id}_{translation_key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, base_id)},
             manufacturer="Lancaster University",
             model="AuroraWatch UK",
             name="AuroraWatch UK",

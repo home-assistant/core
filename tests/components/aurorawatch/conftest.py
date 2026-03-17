@@ -74,12 +74,20 @@ def mock_aiohttp_session() -> Generator[AsyncMock]:
         mock_activity_response.raise_for_status = Mock()
 
         # Mock session.get to return different responses based on URL
-        async def mock_get(url):
+        async def mock_get(url: str, *args, **kwargs):
+            """Return an async context manager yielding the appropriate response."""
             if "current-status.xml" in url:
-                return mock_status_response
-            if "sum-activity.xml" in url:
-                return mock_activity_response
-            return AsyncMock()
+                response = mock_status_response
+            elif "sum-activity.xml" in url:
+                response = mock_activity_response
+            else:
+                response = AsyncMock()
+
+            context_manager = AsyncMock()
+            context_manager.__aenter__.return_value = response
+            context_manager.__aexit__.return_value = AsyncMock(return_value=None)
+
+            return context_manager
 
         mock_session.get = mock_get
 

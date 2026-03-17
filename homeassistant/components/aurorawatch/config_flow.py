@@ -15,6 +15,7 @@ class AurowatchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AuroraWatch UK."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""

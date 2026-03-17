@@ -5,6 +5,7 @@ from defusedxml import ElementTree as ET
 from datetime import timedelta
 
 import asyncio
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,13 +18,18 @@ _LOGGER = logging.getLogger(__name__)
 class AurowatchDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching AuroraWatch data from API."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry | None = None,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name="AuroraWatch",
             update_interval=UPDATE_INTERVAL,
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self):
@@ -99,7 +105,7 @@ class AurowatchDataUpdateCoordinator(DataUpdateCoordinator):
                     "activity": activity_value,
                 }
 
-                _LOGGER.debug("Successfully fetched AuroraWatch data: %s", data)
+                _LOGGER.debug("Successfully fetched data: %s", data)
                 return data
 
             except (AttributeError, KeyError) as err:
@@ -107,5 +113,5 @@ class AurowatchDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(f"Failed to parse XML structure: {err}") from err
 
         except Exception as err:
-            _LOGGER.error("Error fetching AuroraWatch data: %s", err)
+            _LOGGER.error("Error fetching data: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
