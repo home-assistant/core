@@ -29,6 +29,8 @@ class PowerviewEntryData:
     shade_data: dict[str, BaseShade]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: PowerviewDeviceInfo
+    scene_to_shade_ids: dict[int, list[int]]
+    shade_to_scene_ids: dict[int, list[int]]
 
 
 @dataclass(slots=True)

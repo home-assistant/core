@@ -25,11 +25,13 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import STATE_ATTRIBUTE_ROOM_NAME
+from .const import DOMAIN, STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
 from .model import PowerviewConfigEntry, PowerviewDeviceInfo
@@ -114,6 +116,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         if self._shade.is_supported(MOTION_STOP):
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync: Callable[[], None] | None = None
+        self._scene_ids: list[int] = []
 
     @property
     def assumed_state(self) -> bool:
@@ -136,9 +139,23 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self._is_hard_wired
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
+        scene_entity_ids: list[str] = []
+        if self._scene_ids:
+            entity_registry = er.async_get(self.hass)
+            serial = self._device_info.serial_number
+            for scene_id in self._scene_ids:
+                entity_id = entity_registry.async_get_entity_id(
+                    Platform.SCENE, DOMAIN, f"{serial}_{scene_id}"
+                )
+                if entity_id:
+                    scene_entity_ids.append(entity_id)
+        return {
+            STATE_ATTRIBUTE_ROOM_NAME: self._room_name,
+            "scene_ids": self._scene_ids,
+            "scene_entity_ids": scene_entity_ids,
+        }
 
     @property
     def is_closed(self) -> bool:
@@ -294,6 +311,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
+        pv_entry = self.coordinator.config_entry.runtime_data
+        self._scene_ids = pv_entry.shade_to_scene_ids.get(self._shade.id, [])
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending refreshes."""

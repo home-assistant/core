@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from aiopvapi.resources.model import PowerviewData
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.rooms import Rooms
+from aiopvapi.scene_members import SceneMembers
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
@@ -91,6 +92,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
             f"Connection error to PowerView hub {hub_address}: {err}"
         ) from err
 
+    scene_member_data: PowerviewData | None = None
+    if hub.api_version == 2:
+        try:
+            scene_members = SceneMembers(pv_request)
+            scene_member_data = await scene_members.get_scene_members()
+        except HUB_EXCEPTIONS as err:
+            raise ConfigEntryNotReady(
+                f"Connection error to PowerView hub {hub_address}: {err}"
+            ) from err
+
+    scene_to_shade_ids: dict[int, list[int]] = {}
+    shade_to_scene_ids: dict[int, list[int]] = {}
+    if scene_member_data:
+        for member in scene_member_data.raw:
+            s_id = member["sceneId"]
+            sh_id = member["shadeId"]
+            scene_to_shade_ids.setdefault(s_id, []).append(sh_id)
+            shade_to_scene_ids.setdefault(sh_id, []).append(s_id)
+    elif hub.api_version >= 3:
+        # Gen3 embeds shadeIds directly in scene data; no separate API call needed
+        for scene in scene_data.processed.values():
+            for sh_id in scene.raw_data.get("shadeIds", []):
+                scene_to_shade_ids.setdefault(scene.id, []).append(sh_id)
+                shade_to_scene_ids.setdefault(sh_id, []).append(scene.id)
+
     if not device_info:
         raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
@@ -116,9 +142,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerviewConfigEntry) ->
         shade_data=shade_data.processed,
         coordinator=coordinator,
         device_info=device_info,
+        scene_to_shade_ids=scene_to_shade_ids,
+        shade_to_scene_ids=shade_to_scene_ids,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # All platforms (including scene) are now set up. Fire coordinator listeners so
+    # cover entities can resolve scene entity IDs from the now-populated entity registry.
+    coordinator.async_update_listeners()
 
     return True
 
