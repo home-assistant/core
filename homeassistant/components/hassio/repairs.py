@@ -65,11 +65,16 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     @property
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
-        placeholders = {}
-        if self.issue:
-            placeholders = EXTRA_PLACEHOLDERS.get(self.issue.key, {})
-            if self.issue.reference:
-                placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
+        if not self.issue:
+            return None
+
+        if self.issue.key in EXTRA_PLACEHOLDERS:
+            placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[self.issue.key].copy()
+        else:
+            placeholders = {}
+
+        if self.issue.reference:
+            placeholders |= {PLACEHOLDER_KEY_REFERENCE: self.issue.reference}
 
         return placeholders or None
 
