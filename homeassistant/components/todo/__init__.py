@@ -24,6 +24,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -240,7 +241,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
-    _update_listeners: list[Callable[[list[JsonValueType]], None]] | None = None
+    _update_listeners: list[Callable[[list[TodoItem]], None]] | None = None
 
     @property
     def state(self) -> int | None:
@@ -280,13 +281,28 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @callback
+    @deprecated_function("async_subscribe", breaks_in_ha_version="2026.10")
     def async_subscribe_updates(
         self, listener: Callable[[list[JsonValueType]], None]
     ) -> CALLBACK_TYPE:
         """Subscribe to To-do list item updates.
 
-        Called by websocket API.
+        Will be removed in Home Assistant Core 2026.10. async_subscribe should
+        be used instead.
         """
+
+        def wrapped_listener(items: list[TodoItem]) -> None:
+            """Wrap listener to convert To-do items to JSON-serializable format."""
+            listener([dataclasses.asdict(item) for item in items])
+
+        return self.async_subscribe(wrapped_listener)
+
+    @final
+    @callback
+    def async_subscribe(
+        self, listener: Callable[[list[TodoItem]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to To-do list item updates."""
         if self._update_listeners is None:
             self._update_listeners = []
         self._update_listeners.append(listener)
@@ -305,9 +321,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._update_listeners:
             return
 
-        todo_items: list[JsonValueType] = [
-            dataclasses.asdict(item) for item in self.todo_items or ()
-        ]
+        todo_items = self.todo_items or []
         for listener in self._update_listeners:
             listener(todo_items)
 
@@ -340,20 +354,18 @@ async def websocket_handle_subscribe_todo_items(
         return
 
     @callback
-    def todo_item_listener(todo_items: list[JsonValueType]) -> None:
+    def todo_item_listener(todo_items: list[TodoItem]) -> None:
         """Push updated To-do list items to websocket."""
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
-                    "items": todo_items,
+                    "items": [dataclasses.asdict(item) for item in todo_items],
                 },
             )
         )
 
-    connection.subscriptions[msg["id"]] = entity.async_subscribe_updates(
-        todo_item_listener
-    )
+    connection.subscriptions[msg["id"]] = entity.async_subscribe(todo_item_listener)
     connection.send_result(msg["id"])
 
     # Push an initial forecast update
