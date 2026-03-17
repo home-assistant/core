@@ -137,30 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         )
     )
 
-    # Register bus event callbacks (for automations)
-    @callback
-    def _fire_button_bus_event(event_type: str, event_data: dict[str, Any]) -> None:
-        """Fire a Home Assistant bus event for button events."""
-        device_id: str | None = None
-        device_registry = dr.async_get(hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, client.address)}
-        )
-        if device:
-            device_id = device.id
-        hass.bus.async_fire(
-            FLIC_BUTTON_EVENT,
-            {
-                "device_id": device_id,
-                "address": client.address,
-                "event_type": event_type,
-                **event_data,
-            },
-        )
-
-    entry.async_on_unload(client.register_button_event_callback(_fire_button_bus_event))
-    entry.async_on_unload(client.register_rotate_event_callback(_fire_button_bus_event))
-
     # Register state callback for device registry updates on connect
     @callback
     def _handle_state_change(state: FlicState) -> None:
@@ -193,8 +169,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
 
     entry.async_on_unload(client.register_state_callback(_handle_state_change))
 
-    # Forward entry setup to platforms
+    # Forward entry setup to platforms (creates device registry entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Look up device_id after platform setup so the device registry entry exists
+    device_id: str | None = None
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, client.address)})
+    if device:
+        device_id = device.id
+
+    # Register bus event callbacks (for automations)
+    @callback
+    def _fire_button_bus_event(event_type: str, event_data: dict[str, Any]) -> None:
+        """Fire a Home Assistant bus event for button events."""
+        hass.bus.async_fire(
+            FLIC_BUTTON_EVENT,
+            {
+                "device_id": device_id,
+                "address": client.address,
+                "event_type": event_type,
+                **event_data,
+            },
+        )
+
+    entry.async_on_unload(client.register_button_event_callback(_fire_button_bus_event))
+    entry.async_on_unload(client.register_rotate_event_callback(_fire_button_bus_event))
 
     # Register device name listener to push HA renames to the physical device
     unsub = _register_device_name_listener(hass, entry, client)
