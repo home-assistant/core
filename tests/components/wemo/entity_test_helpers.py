@@ -146,11 +146,6 @@ async def test_avaliable_after_update(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
-    # _wemo_call_wrapper schedules async_update_listeners via hass.add_job
-    # from the executor thread, which goes through two levels of call_soon
-    # before the entity state is written.
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     assert hass.states.get(wemo_entity.entity_id).state == STATE_UNAVAILABLE
 
