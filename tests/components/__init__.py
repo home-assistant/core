@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -391,7 +391,7 @@ def parametrize_trigger_states(
                     "attributes": additional_attributes,
                 },
                 "excluded": {
-                    "state": state,
+                    "state": state if additional_attributes else None,
                     "attributes": {},
                 },
                 "count": count,
@@ -402,7 +402,7 @@ def parametrize_trigger_states(
                 "attributes": state[1] | additional_attributes,
             },
             "excluded": {
-                "state": state[0],
+                "state": state[0] if additional_attributes else None,
                 "attributes": state[1],
             },
             "count": count,
@@ -862,3 +862,48 @@ async def assert_trigger_gated_by_labs_flag(
         "feature to be enabled in Home Assistant Labs settings (feature flag: "
         "'new_triggers_conditions')"
     ) in caplog.text
+
+
+async def assert_trigger_behavior_any(
+    hass: HomeAssistant,
+    *,
+    service_calls: list[ServiceCall],
+    target_entities: dict[str, list[str]],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
+) -> None:
+    """Test trigger fires in mode any."""
+    other_entity_ids = set(target_entities["included"]) - {entity_id}
+    excluded_entity_ids = set(target_entities["excluded"]) - {entity_id}
+
+    for eid in target_entities["included"]:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+    for eid in excluded_entity_ids:
+        set_or_remove_state(hass, eid, states[0]["excluded"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+
+    for state in states[1:]:
+        excluded_state = state["excluded"]
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        for excluded_entity_id in excluded_entity_ids:
+            set_or_remove_state(hass, excluded_entity_id, excluded_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()

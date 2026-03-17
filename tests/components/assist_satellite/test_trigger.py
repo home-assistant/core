@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
+    assert_trigger_behavior_any,
     assert_trigger_gated_by_labs_flag,
     other_states,
     parametrize_target_entities,
@@ -84,30 +85,17 @@ async def test_assist_satellite_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    other_entity_ids = set(target_assist_satellites["included"]) - {entity_id}
-
-    # Set all assist satellites, including the tested one, to the initial state
-    for eid in target_assist_satellites["included"]:
-        set_or_remove_state(hass, eid, states[0]["included"])
-        await hass.async_block_till_done()
-
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
-
-    for state in states[1:]:
-        included_state = state["included"]
-        set_or_remove_state(hass, entity_id, included_state)
-        await hass.async_block_till_done()
-        assert len(service_calls) == state["count"]
-        for service_call in service_calls:
-            assert service_call.data[CONF_ENTITY_ID] == entity_id
-        service_calls.clear()
-
-        # Check if changing other assist satellites also triggers
-        for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, included_state)
-            await hass.async_block_till_done()
-        assert len(service_calls) == (entities_in_target - 1) * state["count"]
-        service_calls.clear()
+    await assert_trigger_behavior_any(
+        hass,
+        service_calls=service_calls,
+        target_entities=target_assist_satellites,
+        trigger_target_config=trigger_target_config,
+        entity_id=entity_id,
+        entities_in_target=entities_in_target,
+        trigger=trigger,
+        trigger_options=trigger_options,
+        states=states,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
