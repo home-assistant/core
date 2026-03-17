@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_AVAILABLE, DOMAIN
+from .const import DOMAIN
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -185,11 +185,3 @@ class XiaomiGatewayDevice(
             sw_version=self._sub_device.firmware_version,
             hw_version=self._sub_device.zigbee_model,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if self.coordinator.data is None:
-            return False
-
-        return self.coordinator.data[ATTR_AVAILABLE]
