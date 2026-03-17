@@ -47,12 +47,14 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
+    session = async_create_clientsession(
+        hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+    )
+
     client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
-        session=async_create_clientsession(
-            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
-        ),
+        session=session,
         request_timeout=10,
         max_retries=API_MAX_RETRIES,
     )
@@ -63,9 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     slow_client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
-        session=async_create_clientsession(
-            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
-        ),
+        session=session,
         request_timeout=30,
         max_retries=API_MAX_RETRIES,
     )
