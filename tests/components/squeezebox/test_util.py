@@ -31,15 +31,9 @@ async def test_safe_library_call_raises_error() -> None:
     assert exc.value.translation_key == "error_key"
 
     none_method = MagicMock(return_value=None)
-    none_method = MagicMock(return_value=None)
     with pytest.raises(HomeAssistantError) as exc_none:
         await safe_library_call(none_method, translation_key="error_key_none")
 
-    assert exc_none.value.translation_key == "error_key_none"
-
-
-    with pytest.raises(HomeAssistantError) as exc_none:
-        await safe_library_call(none_method, translation_key="error_key_none")
     assert exc_none.value.translation_key == "error_key_none"
 
 
