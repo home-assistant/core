@@ -30,6 +30,11 @@ async def test_safe_library_call_raises_error() -> None:
 
     assert exc.value.translation_key == "error_key"
 
+    none_method = MagicMock(return_value=None)
+    with pytest.raises(HomeAssistantError) as exc_none:
+        await safe_library_call(none_method, translation_key="error_key_none")
+    assert exc_none.value.translation_key == "error_key_none"
+
 
 async def test_safe_library_call_value_error() -> None:
     """Test that ValueError is caught and wraps into HomeAssistantError."""
