@@ -29,6 +29,6 @@ async def async_get_config_entry_diagnostics(
                 },
                 "data": asdict(coordinator.data),
             }
-            for device_id, coordinator in entry.runtime_data.items()
+            for device_id, coordinator in entry.runtime_data.coordinators.items()
         },
     }

@@ -1,5 +1,9 @@
 """Fixtures for aladdin_connect tests."""
 
+from collections.abc import Generator
+from time import time
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.aladdin_connect import DOMAIN
@@ -27,6 +31,42 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_aladdin_connect_api() -> Generator[AsyncMock]:
+    """Mock the AladdinConnectClient."""
+    mock_door = AsyncMock()
+    mock_door.device_id = "test_device_id"
+    mock_door.door_number = 1
+    mock_door.name = "Test Door"
+    mock_door.status = "closed"
+    mock_door.link_status = "connected"
+    mock_door.battery_level = 100
+    mock_door.unique_id = f"{mock_door.device_id}-{mock_door.door_number}"
+
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.AladdinConnectClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.aladdin_connect.config_flow.AladdinConnectClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.get_doors.return_value = [mock_door]
+        yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> AsyncMock:
+    """Fixture to mock setup entry."""
+    with patch(
+        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Define a mock config entry fixture."""
@@ -41,7 +81,7 @@ def mock_config_entry() -> MockConfigEntry:
                 "access_token": "old-token",
                 "refresh_token": "old-refresh-token",
                 "expires_in": 3600,
-                "expires_at": 1234567890,
+                "expires_at": time() + 3600,
             },
         },
         source="user",

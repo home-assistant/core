@@ -72,7 +72,7 @@ class FitbitApi(ABC):
         configuration = Configuration()
         configuration.pool_manager = async_get_clientsession(self._hass)
         configuration.access_token = token[CONF_ACCESS_TOKEN]
-        return ApiClient(configuration)
+        return await self._hass.async_add_executor_job(ApiClient, configuration)
 
     async def async_get_user_profile(self) -> FitbitProfile:
         """Return the user profile from the API."""

@@ -4,19 +4,13 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.humidifier.const import (
-    ATTR_ACTION,
-    ATTR_CURRENT_HUMIDITY,
-    HumidifierAction,
-)
+from homeassistant.components.humidifier.const import ATTR_ACTION, HumidifierAction
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
     TriggerStateDescription,
     arm_trigger,
-    parametrize_numerical_attribute_changed_trigger_states,
-    parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
     parametrize_trigger_states,
     set_or_remove_state,
@@ -33,8 +27,6 @@ async def target_humidifiers(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        "humidifier.current_humidity_changed",
-        "humidifier.current_humidity_crossed_threshold",
         "humidifier.started_drying",
         "humidifier.started_humidifying",
         "humidifier.turned_off",
@@ -120,14 +112,6 @@ async def test_humidifier_state_trigger_behavior_any(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_numerical_attribute_changed_trigger_states(
-            "humidifier.current_humidity_changed", STATE_ON, ATTR_CURRENT_HUMIDITY
-        ),
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold",
-            STATE_ON,
-            ATTR_CURRENT_HUMIDITY,
-        ),
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
@@ -243,11 +227,6 @@ async def test_humidifier_state_trigger_behavior_first(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold",
-            STATE_ON,
-            ATTR_CURRENT_HUMIDITY,
-        ),
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],
@@ -363,11 +342,6 @@ async def test_humidifier_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
-        *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "humidifier.current_humidity_crossed_threshold",
-            STATE_ON,
-            ATTR_CURRENT_HUMIDITY,
-        ),
         *parametrize_trigger_states(
             trigger="humidifier.started_drying",
             target_states=[(STATE_ON, {ATTR_ACTION: HumidifierAction.DRYING})],

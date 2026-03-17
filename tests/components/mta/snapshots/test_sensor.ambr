@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival-entry]
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,451 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival',
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next arrival',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_arrival',
+    'unique_id': 'bus_M15_400561-next_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:05:00+00:00',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_destination-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_destination',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next arrival destination',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next arrival destination',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_arrival_destination',
+    'unique_id': 'bus_M15_400561-next_arrival_destination',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_destination-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival destination',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_destination',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'South Ferry',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_route-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_route',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Next arrival route',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Next arrival route',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_arrival_route',
+    'unique_id': 'bus_M15_400561-next_arrival_route',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_route-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival route',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_route',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'M15',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second arrival',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Second arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'second_arrival',
+    'unique_id': 'bus_M15_400561-second_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:12:00+00:00',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_destination-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_destination',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second arrival destination',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second arrival destination',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'second_arrival_destination',
+    'unique_id': 'bus_M15_400561-second_arrival_destination',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_destination-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival destination',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_destination',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'South Ferry',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_route-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_route',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Second arrival route',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Second arrival route',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'second_arrival_route',
+    'unique_id': 'bus_M15_400561-second_arrival_route',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_route-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival route',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_route',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'M15',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Third arrival',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Third arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'third_arrival',
+    'unique_id': 'bus_M15_400561-third_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:20:00+00:00',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_destination-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_destination',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Third arrival destination',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Third arrival destination',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'third_arrival_destination',
+    'unique_id': 'bus_M15_400561-third_arrival_destination',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_destination-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival destination',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_destination',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'South Ferry',
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_route-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_route',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Third arrival route',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Third arrival route',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'third_arrival_route',
+    'unique_id': 'bus_M15_400561-third_arrival_route',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_route-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival route',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_route',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'M15',
+  })
+# ---
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,21 +479,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Next arrival',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-10-21T00:05:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_destination-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_destination',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -85,20 +529,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_destination-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Next arrival destination',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival destination',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_destination',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Van Cortlandt Park - 242 St',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_route-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_route-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -111,7 +555,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_route',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -134,20 +578,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_route-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Next arrival route',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival route',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_next_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_route',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -160,7 +604,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -183,21 +627,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Second arrival',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-10-21T00:10:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_destination-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -210,7 +654,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_destination',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -233,20 +677,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_destination-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Second arrival destination',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival destination',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_destination',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Van Cortlandt Park - 242 St',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_route-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_route-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -259,7 +703,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_route',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -282,20 +726,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_route-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Second arrival route',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival route',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_second_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_route',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -308,7 +752,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -331,21 +775,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Third arrival',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-10-21T00:15:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_destination-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -358,7 +802,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_destination',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -381,20 +825,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_destination-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Third arrival destination',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival destination',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_destination',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_destination',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Van Cortlandt Park - 242 St',
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_route-entry]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_route-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -407,7 +851,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_route',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -430,13 +874,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_route-state]
+# name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 Line - Times Sq - 42 St (N direction) (127N) Third arrival route',
+      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival route',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_127n_third_arrival_route',
+    'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_route',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
