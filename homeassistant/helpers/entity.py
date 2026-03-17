@@ -413,6 +413,7 @@ class CachedProperties(type):
             else:
 
                 def wrapped_annotate(format: Format) -> dict[str, Any]:
+                    # Note: to avoid complicating things, we only support FORWARDREF
                     return cls_annotations
 
                 cls.__annotate__ = wrapped_annotate
