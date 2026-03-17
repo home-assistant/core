@@ -7150,7 +7150,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'C30 (unsupported)',
+    'model': 'C30',
     'model_id': 'pkhw2vbphv4csrir',
     'name': 'C30',
     'name_by_user': None,
