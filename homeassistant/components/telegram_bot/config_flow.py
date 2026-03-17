@@ -613,7 +613,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "chat_not_found"
             except TelegramError as err:
                 errors["base"] = "telegram_error"
-                description_placeholders["error_message"] = str(err)
+                description_placeholders[ERROR_MESSAGE] = str(err)
 
             if not errors:
                 return self.async_create_entry(
