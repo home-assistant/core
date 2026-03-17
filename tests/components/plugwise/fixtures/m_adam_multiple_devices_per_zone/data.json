@@ -186,7 +186,7 @@
     "firmware": "2019-03-27T01:00:00+01:00",
     "hardware": "1",
     "location": "08963fec7c53423ca5680aa4cb502c63",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Thermostatic Radiator Badkamer 1",
     "sensors": {
@@ -327,7 +327,7 @@
     "firmware": "2019-03-27T01:00:00+01:00",
     "hardware": "1",
     "location": "12493538af164a409c6a1c79e38afe1c",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Bios Cv Thermostatic Radiator ",
     "sensors": {
@@ -352,7 +352,7 @@
     "firmware": "2019-03-27T01:00:00+01:00",
     "hardware": "1",
     "location": "c50f167537524366a5af7aa3942feb1e",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Floor kraan",
     "sensors": {
@@ -460,7 +460,7 @@
     "firmware": "2019-03-27T01:00:00+01:00",
     "hardware": "1",
     "location": "82fa13f017d240daa0d0ea1775420f24",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Thermostatic Radiator Jessie",
     "sensors": {
@@ -528,7 +528,7 @@
     "firmware": "2019-03-27T01:00:00+01:00",
     "hardware": "1",
     "location": "446ac08dd04d4eff8ac57489757b7314",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "CV Kraan Garage",
     "sensors": {

@@ -1,0 +1,12 @@
+{
+  "domain": "fish_audio",
+  "name": "Fish Audio",
+  "codeowners": ["@noambav"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fish_audio",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["fish_audio_sdk"],
+  "quality_scale": "bronze",
+  "requirements": ["fish-audio-sdk==1.1.0"]
+}

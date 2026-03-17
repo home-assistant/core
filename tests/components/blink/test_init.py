@@ -6,7 +6,8 @@ from aiohttp import ClientError
 from blinkpy.auth import LoginError
 import pytest
 
-from homeassistant.components.blink.const import DOMAIN, SERVICE_SAVE_VIDEO
+from homeassistant.components.blink.const import DOMAIN
+from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

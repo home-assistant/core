@@ -5,6 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 import json
 import logging
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -46,7 +47,7 @@ class FacebookNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.page_access_token = access_token
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send some message."""
         payload = {"access_token": self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
@@ -76,7 +77,7 @@ class FacebookNotificationService(BaseNotificationService):
                 "recipient": recipient,
                 "message": body_message,
                 "messaging_type": "MESSAGE_TAG",
-                "tag": "ACCOUNT_UPDATE",
+                "tag": "HUMAN_AGENT",
             }
             resp = requests.post(
                 BASE_URL,

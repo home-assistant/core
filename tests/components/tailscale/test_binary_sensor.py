@@ -6,12 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    STATE_UNKNOWN,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -46,21 +41,6 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_OFF
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Key expiry disabled"
-    )
-    assert ATTR_DEVICE_CLASS not in state.attributes
-
-    state = hass.states.get("binary_sensor.frencks_iphone_supports_hairpinning")
-    entry = entity_registry.async_get(
-        "binary_sensor.frencks_iphone_supports_hairpinning"
-    )
-    assert entry
-    assert state
-    assert entry.unique_id == "123456_client_supports_hair_pinning"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state == STATE_OFF
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "frencks-iphone Supports hairpinning"
     )
     assert ATTR_DEVICE_CLASS not in state.attributes
 
@@ -127,19 +107,3 @@ async def test_tailscale_binary_sensors(
         device_entry.configuration_url
         == "https://login.tailscale.com/admin/machines/100.11.11.111"
     )
-
-    # Check host without client connectivity attribute
-    state = hass.states.get("binary_sensor.host_no_connectivity_supports_hairpinning")
-    entry = entity_registry.async_get(
-        "binary_sensor.host_no_connectivity_supports_hairpinning"
-    )
-    assert entry
-    assert state
-    assert entry.unique_id == "123458_client_supports_hair_pinning"
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
-    assert state.state == STATE_UNKNOWN
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "host-no-connectivity Supports hairpinning"
-    )
-    assert ATTR_DEVICE_CLASS not in state.attributes

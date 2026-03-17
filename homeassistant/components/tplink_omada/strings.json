@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "device_mismatch": "Please ensure you reauthenticate the same controller.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
@@ -102,6 +103,10 @@
     "reconnect_client": {
       "description": "Tries to get wireless client to reconnect to Omada network.",
       "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
         "mac": {
           "description": "MAC address of the device.",
           "name": "MAC address"

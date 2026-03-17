@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -58,7 +59,7 @@ def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -111,11 +112,26 @@ async def programs_fixture(
     return load_json_value_fixture(load_programs_file, DOMAIN)
 
 
+@pytest.fixture(scope="package")
+def load_filling_levels_file() -> str:
+    """Fixture for loading filling levels file."""
+    return "filling_levels.json"
+
+
+@pytest.fixture
+async def filling_levels_fixture(
+    hass: HomeAssistant, load_filling_levels_file: str
+) -> JsonValueType:
+    """Fixture for filling levels."""
+    return load_json_value_fixture(load_filling_levels_file, DOMAIN)
+
+
 @pytest.fixture
 def mock_miele_client(
     device_fixture,
     action_fixture,
     programs_fixture,
+    filling_levels_fixture,
 ) -> Generator[MagicMock]:
     """Mock a Miele client."""
 
@@ -127,6 +143,7 @@ def mock_miele_client(
 
         client.get_devices.return_value = device_fixture
         client.get_actions.return_value = action_fixture
+        client.get_filling_levels.return_value = filling_levels_fixture
         client.get_programs.return_value = programs_fixture
         client.set_program.return_value = None
 

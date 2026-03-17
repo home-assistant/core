@@ -31,7 +31,8 @@ async def test_setup_success_no_region(hass: HomeAssistant) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    result = await async_setup_component(hass=hass, domain=DOMAIN, config={})
+    with patch("homeassistant.components.sharkiq.async_setup_entry", return_value=True):
+        result = await async_setup_component(hass=hass, domain=DOMAIN, config={})
 
     assert result is True
 

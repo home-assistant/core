@@ -2,74 +2,79 @@
 
 from datetime import timedelta
 
+from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import namecheapdns
+from homeassistant.components.namecheapdns.const import UPDATE_URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from .conftest import TEST_USER_INPUT
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HOST = "test"
-DOMAIN = "bla"
-PASSWORD = "abcdefgh"
 
-
-@pytest.fixture
-async def setup_namecheapdns(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.freeze_time
+async def test_setup(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Fixture that sets up NamecheapDNS."""
-    aioclient_mock.get(
-        namecheapdns.UPDATE_URL,
-        params={"host": HOST, "domain": DOMAIN, "password": PASSWORD},
-        text="<interface-response><ErrCount>0</ErrCount></interface-response>",
-    )
-
-    await async_setup_component(
-        hass,
-        namecheapdns.DOMAIN,
-        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
-    )
-
-
-async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     aioclient_mock.get(
-        namecheapdns.UPDATE_URL,
-        params={"host": HOST, "domain": DOMAIN, "password": PASSWORD},
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
         text="<interface-response><ErrCount>0</ErrCount></interface-response>",
     )
 
-    result = await async_setup_component(
-        hass,
-        namecheapdns.DOMAIN,
-        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
-    )
-    assert result
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
     assert aioclient_mock.call_count == 1
 
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 2
 
 
+@pytest.mark.freeze_time
 async def test_setup_fails_if_update_fails(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup fails if first update fails."""
     aioclient_mock.get(
-        namecheapdns.UPDATE_URL,
-        params={"host": HOST, "domain": DOMAIN, "password": PASSWORD},
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
         text="<interface-response><ErrCount>1</ErrCount></interface-response>",
     )
 
-    result = await async_setup_component(
-        hass,
-        namecheapdns.DOMAIN,
-        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    assert aioclient_mock.call_count == 1
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        UPDATE_URL,
+        params=TEST_USER_INPUT,
+        exc=ClientError,
     )
-    assert not result
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert aioclient_mock.call_count == 1

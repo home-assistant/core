@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
+    DEPRECATED_PACKAGES,
     RequirementsNotFound,
     _async_get_manager,
     async_clear_install_history,
@@ -657,3 +658,73 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
 
     assert len(mock_process.mock_calls) == 2  # dhcp does not depend on http
     assert mock_process.mock_calls[0][1][1] == dhcp.requirements
+
+
+@pytest.mark.parametrize(
+    ("requirement", "is_built_in", "deprecation_prefix", "deprecation_info"),
+    [
+        (
+            "hello",
+            True,
+            "Detected that integration",
+            "which is deprecated for testing. This will stop working in Home Assistant"
+            " 2020.12, please create a bug report at https://github.com/home-assistant/"
+            "core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "hello>=1.0.0",
+            False,
+            "Detected that custom integration",
+            "which is deprecated for testing. This will stop working in Home Assistant"
+            " 2020.12, please create a bug report at https://github.com/home-assistant/"
+            "core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "pyserial-asyncio",
+            False,
+            "Detected that custom integration",
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+            "label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "pyserial-asyncio>=0.6",
+            True,
+            "Detected that integration",
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+            "label%3A%22integration%3A+test_component%22",
+        ),
+    ],
+)
+async def test_install_deprecated_package(
+    hass: HomeAssistant,
+    requirement: str,
+    is_built_in: bool,
+    deprecation_prefix: str,
+    deprecation_info: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test installation of a deprecated package."""
+    with (
+        patch.dict(
+            DEPRECATED_PACKAGES, {"hello": ("is deprecated for testing", "2020.12")}
+        ),
+        patch("homeassistant.util.package.install_package", return_value=True),
+    ):
+        await async_process_requirements(
+            hass,
+            "test_component",
+            [
+                requirement,
+                "git+https://github.com/user/project.git@1.2.3",
+            ],
+            is_built_in,
+        )
+
+    assert (
+        f"{deprecation_prefix} 'test_component'"
+        f" has requirement '{requirement}' {deprecation_info}"
+    ) in caplog.text

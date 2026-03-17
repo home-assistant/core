@@ -22,6 +22,7 @@ from homeassistant.components.shelly.const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     DOMAIN,
+    MAX_PUSH_UPDATE_FAILURES,
     REST_SENSORS_UPDATE_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
 )
@@ -69,6 +70,16 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return entry
+
+
+async def mock_block_device_push_update_failure(
+    hass: HomeAssistant, mock_block_device: Mock
+) -> None:
+    """Create updates with COAP_REPLY indicating push update failure for block device."""
+    for _ in range(MAX_PUSH_UPDATE_FAILURES):
+        mock_block_device.mock_update_reply()
+        await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def mutate_rpc_device_status(

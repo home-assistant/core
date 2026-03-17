@@ -72,12 +72,6 @@
     }
   },
   "exceptions": {
-    "config_entry_not_found": {
-      "message": "Config entry not found. Please check that the config entry ID is correct."
-    },
-    "config_entry_not_loaded": {
-      "message": "Config entry is not loaded. Please ensure the Risco integration is set up correctly."
-    },
     "not_local_entry": {
       "message": "This service only works with local Risco connections."
     }

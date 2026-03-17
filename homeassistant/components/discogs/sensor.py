@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import random
+from typing import Any
 
 import discogs_client
 import voluptuous as vol
@@ -118,7 +119,7 @@ class DiscogsSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes of the sensor."""
         if self._attr_native_value is None or self._attrs is None:
             return None

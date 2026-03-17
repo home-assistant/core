@@ -21,6 +21,9 @@ class SampleRegistry(BaseRegistry):
         self._store = storage.Store(hass, 1, "test")
         self.save_calls = 0
 
+    async def _async_load(self) -> None:
+        """Load the registry."""
+
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of registry to save."""
         self.save_calls += 1

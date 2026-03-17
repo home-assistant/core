@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 import math
 from typing import Any
 
 from propcache.api import cached_property
 from xknx.devices import Fan as XknxFan
+from xknx.telegram.address import parse_device_group_address
 
 from homeassistant import config_entries
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
@@ -37,6 +40,58 @@ from .storage.const import (
 )
 from .storage.util import ConfigExtractor
 
+_LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_migrate_yaml_uids(
+    hass: HomeAssistant, platform_config: list[ConfigType]
+) -> None:
+    """Migrate entities unique_id for YAML switch-only fan entities."""
+    # issue was introduced in 2026.1 - this migration in 2026.2
+    ent_reg = er.async_get(hass)
+    invalid_uid = str(None)
+    if (
+        none_entity_id := ent_reg.async_get_entity_id(Platform.FAN, DOMAIN, invalid_uid)
+    ) is None:
+        return
+    for config in platform_config:
+        if not config.get(KNX_ADDRESS) and (
+            new_uid_base := config.get(FanSchema.CONF_SWITCH_ADDRESS)
+        ):
+            break
+    else:
+        _LOGGER.info(
+            "No YAML entry found to migrate fan entity '%s' unique_id from '%s'. Removing entry",
+            none_entity_id,
+            invalid_uid,
+        )
+        ent_reg.async_remove(none_entity_id)
+        return
+    new_uid = str(
+        parse_device_group_address(
+            new_uid_base[0],  # list of group addresses - first item is sending address
+        )
+    )
+    try:
+        ent_reg.async_update_entity(none_entity_id, new_unique_id=str(new_uid))
+        _LOGGER.info(
+            "Migrating fan entity '%s' unique_id from '%s' to %s",
+            none_entity_id,
+            invalid_uid,
+            new_uid,
+        )
+    except ValueError:
+        # New unique_id already exists - remove invalid entry. User might have changed YAML
+        _LOGGER.info(
+            "Failed to migrate fan entity '%s' unique_id from '%s' to '%s'. "
+            "Removing the invalid entry",
+            none_entity_id,
+            invalid_uid,
+            new_uid,
+        )
+        ent_reg.async_remove(none_entity_id)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,6 +112,7 @@ async def async_setup_entry(
 
     entities: list[_KnxFan] = []
     if yaml_platform_config := knx_module.config_yaml.get(Platform.FAN):
+        async_migrate_yaml_uids(hass, yaml_platform_config)
         entities.extend(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
@@ -177,7 +233,10 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
-        self._attr_unique_id = str(self._device.speed.group_address)
+        if self._device.speed.group_address:
+            self._attr_unique_id = str(self._device.speed.group_address)
+        else:
+            self._attr_unique_id = str(self._device.switch.group_address)
 
 
 class KnxUiFan(_KnxFan, KnxUiEntity):

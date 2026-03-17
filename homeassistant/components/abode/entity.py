@@ -7,7 +7,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import AbodeSystem
-from .const import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, DOMAIN_DATA
 
 
 class AbodeEntity(Entity):
@@ -29,7 +29,7 @@ class AbodeEntity(Entity):
             self._update_connection_status,
         )
 
-        self.hass.data[DOMAIN].entity_ids.add(self.entity_id)
+        self.hass.data[DOMAIN_DATA].entity_ids.add(self.entity_id)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from Abode connection status updates."""

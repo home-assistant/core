@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.pool_device_chlorine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_chlorine_dosing_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -74,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine dosing type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -108,8 +112,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_chlorine_peristaltic_dosing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine peristaltic dosing',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -170,8 +176,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_flow_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -189,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flow rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -223,8 +231,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -242,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -276,8 +286,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_calibration_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -295,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -329,8 +341,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_calibration_slope-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -348,6 +361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration slope',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -382,8 +396,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_calibration_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -407,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP calibration type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -442,8 +458,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_dosing_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -466,6 +483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP dosing type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -500,8 +518,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_overfeed_alert_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -519,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alert time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -553,8 +573,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_orp_peristaltic_dosing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -579,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP peristaltic dosing',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -615,8 +637,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -634,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -664,8 +688,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_calibration_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -683,6 +708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration offset',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -717,8 +743,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_calibration_slope-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -736,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration slope',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -770,8 +798,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_calibration_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -796,6 +825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH calibration type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -832,8 +862,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_dosing_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -856,6 +887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH dosing type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -890,8 +922,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_overfeed_alert_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -909,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alert time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -943,8 +977,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_ph_peristaltic_dosing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -968,6 +1003,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH peristaltic dosing',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1003,8 +1039,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1022,6 +1059,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1056,8 +1094,9 @@
 # ---
 # name: test_all_sensors[sensor.pool_device_totalizer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -1077,6 +1116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Totalizer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

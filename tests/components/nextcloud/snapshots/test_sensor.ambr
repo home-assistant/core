@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last 5 minutes',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,8 +54,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -73,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last day',
     'options': dict({
     }),
     'original_device_class': None,
@@ -103,8 +107,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -124,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of active users last hour',
     'options': dict({
     }),
     'original_device_class': None,
@@ -154,8 +160,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -175,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of files',
     'options': dict({
     }),
     'original_device_class': None,
@@ -205,8 +213,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -226,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of group shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -256,8 +266,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -277,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of link shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -307,8 +319,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -328,6 +341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of local storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -358,8 +372,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -379,6 +394,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of mail shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -409,8 +425,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -430,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of other storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -460,8 +478,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -481,6 +500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of passwordless link shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -511,8 +531,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -532,6 +553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of room shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -562,8 +584,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -583,6 +606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -613,8 +637,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -634,6 +659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares received',
     'options': dict({
     }),
     'original_device_class': None,
@@ -664,8 +690,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -685,6 +712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of shares sent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -715,8 +743,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -736,6 +765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages',
     'options': dict({
     }),
     'original_device_class': None,
@@ -766,8 +796,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -787,6 +818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of storages at home',
     'options': dict({
     }),
     'original_device_class': None,
@@ -817,8 +849,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -838,6 +871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user',
     'options': dict({
     }),
     'original_device_class': None,
@@ -868,8 +902,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -889,6 +924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amount of user shares',
     'options': dict({
     }),
     'original_device_class': None,
@@ -919,8 +955,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -940,6 +977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Apps installed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -970,8 +1008,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -991,6 +1030,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache expunges',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1021,8 +1061,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1040,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1069,8 +1111,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1088,6 +1131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache memory size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1125,8 +1169,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1146,6 +1191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of entries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1176,8 +1222,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1197,6 +1244,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of hits',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1227,8 +1275,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1248,6 +1297,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of inserts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1278,8 +1328,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1299,6 +1350,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1329,8 +1381,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1350,6 +1403,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache number of slots',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1380,8 +1434,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1399,6 +1454,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1429,8 +1485,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1448,6 +1505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cache TTL',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1477,8 +1535,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1496,6 +1555,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 15 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1529,8 +1589,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1548,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 1 minute',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1581,8 +1643,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1600,6 +1663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU load last 5 minutes',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1633,8 +1697,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1652,6 +1717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1689,8 +1755,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_type-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1708,6 +1775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1737,8 +1805,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1756,6 +1825,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Database version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1785,8 +1855,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1804,6 +1875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1841,8 +1913,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1860,6 +1933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1897,8 +1971,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1916,6 +1991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1953,8 +2029,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1972,6 +2049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2009,8 +2087,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2028,6 +2107,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2065,8 +2145,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2086,6 +2167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned number of strings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2116,8 +2198,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2135,6 +2218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Interned used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2172,8 +2256,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2191,6 +2276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2228,8 +2314,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2247,6 +2334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT buffer size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2284,8 +2372,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2303,6 +2392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT kind',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2332,8 +2422,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2351,6 +2442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt flags',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2380,8 +2472,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2399,6 +2492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'JIT opt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2428,8 +2522,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2449,6 +2544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist miss ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2480,8 +2576,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2501,6 +2598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache blacklist misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2531,8 +2629,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2552,6 +2651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached keys',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2582,8 +2682,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2603,6 +2704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache cached scripts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2633,8 +2735,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2652,6 +2755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache current wasted percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2685,8 +2789,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2704,6 +2809,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2741,8 +2847,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2762,6 +2869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hash restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2792,8 +2900,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2811,6 +2920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hit rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2844,8 +2954,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2865,6 +2976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache hits',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2895,8 +3007,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2914,6 +3027,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache last restart time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2944,8 +3058,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2965,6 +3080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache manual restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2995,8 +3111,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3016,6 +3133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache max cached keys',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3046,8 +3164,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3067,6 +3186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache misses',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3097,8 +3217,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3118,6 +3239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache out of memory restarts',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3148,8 +3270,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3167,6 +3290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3197,8 +3321,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3216,6 +3341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache used memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3253,8 +3379,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3272,6 +3399,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Opcache wasted memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3309,8 +3437,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3328,6 +3457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP max execution time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3362,8 +3492,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3381,6 +3512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3418,8 +3550,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3437,6 +3570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP upload maximum filesize',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3474,8 +3608,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3493,6 +3628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PHP version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3522,8 +3658,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3541,6 +3678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA available memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3578,8 +3716,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -3599,6 +3738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA number of segments',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3629,8 +3769,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3648,6 +3789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SMA segment size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3685,8 +3827,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3704,6 +3847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache distributed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3733,8 +3877,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3752,6 +3897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache local',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3781,8 +3927,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3800,6 +3947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System memcache locking',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3829,8 +3977,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3848,6 +3997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System theme',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3877,8 +4027,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3896,6 +4047,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'System version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3925,8 +4077,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3944,6 +4097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3981,8 +4135,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4000,6 +4155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total swap memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4037,8 +4193,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -4058,6 +4215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Updates available',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4088,8 +4246,9 @@
 # ---
 # name: test_async_setup_entry[sensor.my_nc_url_local_webserver-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4107,6 +4266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Webserver',
     'options': dict({
     }),
     'original_device_class': None,

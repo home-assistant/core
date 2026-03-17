@@ -588,6 +588,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_registry[7E.333333333333-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'onewire',
+        '7E.333333333333',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Embedded Data Systems',
+    'model': None,
+    'model_id': 'EDS0065',
+    'name': '7E.333333333333',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '333333333333',
+    'sw_version': '3.2',
+    'via_device_id': None,
+  })
+# ---
 # name: test_registry[A6.111111111111-entry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

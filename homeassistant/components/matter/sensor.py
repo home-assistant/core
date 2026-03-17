@@ -70,6 +70,16 @@ CONTAMINATION_STATE_MAP = {
     clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
+CONCENTRATION_LEVEL_MAP = {
+    # enum with known Concentration Level values which we can translate
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kUnknown: None,
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kLow: "low",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kMedium: "medium",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kHigh: "high",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kCritical: "critical",
+    clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Enums.LevelValueEnum.kUnknownEnumValue: None,
+}
+
 EVE_CLUSTER_WEATHER_MAP = {
     # enum with known Weather state values which we can translate
     1: "sunny",
@@ -442,6 +452,9 @@ DISCOVERY_SCHEMAS = [
             key="PowerSourceBatVoltage",
             translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            # Battery voltages are low-voltage diagnostics; use 2 decimals in volts
+            # to provide finer granularity than mains-level voltage sensors.
+            suggested_display_precision=2,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -627,6 +640,21 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="TotalVolatileOrganicCompoundsSensorLevel",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="tvoc_level",
+            options=[x for x in CONCENTRATION_LEVEL_MAP.values() if x is not None],
+            device_to_ha=CONCENTRATION_LEVEL_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Attributes.LevelValue,
+        ),
+        featuremap_contains=clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement.Bitmaps.Feature.kLevelIndication,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="PM1Sensor",
             native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             device_class=SensorDeviceClass.PM1,
@@ -694,8 +722,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="NitrogenDioxideSensor",
-            translation_key="nitrogen_dioxide",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -880,6 +908,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentPower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -896,6 +925,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactivePower,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -911,6 +941,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -928,6 +959,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSVoltage,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -945,6 +977,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ApparentCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -962,6 +995,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -979,6 +1013,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.ReactiveCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -996,6 +1031,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalPowerMeasurement.Attributes.RMSCurrent,
         ),
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1011,6 +1047,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
@@ -1030,6 +1067,7 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: x.energy,
         ),
         entity_class=MatterSensor,
+        allow_none_value=True,
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyExported,
         ),

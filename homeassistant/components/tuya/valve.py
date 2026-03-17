@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeBooleanWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.valve import (
@@ -17,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
 
 VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
     DeviceCategory.SFKZQ: (
@@ -122,7 +123,7 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ValveEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaValveEntity."""
         super().__init__(device, device_manager)
@@ -136,6 +137,20 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         if (is_open := self._read_wrapper(self._dpcode_wrapper)) is None:
             return None
         return not is_open
+
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        return not self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        )
 
     async def async_open_valve(self) -> None:
         """Open the valve."""

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine overfeed alarm lower limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -59,8 +61,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 10,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine overfeed alarm upper limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,8 +121,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_chlorine_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 65535,
@@ -141,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Chlorine target',
     'options': dict({
     }),
     'original_device_class': None,
@@ -175,8 +181,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alarm lower limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
@@ -234,8 +242,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 1000,
@@ -258,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP overfeed alarm upper limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
@@ -293,8 +303,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_orp_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 850,
@@ -317,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ORP target',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.VOLTAGE: 'voltage'>,
@@ -352,8 +364,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_lower_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 14,
@@ -376,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alarm lower limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,
@@ -410,8 +424,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_upper_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 14,
@@ -434,6 +449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH overfeed alarm upper limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,
@@ -468,8 +484,9 @@
 # ---
 # name: test_all_numbers[number.pool_device_ph_target-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 8,
@@ -492,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH target',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.PH: 'ph'>,

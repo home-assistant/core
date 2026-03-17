@@ -2,6 +2,10 @@
 
 from typing import Any
 
+from pymystrom.bulb import MyStromBulb
+from pymystrom.pir import MyStromPir
+from pymystrom.switch import MyStromSwitch
+
 
 def get_default_device_response(device_type: int | None) -> dict[str, Any]:
     """Return default device response."""
@@ -35,6 +39,14 @@ def get_default_bulb_state() -> dict[str, Any]:
         "ramp": 10,
         "power": 0.45,
         "fw_version": "2.58.0",
+    }
+
+
+def get_default_pir_state() -> dict[str, Any]:
+    """Get default pir state."""
+    return {
+        "temperature_compensated": 24.87,
+        "intensity": 16,
     }
 
 
@@ -73,6 +85,11 @@ class MyStromDeviceMock:
 
 class MyStromBulbMock(MyStromDeviceMock):
     """MyStrom Bulb mock."""
+
+    @property
+    def __class__(self):
+        """Mock the class type to pass type checks."""
+        return MyStromBulb
 
     def __init__(self, mac: str, state: dict[str, Any]) -> None:
         """Initialize bulb mock."""
@@ -129,8 +146,48 @@ class MyStromBulbMock(MyStromDeviceMock):
         return self._state["on"]
 
 
+class MyStromPirMock(MyStromDeviceMock):
+    """MyStrom PIR motion sensor mock."""
+
+    @property
+    def __class__(self):
+        """Mock the class type to pass type checks."""
+        return MyStromPir
+
+    @property
+    def temperature_compensated(self) -> float | None:
+        """Return current compensated temperature."""
+        if not self._requested_state:
+            return None
+        return self._state["temperature_compensated"]
+
+    @property
+    def intensity(self) -> int | None:
+        """Return the intensity reported by the light sensor."""
+        if not self._requested_state:
+            return None
+        return self._state["intensity"]
+
+    async def get_light(self):
+        """Get the state of the light sensor from the PIR."""
+        self._requested_state = True
+
+    async def get_motion(self):
+        """Get the state of the motion sensor from the PIR."""
+        self._requested_state = True
+
+    async def get_temperatures(self):
+        """Get the temperatures from the PIR."""
+        self._requested_state = True
+
+
 class MyStromSwitchMock(MyStromDeviceMock):
     """MyStrom Switch mock."""
+
+    @property
+    def __class__(self):
+        """Mock the class type to pass type checks."""
+        return MyStromSwitch
 
     @property
     def relay(self) -> bool | None:

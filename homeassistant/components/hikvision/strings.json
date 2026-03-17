@@ -1,10 +1,12 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
@@ -24,6 +26,72 @@
         },
         "description": "Enter your Hikvision device connection details.",
         "title": "Set up Hikvision device"
+      }
+    }
+  },
+  "device": {
+    "nvr_channel": {
+      "name": "{device_name} channel {channel_number}"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "attended_baggage": {
+        "name": "Attended baggage"
+      },
+      "bad_video": {
+        "name": "Bad video"
+      },
+      "disk_error": {
+        "name": "Disk error"
+      },
+      "disk_full": {
+        "name": "Disk full"
+      },
+      "entering_region": {
+        "name": "Entering region"
+      },
+      "exiting_region": {
+        "name": "Exiting region"
+      },
+      "face_detection": {
+        "name": "Face detection"
+      },
+      "field_detection": {
+        "name": "Field detection"
+      },
+      "illegal_access": {
+        "name": "Illegal access"
+      },
+      "io": {
+        "name": "I/O alarm"
+      },
+      "ip_conflict": {
+        "name": "IP conflict"
+      },
+      "line_crossing": {
+        "name": "Line crossing"
+      },
+      "net_interface_broken": {
+        "name": "Network interface broken"
+      },
+      "pir_alarm": {
+        "name": "PIR alarm"
+      },
+      "recording_failure": {
+        "name": "Recording failure"
+      },
+      "scene_change_detection": {
+        "name": "Scene change detection"
+      },
+      "shelter_alarm": {
+        "name": "Shelter alarm"
+      },
+      "unattended_baggage": {
+        "name": "Unattended baggage"
+      },
+      "video_mismatch": {
+        "name": "Video mismatch"
       }
     }
   },

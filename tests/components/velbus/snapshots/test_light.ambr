@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[light.bedroom_kid_1_led_buttonon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -24,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED ButtonOn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -33,7 +35,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 8>,
-    'translation_key': None,
+    'translation_key': 'button_light',
     'unique_id': 'a1b2c3d4e5f6-1',
     'unit_of_measurement': None,
   })
@@ -58,8 +60,9 @@
 # ---
 # name: test_entities[light.dimmer_full_name_dimmer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dimmer',
     'options': dict({
     }),
     'original_device_class': None,

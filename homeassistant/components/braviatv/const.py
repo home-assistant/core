@@ -12,6 +12,7 @@ ATTR_MODEL: Final = "model"
 
 CONF_NICKNAME: Final = "nickname"
 CONF_USE_PSK: Final = "use_psk"
+CONF_USE_SSL: Final = "use_ssl"
 
 DOMAIN: Final = "braviatv"
 LEGACY_CLIENT_ID: Final = "HomeAssistant"

@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -144,3 +145,58 @@ async def test_turn_off_switch(
     # Verify state updated immediately
     pump_monitoring_state = hass.states.get("switch.pool_device_pump_monitoring")
     assert pump_monitoring_state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_actions_cannot_connect_switch(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """When the client write method raises, ServiceValidationError('cannot_connect') is raised."""
+    client = mock_pooldose_client
+    entity_id = "switch.pool_device_pause_dosing"
+    before = hass.states.get(entity_id)
+    assert before is not None
+
+    client.is_connected = False
+    client.set_switch = AsyncMock(return_value=False)
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+
+    assert excinfo.value.translation_key == "cannot_connect"
+
+    after = hass.states.get(entity_id)
+    assert after is not None
+    assert before.state == after.state
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_actions_write_rejected_switch(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """When the client write method returns False, ServiceValidationError('write_rejected') is raised."""
+    client = mock_pooldose_client
+    entity_id = "switch.pool_device_pause_dosing"
+    before = hass.states.get(entity_id)
+    assert before is not None
+
+    client.set_switch = AsyncMock(return_value=False)
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+
+    assert excinfo.value.translation_key == "write_rejected"
+
+    after = hass.states.get(entity_id)
+    assert after is not None
+    assert before.state == after.state

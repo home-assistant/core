@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import Final
 
 DOMAIN: Final = "essent"
-UPDATE_INTERVAL: Final = timedelta(hours=12)
+UPDATE_INTERVAL: Final = timedelta(hours=1)
 ATTRIBUTION: Final = "Data provided by Essent"
 
 

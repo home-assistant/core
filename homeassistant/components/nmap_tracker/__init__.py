@@ -46,7 +46,7 @@ MAX_SCAN_ATTEMPTS: Final = 16
 
 def short_hostname(hostname: str) -> str:
     """Return the first part of the hostname."""
-    return hostname.split(".")[0]
+    return hostname.split(".", maxsplit=1)[0]
 
 
 def human_readable_name(hostname: str, vendor: str, mac_address: str) -> str:

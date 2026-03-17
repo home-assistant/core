@@ -176,6 +176,12 @@ def climate_eurotronic_spirit_z_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("climate_eurotronic_spirit_z_state.json", DOMAIN)
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z_state", scope="package")
+def climate_eurotronic_comet_z_state_fixture() -> dict[str, Any]:
+    """Load the climate Eurotronic Comet Z thermostat node state fixture data."""
+    return load_json_object_fixture("climate_eurotronic_comet_z_state.json", DOMAIN)
+
+
 @pytest.fixture(name="climate_heatit_z_trm6_state", scope="package")
 def climate_heatit_z_trm6_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
@@ -276,6 +282,14 @@ def zvidar_state_fixture() -> dict[str, Any]:
 def qubino_shutter_state_fixture() -> dict[str, Any]:
     """Load the Qubino Shutter node state fixture data."""
     return load_json_object_fixture("cover_qubino_shutter_state.json", DOMAIN)
+
+
+@pytest.fixture(name="qubino_shutter_state_firmware_14_2_0", scope="package")
+def qubino_shutter_state_firmware_14_2_0_fixture() -> dict[str, Any]:
+    """Load the Qubino Shutter node state fixture data with firmware 14.2.0."""
+    return load_json_object_fixture(
+        "cover_qubino_shutter_state_firmware_14_2_0.json", DOMAIN
+    )
 
 
 @pytest.fixture(name="aeotec_nano_shutter_state", scope="package")
@@ -569,6 +583,15 @@ def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="hoppe_ehandle_connectsense_state")
+def hoppe_ehandle_connectsense_state_fixture() -> NodeDataType:
+    """Load node state fixture data for Hoppe eHandle ConnectSense."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("hoppe_ehandle_connectsense_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -843,6 +866,16 @@ def climate_eurotronic_spirit_z_fixture(
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_comet_z")
+def climate_eurotronic_comet_z_fixture(
+    client: MagicMock, climate_eurotronic_comet_z_state: dict[str, Any]
+) -> Node:
+    """Mock a climate Eurotronic Comet Z node."""
+    node = Node(client, copy.deepcopy(climate_eurotronic_comet_z_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm6")
 def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state) -> Node:
     """Mock a climate radio HEATIT Z-TRM6 node."""
@@ -1045,6 +1078,16 @@ def zvidar_cover_fixture(client, zvidar_state) -> Node:
 def qubino_shutter_cover_fixture(client, qubino_shutter_state) -> Node:
     """Mock a Qubino flush shutter node."""
     node = Node(client, copy.deepcopy(qubino_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="qubino_shutter_firmware_14_2_0")
+def qubino_shutter_firmware_14_2_0_cover_fixture(
+    client, qubino_shutter_state_firmware_14_2_0
+) -> Node:
+    """Mock a Qubino flush shutter node with firmware 14.2.0."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state_firmware_14_2_0))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1423,5 +1466,15 @@ def nabu_casa_zwa2_legacy_fixture(
 ) -> Node:
     """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
     node = Node(client, nabu_casa_zwa2_legacy_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hoppe_ehandle_connectsense")
+def hoppe_ehandle_connectsense_fixture(
+    client: MagicMock, hoppe_ehandle_connectsense_state: NodeDataType
+) -> Node:
+    """Load node for Hoppe eHandle ConnectSense."""
+    node = Node(client, hoppe_ehandle_connectsense_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

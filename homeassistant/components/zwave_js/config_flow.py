@@ -73,6 +73,7 @@ from .helpers import (
     CannotConnect,
     async_get_version_info,
     async_wait_for_driver_ready_event,
+    format_home_id_for_display,
 )
 from .models import ZwaveJSConfigEntry
 
@@ -192,7 +193,7 @@ def get_usb_ports() -> dict[str, str]:
     }
 
     # If we have non-"n/a" ports, return only those; otherwise return all ports as-is
-    return non_na_ports if non_na_ports else port_descriptions
+    return non_na_ports or port_descriptions
 
 
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -467,7 +468,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(home_id)
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
-        self.context.update({"title_placeholders": {CONF_NAME: home_id}})
+        home_id_display = format_home_id_for_display(int(home_id))
+        # Show home ID and network location in discovery notification
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "host": discovery_info.host,
+                    "port": str(discovery_info.port),
+                    "home_id": home_id_display,
+                }
+            }
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -479,10 +490,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.ws_address
         assert self.unique_id
+        home_id_display = format_home_id_for_display(int(self.unique_id))
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "home_id": self.unique_id,
+                "home_id": home_id_display,
                 CONF_URL: self.ws_address[5:],
             },
         )
@@ -1220,7 +1232,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Unload the config entry before stopping the add-on.
                 await self.hass.config_entries.async_unload(config_entry.entry_id)
                 addon_manager = get_addon_manager(self.hass)
-                _LOGGER.debug("Stopping Z-Wave JS add-on")
+                _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
@@ -1598,7 +1610,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             for addon_key, addon_val in self.original_addon_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
-        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
 
     async def _async_backup_network(self) -> None:
