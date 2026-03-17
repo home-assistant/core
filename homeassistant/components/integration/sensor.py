@@ -326,7 +326,7 @@ class IntegrationSensor(RestoreSensor):
         self._round_digits = round_digits
         self._state: Decimal | None = None
         self._method = _IntegrationMethod.from_name(integration_method)
-        self._init_device_class: SensorDeviceClass | None = device_class
+        self._configured_device_class: SensorDeviceClass | None = device_class
 
         self._attr_name = name if name is not None else f"{source_entity} integral"
         self._unit_prefix_string = "" if unit_prefix is None else unit_prefix
@@ -378,15 +378,13 @@ class IntegrationSensor(RestoreSensor):
     ) -> SensorDeviceClass | None:
         """Deduce device class if possible from source device class and target unit.
 
-        If a device class value has been set in the config, use that instead.
+        If a device class value has been set in the config, try to use that instead.
         """
-        if self._init_device_class is not None:
-            return self._init_device_class
-
-        if source_device_class is None:
-            return None
-
-        if (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None:
+        device_class = self._configured_device_class
+        if device_class is None and (
+            source_device_class is None
+            or (device_class := DEVICE_CLASS_MAP.get(source_device_class)) is None
+        ):
             return None
 
         if unit_of_measurement not in DEVICE_CLASS_UNITS.get(device_class, set()):
