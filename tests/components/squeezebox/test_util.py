@@ -19,7 +19,7 @@ async def test_safe_library_call_success() -> None:
     assert (
         await safe_library_call(async_method, translation_key="test") == "async_success"
     )
-    
+
     # Test a sync method that returns an asyncio.Future (WHICH IS an Awaitable)
     future = asyncio.Future()
     future.set_result("future_success")
