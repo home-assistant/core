@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_fans[longan_link_thermostat][fan.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -65,8 +66,9 @@
 # ---
 # name: test_fans[mock_air_purifier][fan.mock_air_purifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -137,8 +139,9 @@
 # ---
 # name: test_fans[mock_extractor_hood][fan.mock_extractor_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -199,8 +202,9 @@
 # ---
 # name: test_fans[mock_fan][fan.mocked_fan_switch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -269,8 +273,9 @@
 # ---
 # name: test_fans[mock_room_airconditioner][fan.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -337,8 +342,9 @@
 # ---
 # name: test_fans[silabs_fan][fan.sl_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([

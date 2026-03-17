@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ks_microwave_0101x][number.microwave_fan_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3,
@@ -59,8 +60,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][number.refrigerator_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': -15.0,
@@ -119,8 +121,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_000001][number.refrigerator_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 7.0,
@@ -179,8 +182,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': -15.0,
@@ -239,8 +243,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01001][number.refrigerator_1_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 7.0,
@@ -299,8 +304,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][number.frigo_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': -15.0,
@@ -359,8 +365,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011][number.frigo_fridge_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 7.0,
@@ -419,8 +426,9 @@
 # ---
 # name: test_all_entities[da_ref_normal_01011_onedoor][number.lodowka_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 7,
@@ -479,8 +487,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -538,8 +547,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][number.washing_machine_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
@@ -597,8 +607,9 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][number.machine_a_laver_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 5,
