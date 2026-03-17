@@ -370,8 +370,6 @@ class CachedProperties(type):
                 if isinstance(attr, (FunctionType, property)):
                     raise TypeError(f"Can't override {attr_name} in subclass")
                 setattr(cls, private_attr_name, attr)
-
-                # Check annotations as well.
                 annotations = get_annotations(cls, format=Format.FORWARDREF)
                 if attr_name in annotations:
                     annotations[private_attr_name] = annotations.pop(attr_name)
