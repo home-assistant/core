@@ -15,7 +15,7 @@
   },
   "services": {
     "press": {
-      "description": "Mimics the physical button press on the device.",
+      "description": "Mimics a physical button press on a device.",
       "name": "Press"
     },
     "reload": {

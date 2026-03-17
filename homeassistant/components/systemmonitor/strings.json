@@ -19,6 +19,18 @@
       "battery_empty": {
         "name": "Battery empty"
       },
+      "cpu_pressure_some_avg10": {
+        "name": "CPU pressure some 10s average"
+      },
+      "cpu_pressure_some_avg300": {
+        "name": "CPU pressure some 300s average"
+      },
+      "cpu_pressure_some_avg60": {
+        "name": "CPU pressure some 60s average"
+      },
+      "cpu_pressure_some_total": {
+        "name": "CPU pressure some total"
+      },
       "disk_free": {
         "name": "Disk free {mount_point}"
       },
@@ -30,6 +42,30 @@
       },
       "fan_speed": {
         "name": "{fan_name} fan speed"
+      },
+      "io_pressure_full_avg10": {
+        "name": "IO pressure full 10s average"
+      },
+      "io_pressure_full_avg300": {
+        "name": "IO pressure full 300s average"
+      },
+      "io_pressure_full_avg60": {
+        "name": "IO pressure full 60s average"
+      },
+      "io_pressure_full_total": {
+        "name": "IO pressure full total"
+      },
+      "io_pressure_some_avg10": {
+        "name": "IO pressure some 10s average"
+      },
+      "io_pressure_some_avg300": {
+        "name": "IO pressure some 300s average"
+      },
+      "io_pressure_some_avg60": {
+        "name": "IO pressure some 60s average"
+      },
+      "io_pressure_some_total": {
+        "name": "IO pressure some total"
       },
       "ipv4_address": {
         "name": "IPv4 address {ip_address}"
@@ -51,6 +87,30 @@
       },
       "memory_free": {
         "name": "Memory free"
+      },
+      "memory_pressure_full_avg10": {
+        "name": "Memory pressure full 10s average"
+      },
+      "memory_pressure_full_avg300": {
+        "name": "Memory pressure full 300s average"
+      },
+      "memory_pressure_full_avg60": {
+        "name": "Memory pressure full 60s average"
+      },
+      "memory_pressure_full_total": {
+        "name": "Memory pressure full total"
+      },
+      "memory_pressure_some_avg10": {
+        "name": "Memory pressure some 10s average"
+      },
+      "memory_pressure_some_avg300": {
+        "name": "Memory pressure some 300s average"
+      },
+      "memory_pressure_some_avg60": {
+        "name": "Memory pressure some 60s average"
+      },
+      "memory_pressure_some_total": {
+        "name": "Memory pressure some total"
       },
       "memory_use": {
         "name": "Memory use"

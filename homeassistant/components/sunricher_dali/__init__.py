@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Sequence
 import logging
 
-from PySrDaliGateway import DaliGateway
+from PySrDaliGateway import DaliGateway, Device
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant.const import (
@@ -18,13 +20,51 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+]
 _LOGGER = logging.getLogger(__name__)
+
+
+def _remove_missing_devices(
+    hass: HomeAssistant,
+    entry: DaliCenterConfigEntry,
+    devices: Sequence[Device],
+    gateway_identifier: tuple[str, str],
+) -> None:
+    """Detach devices that are no longer provided by the gateway."""
+    device_registry = dr.async_get(hass)
+    known_device_ids = {device.dev_id for device in devices}
+
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if gateway_identifier in device_entry.identifiers:
+            continue
+
+        domain_device_ids = {
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        }
+
+        if not domain_device_ids:
+            continue
+
+        if domain_device_ids.isdisjoint(known_device_ids):
+            device_registry.async_update_device(
+                device_entry.id,
+                remove_config_entry_id=entry.entry_id,
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -> bool:
@@ -47,14 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             "You can try to delete the gateway and add it again"
         ) from exc
 
-    def on_online_status(dev_id: str, available: bool) -> None:
-        signal = f"{DOMAIN}_update_available_{dev_id}"
-        hass.add_job(async_dispatcher_send, hass, signal, available)
-
-    gateway.on_online_status = on_online_status
-
     try:
-        devices = await gateway.discover_devices()
+        devices, scenes = await asyncio.gather(
+            gateway.discover_devices(),
+            gateway.discover_scenes(),
+        )
     except DaliGatewayError as exc:
         raise ConfigEntryNotReady(
             "Unable to discover devices from the gateway"
@@ -65,16 +102,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, gw_sn)},
         identifiers={(DOMAIN, gw_sn)},
         manufacturer=MANUFACTURER,
         name=gateway.name,
         model="SR-GW-EDA",
         serial_number=gw_sn,
     )
+    _remove_missing_devices(hass, entry, devices, (DOMAIN, gw_sn))
 
     entry.runtime_data = DaliCenterData(
         gateway=gateway,
         devices=devices,
+        scenes=scenes,
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

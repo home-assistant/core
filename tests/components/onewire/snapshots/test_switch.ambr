@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.05_111111111111_programmed_input_output-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_switches[switch.12_111111111111_latch_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -99,8 +103,9 @@
 # ---
 # name: test_switches[switch.12_111111111111_latch_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -148,8 +154,9 @@
 # ---
 # name: test_switches[switch.12_111111111111_programmed_input_output_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -197,8 +205,9 @@
 # ---
 # name: test_switches[switch.12_111111111111_programmed_input_output_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -246,8 +256,9 @@
 # ---
 # name: test_switches[switch.26_111111111111_current_a_d_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -295,8 +307,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -344,8 +358,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -363,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -393,8 +409,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -412,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -442,8 +460,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -461,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -491,8 +511,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -510,6 +531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -540,8 +562,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -559,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,8 +613,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -608,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -638,8 +664,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_latch_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -657,6 +684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -687,8 +715,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -706,6 +735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -736,8 +766,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -755,6 +786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -785,8 +817,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -804,6 +837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -834,8 +868,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -853,6 +888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -883,8 +919,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -902,6 +939,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,8 +970,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -951,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -981,8 +1021,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1000,6 +1041,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1030,8 +1072,9 @@
 # ---
 # name: test_switches[switch.29_111111111111_programmed_input_output_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1049,6 +1092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1079,8 +1123,9 @@
 # ---
 # name: test_switches[switch.3a_111111111111_programmed_input_output_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1098,6 +1143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1128,8 +1174,9 @@
 # ---
 # name: test_switches[switch.3a_111111111111_programmed_input_output_b-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1147,6 +1194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1177,8 +1225,9 @@
 # ---
 # name: test_switches[switch.a6_111111111111_current_a_d_control-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1196,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1226,8 +1276,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_leaf_sensor_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1245,6 +1296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1275,8 +1327,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_leaf_sensor_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1294,6 +1347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1324,8 +1378,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_leaf_sensor_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1343,6 +1398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1373,8 +1429,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_leaf_sensor_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1392,6 +1449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1422,8 +1480,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_moisture_sensor_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1441,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1471,8 +1531,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_moisture_sensor_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1490,6 +1551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1520,8 +1582,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_moisture_sensor_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1539,6 +1602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1569,8 +1633,9 @@
 # ---
 # name: test_switches[switch.ef_111111111112_moisture_sensor_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1588,6 +1653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1618,8 +1684,9 @@
 # ---
 # name: test_switches[switch.ef_111111111113_hub_branch_0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1637,6 +1704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1667,8 +1735,9 @@
 # ---
 # name: test_switches[switch.ef_111111111113_hub_branch_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1686,6 +1755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1716,8 +1786,9 @@
 # ---
 # name: test_switches[switch.ef_111111111113_hub_branch_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1735,6 +1806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1765,8 +1837,9 @@
 # ---
 # name: test_switches[switch.ef_111111111113_hub_branch_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1784,6 +1857,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 3',
     'options': dict({
     }),
     'original_device_class': None,

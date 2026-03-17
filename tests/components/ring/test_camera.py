@@ -325,6 +325,38 @@ async def test_camera_image(
         assert image.content == SMALLEST_VALID_JPEG_BYTES
 
 
+async def test_camera_live_view_no_subscription(
+    hass: HomeAssistant,
+    mock_ring_client,
+    mock_ring_devices,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test live view camera skips recording URL when no subscription."""
+    await setup_platform(hass, Platform.CAMERA)
+
+    front_camera_mock = mock_ring_devices.get_device(765432)
+    # Set device to not have subscription
+    front_camera_mock.has_subscription = False
+
+    state = hass.states.get("camera.front_live_view")
+    assert state is not None
+
+    # Reset mock call counts
+    front_camera_mock.async_recording_url.reset_mock()
+
+    # Trigger coordinator update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # For cameras without subscription, recording URL should NOT be fetched
+    front_camera_mock.async_recording_url.assert_not_called()
+
+    # Requesting an image without subscription should raise an error
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front_live_view")
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_stream_attributes(
     hass: HomeAssistant,

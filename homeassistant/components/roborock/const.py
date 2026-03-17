@@ -11,7 +11,8 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 CONF_SHOW_BACKGROUND = "show_background"
-
+CONF_REGION = "region"
+REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
 # Option Flow steps
 DRAWABLES = "drawables"
 
@@ -51,12 +52,10 @@ IMAGE_CACHE_INTERVAL = timedelta(seconds=30)
 
 MAP_SLEEP = 3
 
-GET_MAPS_SERVICE_NAME = "get_maps"
+
 MAP_SCALE = 4
 MAP_FILE_FORMAT = "PNG"
 MAP_FILENAME_SUFFIX = ".png"
-SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"
-GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"
 
 
 A01_UPDATE_INTERVAL = timedelta(minutes=1)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import cast
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
 from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 from yalexs.manager.gateway import Config as YaleXSConfig
@@ -13,11 +13,17 @@ from yalexs.manager.gateway import Config as YaleXSConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_entry_oauth2_flow,
-    device_registry as dr,
-    issue_registry as ir,
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 
 from .const import DEFAULT_AUGUST_BRAND, DOMAIN, PLATFORMS
@@ -37,22 +43,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
 
     session = async_create_august_clientsession(hass)
     try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
-        )
-    except ValueError as err:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
         raise ConfigEntryNotReady("OAuth implementation not available") from err
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    oauth_session = OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
-    except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
+    except (
+        AugustApiAIOHTTPError,
+        OAuth2TokenRequestError,
+        ClientError,
+        CannotConnect,
+    ) as err:
         raise ConfigEntryNotReady from err
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -59,34 +59,17 @@ class VActuator(SwitchEntity):
 
     def __init__(self, peripheral, parent_name, unit, measurement, consumer):
         """Initialize the sensor."""
-        self._is_on = False
-        self._available = True
-        self._name = f"{parent_name} {measurement}"
+        self._attr_is_on = False
+        self._attr_name = f"{parent_name} {measurement}"
+        self._attr_unique_id = (
+            f"{peripheral.parentMac}/{peripheral.identifier}/{measurement}"
+        )
+
         self._parent_mac = peripheral.parentMac
         self._identifier = peripheral.identifier
         self._unit = unit
         self._measurement = measurement
         self.consumer = consumer
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the actuator."""
-        return f"{self._parent_mac}/{self._identifier}/{self._measurement}"
-
-    @property
-    def name(self):
-        """Return the name of the actuator."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the actuator."""
-        return self._is_on
-
-    @property
-    def available(self) -> bool:
-        """Return if the actuator is available."""
-        return self._available
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the actuator."""
@@ -113,13 +96,13 @@ class VActuator(SwitchEntity):
         if samples is not None:
             for sample in samples:
                 if sample.measurement == self._measurement:
-                    self._available = True
+                    self._attr_available = True
                     if sample.value == PERIPHERAL_STATE_OFF:
-                        self._is_on = False
+                        self._attr_is_on = False
                     elif sample.value == PERIPHERAL_STATE_ON:
-                        self._is_on = True
+                        self._attr_is_on = True
                     break
         else:
             _LOGGER.error("Sample unavailable")
-            self._available = False
-            self._is_on = None
+            self._attr_available = False
+            self._attr_is_on = None

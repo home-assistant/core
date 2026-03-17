@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 
-from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -25,12 +25,13 @@ async def test_load_unload_config_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.unique_id
 
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )
     assert device_entry is not None
-    assert device_entry.manufacturer == "Lunatone"
+    assert device_entry.manufacturer == MANUFACTURER
     assert device_entry.sw_version == VERSION
     assert device_entry.configuration_url == BASE_URL
     assert device_entry.model == PRODUCT_NAME

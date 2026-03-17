@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 
 async def setup_platform(
     hass: HomeAssistant, config_entry: MockConfigEntry, platforms: list[Platform]
-) -> MockConfigEntry:
+) -> None:
     """Fixture for setting up the IOmeter platform."""
     config_entry.add_to_hass(hass)
 

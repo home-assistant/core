@@ -59,8 +59,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

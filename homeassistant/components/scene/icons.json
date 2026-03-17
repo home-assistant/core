@@ -20,5 +20,10 @@
     "turn_on": {
       "service": "mdi:power"
     }
+  },
+  "triggers": {
+    "activated": {
+      "trigger": "mdi:palette"
+    }
   }
 }

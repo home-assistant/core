@@ -74,7 +74,7 @@ class FileSensor(SensorEntity):
                     data = line
                     break
                 data = data.strip()
-        except (IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError):
+        except IndexError, FileNotFoundError, IsADirectoryError, UnboundLocalError:
             _LOGGER.warning(
                 "File or data not present at the moment: %s",
                 os.path.basename(self._file_path),

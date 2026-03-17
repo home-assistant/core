@@ -33,8 +33,21 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "inMultiplayerSession": 0,
-        "inParty": 0
+        "joinableActivities": [],
+        "partyDetails": [
+          {
+            "sessionRef": {
+              "scid": "7ffcfe63-a320-4086-85bb-a1734bef7a30",
+              "templateName": "chat",
+              "name": "d3804c40-ac93-4c7d-9414-6cb419931105"
+            },
+            "status": "active",
+            "visibility": "open",
+            "joinRestriction": "followed",
+            "accepted": 2
+          }
+        ],
+        "inParty": 2
       },
       "recentPlayer": null,
       "follower": null,

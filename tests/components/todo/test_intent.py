@@ -290,3 +290,80 @@ async def test_complete_item_intent_ha_errors(
             {ATTR_ITEM: {"value": "wine"}, ATTR_NAME: {"value": "List 1"}},
             assistant=conversation.DOMAIN,
         )
+
+
+async def test_remove_item_intent(
+    hass: HomeAssistant,
+) -> None:
+    """Test the remove item intent."""
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="beer", uid="1", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="wine", uid="2", status=TodoItemStatus.NEEDS_ACTION),
+            TodoItem(summary="beer", uid="3", status=TodoItemStatus.COMPLETED),
+        ]
+    )
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    # Add entities to hass
+    config_entry = await create_mock_platform(hass, [entity1])
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert len(entity1.items) == 3
+
+    # Remove item
+    async_mock_service(hass, DOMAIN, todo_intent.INTENT_LIST_REMOVE_ITEM)
+    response = await intent.async_handle(
+        hass,
+        DOMAIN,
+        todo_intent.INTENT_LIST_REMOVE_ITEM,
+        {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # only the first matching item has been removed
+    assert len(entity1.items) == 2
+    assert entity1.items[0].uid == "2"
+    assert entity1.items[1].uid == "3"
+
+
+async def test_remove_item_intent_errors(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test errors with the remove item intent."""
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="beer", uid="1", status=TodoItemStatus.COMPLETED),
+        ]
+    )
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    # Add entities to hass
+    await create_mock_platform(hass, [entity1])
+
+    # Try to remove item in list that does not exist
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_REMOVE_ITEM,
+            {
+                ATTR_ITEM: {"value": "wine"},
+                ATTR_NAME: {"value": "This list does not exist"},
+            },
+            assistant=conversation.DOMAIN,
+        )
+
+    # Try to remove item that does not exist
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_REMOVE_ITEM,
+            {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )

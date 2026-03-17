@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
-from systembridgemodels.modules.cpu import PerCPU
-from systembridgemodels.modules.displays import Display
-from systembridgemodels.modules.gpus import GPU
+from systembridgeconnector.models.modules.cpu import PerCPU
+from systembridgeconnector.models.modules.displays import Display
+from systembridgeconnector.models.modules.gpus import GPU
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -390,9 +390,9 @@ async def async_setup_entry(
                     suggested_display_precision=2,
                     icon="mdi:harddisk",
                     value=(
-                        lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk)
+                        lambda data, dk=index_device, pk=index_partition: (
+                            partition_usage(data, dk, pk)
+                        )
                     ),
                 ),
                 entry.data[CONF_PORT],

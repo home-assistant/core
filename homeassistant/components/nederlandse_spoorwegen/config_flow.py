@@ -17,7 +17,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
@@ -30,15 +29,7 @@ from homeassistant.helpers.selector import (
     TimeSelector,
 )
 
-from .const import (
-    CONF_FROM,
-    CONF_ROUTES,
-    CONF_TIME,
-    CONF_TO,
-    CONF_VIA,
-    DOMAIN,
-    INTEGRATION_TITLE,
-)
+from .const import CONF_FROM, CONF_TIME, CONF_TO, CONF_VIA, DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +51,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(client.get_stations)
         except HTTPError:
             errors["base"] = "invalid_auth"
-        except (RequestsConnectionError, Timeout):
+        except RequestsConnectionError, Timeout:
             errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
@@ -133,47 +124,6 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML configuration."""
-        self._async_abort_entries_match({CONF_API_KEY: import_data[CONF_API_KEY]})
-
-        client = NSAPI(import_data[CONF_API_KEY])
-        try:
-            stations = await self.hass.async_add_executor_job(client.get_stations)
-        except HTTPError:
-            return self.async_abort(reason="invalid_auth")
-        except (RequestsConnectionError, Timeout):
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception validating API key")
-            return self.async_abort(reason="unknown")
-
-        station_codes = {station.code for station in stations}
-
-        subentries: list[ConfigSubentryData] = []
-        for route in import_data.get(CONF_ROUTES, []):
-            # Convert station codes to uppercase for consistency with UI routes
-            for key in (CONF_FROM, CONF_TO, CONF_VIA):
-                if key in route:
-                    route[key] = route[key].upper()
-                    if route[key] not in station_codes:
-                        return self.async_abort(reason="invalid_station")
-
-            subentries.append(
-                ConfigSubentryData(
-                    title=route[CONF_NAME],
-                    subentry_type="route",
-                    data=route,
-                    unique_id=None,
-                )
-            )
-
-        return self.async_create_entry(
-            title=INTEGRATION_TITLE,
-            data={CONF_API_KEY: import_data[CONF_API_KEY]},
-            subentries=subentries,
-        )
-
     @classmethod
     @callback
     def async_get_supported_subentry_types(
@@ -205,7 +155,7 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                         client.get_stations
                     )
                 }
-            except (RequestsConnectionError, Timeout, HTTPError, ValueError):
+            except RequestsConnectionError, Timeout, HTTPError, ValueError:
                 return self.async_abort(reason="cannot_connect")
 
         options = [

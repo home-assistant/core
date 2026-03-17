@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import ATTR_BONUS_TIME, DOMAIN
@@ -56,7 +56,7 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
     bonus_time: int = data[ATTR_BONUS_TIME]
     device = dr.async_get(call.hass).async_get(device_id)
     if device is None:
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
         )
@@ -66,6 +66,10 @@ async def async_add_bonus_time(call: ServiceCall) -> None:
             break
     nintendo_device_id = _get_nintendo_device_id(device)
     if config_entry and nintendo_device_id:
-        await config_entry.runtime_data.api.devices[nintendo_device_id].add_extra_time(
-            bonus_time
-        )
+        return await config_entry.runtime_data.api.devices[
+            nintendo_device_id
+        ].add_extra_time(bonus_time)
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_device",
+    )

@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/mystrom",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pymystrom"],
   "requirements": ["python-mystrom==2.5.0"]

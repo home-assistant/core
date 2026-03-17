@@ -68,10 +68,20 @@ MIN_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     GrowattNumberEntityDescription(
-        key="battery_discharge_soc_limit",
-        translation_key="battery_discharge_soc_limit",
-        api_key="wdisChargeSOCLowLimit",  # Key returned by V1 API
+        key="battery_discharge_soc_limit",  # Keep original key to preserve unique_id
+        translation_key="battery_discharge_soc_limit_off_grid",
+        api_key="wdisChargeSOCLowLimit",  # Key returned by V1 API (off-grid)
         write_key="discharge_stop_soc",  # Key used to write parameter
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    GrowattNumberEntityDescription(
+        key="battery_discharge_soc_limit_on_grid",
+        translation_key="battery_discharge_soc_limit_on_grid",
+        api_key="onGridDischargeStopSOC",  # Key returned by V1 API (on-grid)
+        write_key="on_grid_discharge_stop_soc",  # Key used to write parameter
         native_step=1,
         native_min_value=0,
         native_max_value=100,

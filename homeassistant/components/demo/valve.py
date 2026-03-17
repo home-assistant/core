@@ -9,8 +9,11 @@ from typing import Any
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature, ValveState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
+
+from . import DOMAIN
 
 OPEN_CLOSE_DELAY = 2  # Used to give a realistic open/close experience in frontend
 
@@ -23,10 +26,10 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoValve("Front Garden", ValveState.OPEN),
-            DemoValve("Orchard", ValveState.CLOSED),
-            DemoValve("Back Garden", ValveState.CLOSED, position=70),
-            DemoValve("Trees", ValveState.CLOSED, position=30),
+            DemoValve("valve_1", "Front Garden", ValveState.OPEN),
+            DemoValve("valve_2", "Orchard", ValveState.CLOSED),
+            DemoValve("valve_3", "Back Garden", ValveState.CLOSED, position=70),
+            DemoValve("valve_4", "Trees", ValveState.CLOSED, position=30),
         ]
     )
 
@@ -34,17 +37,24 @@ async def async_setup_entry(
 class DemoValve(ValveEntity):
     """Representation of a Demo valve."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         state: str,
         moveable: bool = True,
         position: int | None = None,
     ) -> None:
         """Initialize the valve."""
-        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
         if moveable:
             self._attr_supported_features = (
                 ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE

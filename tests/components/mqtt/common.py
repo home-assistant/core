@@ -600,6 +600,98 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "optimistic": True,
     },
 }
+MOCK_SUBENTRY_TEXT_COMPONENT = {
+    "09261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "text",
+        "name": "MOTD",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "mode": "password",
+        "pattern": "^[a-z_]*$",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_VALVE_COMPONENT_STATE = {
+    "09261f6feed443e7b7d5f32345a47413": {
+        "platform": "valve",
+        "name": "Ice cream",
+        "entity_category": None,
+        "device_class": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "reports_position": False,
+        "payload_open": "OPEN",
+        "payload_close": "CLOSE",
+        "payload_stop": "STOP",
+        "state_open": "open",
+        "state_opening": "opening",
+        "state_closed": "closed",
+        "state_closing": "closing",
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f32345a47413",
+        "retain": True,
+        "optimistic": True,
+    },
+}
+MOCK_SUBENTRY_VALVE_COMPONENT_POSITION = {
+    "09261f6feed443e7b7d5f32345a47414": {
+        "platform": "valve",
+        "name": "Ice cream",
+        "entity_category": None,
+        "device_class": "water",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "reports_position": True,
+        "position_closed": 0,
+        "position_open": 100,
+        "payload_stop": "STOP",
+        "state_opening": "opening",
+        "state_closing": "closing",
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f32345a47414",
+        "retain": True,
+        "optimistic": False,
+    },
+}
+MOCK_SUBENTRY_WATER_HEATER_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851123": {
+        "platform": "water_heater",
+        "name": "Boyler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851123",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "gas", "electric"],
+        # target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 43,
+        "max_temp": 60,
+        "precision": "0.1",
+        "initial": 43,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
+    },
+}
 
 MOCK_SUBENTRY_AVAILABILITY_DATA = {
     "availability": {
@@ -724,6 +816,22 @@ MOCK_SIREN_SUBENTRY_DATA = {
 MOCK_SWITCH_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
+}
+MOCK_TEXT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TEXT_COMPONENT,
+}
+MOCK_VALVE_SUBENTRY_DATA_STATE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_VALVE_COMPONENT_STATE,
+}
+MOCK_VALVE_SUBENTRY_DATA_POSITION = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_VALVE_COMPONENT_POSITION,
+}
+MOCK_WATER_HEATER_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_WATER_HEATER_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

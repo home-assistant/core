@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.zona_01-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  01',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_02e-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  02e',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_03a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  03a',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_04-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  04',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -197,8 +205,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_05-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -216,6 +225,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  05',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -246,8 +256,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_06-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -265,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  06',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -295,8 +307,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_07-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -314,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  07',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -344,8 +358,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.zona_08-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -363,6 +378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ZONA  08',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,

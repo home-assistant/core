@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -97,17 +98,30 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         end_date = now
 
         try:
-            accounts = await self.firefly.get_accounts()
-            categories = await self.firefly.get_categories()
-            category_details = [
-                await self.firefly.get_category(
-                    category_id=int(category.id), start=start_date, end=end_date
+            (
+                accounts,
+                categories,
+                primary_currency,
+                budgets,
+                bills,
+            ) = await asyncio.gather(
+                self.firefly.get_accounts(),
+                self.firefly.get_categories(),
+                self.firefly.get_currency_primary(),
+                self.firefly.get_budgets(start=start_date, end=end_date),
+                self.firefly.get_bills(),
+            )
+
+            category_details = await asyncio.gather(
+                *(
+                    self.firefly.get_category(
+                        category_id=int(category.id),
+                        start=start_date,
+                        end=end_date,
+                    )
+                    for category in categories
                 )
-                for category in categories
-            ]
-            primary_currency = await self.firefly.get_currency_primary()
-            budgets = await self.firefly.get_budgets(start=start_date, end=end_date)
-            bills = await self.firefly.get_bills()
+            )
         except FireflyAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

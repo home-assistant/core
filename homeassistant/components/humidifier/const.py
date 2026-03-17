@@ -28,6 +28,7 @@ ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
+ATTR_TARGET_HUMIDITY_STEP = "target_humidity_step"
 
 DEFAULT_MIN_HUMIDITY = 0
 DEFAULT_MAX_HUMIDITY = 100

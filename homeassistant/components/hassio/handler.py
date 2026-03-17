@@ -88,70 +88,6 @@ class HassIO:
         return self._base_url
 
     @api_data
-    def get_info(self) -> Coroutine:
-        """Return generic Supervisor information.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/info", method="get")
-
-    @api_data
-    def get_host_info(self) -> Coroutine:
-        """Return data for Host.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/host/info", method="get")
-
-    @api_data
-    def get_os_info(self) -> Coroutine:
-        """Return data for the OS.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/os/info", method="get")
-
-    @api_data
-    def get_core_info(self) -> Coroutine:
-        """Return data for Home Asssistant Core.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/core/info", method="get")
-
-    @api_data
-    def get_supervisor_info(self) -> Coroutine:
-        """Return data for the Supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/info", method="get")
-
-    @api_data
-    def get_network_info(self) -> Coroutine:
-        """Return data for the Host Network.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/network/info", method="get")
-
-    @api_data
-    def get_core_stats(self) -> Coroutine:
-        """Return stats for the core.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/core/stats", method="get")
-
-    @api_data
-    def get_supervisor_stats(self) -> Coroutine:
-        """Return stats for the supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/stats", method="get")
-
-    @api_data
     def get_ingress_panels(self) -> Coroutine:
         """Return data for Add-on ingress panels.
 
@@ -198,6 +134,7 @@ class HassIO:
         timeout: int | None = 10,
         return_text: bool = False,
         *,
+        params: dict[str, Any] | None = None,
         source: str = "core.handler",
     ) -> Any:
         """Send API command to Hass.io.
@@ -218,6 +155,7 @@ class HassIO:
             response = await self.websession.request(
                 method,
                 joined_url,
+                params=params,
                 json=payload,
                 headers={
                     aiohttp.hdrs.AUTHORIZATION: (

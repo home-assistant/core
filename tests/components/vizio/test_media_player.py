@@ -47,8 +47,8 @@ from homeassistant.components.vizio.const import (
     CONF_VOLUME_STEP,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
-    SERVICE_UPDATE_SETTING,
 )
+from homeassistant.components.vizio.services import SERVICE_UPDATE_SETTING
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util

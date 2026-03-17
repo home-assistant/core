@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[sensor.1p7k_500006_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -54,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -110,8 +114,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -163,8 +169,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_installation_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -182,6 +189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -216,8 +224,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_lifetime_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -237,6 +246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -267,13 +277,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1.123',
   })
 # ---
 # name: test_all_entities[sensor.1p7k_500006_limit_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -305,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Limit reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -348,8 +360,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -369,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -407,8 +421,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -438,6 +453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -479,8 +495,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -500,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -535,8 +553,9 @@
 # ---
 # name: test_all_entities[sensor.1p7k_500006_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -554,6 +573,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

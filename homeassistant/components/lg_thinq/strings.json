@@ -199,6 +199,33 @@
         }
       }
     },
+    "humidifier": {
+      "dehumidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "air_clean": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::air_clean%]",
+              "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
+              "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
+              "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+              "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
+              "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]"
+            }
+          }
+        }
+      },
+      "humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "air_clean": "[%key:component::lg_thinq::entity::select::current_job_mode::state::air_clean%]",
+              "humidify": "[%key:component::lg_thinq::entity::select::current_job_mode::state::humidify%]",
+              "humidify_and_air_clean": "[%key:component::lg_thinq::entity::select::current_job_mode::state::humidify_and_air_clean%]"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "fan_speed": {
         "name": "Fan"

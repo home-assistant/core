@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_adam_2_climate_snapshot[platforms0-False-m_adam_heating][climate.bathroom-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -13,9 +14,9 @@
       'max_temp': 35.0,
       'min_temp': 0.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -36,6 +37,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -63,11 +65,11 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 0.0,
-      'preset_mode': 'home',
+      'preset_mode': 'vacation',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -85,8 +87,9 @@
 # ---
 # name: test_adam_2_climate_snapshot[platforms0-False-m_adam_heating][climate.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -97,9 +100,9 @@
       'max_temp': 35.0,
       'min_temp': 1.0,
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -120,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,9 +153,9 @@
       'min_temp': 1.0,
       'preset_mode': 'home',
       'preset_modes': list([
+        'vacation',
         'no_frost',
         'asleep',
-        'vacation',
         'home',
         'away',
       ]),
@@ -169,8 +173,9 @@
 # ---
 # name: test_adam_climate_snapshot[platforms0][climate.badkamer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -203,6 +208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -251,8 +257,9 @@
 # ---
 # name: test_adam_climate_snapshot[platforms0][climate.bios-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -285,6 +292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -333,8 +341,9 @@
 # ---
 # name: test_adam_climate_snapshot[platforms0][climate.garage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -366,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -413,8 +423,9 @@
 # ---
 # name: test_adam_climate_snapshot[platforms0][climate.jessie-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -447,6 +458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -495,8 +507,9 @@
 # ---
 # name: test_adam_climate_snapshot[platforms0][climate.woonkamer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -529,6 +542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -577,8 +591,9 @@
 # ---
 # name: test_anna_2_climate_snapshot[platforms0-True-m_anna_heatpump_cooling][climate.anna-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -611,6 +626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -660,8 +676,9 @@
 # ---
 # name: test_anna_climate_snapshot[platforms0-True-anna_heatpump_heating][climate.anna-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -694,6 +711,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -743,8 +761,9 @@
 # ---
 # name: test_anna_p1_climate_snapshot[platforms0][climate.anna-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -777,6 +796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

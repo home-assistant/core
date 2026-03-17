@@ -25,7 +25,7 @@ rules:
     status: exempt
     comment: Integration has no configuration parameters
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -74,4 +74,4 @@ rules:
     status: exempt
     comment: |
       Integration is not making any HTTP requests.
-  strict-typing: todo
+  strict-typing: done

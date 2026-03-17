@@ -25,6 +25,7 @@ from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 from .manager import DEVICE_CONFLICT_ISSUE_FORMAT, ESPHomeManager, cleanup_instance
+from .websocket_api import async_setup as async_setup_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ffmpeg_proxy.async_setup(hass)
     await assist_satellite.async_setup(hass)
     await dashboard.async_setup(hass)
+    async_setup_websocket_api(hass)
     return True
 
 

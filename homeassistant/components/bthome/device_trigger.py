@@ -81,7 +81,7 @@ def get_event_types_by_event_class(event_class: str) -> set[str]:
     but if there is only one button then it will be
     button without a number postfix.
     """
-    return EVENT_TYPES_BY_EVENT_CLASS.get(event_class.split("_")[0], set())
+    return EVENT_TYPES_BY_EVENT_CLASS.get(event_class.split("_", maxsplit=1)[0], set())
 
 
 async def async_validate_trigger_config(

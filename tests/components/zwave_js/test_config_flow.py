@@ -651,7 +651,7 @@ async def test_abort_hassio_discovery_for_other_addon(hass: HomeAssistant) -> No
     assert result2["reason"] == "not_zwave_js_addon"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -1176,7 +1176,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 @pytest.mark.parametrize(
     "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
 )
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_intent_custom(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1373,7 +1373,7 @@ async def test_esphome_discovery_already_configured(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery success path."""
+    """Test ESPHome discovery when already configured."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -1421,7 +1421,46 @@ async def test_esphome_discovery_already_configured(
     assert stop_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_already_configured_unmanaged_addon(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    stop_addon: AsyncMock,
+) -> None:
+    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
+    addon_options["another_key"] = "should_not_be_touched"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            "use_addon": False,
+            "integration_created_addon": False,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Data did not get updated. Since we don't use the addon, we don't update the data
+    assert entry.data == {
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_usb_same_home_id(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1660,7 +1699,7 @@ async def test_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_discovery_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -2729,7 +2768,7 @@ async def test_addon_installed_already_configured(
     assert entry.data["lr_s2_authenticated_key"] == "new321"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_addon_not_installed(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -3834,7 +3873,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert client.disconnect.call_count == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed")
+@pytest.mark.usefixtures("supervisor")
 @pytest.mark.parametrize(
     (
         "entry_data",
@@ -4015,6 +4054,14 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
+
+    # Verify discovery notification shows home ID with network location
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    flow = flows[0]
+    assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
+    assert flow["context"]["title_placeholders"]["port"] == "3000"
+    assert flow["context"]["title_placeholders"]["home_id"] == "0x000004d2"  # 1234
 
     with (
         patch(
@@ -4989,7 +5036,7 @@ async def test_get_usb_ports_ignored_devices() -> None:
         ]
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_intent_recommended_user(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -5085,7 +5132,7 @@ async def test_intent_recommended_user(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info")
 @pytest.mark.parametrize(
     ("usb_discovery_info", "device", "discovery_name"),
     [
@@ -5225,7 +5272,7 @@ async def test_addon_rf_region_new_network(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "rf_region"
 
     # Check that all expected RF regions are available
@@ -5396,7 +5443,7 @@ async def test_addon_rf_region_migrate_network(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "rf_region"
 
     result = await hass.config_entries.flow.async_configure(

@@ -1,22 +1,26 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
+from http import HTTPStatus
 import logging
 from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from requests import Response
+from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
+    UPNP_ISSUE_ID,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -24,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(
@@ -83,6 +87,83 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
+
+
+async def test_upnp_disabled_discovery(
+    hass: HomeAssistant, config_entry: MockConfigEntry, soco: MockSoCo
+) -> None:
+    """Test issue creation when discovery processing fails with 403."""
+
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    http_error = HTTPError(response=resp)
+
+    with patch(
+        "tests.components.sonos.conftest.MockSoCo.household_id",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=http_error,
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    issue_registry = ir.async_get(hass)
+    assert (
+        issue_registry.async_get_issue(
+            sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
+        )
+        is not None
+    )
+
+
+async def test_upnp_disabled_manual_hosts(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test issue creation when manual host processing fails with 403."""
+
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    http_error = HTTPError(response=resp)
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+
+    with patch.object(
+        type(soco),
+        "household_id",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=http_error,
+    ):
+        await _setup_hass(hass)
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders.get("device_ip") == "10.10.10.1"
+
+
+async def test_discovery_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exception handling during discovery processing."""
+
+    with patch(
+        "tests.components.sonos.conftest.MockSoCo.household_id",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=OSError("This is a test"),
+    ):
+        caplog.set_level(logging.ERROR)
+        caplog.clear()
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert "This is a test" in caplog.text
 
 
 async def test_async_poll_manual_hosts_warnings(

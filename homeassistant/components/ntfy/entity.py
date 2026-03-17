@@ -7,10 +7,11 @@ from yarl import URL
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_TOPIC, DOMAIN
-from .coordinator import NtfyConfigEntry
+from .coordinator import BaseDataUpdateCoordinator, NtfyConfigEntry
 
 
 class NtfyBaseEntity(Entity):
@@ -38,6 +39,29 @@ class NtfyBaseEntity(Entity):
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")},
             via_device=(DOMAIN, config_entry.entry_id),
         )
-        self.ntfy = config_entry.runtime_data.ntfy
+        self.ntfy = config_entry.runtime_data.account.ntfy
         self.config_entry = config_entry
         self.subentry = subentry
+
+
+class NtfyCommonBaseEntity(CoordinatorEntity[BaseDataUpdateCoordinator]):
+    """Base entity for common entities."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: BaseDataUpdateCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="ntfy LLC",
+            model="ntfy",
+            configuration_url=URL(coordinator.config_entry.data[CONF_URL]) / "app",
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        )

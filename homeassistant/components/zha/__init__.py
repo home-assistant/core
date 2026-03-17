@@ -253,6 +253,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     def update_config(event: Event) -> None:
         """Handle Core config update."""
         zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+        zha_gateway.config.country_code = hass.config.country
 
     config_entry.async_on_unload(
         hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
@@ -273,12 +274,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
+
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
 
     if ha_zha_data.gateway_proxy is not None:
         await ha_zha_data.gateway_proxy.shutdown()
         ha_zha_data.gateway_proxy = None
+
+    ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)
@@ -290,7 +296,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     websocket_api.async_unload_api(hass)
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

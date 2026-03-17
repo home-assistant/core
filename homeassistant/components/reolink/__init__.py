@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
+from random import uniform
 from time import time
 from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
-from reolink_aio.exceptions import (
-    CredentialsInvalidError,
-    LoginPrivacyModeError,
-    ReolinkError,
-)
+from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -28,16 +23,17 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_ONLY,
     CONF_BC_PORT,
+    CONF_FIRMWARE_CHECK_TIME,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DOMAIN,
 )
+from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -58,9 +54,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
-NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -137,83 +131,55 @@ async def async_setup_entry(
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
-    async def async_device_config_update() -> None:
-        """Update the host state cache and renew the ONVIF-subscription."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
-            try:
-                await host.update_states()
-            except CredentialsInvalidError as err:
-                host.credential_errors += 1
-                if host.credential_errors >= NUM_CRED_ERRORS:
-                    await host.stop()
-                    raise ConfigEntryAuthFailed(err) from err
-                raise UpdateFailed(str(err)) from err
-            except LoginPrivacyModeError:
-                pass  # HTTP API is shutdown when privacy mode is active
-            except ReolinkError as err:
-                host.credential_errors = 0
-                raise UpdateFailed(str(err)) from err
+    min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
 
-        host.credential_errors = 0
-
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
-            await host.renew()
-
-        if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
-            # Their are new cameras/chimes connected, reload to add them.
-            _LOGGER.debug(
-                "Reloading Reolink %s to add new device (capabilities)",
-                host.api.nvr_name,
-            )
-            hass.async_create_task(
-                hass.config_entries.async_reload(config_entry.entry_id)
-            )
-
-    async def async_check_firmware_update() -> None:
-        """Check for firmware updates."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
-            try:
-                await host.api.check_new_firmware(host.firmware_ch_list)
-            except ReolinkError as err:
-                if host.starting:
-                    _LOGGER.debug(
-                        "Error checking Reolink firmware update at startup "
-                        "from %s, possibly internet access is blocked",
-                        host.api.nvr_name,
-                    )
-                    return
-
-                raise UpdateFailed(
-                    f"Error checking Reolink firmware update from {host.api.nvr_name}, "
-                    "if the camera is blocked from accessing the internet, "
-                    "disable the update entity"
-                ) from err
-            finally:
-                host.starting = False
-
-    device_coordinator = DataUpdateCoordinator(
+    device_coordinator = ReolinkDeviceCoordinator(
         hass,
-        _LOGGER,
-        config_entry=config_entry,
-        name=f"reolink.{host.api.nvr_name}",
-        update_method=async_device_config_update,
-        update_interval=DEVICE_UPDATE_INTERVAL,
+        config_entry,
+        host,
+        min_timeout=min_timeout,
     )
-    firmware_coordinator = DataUpdateCoordinator(
+
+    firmware_coordinator = ReolinkFirmwareCoordinator(
         hass,
-        _LOGGER,
-        config_entry=config_entry,
-        name=f"reolink.{host.api.nvr_name}.firmware",
-        update_method=async_check_firmware_update,
-        update_interval=FIRMWARE_UPDATE_INTERVAL,
+        config_entry,
+        host,
+        min_timeout=min_timeout,
     )
+    device_coordinator.firmware_coordinator = firmware_coordinator
+
+    async def first_firmware_check(*args: Any) -> None:
+        """Start first firmware check delayed to continue 24h schedule."""
+        firmware_coordinator.update_interval = FIRMWARE_UPDATE_INTERVAL
+        await firmware_coordinator.async_refresh()
+        host.cancel_first_firmware_check = None
+
+    # get update time from config entry
+    check_time_sec = config_entry.data.get(CONF_FIRMWARE_CHECK_TIME)
+    if check_time_sec is None:
+        check_time_sec = uniform(0, 86400)
+        data = {
+            **config_entry.data,
+            CONF_FIRMWARE_CHECK_TIME: check_time_sec,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    config_entry.async_create_background_task(
-        hass,
-        firmware_coordinator.async_refresh(),
-        f"Reolink firmware check {config_entry.entry_id}",
+    now = datetime.now(UTC)
+    check_time = timedelta(seconds=check_time_sec)
+    delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    firmware_check_delay = check_time - delta_midnight
+    if firmware_check_delay < timedelta(0):
+        firmware_check_delay += timedelta(days=1)
+    _LOGGER.debug(
+        "Scheduling first Reolink %s firmware check in %s",
+        host.api.nvr_name,
+        firmware_check_delay,
     )
+    host.cancel_first_firmware_check = async_call_later(
+        hass, firmware_check_delay, first_firmware_check
+    )
+
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()
@@ -248,7 +214,7 @@ async def async_setup_entry(
 
 async def register_callbacks(
     host: ReolinkHost,
-    device_coordinator: DataUpdateCoordinator[None],
+    device_coordinator: ReolinkDeviceCoordinator,
     hass: HomeAssistant,
 ) -> None:
     """Register update callbacks."""
@@ -305,6 +271,8 @@ async def async_unload_entry(
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
     if host.cancel_refresh_privacy_mode is not None:
         host.cancel_refresh_privacy_mode()
+    if host.cancel_first_firmware_check is not None:
+        host.cancel_first_firmware_check()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
@@ -506,7 +474,20 @@ def migrate_entity_ids(
                 entity.unique_id,
                 new_id,
             )
-            entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            existing_entity = entity_reg.async_get_entity_id(
+                entity.domain, entity.platform, new_id
+            )
+            if existing_entity is None:
+                entity_reg.async_update_entity(entity.entity_id, new_unique_id=new_id)
+            else:
+                _LOGGER.warning(
+                    "Reolink entity with unique_id %s already exists, "
+                    "removing entity with unique_id %s",
+                    new_id,
+                    entity.unique_id,
+                )
+                entity_reg.async_remove(entity.entity_id)
+                continue
 
         if entity.device_id in ch_device_ids:
             ch = ch_device_ids[entity.device_id]
@@ -536,7 +517,7 @@ def migrate_entity_ids(
                 else:
                     _LOGGER.warning(
                         "Reolink entity with unique_id %s already exists, "
-                        "removing device with unique_id %s",
+                        "removing entity with unique_id %s",
                         new_id,
                         entity.unique_id,
                     )

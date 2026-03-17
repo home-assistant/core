@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final
 
-import aiohttp
+from aiohttp import ClientResponseError
 
 from homeassistant.components.light import (
     ColorMode,
@@ -86,7 +86,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -131,7 +131,8 @@ class MieleLight(MieleEntity, LightEntity):
             await self.api.send_action(
                 self._device_id, {self.entity_description.light_type: mode}
             )
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting light state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",

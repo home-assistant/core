@@ -39,7 +39,6 @@ TRIGGER_DESCRIPTIONS = {
                 "_": {
                     "name": "MQTT",
                     "description": "When a specific message is received on a given MQTT topic.",
-                    "description_configured": "When an MQTT message has been received",
                     "fields": {
                         "event": {"name": "Event", "description": "The event."},
                         "offset": {"name": "Offset", "description": "The offset."},

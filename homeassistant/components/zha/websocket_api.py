@@ -53,6 +53,10 @@ import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
 from zigpy.types.named import EUI64, KeyData
+from zigpy.typing import (
+    UNDEFINED as ZIGPY_UNDEFINED,
+    UndefinedType as ZigpyUndefinedType,
+)
 from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
@@ -850,7 +854,7 @@ async def websocket_read_zigbee_cluster_attributes(
     cluster_id: int = msg[ATTR_CLUSTER_ID]
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     attribute: int = msg[ATTR_ATTRIBUTE]
-    manufacturer: int | None = msg.get(ATTR_MANUFACTURER)
+    manufacturer: int | ZigpyUndefinedType = msg.get(ATTR_MANUFACTURER, ZIGPY_UNDEFINED)
     zha_device = zha_gateway.get_device(ieee)
     success = {}
     failure = {}
@@ -1326,7 +1330,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_type: str = service.data[ATTR_CLUSTER_TYPE]
         attribute: int | str = service.data[ATTR_ATTRIBUTE]
         value: int | bool | str = service.data[ATTR_VALUE]
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         zha_device = zha_gateway.get_device(ieee)
         response = None
         if zha_device is not None:
@@ -1380,7 +1386,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         command_type: str = service.data[ATTR_COMMAND_TYPE]
         args: list | None = service.data.get(ATTR_ARGS)
         params: dict | None = service.data.get(ATTR_PARAMS)
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         zha_device = zha_gateway.get_device(ieee)
         if zha_device is not None:
             if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
@@ -1435,7 +1443,9 @@ def async_load_api(hass: HomeAssistant) -> None:
         cluster_id: int = service.data[ATTR_CLUSTER_ID]
         command: int = service.data[ATTR_COMMAND]
         args: list = service.data[ATTR_ARGS]
-        manufacturer: int | None = service.data.get(ATTR_MANUFACTURER)
+        manufacturer: int | ZigpyUndefinedType = service.data.get(
+            ATTR_MANUFACTURER, ZIGPY_UNDEFINED
+        )
         group = zha_gateway.get_group(group_id)
         if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
             _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)

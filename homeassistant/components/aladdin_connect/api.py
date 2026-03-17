@@ -11,6 +11,18 @@ API_URL = "https://twdvzuefzh.execute-api.us-east-2.amazonaws.com/v1"
 API_KEY = "k6QaiQmcTm2zfaNns5L1Z8duBtJmhDOW8JawlCC3"
 
 
+class AsyncConfigFlowAuth(Auth):
+    """Provide Aladdin Connect Genie authentication for config flow validation."""
+
+    def __init__(self, websession: ClientSession, access_token: str) -> None:
+        """Initialize Aladdin Connect Genie auth."""
+        super().__init__(websession, API_URL, access_token, API_KEY)
+
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self.access_token
+
+
 class AsyncConfigEntryAuth(Auth):
     """Provide Aladdin Connect Genie authentication tied to an OAuth2 based config entry."""
 

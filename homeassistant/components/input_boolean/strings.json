@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted toggles to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::input_boolean::title%]",
@@ -17,23 +21,54 @@
       }
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
       "name": "[%key:common::action::reload%]"
     },
     "toggle": {
-      "description": "Toggles the helper on/off.",
+      "description": "Toggles an input boolean on/off.",
       "name": "[%key:common::action::toggle%]"
     },
     "turn_off": {
-      "description": "Turns off the helper.",
+      "description": "Turns off an input boolean.",
       "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "description": "Turns on the helper.",
+      "description": "Turns on an input boolean.",
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Input boolean"
+  "title": "Input boolean",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more toggles turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
+          "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Toggle turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more toggles turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::input_boolean::common::trigger_behavior_description%]",
+          "name": "[%key:component::input_boolean::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Toggle turned on"
+    }
+  }
 }

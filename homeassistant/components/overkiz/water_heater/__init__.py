@@ -56,4 +56,5 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
     "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": AtlanticDomesticHotWaterProductionMBLComponent,
     "io:AtlanticDomesticHotWaterProductionV2_CV4E_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
+    "io:AtlanticDomesticHotWaterProductionV2_CETHI_V4_IOComponent": AtlanticDomesticHotWaterProductionV2IOComponent,
 }

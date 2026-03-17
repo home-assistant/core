@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from pylamarzocco.const import (
+    DoseMode,
     ModelName,
     PreExtractionMode,
     SmartStandByType,
@@ -26,6 +27,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import async_init_integration
 
 from tests.common import MockConfigEntry
+
+DOSE_MODE_HA_TO_LM = {
+    "dose1": DoseMode.DOSE_1,
+    "dose2": DoseMode.DOSE_2,
+}
 
 
 @pytest.mark.parametrize(
@@ -251,3 +257,85 @@ async def test_number_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "number_exception"
+
+
+@pytest.mark.parametrize("device_fixture", [ModelName.GS3_AV])
+async def test_steam_temperature(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test steam temperature number."""
+
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+    entity_id = f"number.{serial_number}_steam_target_temperature"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry == snapshot
+
+    # service call
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 128.3,
+        },
+        blocking=True,
+    )
+
+    mock_lamarzocco.set_steam_target_temperature.assert_called_once_with(
+        temperature=128.3,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", [ModelName.LINEA_MINI])
+async def test_brew_by_weight_dose(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test brew by weight dose."""
+
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+    for dose in (1, 2):
+        entity_id = f"number.{serial_number}_brew_by_weight_dose_{dose}"
+
+        state = hass.states.get(entity_id)
+
+        assert state
+        assert state == snapshot(name=f"state-dose-{dose}")
+
+        entry = entity_registry.async_get(state.entity_id)
+        assert entry
+        assert entry.device_id
+        assert entry == snapshot(name=f"entry-dose-{dose}")
+
+        # service call
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_VALUE: 42,
+            },
+            blocking=True,
+        )
+
+        mock_lamarzocco.set_brew_by_weight_dose.assert_called_with(
+            dose=DOSE_MODE_HA_TO_LM[f"dose{dose}"],
+            value=42,
+        )

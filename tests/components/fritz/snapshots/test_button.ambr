@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_setup[button.mock_title_cleanup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleanup',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_button_setup[button.mock_title_firmware_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware update',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.UPDATE: 'update'>,
@@ -98,8 +102,9 @@
 # ---
 # name: test_button_setup[button.mock_title_reconnect-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -117,6 +122,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reconnect',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -147,8 +153,9 @@
 # ---
 # name: test_button_setup[button.mock_title_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
@@ -196,8 +204,9 @@
 # ---
 # name: test_button_setup[button.printer_wake_on_lan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,23 +217,24 @@
     'domain': 'button',
     'entity_category': None,
     'entity_id': 'button.printer_wake_on_lan',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wake on LAN',
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:lan-pending',
-    'original_name': 'printer Wake on LAN',
+    'original_icon': None,
+    'original_name': 'Wake on LAN',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wake_on_lan',
     'unique_id': 'AA:BB:CC:00:11:22_wake_on_lan',
     'unit_of_measurement': None,
   })
@@ -233,7 +243,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'printer Wake on LAN',
-      'icon': 'mdi:lan-pending',
     }),
     'context': <ANY>,
     'entity_id': 'button.printer_wake_on_lan',

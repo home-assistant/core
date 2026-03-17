@@ -9,7 +9,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["zwave_js_server"],
-  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.67.1"],
+  "requirements": ["pyserial==3.5", "zwave-js-server-python==0.68.0"],
   "usb": [
     {
       "known_devices": ["Aeotec Z-Stick Gen5+", "Z-WaveMe UZB"],
@@ -28,6 +28,13 @@
       "manufacturer": "nabu casa",
       "pid": "4001",
       "vid": "303A"
+    },
+    {
+      "description": "*sonoff*zwave*",
+      "known_devices": ["SONOFF ZWave 800 Dongle Plus ZG23"],
+      "manufacturer": "sonoff",
+      "pid": "EA60",
+      "vid": "10C4"
     }
   ],
   "zeroconf": ["_zwave-js-server._tcp.local."]
