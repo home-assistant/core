@@ -1,20 +1,11 @@
 """Provides triggers for covers."""
 
-from dataclasses import dataclass
-
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, split_entity_id
-from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
-
-
-@dataclass(frozen=True, slots=True)
-class CoverDomainSpec(DomainSpec):
-    """DomainSpec with a target value for comparison."""
-
-    target_value: str | bool | None = None
+from .models import CoverDomainSpec
 
 
 class CoverTriggerBase(EntityTriggerBase[CoverDomainSpec]):
