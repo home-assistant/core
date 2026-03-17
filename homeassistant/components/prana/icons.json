@@ -8,6 +8,20 @@
         "default": "mdi:arrow-expand-left"
       }
     },
+    "number": {
+      "display_brightness": {
+        "default": "mdi:brightness-6",
+        "state": {
+          "0": "mdi:brightness-2",
+          "1": "mdi:brightness-4",
+          "2": "mdi:brightness-4",
+          "3": "mdi:brightness-5",
+          "4": "mdi:brightness-5",
+          "5": "mdi:brightness-7",
+          "6": "mdi:brightness-7"
+        }
+      }
+    },
     "sensor": {
       "inside_temperature": {
         "default": "mdi:home-thermometer"
