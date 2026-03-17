@@ -59,8 +59,8 @@
         "name": "Velocity",
         "state": {
           "default": "Default",
-          "silent": "Silent",
-          "fast": "Fast"
+          "fast": "Fast",
+          "silent": "Silent"
         }
       }
     }

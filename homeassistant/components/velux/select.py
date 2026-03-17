@@ -53,6 +53,7 @@ class VeluxVelocitySelect(VeluxEntity, SelectEntity, RestoreEntity):
         super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_velocity"
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Restore state."""
         state = await self.async_get_last_state()
