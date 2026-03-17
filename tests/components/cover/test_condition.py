@@ -8,7 +8,7 @@ from homeassistant.components.cover import ATTR_IS_CLOSED, CoverState
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components import (
+from tests.components.common import (
     ConditionStateDescription,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
