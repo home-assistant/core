@@ -37,6 +37,8 @@ async def async_setup_entry(
 class DemoValve(ValveEntity):
     """Representation of a Demo valve."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
@@ -49,7 +51,6 @@ class DemoValve(ValveEntity):
     ) -> None:
         """Initialize the valve."""
         self._attr_unique_id = unique_id
-        self._attr_name = name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=name,
