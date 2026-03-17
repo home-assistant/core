@@ -137,7 +137,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         await self._async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
+        """Turn the fan off."""
         await self._async_wemo_call(
             "turn off", ft.partial(self.wemo.set_state, FanMode.Off)
         )
